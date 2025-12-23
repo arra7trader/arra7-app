@@ -34,6 +34,7 @@ export default function AdminDashboard() {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [notification, setNotification] = useState<UpgradeNotification | null>(null);
     const [copied, setCopied] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -138,6 +139,12 @@ Tim ARRA7`;
         return null;
     }
 
+    // Filter users by search query
+    const filteredUsers = users.filter(user =>
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
     const stats = {
         total: users.length,
         basic: users.filter(u => u.membership === 'BASIC').length,
@@ -188,8 +195,8 @@ Tim ARRA7`;
                                 <button
                                     onClick={copyToClipboard}
                                     className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${copied
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                                         }`}
                                 >
                                     {copied ? (
@@ -268,6 +275,37 @@ Tim ARRA7`;
                     </div>
                 </div>
 
+                {/* Search */}
+                <div className="mb-6">
+                    <div className="relative max-w-md">
+                        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Cari email atau nama..."
+                            className="w-full pl-12 pr-4 py-3 bg-[#12141A] border border-[#1F2937] rounded-xl text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500 transition-colors"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                    {searchQuery && (
+                        <p className="mt-2 text-sm text-[#64748B]">
+                            Ditemukan {filteredUsers.length} dari {users.length} users
+                        </p>
+                    )}
+                </div>
+
                 {/* Users Table */}
                 <div className="glass rounded-2xl border border-[#1F2937] overflow-hidden">
                     <div className="overflow-x-auto">
@@ -282,7 +320,7 @@ Tim ARRA7`;
                                 </tr>
                             </thead>
                             <tbody>
-                                {users.map((user) => (
+                                {filteredUsers.map((user) => (
                                     <tr key={user.id} className="border-t border-[#1F2937] hover:bg-[#1A1D24]">
                                         <td className="p-4">
                                             <div>
