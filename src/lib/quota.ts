@@ -14,6 +14,25 @@ export const ALLOWED_TIMEFRAMES = {
     VVIP: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
 } as const;
 
+// Allowed pair categories per membership
+export const ALLOWED_PAIR_CATEGORIES = {
+    BASIC: ['major', 'minor', 'gold'], // Forex Major, Minor, and Gold only
+    PRO: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
+    VVIP: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
+} as const;
+
+// Specific pairs allowed for BASIC (Forex + Gold)
+export const BASIC_ALLOWED_PAIRS = [
+    // Forex Major
+    'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD',
+    // Forex Minor
+    'EURGBP', 'EURJPY', 'GBPJPY', 'EURCHF', 'EURAUD', 'EURCAD', 'GBPCHF',
+    'GBPAUD', 'AUDJPY', 'CADJPY', 'CHFJPY', 'NZDJPY', 'AUDCAD', 'AUDCHF',
+    'AUDNZD', 'EURNZD', 'GBPCAD', 'GBPNZD',
+    // Gold only from commodities
+    'XAUUSD',
+];
+
 export type Membership = keyof typeof QUOTA_LIMITS;
 
 export interface QuotaStatus {
@@ -78,7 +97,7 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
 }
 
 // Check if user can analyze (has remaining quota)
-export async function checkQuota(userId: string, timeframe: string): Promise<{
+export async function checkQuota(userId: string, timeframe: string, pair?: string): Promise<{
     allowed: boolean;
     message?: string;
     quotaStatus: QuotaStatus;
@@ -91,6 +110,15 @@ export async function checkQuota(userId: string, timeframe: string): Promise<{
     }
 
     const status = await getQuotaStatus(userId);
+
+    // Check pair restriction for BASIC
+    if (pair && status.membership === 'BASIC' && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
+        return {
+            allowed: false,
+            message: `Pair ${pair} tidak tersedia untuk paket BASIC. Upgrade ke PRO untuk akses semua pairs termasuk Crypto & Indices.`,
+            quotaStatus: status,
+        };
+    }
 
     // Check timeframe restriction
     if (!status.allowedTimeframes.includes(timeframe)) {

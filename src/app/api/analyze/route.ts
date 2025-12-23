@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
         // Check quota (only if Turso is configured)
         if (process.env.TURSO_DATABASE_URL) {
-            const quotaCheck = await checkQuota(userId, timeframe);
+            const quotaCheck = await checkQuota(userId, timeframe, pair);
 
             if (!quotaCheck.allowed) {
                 return NextResponse.json(
