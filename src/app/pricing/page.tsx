@@ -25,6 +25,8 @@ const PRICING_PLANS = [
         id: 'BASIC',
         name: 'Basic',
         price: 'FREE',
+        originalPrice: null,
+        discount: null,
         period: '',
         description: 'Untuk pemula yang ingin mencoba',
         features: [
@@ -43,6 +45,8 @@ const PRICING_PLANS = [
         id: 'PRO',
         name: 'Pro',
         price: 'Rp 149K',
+        originalPrice: 'Rp 299K',
+        discount: 50,
         period: '/bulan',
         description: 'Untuk trader aktif',
         features: [
@@ -61,6 +65,8 @@ const PRICING_PLANS = [
         id: 'VVIP',
         name: 'VVIP',
         price: 'Rp 399K',
+        originalPrice: 'Rp 799K',
+        discount: 50,
         period: '/bulan',
         description: 'Untuk trader profesional',
         features: [
@@ -82,6 +88,46 @@ export default function PricingPage() {
     const t = useTranslations('nav');
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
     const [snapReady, setSnapReady] = useState(false);
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+    // Countdown timer - resets to 14 days from first visit
+    useEffect(() => {
+        const getEndDate = () => {
+            const stored = localStorage.getItem('arra7_promo_end');
+            if (stored) {
+                return new Date(stored);
+            }
+            // Set promo end to 14 days from now
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + 14);
+            localStorage.setItem('arra7_promo_end', endDate.toISOString());
+            return endDate;
+        };
+
+        const endDate = getEndDate();
+
+        const updateCountdown = () => {
+            const now = new Date();
+            const diff = endDate.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                // Reset promo for another 14 days
+                localStorage.removeItem('arra7_promo_end');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            setCountdown({ days, hours, minutes, seconds });
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleSubscribe = async (planId: string) => {
         if (!session) {
@@ -113,6 +159,33 @@ export default function PricingPage() {
             <div className="bg-orb bg-orb-purple w-[500px] h-[500px] bottom-0 right-1/4 opacity-15" />
 
             <div className="relative max-w-7xl mx-auto">
+                {/* Promo Countdown Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 p-4 rounded-2xl bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-red-500/20"
+                >
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xl">🔥</span>
+                            <span className="font-semibold text-white">PROMO SPESIAL!</span>
+                            <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold animate-pulse">DISKON 50%</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
+                            <span>Berakhir dalam:</span>
+                            <div className="flex gap-1">
+                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.days).padStart(2, '0')}</span>
+                                <span className="text-[#64748B]">:</span>
+                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.hours).padStart(2, '0')}</span>
+                                <span className="text-[#64748B]">:</span>
+                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.minutes).padStart(2, '0')}</span>
+                                <span className="text-[#64748B]">:</span>
+                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.seconds).padStart(2, '0')}</span>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -181,7 +254,13 @@ export default function PricingPage() {
 
                             {/* Price */}
                             <div className="mb-6">
-                                <span className={`text-4xl font-bold ${plan.popular ? 'gradient-text' : ''}`}>
+                                {plan.originalPrice && (
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-lg text-[#64748B] line-through">{plan.originalPrice}</span>
+                                        <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold">-{plan.discount}%</span>
+                                    </div>
+                                )}
+                                <span className={`text-4xl font-bold ${plan.popular ? 'gradient-text' : plan.originalPrice ? 'text-green-400' : ''}`}>
                                     {plan.price}
                                 </span>
                                 <span className="text-[#64748B]">{plan.period}</span>
