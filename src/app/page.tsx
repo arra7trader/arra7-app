@@ -38,32 +38,6 @@ export default function Home() {
         className="absolute top-1/3 -right-20 w-[400px] h-[400px] opacity-30 blur-sm pointer-events-none"
       />
 
-      {/* Floating Decorative Images */}
-      <motion.img
-        src="/images/chart-glow.png"
-        alt=""
-        initial={{ opacity: 0, x: 100 }}
-        animate={{ opacity: 0.4, x: 0 }}
-        transition={{ duration: 1, delay: 0.8 }}
-        className="absolute top-40 right-10 w-[300px] hidden lg:block pointer-events-none"
-      />
-      <motion.img
-        src="/images/gold-bar.png"
-        alt=""
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 0.5, y: 0 }}
-        transition={{ duration: 1, delay: 1 }}
-        className="absolute bottom-40 left-10 w-[200px] hidden lg:block pointer-events-none"
-      />
-      <motion.img
-        src="/images/crypto-coins.png"
-        alt=""
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 0.4, y: 0 }}
-        transition={{ duration: 1, delay: 1.2 }}
-        className="absolute bottom-20 right-20 w-[250px] hidden lg:block pointer-events-none"
-      />
-
       {/* Radial Gradient Overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
