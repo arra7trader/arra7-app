@@ -1,0 +1,40 @@
+{
+    "nav": {
+        "home": "Beranda",
+        "pricing": "Harga",
+        "products": "Produk",
+        "indicators": "Indikator",
+        "expertAdvisors": "Expert Advisors",
+        "login": "Masuk dengan Google",
+        "logout": "Keluar",
+        "analisaMarket": "Analisa Market"
+    },
+    "hero": {
+        "badge": "Alat Trading Presisi",
+        "headline": "Trading dengan",
+        "headlineHighlight": "Presisi",
+        "headlineEnd": "& Percaya Diri",
+        "subheadline": "Indikator Forex dan Expert Advisors kelas profesional yang dirancang untuk memberikan keunggulan di pasar. Didukung oleh algoritma canggih dan analisis real-time.",
+        "cta": "Analisa Market",
+        "ctaSecondary": "Lihat Produk"
+    },
+    "features": {
+        "indicators": "Indikator Premium",
+        "indicatorsDesc": "Alat analisis teknikal canggih",
+        "ea": "Expert Advisors",
+        "eaDesc": "Solusi trading otomatis",
+        "analysis": "Analisa Market",
+        "analysisDesc": "Wawasan pasar real-time"
+    },
+    "auth": {
+        "loginTitle": "Selamat Datang di ARRA7",
+        "loginSubtitle": "Masuk untuk mengakses alat trading premium",
+        "continueWithGoogle": "Lanjutkan dengan Google",
+        "redirecting": "Mengalihkan..."
+    },
+    "analisaMarket": {
+        "title": "Analisa Market",
+        "subtitle": "Analisis pasar forex real-time didukung AI",
+        "welcome": "Selamat datang kembali"
+    }
+}

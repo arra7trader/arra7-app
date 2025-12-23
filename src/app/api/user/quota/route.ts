@@ -1,0 +1,47 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { getQuotaStatus } from '@/lib/quota';
+
+export async function GET() {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                { status: 'error', message: 'Not authenticated' },
+                { status: 401 }
+            );
+        }
+
+        // Check if Turso is configured
+        if (!process.env.TURSO_DATABASE_URL) {
+            // Return unlimited quota if no database
+            return NextResponse.json({
+                status: 'success',
+                quota: {
+                    membership: 'BASIC',
+                    dailyLimit: Infinity,
+                    used: 0,
+                    remaining: Infinity,
+                    canAnalyze: true,
+                    allowedTimeframes: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+                },
+            });
+        }
+
+        const quotaStatus = await getQuotaStatus(session.user.id);
+
+        return NextResponse.json({
+            status: 'success',
+            quota: quotaStatus,
+        });
+
+    } catch (error) {
+        console.error('Quota API Error:', error);
+        return NextResponse.json(
+            { status: 'error', message: 'Failed to get quota status' },
+            { status: 500 }
+        );
+    }
+}

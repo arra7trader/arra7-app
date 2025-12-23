@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "products": "Products",
+    "indicators": "Indicators",
+    "expertAdvisors": "Expert Advisors",
+    "login": "Login with Google",
+    "logout": "Logout",
+    "analisaMarket": "Analisa Market"
+  },
+  "hero": {
+    "badge": "Precision Trading Tools",
+    "headline": "Trade with",
+    "headlineHighlight": "Precision",
+    "headlineEnd": "& Confidence",
+    "subheadline": "Professional-grade Forex indicators and Expert Advisors designed to give you the edge in the market. Powered by advanced algorithms and real-time analysis.",
+    "cta": "Analisa Market",
+    "ctaSecondary": "View Products"
+  },
+  "features": {
+    "indicators": "Premium Indicators",
+    "indicatorsDesc": "Advanced technical analysis tools",
+    "ea": "Expert Advisors",
+    "eaDesc": "Automated trading solutions",
+    "analysis": "Market Analysis",
+    "analysisDesc": "Real-time market insights"
+  },
+  "auth": {
+    "loginTitle": "Welcome to ARRA7",
+    "loginSubtitle": "Sign in to access premium trading tools",
+    "continueWithGoogle": "Continue with Google",
+    "redirecting": "Redirecting..."
+  },
+  "analisaMarket": {
+    "title": "Market Analysis",
+    "subtitle": "Real-time forex market analysis powered by AI",
+    "welcome": "Welcome back"
+  }
+}
