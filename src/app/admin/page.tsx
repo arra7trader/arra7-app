@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 interface User {
@@ -16,6 +16,13 @@ interface User {
     todayUsage: number;
 }
 
+interface UpgradeNotification {
+    userName: string;
+    userEmail: string;
+    membership: string;
+    expiresDate: string;
+}
+
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 
 export default function AdminDashboard() {
@@ -25,6 +32,8 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<string | null>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [notification, setNotification] = useState<UpgradeNotification | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -52,7 +61,7 @@ export default function AdminDashboard() {
         }
     };
 
-    const updateMembership = async (userId: string, membership: string, days: number = 30) => {
+    const updateMembership = async (userId: string, membership: string, userName: string, userEmail: string, days: number = 30) => {
         setUpdating(userId);
         setMessage(null);
 
@@ -68,6 +77,16 @@ export default function AdminDashboard() {
             if (data.status === 'success') {
                 setMessage({ type: 'success', text: data.message });
                 fetchUsers();
+
+                // Show notification modal
+                const expiresDate = new Date();
+                expiresDate.setDate(expiresDate.getDate() + days);
+                setNotification({
+                    userName,
+                    userEmail,
+                    membership,
+                    expiresDate: expiresDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+                });
             } else {
                 setMessage({ type: 'error', text: data.message });
             }
@@ -75,6 +94,35 @@ export default function AdminDashboard() {
             setMessage({ type: 'error', text: 'Failed to update' });
         } finally {
             setUpdating(null);
+        }
+    };
+
+    const getNotificationMessage = () => {
+        if (!notification) return '';
+        return `✅ Akun Anda sudah diupgrade ke ${notification.membership}! 🎉
+
+Halo ${notification.userName || 'Kak'},
+
+Terima kasih telah melakukan pembayaran. Akun Anda (${notification.userEmail}) telah berhasil diupgrade.
+
+📦 Paket: ${notification.membership}
+📅 Berlaku hingga: ${notification.expiresDate}
+
+Silakan refresh halaman atau login ulang untuk melihat perubahan.
+
+Selamat trading dan semoga profit! 💰🚀
+
+Best regards,
+Tim ARRA7`;
+    };
+
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(getNotificationMessage());
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Copy failed:', err);
         }
     };
 
@@ -101,6 +149,77 @@ export default function AdminDashboard() {
         <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
             <div className="absolute inset-0 bg-grid opacity-20" />
 
+            {/* Notification Modal */}
+            <AnimatePresence>
+                {notification && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setNotification(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="glass rounded-2xl p-6 max-w-lg w-full border border-green-500/30"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white">Upgrade Berhasil!</h3>
+                                    <p className="text-sm text-[#94A3B8]">Copy pesan ini untuk dikirim ke customer</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-[#12141A] rounded-xl p-4 mb-4 max-h-64 overflow-y-auto">
+                                <pre className="text-sm text-[#94A3B8] whitespace-pre-wrap font-sans">
+                                    {getNotificationMessage()}
+                                </pre>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={copyToClipboard}
+                                    className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${copied
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                                        }`}
+                                >
+                                    {copied ? (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Tersalin!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                            </svg>
+                                            Copy Pesan
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setNotification(null)}
+                                    className="px-6 py-3 rounded-xl border border-[#374151] text-[#94A3B8] hover:text-white transition-colors"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="relative max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
@@ -121,8 +240,8 @@ export default function AdminDashboard() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`mb-6 p-4 rounded-xl ${message.type === 'success'
-                                ? 'bg-green-500/10 border border-green-500/30 text-green-400'
-                                : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                            ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+                            : 'bg-red-500/10 border border-red-500/30 text-red-400'
                             }`}
                     >
                         {message.text}
@@ -173,8 +292,8 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${user.membership === 'VVIP' ? 'bg-amber-500/20 text-amber-400' :
-                                                    user.membership === 'PRO' ? 'bg-blue-500/20 text-blue-400' :
-                                                        'bg-slate-500/20 text-slate-400'
+                                                user.membership === 'PRO' ? 'bg-blue-500/20 text-blue-400' :
+                                                    'bg-slate-500/20 text-slate-400'
                                                 }`}>
                                                 {user.membership}
                                             </span>
@@ -190,7 +309,7 @@ export default function AdminDashboard() {
                                             <div className="flex gap-2">
                                                 {user.membership !== 'PRO' && (
                                                     <button
-                                                        onClick={() => updateMembership(user.id, 'PRO')}
+                                                        onClick={() => updateMembership(user.id, 'PRO', user.name, user.email)}
                                                         disabled={updating === user.id}
                                                         className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-xs disabled:opacity-50"
                                                     >
@@ -199,7 +318,7 @@ export default function AdminDashboard() {
                                                 )}
                                                 {user.membership !== 'VVIP' && (
                                                     <button
-                                                        onClick={() => updateMembership(user.id, 'VVIP')}
+                                                        onClick={() => updateMembership(user.id, 'VVIP', user.name, user.email)}
                                                         disabled={updating === user.id}
                                                         className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded text-xs disabled:opacity-50"
                                                     >
@@ -208,7 +327,7 @@ export default function AdminDashboard() {
                                                 )}
                                                 {user.membership !== 'BASIC' && (
                                                     <button
-                                                        onClick={() => updateMembership(user.id, 'BASIC')}
+                                                        onClick={() => updateMembership(user.id, 'BASIC', user.name, user.email)}
                                                         disabled={updating === user.id}
                                                         className="px-3 py-1 bg-slate-500/20 hover:bg-slate-500/30 text-slate-400 rounded text-xs disabled:opacity-50"
                                                     >
