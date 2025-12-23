@@ -316,11 +316,40 @@ export async function getForexNews(): Promise<{ html: string; events: NewsEvent[
             return { html: '✅ No High Impact News Today/Tomorrow', events: [] };
         }
 
+        // Convert ET (Eastern Time) to WIB (UTC+7)
+        // ET is UTC-5 (EST) or UTC-4 (EDT), WIB is UTC+7
+        // Difference: +12 hours (using EST as base)
+        const convertToWIB = (timeStr: string): string => {
+            if (!timeStr) return '';
+
+            // Parse time like "8:30am" or "10:00pm"
+            const match = timeStr.match(/(\d{1,2}):(\d{2})(am|pm)/i);
+            if (!match) return timeStr;
+
+            let hours = parseInt(match[1]);
+            const minutes = match[2];
+            const period = match[3].toLowerCase();
+
+            // Convert to 24-hour format
+            if (period === 'pm' && hours !== 12) hours += 12;
+            if (period === 'am' && hours === 12) hours = 0;
+
+            // Add 12 hours for WIB conversion (ET to WIB)
+            hours += 12;
+
+            // Handle day overflow
+            if (hours >= 24) hours -= 24;
+
+            // Format as 24-hour WIB
+            return `${String(hours).padStart(2, '0')}:${minutes} WIB`;
+        };
+
         const html = relevantEvents.map(e => {
             const color = e.impact === 'High' ? '#ef4444' : '#f59e0b';
             const isToday = e.date === today;
-            const dayLabel = isToday ? '' : '(Tomorrow) ';
-            return `<div class="news-item"><span class="time">${dayLabel}${e.time}</span><span class="country" style="color:${color}">${e.country}</span><span class="title">${e.title}</span></div>`;
+            const dayLabel = isToday ? '' : '(Besok) ';
+            const wibTime = convertToWIB(e.time);
+            return `<div class="news-item"><span class="time">${dayLabel}${wibTime}</span><span class="country" style="color:${color}">${e.country}</span><span class="title">${e.title}</span></div>`;
         }).join('');
 
         return { html, events: relevantEvents };
