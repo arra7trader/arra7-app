@@ -253,7 +253,7 @@ export default function PricingPage() {
                         {[
                             {
                                 question: 'Metode pembayaran apa yang tersedia?',
-                                answer: 'Kami menerima transfer bank, e-wallet (GoPay, OVO, Dana), dan kartu kredit/debit. Pembayaran diproses secara aman dan terenkripsi.',
+                                answer: 'Kami menggunakan metode pembayaran QRIS yang dapat di-scan melalui semua aplikasi e-wallet (GoPay, OVO, Dana, ShopeePay) dan mobile banking. Pembayaran diproses secara aman dan instan.',
                             },
                             {
                                 question: 'Bisakah upgrade atau downgrade paket?',
