@@ -188,84 +188,119 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                name: 'Rizky Pratama',
-                role: 'Day Trader • Jakarta',
-                avatar: 'RP',
-                rating: 5,
-                text: 'Gila sih ini AI nya. Gue udah lama nyari tools yang bisa bantu analisa tanpa ribet. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah 149k/bulan mah.',
-                color: 'from-blue-500 to-cyan-500',
-              },
-              {
-                name: 'Dewi Anggraini',
-                role: 'Swing Trader • Surabaya',
-                avatar: 'DA',
-                rating: 5,
-                text: 'Awalnya skeptis karena udah sering kena tipu tools abal-abal. Tapi ARRA7 beda, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede dan gak asal entry.',
-                color: 'from-purple-500 to-pink-500',
-              },
-              {
-                name: 'Budi Santoso',
-                role: 'Part-time Trader • Bandung',
-                avatar: 'BS',
-                rating: 5,
-                text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa, langsung tau mau entry di mana. Simple tapi powerfull. Profitnya lumayan buat tambahan gaji 😂',
-                color: 'from-amber-500 to-orange-500',
-              },
-              {
-                name: 'Andi Wijaya',
-                role: 'Crypto Enthusiast • Medan',
-                avatar: 'AW',
-                rating: 5,
-                text: 'Yang VVIP mantap! Bisa analisa crypto juga. Kemarin BTC sama ETH signal nya bener semua. EA custom nya juga udah dipasang, auto profit while sleeping wkwk',
-                color: 'from-green-500 to-emerald-500',
-              },
-              {
-                name: 'Siti Nurhaliza',
-                role: 'Newbie Trader • Yogyakarta',
-                avatar: 'SN',
-                rating: 5,
-                text: 'Baru belajar trading 3 bulan. Berkat ARRA7 jadi ngerti kapan harus entry sama exit. Penjelasan AI nya gampang dimengerti, cocok banget buat pemula kayak gue.',
-                color: 'from-red-500 to-rose-500',
-              },
-              {
-                name: 'Fajar Rahman',
-                role: 'Full-time Trader • Bali',
-                avatar: 'FR',
-                rating: 5,
-                text: 'Udah pake dari awal launching. Support nya fast respond, admin nya ramah. Tools nya makin hari makin update. Recommended buat yang serius mau profit di forex!',
-                color: 'from-indigo-500 to-violet-500',
-              },
-            ].map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="glass rounded-2xl p-6 border border-[#1F2937] hover:border-[#374151] transition-colors"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}>
-                    {testimonial.avatar}
+          {/* Scrolling Testimonials */}
+          <div className="relative overflow-hidden">
+            <motion.div
+              className="flex gap-6"
+              animate={{ x: [0, -1800] }}
+              transition={{
+                x: {
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 30,
+                  ease: "linear",
+                },
+              }}
+            >
+              {[
+                {
+                  name: 'Rizky Pratama',
+                  role: 'Day Trader • Jakarta',
+                  avatar: 'RP',
+                  rating: 5,
+                  text: 'Gila sih ini AI nya. Gue udah lama nyari tools yang bisa bantu analisa tanpa ribet. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah 149k/bulan mah.',
+                  color: 'from-blue-500 to-cyan-500',
+                },
+                {
+                  name: 'Dewi Anggraini',
+                  role: 'Swing Trader • Surabaya',
+                  avatar: 'DA',
+                  rating: 5,
+                  text: 'Awalnya skeptis karena udah sering kena tipu tools abal-abal. Tapi ARRA7 beda, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede dan gak asal entry.',
+                  color: 'from-purple-500 to-pink-500',
+                },
+                {
+                  name: 'Budi Santoso',
+                  role: 'Part-time Trader • Bandung',
+                  avatar: 'BS',
+                  rating: 5,
+                  text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, langsung tau mau entry di mana. Simple tapi powerful. Profitnya lumayan buat tambahan gaji 😂',
+                  color: 'from-amber-500 to-orange-500',
+                },
+                {
+                  name: 'Andi Wijaya',
+                  role: 'Crypto Trader • Medan',
+                  avatar: 'AW',
+                  rating: 5,
+                  text: 'Yang VVIP mantap! Bisa analisa crypto juga. Kemarin BTC sama ETH signal dari AI nya bener semua. Support resistance nya akurat, SL TP nya udah dikasih. Tinggal eksekusi aja.',
+                  color: 'from-green-500 to-emerald-500',
+                },
+                {
+                  name: 'Siti Nurhaliza',
+                  role: 'Newbie Trader • Yogyakarta',
+                  avatar: 'SN',
+                  rating: 5,
+                  text: 'Baru belajar trading 3 bulan. Berkat analisa AI ARRA7 jadi ngerti kapan harus entry sama exit. Penjelasannya gampang dimengerti, cocok banget buat pemula kayak gue.',
+                  color: 'from-red-500 to-rose-500',
+                },
+                {
+                  name: 'Fajar Rahman',
+                  role: 'Full-time Trader • Bali',
+                  avatar: 'FR',
+                  rating: 5,
+                  text: 'Udah pake dari awal launching. AI analisanya makin akurat, support nya fast respond. Sekarang gak perlu buka banyak chart, tinggal minta analisa sesuai pair yang mau ditrade.',
+                  color: 'from-indigo-500 to-violet-500',
+                },
+                // Duplicate for seamless loop
+                {
+                  name: 'Rizky Pratama',
+                  role: 'Day Trader • Jakarta',
+                  avatar: 'RP',
+                  rating: 5,
+                  text: 'Gila sih ini AI nya. Gue udah lama nyari tools yang bisa bantu analisa tanpa ribet. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah 149k/bulan mah.',
+                  color: 'from-blue-500 to-cyan-500',
+                },
+                {
+                  name: 'Dewi Anggraini',
+                  role: 'Swing Trader • Surabaya',
+                  avatar: 'DA',
+                  rating: 5,
+                  text: 'Awalnya skeptis karena udah sering kena tipu tools abal-abal. Tapi ARRA7 beda, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede dan gak asal entry.',
+                  color: 'from-purple-500 to-pink-500',
+                },
+                {
+                  name: 'Budi Santoso',
+                  role: 'Part-time Trader • Bandung',
+                  avatar: 'BS',
+                  rating: 5,
+                  text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, langsung tau mau entry di mana. Simple tapi powerful. Profitnya lumayan buat tambahan gaji 😂',
+                  color: 'from-amber-500 to-orange-500',
+                },
+              ].map((testimonial, index) => (
+                <div
+                  key={index}
+                  className="flex-shrink-0 w-[350px] glass rounded-2xl p-6 border border-[#1F2937] hover:border-[#374151] transition-colors"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}>
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white">{testimonial.name}</h4>
+                      <p className="text-sm text-[#64748B]">{testimonial.role}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                    <p className="text-sm text-[#64748B]">{testimonial.role}</p>
+                  <div className="flex gap-1 mb-3">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
                   </div>
+                  <p className="text-[#94A3B8] text-sm leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
                 </div>
-                <div className="flex gap-1 mb-3">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-[#94A3B8] text-sm leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
-              </motion.div>
-            ))}
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
