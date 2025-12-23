@@ -297,26 +297,33 @@ export async function getForexNews(): Promise<{ html: string; events: NewsEvent[
         const xmlText = await response.text();
         const events = parseForexFactoryXml(xmlText);
 
-        const today = new Date().toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric'
-        }).replace(/\//g, '-');
+        // Format: MM-DD-YYYY (matching XML format)
+        const now = new Date();
+        const today = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${now.getFullYear()}`;
 
-        const todayEvents = events.filter(e =>
-            e.date === today && ['High', 'Medium'].includes(e.impact)
+        // Also get tomorrow for upcoming events
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = `${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}-${tomorrow.getFullYear()}`;
+
+        // Filter high/medium impact events for today and tomorrow
+        const relevantEvents = events.filter(e =>
+            (e.date === today || e.date === tomorrowStr) &&
+            ['High', 'Medium'].includes(e.impact)
         );
 
-        if (todayEvents.length === 0) {
-            return { html: '✅ No High Impact News Today', events: [] };
+        if (relevantEvents.length === 0) {
+            return { html: '✅ No High Impact News Today/Tomorrow', events: [] };
         }
 
-        const html = todayEvents.map(e => {
+        const html = relevantEvents.map(e => {
             const color = e.impact === 'High' ? '#ef4444' : '#f59e0b';
-            return `<div class="news-item"><span class="time">${e.time}</span><span class="country" style="color:${color}">${e.country}</span><span class="title">${e.title}</span></div>`;
+            const isToday = e.date === today;
+            const dayLabel = isToday ? '' : '(Tomorrow) ';
+            return `<div class="news-item"><span class="time">${dayLabel}${e.time}</span><span class="country" style="color:${color}">${e.country}</span><span class="title">${e.title}</span></div>`;
         }).join('');
 
-        return { html, events: todayEvents };
+        return { html, events: relevantEvents };
 
     } catch (error) {
         console.error('News fetch error:', error);
@@ -341,8 +348,12 @@ function parseForexFactoryXml(xml: string): NewsEvent[] {
         const eventXml = match[1];
 
         const getTag = (tag: string) => {
-            const tagMatch = eventXml.match(new RegExp(`<${tag}>(.*?)</${tag}>`));
-            return tagMatch ? tagMatch[1] : '';
+            // Handle both regular content and CDATA wrapped content
+            const cdataMatch = eventXml.match(new RegExp(`<${tag}><!\\[CDATA\\[([^\\]]*?)\\]\\]></${tag}>`));
+            if (cdataMatch) return cdataMatch[1];
+
+            const regularMatch = eventXml.match(new RegExp(`<${tag}>([^<]*?)</${tag}>`));
+            return regularMatch ? regularMatch[1] : '';
         };
 
         events.push({
