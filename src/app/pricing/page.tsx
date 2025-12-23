@@ -48,9 +48,10 @@ const PRICING_PLANS = [
         features: [
             { text: '25x Analisa per hari', included: true },
             { text: 'Semua Timeframe', included: true },
-            { text: 'Akses Semua Pairs', included: true },
+            { text: 'Akses Semua Pairs + Crypto', included: true },
             { text: 'Economic Calendar', included: true },
-            { text: 'Free Custom Indikator/EA', included: false },
+            { text: 'Free Custom Indikator', included: true },
+            { text: 'Free Custom EA', included: false },
         ],
         cta: 'Upgrade ke Pro',
         popular: true,
