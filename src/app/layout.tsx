@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import AuthProvider from "@/components/providers/AuthProvider";
 import Navbar from "@/components/Navbar";
+import TelegramWidget from "@/components/TelegramWidget";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,9 +48,11 @@ export default async function RootLayout({
             <main className="relative">
               {children}
             </main>
+            <TelegramWidget />
           </NextIntlClientProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
+
