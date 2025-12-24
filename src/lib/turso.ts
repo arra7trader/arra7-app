@@ -48,9 +48,21 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
-        // Create quota_usage table
+        // Create quota_usage table (Forex)
         await turso.execute(`
       CREATE TABLE IF NOT EXISTS quota_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        count INTEGER DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        UNIQUE(user_id, date)
+      )
+    `);
+
+        // Create stock_quota_usage table (Stock Analysis)
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS stock_quota_usage (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL,
         date TEXT NOT NULL,

@@ -30,7 +30,8 @@ const PRICING_PLANS = [
         period: '',
         description: 'Untuk pemula yang ingin mencoba',
         features: [
-            { text: '2x Analisa per hari', included: true },
+            { text: '2x Analisa Forex per hari', included: true },
+            { text: '2x Analisa Saham IDX per hari', included: true },
             { text: 'Timeframe M1 - M30', included: true },
             { text: 'Akses Gold & Major Pairs', included: true },
             { text: 'Economic Calendar', included: true },
@@ -50,7 +51,8 @@ const PRICING_PLANS = [
         period: '/bulan',
         description: 'Untuk trader aktif',
         features: [
-            { text: '25x Analisa per hari', included: true },
+            { text: '25x Analisa Forex per hari', included: true },
+            { text: '25x Analisa Saham IDX per hari', included: true },
             { text: 'Semua Timeframe', included: true },
             { text: 'Akses Semua Pairs + Crypto', included: true },
             { text: 'Economic Calendar', included: true },
@@ -70,7 +72,8 @@ const PRICING_PLANS = [
         period: '/bulan',
         description: 'Untuk trader profesional',
         features: [
-            { text: 'UNLIMITED Analisa', included: true },
+            { text: 'UNLIMITED Analisa Forex', included: true },
+            { text: 'UNLIMITED Analisa Saham IDX', included: true },
             { text: 'Semua Timeframe', included: true },
             { text: 'Akses Semua Pairs + Crypto', included: true },
             { text: 'Economic Calendar', included: true },

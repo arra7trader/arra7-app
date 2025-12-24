@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { checkStockQuota, useStockQuota } from '@/lib/quota';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 const MODEL = 'llama-3.3-70b-versatile';
@@ -13,6 +14,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { status: 'error', message: 'Silakan login terlebih dahulu' },
                 { status: 401 }
+            );
+        }
+
+        // Check stock quota
+        const quotaCheck = await checkStockQuota(session.user.id);
+        if (!quotaCheck.allowed) {
+            return NextResponse.json(
+                {
+                    status: 'error',
+                    message: quotaCheck.message,
+                    quotaStatus: quotaCheck.quotaStatus,
+                },
+                { status: 403 }
             );
         }
 
@@ -196,6 +210,9 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
         if (!analysis) {
             throw new Error('No analysis returned from AI');
         }
+
+        // Use quota after successful analysis
+        await useStockQuota(session.user.id);
 
         return NextResponse.json({
             status: 'success',

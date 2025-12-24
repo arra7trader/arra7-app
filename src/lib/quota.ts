@@ -1,7 +1,14 @@
 import getTursoClient, { getUserMembership, isTursoConfigured } from './turso';
 
-// Quota limits per membership level
+// Quota limits per membership level (Forex Analysis)
 export const QUOTA_LIMITS = {
+    BASIC: 2,
+    PRO: 25,
+    VVIP: Infinity, // Unlimited
+} as const;
+
+// Stock Analysis Quota limits (same as Forex)
+export const STOCK_QUOTA_LIMITS = {
     BASIC: 2,
     PRO: 25,
     VVIP: Infinity, // Unlimited
@@ -189,6 +196,118 @@ export async function resetQuota(userId: string): Promise<boolean> {
         return true;
     } catch (error) {
         console.error('Reset quota error:', error);
+        return false;
+    }
+}
+
+// ============== STOCK ANALYSIS QUOTA ==============
+
+export interface StockQuotaStatus {
+    membership: Membership;
+    dailyLimit: number;
+    used: number;
+    remaining: number;
+    canAnalyze: boolean;
+}
+
+// Default unlimited stock quota
+function getDefaultStockQuota(): StockQuotaStatus {
+    return {
+        membership: 'VVIP',
+        dailyLimit: Infinity,
+        used: 0,
+        remaining: Infinity,
+        canAnalyze: true,
+    };
+}
+
+// Get user's stock quota status
+export async function getStockQuotaStatus(userId: string): Promise<StockQuotaStatus> {
+    const turso = getTursoClient();
+    if (!turso) return getDefaultStockQuota();
+
+    try {
+        const membership = (await getUserMembership(userId)) as Membership;
+        const dailyLimit = STOCK_QUOTA_LIMITS[membership] || STOCK_QUOTA_LIMITS.BASIC;
+
+        const today = getTodayDate();
+
+        // Get today's stock analysis usage
+        const result = await turso.execute({
+            sql: 'SELECT count FROM stock_quota_usage WHERE user_id = ? AND date = ?',
+            args: [userId, today],
+        });
+
+        const used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
+        const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
+
+        return {
+            membership,
+            dailyLimit,
+            used,
+            remaining,
+            canAnalyze: remaining > 0,
+        };
+    } catch (error) {
+        console.error('Get stock quota status error:', error);
+        return getDefaultStockQuota();
+    }
+}
+
+// Check if user can analyze stock
+export async function checkStockQuota(userId: string): Promise<{
+    allowed: boolean;
+    message?: string;
+    quotaStatus: StockQuotaStatus;
+}> {
+    if (!isTursoConfigured()) {
+        return {
+            allowed: true,
+            quotaStatus: getDefaultStockQuota(),
+        };
+    }
+
+    const status = await getStockQuotaStatus(userId);
+
+    if (!status.canAnalyze) {
+        return {
+            allowed: false,
+            message: `Quota analisa saham harian Anda sudah habis (${status.used}/${status.dailyLimit}). Upgrade paket untuk lebih banyak analisa.`,
+            quotaStatus: status,
+        };
+    }
+
+    return {
+        allowed: true,
+        quotaStatus: status,
+    };
+}
+
+// Use stock quota
+export async function useStockQuota(userId: string): Promise<boolean> {
+    const turso = getTursoClient();
+    if (!turso) return true;
+
+    try {
+        const today = getTodayDate();
+
+        // Try to update existing record
+        const updateResult = await turso.execute({
+            sql: 'UPDATE stock_quota_usage SET count = count + 1 WHERE user_id = ? AND date = ?',
+            args: [userId, today],
+        });
+
+        // If no rows updated, insert new record
+        if (updateResult.rowsAffected === 0) {
+            await turso.execute({
+                sql: 'INSERT INTO stock_quota_usage (user_id, date, count) VALUES (?, ?, 1)',
+                args: [userId, today],
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Use stock quota error:', error);
         return false;
     }
 }
