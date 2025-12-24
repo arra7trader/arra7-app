@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,14 @@ interface StockData {
     historicalData: Array<{ date: string; close: number }>;
 }
 
+interface QuotaStatus {
+    membership: string;
+    dailyLimit: number | string;
+    used: number;
+    remaining: number | string;
+    canAnalyze: boolean;
+}
+
 export default function AnalisaSahamPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -29,6 +37,26 @@ export default function AnalisaSahamPage() {
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [quota, setQuota] = useState<QuotaStatus | null>(null);
+
+    // Fetch quota on mount and after analysis
+    const fetchQuota = async () => {
+        try {
+            const res = await fetch('/api/stock/quota');
+            const data = await res.json();
+            if (data.status === 'success') {
+                setQuota(data.data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch quota:', err);
+        }
+    };
+
+    useEffect(() => {
+        if (session?.user) {
+            fetchQuota();
+        }
+    }, [session]);
 
     // Redirect if not authenticated
     if (status === 'unauthenticated') {
@@ -83,6 +111,8 @@ export default function AnalisaSahamPage() {
 
             if (data.status === 'success') {
                 setAnalysis(data.analysis);
+                // Refresh quota after successful analysis
+                fetchQuota();
             } else {
                 setError(data.message || 'Gagal menganalisa saham');
             }
@@ -130,6 +160,67 @@ export default function AnalisaSahamPage() {
                         Analisa fundamental & teknikal saham IDX dengan AI
                     </p>
                 </motion.div>
+
+                {/* Quota Indicator */}
+                {quota && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="glass rounded-xl p-4 border border-[#1F2937] mb-6"
+                    >
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${quota.membership === 'VVIP'
+                                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                        : quota.membership === 'PRO'
+                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                            : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                                    }`}>
+                                    {quota.membership}
+                                </div>
+                                <span className="text-sm text-[#94A3B8]">Quota Analisa Saham Hari Ini</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                    <div className="text-lg font-bold">
+                                        {typeof quota.remaining === 'string' ? (
+                                            <span className="text-amber-400">∞ Unlimited</span>
+                                        ) : (
+                                            <>
+                                                <span className={quota.remaining > 0 ? 'text-green-400' : 'text-red-400'}>
+                                                    {quota.remaining}
+                                                </span>
+                                                <span className="text-[#64748B]">/{quota.dailyLimit}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="text-xs text-[#64748B]">
+                                        {typeof quota.remaining === 'string'
+                                            ? 'Analisa tanpa batas'
+                                            : `${quota.used} sudah digunakan`
+                                        }
+                                    </div>
+                                </div>
+                                {typeof quota.dailyLimit === 'number' && (
+                                    <div className="w-24 h-2 bg-[#1F2937] rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all ${quota.remaining === 0
+                                                    ? 'bg-red-500'
+                                                    : (quota.used / quota.dailyLimit) > 0.7
+                                                        ? 'bg-yellow-500'
+                                                        : 'bg-green-500'
+                                                }`}
+                                            style={{
+                                                width: `${Math.max(0, 100 - (quota.used / quota.dailyLimit * 100))}%`
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Search Box */}
                 <motion.div
