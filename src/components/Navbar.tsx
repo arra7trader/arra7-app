@@ -127,6 +127,23 @@ export default function Navbar() {
                                                     <div className="text-xs text-[#64748B]">Automated trading bots</div>
                                                 </div>
                                             </Link>
+                                            <div className="h-px bg-[#1F2937] my-1" />
+                                            <Link
+                                                href="/analisa-saham"
+                                                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors group"
+                                            >
+                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-600/20 flex items-center justify-center">
+                                                    <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-white group-hover:text-green-400 transition-colors">
+                                                        Analisa Saham
+                                                    </div>
+                                                    <div className="text-xs text-[#64748B]">AI stock analysis IDX</div>
+                                                </div>
+                                            </Link>
                                         </motion.div>
                                     </Popover.Content>
                                 </Popover.Portal>
