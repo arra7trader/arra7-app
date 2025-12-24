@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -20,14 +20,6 @@ interface StockData {
     historicalData: Array<{ date: string; close: number }>;
 }
 
-interface TrendingStock {
-    symbol: string;
-    name: string;
-    price?: number;
-    changePercent?: number;
-    volume?: number;
-}
-
 export default function AnalisaSahamPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -37,26 +29,6 @@ export default function AnalisaSahamPage() {
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [trendingStocks, setTrendingStocks] = useState<TrendingStock[]>([]);
-    const [loadingTrending, setLoadingTrending] = useState(true);
-
-    // Fetch trending stocks on mount
-    useEffect(() => {
-        const fetchTrending = async () => {
-            try {
-                const res = await fetch('/api/stock/trending');
-                const data = await res.json();
-                if (data.status === 'success') {
-                    setTrendingStocks(data.data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch trending stocks:', err);
-            } finally {
-                setLoadingTrending(false);
-            }
-        };
-        fetchTrending();
-    }, []);
 
     // Redirect if not authenticated
     if (status === 'unauthenticated') {
@@ -196,34 +168,6 @@ export default function AnalisaSahamPage() {
                             )}
                         </button>
                     </form>
-
-                    {/* Trending Stocks */}
-                    <div className="mt-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xl">🔥</span>
-                            <p className="text-sm text-[#64748B]">Saham Trending Saat Ini:</p>
-                            {loadingTrending && (
-                                <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            )}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {trendingStocks.map((stock) => (
-                                <button
-                                    key={stock.symbol}
-                                    onClick={() => handleQuickSelect(stock.symbol)}
-                                    className="group px-3 py-1.5 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm transition-colors flex items-center gap-2"
-                                    title={stock.name}
-                                >
-                                    <span className="font-medium">{stock.symbol}</span>
-                                    {stock.changePercent !== undefined && (
-                                        <span className={`text-xs ${stock.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </motion.div>
 
                 {/* Error */}
