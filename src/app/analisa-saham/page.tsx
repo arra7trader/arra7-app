@@ -292,21 +292,277 @@ export default function AnalisaSahamPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="glass rounded-2xl p-6 border border-[#1F2937]"
+                            className="glass rounded-2xl border border-[#1F2937] overflow-hidden"
                         >
-                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                <span className="text-2xl">🤖</span>
-                                Hasil Analisa AI
-                            </h3>
-                            <div className="bg-[#12141A] rounded-xl p-6 overflow-x-auto">
-                                <pre className="whitespace-pre-wrap text-sm text-[#E2E8F0] font-sans leading-relaxed">
-                                    {analysis}
-                                </pre>
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-4 border-b border-[#1F2937]">
+                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <span className="text-2xl">🤖</span>
+                                    ARRA Institutional Research
+                                </h3>
+                            </div>
+
+                            {/* Analysis Content */}
+                            <div className="p-6">
+                                <div
+                                    className="stock-analysis-content"
+                                    dangerouslySetInnerHTML={{
+                                        __html: formatStockAnalysis(analysis)
+                                    }}
+                                />
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Custom Styles for Stock Analysis */}
+            <style jsx global>{`
+                .stock-analysis-content {
+                    font-size: 14px;
+                    line-height: 1.7;
+                    color: #E2E8F0;
+                }
+                
+                .stock-analysis-content .section {
+                    margin-bottom: 20px;
+                    padding: 16px;
+                    background: #12141A;
+                    border-radius: 12px;
+                    border: 1px solid #1F2937;
+                }
+                
+                .stock-analysis-content .section-title {
+                    font-size: 16px;
+                    font-weight: 700;
+                    margin-bottom: 12px;
+                    padding-bottom: 8px;
+                    border-bottom: 1px solid #1F2937;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                
+                .stock-analysis-content .verdict-box {
+                    background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+                    padding: 16px 24px;
+                    border-radius: 12px;
+                    text-align: center;
+                    margin: 16px 0;
+                }
+                
+                .stock-analysis-content .verdict-box.sell {
+                    background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+                }
+                
+                .stock-analysis-content .verdict-box.hold {
+                    background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+                }
+                
+                .stock-analysis-content .verdict-text {
+                    font-size: 24px;
+                    font-weight: 800;
+                    color: white;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }
+                
+                .stock-analysis-content .score-box {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+                    padding: 12px 20px;
+                    border-radius: 12px;
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: white;
+                    margin: 8px 0;
+                }
+                
+                .stock-analysis-content .metric-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 12px;
+                    margin: 12px 0;
+                }
+                
+                .stock-analysis-content .metric-item {
+                    background: #1A1D24;
+                    padding: 12px;
+                    border-radius: 8px;
+                    border: 1px solid #1F2937;
+                }
+                
+                .stock-analysis-content .metric-label {
+                    font-size: 12px;
+                    color: #64748B;
+                    margin-bottom: 4px;
+                }
+                
+                .stock-analysis-content .metric-value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #E2E8F0;
+                }
+                
+                .stock-analysis-content .stars {
+                    color: #F59E0B;
+                }
+                
+                .stock-analysis-content .bullish {
+                    color: #10B981;
+                }
+                
+                .stock-analysis-content .bearish {
+                    color: #EF4444;
+                }
+                
+                .stock-analysis-content .neutral {
+                    color: #F59E0B;
+                }
+                
+                .stock-analysis-content ul {
+                    list-style: none;
+                    padding: 0;
+                    margin: 8px 0;
+                }
+                
+                .stock-analysis-content li {
+                    padding: 6px 0;
+                    padding-left: 20px;
+                    position: relative;
+                }
+                
+                .stock-analysis-content li::before {
+                    content: "•";
+                    position: absolute;
+                    left: 0;
+                    color: #3B82F6;
+                }
+                
+                .stock-analysis-content .risk-item::before {
+                    content: "⚠️";
+                }
+                
+                .stock-analysis-content .thesis-item::before {
+                    content: "💡";
+                }
+                
+                .stock-analysis-content .action-table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    margin: 12px 0;
+                }
+                
+                .stock-analysis-content .action-table th,
+                .stock-analysis-content .action-table td {
+                    padding: 10px 12px;
+                    text-align: left;
+                    border-bottom: 1px solid #1F2937;
+                }
+                
+                .stock-analysis-content .action-table th {
+                    background: #1A1D24;
+                    font-weight: 600;
+                    color: #94A3B8;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                }
+                
+                .stock-analysis-content .action-table tr:last-child td {
+                    border-bottom: none;
+                }
+                
+                .stock-analysis-content .highlight {
+                    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 700;
+                }
+                
+                .stock-analysis-content .bottom-line {
+                    background: linear-gradient(135deg, #1E3A5F 0%, #1E293B 100%);
+                    padding: 16px;
+                    border-radius: 12px;
+                    border-left: 4px solid #3B82F6;
+                    font-weight: 500;
+                }
+                
+                .stock-analysis-content .disclaimer {
+                    font-size: 12px;
+                    color: #64748B;
+                    font-style: italic;
+                    margin-top: 16px;
+                    padding-top: 16px;
+                    border-top: 1px solid #1F2937;
+                }
+            `}</style>
         </div>
     );
+}
+
+// Function to format analysis text to HTML
+function formatStockAnalysis(text: string): string {
+    let html = text;
+
+    // Clean markdown
+    html = html.replace(/\*\*/g, '');
+    html = html.replace(/\*/g, '');
+    html = html.replace(/`/g, '');
+
+    // Overall Score
+    html = html.replace(
+        /📊 OVERALL SCORE:\s*(\d+)\/10/gi,
+        '<div class="section"><div class="score-box">📊 OVERALL SCORE: $1/10</div></div>'
+    );
+
+    // Verdict detection
+    const isSell = /SELL/i.test(html) && !/BUY/i.test(html);
+    const isHold = /HOLD/i.test(html) && !/BUY/i.test(html) && !/SELL/i.test(html);
+    const verdictClass = isSell ? 'sell' : isHold ? 'hold' : '';
+
+    // Verdict box
+    html = html.replace(
+        /🚀\s*(STRONG BUY|BUY|HOLD|SELL|STRONG SELL)/gi,
+        `<div class="verdict-box ${verdictClass}"><div class="verdict-text">🚀 $1</div></div>`
+    );
+
+    // Section headers
+    html = html.replace(/🏢 COMPANY SNAPSHOT/gi, '<div class="section"><div class="section-title">🏢 Company Snapshot</div>');
+    html = html.replace(/📊 FUNDAMENTAL SCORECARD/gi, '<div class="section"><div class="section-title">📊 Fundamental Scorecard</div>');
+    html = html.replace(/📈 TECHNICAL OUTLOOK/gi, '<div class="section"><div class="section-title">📈 Technical Outlook</div>');
+    html = html.replace(/🎯 VERDICT & ACTION/gi, '<div class="section"><div class="section-title">🎯 Verdict & Action</div>');
+    html = html.replace(/💡 INVESTMENT THESIS/gi, '<div class="section"><div class="section-title">💡 Investment Thesis</div>');
+    html = html.replace(/⚠️ KEY RISKS/gi, '<div class="section"><div class="section-title">⚠️ Key Risks</div>');
+    html = html.replace(/📌 BOTTOM LINE/gi, '<div class="section"><div class="section-title">📌 Bottom Line</div><div class="bottom-line">');
+
+    // Stars
+    html = html.replace(/⭐/g, '<span class="stars">⭐</span>');
+
+    // Trend colors
+    html = html.replace(/🟢\s*BULLISH/gi, '<span class="bullish">🟢 BULLISH</span>');
+    html = html.replace(/🔴\s*BEARISH/gi, '<span class="bearish">🔴 BEARISH</span>');
+    html = html.replace(/🟡\s*SIDEWAYS/gi, '<span class="neutral">🟡 SIDEWAYS</span>');
+
+    // Clean separators
+    html = html.replace(/━+/g, '');
+
+    // Disclaimer
+    html = html.replace(
+        /⚠️\s*_?Disclaimer:?\s*(.*?)_?$/gim,
+        '</div><div class="disclaimer">⚠️ Disclaimer: $1</div>'
+    );
+
+    // Close sections properly
+    html = html.replace(/\n\n/g, '</div><div class="section">');
+
+    // Line breaks
+    html = html.replace(/\n/g, '<br>');
+
+    // Clean up empty sections
+    html = html.replace(/<div class="section"><\/div>/g, '');
+    html = html.replace(/<div class="section"><br>/g, '<div class="section">');
+
+    return html;
 }
