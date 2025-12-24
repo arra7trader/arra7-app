@@ -26,7 +26,6 @@ export default function Navbar() {
         { label: t('home'), href: '/' },
         { label: t('indicators'), href: '/products/indicators' },
         { label: t('expertAdvisors'), href: '/products/expert-advisors' },
-        { label: 'Analisa Saham', href: '/analisa-saham' },
         { label: t('pricing'), href: '/pricing' },
     ];
 

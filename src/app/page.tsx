@@ -106,13 +106,13 @@ export default function Home() {
                 </motion.button>
               </Link>
 
-              <Link href="/products/indicators">
+              <Link href={session ? '/analisa-saham' : '/login?callbackUrl=/analisa-saham'}>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-8 py-4 rounded-xl border border-[#1F2937] hover:border-[#374151] bg-[#12141A]/50 hover:bg-[#12141A] text-white font-semibold text-lg transition-all"
+                  className="px-8 py-4 rounded-xl border border-[#1F2937] hover:border-green-500/50 bg-[#12141A]/50 hover:bg-green-500/10 text-white font-semibold text-lg transition-all flex items-center gap-2"
                 >
-                  {t('ctaSecondary')}
+                  📊 Analisa Saham
                 </motion.button>
               </Link>
             </motion.div>
