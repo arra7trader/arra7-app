@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -20,21 +20,13 @@ interface StockData {
     historicalData: Array<{ date: string; close: number }>;
 }
 
-// Popular Indonesian stocks for quick selection
-const POPULAR_STOCKS = [
-    { symbol: 'BBCA', name: 'Bank Central Asia' },
-    { symbol: 'BBRI', name: 'Bank Rakyat Indonesia' },
-    { symbol: 'BMRI', name: 'Bank Mandiri' },
-    { symbol: 'TLKM', name: 'Telkom Indonesia' },
-    { symbol: 'ASII', name: 'Astra International' },
-    { symbol: 'UNVR', name: 'Unilever Indonesia' },
-    { symbol: 'ICBP', name: 'Indofood CBP' },
-    { symbol: 'GOTO', name: 'GoTo Gojek Tokopedia' },
-    { symbol: 'BUKA', name: 'Bukalapak' },
-    { symbol: 'ACES', name: 'Ace Hardware' },
-    { symbol: 'ANTM', name: 'Aneka Tambang' },
-    { symbol: 'INCO', name: 'Vale Indonesia' },
-];
+interface TrendingStock {
+    symbol: string;
+    name: string;
+    price?: number;
+    changePercent?: number;
+    volume?: number;
+}
 
 export default function AnalisaSahamPage() {
     const { data: session, status } = useSession();
@@ -45,6 +37,26 @@ export default function AnalisaSahamPage() {
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [trendingStocks, setTrendingStocks] = useState<TrendingStock[]>([]);
+    const [loadingTrending, setLoadingTrending] = useState(true);
+
+    // Fetch trending stocks on mount
+    useEffect(() => {
+        const fetchTrending = async () => {
+            try {
+                const res = await fetch('/api/stock/trending');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    setTrendingStocks(data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch trending stocks:', err);
+            } finally {
+                setLoadingTrending(false);
+            }
+        };
+        fetchTrending();
+    }, []);
 
     // Redirect if not authenticated
     if (status === 'unauthenticated') {
@@ -185,18 +197,29 @@ export default function AnalisaSahamPage() {
                         </button>
                     </form>
 
-                    {/* Quick Select */}
+                    {/* Trending Stocks */}
                     <div className="mt-4">
-                        <p className="text-sm text-[#64748B] mb-2">Saham Populer:</p>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xl">🔥</span>
+                            <p className="text-sm text-[#64748B]">Saham Trending Saat Ini:</p>
+                            {loadingTrending && (
+                                <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            )}
+                        </div>
                         <div className="flex flex-wrap gap-2">
-                            {POPULAR_STOCKS.map((stock) => (
+                            {trendingStocks.map((stock) => (
                                 <button
                                     key={stock.symbol}
                                     onClick={() => handleQuickSelect(stock.symbol)}
-                                    className="px-3 py-1.5 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm transition-colors"
+                                    className="group px-3 py-1.5 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm transition-colors flex items-center gap-2"
                                     title={stock.name}
                                 >
-                                    {stock.symbol}
+                                    <span className="font-medium">{stock.symbol}</span>
+                                    {stock.changePercent !== undefined && (
+                                        <span className={`text-xs ${stock.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%
+                                        </span>
+                                    )}
                                 </button>
                             ))}
                         </div>
