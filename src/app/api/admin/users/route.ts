@@ -66,33 +66,54 @@ export async function GET(request: NextRequest) {
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
 
-        // Try to get today's usage data (may fail if table doesn't exist)
-        let usageMap: Record<string, number> = {};
+        // Try to get today's FOREX usage data
+        let forexUsageMap: Record<string, number> = {};
         try {
             const usageResult = await turso.execute({
                 sql: `SELECT user_id, count FROM quota_usage WHERE date = ?`,
                 args: [today],
             });
             usageResult.rows.forEach((row: any) => {
-                usageMap[row.user_id as string] = row.count as number;
+                forexUsageMap[row.user_id as string] = row.count as number;
             });
-            console.log('[ADMIN] Usage data loaded for', Object.keys(usageMap).length, 'users');
+            console.log('[ADMIN] Forex usage data loaded for', Object.keys(forexUsageMap).length, 'users');
         } catch (usageError) {
-            console.log('[ADMIN] Could not load usage data:', usageError);
+            console.log('[ADMIN] Could not load forex usage data:', usageError);
+        }
+
+        // Try to get today's STOCK usage data
+        let stockUsageMap: Record<string, number> = {};
+        try {
+            const stockUsageResult = await turso.execute({
+                sql: `SELECT user_id, count FROM stock_quota_usage WHERE date = ?`,
+                args: [today],
+            });
+            stockUsageResult.rows.forEach((row: any) => {
+                stockUsageMap[row.user_id as string] = row.count as number;
+            });
+            console.log('[ADMIN] Stock usage data loaded for', Object.keys(stockUsageMap).length, 'users');
+        } catch (stockUsageError) {
+            console.log('[ADMIN] Could not load stock usage data:', stockUsageError);
         }
 
         // Safely map users with fallbacks for missing columns
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const users = result.rows.map((row: any) => ({
-            id: row.id || '',
-            email: row.email || '',
-            name: row.name || '',
-            membership: row.membership || 'BASIC',
-            membershipExpires: row.membership_expires || null,
-            createdAt: row.created_at || null,
-            updatedAt: row.updated_at || null,
-            todayUsage: usageMap[row.id as string] || 0,
-        }));
+        const users = result.rows.map((row: any) => {
+            const forexUsage = forexUsageMap[row.id as string] || 0;
+            const stockUsage = stockUsageMap[row.id as string] || 0;
+            return {
+                id: row.id || '',
+                email: row.email || '',
+                name: row.name || '',
+                membership: row.membership || 'BASIC',
+                membershipExpires: row.membership_expires || null,
+                createdAt: row.created_at || null,
+                updatedAt: row.updated_at || null,
+                todayUsage: forexUsage + stockUsage, // Combined usage
+                forexUsage,
+                stockUsage,
+            };
+        });
 
         console.log('[ADMIN] Returning', users.length, 'users');
 

@@ -14,6 +14,8 @@ interface User {
     membershipExpires: string | null;
     createdAt: string;
     todayUsage: number;
+    forexUsage: number;
+    stockUsage: number;
 }
 
 interface UpgradeNotification {
@@ -365,7 +367,14 @@ Tim ARRA7`;
                                                 : '-'
                                             }
                                         </td>
-                                        <td className="p-4 text-sm">{user.todayUsage}x</td>
+                                        <td className="p-4 text-sm">
+                                            <div className="flex flex-col">
+                                                <span className="text-white">{user.todayUsage}x total</span>
+                                                <span className="text-xs text-[#64748B]">
+                                                    Forex: {user.forexUsage || 0} | Saham: {user.stockUsage || 0}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td className="p-4">
                                             <div className="flex gap-2">
                                                 {user.membership !== 'PRO' && (
