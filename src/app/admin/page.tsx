@@ -323,6 +323,7 @@ Tim ARRA7`;
                             <thead className="bg-[#12141A]">
                                 <tr>
                                     <th className="text-left p-4 text-sm text-[#64748B]">User</th>
+                                    <th className="text-left p-4 text-sm text-[#64748B]">Tanggal Daftar</th>
                                     <th className="text-left p-4 text-sm text-[#64748B]">Membership</th>
                                     <th className="text-left p-4 text-sm text-[#64748B]">Expires</th>
                                     <th className="text-left p-4 text-sm text-[#64748B]">Usage Today</th>
@@ -337,6 +338,18 @@ Tim ARRA7`;
                                                 <p className="font-medium">{user.name || 'No Name'}</p>
                                                 <p className="text-sm text-[#64748B]">{user.email}</p>
                                             </div>
+                                        </td>
+                                        <td className="p-4 text-sm text-[#94A3B8]">
+                                            {user.createdAt
+                                                ? new Date(user.createdAt).toLocaleDateString('id-ID', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })
+                                                : '-'
+                                            }
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${user.membership === 'VVIP' ? 'bg-amber-500/20 text-amber-400' :
