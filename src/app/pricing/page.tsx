@@ -141,18 +141,12 @@ export default function PricingPage() {
             return;
         }
 
-        // Redirect to QRIS checkout page
-        window.location.href = `/payment/checkout?plan=${planId}`;
+        // Redirect to bank transfer page
+        window.location.href = `/payment/transfer?plan=${planId}`;
     };
 
     return (
         <div className="relative min-h-screen pt-28 lg:pt-36 pb-20 px-4 sm:px-6 lg:px-8">
-            {/* Midtrans Snap Script */}
-            <Script
-                src="https://app.midtrans.com/snap/snap.js"
-                data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-                onLoad={() => setSnapReady(true)}
-            />
 
             {/* Background */}
             <div className="absolute inset-0 bg-grid opacity-20" />
