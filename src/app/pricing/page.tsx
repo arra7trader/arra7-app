@@ -62,7 +62,7 @@ const PRICING_PLANS = [
             { text: 'Semua Timeframe', included: true },
             { text: 'Akses Semua Pairs + Crypto', included: true },
             { text: 'Economic Calendar', included: true },
-            { text: 'Free 1 Indikator ATAU 1 EA (pilih salah satu)', included: true },
+            { text: 'Free 1 Indikator ATAU 1 EA (pilih salah satu)', included: false },
         ],
         cta: '🎄 Ambil Promo Natal!',
         popular: true,
