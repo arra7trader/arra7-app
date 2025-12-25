@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { generateDailyReport, getPerformanceSummary } from '@/lib/signal-tracker';
+import { sendTelegramMessage, isTelegramConfigured } from '@/lib/telegram';
 import getTursoClient from '@/lib/turso';
 
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
                 data: {
                     report,
                     summary,
+                    telegramConfigured: isTelegramConfigured(),
                 },
             });
         }
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { action, report, channelId } = body;
+        const { action, report } = body;
 
         if (action === 'send_telegram') {
             if (!report) {
@@ -85,35 +87,19 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            // Send to Telegram using bot
-            const botToken = process.env.TELEGRAM_BOT_TOKEN;
-            const chatId = channelId || process.env.TELEGRAM_CHANNEL_ID;
-
-            if (!botToken || !chatId) {
+            if (!isTelegramConfigured()) {
                 return NextResponse.json(
-                    { status: 'error', message: 'Telegram bot not configured' },
+                    { status: 'error', message: 'Telegram bot not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID in environment variables.' },
                     { status: 400 }
                 );
             }
 
-            const telegramResponse = await fetch(
-                `https://api.telegram.org/bot${botToken}/sendMessage`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: report,
-                        parse_mode: 'Markdown',
-                    }),
-                }
-            );
+            // Send using existing telegram utility
+            const result = await sendTelegramMessage(report, 'Markdown');
 
-            const telegramResult = await telegramResponse.json();
-
-            if (!telegramResult.ok) {
+            if (!result.success) {
                 return NextResponse.json(
-                    { status: 'error', message: telegramResult.description || 'Telegram send failed' },
+                    { status: 'error', message: result.error || 'Telegram send failed' },
                     { status: 400 }
                 );
             }
