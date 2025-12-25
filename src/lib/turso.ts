@@ -80,6 +80,11 @@ export async function initDatabase(): Promise<boolean> {
             { column: 'created_at', sql: `ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP` },
             { column: 'updated_at', sql: `ALTER TABLE users ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP` },
             { column: 'image', sql: `ALTER TABLE users ADD COLUMN image TEXT` },
+            // Geo-location columns
+            { column: 'last_login_ip', sql: `ALTER TABLE users ADD COLUMN last_login_ip TEXT` },
+            { column: 'last_login_country', sql: `ALTER TABLE users ADD COLUMN last_login_country TEXT` },
+            { column: 'last_login_city', sql: `ALTER TABLE users ADD COLUMN last_login_city TEXT` },
+            { column: 'last_login_at', sql: `ALTER TABLE users ADD COLUMN last_login_at DATETIME` },
         ];
 
         for (const migration of migrations) {
@@ -161,6 +166,33 @@ export async function updateUserMembership(userId: string, membership: string): 
         return true;
     } catch (error) {
         console.error('Update membership error:', error);
+        return false;
+    }
+}
+
+// Update user's geo-location data on login
+export async function updateUserGeoLocation(userId: string, geoData: {
+    ip?: string;
+    country?: string;
+    city?: string;
+}): Promise<boolean> {
+    const turso = getTursoClient();
+    if (!turso) return false;
+
+    try {
+        await turso.execute({
+            sql: `UPDATE users SET 
+                last_login_ip = ?,
+                last_login_country = ?,
+                last_login_city = ?,
+                last_login_at = datetime('now')
+                WHERE id = ?`,
+            args: [geoData.ip || null, geoData.country || null, geoData.city || null, userId],
+        });
+        console.log(`[GEO] Updated location for user ${userId}: ${geoData.city}, ${geoData.country}`);
+        return true;
+    } catch (error) {
+        console.error('Update geo-location error:', error);
         return false;
     }
 }

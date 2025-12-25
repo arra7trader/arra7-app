@@ -16,6 +16,11 @@ interface User {
     todayUsage: number;
     forexUsage: number;
     stockUsage: number;
+    // Geo-location
+    lastLoginIp: string | null;
+    lastLoginCountry: string | null;
+    lastLoginCity: string | null;
+    lastLoginAt: string | null;
 }
 
 interface UpgradeNotification {
@@ -325,6 +330,7 @@ Tim ARRA7`;
                             <thead className="bg-[#12141A]">
                                 <tr>
                                     <th className="text-left p-4 text-sm text-[#64748B]">User</th>
+                                    <th className="text-left p-4 text-sm text-[#64748B]">Lokasi Login</th>
                                     <th className="text-left p-4 text-sm text-[#64748B]">Tanggal Daftar</th>
                                     <th className="text-left p-4 text-sm text-[#64748B]">Membership</th>
                                     <th className="text-left p-4 text-sm text-[#64748B]">Expires</th>
@@ -340,6 +346,27 @@ Tim ARRA7`;
                                                 <p className="font-medium">{user.name || 'No Name'}</p>
                                                 <p className="text-sm text-[#64748B]">{user.email}</p>
                                             </div>
+                                        </td>
+                                        <td className="p-4 text-sm">
+                                            {user.lastLoginCity || user.lastLoginCountry ? (
+                                                <div className="flex flex-col">
+                                                    <span className="text-white">
+                                                        📍 {user.lastLoginCity}{user.lastLoginCity && user.lastLoginCountry ? ', ' : ''}{user.lastLoginCountry}
+                                                    </span>
+                                                    {user.lastLoginAt && (
+                                                        <span className="text-xs text-[#64748B]">
+                                                            {new Date(user.lastLoginAt).toLocaleDateString('id-ID', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-[#64748B]">-</span>
+                                            )}
                                         </td>
                                         <td className="p-4 text-sm text-[#94A3B8]">
                                             {user.createdAt

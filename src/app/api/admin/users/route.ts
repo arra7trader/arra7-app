@@ -112,6 +112,11 @@ export async function GET(request: NextRequest) {
                 todayUsage: forexUsage + stockUsage, // Combined usage
                 forexUsage,
                 stockUsage,
+                // Geo-location data
+                lastLoginIp: row.last_login_ip || null,
+                lastLoginCountry: row.last_login_country || null,
+                lastLoginCity: row.last_login_city || null,
+                lastLoginAt: row.last_login_at || null,
             };
         });
 
