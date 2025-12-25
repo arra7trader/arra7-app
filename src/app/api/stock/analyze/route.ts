@@ -228,6 +228,19 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
             // Don't fail the request if history save fails
         }
 
+        // Save signal for performance tracking
+        try {
+            const { parseSignalFromAnalysis, saveSignal } = await import('@/lib/signal-tracker');
+            if (analysis) {
+                const signalData = parseSignalFromAnalysis(analysis, 'stock', symbol);
+                if (signalData) {
+                    await saveSignal(signalData);
+                }
+            }
+        } catch (signalError) {
+            console.error('Failed to save signal:', signalError);
+        }
+
         return NextResponse.json({
             status: 'success',
             analysis,

@@ -86,6 +86,44 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+        // Create ai_signals table for performance tracking
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS ai_signals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        timeframe TEXT,
+        direction TEXT NOT NULL,
+        entry_price REAL NOT NULL,
+        stop_loss REAL NOT NULL,
+        take_profit_1 REAL NOT NULL,
+        take_profit_2 REAL,
+        confidence INTEGER,
+        status TEXT DEFAULT 'PENDING',
+        result_price REAL,
+        pips_result REAL,
+        verified_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+        // Create daily_reports table for admin broadcast
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS daily_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL UNIQUE,
+        total_signals INTEGER DEFAULT 0,
+        tp_hit INTEGER DEFAULT 0,
+        sl_hit INTEGER DEFAULT 0,
+        pending INTEGER DEFAULT 0,
+        win_rate REAL DEFAULT 0,
+        report_text TEXT,
+        sent_to_telegram INTEGER DEFAULT 0,
+        sent_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
         // Migrations: Add any missing columns to users table
         // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
         const migrations = [

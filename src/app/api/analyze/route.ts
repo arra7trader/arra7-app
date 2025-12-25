@@ -89,6 +89,19 @@ export async function POST(request: NextRequest) {
             console.error('Failed to save to history:', historyError);
         }
 
+        // Save signal for performance tracking
+        try {
+            const { parseSignalFromAnalysis, saveSignal } = await import('@/lib/signal-tracker');
+            if (aiResult.analysis) {
+                const signalData = parseSignalFromAnalysis(aiResult.analysis, 'forex', pair, timeframe);
+                if (signalData) {
+                    await saveSignal(signalData);
+                }
+            }
+        } catch (signalError) {
+            console.error('Failed to save signal:', signalError);
+        }
+
         return NextResponse.json({
             status: 'success',
             result: aiResult.formattedHtml,
