@@ -20,12 +20,17 @@ declare global {
     }
 }
 
+// Christmas Promo ends: December 26, 2025 at 23:59:59 WIB (UTC+7)
+const CHRISTMAS_PROMO_END = new Date('2025-12-26T23:59:59+07:00');
+const isChristmasPromoActive = () => new Date() < CHRISTMAS_PROMO_END;
+
 const PRICING_PLANS = [
     {
         id: 'BASIC',
         name: 'Basic',
         price: 'FREE',
         originalPrice: null,
+        promoPrice: null,
         discount: null,
         period: '',
         description: 'Untuk pemula yang ingin mencoba',
@@ -47,7 +52,8 @@ const PRICING_PLANS = [
         name: 'Pro',
         price: 'Rp 149K',
         originalPrice: 'Rp 299K',
-        discount: 50,
+        promoPrice: 'Rp 99K', // Christmas promo price!
+        discount: 67, // 99K dari 299K = 67% off
         period: '/bulan',
         description: 'Untuk trader aktif',
         features: [
@@ -58,7 +64,7 @@ const PRICING_PLANS = [
             { text: 'Economic Calendar', included: true },
             { text: 'Free 1 Indikator ATAU 1 EA (pilih salah satu)', included: true },
         ],
-        cta: 'Upgrade ke Pro',
+        cta: '🎄 Ambil Promo Natal!',
         popular: true,
         gradient: 'from-blue-500 to-purple-500',
     },
@@ -67,6 +73,7 @@ const PRICING_PLANS = [
         name: 'VVIP',
         price: 'Rp 399K',
         originalPrice: 'Rp 799K',
+        promoPrice: null,
         discount: 50,
         period: '/bulan',
         description: 'Untuk trader profesional',
@@ -89,40 +96,28 @@ export default function PricingPage() {
     const t = useTranslations('nav');
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
     const [snapReady, setSnapReady] = useState(false);
-    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [christmasCountdown, setChristmasCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [isPromoActive, setIsPromoActive] = useState(false);
 
-    // Countdown timer - resets to 14 days from first visit
+    // Christmas Promo Countdown - Fixed end date
     useEffect(() => {
-        const getEndDate = () => {
-            const stored = localStorage.getItem('arra7_promo_end');
-            if (stored) {
-                return new Date(stored);
-            }
-            // Set promo end to 14 days from now
-            const endDate = new Date();
-            endDate.setDate(endDate.getDate() + 14);
-            localStorage.setItem('arra7_promo_end', endDate.toISOString());
-            return endDate;
-        };
-
-        const endDate = getEndDate();
-
         const updateCountdown = () => {
             const now = new Date();
-            const diff = endDate.getTime() - now.getTime();
+            const diff = CHRISTMAS_PROMO_END.getTime() - now.getTime();
 
             if (diff <= 0) {
-                // Reset promo for another 14 days
-                localStorage.removeItem('arra7_promo_end');
+                setIsPromoActive(false);
+                setChristmasCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
                 return;
             }
 
+            setIsPromoActive(true);
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            setCountdown({ days, hours, minutes, seconds });
+            setChristmasCountdown({ days, hours, minutes, seconds });
         };
 
         updateCountdown();
@@ -154,32 +149,73 @@ export default function PricingPage() {
             <div className="bg-orb bg-orb-purple w-[500px] h-[500px] bottom-0 right-1/4 opacity-15" />
 
             <div className="relative max-w-7xl mx-auto">
-                {/* Promo Countdown Banner */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 p-4 rounded-2xl bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-red-500/20"
-                >
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
-                        <div className="flex items-center gap-2">
-                            <span className="text-2xl">🔥</span>
-                            <span className="font-semibold text-white">PROMO SPESIAL!</span>
-                            <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold animate-pulse">DISKON 50%</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
-                            <span>Berakhir dalam:</span>
-                            <div className="flex gap-1">
-                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.days).padStart(2, '0')}</span>
-                                <span className="text-[#64748B]">:</span>
-                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.hours).padStart(2, '0')}</span>
-                                <span className="text-[#64748B]">:</span>
-                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.minutes).padStart(2, '0')}</span>
-                                <span className="text-[#64748B]">:</span>
-                                <span className="px-2 py-1 bg-[#12141A] rounded font-mono text-white">{String(countdown.seconds).padStart(2, '0')}</span>
+                {/* Christmas Promo Countdown Banner */}
+                {isPromoActive && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-red-600/20 via-green-600/20 to-red-600/20 border-2 border-red-500/40 relative overflow-hidden"
+                    >
+                        {/* Festive decorations */}
+                        <div className="absolute top-0 left-4 text-4xl">🎄</div>
+                        <div className="absolute top-0 right-4 text-4xl">🎁</div>
+                        <div className="absolute -top-2 left-1/4 text-2xl animate-bounce">❄️</div>
+                        <div className="absolute -top-2 right-1/4 text-2xl animate-bounce delay-100">❄️</div>
+
+                        <div className="flex flex-col items-center justify-center gap-4 text-center relative z-10">
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                                <span className="text-3xl">🎅</span>
+                                <span className="font-bold text-2xl text-white">PROMO NATAL SPESIAL!</span>
+                                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-red-500 to-green-500 text-white text-sm font-bold animate-pulse">
+                                    HEMAT 200K!
+                                </span>
                             </div>
+
+                            <div className="text-lg text-white">
+                                Paket <span className="font-bold text-blue-400">PRO</span> cuma{' '}
+                                <span className="font-bold text-3xl text-green-400">Rp 99K</span>
+                                <span className="text-[#94A3B8] line-through ml-2">Rp 299K</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2">
+                                <span className="text-sm text-[#94A3B8]">⏰ Promo berakhir dalam:</span>
+                                <div className="flex gap-2">
+                                    <div className="flex flex-col items-center">
+                                        <span className="px-3 py-2 bg-red-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
+                                            {String(christmasCountdown.days).padStart(2, '0')}
+                                        </span>
+                                        <span className="text-xs text-[#64748B] mt-1">Hari</span>
+                                    </div>
+                                    <span className="text-2xl text-red-400 self-start mt-2">:</span>
+                                    <div className="flex flex-col items-center">
+                                        <span className="px-3 py-2 bg-red-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
+                                            {String(christmasCountdown.hours).padStart(2, '0')}
+                                        </span>
+                                        <span className="text-xs text-[#64748B] mt-1">Jam</span>
+                                    </div>
+                                    <span className="text-2xl text-red-400 self-start mt-2">:</span>
+                                    <div className="flex flex-col items-center">
+                                        <span className="px-3 py-2 bg-red-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
+                                            {String(christmasCountdown.minutes).padStart(2, '0')}
+                                        </span>
+                                        <span className="text-xs text-[#64748B] mt-1">Menit</span>
+                                    </div>
+                                    <span className="text-2xl text-red-400 self-start mt-2">:</span>
+                                    <div className="flex flex-col items-center">
+                                        <span className="px-3 py-2 bg-green-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px] animate-pulse">
+                                            {String(christmasCountdown.seconds).padStart(2, '0')}
+                                        </span>
+                                        <span className="text-xs text-[#64748B] mt-1">Detik</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-[#94A3B8]">
+                                🎄 Promo berlaku sampai 26 Desember 2025 pukul 23:59 WIB
+                            </p>
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                )}
 
                 {/* Header */}
                 <motion.div
@@ -252,11 +288,17 @@ export default function PricingPage() {
                                 {plan.originalPrice && (
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-lg text-[#64748B] line-through">{plan.originalPrice}</span>
-                                        <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold">-{plan.discount}%</span>
+                                        {isPromoActive && plan.promoPrice ? (
+                                            <span className="px-2 py-0.5 rounded bg-gradient-to-r from-red-500 to-green-500 text-white text-xs font-bold animate-pulse">
+                                                🎄 NATAL -{plan.discount}%
+                                            </span>
+                                        ) : (
+                                            <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold">-{plan.discount}%</span>
+                                        )}
                                     </div>
                                 )}
                                 <span className={`text-4xl font-bold ${plan.popular ? 'gradient-text' : plan.originalPrice ? 'text-green-400' : ''}`}>
-                                    {plan.price}
+                                    {isPromoActive && plan.promoPrice ? plan.promoPrice : plan.price}
                                 </span>
                                 <span className="text-[#64748B]">{plan.period}</span>
                             </div>
