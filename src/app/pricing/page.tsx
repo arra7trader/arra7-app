@@ -348,7 +348,9 @@ export default function PricingPage() {
                                         Memproses...
                                     </span>
                                 ) : (
-                                    plan.cta
+                                    // Show promo CTA only during active promo for PRO plan
+                                    isPromoActive && plan.id === 'PRO' ? '🎄 Ambil Promo Natal!' :
+                                        plan.id === 'PRO' ? 'Upgrade ke Pro' : plan.cta
                                 )}
                             </motion.button>
                         </motion.div>
