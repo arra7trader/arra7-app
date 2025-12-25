@@ -63,6 +63,24 @@ export async function GET(request: NextRequest) {
 
         console.log('[ADMIN] Query result rows:', result.rows.length);
 
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date().toISOString().split('T')[0];
+
+        // Try to get today's usage data (may fail if table doesn't exist)
+        let usageMap: Record<string, number> = {};
+        try {
+            const usageResult = await turso.execute({
+                sql: `SELECT user_id, count FROM quota_usage WHERE date = ?`,
+                args: [today],
+            });
+            usageResult.rows.forEach((row: any) => {
+                usageMap[row.user_id as string] = row.count as number;
+            });
+            console.log('[ADMIN] Usage data loaded for', Object.keys(usageMap).length, 'users');
+        } catch (usageError) {
+            console.log('[ADMIN] Could not load usage data:', usageError);
+        }
+
         // Safely map users with fallbacks for missing columns
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const users = result.rows.map((row: any) => ({
@@ -73,7 +91,7 @@ export async function GET(request: NextRequest) {
             membershipExpires: row.membership_expires || null,
             createdAt: row.created_at || null,
             updatedAt: row.updated_at || null,
-            todayUsage: 0, // Will be fetched separately if needed
+            todayUsage: usageMap[row.id as string] || 0,
         }));
 
         console.log('[ADMIN] Returning', users.length, 'users');
