@@ -72,6 +72,18 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+        // Migration: Add membership_expires column if it doesn't exist
+        // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch
+        try {
+            await turso.execute(`
+                ALTER TABLE users ADD COLUMN membership_expires DATETIME
+            `);
+            console.log('Added membership_expires column');
+        } catch (alterError) {
+            // Column likely already exists, ignore error
+            console.log('membership_expires column already exists or migration skipped');
+        }
+
         console.log('Database tables initialized');
         return true;
     } catch (error) {
