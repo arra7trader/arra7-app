@@ -6,6 +6,7 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import Navbar from "@/components/Navbar";
 import TelegramWidget from "@/components/TelegramWidget";
 import LocationTracker from "@/components/LocationTracker";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,14 +20,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ARRA7 - Premium Forex Trading Tools",
-  description: "Professional-grade Forex indicators and Expert Advisors designed to give you the edge in the market. Powered by advanced algorithms and real-time analysis.",
-  keywords: ["forex", "trading", "indicators", "expert advisors", "EA", "MT4", "MT5", "technical analysis"],
+  title: "ARRA7 - AI Trading Analysis",
+  description: "Analisa Trading Forex & Saham Indonesia dengan AI Level Institusional. Entry, SL, TP otomatis. Smart Money Concepts.",
+  keywords: ["forex", "saham", "trading", "analisa", "AI", "indonesia", "XAUUSD", "gold", "IDX", "indicators", "expert advisors"],
   authors: [{ name: "ARRA7" }],
+  manifest: "/manifest.json",
+  themeColor: "#3B82F6",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ARRA7",
+  },
   openGraph: {
-    title: "ARRA7 - Premium Forex Trading Tools",
-    description: "Professional-grade Forex indicators and Expert Advisors",
+    title: "ARRA7 - AI Trading Analysis",
+    description: "Analisa Trading Forex & Saham Indonesia dengan AI Level Institusional",
     type: "website",
+    siteName: "ARRA7",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ARRA7 - AI Trading Analysis",
+    description: "Analisa Trading Forex & Saham Indonesia dengan AI",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/icon-180x180.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -47,6 +76,7 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <Navbar />
             <LocationTracker />
+            <ServiceWorkerRegistration />
             <main className="relative">
               {children}
             </main>
