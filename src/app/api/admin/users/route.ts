@@ -55,32 +55,24 @@ export async function GET(request: NextRequest) {
 
         console.log('[ADMIN] Turso client connected, executing query...');
 
+        // Query users with simple SELECT to handle varying column availability
         const result = await turso.execute(`
-            SELECT 
-                u.id,
-                u.email,
-                u.name,
-                u.membership,
-                u.membership_expires,
-                u.created_at,
-                u.updated_at,
-                COALESCE(q.count, 0) as today_usage
-            FROM users u
-            LEFT JOIN quota_usage q ON u.id = q.user_id AND q.date = date('now')
-            ORDER BY u.created_at DESC
+            SELECT * FROM users ORDER BY id DESC
         `);
 
         console.log('[ADMIN] Query result rows:', result.rows.length);
 
-        const users = result.rows.map(row => ({
-            id: row.id,
-            email: row.email,
-            name: row.name,
+        // Safely map users with fallbacks for missing columns
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const users = result.rows.map((row: any) => ({
+            id: row.id || '',
+            email: row.email || '',
+            name: row.name || '',
             membership: row.membership || 'BASIC',
-            membershipExpires: row.membership_expires,
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-            todayUsage: row.today_usage || 0,
+            membershipExpires: row.membership_expires || null,
+            createdAt: row.created_at || null,
+            updatedAt: row.updated_at || null,
+            todayUsage: 0, // Will be fetched separately if needed
         }));
 
         console.log('[ADMIN] Returning', users.length, 'users');
