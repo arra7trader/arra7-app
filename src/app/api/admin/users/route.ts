@@ -16,22 +16,40 @@ export function isAdmin(email: string | null | undefined): boolean {
 // GET all users
 export async function GET(request: NextRequest) {
     try {
+        console.log('[ADMIN] Starting GET users request...');
+
         const session = await getServerSession(authOptions);
+        console.log('[ADMIN] Session:', session?.user?.email || 'No session');
 
         if (!session?.user?.email || !isAdmin(session.user.email)) {
+            console.log('[ADMIN] Unauthorized access attempt');
             return NextResponse.json(
                 { status: 'error', message: 'Unauthorized' },
                 { status: 403 }
             );
         }
 
+        // Debug environment variables
+        console.log('[ADMIN] TURSO_DATABASE_URL configured:', !!process.env.TURSO_DATABASE_URL);
+        console.log('[ADMIN] TURSO_AUTH_TOKEN configured:', !!process.env.TURSO_AUTH_TOKEN);
+
         const turso = getTursoClient();
         if (!turso) {
+            console.log('[ADMIN] ERROR: Turso client is null - database not configured!');
             return NextResponse.json(
-                { status: 'error', message: 'Database not configured' },
+                {
+                    status: 'error',
+                    message: 'Database not configured. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in Vercel environment variables.',
+                    debug: {
+                        hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+                        hasTursoToken: !!process.env.TURSO_AUTH_TOKEN
+                    }
+                },
                 { status: 503 }
             );
         }
+
+        console.log('[ADMIN] Turso client connected, executing query...');
 
         const result = await turso.execute(`
             SELECT 
@@ -48,6 +66,8 @@ export async function GET(request: NextRequest) {
             ORDER BY u.created_at DESC
         `);
 
+        console.log('[ADMIN] Query result rows:', result.rows.length);
+
         const users = result.rows.map(row => ({
             id: row.id,
             email: row.email,
@@ -59,10 +79,16 @@ export async function GET(request: NextRequest) {
             todayUsage: row.today_usage || 0,
         }));
 
+        console.log('[ADMIN] Returning', users.length, 'users');
+
         return NextResponse.json({
             status: 'success',
             users,
             total: users.length,
+            debug: {
+                databaseConnected: true,
+                queryExecuted: true
+            }
         });
 
     } catch (error) {

@@ -52,11 +52,21 @@ export default function AdminDashboard() {
         try {
             const response = await fetch('/api/admin/users');
             const data = await response.json();
+            console.log('Admin API Response:', data);
+
             if (data.status === 'success') {
                 setUsers(data.users);
+            } else {
+                // Show error message from API
+                setMessage({
+                    type: 'error',
+                    text: data.message || 'Failed to fetch users'
+                });
+                console.error('API Error:', data);
             }
         } catch (error) {
             console.error('Fetch users error:', error);
+            setMessage({ type: 'error', text: 'Network error: Failed to fetch users' });
         } finally {
             setLoading(false);
         }
