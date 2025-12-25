@@ -56,8 +56,9 @@ export async function GET(request: NextRequest) {
         console.log('[ADMIN] Turso client connected, executing query...');
 
         // Query users with simple SELECT to handle varying column availability
+        // Order by created_at DESC so newest users appear first
         const result = await turso.execute(`
-            SELECT * FROM users ORDER BY id DESC
+            SELECT * FROM users ORDER BY created_at DESC, id DESC
         `);
 
         console.log('[ADMIN] Query result rows:', result.rows.length);
