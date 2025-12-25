@@ -72,16 +72,24 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
-        // Migration: Add membership_expires column if it doesn't exist
-        // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch
-        try {
-            await turso.execute(`
-                ALTER TABLE users ADD COLUMN membership_expires DATETIME
-            `);
-            console.log('Added membership_expires column');
-        } catch (alterError) {
-            // Column likely already exists, ignore error
-            console.log('membership_expires column already exists or migration skipped');
+        // Migrations: Add any missing columns to users table
+        // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
+        const migrations = [
+            { column: 'membership', sql: `ALTER TABLE users ADD COLUMN membership TEXT DEFAULT 'BASIC'` },
+            { column: 'membership_expires', sql: `ALTER TABLE users ADD COLUMN membership_expires DATETIME` },
+            { column: 'created_at', sql: `ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP` },
+            { column: 'updated_at', sql: `ALTER TABLE users ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP` },
+            { column: 'image', sql: `ALTER TABLE users ADD COLUMN image TEXT` },
+        ];
+
+        for (const migration of migrations) {
+            try {
+                await turso.execute(migration.sql);
+                console.log(`Added ${migration.column} column`);
+            } catch (alterError) {
+                // Column likely already exists, ignore error
+                console.log(`${migration.column} column already exists or migration skipped`);
+            }
         }
 
         console.log('Database tables initialized');
