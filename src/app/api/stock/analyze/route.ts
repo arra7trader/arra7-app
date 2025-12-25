@@ -214,6 +214,20 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
         // Use quota after successful analysis
         await useStockQuota(session.user.id);
 
+        // Save to history
+        try {
+            const turso = (await import('@/lib/turso')).default();
+            if (turso) {
+                await turso.execute({
+                    sql: 'INSERT INTO analysis_history (user_id, type, symbol, timeframe, result) VALUES (?, ?, ?, ?, ?)',
+                    args: [session.user.id, 'stock', symbol, null, analysis],
+                });
+            }
+        } catch (historyError) {
+            console.error('Failed to save to history:', historyError);
+            // Don't fail the request if history save fails
+        }
+
         return NextResponse.json({
             status: 'success',
             analysis,

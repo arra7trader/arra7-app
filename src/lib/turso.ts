@@ -72,6 +72,20 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+        // Create analysis_history table
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS analysis_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        timeframe TEXT,
+        result TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
         // Migrations: Add any missing columns to users table
         // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
         const migrations = [

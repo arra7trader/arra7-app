@@ -76,6 +76,19 @@ export async function POST(request: NextRequest) {
             quotaStatus = await getQuotaStatus(userId);
         }
 
+        // Save to history
+        try {
+            const turso = (await import('@/lib/turso')).default();
+            if (turso && aiResult.analysis) {
+                await turso.execute({
+                    sql: 'INSERT INTO analysis_history (user_id, type, symbol, timeframe, result) VALUES (?, ?, ?, ?, ?)',
+                    args: [userId, 'forex', pair, timeframe, aiResult.analysis],
+                });
+            }
+        } catch (historyError) {
+            console.error('Failed to save to history:', historyError);
+        }
+
         return NextResponse.json({
             status: 'success',
             result: aiResult.formattedHtml,
