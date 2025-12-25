@@ -43,6 +43,11 @@ export default function AdminDashboard() {
     const [copied, setCopied] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Telegram Marketing
+    const [telegramConfigured, setTelegramConfigured] = useState(false);
+    const [sendingTelegram, setSendingTelegram] = useState(false);
+    const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
+
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
     useEffect(() => {
@@ -52,8 +57,43 @@ export default function AdminDashboard() {
             router.push('/');
         } else if (status === 'authenticated' && isAdmin) {
             fetchUsers();
+            checkTelegramConfig();
         }
     }, [status, isAdmin, router]);
+
+    const checkTelegramConfig = async () => {
+        try {
+            const response = await fetch('/api/admin/telegram');
+            const data = await response.json();
+            if (data.status === 'success') {
+                setTelegramConfigured(data.configured);
+            }
+        } catch (error) {
+            console.error('Check Telegram config error:', error);
+        }
+    };
+
+    const sendTelegramPromo = async (template: string) => {
+        setSendingTelegram(true);
+        setTelegramMessage(null);
+        try {
+            const response = await fetch('/api/admin/telegram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ template }),
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setTelegramMessage('✅ Pesan berhasil dikirim ke @arrareborn!');
+            } else {
+                setTelegramMessage(`❌ Gagal: ${data.message}`);
+            }
+        } catch (error) {
+            setTelegramMessage('❌ Error mengirim pesan');
+        } finally {
+            setSendingTelegram(false);
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -290,6 +330,65 @@ Tim ARRA7`;
                         <p className="text-sm text-[#64748B]">VVIP</p>
                         <p className="text-2xl font-bold text-amber-400">{stats.vvip}</p>
                     </div>
+                </div>
+
+                {/* Telegram Marketing Section */}
+                <div className="mb-8 glass rounded-2xl border border-[#1F2937] p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">📢</span>
+                        <div>
+                            <h3 className="text-lg font-semibold">Telegram Marketing</h3>
+                            <p className="text-sm text-[#64748B]">
+                                Kirim promo ke channel @arrareborn
+                                {telegramConfigured ? (
+                                    <span className="ml-2 text-green-400">● Connected</span>
+                                ) : (
+                                    <span className="ml-2 text-red-400">● Not configured</span>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+
+                    {telegramMessage && (
+                        <div className={`mb-4 p-3 rounded-lg ${telegramMessage.includes('✅') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {telegramMessage}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button
+                            onClick={() => sendTelegramPromo('christmasPromo')}
+                            disabled={sendingTelegram || !telegramConfigured}
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500/20 to-green-500/20 hover:from-red-500/30 hover:to-green-500/30 border border-red-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            <span>🎄</span>
+                            <span>{sendingTelegram ? 'Mengirim...' : 'Kirim Promo Natal'}</span>
+                        </button>
+
+                        <button
+                            onClick={() => sendTelegramPromo('welcomeMessage')}
+                            disabled={sendingTelegram || !telegramConfigured}
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            <span>👋</span>
+                            <span>{sendingTelegram ? 'Mengirim...' : 'Welcome Message'}</span>
+                        </button>
+
+                        <button
+                            onClick={() => sendTelegramPromo('dailyMotivation')}
+                            disabled={sendingTelegram || !telegramConfigured}
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            <span>☀️</span>
+                            <span>{sendingTelegram ? 'Mengirim...' : 'Daily Motivation'}</span>
+                        </button>
+                    </div>
+
+                    {!telegramConfigured && (
+                        <p className="mt-4 text-sm text-[#64748B]">
+                            ⚠️ Tambahkan TELEGRAM_BOT_TOKEN dan TELEGRAM_CHANNEL_ID di Vercel Environment Variables
+                        </p>
+                    )}
                 </div>
 
                 {/* Search */}
