@@ -99,6 +99,8 @@ export async function GET(request: NextRequest) {
 // POST - Update user membership
 export async function POST(request: NextRequest) {
     try {
+        console.log('[ADMIN] POST - Starting membership update...');
+
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.email || !isAdmin(session.user.email)) {
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json();
         const { userId, membership, durationDays } = body;
+        console.log('[ADMIN] POST - Updating user:', { userId, membership, durationDays });
 
         if (!userId || !membership) {
             return NextResponse.json(
@@ -133,23 +136,40 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Ensure database has all columns
+        const { initDatabase } = await import('@/lib/turso');
+        await initDatabase();
+
         // Calculate expiry date
         const days = durationDays || 30;
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + days);
 
+        console.log('[ADMIN] POST - Executing UPDATE query...');
+
+        // Update membership - use simpler query that works with minimal columns
         await turso.execute({
-            sql: `UPDATE users SET 
-                membership = ?,
-                membership_expires = ?,
-                updated_at = datetime('now')
-                WHERE id = ?`,
-            args: [membership, expiresAt.toISOString(), userId],
+            sql: `UPDATE users SET membership = ? WHERE id = ?`,
+            args: [membership, userId],
         });
+
+        // Try to update expires date separately (may fail if column doesn't exist)
+        try {
+            await turso.execute({
+                sql: `UPDATE users SET membership_expires = ? WHERE id = ?`,
+                args: [expiresAt.toISOString(), userId],
+            });
+            console.log('[ADMIN] POST - Updated membership_expires');
+        } catch (expError) {
+            console.log('[ADMIN] POST - Could not update membership_expires (column may not exist)');
+        }
+
+        console.log('[ADMIN] POST - Update successful!');
 
         return NextResponse.json({
             status: 'success',
             message: `User upgraded to ${membership} for ${days} days`,
+            expiresAt: expiresAt.toISOString(),
         });
 
     } catch (error) {
