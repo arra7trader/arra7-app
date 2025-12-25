@@ -49,6 +49,10 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        // Ensure database is initialized with all columns before querying
+        const { initDatabase } = await import('@/lib/turso');
+        await initDatabase();
+
         console.log('[ADMIN] Turso client connected, executing query...');
 
         const result = await turso.execute(`
