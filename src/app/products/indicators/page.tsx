@@ -92,9 +92,9 @@ export default function IndicatorsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
                     >
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm font-medium mb-6">
-                            <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                            Institutional-Grade Indicators
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-medium mb-6">
+                            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                            🔒 Coming Soon - Q1 2025
                         </span>
                     </motion.div>
 
@@ -142,7 +142,7 @@ export default function IndicatorsPage() {
                 </div>
             </section>
 
-            {/* Indicators Grid */}
+            {/* Indicators Grid - LOCKED */}
             <section className="relative px-4 sm:px-6 lg:px-8 pb-20 z-10">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -152,12 +152,22 @@ export default function IndicatorsPage() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 * index }}
-                                whileHover={{ y: -8, scale: 1.02 }}
-                                className={`relative glass rounded-2xl p-6 border ${indicator.borderColor} hover:border-opacity-60 transition-all cursor-pointer group`}
+                                className={`relative glass rounded-2xl p-6 border ${indicator.borderColor} overflow-hidden`}
                             >
+                                {/* Blur Overlay */}
+                                <div className="absolute inset-0 backdrop-blur-sm bg-[#0F1629]/60 z-10 flex flex-col items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-[#1F2937]/80 flex items-center justify-center mb-4 border border-[#374151]">
+                                        <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-amber-400 font-semibold text-sm">Coming Soon</span>
+                                    <span className="text-[#64748B] text-xs mt-1">Q1 2025</span>
+                                </div>
+
                                 {/* Priority Badge */}
                                 {indicator.priority && (
-                                    <div className="absolute -top-3 right-4">
+                                    <div className="absolute -top-3 right-4 z-20">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${indicator.priority === 'FLAGSHIP'
                                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
                                                 : indicator.priority === 'HIGHEST WINRATE'
@@ -170,41 +180,44 @@ export default function IndicatorsPage() {
                                     </div>
                                 )}
 
-                                {/* Icon */}
-                                <div className={`w-14 h-14 rounded-2xl ${indicator.bgColor} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform`}>
-                                    {indicator.icon}
-                                </div>
+                                {/* Blurred Content */}
+                                <div className="filter blur-[2px]">
+                                    {/* Icon */}
+                                    <div className={`w-14 h-14 rounded-2xl ${indicator.bgColor} flex items-center justify-center text-3xl mb-4`}>
+                                        {indicator.icon}
+                                    </div>
 
-                                {/* Title */}
-                                <h3 className={`text-xl font-bold mb-2 bg-gradient-to-r ${indicator.color} bg-clip-text text-transparent`}>
-                                    {indicator.shortName}
-                                </h3>
+                                    {/* Title */}
+                                    <h3 className={`text-xl font-bold mb-2 bg-gradient-to-r ${indicator.color} bg-clip-text text-transparent`}>
+                                        {indicator.shortName}
+                                    </h3>
 
-                                {/* Winrate & Strategy */}
-                                <div className="flex gap-2 mb-3">
-                                    <span className="px-2 py-1 rounded-md bg-green-500/20 text-green-400 text-xs font-semibold">
-                                        {indicator.winrate} Winrate
-                                    </span>
-                                    <span className="px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs">
-                                        {indicator.strategy}
-                                    </span>
-                                </div>
-
-                                {/* Description */}
-                                <p className="text-[#94A3B8] text-sm mb-4 leading-relaxed">
-                                    {indicator.description}
-                                </p>
-
-                                {/* Features */}
-                                <div className="flex flex-wrap gap-2">
-                                    {indicator.features.map((feature, i) => (
-                                        <span
-                                            key={i}
-                                            className="px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs"
-                                        >
-                                            ✓ {feature}
+                                    {/* Winrate & Strategy */}
+                                    <div className="flex gap-2 mb-3">
+                                        <span className="px-2 py-1 rounded-md bg-green-500/20 text-green-400 text-xs font-semibold">
+                                            {indicator.winrate} Winrate
                                         </span>
-                                    ))}
+                                        <span className="px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs">
+                                            {indicator.strategy}
+                                        </span>
+                                    </div>
+
+                                    {/* Description */}
+                                    <p className="text-[#94A3B8] text-sm mb-4 leading-relaxed">
+                                        {indicator.description}
+                                    </p>
+
+                                    {/* Features */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {indicator.features.slice(0, 3).map((feature, i) => (
+                                            <span
+                                                key={i}
+                                                className="px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs"
+                                            >
+                                                ✓ {feature}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
@@ -273,14 +286,14 @@ export default function IndicatorsPage() {
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="glass rounded-3xl p-8 md:p-12 border border-[#1F2937] text-center"
+                        className="glass rounded-3xl p-8 md:p-12 border border-amber-500/30 text-center"
                     >
-                        <div className="text-4xl mb-4">🚀</div>
+                        <div className="text-4xl mb-4">🔔</div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                            Dapatkan <span className="gradient-text">Early Access</span>
+                            Daftar <span className="text-amber-400">Waitlist</span>
                         </h2>
                         <p className="text-[#94A3B8] mb-6">
-                            Daftar sekarang dan dapatkan <strong className="text-white">diskon 40%</strong> + akses beta testing gratis!
+                            Jadi yang pertama tahu saat indicators ini rilis. Dapatkan <strong className="text-white">diskon 40%</strong> untuk early adopters!
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -288,9 +301,9 @@ export default function IndicatorsPage() {
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25"
+                                    className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25"
                                 >
-                                    Lihat Paket Premium
+                                    🔔 Join Waitlist
                                 </motion.button>
                             </Link>
                             <Link href="/analisa-market">

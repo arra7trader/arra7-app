@@ -93,9 +93,9 @@ export default function ExpertAdvisorsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
                     >
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm font-medium mb-6">
-                            <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                            Profitable Automated Trading
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-medium mb-6">
+                            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                            🔒 Coming Soon - Q1 2025
                         </span>
                     </motion.div>
 
@@ -138,7 +138,7 @@ export default function ExpertAdvisorsPage() {
                 </div>
             </section>
 
-            {/* EA Grid */}
+            {/* EA Grid - LOCKED */}
             <section className="relative px-4 sm:px-6 lg:px-8 pb-20 z-10">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -148,12 +148,22 @@ export default function ExpertAdvisorsPage() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 * index }}
-                                whileHover={{ y: -8, scale: 1.01 }}
-                                className={`relative glass rounded-2xl p-6 border ${ea.borderColor} hover:border-opacity-60 transition-all cursor-pointer group`}
+                                className={`relative glass rounded-2xl p-6 border ${ea.borderColor} overflow-hidden`}
                             >
+                                {/* Blur Overlay */}
+                                <div className="absolute inset-0 backdrop-blur-sm bg-[#0F1629]/60 z-10 flex flex-col items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-[#1F2937]/80 flex items-center justify-center mb-4 border border-[#374151]">
+                                        <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-amber-400 font-semibold text-sm">Coming Soon</span>
+                                    <span className="text-[#64748B] text-xs mt-1">Q1 2025</span>
+                                </div>
+
                                 {/* Priority Badge */}
                                 {ea.priority && (
-                                    <div className="absolute -top-3 right-4">
+                                    <div className="absolute -top-3 right-4 z-20">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${ea.priority === 'FLAGSHIP'
                                                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                                                 : ea.priority === 'HIGH PROFIT'
@@ -169,120 +179,63 @@ export default function ExpertAdvisorsPage() {
                                     </div>
                                 )}
 
-                                <div className="flex gap-4">
-                                    {/* Icon */}
-                                    <div className={`w-16 h-16 rounded-2xl ${ea.bgColor} flex items-center justify-center text-4xl flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                                        {ea.icon}
+                                {/* Blurred Content */}
+                                <div className="filter blur-[2px]">
+                                    <div className="flex gap-4">
+                                        {/* Icon */}
+                                        <div className={`w-16 h-16 rounded-2xl ${ea.bgColor} flex items-center justify-center text-4xl flex-shrink-0`}>
+                                            {ea.icon}
+                                        </div>
+
+                                        <div className="flex-1">
+                                            {/* Title */}
+                                            <h3 className={`text-xl font-bold mb-2 bg-gradient-to-r ${ea.color} bg-clip-text text-transparent`}>
+                                                {ea.shortName}
+                                            </h3>
+
+                                            {/* Strategy Badge */}
+                                            <span className="inline-block px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs mb-3">
+                                                {ea.strategy}
+                                            </span>
+
+                                            {/* Description */}
+                                            <p className="text-[#94A3B8] text-sm mb-4 leading-relaxed">
+                                                {ea.description}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1">
-                                        {/* Title */}
-                                        <h3 className={`text-xl font-bold mb-2 bg-gradient-to-r ${ea.color} bg-clip-text text-transparent`}>
-                                            {ea.shortName}
-                                        </h3>
-
-                                        {/* Strategy Badge */}
-                                        <span className="inline-block px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs mb-3">
-                                            {ea.strategy}
-                                        </span>
-
-                                        {/* Description */}
-                                        <p className="text-[#94A3B8] text-sm mb-4 leading-relaxed">
-                                            {ea.description}
-                                        </p>
+                                    {/* Specs */}
+                                    <div className="grid grid-cols-3 gap-3 mt-4 mb-4">
+                                        <div className="text-center p-2 rounded-lg bg-[#1F2937]/30">
+                                            <div className="text-[10px] text-[#64748B] uppercase">Platform</div>
+                                            <div className="text-xs text-white font-medium">{ea.platform}</div>
+                                        </div>
+                                        <div className="text-center p-2 rounded-lg bg-[#1F2937]/30">
+                                            <div className="text-[10px] text-[#64748B] uppercase">Pairs</div>
+                                            <div className="text-xs text-white font-medium">{ea.pairs}</div>
+                                        </div>
+                                        <div className="text-center p-2 rounded-lg bg-green-500/10">
+                                            <div className="text-[10px] text-green-400 uppercase">Monthly</div>
+                                            <div className="text-xs text-green-400 font-bold">{ea.monthly}</div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Specs */}
-                                <div className="grid grid-cols-3 gap-3 mt-4 mb-4">
-                                    <div className="text-center p-2 rounded-lg bg-[#1F2937]/30">
-                                        <div className="text-[10px] text-[#64748B] uppercase">Platform</div>
-                                        <div className="text-xs text-white font-medium">{ea.platform}</div>
+                                    {/* Features */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {ea.features.slice(0, 3).map((feature, i) => (
+                                            <span
+                                                key={i}
+                                                className="px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs"
+                                            >
+                                                ✓ {feature}
+                                            </span>
+                                        ))}
                                     </div>
-                                    <div className="text-center p-2 rounded-lg bg-[#1F2937]/30">
-                                        <div className="text-[10px] text-[#64748B] uppercase">Pairs</div>
-                                        <div className="text-xs text-white font-medium">{ea.pairs}</div>
-                                    </div>
-                                    <div className="text-center p-2 rounded-lg bg-green-500/10">
-                                        <div className="text-[10px] text-green-400 uppercase">Monthly</div>
-                                        <div className="text-xs text-green-400 font-bold">{ea.monthly}</div>
-                                    </div>
-                                </div>
-
-                                {/* Features */}
-                                <div className="flex flex-wrap gap-2">
-                                    {ea.features.map((feature, i) => (
-                                        <span
-                                            key={i}
-                                            className="px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs"
-                                        >
-                                            ✓ {feature}
-                                        </span>
-                                    ))}
                                 </div>
                             </motion.div>
                         ))}
                     </div>
-                </div>
-            </section>
-
-            {/* Comparison Table */}
-            <section className="relative px-4 sm:px-6 lg:px-8 pb-20 z-10">
-                <div className="max-w-4xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-8"
-                    >
-                        <h2 className="text-2xl font-bold mb-4">
-                            Pilih EA yang <span className="gradient-text">Cocok</span>
-                        </h2>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="glass rounded-2xl border border-[#1F2937] overflow-hidden"
-                    >
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-[#1F2937] bg-[#1F2937]/30">
-                                    <th className="py-4 px-4 text-left text-[#94A3B8] font-medium">EA</th>
-                                    <th className="py-4 px-4 text-center text-[#94A3B8] font-medium">Style</th>
-                                    <th className="py-4 px-4 text-center text-[#94A3B8] font-medium">Monthly</th>
-                                    <th className="py-4 px-4 text-center text-[#94A3B8] font-medium">Best For</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className="border-b border-[#1F2937]/50">
-                                    <td className="py-4 px-4 text-white font-medium">Copy AI Signals</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">AI-Based</td>
-                                    <td className="py-4 px-4 text-center text-green-400">Varies</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Pemula</td>
-                                </tr>
-                                <tr className="border-b border-[#1F2937]/50">
-                                    <td className="py-4 px-4 text-white font-medium">Silver Bullet</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Scalping</td>
-                                    <td className="py-4 px-4 text-center text-green-400">~12%</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Aggressive</td>
-                                </tr>
-                                <tr className="border-b border-[#1F2937]/50">
-                                    <td className="py-4 px-4 text-white font-medium">Asian Sweep</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Reversal</td>
-                                    <td className="py-4 px-4 text-center text-green-400">~8%</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Moderate</td>
-                                </tr>
-                                <tr>
-                                    <td className="py-4 px-4 text-white font-medium">Williams Momentum</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Swing</td>
-                                    <td className="py-4 px-4 text-center text-green-400">~6%</td>
-                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Conservative</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </motion.div>
                 </div>
             </section>
 
@@ -293,14 +246,14 @@ export default function ExpertAdvisorsPage() {
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="glass rounded-3xl p-8 md:p-12 border border-[#1F2937] text-center"
+                        className="glass rounded-3xl p-8 md:p-12 border border-amber-500/30 text-center"
                     >
-                        <div className="text-4xl mb-4">🚀</div>
+                        <div className="text-4xl mb-4">🔔</div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                            Mulai <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Auto Trading</span>
+                            Daftar <span className="text-amber-400">Waitlist</span>
                         </h2>
                         <p className="text-[#94A3B8] mb-6">
-                            Pre-order sekarang dan dapatkan <strong className="text-white">diskon 40%</strong> + lifetime update!
+                            Jadi yang pertama tahu saat Expert Advisors ini rilis. Dapatkan <strong className="text-white">diskon 40%</strong> + lifetime update untuk early adopters!
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -308,9 +261,9 @@ export default function ExpertAdvisorsPage() {
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25"
+                                    className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25"
                                 >
-                                    Lihat Paket VVIP
+                                    🔔 Join Waitlist
                                 </motion.button>
                             </Link>
                             <Link href="/analisa-market">
