@@ -20,9 +20,9 @@ declare global {
     }
 }
 
-// Christmas Promo ends: December 26, 2025 at 23:59:59 WIB (UTC+7)
-const CHRISTMAS_PROMO_END = new Date('2025-12-26T23:59:59+07:00');
-const isChristmasPromoActive = () => new Date() < CHRISTMAS_PROMO_END;
+// New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
+const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
+const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
 
 const PRICING_PLANS = [
     {
@@ -52,7 +52,7 @@ const PRICING_PLANS = [
         name: 'Pro',
         price: 'Rp 149K',
         originalPrice: 'Rp 299K',
-        promoPrice: 'Rp 99K', // Christmas promo price!
+        promoPrice: 'Rp 99K', // New Year promo price!
         discount: 67, // 99K dari 299K = 67% off
         period: '/bulan',
         description: 'Untuk trader aktif',
@@ -64,7 +64,7 @@ const PRICING_PLANS = [
             { text: 'Economic Calendar', included: true },
             { text: 'Free 1 Indikator ATAU 1 EA (pilih salah satu)', included: false },
         ],
-        cta: '🎄 Ambil Promo Natal!',
+        cta: '🎉 Ambil Promo Tahun Baru!',
         popular: true,
         gradient: 'from-blue-500 to-purple-500',
     },
@@ -96,18 +96,18 @@ export default function PricingPage() {
     const t = useTranslations('nav');
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
     const [snapReady, setSnapReady] = useState(false);
-    const [christmasCountdown, setChristmasCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [newYearCountdown, setNewYearCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [isPromoActive, setIsPromoActive] = useState(false);
 
-    // Christmas Promo Countdown - Fixed end date
+    // New Year Promo Countdown - Fixed end date
     useEffect(() => {
         const updateCountdown = () => {
             const now = new Date();
-            const diff = CHRISTMAS_PROMO_END.getTime() - now.getTime();
+            const diff = NEW_YEAR_PROMO_END.getTime() - now.getTime();
 
             if (diff <= 0) {
                 setIsPromoActive(false);
-                setChristmasCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                setNewYearCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
                 return;
             }
 
@@ -117,7 +117,7 @@ export default function PricingPage() {
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            setChristmasCountdown({ days, hours, minutes, seconds });
+            setNewYearCountdown({ days, hours, minutes, seconds });
         };
 
         updateCountdown();
@@ -149,24 +149,24 @@ export default function PricingPage() {
             <div className="bg-orb bg-orb-purple w-[500px] h-[500px] bottom-0 right-1/4 opacity-15" />
 
             <div className="relative max-w-7xl mx-auto">
-                {/* Christmas Promo Countdown Banner */}
+                {/* New Year Promo Countdown Banner */}
                 {isPromoActive && (
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-red-600/20 via-green-600/20 to-red-600/20 border-2 border-red-500/40 relative overflow-hidden"
+                        className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 border-2 border-purple-500/40 relative overflow-hidden"
                     >
                         {/* Festive decorations */}
-                        <div className="absolute top-0 left-4 text-4xl">🎄</div>
-                        <div className="absolute top-0 right-4 text-4xl">🎁</div>
-                        <div className="absolute -top-2 left-1/4 text-2xl animate-bounce">❄️</div>
-                        <div className="absolute -top-2 right-1/4 text-2xl animate-bounce delay-100">❄️</div>
+                        <div className="absolute top-0 left-4 text-4xl">🎆</div>
+                        <div className="absolute top-0 right-4 text-4xl">🎇</div>
+                        <div className="absolute -top-2 left-1/4 text-2xl animate-bounce">✨</div>
+                        <div className="absolute -top-2 right-1/4 text-2xl animate-bounce delay-100">🎊</div>
 
                         <div className="flex flex-col items-center justify-center gap-4 text-center relative z-10">
                             <div className="flex flex-wrap items-center justify-center gap-2">
-                                <span className="text-3xl">🎅</span>
-                                <span className="font-bold text-2xl text-white">PROMO NATAL SPESIAL!</span>
-                                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-red-500 to-green-500 text-white text-sm font-bold animate-pulse">
+                                <span className="text-3xl">🎉</span>
+                                <span className="font-bold text-2xl text-white">PROMO TAHUN BARU 2026!</span>
+                                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold animate-pulse">
                                     HEMAT 200K!
                                 </span>
                             </div>
@@ -181,29 +181,29 @@ export default function PricingPage() {
                                 <span className="text-sm text-[#94A3B8]">⏰ Promo berakhir dalam:</span>
                                 <div className="flex gap-2">
                                     <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-red-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
-                                            {String(christmasCountdown.days).padStart(2, '0')}
+                                        <span className="px-3 py-2 bg-purple-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
+                                            {String(newYearCountdown.days).padStart(2, '0')}
                                         </span>
                                         <span className="text-xs text-[#64748B] mt-1">Hari</span>
                                     </div>
-                                    <span className="text-2xl text-red-400 self-start mt-2">:</span>
+                                    <span className="text-2xl text-purple-400 self-start mt-2">:</span>
                                     <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-red-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
-                                            {String(christmasCountdown.hours).padStart(2, '0')}
+                                        <span className="px-3 py-2 bg-purple-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
+                                            {String(newYearCountdown.hours).padStart(2, '0')}
                                         </span>
                                         <span className="text-xs text-[#64748B] mt-1">Jam</span>
                                     </div>
-                                    <span className="text-2xl text-red-400 self-start mt-2">:</span>
+                                    <span className="text-2xl text-purple-400 self-start mt-2">:</span>
                                     <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-red-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
-                                            {String(christmasCountdown.minutes).padStart(2, '0')}
+                                        <span className="px-3 py-2 bg-purple-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
+                                            {String(newYearCountdown.minutes).padStart(2, '0')}
                                         </span>
                                         <span className="text-xs text-[#64748B] mt-1">Menit</span>
                                     </div>
-                                    <span className="text-2xl text-red-400 self-start mt-2">:</span>
+                                    <span className="text-2xl text-purple-400 self-start mt-2">:</span>
                                     <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-green-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px] animate-pulse">
-                                            {String(christmasCountdown.seconds).padStart(2, '0')}
+                                        <span className="px-3 py-2 bg-blue-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px] animate-pulse">
+                                            {String(newYearCountdown.seconds).padStart(2, '0')}
                                         </span>
                                         <span className="text-xs text-[#64748B] mt-1">Detik</span>
                                     </div>
@@ -211,7 +211,7 @@ export default function PricingPage() {
                             </div>
 
                             <p className="text-xs text-[#94A3B8]">
-                                🎄 Promo berlaku sampai 26 Desember 2025 pukul 23:59 WIB
+                                🎆 Promo berlaku sampai 1 Januari 2026 pukul 23:59 WIB
                             </p>
                         </div>
                     </motion.div>
@@ -289,8 +289,8 @@ export default function PricingPage() {
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-lg text-[#64748B] line-through">{plan.originalPrice}</span>
                                         {isPromoActive && plan.promoPrice ? (
-                                            <span className="px-2 py-0.5 rounded bg-gradient-to-r from-red-500 to-green-500 text-white text-xs font-bold animate-pulse">
-                                                🎄 NATAL -{plan.discount}%
+                                            <span className="px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold animate-pulse">
+                                                🎉 TAHUN BARU -{plan.discount}%
                                             </span>
                                         ) : (
                                             <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold">-{plan.discount}%</span>
@@ -349,7 +349,7 @@ export default function PricingPage() {
                                     </span>
                                 ) : (
                                     // Show promo CTA only during active promo for PRO plan
-                                    isPromoActive && plan.id === 'PRO' ? '🎄 Ambil Promo Natal!' :
+                                    isPromoActive && plan.id === 'PRO' ? '🎉 Ambil Promo Tahun Baru!' :
                                         plan.id === 'PRO' ? 'Upgrade ke Pro' : plan.cta
                                 )}
                             </motion.button>
