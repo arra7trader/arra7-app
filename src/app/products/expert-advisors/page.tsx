@@ -8,69 +8,73 @@ const expertAdvisors = [
         id: 'copy-ai',
         name: 'ARRA7 Copy AI Signals EA',
         shortName: 'Copy AI Signals',
-        description: 'GAME-CHANGER! Auto-execute trading signals dari AI Analysis ARRA7. Connect langsung ke API, eksekusi otomatis atau manual approval mode.',
-        features: ['API Integration', 'Auto Execute', 'Manual Approval Mode', 'Custom Risk', 'Dashboard Sync'],
+        description: 'GAME-CHANGER! Auto-execute trading signals dari AI Analysis ARRA7. Connect langsung ke API, bisa mode otomatis atau manual approval. Tidak perlu analisa sendiri lagi.',
+        features: ['API Integration', 'Auto Execute', 'Manual Mode', 'Custom Risk', 'Real-time Sync'],
         icon: '🤖',
         color: 'from-blue-500 to-cyan-500',
         borderColor: 'border-blue-500/30',
         bgColor: 'bg-blue-500/10',
         priority: 'FLAGSHIP',
         platform: 'MT4 / MT5',
-        pairs: 'All Pairs + Gold',
-        riskLevel: 'Adjustable',
+        pairs: 'All + Gold',
+        monthly: 'Varies',
+        strategy: 'AI-Powered',
     },
     {
-        id: 'gold-scalper',
-        name: 'ARRA7 Gold Scalper EA',
-        shortName: 'Gold Scalper',
-        description: 'Scalping XAUUSD specialist dengan SMC + Session timing. Auto-trade during London & New York session dengan trailing stop Fibonacci.',
-        features: ['XAUUSD Specialist', 'Session Trading', 'SMC Based Entry', 'Fibo Trailing', 'News Filter'],
-        icon: '🥇',
+        id: 'silver-bullet',
+        name: 'ARRA7 Silver Bullet Scalper EA',
+        shortName: 'Silver Bullet Scalper',
+        description: 'Automated ICT Silver Bullet strategy. Trading hanya di NY AM Session (22:00-23:00 WIB) dengan FVG entry. Target 20-30 pips per trade, max 2 trades/hari.',
+        features: ['NY AM Only', 'FVG Entry', 'Auto SL/TP', 'Max 2/Day', 'News Filter'],
+        icon: '🎯',
         color: 'from-amber-500 to-orange-500',
         borderColor: 'border-amber-500/30',
         bgColor: 'bg-amber-500/10',
-        priority: 'POPULAR',
+        priority: 'HIGH PROFIT',
         platform: 'MT4 / MT5',
-        pairs: 'XAUUSD Only',
-        riskLevel: '1-2% per trade',
+        pairs: 'XAUUSD, GBPUSD',
+        monthly: '~12%',
+        strategy: 'ICT Time-Based',
     },
     {
-        id: 'grid-recovery',
-        name: 'ARRA7 Grid Recovery EA',
-        shortName: 'Grid Recovery',
-        description: 'Grid trading dengan smart recovery system. ATR-based grid spacing, partial close untuk secure profit, dan equity protection.',
-        features: ['Smart Grid Spacing', 'Recovery Mode', 'Partial Close', 'Equity Protection', 'Low Drawdown'],
-        icon: '📐',
+        id: 'asian-sweep',
+        name: 'ARRA7 Asian Sweep Reversal EA',
+        shortName: 'Asian Sweep EA',
+        description: 'Auto-trade Asian session liquidity sweep. Mark Asian High/Low, tunggu sweep di London/NY, lalu entry reversal dengan CHoCH confirmation.',
+        features: ['Asian Range Auto', 'Sweep Detection', 'CHoCH Entry', 'Reversal Style', 'Low DD'],
+        icon: '🌏',
         color: 'from-purple-500 to-pink-500',
         borderColor: 'border-purple-500/30',
         bgColor: 'bg-purple-500/10',
-        priority: null,
+        priority: 'POPULAR',
         platform: 'MT4 / MT5',
-        pairs: 'EUR, GBP, JPY pairs',
-        riskLevel: 'Medium',
+        pairs: 'XAUUSD, EUR, GBP',
+        monthly: '~8%',
+        strategy: 'Liquidity Hunting',
     },
     {
-        id: 'trend-follower',
-        name: 'ARRA7 Trend Follower EA',
-        shortName: 'Trend Follower',
-        description: 'Multi-timeframe trend following dengan entry signal dari H4/D1 dan confirmation dari M15/H1. Pyramiding mode untuk maximize profit.',
-        features: ['Multi-TF Analysis', 'HTF + LTF Confirm', 'Dynamic ATR SL', 'Pyramiding Mode', 'Breakeven Auto'],
+        id: 'williams-momentum',
+        name: 'ARRA7 Williams Momentum EA',
+        shortName: 'Williams Momentum',
+        description: 'Combo Williams %R + KAMA trend filter. Entry di oversold (-80) saat KAMA bullish, exit di overbought atau trailing. Strategi dengan 75% backtest winrate.',
+        features: ['Williams %R', 'KAMA Filter', 'Auto Trailing', '1% Risk/Trade', 'Low Frequency'],
         icon: '📈',
         color: 'from-green-500 to-emerald-500',
         borderColor: 'border-green-500/30',
         bgColor: 'bg-green-500/10',
-        priority: null,
+        priority: '75% WINRATE',
         platform: 'MT4 / MT5',
-        pairs: 'Major Pairs + Gold',
-        riskLevel: 'Conservative',
+        pairs: 'Gold, Nasdaq',
+        monthly: '~6%',
+        strategy: 'Momentum Trading',
     },
 ];
 
 const stats = [
     { label: 'Total EAs', value: '4', icon: '🤖' },
-    { label: 'Platform', value: 'MT4 & MT5', icon: '💻' },
-    { label: 'Backtest', value: '3+ Years', icon: '📊' },
-    { label: 'Support', value: '24/7 Indo', icon: '🇮🇩' },
+    { label: 'Highest Monthly', value: '~12%', icon: '📈' },
+    { label: 'Best Winrate', value: '75%', icon: '🎯' },
+    { label: 'Platform', value: 'MT4/MT5', icon: '💻' },
 ];
 
 export default function ExpertAdvisorsPage() {
@@ -91,7 +95,7 @@ export default function ExpertAdvisorsPage() {
                     >
                         <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm font-medium mb-6">
                             <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                            Coming Q1 2025
+                            Profitable Automated Trading
                         </span>
                     </motion.div>
 
@@ -103,7 +107,7 @@ export default function ExpertAdvisorsPage() {
                     >
                         <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Expert Advisors</span>
                         <br />
-                        <span className="text-white">Auto Trading 24/7</span>
+                        <span className="text-white">Profit Tanpa Ribet</span>
                     </motion.h1>
 
                     <motion.p
@@ -112,8 +116,8 @@ export default function ExpertAdvisorsPage() {
                         transition={{ delay: 0.3 }}
                         className="text-lg text-[#94A3B8] mb-8 max-w-2xl mx-auto"
                     >
-                        Robot trading otomatis yang bekerja tanpa henti.
-                        Eksekusi trading tanpa emosi dengan manajemen risiko yang ketat.
+                        Robot trading dengan <strong className="text-white">strategi proven</strong>.
+                        Dari ICT Silver Bullet sampai AI-powered signals. Trading 24/7 tanpa emosi.
                     </motion.p>
 
                     {/* Stats */}
@@ -151,10 +155,16 @@ export default function ExpertAdvisorsPage() {
                                 {ea.priority && (
                                     <div className="absolute -top-3 right-4">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${ea.priority === 'FLAGSHIP'
-                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                                                : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                                                : ea.priority === 'HIGH PROFIT'
+                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                                                    : ea.priority === '75% WINRATE'
+                                                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                                        : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                             }`}>
-                                            {ea.priority === 'FLAGSHIP' ? '⭐ FLAGSHIP' : '🔥 POPULAR'}
+                                            {ea.priority === 'FLAGSHIP' ? '⭐ FLAGSHIP' :
+                                                ea.priority === 'HIGH PROFIT' ? '💰 12%/MONTH' :
+                                                    ea.priority === '75% WINRATE' ? '🏆 75% WIN' : '🔥 POPULAR'}
                                         </span>
                                     </div>
                                 )}
@@ -170,6 +180,11 @@ export default function ExpertAdvisorsPage() {
                                         <h3 className={`text-xl font-bold mb-2 bg-gradient-to-r ${ea.color} bg-clip-text text-transparent`}>
                                             {ea.shortName}
                                         </h3>
+
+                                        {/* Strategy Badge */}
+                                        <span className="inline-block px-2 py-1 rounded-md bg-[#1F2937]/50 text-[#94A3B8] text-xs mb-3">
+                                            {ea.strategy}
+                                        </span>
 
                                         {/* Description */}
                                         <p className="text-[#94A3B8] text-sm mb-4 leading-relaxed">
@@ -188,9 +203,9 @@ export default function ExpertAdvisorsPage() {
                                         <div className="text-[10px] text-[#64748B] uppercase">Pairs</div>
                                         <div className="text-xs text-white font-medium">{ea.pairs}</div>
                                     </div>
-                                    <div className="text-center p-2 rounded-lg bg-[#1F2937]/30">
-                                        <div className="text-[10px] text-[#64748B] uppercase">Risk</div>
-                                        <div className="text-xs text-white font-medium">{ea.riskLevel}</div>
+                                    <div className="text-center p-2 rounded-lg bg-green-500/10">
+                                        <div className="text-[10px] text-green-400 uppercase">Monthly</div>
+                                        <div className="text-xs text-green-400 font-bold">{ea.monthly}</div>
                                     </div>
                                 </div>
 
@@ -211,43 +226,63 @@ export default function ExpertAdvisorsPage() {
                 </div>
             </section>
 
-            {/* How It Works */}
+            {/* Comparison Table */}
             <section className="relative px-4 sm:px-6 lg:px-8 pb-20 z-10">
                 <div className="max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-center mb-12"
+                        className="text-center mb-8"
                     >
-                        <h2 className="text-3xl font-bold mb-4">
-                            Cara Kerja <span className="gradient-text">Expert Advisor</span>
+                        <h2 className="text-2xl font-bold mb-4">
+                            Pilih EA yang <span className="gradient-text">Cocok</span>
                         </h2>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            { step: '1', title: 'Install EA', desc: 'Download file EA dan install ke folder MT4/MT5 Experts', icon: '📥' },
-                            { step: '2', title: 'Setup & Config', desc: 'Atur parameter sesuai risk tolerance dan pair trading Anda', icon: '⚙️' },
-                            { step: '3', title: 'Let It Trade', desc: 'EA akan trading otomatis 24/7. Monitor via dashboard', icon: '🚀' },
-                        ].map((item, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.1 * i }}
-                                className="glass rounded-2xl p-6 border border-[#1F2937] text-center"
-                            >
-                                <div className="text-4xl mb-3">{item.icon}</div>
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm mx-auto mb-3">
-                                    {item.step}
-                                </div>
-                                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                                <p className="text-[#94A3B8] text-sm">{item.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="glass rounded-2xl border border-[#1F2937] overflow-hidden"
+                    >
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-[#1F2937] bg-[#1F2937]/30">
+                                    <th className="py-4 px-4 text-left text-[#94A3B8] font-medium">EA</th>
+                                    <th className="py-4 px-4 text-center text-[#94A3B8] font-medium">Style</th>
+                                    <th className="py-4 px-4 text-center text-[#94A3B8] font-medium">Monthly</th>
+                                    <th className="py-4 px-4 text-center text-[#94A3B8] font-medium">Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-b border-[#1F2937]/50">
+                                    <td className="py-4 px-4 text-white font-medium">Copy AI Signals</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">AI-Based</td>
+                                    <td className="py-4 px-4 text-center text-green-400">Varies</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Pemula</td>
+                                </tr>
+                                <tr className="border-b border-[#1F2937]/50">
+                                    <td className="py-4 px-4 text-white font-medium">Silver Bullet</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Scalping</td>
+                                    <td className="py-4 px-4 text-center text-green-400">~12%</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Aggressive</td>
+                                </tr>
+                                <tr className="border-b border-[#1F2937]/50">
+                                    <td className="py-4 px-4 text-white font-medium">Asian Sweep</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Reversal</td>
+                                    <td className="py-4 px-4 text-center text-green-400">~8%</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Moderate</td>
+                                </tr>
+                                <tr>
+                                    <td className="py-4 px-4 text-white font-medium">Williams Momentum</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Swing</td>
+                                    <td className="py-4 px-4 text-center text-green-400">~6%</td>
+                                    <td className="py-4 px-4 text-center text-[#94A3B8]">Conservative</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </motion.div>
                 </div>
             </section>
 
@@ -260,12 +295,12 @@ export default function ExpertAdvisorsPage() {
                         viewport={{ once: true }}
                         className="glass rounded-3xl p-8 md:p-12 border border-[#1F2937] text-center"
                     >
-                        <div className="text-4xl mb-4">🎁</div>
+                        <div className="text-4xl mb-4">🚀</div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                            Pre-order <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Sekarang</span>
+                            Mulai <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Auto Trading</span>
                         </h2>
                         <p className="text-[#94A3B8] mb-6">
-                            Daftar waitlist untuk mendapatkan diskon 40% + akses beta testing gratis!
+                            Pre-order sekarang dan dapatkan <strong className="text-white">diskon 40%</strong> + lifetime update!
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -284,13 +319,13 @@ export default function ExpertAdvisorsPage() {
                                     whileTap={{ scale: 0.98 }}
                                     className="px-8 py-4 rounded-xl font-semibold border border-[#374151] text-white hover:bg-white/5 transition-colors"
                                 >
-                                    Coba AI Analisa
+                                    Coba AI Dulu
                                 </motion.button>
                             </Link>
                         </div>
 
                         <p className="text-[#64748B] text-sm mt-6">
-                            ⚠️ EA memerlukan VPS untuk performa optimal
+                            ⚠️ Trading berisiko. EA memerlukan VPS untuk performa optimal.
                         </p>
                     </motion.div>
                 </div>
