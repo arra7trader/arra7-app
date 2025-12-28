@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 
 // Dynamic import for Leaflet (client-side only)
@@ -43,6 +43,12 @@ export default function UsersMapPage() {
     const [error, setError] = useState('');
     const [period, setPeriod] = useState('all');
     const [mapReady, setMapReady] = useState(false);
+
+    // User Tracker states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [trackedUser, setTrackedUser] = useState<UserLocation | null>(null);
+    const [showTracker, setShowTracker] = useState(false);
+    const mapRef = useRef<any>(null);
 
     // Admin check
     const adminEmails = ['apmexplore@gmail.com'];
@@ -88,6 +94,12 @@ export default function UsersMapPage() {
             if (data.status === 'success') {
                 setUsers(data.users);
                 setError('');
+
+                // Update tracked user if exists
+                if (trackedUser) {
+                    const updated = data.users.find((u: UserLocation) => u.id === trackedUser.id);
+                    if (updated) setTrackedUser(updated);
+                }
             } else {
                 setError(data.message || 'Failed to fetch locations');
             }
@@ -96,6 +108,25 @@ export default function UsersMapPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Filter users by search
+    const filteredUsers = users.filter(user =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.country?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Track user - focus map on their location
+    const trackUser = (user: UserLocation) => {
+        setTrackedUser(user);
+        // Map will auto-center via key change
+    };
+
+    // Stop tracking
+    const stopTracking = () => {
+        setTrackedUser(null);
     };
 
     if (status === 'loading') {
@@ -127,16 +158,32 @@ export default function UsersMapPage() {
         <div className="min-h-screen bg-[#0B0C10] text-white">
             {/* Header */}
             <div className="border-b border-[#1F2937] bg-[#12141A]">
-                <div className="max-w-7xl mx-auto px-4 py-6">
-                    <div className="flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold">🗺️ User Locations Map</h1>
-                            <p className="text-gray-400 text-sm mt-1">
-                                Real-time tracking of {users.length} active users
+                            <h1 className="text-xl font-bold">🗺️ User Locations Map</h1>
+                            <p className="text-gray-400 text-sm">
+                                Tracking {users.length} users
+                                {trackedUser && <span className="text-green-400 ml-2">• Following: {trackedUser.name}</span>}
                             </p>
                         </div>
-                        <div className="flex items-center gap-4">
-                            {/* Period Filter */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {/* User Tracker Toggle */}
+                            <button
+                                onClick={() => setShowTracker(!showTracker)}
+                                className={`px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${showTracker ? 'bg-green-600 text-white' : 'bg-[#1F2937] text-gray-300 hover:bg-[#374151]'
+                                    }`}
+                            >
+                                🎯 User Tracker
+                            </button>
+                            {trackedUser && (
+                                <button
+                                    onClick={stopTracking}
+                                    className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"
+                                >
+                                    ✕ Stop Tracking
+                                </button>
+                            )}
                             <select
                                 value={period}
                                 onChange={(e) => setPeriod(e.target.value)}
@@ -146,22 +193,118 @@ export default function UsersMapPage() {
                                 <option value="7d">Last 7 Days</option>
                                 <option value="24h">Last 24 Hours</option>
                             </select>
-                            {/* Refresh Button */}
                             <button
                                 onClick={fetchUserLocations}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors"
+                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
                             >
-                                🔄 Refresh
+                                🔄
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+                <div className="flex gap-4">
+                    {/* User Tracker Sidebar */}
+                    <AnimatePresence>
+                        {showTracker && (
+                            <motion.div
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: 300, opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                className="shrink-0 overflow-hidden"
+                            >
+                                <div className="bg-[#12141A] rounded-xl border border-[#1F2937] p-4 h-[600px] flex flex-col">
+                                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                        🎯 User Tracker
+                                        <span className="text-xs text-gray-500">({filteredUsers.length})</span>
+                                    </h3>
+
+                                    {/* Search */}
+                                    <div className="relative mb-3">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search user..."
+                                            className="w-full bg-[#1F2937] border border-[#374151] rounded-lg px-3 py-2 text-sm pr-8"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+                                    </div>
+
+                                    {/* User List */}
+                                    <div className="flex-1 overflow-y-auto space-y-2">
+                                        {filteredUsers.map((user) => (
+                                            <motion.button
+                                                key={user.id}
+                                                onClick={() => trackUser(user)}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className={`w-full text-left p-3 rounded-lg border transition-all ${trackedUser?.id === user.id
+                                                        ? 'bg-green-500/20 border-green-500/50'
+                                                        : 'bg-[#1F2937] border-[#374151] hover:border-blue-500/50'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    {user.image ? (
+                                                        <img
+                                                            src={user.image}
+                                                            alt={user.name}
+                                                            className="w-8 h-8 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
+                                                            {user.name[0]}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-medium truncate flex items-center gap-1">
+                                                            {user.name}
+                                                            {trackedUser?.id === user.id && (
+                                                                <span className="text-green-400">📍</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 truncate">{user.city}, {user.country}</div>
+                                                    </div>
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded ${user.membership === 'VVIP' ? 'bg-amber-500/20 text-amber-400' :
+                                                            user.membership === 'PRO' ? 'bg-blue-500/20 text-blue-400' :
+                                                                'bg-gray-500/20 text-gray-400'
+                                                        }`}>
+                                                        {user.membership}
+                                                    </span>
+                                                </div>
+                                            </motion.button>
+                                        ))}
+
+                                        {filteredUsers.length === 0 && (
+                                            <div className="text-center text-gray-500 py-8">
+                                                No users found
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Tracked User Detail */}
+                                    {trackedUser && (
+                                        <div className="mt-3 pt-3 border-t border-[#374151]">
+                                            <div className="text-xs text-gray-400 mb-1">Currently Tracking:</div>
+                                            <div className="text-sm font-medium text-green-400">{trackedUser.name}</div>
+                                            <div className="text-xs text-gray-500">{trackedUser.email}</div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                📍 {trackedUser.city}, {trackedUser.country}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                🕐 {new Date(trackedUser.lastSeen).toLocaleString('id-ID')}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     {/* Map */}
-                    <div className="lg:col-span-3">
+                    <div className="flex-1">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -170,8 +313,9 @@ export default function UsersMapPage() {
                         >
                             {mapReady && !loading ? (
                                 <MapContainer
-                                    center={[-2.5, 118]} // Indonesia center
-                                    zoom={4}
+                                    key={trackedUser ? `track-${trackedUser.id}` : 'default'}
+                                    center={trackedUser ? [trackedUser.lat, trackedUser.lon] : [-2.5, 118]}
+                                    zoom={trackedUser ? 10 : 4}
                                     style={{ height: '100%', width: '100%' }}
                                 >
                                     <TileLayer
@@ -203,6 +347,12 @@ export default function UsersMapPage() {
                                                         <div>💳 {user.membership}</div>
                                                         <div>🕐 {new Date(user.lastSeen).toLocaleString('id-ID')}</div>
                                                     </div>
+                                                    <button
+                                                        onClick={() => trackUser(user)}
+                                                        className="mt-2 w-full bg-green-500 text-white text-xs py-1 rounded hover:bg-green-600"
+                                                    >
+                                                        🎯 Track User
+                                                    </button>
                                                 </div>
                                             </Popup>
                                         </Marker>
@@ -216,9 +366,8 @@ export default function UsersMapPage() {
                         </motion.div>
                     </div>
 
-                    {/* Sidebar Stats */}
-                    <div className="space-y-4">
-                        {/* Total Users */}
+                    {/* Stats Sidebar */}
+                    <div className="hidden xl:block w-64 space-y-4">
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -228,7 +377,6 @@ export default function UsersMapPage() {
                             <div className="text-3xl font-bold">{users.length}</div>
                         </motion.div>
 
-                        {/* By Country */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -239,17 +387,16 @@ export default function UsersMapPage() {
                             <div className="space-y-2">
                                 {Object.entries(countryStats)
                                     .sort((a, b) => b[1] - a[1])
-                                    .slice(0, 10)
+                                    .slice(0, 8)
                                     .map(([country, count]) => (
                                         <div key={country} className="flex items-center justify-between">
-                                            <span className="text-sm">{country}</span>
+                                            <span className="text-sm truncate">{country}</span>
                                             <span className="text-blue-400 font-medium">{count}</span>
                                         </div>
                                     ))}
                             </div>
                         </motion.div>
 
-                        {/* Recent Users */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -257,25 +404,25 @@ export default function UsersMapPage() {
                             className="bg-[#12141A] rounded-xl p-4 border border-[#1F2937]"
                         >
                             <h3 className="text-gray-400 text-sm mb-3">Recent Activity</h3>
-                            <div className="space-y-3">
-                                {users.slice(0, 5).map((user) => (
-                                    <div key={user.id} className="flex items-center gap-2">
+                            <div className="space-y-2">
+                                {users.slice(0, 4).map((user) => (
+                                    <button
+                                        key={user.id}
+                                        onClick={() => { setShowTracker(true); trackUser(user); }}
+                                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-[#1F2937] transition-colors"
+                                    >
                                         {user.image ? (
-                                            <img
-                                                src={user.image}
-                                                alt={user.name}
-                                                className="w-8 h-8 rounded-full"
-                                            />
+                                            <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full" />
                                         ) : (
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs">
+                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px]">
                                                 {user.name[0]}
                                             </div>
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium truncate">{user.name}</div>
-                                            <div className="text-xs text-gray-500">{user.city}</div>
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <div className="text-xs font-medium truncate">{user.name}</div>
+                                            <div className="text-[10px] text-gray-500">{user.city}</div>
                                         </div>
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                         </motion.div>
