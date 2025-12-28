@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,26 +8,6 @@ import Link from 'next/link';
 
 // New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
 const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
-const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
-
-const PLAN_DETAILS = {
-    PRO: {
-        name: 'Pro',
-        price: isNewYearPromoActive() ? 99000 : 149000,
-        priceDisplay: isNewYearPromoActive() ? 'Rp 99.000' : 'Rp 149.000',
-        originalPrice: isNewYearPromoActive() ? 'Rp 299.000' : null,
-        promoActive: isNewYearPromoActive(),
-        period: '/bulan',
-    },
-    VVIP: {
-        name: 'VVIP',
-        price: 399000,
-        priceDisplay: 'Rp 399.000',
-        originalPrice: null,
-        promoActive: false,
-        period: '/bulan',
-    },
-};
 
 const BANK_INFO = {
     bank: 'BCA',
@@ -39,8 +19,37 @@ export default function TransferPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const planId = searchParams.get('plan') as keyof typeof PLAN_DETAILS;
+    const planId = searchParams.get('plan');
     const [copied, setCopied] = useState<string | null>(null);
+
+    // Check promo status at runtime (client-side)
+    const isPromoActive = useMemo(() => {
+        return new Date() < NEW_YEAR_PROMO_END;
+    }, []);
+
+    // Calculate plan details dynamically based on promo status
+    const plan = useMemo(() => {
+        if (planId === 'PRO') {
+            return {
+                name: 'Pro',
+                price: isPromoActive ? 99000 : 149000,
+                priceDisplay: isPromoActive ? 'Rp 99.000' : 'Rp 149.000',
+                originalPrice: isPromoActive ? 'Rp 299.000' : null,
+                promoActive: isPromoActive,
+                period: '/bulan',
+            };
+        } else if (planId === 'VVIP') {
+            return {
+                name: 'VVIP',
+                price: 399000,
+                priceDisplay: 'Rp 399.000',
+                originalPrice: null,
+                promoActive: false,
+                period: '/bulan',
+            };
+        }
+        return null;
+    }, [planId, isPromoActive]);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -56,7 +65,7 @@ export default function TransferPage() {
         );
     }
 
-    if (!planId || !PLAN_DETAILS[planId]) {
+    if (!planId || !plan) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -68,8 +77,6 @@ export default function TransferPage() {
             </div>
         );
     }
-
-    const plan = PLAN_DETAILS[planId];
 
     const copyToClipboard = (text: string, field: string) => {
         navigator.clipboard.writeText(text);
@@ -199,7 +206,7 @@ export default function TransferPage() {
                         >
                             <span className="flex items-center justify-center gap-2">
                                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
                                 </svg>
                                 Konfirmasi via Telegram
                             </span>

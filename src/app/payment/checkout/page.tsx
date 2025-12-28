@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense, useCallback } from 'react';
+import { useEffect, useState, Suspense, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,36 +10,12 @@ import Image from 'next/image';
 
 // New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
 const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
-const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
-
-const PLANS = {
-    PRO: {
-        id: 'PRO',
-        name: 'Pro',
-        price: isNewYearPromoActive() ? 99000 : 149000,
-        priceFormatted: isNewYearPromoActive() ? 'Rp 99.000' : 'Rp 149.000',
-        originalPrice: 'Rp 299.000',
-        promoActive: isNewYearPromoActive(),
-        description: '25x Analisa/hari, Semua Timeframe',
-        color: 'from-blue-500 to-purple-500',
-    },
-    VVIP: {
-        id: 'VVIP',
-        name: 'VVIP',
-        price: 399000,
-        priceFormatted: 'Rp 399.000',
-        originalPrice: null,
-        promoActive: false,
-        description: 'UNLIMITED Analisa, Free Custom EA',
-        color: 'from-amber-500 to-orange-500',
-    },
-};
 
 function PaymentCheckoutContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const planId = searchParams.get('plan') as keyof typeof PLANS;
+    const planId = searchParams.get('plan');
 
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [orderId, setOrderId] = useState<string | null>(null);
@@ -49,8 +25,41 @@ function PaymentCheckoutContent() {
     const [countdown, setCountdown] = useState<number>(300);
     const [useFallback, setUseFallback] = useState(false);
 
+    // Check promo status at runtime (client-side)
+    const isPromoActive = useMemo(() => {
+        return new Date() < NEW_YEAR_PROMO_END;
+    }, []);
+
+    // Calculate plan details dynamically based on promo status
+    const plan = useMemo(() => {
+        if (planId === 'PRO') {
+            return {
+                id: 'PRO',
+                name: 'Pro',
+                price: isPromoActive ? 99000 : 149000,
+                priceFormatted: isPromoActive ? 'Rp 99.000' : 'Rp 149.000',
+                originalPrice: 'Rp 299.000',
+                promoActive: isPromoActive,
+                description: '25x Analisa/hari, Semua Timeframe',
+                color: 'from-blue-500 to-purple-500',
+            };
+        } else if (planId === 'VVIP') {
+            return {
+                id: 'VVIP',
+                name: 'VVIP',
+                price: 399000,
+                priceFormatted: 'Rp 399.000',
+                originalPrice: null,
+                promoActive: false,
+                description: 'UNLIMITED Analisa, Free Custom EA',
+                color: 'from-amber-500 to-orange-500',
+            };
+        }
+        return null;
+    }, [planId, isPromoActive]);
+
     const createQRIS = useCallback(async () => {
-        if (!planId || !PLANS[planId]) return;
+        if (!planId || !plan) return;
 
         setIsLoading(true);
         setError(null);
@@ -82,7 +91,7 @@ function PaymentCheckoutContent() {
         } finally {
             setIsLoading(false);
         }
-    }, [planId]);
+    }, [planId, plan]);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -91,10 +100,10 @@ function PaymentCheckoutContent() {
     }, [status, router]);
 
     useEffect(() => {
-        if (status === 'authenticated' && planId && PLANS[planId]) {
+        if (status === 'authenticated' && planId && plan) {
             createQRIS();
         }
-    }, [status, planId, createQRIS]);
+    }, [status, planId, plan, createQRIS]);
 
     // Countdown timer
     useEffect(() => {
@@ -141,7 +150,7 @@ function PaymentCheckoutContent() {
     };
 
     const handleTelegramConfirm = () => {
-        const plan = PLANS[planId];
+        if (!plan) return;
         const message = encodeURIComponent(
             `Halo Admin ARRA7! 👋\n\n` +
             `Saya ingin konfirmasi pembayaran:\n\n` +
@@ -154,7 +163,7 @@ function PaymentCheckoutContent() {
         window.open(`https://t.me/arra7trader?text=${message}`, '_blank');
     };
 
-    if (!planId || !PLANS[planId]) {
+    if (!planId || !plan) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -166,8 +175,6 @@ function PaymentCheckoutContent() {
             </div>
         );
     }
-
-    const plan = PLANS[planId];
 
     if (status === 'loading' || isLoading) {
         return (
@@ -238,8 +245,16 @@ function PaymentCheckoutContent() {
                         </h1>
                     </div>
 
-                    {/* Price */}
+                    {/* Price with promo indicator */}
                     <div className="bg-[#12141A] rounded-2xl p-4 mb-6 text-center">
+                        {plan.promoActive && plan.originalPrice && (
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <span className="text-lg text-[#64748B] line-through">{plan.originalPrice}</span>
+                                <span className="px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold animate-pulse">
+                                    🎉 PROMO TAHUN BARU
+                                </span>
+                            </div>
+                        )}
                         <p className="text-4xl font-bold gradient-text">{plan.priceFormatted}</p>
                     </div>
 
