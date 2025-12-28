@@ -147,7 +147,17 @@ export default function AnalisaMarketPage() {
     useEffect(() => {
         fetchNews();
         fetchQuota();
+        // Track user location for admin map
+        trackLocation();
     }, []);
+
+    const trackLocation = async () => {
+        try {
+            await fetch('/api/location', { method: 'POST' });
+        } catch (err) {
+            // Silent fail - location tracking is optional
+        }
+    };
 
     const fetchQuota = async () => {
         try {
@@ -366,18 +376,18 @@ export default function AnalisaMarketPage() {
                         {/* Quota Status */}
                         {quotaStatus && (
                             <div className={`rounded-2xl p-4 border ${quotaStatus.membership === 'VVIP'
-                                    ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30'
-                                    : quotaStatus.membership === 'PRO'
-                                        ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/30'
-                                        : 'glass border-[#1F2937]'
+                                ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30'
+                                : quotaStatus.membership === 'PRO'
+                                    ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/30'
+                                    : 'glass border-[#1F2937]'
                                 }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-[#94A3B8]">📊 Quota Hari Ini</span>
                                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus.membership === 'VVIP'
-                                            ? 'bg-amber-500/20 text-amber-400'
-                                            : quotaStatus.membership === 'PRO'
-                                                ? 'bg-blue-500/20 text-blue-400'
-                                                : 'bg-slate-500/20 text-slate-400'
+                                        ? 'bg-amber-500/20 text-amber-400'
+                                        : quotaStatus.membership === 'PRO'
+                                            ? 'bg-blue-500/20 text-blue-400'
+                                            : 'bg-slate-500/20 text-slate-400'
                                         }`}>
                                         {quotaStatus.membership}
                                     </span>
@@ -386,10 +396,10 @@ export default function AnalisaMarketPage() {
                                     <div className="flex-1 h-2 bg-[#1F2937] rounded-full overflow-hidden">
                                         <div
                                             className={`h-full transition-all ${quotaStatus.remaining === 0
-                                                    ? 'bg-red-500'
-                                                    : quotaStatus.membership === 'VVIP'
-                                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                                                        : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                                                ? 'bg-red-500'
+                                                : quotaStatus.membership === 'VVIP'
+                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                                                    : 'bg-gradient-to-r from-blue-500 to-purple-500'
                                                 }`}
                                             style={{
                                                 width: quotaStatus.dailyLimit === Infinity
