@@ -297,6 +297,11 @@ Tim ARRA7`;
                                 🗺️ Users Map
                             </button>
                         </Link>
+                        <Link href="/admin/revenue">
+                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all">
+                                💰 Revenue
+                            </button>
+                        </Link>
                         <Link href="/admin/notifications">
                             <button className="px-4 py-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-sm font-medium transition-all">
                                 🔔 Notifikasi
