@@ -82,6 +82,13 @@ body {
   border: 1px solid var(--glass-border);
 }
 
+/* Solid Glass (for mobile menu - no see-through) */
+.glass-solid {
+  background: rgba(11, 12, 16, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 /* Gradient Text */
 .gradient-text {
   background: var(--accent-gradient);
