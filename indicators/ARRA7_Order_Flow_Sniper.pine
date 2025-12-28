@@ -1,0 +1,277 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ARRA7 Trading - Order Flow Sniper
+// Version 1.0
+
+//@version=5
+indicator("ARRA7 Order Flow Sniper", overlay=true, max_boxes_count=200, max_labels_count=100)
+
+// ============================================
+// SETTINGS
+// ============================================
+// Order Block Settings
+showOB = input.bool(true, "Show Order Blocks", group="Order Blocks")
+obLookback = input.int(20, "OB Lookback", minval=5, maxval=100, group="Order Blocks")
+obMitigation = input.bool(true, "Hide Mitigated OBs", group="Order Blocks")
+bullOBColor = input.color(color.new(color.green, 70), "Bullish OB", group="Order Blocks")
+bearOBColor = input.color(color.new(color.red, 70), "Bearish OB", group="Order Blocks")
+
+// Volume Filter
+useVolumeFilter = input.bool(true, "Volume Filter", group="Volume Filter")
+volMultiplier = input.float(1.5, "Volume Multiplier", minval=1.0, step=0.1, group="Volume Filter")
+
+// Breaker Block Settings
+showBB = input.bool(true, "Show Breaker Blocks", group="Breaker Blocks")
+bbColor = input.color(color.new(color.purple, 70), "Breaker Block Color", group="Breaker Blocks")
+
+// Premium/Discount
+showPD = input.bool(true, "Show Premium/Discount Zones", group="Premium/Discount")
+pdLookback = input.int(50, "P/D Lookback", minval=10, group="Premium/Discount")
+
+// HTF Confluence
+useHTF = input.bool(true, "HTF Confluence Filter", group="HTF Confluence")
+htfTimeframe = input.timeframe("60", "HTF Timeframe", group="HTF Confluence")
+
+// Alerts
+showAlerts = input.bool(true, "Enable Alerts", group="Alerts")
+
+// ============================================
+// VOLUME ANALYSIS
+// ============================================
+avgVolume = ta.sma(volume, 20)
+highVolume = volume > avgVolume * volMultiplier
+veryHighVolume = volume > avgVolume * 2
+
+// ============================================
+// ORDER BLOCK DETECTION
+// ============================================
+// Bullish OB: Last down candle before a strong up move
+// Bearish OB: Last up candle before a strong down move
+
+// Detect strong moves
+strongUpMove = close > open and (close - open) > ta.atr(14) * 0.5
+strongDownMove = close < open and (open - close) > ta.atr(14) * 0.5
+
+// Bullish Order Block
+bullOB = close[1] < open[1] and strongUpMove and close > high[1]
+bullOBWithVol = useVolumeFilter ? (bullOB and highVolume) : bullOB
+
+// Bearish Order Block  
+bearOB = close[1] > open[1] and strongDownMove and close < low[1]
+bearOBWithVol = useVolumeFilter ? (bearOB and highVolume) : bearOB
+
+// Store OB levels
+var float[] bullOBTop = array.new_float(0)
+var float[] bullOBBottom = array.new_float(0)
+var int[] bullOBBar = array.new_int(0)
+var bool[] bullOBActive = array.new_bool(0)
+
+var float[] bearOBTop = array.new_float(0)
+var float[] bearOBBottom = array.new_float(0)
+var int[] bearOBBar = array.new_int(0)
+var bool[] bearOBActive = array.new_bool(0)
+
+// Add new OBs
+if bullOBWithVol
+    array.push(bullOBTop, high[1])
+    array.push(bullOBBottom, low[1])
+    array.push(bullOBBar, bar_index - 1)
+    array.push(bullOBActive, true)
+
+if bearOBWithVol
+    array.push(bearOBTop, high[1])
+    array.push(bearOBBottom, low[1])
+    array.push(bearOBBar, bar_index - 1)
+    array.push(bearOBActive, true)
+
+// Check OB mitigation
+if obMitigation
+    // Check bullish OBs
+    for i = 0 to array.size(bullOBActive) - 1
+        if array.size(bullOBActive) > i and array.get(bullOBActive, i)
+            obBottom = array.get(bullOBBottom, i)
+            if low < obBottom
+                array.set(bullOBActive, i, false)
+    
+    // Check bearish OBs
+    for i = 0 to array.size(bearOBActive) - 1
+        if array.size(bearOBActive) > i and array.get(bearOBActive, i)
+            obTop = array.get(bearOBTop, i)
+            if high > obTop
+                array.set(bearOBActive, i, false)
+
+// ============================================
+// DRAW ORDER BLOCKS
+// ============================================
+if showOB and barstate.islast
+    // Draw bullish OBs
+    for i = math.max(0, array.size(bullOBActive) - 10) to array.size(bullOBActive) - 1
+        if array.get(bullOBActive, i)
+            obTop = array.get(bullOBTop, i)
+            obBottom = array.get(bullOBBottom, i)
+            obBar = array.get(bullOBBar, i)
+            box.new(obBar, obTop, bar_index + 10, obBottom, border_color=color.green, bgcolor=bullOBColor, border_width=1)
+            label.new(obBar, obBottom, "🟢 OB\nBUY ZONE", style=label.style_label_up, color=color.new(color.green, 40), textcolor=color.white, size=size.tiny)
+    
+    // Draw bearish OBs
+    for i = math.max(0, array.size(bearOBActive) - 10) to array.size(bearOBActive) - 1
+        if array.get(bearOBActive, i)
+            obTop = array.get(bearOBTop, i)
+            obBottom = array.get(bearOBBottom, i)
+            obBar = array.get(bearOBBar, i)
+            box.new(obBar, obTop, bar_index + 10, obBottom, border_color=color.red, bgcolor=bearOBColor, border_width=1)
+            label.new(obBar, obTop, "🔴 OB\nSELL ZONE", style=label.style_label_down, color=color.new(color.red, 40), textcolor=color.white, size=size.tiny)
+
+// ============================================
+// BREAKER BLOCK DETECTION
+// ============================================
+// Breaker = failed Order Block that becomes opposite zone
+// Bullish Breaker: Bearish OB that gets broken = now support
+// Bearish Breaker: Bullish OB that gets broken = now resistance
+
+var float[] breakerTop = array.new_float(0)
+var float[] breakerBottom = array.new_float(0)
+var int[] breakerBar = array.new_int(0)
+var int[] breakerType = array.new_int(0) // 1 = bullish breaker, -1 = bearish breaker
+
+// Detect breakers when OB is violated then price returns
+bullBreaker = bearOB[3] and close > high[3] and close[1] < high[3] and close > high[3]
+bearBreaker = bullOB[3] and close < low[3] and close[1] > low[3] and close < low[3]
+
+if showBB
+    if bullBreaker
+        array.push(breakerTop, high[3])
+        array.push(breakerBottom, low[3])
+        array.push(breakerBar, bar_index - 3)
+        array.push(breakerType, 1)
+    
+    if bearBreaker
+        array.push(breakerTop, high[3])
+        array.push(breakerBottom, low[3])
+        array.push(breakerBar, bar_index - 3)
+        array.push(breakerType, -1)
+
+// Draw Breaker Blocks
+if showBB and barstate.islast
+    for i = math.max(0, array.size(breakerType) - 5) to array.size(breakerType) - 1
+        bbTop = array.get(breakerTop, i)
+        bbBottom = array.get(breakerBottom, i)
+        bbBar = array.get(breakerBar, i)
+        bbTyp = array.get(breakerType, i)
+        bbClr = bbTyp == 1 ? color.new(color.teal, 60) : color.new(color.orange, 60)
+        box.new(bbBar, bbTop, bar_index + 10, bbBottom, border_color=color.purple, bgcolor=bbClr, border_width=2, border_style=line.style_dashed)
+        lbl = bbTyp == 1 ? "⚡ BREAKER\n(Support)" : "⚡ BREAKER\n(Resistance)"
+        label.new(bbBar, bbTyp == 1 ? bbBottom : bbTop, lbl, style=bbTyp == 1 ? label.style_label_up : label.style_label_down, color=color.new(color.purple, 30), textcolor=color.white, size=size.tiny)
+
+// ============================================
+// PREMIUM/DISCOUNT ZONES
+// ============================================
+highestHigh = ta.highest(high, pdLookback)
+lowestLow = ta.lowest(low, pdLookback)
+rangeSize = highestHigh - lowestLow
+equilibrium = lowestLow + rangeSize / 2
+
+isPremium = close > equilibrium
+isDiscount = close < equilibrium
+
+// Background color for P/D
+pdBgColor = showPD ? (isPremium ? color.new(color.red, 95) : isDiscount ? color.new(color.green, 95) : na) : na
+bgcolor(pdBgColor)
+
+// Draw equilibrium line
+plot(showPD ? equilibrium : na, "Equilibrium", color=color.gray, linewidth=1, style=plot.style_cross)
+
+// ============================================
+// HTF CONFLUENCE
+// ============================================
+htfHigh = request.security(syminfo.tickerid, htfTimeframe, ta.highest(high, 10))
+htfLow = request.security(syminfo.tickerid, htfTimeframe, ta.lowest(low, 10))
+htfEq = (htfHigh + htfLow) / 2
+htfBullish = request.security(syminfo.tickerid, htfTimeframe, close > open)
+
+// ============================================
+// SIGNAL GENERATION
+// ============================================
+// Check if price is at valid OB
+atBullOB = false
+atBearOB = false
+
+for i = 0 to math.min(9, array.size(bullOBActive) - 1)
+    if array.size(bullOBActive) > i and array.get(bullOBActive, i)
+        obTop = array.get(bullOBTop, i)
+        obBottom = array.get(bullOBBottom, i)
+        if low <= obTop and low >= obBottom
+            atBullOB := true
+
+for i = 0 to math.min(9, array.size(bearOBActive) - 1)
+    if array.size(bearOBActive) > i and array.get(bearOBActive, i)
+        obTop = array.get(bearOBTop, i)
+        obBottom = array.get(bearOBBottom, i)
+        if high >= obBottom and high <= obTop
+            atBearOB := true
+
+// High probability signals
+buySignal = atBullOB and isDiscount and (not useHTF or htfBullish)
+sellSignal = atBearOB and isPremium and (not useHTF or not htfBullish)
+
+plotshape(buySignal, "OB Buy", shape.triangleup, location.belowbar, color.lime, size=size.normal)
+plotshape(sellSignal, "OB Sell", shape.triangledown, location.abovebar, color.red, size=size.normal)
+
+// ============================================
+// ALERTS
+// ============================================
+if showAlerts
+    if buySignal
+        alert("🟢 ARRA7 Order Flow Sniper: BUY at OB!\n" + syminfo.ticker + " @ " + str.tostring(close) + "\nZone: DISCOUNT + Bullish OB", alert.freq_once_per_bar)
+    
+    if sellSignal
+        alert("🔴 ARRA7 Order Flow Sniper: SELL at OB!\n" + syminfo.ticker + " @ " + str.tostring(close) + "\nZone: PREMIUM + Bearish OB", alert.freq_once_per_bar)
+    
+    if bullOBWithVol
+        alert("📊 New Bullish Order Block formed on " + syminfo.ticker + " @ " + str.tostring(high[1], format.mintick), alert.freq_once_per_bar)
+    
+    if bearOBWithVol
+        alert("📊 New Bearish Order Block formed on " + syminfo.ticker + " @ " + str.tostring(low[1], format.mintick), alert.freq_once_per_bar)
+
+// ============================================
+// INFO TABLE
+// ============================================
+var table infoTable = table.new(position.top_right, 2, 7, bgcolor=color.new(color.black, 80), border_width=1)
+
+if barstate.islast
+    table.cell(infoTable, 0, 0, "📊 ARRA7 Order Flow Sniper", text_color=color.white, text_size=size.small)
+    table.cell(infoTable, 1, 0, "v1.0", text_color=color.gray, text_size=size.tiny)
+    
+    // Premium/Discount
+    pdText = isPremium ? "🔴 PREMIUM (Sell Zone)" : "🟢 DISCOUNT (Buy Zone)"
+    pdClr = isPremium ? color.red : color.lime
+    table.cell(infoTable, 0, 1, "Zone", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 1, pdText, text_color=pdClr, text_size=size.small)
+    
+    // Equilibrium
+    table.cell(infoTable, 0, 2, "Equilibrium", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 2, str.tostring(equilibrium, format.mintick), text_color=color.white, text_size=size.small)
+    
+    // Active Bullish OBs
+    activeBullOBs = 0
+    for i = 0 to array.size(bullOBActive) - 1
+        if array.get(bullOBActive, i)
+            activeBullOBs += 1
+    table.cell(infoTable, 0, 3, "Bullish OBs", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 3, str.tostring(activeBullOBs), text_color=color.lime, text_size=size.small)
+    
+    // Active Bearish OBs
+    activeBearOBs = 0
+    for i = 0 to array.size(bearOBActive) - 1
+        if array.get(bearOBActive, i)
+            activeBearOBs += 1
+    table.cell(infoTable, 0, 4, "Bearish OBs", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 4, str.tostring(activeBearOBs), text_color=color.red, text_size=size.small)
+    
+    // Volume
+    volStatus = veryHighVolume ? "🔥 VERY HIGH" : highVolume ? "📈 HIGH" : "📊 Normal"
+    volClr = veryHighVolume ? color.orange : highVolume ? color.lime : color.gray
+    table.cell(infoTable, 0, 5, "Volume", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 5, volStatus, text_color=volClr, text_size=size.small)
+    
+    table.cell(infoTable, 0, 6, "© ARRA7 Trading", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 6, "arra7-app.vercel.app", text_color=color.aqua, text_size=size.tiny)
