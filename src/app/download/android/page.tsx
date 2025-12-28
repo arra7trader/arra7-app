@@ -75,7 +75,8 @@ export default function DownloadAndroidPage() {
 
                             {/* Download Button */}
                             <a
-                                href="https://github.com/arra7trader/arra7-app/releases/download/v2.0/ARRA7_v2.0.apk"
+                                href="https://raw.githubusercontent.com/arra7trader/arra7-app/main/ARRA7_v2.0.apk"
+                                download="ARRA7_v2.0.apk"
                                 className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-green-500/30 transition-all"
                             >
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
