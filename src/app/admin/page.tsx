@@ -291,7 +291,17 @@ Tim ARRA7`;
                         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                         <p className="text-[#94A3B8]">Kelola users dan membership</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                        <Link href="/admin/users-map">
+                            <button className="px-4 py-2 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-sm font-medium transition-all">
+                                🗺️ Users Map
+                            </button>
+                        </Link>
+                        <Link href="/admin/notifications">
+                            <button className="px-4 py-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-sm font-medium transition-all">
+                                🔔 Notifikasi
+                            </button>
+                        </Link>
                         <Link href="/admin/report">
                             <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg hover:shadow-blue-500/25 rounded-lg text-sm font-medium transition-all">
                                 📊 Daily Report
