@@ -402,14 +402,14 @@ export default function AnalisaMarketPage() {
                                                     : 'bg-gradient-to-r from-blue-500 to-purple-500'
                                                 }`}
                                             style={{
-                                                width: quotaStatus.dailyLimit === Infinity
+                                                width: (quotaStatus.dailyLimit === -1 || quotaStatus.dailyLimit === null)
                                                     ? '100%'
-                                                    : `${Math.min(100, (quotaStatus.used / quotaStatus.dailyLimit) * 100)}%`
+                                                    : `${Math.min(100, (quotaStatus.used / (quotaStatus.dailyLimit || 1)) * 100)}%`
                                             }}
                                         />
                                     </div>
                                     <span className="text-sm font-mono text-white">
-                                        {quotaStatus.dailyLimit === Infinity
+                                        {(quotaStatus.dailyLimit === -1 || quotaStatus.dailyLimit === null)
                                             ? '∞'
                                             : `${quotaStatus.used}/${quotaStatus.dailyLimit}`
                                         }

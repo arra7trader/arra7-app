@@ -17,13 +17,14 @@ export async function GET() {
         // Check if Turso is configured
         if (!process.env.TURSO_DATABASE_URL) {
             // Return unlimited quota if no database
+            // Use -1 to represent unlimited (JSON can't serialize Infinity)
             return NextResponse.json({
                 status: 'success',
                 quota: {
                     membership: 'BASIC',
-                    dailyLimit: Infinity,
+                    dailyLimit: -1, // -1 means unlimited
                     used: 0,
-                    remaining: Infinity,
+                    remaining: -1, // -1 means unlimited  
                     canAnalyze: true,
                     allowedTimeframes: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
                 },
@@ -32,9 +33,16 @@ export async function GET() {
 
         const quotaStatus = await getQuotaStatus(session.user.id);
 
+        // Convert Infinity to -1 for JSON serialization
+        const serializedQuota = {
+            ...quotaStatus,
+            dailyLimit: quotaStatus.dailyLimit === Infinity ? -1 : quotaStatus.dailyLimit,
+            remaining: quotaStatus.remaining === Infinity ? -1 : quotaStatus.remaining,
+        };
+
         return NextResponse.json({
             status: 'success',
-            quota: quotaStatus,
+            quota: serializedQuota,
         });
 
     } catch (error) {

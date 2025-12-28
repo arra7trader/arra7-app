@@ -44,11 +44,17 @@ export async function POST(request: NextRequest) {
             const quotaCheck = await checkQuota(userId, timeframe, pair);
 
             if (!quotaCheck.allowed) {
+                // Serialize quotaStatus - convert Infinity to -1 for JSON
+                const serializedQuota = {
+                    ...quotaCheck.quotaStatus,
+                    dailyLimit: quotaCheck.quotaStatus.dailyLimit === Infinity ? -1 : quotaCheck.quotaStatus.dailyLimit,
+                    remaining: quotaCheck.quotaStatus.remaining === Infinity ? -1 : quotaCheck.quotaStatus.remaining,
+                };
                 return NextResponse.json(
                     {
                         status: 'error',
                         message: quotaCheck.message,
-                        quotaStatus: quotaCheck.quotaStatus,
+                        quotaStatus: serializedQuota,
                     },
                     { status: 403 }
                 );
@@ -117,6 +123,13 @@ export async function POST(request: NextRequest) {
             console.error('Failed to save signal:', signalError);
         }
 
+        // Serialize quotaStatus - convert Infinity to -1 for JSON
+        const serializedQuotaStatus = quotaStatus ? {
+            ...quotaStatus,
+            dailyLimit: quotaStatus.dailyLimit === Infinity ? -1 : quotaStatus.dailyLimit,
+            remaining: quotaStatus.remaining === Infinity ? -1 : quotaStatus.remaining,
+        } : null;
+
         return NextResponse.json({
             status: 'success',
             result: aiResult.formattedHtml,
@@ -128,7 +141,7 @@ export async function POST(request: NextRequest) {
                 change: marketData.change_percent,
                 isRealtime: marketData.is_realtime,
             },
-            quotaStatus,
+            quotaStatus: serializedQuotaStatus,
             timestamp: new Date().toISOString(),
         });
 
