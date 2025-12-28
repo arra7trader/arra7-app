@@ -116,7 +116,24 @@ export default function Home() {
                 </motion.button>
               </Link>
             </motion.div>
+
+            {/* Android App Banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mt-8"
+            >
+              <Link href="/download/android">
+                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:border-green-500/60 transition-all cursor-pointer group">
+                  <span className="text-2xl">📱</span>
+                  <span className="text-green-400 font-medium">Download Android App</span>
+                  <span className="text-gray-400 group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+              </Link>
+            </motion.div>
           </div>
+
 
           {/* Feature Cards */}
           <motion.div

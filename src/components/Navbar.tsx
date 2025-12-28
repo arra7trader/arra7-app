@@ -27,6 +27,7 @@ export default function Navbar() {
         { label: t('indicators'), href: '/products/indicators' },
         { label: t('expertAdvisors'), href: '/products/expert-advisors' },
         { label: t('pricing'), href: '/pricing' },
+        { label: '📱 Android', href: '/download/android' },
         { label: 'FAQ', href: '/faq' },
     ];
 
