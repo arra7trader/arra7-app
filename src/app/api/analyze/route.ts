@@ -91,11 +91,26 @@ export async function POST(request: NextRequest) {
 
         // Save signal for performance tracking
         try {
-            const { parseSignalFromAnalysis, saveSignal } = await import('@/lib/signal-tracker');
+            const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
             if (aiResult.analysis) {
                 const signalData = parseSignalFromAnalysis(aiResult.analysis, 'forex', pair, timeframe);
                 if (signalData) {
-                    await saveSignal(signalData);
+                    const saved = await saveSignal(signalData);
+                    console.log('[Analyze] Signal saved via parsing:', saved);
+                } else {
+                    // Fallback: try to determine direction and force save with current price
+                    const lowerAnalysis = aiResult.analysis.toLowerCase();
+                    let direction: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
+                    if (lowerAnalysis.includes('buy') || lowerAnalysis.includes('bullish') || lowerAnalysis.includes('beli')) {
+                        direction = 'BUY';
+                    } else if (lowerAnalysis.includes('sell') || lowerAnalysis.includes('bearish') || lowerAnalysis.includes('jual')) {
+                        direction = 'SELL';
+                    }
+
+                    if (direction !== 'HOLD' && marketData.current_price > 0) {
+                        const saved = await forceSaveSignal('forex', pair, direction, marketData.current_price, timeframe);
+                        console.log('[Analyze] Signal saved via forceSave:', saved, 'Direction:', direction, 'Price:', marketData.current_price);
+                    }
                 }
             }
         } catch (signalError) {

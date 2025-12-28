@@ -230,11 +230,26 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
 
         // Save signal for performance tracking
         try {
-            const { parseSignalFromAnalysis, saveSignal } = await import('@/lib/signal-tracker');
+            const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
             if (analysis) {
                 const signalData = parseSignalFromAnalysis(analysis, 'stock', symbol);
                 if (signalData) {
-                    await saveSignal(signalData);
+                    const saved = await saveSignal(signalData);
+                    console.log('[StockAnalyze] Signal saved via parsing:', saved);
+                } else {
+                    // Fallback: try to determine direction and force save with current price
+                    const lowerAnalysis = analysis.toLowerCase();
+                    let direction: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
+                    if (lowerAnalysis.includes('strong buy') || lowerAnalysis.includes('buy') || lowerAnalysis.includes('bullish') || lowerAnalysis.includes('beli')) {
+                        direction = 'BUY';
+                    } else if (lowerAnalysis.includes('strong sell') || lowerAnalysis.includes('sell') || lowerAnalysis.includes('bearish') || lowerAnalysis.includes('jual')) {
+                        direction = 'SELL';
+                    }
+
+                    if (direction !== 'HOLD' && stockData.currentPrice > 0) {
+                        const saved = await forceSaveSignal('stock', symbol, direction, stockData.currentPrice);
+                        console.log('[StockAnalyze] Signal saved via forceSave:', saved, 'Direction:', direction, 'Price:', stockData.currentPrice);
+                    }
                 }
             }
         } catch (signalError) {
