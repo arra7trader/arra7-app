@@ -1,0 +1,202 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ARRA7 Trading - Momentum Shift Detector
+// Version 1.0
+
+//@version=5
+indicator("ARRA7 Momentum Shift Detector", overlay=true, max_lines_count=500, max_labels_count=200)
+
+// ============================================
+// SETTINGS
+// ============================================
+// Structure Settings
+showBOS = input.bool(true, "Show Break of Structure (BOS)", group="Market Structure")
+showCHoCH = input.bool(true, "Show Change of Character (CHoCH)", group="Market Structure")
+structureLength = input.int(10, "Swing Length", minval=3, maxval=50, group="Market Structure")
+bosColor = input.color(color.blue, "BOS Color", group="Market Structure")
+chochBullColor = input.color(color.lime, "CHoCH Bullish Color", group="Market Structure")
+chochBearColor = input.color(color.red, "CHoCH Bearish Color", group="Market Structure")
+
+// Divergence Settings
+showDivergence = input.bool(true, "Show RSI Divergence", group="Divergence")
+rsiLength = input.int(14, "RSI Length", group="Divergence")
+rsiOB = input.int(70, "RSI Overbought", group="Divergence")
+rsiOS = input.int(30, "RSI Oversold", group="Divergence")
+divBullColor = input.color(color.green, "Bullish Divergence", group="Divergence")
+divBearColor = input.color(color.red, "Bearish Divergence", group="Divergence")
+
+// Alerts
+showAlerts = input.bool(true, "Enable Alerts", group="Alerts")
+
+// ============================================
+// SWING HIGH/LOW DETECTION
+// ============================================
+ph = ta.pivothigh(high, structureLength, structureLength)
+pl = ta.pivotlow(low, structureLength, structureLength)
+
+var float lastSwingHigh = na
+var float lastSwingLow = na
+var int lastSwingHighBar = na
+var int lastSwingLowBar = na
+var int trend = 0 // 1 = bullish, -1 = bearish, 0 = neutral
+
+// Track swing points
+if not na(ph)
+    lastSwingHigh := ph
+    lastSwingHighBar := bar_index - structureLength
+
+if not na(pl)
+    lastSwingLow := pl
+    lastSwingLowBar := bar_index - structureLength
+
+// ============================================
+// BREAK OF STRUCTURE (BOS) DETECTION
+// ============================================
+// BOS = continuation of current trend
+// Bullish BOS: breaking above previous swing high in uptrend
+// Bearish BOS: breaking below previous swing low in downtrend
+
+bullishBOS = trend == 1 and high > lastSwingHigh and high[1] <= lastSwingHigh
+bearishBOS = trend == -1 and low < lastSwingLow and low[1] >= lastSwingLow
+
+// Update trend based on BOS
+if bullishBOS
+    trend := 1
+if bearishBOS
+    trend := -1
+
+// ============================================
+// CHANGE OF CHARACTER (CHoCH) DETECTION
+// ============================================
+// CHoCH = trend reversal signal
+// Bullish CHoCH: breaking above swing high after downtrend
+// Bearish CHoCH: breaking below swing low after uptrend
+
+bullishCHoCH = trend <= 0 and high > lastSwingHigh and high[1] <= lastSwingHigh
+bearishCHoCH = trend >= 0 and low < lastSwingLow and low[1] >= lastSwingLow
+
+// Update trend based on CHoCH
+if bullishCHoCH
+    trend := 1
+if bearishCHoCH
+    trend := -1
+
+// ============================================
+// DRAW BOS
+// ============================================
+if showBOS and bullishBOS
+    line.new(lastSwingHighBar, lastSwingHigh, bar_index, lastSwingHigh, color=bosColor, style=line.style_dashed, width=1)
+    label.new(bar_index, high, "BOS ↗", style=label.style_label_down, color=color.new(bosColor, 50), textcolor=color.white, size=size.tiny)
+
+if showBOS and bearishBOS
+    line.new(lastSwingLowBar, lastSwingLow, bar_index, lastSwingLow, color=bosColor, style=line.style_dashed, width=1)
+    label.new(bar_index, low, "BOS ↘", style=label.style_label_up, color=color.new(bosColor, 50), textcolor=color.white, size=size.tiny)
+
+// ============================================
+// DRAW CHoCH (More prominent - this is the reversal signal!)
+// ============================================
+if showCHoCH and bullishCHoCH
+    line.new(lastSwingHighBar, lastSwingHigh, bar_index, lastSwingHigh, color=chochBullColor, style=line.style_solid, width=2)
+    label.new(bar_index, high, "🔄 CHoCH\nBULLISH", style=label.style_label_down, color=color.new(chochBullColor, 20), textcolor=color.white, size=size.small)
+
+if showCHoCH and bearishCHoCH
+    line.new(lastSwingLowBar, lastSwingLow, bar_index, lastSwingLow, color=chochBearColor, style=line.style_solid, width=2)
+    label.new(bar_index, low, "🔄 CHoCH\nBEARISH", style=label.style_label_up, color=color.new(chochBearColor, 20), textcolor=color.white, size=size.small)
+
+// ============================================
+// RSI DIVERGENCE DETECTION
+// ============================================
+rsi = ta.rsi(close, rsiLength)
+
+// Find RSI swing points
+rsiPH = ta.pivothigh(rsi, 5, 5)
+rsiPL = ta.pivotlow(rsi, 5, 5)
+
+// Price swing points (using close for smoother detection)
+pricePH = ta.pivothigh(close, 5, 5)
+pricePL = ta.pivotlow(close, 5, 5)
+
+// Regular Bullish Divergence: Price makes lower low, RSI makes higher low
+var float prevPriceLow = na
+var float prevRSILow = na
+var int prevLowBar = na
+
+// Regular Bearish Divergence: Price makes higher high, RSI makes lower high
+var float prevPriceHigh = na
+var float prevRSIHigh = na
+var int prevHighBar = na
+
+// Track for divergence
+if not na(pricePL)
+    if not na(prevPriceLow) and close[5] < prevPriceLow and rsi[5] > prevRSILow and rsi[5] < rsiOS + 20
+        // Bullish Regular Divergence
+        if showDivergence
+            line.new(prevLowBar, prevPriceLow, bar_index - 5, close[5], color=divBullColor, width=2)
+            label.new(bar_index - 5, low[5], "📊 Bull Div", style=label.style_label_up, color=color.new(divBullColor, 30), textcolor=color.white, size=size.tiny)
+    
+    prevPriceLow := close[5]
+    prevRSILow := rsi[5]
+    prevLowBar := bar_index - 5
+
+if not na(pricePH)
+    if not na(prevPriceHigh) and close[5] > prevPriceHigh and rsi[5] < prevRSIHigh and rsi[5] > rsiOB - 20
+        // Bearish Regular Divergence
+        if showDivergence
+            line.new(prevHighBar, prevPriceHigh, bar_index - 5, close[5], color=divBearColor, width=2)
+            label.new(bar_index - 5, high[5], "📊 Bear Div", style=label.style_label_down, color=color.new(divBearColor, 30), textcolor=color.white, size=size.tiny)
+    
+    prevPriceHigh := close[5]
+    prevRSIHigh := rsi[5]
+    prevHighBar := bar_index - 5
+
+// ============================================
+// SIGNAL PLOTTING
+// ============================================
+plotshape(bullishCHoCH, "CHoCH Buy", shape.triangleup, location.belowbar, chochBullColor, size=size.normal)
+plotshape(bearishCHoCH, "CHoCH Sell", shape.triangledown, location.abovebar, chochBearColor, size=size.normal)
+
+// Trend background
+trendColor = trend == 1 ? color.new(color.green, 95) : trend == -1 ? color.new(color.red, 95) : color.new(color.gray, 98)
+bgcolor(trendColor)
+
+// ============================================
+// ALERTS
+// ============================================
+if showAlerts
+    if bullishCHoCH
+        alert("🔄 ARRA7 Momentum Shift: BULLISH CHoCH!\n" + syminfo.ticker + " @ " + str.tostring(close) + "\nTrend reversal to BULLISH detected", alert.freq_once_per_bar)
+    
+    if bearishCHoCH
+        alert("🔄 ARRA7 Momentum Shift: BEARISH CHoCH!\n" + syminfo.ticker + " @ " + str.tostring(close) + "\nTrend reversal to BEARISH detected", alert.freq_once_per_bar)
+    
+    if bullishBOS
+        alert("📈 ARRA7: Bullish BOS (Trend Continuation)\n" + syminfo.ticker + " broke above " + str.tostring(lastSwingHigh, format.mintick), alert.freq_once_per_bar)
+    
+    if bearishBOS
+        alert("📉 ARRA7: Bearish BOS (Trend Continuation)\n" + syminfo.ticker + " broke below " + str.tostring(lastSwingLow, format.mintick), alert.freq_once_per_bar)
+
+// ============================================
+// INFO TABLE
+// ============================================
+var table infoTable = table.new(position.top_right, 2, 6, bgcolor=color.new(color.black, 80), border_width=1)
+
+if barstate.islast
+    table.cell(infoTable, 0, 0, "⚡ ARRA7 Momentum Shift", text_color=color.white, text_size=size.small)
+    table.cell(infoTable, 1, 0, "v1.0", text_color=color.gray, text_size=size.tiny)
+    
+    trendText = trend == 1 ? "📈 BULLISH" : trend == -1 ? "📉 BEARISH" : "➡️ NEUTRAL"
+    trendClr = trend == 1 ? color.lime : trend == -1 ? color.red : color.gray
+    table.cell(infoTable, 0, 1, "Trend", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 1, trendText, text_color=trendClr, text_size=size.small)
+    
+    table.cell(infoTable, 0, 2, "Last Swing High", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 2, str.tostring(lastSwingHigh, format.mintick), text_color=color.red, text_size=size.small)
+    
+    table.cell(infoTable, 0, 3, "Last Swing Low", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 3, str.tostring(lastSwingLow, format.mintick), text_color=color.green, text_size=size.small)
+    
+    table.cell(infoTable, 0, 4, "RSI", text_color=color.gray, text_size=size.tiny)
+    rsiColor = rsi > rsiOB ? color.red : rsi < rsiOS ? color.green : color.white
+    table.cell(infoTable, 1, 4, str.tostring(rsi, "#.0"), text_color=rsiColor, text_size=size.small)
+    
+    table.cell(infoTable, 0, 5, "© ARRA7 Trading", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 5, "arra7-app.vercel.app", text_color=color.aqua, text_size=size.tiny)

@@ -1,0 +1,216 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ARRA7 Trading - ICT Silver Bullet Strategy
+// Version 1.0
+
+//@version=5
+indicator("ARRA7 ICT Silver Bullet", overlay=true, max_lines_count=500, max_boxes_count=100, max_labels_count=100)
+
+// ============================================
+// SETTINGS
+// ============================================
+showKillZones = input.bool(true, "Show Kill Zones", group="Kill Zones")
+londonOpen = input.bool(true, "London Open (15:00-16:00 WIB)", group="Kill Zones")
+nyAM = input.bool(true, "NY AM Session (22:00-23:00 WIB) ⭐", group="Kill Zones")
+nyPM = input.bool(true, "NY PM Session (02:00-03:00 WIB)", group="Kill Zones")
+kzOpacity = input.int(85, "Kill Zone Opacity", minval=0, maxval=100, group="Kill Zones")
+
+showFVG = input.bool(true, "Show Fair Value Gaps", group="FVG Settings")
+fvgBullColor = input.color(color.new(color.green, 70), "Bullish FVG", group="FVG Settings")
+fvgBearColor = input.color(color.new(color.red, 70), "Bearish FVG", group="FVG Settings")
+fvgMinSize = input.float(0.0001, "Min FVG Size (0 = auto)", step=0.0001, group="FVG Settings")
+
+showHTFBias = input.bool(true, "Show HTF Trend Bias", group="Trend Filter")
+htfTimeframe = input.timeframe("60", "HTF Timeframe", group="Trend Filter")
+emaLength = input.int(50, "EMA Length for Bias", group="Trend Filter")
+
+showAlerts = input.bool(true, "Enable Alerts", group="Alerts")
+alertInKillZone = input.bool(true, "Only Alert in Kill Zones", group="Alerts")
+
+// ============================================
+// TIMEZONE CONVERSION (WIB = UTC+7)
+// ============================================
+// TradingView uses exchange timezone, we convert to WIB
+getWIBHour() =>
+    hour(time, "Asia/Jakarta")
+
+getWIBMinute() =>
+    minute(time, "Asia/Jakarta")
+
+// ============================================
+// KILL ZONE DETECTION
+// ============================================
+wibHour = getWIBHour()
+wibMinute = getWIBMinute()
+
+// London Open: 15:00-16:00 WIB
+isLondonOpen = londonOpen and (wibHour == 15)
+
+// NY AM Session: 22:00-23:00 WIB (BEST)
+isNYAM = nyAM and (wibHour == 22)
+
+// NY PM Session: 02:00-03:00 WIB
+isNYPM = nyPM and (wibHour == 2)
+
+// Combined Kill Zone
+isKillZone = isLondonOpen or isNYAM or isNYPM
+
+// Kill Zone Colors
+kzLondonColor = color.new(color.blue, kzOpacity)
+kzNYAMColor = color.new(color.orange, kzOpacity)
+kzNYPMColor = color.new(color.purple, kzOpacity)
+
+// ============================================
+// DRAW KILL ZONES
+// ============================================
+var box londonBox = na
+var box nyamBox = na
+var box nypmBox = na
+
+if showKillZones
+    if isLondonOpen and not isLondonOpen[1]
+        londonBox := box.new(bar_index, high, bar_index + 1, low, border_color=color.blue, bgcolor=kzLondonColor, border_width=1)
+        label.new(bar_index, high, "🔵 London Open\n15:00-16:00 WIB", style=label.style_label_down, color=color.new(color.blue, 50), textcolor=color.white, size=size.small)
+    
+    if isLondonOpen and not na(londonBox)
+        box.set_right(londonBox, bar_index + 1)
+        box.set_top(londonBox, math.max(box.get_top(londonBox), high))
+        box.set_bottom(londonBox, math.min(box.get_bottom(londonBox), low))
+    
+    if isNYAM and not isNYAM[1]
+        nyamBox := box.new(bar_index, high, bar_index + 1, low, border_color=color.orange, bgcolor=kzNYAMColor, border_width=2)
+        label.new(bar_index, high, "🟠 NY AM ⭐ BEST\n22:00-23:00 WIB", style=label.style_label_down, color=color.new(color.orange, 50), textcolor=color.white, size=size.small)
+    
+    if isNYAM and not na(nyamBox)
+        box.set_right(nyamBox, bar_index + 1)
+        box.set_top(nyamBox, math.max(box.get_top(nyamBox), high))
+        box.set_bottom(nyamBox, math.min(box.get_bottom(nyamBox), low))
+    
+    if isNYPM and not isNYPM[1]
+        nypmBox := box.new(bar_index, high, bar_index + 1, low, border_color=color.purple, bgcolor=kzNYPMColor, border_width=1)
+        label.new(bar_index, high, "🟣 NY PM\n02:00-03:00 WIB", style=label.style_label_down, color=color.new(color.purple, 50), textcolor=color.white, size=size.small)
+    
+    if isNYPM and not na(nypmBox)
+        box.set_right(nypmBox, bar_index + 1)
+        box.set_top(nypmBox, math.max(box.get_top(nypmBox), high))
+        box.set_bottom(nypmBox, math.min(box.get_bottom(nypmBox), low))
+
+// ============================================
+// FAIR VALUE GAP (FVG) DETECTION
+// ============================================
+// Bullish FVG: Low[0] > High[2] (gap up)
+// Bearish FVG: High[0] < Low[2] (gap down)
+
+bullishFVG = low > high[2]
+bearishFVG = high < low[2]
+
+// Calculate FVG size
+fvgBullSize = bullishFVG ? low - high[2] : 0
+fvgBearSize = bearishFVG ? low[2] - high : 0
+
+// Auto min size based on ATR
+atrValue = ta.atr(14)
+autoMinSize = atrValue * 0.1
+minFVGSize = fvgMinSize > 0 ? fvgMinSize : autoMinSize
+
+// Valid FVG
+validBullFVG = bullishFVG and fvgBullSize >= minFVGSize
+validBearFVG = bearishFVG and fvgBearSize >= minFVGSize
+
+// ============================================
+// DRAW FVG ZONES
+// ============================================
+if showFVG
+    if validBullFVG
+        fvgTop = low
+        fvgBottom = high[2]
+        box.new(bar_index - 2, fvgTop, bar_index + 10, fvgBottom, border_color=color.green, bgcolor=fvgBullColor, border_width=1, border_style=line.style_dashed)
+        
+        // FVG in Kill Zone = High Probability
+        if isKillZone
+            label.new(bar_index - 1, fvgTop, "🎯 BULL FVG\n(Kill Zone)", style=label.style_label_down, color=color.new(color.green, 30), textcolor=color.white, size=size.tiny)
+    
+    if validBearFVG
+        fvgTop = low[2]
+        fvgBottom = high
+        box.new(bar_index - 2, fvgTop, bar_index + 10, fvgBottom, border_color=color.red, bgcolor=fvgBearColor, border_width=1, border_style=line.style_dashed)
+        
+        // FVG in Kill Zone = High Probability
+        if isKillZone
+            label.new(bar_index - 1, fvgBottom, "🎯 BEAR FVG\n(Kill Zone)", style=label.style_label_up, color=color.new(color.red, 30), textcolor=color.white, size=size.tiny)
+
+// ============================================
+// HTF TREND BIAS
+// ============================================
+htfEMA = request.security(syminfo.tickerid, htfTimeframe, ta.ema(close, emaLength))
+htfClose = request.security(syminfo.tickerid, htfTimeframe, close)
+
+htfBullish = htfClose > htfEMA
+htfBearish = htfClose < htfEMA
+
+// Plot HTF EMA
+plot(showHTFBias ? htfEMA : na, "HTF EMA", color=htfBullish ? color.green : color.red, linewidth=2, style=plot.style_line)
+
+// HTF Bias Label (only at session start)
+var label biasLabel = na
+if showHTFBias and barstate.islast
+    label.delete(biasLabel)
+    biasText = htfBullish ? "📈 HTF BIAS: BULLISH\n(Only take BUY setups)" : "📉 HTF BIAS: BEARISH\n(Only take SELL setups)"
+    biasColor = htfBullish ? color.new(color.green, 20) : color.new(color.red, 20)
+    biasLabel := label.new(bar_index + 3, htfEMA, biasText, style=label.style_label_left, color=biasColor, textcolor=color.white, size=size.normal)
+
+// ============================================
+// SIGNAL GENERATION
+// ============================================
+// Silver Bullet Buy Signal: Bullish FVG in Kill Zone + HTF Bullish
+silverBulletBuy = validBullFVG and isKillZone and htfBullish
+
+// Silver Bullet Sell Signal: Bearish FVG in Kill Zone + HTF Bearish
+silverBulletSell = validBearFVG and isKillZone and htfBearish
+
+// Plot signals
+plotshape(silverBulletBuy, "Silver Bullet BUY", shape.triangleup, location.belowbar, color.lime, size=size.normal)
+plotshape(silverBulletSell, "Silver Bullet SELL", shape.triangledown, location.abovebar, color.red, size=size.normal)
+
+// ============================================
+// ALERTS
+// ============================================
+if showAlerts
+    if silverBulletBuy
+        alert("🎯 ARRA7 Silver Bullet BUY Signal!\n" + syminfo.ticker + " @ " + str.tostring(close) + "\nKill Zone: " + (isLondonOpen ? "London" : isNYAM ? "NY AM ⭐" : "NY PM"), alert.freq_once_per_bar)
+    
+    if silverBulletSell
+        alert("🎯 ARRA7 Silver Bullet SELL Signal!\n" + syminfo.ticker + " @ " + str.tostring(close) + "\nKill Zone: " + (isLondonOpen ? "London" : isNYAM ? "NY AM ⭐" : "NY PM"), alert.freq_once_per_bar)
+    
+    // Alert when entering Kill Zone
+    if isKillZone and not isKillZone[1]
+        kzName = isLondonOpen ? "London Open (15:00-16:00 WIB)" : isNYAM ? "NY AM Session (22:00-23:00 WIB) ⭐ BEST" : "NY PM Session (02:00-03:00 WIB)"
+        alert("⏰ Entering Kill Zone: " + kzName + "\nLook for FVG setups on " + syminfo.ticker, alert.freq_once_per_bar)
+
+// ============================================
+// INFO TABLE
+// ============================================
+var table infoTable = table.new(position.top_right, 2, 6, bgcolor=color.new(color.black, 80), border_width=1)
+
+if barstate.islast
+    table.cell(infoTable, 0, 0, "🎯 ARRA7 Silver Bullet", text_color=color.white, text_size=size.small)
+    table.cell(infoTable, 1, 0, "v1.0", text_color=color.gray, text_size=size.tiny)
+    
+    table.cell(infoTable, 0, 1, "Current Time (WIB)", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 1, str.tostring(wibHour) + ":" + str.tostring(wibMinute, "00"), text_color=color.white, text_size=size.small)
+    
+    kzStatus = isKillZone ? (isNYAM ? "NY AM ⭐ ACTIVE" : isLondonOpen ? "LONDON ACTIVE" : "NY PM ACTIVE") : "WAITING..."
+    kzColor = isKillZone ? color.lime : color.gray
+    table.cell(infoTable, 0, 2, "Kill Zone", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 2, kzStatus, text_color=kzColor, text_size=size.small)
+    
+    biasStatus = htfBullish ? "📈 BULLISH" : "📉 BEARISH"
+    biasClr = htfBullish ? color.lime : color.red
+    table.cell(infoTable, 0, 3, "HTF Bias", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 3, biasStatus, text_color=biasClr, text_size=size.small)
+    
+    table.cell(infoTable, 0, 4, "Setup", text_color=color.gray, text_size=size.tiny)
+    setupText = isKillZone and htfBullish ? "Look for BULL FVG" : isKillZone and htfBearish ? "Look for BEAR FVG" : "Wait for Kill Zone"
+    table.cell(infoTable, 1, 4, setupText, text_color=color.yellow, text_size=size.small)
+    
+    table.cell(infoTable, 0, 5, "© ARRA7 Trading", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 5, "arra7-app.vercel.app", text_color=color.aqua, text_size=size.tiny)
