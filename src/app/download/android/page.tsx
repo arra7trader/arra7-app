@@ -64,7 +64,7 @@ export default function DownloadAndroidPage() {
                         {/* Info */}
                         <div className="flex-1 text-center md:text-left">
                             <h2 className="text-2xl font-bold mb-2">ARRA7 Trading App</h2>
-                            <p className="text-gray-400 mb-4">Version 2.0 • ~13 MB</p>
+                            <p className="text-gray-400 mb-4">Version 2.1 • ~13 MB</p>
 
                             <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-6">
                                 <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm">AI Analysis</span>
@@ -75,14 +75,14 @@ export default function DownloadAndroidPage() {
 
                             {/* Download Button */}
                             <a
-                                href="https://raw.githubusercontent.com/arra7trader/arra7-app/main/ARRA7_v2.0.apk"
-                                download="ARRA7_v2.0.apk"
+                                href="https://raw.githubusercontent.com/arra7trader/arra7-app/main/ARRA7_v2.1.apk"
+                                download="ARRA7_v2.1.apk"
                                 className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-green-500/30 transition-all"
                             >
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M17.523 15.34l-.006-.026a3.002 3.002 0 00-2.83-2.314H9.313a3.002 3.002 0 00-2.83 2.314l-.006.026A9.957 9.957 0 015 12c0-3.859 2.18-7.211 5.375-8.89a3.003 3.003 0 003.25 0A9.959 9.959 0 0119 12c0 1.203-.216 2.355-.611 3.424zM12 2c-.69 0-1.25.56-1.25 1.25S11.31 4.5 12 4.5s1.25-.56 1.25-1.25S12.69 2 12 2zm0 20c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm-1-5h2v2h-2v-2zm0-2h2V9h-2v6z" />
                                 </svg>
-                                Download APK (v2.0)
+                                Download APK (v2.1)
                             </a>
 
                             <p className="text-sm text-gray-500 mt-3">
