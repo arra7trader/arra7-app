@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
         const session = await getServerSession(authOptions);
 
         // Check if admin (you can customize this check)
-        const adminEmails = ['your-email@gmail.com', 'arra7trader@gmail.com'];
+        const adminEmails = ['apmexplore@gmail.com'];
         if (!session?.user?.email || !adminEmails.includes(session.user.email)) {
             return NextResponse.json({ status: 'error', message: 'Admin only' }, { status: 403 });
         }

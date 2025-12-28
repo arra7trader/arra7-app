@@ -45,7 +45,7 @@ export default function UsersMapPage() {
     const [mapReady, setMapReady] = useState(false);
 
     // Admin check
-    const adminEmails = ['arra7trader@gmail.com'];
+    const adminEmails = ['apmexplore@gmail.com'];
     const isAdmin = session?.user?.email && adminEmails.includes(session.user.email);
 
     useEffect(() => {
