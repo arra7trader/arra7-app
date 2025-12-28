@@ -38,12 +38,16 @@ export const isDokuConfigured = (): boolean => {
     return !!(process.env.DOKU_CLIENT_ID && process.env.DOKU_SECRET_KEY);
 };
 
-// Pricing plans
+// New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
+const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
+const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
+
+// Pricing plans - with New Year promo support
 export const DOKU_PLANS = {
     PRO: {
         id: 'PRO',
-        name: 'ARRA7 Pro Membership',
-        price: 149000,
+        name: isNewYearPromoActive() ? 'ARRA7 Pro Membership (Promo Tahun Baru)' : 'ARRA7 Pro Membership',
+        price: isNewYearPromoActive() ? 99000 : 149000,
         duration: 30,
     },
     VVIP: {

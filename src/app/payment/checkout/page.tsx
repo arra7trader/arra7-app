@@ -8,12 +8,18 @@ import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 
+// New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
+const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
+const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
+
 const PLANS = {
     PRO: {
         id: 'PRO',
         name: 'Pro',
-        price: 149000,
-        priceFormatted: 'Rp 149.000',
+        price: isNewYearPromoActive() ? 99000 : 149000,
+        priceFormatted: isNewYearPromoActive() ? 'Rp 99.000' : 'Rp 149.000',
+        originalPrice: 'Rp 299.000',
+        promoActive: isNewYearPromoActive(),
         description: '25x Analisa/hari, Semua Timeframe',
         color: 'from-blue-500 to-purple-500',
     },
@@ -22,6 +28,8 @@ const PLANS = {
         name: 'VVIP',
         price: 399000,
         priceFormatted: 'Rp 399.000',
+        originalPrice: null,
+        promoActive: false,
         description: 'UNLIMITED Analisa, Free Custom EA',
         color: 'from-amber-500 to-orange-500',
     },

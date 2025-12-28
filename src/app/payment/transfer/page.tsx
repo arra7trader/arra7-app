@@ -6,17 +6,25 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+// New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
+const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
+const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
+
 const PLAN_DETAILS = {
     PRO: {
         name: 'Pro',
-        price: 149000,
-        priceDisplay: 'Rp 149.000',
+        price: isNewYearPromoActive() ? 99000 : 149000,
+        priceDisplay: isNewYearPromoActive() ? 'Rp 99.000' : 'Rp 149.000',
+        originalPrice: isNewYearPromoActive() ? 'Rp 299.000' : null,
+        promoActive: isNewYearPromoActive(),
         period: '/bulan',
     },
     VVIP: {
         name: 'VVIP',
         price: 399000,
         priceDisplay: 'Rp 399.000',
+        originalPrice: null,
+        promoActive: false,
         period: '/bulan',
     },
 };
@@ -106,6 +114,14 @@ export default function TransferPage() {
                     {/* Amount */}
                     <div className="bg-[#12141A] rounded-xl p-4 mb-6 text-center">
                         <p className="text-sm text-[#64748B] mb-1">Total Pembayaran</p>
+                        {plan.promoActive && plan.originalPrice && (
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <span className="text-lg text-[#64748B] line-through">{plan.originalPrice}</span>
+                                <span className="px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold animate-pulse">
+                                    🎉 PROMO TAHUN BARU
+                                </span>
+                            </div>
+                        )}
                         <p className="text-3xl font-bold gradient-text">{plan.priceDisplay}</p>
                         <p className="text-sm text-[#64748B]">{plan.period}</p>
                     </div>
