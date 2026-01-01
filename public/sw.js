@@ -1,4 +1,4 @@
-const CACHE_NAME = 'arra7-v1';
+const CACHE_NAME = 'arra7-v2';
 const urlsToCache = [
     '/',
     '/analisa-market',
