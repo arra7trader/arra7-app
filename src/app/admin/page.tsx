@@ -342,6 +342,31 @@ Tim ARRA7`;
                                 📈 Performance
                             </button>
                         </Link>
+                        <button
+                            onClick={async () => {
+                                const btn = document.getElementById('verify-btn');
+                                if (btn) {
+                                    btn.innerHTML = '⏳ Checking...';
+                                    (btn as HTMLButtonElement).disabled = true;
+                                }
+                                try {
+                                    const res = await fetch('/api/admin/verify-signals', { method: 'POST' });
+                                    const data = await res.json();
+                                    alert(JSON.stringify(data.data, null, 2));
+                                } catch (e) {
+                                    alert('Error verifying');
+                                } finally {
+                                    if (btn) {
+                                        btn.innerHTML = '⚡ Verify Signals';
+                                        (btn as HTMLButtonElement).disabled = false;
+                                    }
+                                }
+                            }}
+                            id="verify-btn"
+                            className="px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm font-medium transition-all"
+                        >
+                            ⚡ Verify Signals
+                        </button>
                         <Link href="/">
                             <button className="px-4 py-2 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm">
                                 ← Kembali
@@ -638,6 +663,6 @@ Tim ARRA7`;
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
