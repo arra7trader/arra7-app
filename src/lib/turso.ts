@@ -124,6 +124,15 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+        // Create settings table for app configuration (e.g., Telegram auto-post toggle)
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
         // Migrations: Add any missing columns to users table
         // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
         const migrations = [

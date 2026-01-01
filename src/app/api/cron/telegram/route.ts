@@ -1,8 +1,28 @@
 import { NextResponse } from 'next/server';
 import { sendTelegramMessage, getRotatingTemplate, isTelegramConfigured, TEMPLATE_METADATA } from '@/lib/telegram';
+import getTursoClient from '@/lib/turso';
 
 // Vercel Cron Job - Auto-post to Telegram every 5 hours
 // Schedule: 0 */5 * * * (at minute 0 past every 5th hour)
+
+// Helper to get auto-post status from database
+async function isAutoPostEnabled(): Promise<boolean> {
+    const turso = getTursoClient();
+    if (!turso) return false;
+
+    try {
+        const result = await turso.execute({
+            sql: "SELECT value FROM settings WHERE key = 'telegram_auto_post_enabled'",
+            args: [],
+        });
+        if (result.rows.length > 0) {
+            return result.rows[0].value === 'true';
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
 
 export async function GET(request: Request) {
     // Verify cron secret for security (optional but recommended)
@@ -24,6 +44,17 @@ export async function GET(request: Request) {
         return NextResponse.json({
             status: 'error',
             message: 'Telegram not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID.',
+        });
+    }
+
+    // Check if auto-posting is enabled
+    const autoPostEnabled = await isAutoPostEnabled();
+    if (!autoPostEnabled) {
+        console.log('[CRON] Auto-posting is disabled, skipping');
+        return NextResponse.json({
+            status: 'skipped',
+            message: 'Auto-posting is disabled. Enable it from admin panel.',
+            timestamp: new Date().toISOString(),
         });
     }
 

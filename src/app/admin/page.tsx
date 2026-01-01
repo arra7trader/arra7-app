@@ -47,6 +47,7 @@ export default function AdminDashboard() {
     const [telegramConfigured, setTelegramConfigured] = useState(false);
     const [sendingTelegram, setSendingTelegram] = useState(false);
     const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
+    const [autoPostEnabled, setAutoPostEnabled] = useState(false);
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -67,9 +68,33 @@ export default function AdminDashboard() {
             const data = await response.json();
             if (data.status === 'success') {
                 setTelegramConfigured(data.configured);
+                setAutoPostEnabled(data.autoPostEnabled || false);
             }
         } catch (error) {
             console.error('Check Telegram config error:', error);
+        }
+    };
+
+    const toggleAutoPost = async (action: 'start' | 'stop') => {
+        setSendingTelegram(true);
+        setTelegramMessage(null);
+        try {
+            const response = await fetch('/api/admin/telegram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action === 'start' ? 'start_auto_post' : 'stop_auto_post' }),
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setAutoPostEnabled(data.autoPostEnabled);
+                setTelegramMessage(action === 'start' ? '✅ Auto-posting diaktifkan!' : '⏸️ Auto-posting dihentikan.');
+            } else {
+                setTelegramMessage(`❌ Gagal: ${data.message}`);
+            }
+        } catch (error) {
+            setTelegramMessage('❌ Error mengubah status auto-post');
+        } finally {
+            setSendingTelegram(false);
         }
     };
 
@@ -367,7 +392,7 @@ Tim ARRA7`;
                             <div>
                                 <h3 className="text-lg font-semibold">Telegram Marketing</h3>
                                 <p className="text-sm text-[#64748B]">
-                                    10 templates • Auto-post setiap 5 jam
+                                    2 templates • Auto-post setiap 5 jam
                                     {telegramConfigured ? (
                                         <span className="ml-2 text-green-400">● Connected</span>
                                     ) : (
@@ -376,10 +401,16 @@ Tim ARRA7`;
                                 </p>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">
-                                ⚡ Auto-posting Active
-                            </span>
+                        <div className="flex items-center gap-2">
+                            {autoPostEnabled ? (
+                                <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                                    ✅ Auto-posting Active
+                                </span>
+                            ) : (
+                                <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-medium">
+                                    ⏸️ Auto-posting Paused
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -389,101 +420,61 @@ Tim ARRA7`;
                         </div>
                     )}
 
-                    {/* 10 Marketing Templates Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {/* Start/Stop Auto-Post Toggle */}
+                    <div className="mb-6 p-4 bg-[#12141A] rounded-xl flex items-center justify-between">
+                        <div>
+                            <p className="font-medium text-white">Auto-Posting Control</p>
+                            <p className="text-sm text-[#64748B]">Toggle auto-posting setiap 5 jam</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => toggleAutoPost('start')}
+                                disabled={sendingTelegram || !telegramConfigured || autoPostEnabled}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all ${autoPostEnabled
+                                    ? 'bg-green-500/20 text-green-400 cursor-default'
+                                    : 'bg-green-500 hover:bg-green-600 text-white'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                ▶️ Start
+                            </button>
+                            <button
+                                onClick={() => toggleAutoPost('stop')}
+                                disabled={sendingTelegram || !telegramConfigured || !autoPostEnabled}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all ${!autoPostEnabled
+                                    ? 'bg-red-500/20 text-red-400 cursor-default'
+                                    : 'bg-red-500 hover:bg-red-600 text-white'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                ⏹️ Stop
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 2 Marketing Templates */}
+                    <div className="grid grid-cols-2 gap-4">
                         <button
-                            onClick={() => sendTelegramPromo('newYearPromo')}
+                            onClick={() => sendTelegramPromo('arra7')}
                             disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="flex flex-col items-center gap-2 p-4 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                            <span className="text-xl">🎆</span>
-                            <span className="text-xs">Tahun Baru</span>
+                            <span className="text-3xl">🔮</span>
+                            <span className="font-medium">ARRA7</span>
+                            <span className="text-xs text-[#94A3B8]">AI Trading Analysis</span>
                         </button>
 
                         <button
-                            onClick={() => sendTelegramPromo('aiFeatures')}
+                            onClick={() => sendTelegramPromo('cryptologic')}
                             disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="flex flex-col items-center gap-2 p-4 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                            <span className="text-xl">🤖</span>
-                            <span className="text-xs">AI Features</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('whyArra7')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">❓</span>
-                            <span className="text-xs">Why ARRA7</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('testimonial')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">💬</span>
-                            <span className="text-xs">Testimonial</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('goldTrading')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">🥇</span>
-                            <span className="text-xs">Gold</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('stockIDX')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">📊</span>
-                            <span className="text-xs">Saham IDX</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('riskManagement')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">🛡️</span>
-                            <span className="text-xs">Risk Mgmt</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('freeTrial')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">🆓</span>
-                            <span className="text-xs">Free Trial</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('smcAnalysis')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">📈</span>
-                            <span className="text-xs">SMC/ICT</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('weekendReview')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-1 px-3 py-3 bg-slate-500/20 hover:bg-slate-500/30 border border-slate-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-xl">📅</span>
-                            <span className="text-xs">Weekend</span>
+                            <span className="text-3xl">🌟</span>
+                            <span className="font-medium">Cryptologic</span>
+                            <span className="text-xs text-[#94A3B8]">Financial Astrology</span>
                         </button>
                     </div>
 
                     <p className="mt-4 text-xs text-[#64748B] text-center">
-                        {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post berjalan setiap 5 jam secara otomatis'}
+                        {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post bergantian setiap 5 jam'}
                     </p>
 
                     {!telegramConfigured && (
