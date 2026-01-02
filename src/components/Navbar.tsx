@@ -85,6 +85,28 @@ export default function Navbar() {
                                 >
                                     {t('analisaMarket')}
                                 </Link>
+                                {/* Premium Feature Links */}
+                                <Link
+                                    href="/journal"
+                                    className="text-sm font-medium text-[#94A3B8] hover:text-green-400 transition-colors"
+                                    title="Trade Journal"
+                                >
+                                    📓
+                                </Link>
+                                <Link
+                                    href="/portfolio"
+                                    className="text-sm font-medium text-[#94A3B8] hover:text-purple-400 transition-colors"
+                                    title="Portfolio Tracker"
+                                >
+                                    📈
+                                </Link>
+                                <Link
+                                    href="/social"
+                                    className="text-sm font-medium text-[#94A3B8] hover:text-cyan-400 transition-colors"
+                                    title="Social Feed"
+                                >
+                                    🌐
+                                </Link>
                                 <Popover.Root>
                                     <Popover.Trigger asChild>
                                         <button className="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-blue-500/50 transition-all">
@@ -111,6 +133,27 @@ export default function Navbar() {
                                                 <div className="px-3 py-2 border-b border-[#1F2937]">
                                                     <div className="text-sm font-medium text-white truncate">{session.user?.name}</div>
                                                     <div className="text-xs text-[#64748B] truncate">{session.user?.email}</div>
+                                                </div>
+                                                {/* Premium Feature Links in Dropdown */}
+                                                <div className="py-1 border-b border-[#1F2937]">
+                                                    <Link
+                                                        href="/journal"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm text-[#94A3B8] hover:bg-green-500/10 hover:text-green-400 rounded-lg transition-colors"
+                                                    >
+                                                        <span>📓</span> Trade Journal
+                                                    </Link>
+                                                    <Link
+                                                        href="/portfolio"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm text-[#94A3B8] hover:bg-purple-500/10 hover:text-purple-400 rounded-lg transition-colors"
+                                                    >
+                                                        <span>📈</span> Portfolio
+                                                    </Link>
+                                                    <Link
+                                                        href="/social"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm text-[#94A3B8] hover:bg-cyan-500/10 hover:text-cyan-400 rounded-lg transition-colors"
+                                                    >
+                                                        <span>🌐</span> Social Feed
+                                                    </Link>
                                                 </div>
                                                 <button
                                                     onClick={() => signOut()}
@@ -188,6 +231,39 @@ export default function Navbar() {
                                         {item.label}
                                     </Link>
                                 ))}
+                                {/* Mobile Premium Features Links */}
+                                {session && (
+                                    <div className="px-4 py-2 border-t border-[#1F2937] space-y-2">
+                                        <Link
+                                            href="/analisa-market"
+                                            className="block px-2 py-2 text-white hover:text-blue-400 font-medium transition-colors"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            🔮 Analisa Market
+                                        </Link>
+                                        <Link
+                                            href="/journal"
+                                            className="block px-2 py-2 text-[#94A3B8] hover:text-green-400 transition-colors"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            📓 Trade Journal
+                                        </Link>
+                                        <Link
+                                            href="/portfolio"
+                                            className="block px-2 py-2 text-[#94A3B8] hover:text-purple-400 transition-colors"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            📈 Portfolio Tracker
+                                        </Link>
+                                        <Link
+                                            href="/social"
+                                            className="block px-2 py-2 text-[#94A3B8] hover:text-cyan-400 transition-colors"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            🌐 Social Feed
+                                        </Link>
+                                    </div>
+                                )}
                                 <div className="px-4 pt-3 flex items-center justify-between border-t border-[#1F2937]">
                                     <LanguageSwitcher />
                                     {session ? (
