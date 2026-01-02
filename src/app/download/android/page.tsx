@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { DevicePhoneIcon, SparklesIcon, ChartIcon, BellIcon, LightbulbIcon, WarningIcon } from '@/components/PremiumIcons';
 
 export default function DownloadAndroidPage() {
     const [isAndroid, setIsAndroid] = useState(false);
@@ -34,7 +35,7 @@ export default function DownloadAndroidPage() {
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 mb-6">
-                        <span className="text-2xl">📱</span>
+                        <DevicePhoneIcon className="text-green-400" size="lg" />
                         <span className="text-green-400 font-medium">Android App</span>
                     </div>
 
@@ -85,8 +86,8 @@ export default function DownloadAndroidPage() {
                                 Download APK (v2.1)
                             </a>
 
-                            <p className="text-sm text-gray-500 mt-3">
-                                ⚠️ Aktifkan "Install from Unknown Sources" di Settings
+                            <p className="text-sm text-gray-500 mt-3 flex items-center gap-1">
+                                <WarningIcon size="sm" /> Aktifkan "Install from Unknown Sources" di Settings
                             </p>
                         </div>
                     </div>

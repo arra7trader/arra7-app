@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DocumentIcon, TrendUpIcon, ChartIcon } from '@/components/PremiumIcons';
 
 interface HistoryItem {
     id: number;
@@ -89,7 +90,7 @@ export default function HistoryPage() {
                     className="text-center mb-8"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1F2937] bg-[#12141A]/50 backdrop-blur-sm mb-6">
-                        <span className="text-xl">📜</span>
+                        <DocumentIcon className="text-blue-400" size="lg" />
                         <span className="text-sm text-[#94A3B8]">Analysis History</span>
                     </div>
                     <h1 className="text-3xl lg:text-4xl font-bold mb-3">
@@ -112,11 +113,11 @@ export default function HistoryPage() {
                             key={tab}
                             onClick={() => setFilter(tab)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === tab
-                                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                                    : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
+                                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                                : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
                                 }`}
                         >
-                            {tab === 'all' ? 'Semua' : tab === 'forex' ? '📈 Forex' : '📊 Saham'}
+                            {tab === 'all' ? 'Semua' : tab === 'forex' ? <><TrendUpIcon className="inline" size="sm" /> Forex</> : <><ChartIcon className="inline" size="sm" /> Saham</>}
                         </button>
                     ))}
                 </motion.div>
@@ -188,7 +189,7 @@ export default function HistoryPage() {
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className={`px-2 py-1 rounded text-xs font-semibold border ${getTypeColor(item.type)}`}>
-                                            {item.type === 'forex' ? '📈 Forex' : '📊 Saham'}
+                                            {item.type === 'forex' ? <><TrendUpIcon className="inline" size="sm" /> Forex</> : <><ChartIcon className="inline" size="sm" /> Saham</>}
                                         </span>
                                         <span className="font-bold">{item.symbol}</span>
                                         {item.timeframe && (

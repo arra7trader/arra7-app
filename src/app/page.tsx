@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { ChartIcon, DevicePhoneIcon } from '@/components/PremiumIcons';
 
 export default function Home() {
   const t = useTranslations('hero');
@@ -112,7 +113,7 @@ export default function Home() {
                   whileTap={{ scale: 0.98 }}
                   className="px-8 py-4 rounded-xl border border-[#1F2937] hover:border-green-500/50 bg-[#12141A]/50 hover:bg-green-500/10 text-white font-semibold text-lg transition-all flex items-center gap-2"
                 >
-                  📊 Analisa Saham
+                  <ChartIcon className="inline mr-2" size="md" /> Analisa Saham
                 </motion.button>
               </Link>
             </motion.div>
@@ -126,7 +127,7 @@ export default function Home() {
             >
               <Link href="/download/android">
                 <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:border-green-500/60 transition-all cursor-pointer group">
-                  <span className="text-2xl">📱</span>
+                  <DevicePhoneIcon className="text-green-400" size="lg" />
                   <span className="text-green-400 font-medium">Download Android App</span>
                   <span className="text-gray-400 group-hover:translate-x-1 transition-transform">→</span>
                 </div>

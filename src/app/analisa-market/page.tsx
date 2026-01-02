@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, WarningIcon } from '@/components/PremiumIcons';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
@@ -266,7 +267,7 @@ export default function AnalisaMarketPage() {
                 >
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                            <span className="text-xl">🔮</span>
+                            <SparklesIcon className="text-purple-400" size="lg" />
                         </div>
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-bold">{t('title')}</h1>
@@ -382,7 +383,7 @@ export default function AnalisaMarketPage() {
                                     : 'glass border-[#1F2937]'
                                 }`}>
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm text-[#94A3B8]">📊 Quota Hari Ini</span>
+                                    <span className="text-sm text-[#94A3B8] flex items-center gap-1"><ChartIcon size="sm" /> Quota Hari Ini</span>
                                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus.membership === 'VVIP'
                                         ? 'bg-amber-500/20 text-amber-400'
                                         : quotaStatus.membership === 'PRO'
@@ -420,7 +421,7 @@ export default function AnalisaMarketPage() {
                                         href="/pricing"
                                         className="mt-3 block text-center text-xs text-blue-400 hover:text-blue-300 underline"
                                     >
-                                        ⚡ Upgrade untuk lebih banyak analisa
+                                        <LightbulbIcon className="inline" size="sm" /> Upgrade untuk lebih banyak analisa
                                     </a>
                                 )}
                             </div>
@@ -447,7 +448,7 @@ export default function AnalisaMarketPage() {
                                 </span>
                             ) : (
                                 <span className="flex items-center justify-center gap-2">
-                                    <span>🚀</span> Analisa Market
+                                    <RocketIcon size="md" /> Analisa Market
                                 </span>
                             )}
                         </motion.button>
@@ -459,7 +460,7 @@ export default function AnalisaMarketPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="glass rounded-2xl p-4 border border-[#1F2937]"
                             >
-                                <h3 className="text-sm font-medium text-[#94A3B8] mb-3">📊 Market Info</h3>
+                                <h3 className="text-sm font-medium text-[#94A3B8] mb-3 flex items-center gap-2"><ChartIcon size="sm" /> Market Info</h3>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-[#64748B]">Symbol</span>

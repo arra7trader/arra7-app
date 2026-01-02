@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { ChartIcon, GlobeIcon, CurrencyIcon, BellIcon, TrendUpIcon, LightbulbIcon } from '@/components/PremiumIcons';
 
 interface User {
     id: string;
@@ -318,33 +319,33 @@ Tim ARRA7`;
                     </div>
                     <div className="flex gap-2 flex-wrap">
                         <Link href="/admin/crm">
-                            <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/25 rounded-lg text-sm font-medium transition-all">
-                                📊 CRM
+                            <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/25 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                <ChartIcon size="sm" /> CRM
                             </button>
                         </Link>
                         <Link href="/admin/users-map">
-                            <button className="px-4 py-2 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-sm font-medium transition-all">
-                                🗺️ Users Map
+                            <button className="px-4 py-2 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                <GlobeIcon size="sm" /> Users Map
                             </button>
                         </Link>
                         <Link href="/admin/revenue">
-                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all">
-                                💰 Revenue
+                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                <CurrencyIcon size="sm" /> Revenue
                             </button>
                         </Link>
                         <Link href="/admin/notifications">
-                            <button className="px-4 py-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-sm font-medium transition-all">
-                                🔔 Notifikasi
+                            <button className="px-4 py-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                <BellIcon size="sm" /> Notifikasi
                             </button>
                         </Link>
                         <Link href="/admin/report">
-                            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg hover:shadow-blue-500/25 rounded-lg text-sm font-medium transition-all">
-                                📊 Daily Report
+                            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg hover:shadow-blue-500/25 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                <ChartIcon size="sm" /> Daily Report
                             </button>
                         </Link>
                         <Link href="/performance">
-                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all">
-                                📈 Performance
+                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                <TrendUpIcon size="sm" /> Performance
                             </button>
                         </Link>
                         <button
@@ -370,7 +371,7 @@ Tim ARRA7`;
                             id="verify-btn"
                             className="px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm font-medium transition-all"
                         >
-                            ⚡ Verify Signals
+                            <LightbulbIcon className="inline" size="sm" /> Verify Signals
                         </button>
                         <Link href="/">
                             <button className="px-4 py-2 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm">

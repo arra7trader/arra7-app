@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { ChartIcon, CpuChipIcon } from '@/components/PremiumIcons';
 
 interface StockData {
     symbol: string;
@@ -150,7 +151,7 @@ export default function AnalisaSahamPage() {
                     className="text-center mb-10"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1F2937] bg-[#12141A]/50 backdrop-blur-sm mb-6">
-                        <span className="text-xl">📊</span>
+                        <ChartIcon className="text-blue-400" size="lg" />
                         <span className="text-sm text-[#94A3B8]">AI Stock Analysis</span>
                     </div>
                     <h1 className="text-3xl lg:text-4xl font-bold mb-3">
@@ -172,10 +173,10 @@ export default function AnalisaSahamPage() {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <div className={`px-3 py-1 rounded-full text-xs font-semibold ${quota.membership === 'VVIP'
-                                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                        : quota.membership === 'PRO'
-                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                            : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                    : quota.membership === 'PRO'
+                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                        : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
                                     }`}>
                                     {quota.membership}
                                 </div>
@@ -206,10 +207,10 @@ export default function AnalisaSahamPage() {
                                     <div className="w-24 h-2 bg-[#1F2937] rounded-full overflow-hidden">
                                         <div
                                             className={`h-full rounded-full transition-all ${quota.remaining === 0
-                                                    ? 'bg-red-500'
-                                                    : (quota.used / quota.dailyLimit) > 0.7
-                                                        ? 'bg-yellow-500'
-                                                        : 'bg-green-500'
+                                                ? 'bg-red-500'
+                                                : (quota.used / quota.dailyLimit) > 0.7
+                                                    ? 'bg-yellow-500'
+                                                    : 'bg-green-500'
                                                 }`}
                                             style={{
                                                 width: `${Math.max(0, 100 - (quota.used / quota.dailyLimit * 100))}%`
@@ -336,7 +337,7 @@ export default function AnalisaSahamPage() {
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                         </svg>
-                                        🤖 Analisa Market Saham Indonesia
+                                        <CpuChipIcon className="inline" size="sm" /> Analisa Market Saham Indonesia
                                     </>
                                 )}
                             </button>
@@ -355,7 +356,7 @@ export default function AnalisaSahamPage() {
                             {/* Header */}
                             <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-4 border-b border-[#1F2937]">
                                 <h3 className="text-xl font-bold flex items-center gap-2">
-                                    <span className="text-2xl">🤖</span>
+                                    <CpuChipIcon className="text-green-400" size="lg" />
                                     ARRA Institutional Research
                                 </h3>
                             </div>
