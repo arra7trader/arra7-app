@@ -43,13 +43,17 @@ export default function BookmapCanvas({
     const historyRef = useRef<DepthSnapshot[]>([]);
     const lastSnapshotTime = useRef(0);
     const maxQuantityRef = useRef(1);
+    const initialPriceRef = useRef<number | null>(null);
 
     const themeConfig = THEMES[theme];
     const colorLookup = useMemo(() => generateColorLookup(themeConfig), [themeConfig]);
 
-    // Zoom and pan
-    const [pricePerPixel, setPricePerPixel] = useState(0.5);
+    // Zoom and pan - pricePerPixel means "how many $ per pixel"
+    // Higher = more zoomed out (wider range), Lower = more zoomed in
+    // For BTC (~95000), we want to show ~500-1000 range, so for 800px height: 1000/800 = 1.25
+    const [pricePerPixel, setPricePerPixel] = useState(5); // Default: show ~$4000 range on 800px screen
     const [contrast, setContrast] = useState(1.0);
+    const [autoScaled, setAutoScaled] = useState(false);
 
     // Main rendering loop
     useEffect(() => {
@@ -104,12 +108,25 @@ export default function BookmapCanvas({
                 return;
             }
 
-            // Price range
-            const priceRangeHalf = (height / 2) * pricePerPixel;
+            // Auto-scale on first valid price (only once per symbol)
+            if (initialPriceRef.current === null || !autoScaled) {
+                initialPriceRef.current = currentPrice;
+                // Set pricePerPixel based on asset price to show ~1% range
+                // For BTC at $95000: 1% = $950, for 800px height: 950/400 = 2.375
+                // For ETH at $3500: 1% = $35, for 800px height: 35/400 = 0.0875
+                const targetRange = currentPrice * 0.01; // 1% of price
+                const optimalPricePerPixel = Math.max(targetRange / (height / 2), 0.01);
+                setPricePerPixel(optimalPricePerPixel);
+                setAutoScaled(true);
+            }
+
+            // Price range - use current pricePerPixel
+            const effectivePricePerPixel = pricePerPixel;
+            const priceRangeHalf = (height / 2) * effectivePricePerPixel;
             const maxPrice = currentPrice + priceRangeHalf;
             const minPrice = currentPrice - priceRangeHalf;
 
-            const priceToY = (price: number) => Math.floor(height / 2 - (price - currentPrice) / pricePerPixel);
+            const priceToY = (price: number) => Math.floor(height / 2 - (price - currentPrice) / effectivePricePerPixel);
 
             // Calculate intensity with contrast
             const getIntensity = (quantity: number) => {
@@ -360,6 +377,8 @@ export default function BookmapCanvas({
     useEffect(() => {
         historyRef.current = [];
         maxQuantityRef.current = 1;
+        initialPriceRef.current = null;
+        setAutoScaled(false);
     }, [symbol]);
 
     // Zoom handler
