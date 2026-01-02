@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient from '@/lib/turso';
-import { isAdmin } from '../users/route';
+import { isAdmin } from '../../users/route';
 
 // Pricing constants for revenue calculation
 const PRICING = {
