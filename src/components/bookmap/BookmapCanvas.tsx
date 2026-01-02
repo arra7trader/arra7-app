@@ -7,7 +7,7 @@ import {
     VisualizationMode,
     BubbleStyle,
     THEMES,
-    generateColorLookup
+    generateColorStringLookup
 } from '@/lib/bookmap/themes';
 
 interface BookmapCanvasProps {
@@ -19,17 +19,22 @@ interface BookmapCanvasProps {
     bubbleStyle: BubbleStyle;
 }
 
-// History snapshot for heatmap
+// History snapshot
 type DepthSnapshot = {
     time: number;
     bids: Map<number, number>;
     asks: Map<number, number>;
     bestBid: number;
     bestAsk: number;
+    lastPrice: number;
+    buyVolume: number;
+    sellVolume: number;
 };
 
-const MAX_HISTORY = 800;
-const SNAPSHOT_INTERVAL = 50; // ms
+const MAX_HISTORY = 600;
+const SNAPSHOT_INTERVAL = 100;
+const VOLUME_HEIGHT = 60;
+const AXIS_WIDTH = 80;
 
 export default function BookmapCanvas({
     symbol,
@@ -41,21 +46,17 @@ export default function BookmapCanvas({
 }: BookmapCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const historyRef = useRef<DepthSnapshot[]>([]);
+    const priceHistoryRef = useRef<{ time: number; price: number; isBuy: boolean }[]>([]);
     const lastSnapshotTime = useRef(0);
     const maxQuantityRef = useRef(1);
     const initialPriceRef = useRef<number | null>(null);
 
     const themeConfig = THEMES[theme];
-    const colorLookup = useMemo(() => generateColorLookup(themeConfig), [themeConfig]);
+    const colorLookup = useMemo(() => generateColorStringLookup(themeConfig), [themeConfig]);
 
-    // Zoom and pan - pricePerPixel means "how many $ per pixel"
-    // Higher = more zoomed out (wider range), Lower = more zoomed in
-    // For BTC (~95000), we want to show ~500-1000 range, so for 800px height: 1000/800 = 1.25
-    const [pricePerPixel, setPricePerPixel] = useState(5); // Default: show ~$4000 range on 800px screen
-    const [contrast, setContrast] = useState(1.0);
+    const [pricePerPixel, setPricePerPixel] = useState(5);
     const [autoScaled, setAutoScaled] = useState(false);
 
-    // Main rendering loop
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -64,22 +65,37 @@ export default function BookmapCanvas({
         if (!ctx) return;
 
         let animationId: number;
-        const AXIS_WIDTH = 75;
-        const COLUMN_WIDTH = 2;
+        let lastTradeCount = 0;
 
         const render = (timestamp: number) => {
             const width = canvas.width;
             const height = canvas.height;
+            const chartHeight = height - VOLUME_HEIGHT;
             const chartWidth = width - AXIS_WIDTH;
 
             // Take snapshots
             if (timestamp - lastSnapshotTime.current > SNAPSHOT_INTERVAL && dataRef.current) {
+                // Calculate volume since last snapshot
+                let buyVol = 0, sellVol = 0;
+                const trades = dataRef.current.trades;
+                for (let i = lastTradeCount; i < trades.length; i++) {
+                    if (trades[i].isBuyerMaker) {
+                        sellVol += trades[i].quantity;
+                    } else {
+                        buyVol += trades[i].quantity;
+                    }
+                }
+                lastTradeCount = trades.length;
+
                 const snapshot: DepthSnapshot = {
                     time: timestamp,
                     bids: new Map(dataRef.current.bids),
                     asks: new Map(dataRef.current.asks),
                     bestBid: dataRef.current.bestBid,
                     bestAsk: dataRef.current.bestAsk,
+                    lastPrice: dataRef.current.lastPrice,
+                    buyVolume: buyVol,
+                    sellVolume: sellVol,
                 };
                 historyRef.current.push(snapshot);
 
@@ -88,17 +104,29 @@ export default function BookmapCanvas({
                 }
                 lastSnapshotTime.current = timestamp;
 
-                // Update max quantity for normalization (rolling window)
+                // Track price line
+                if (dataRef.current.lastPrice > 0) {
+                    priceHistoryRef.current.push({
+                        time: timestamp,
+                        price: dataRef.current.lastPrice,
+                        isBuy: !dataRef.current.trades[dataRef.current.trades.length - 1]?.isBuyerMaker
+                    });
+                    if (priceHistoryRef.current.length > MAX_HISTORY) {
+                        priceHistoryRef.current.shift();
+                    }
+                }
+
+                // Update max quantity
                 let maxQ = 1;
-                const recentHistory = historyRef.current.slice(-100);
-                recentHistory.forEach(snap => {
+                const recent = historyRef.current.slice(-50);
+                recent.forEach(snap => {
                     snap.bids.forEach(q => { if (q > maxQ) maxQ = q; });
                     snap.asks.forEach(q => { if (q > maxQ) maxQ = q; });
                 });
                 maxQuantityRef.current = maxQ;
             }
 
-            // Clear with background
+            // Clear
             ctx.fillStyle = themeConfig.background;
             ctx.fillRect(0, 0, width, height);
 
@@ -108,38 +136,39 @@ export default function BookmapCanvas({
                 return;
             }
 
-            // Auto-scale on first valid price (only once per symbol)
+            // Auto-scale
             if (initialPriceRef.current === null || !autoScaled) {
                 initialPriceRef.current = currentPrice;
-                // Set pricePerPixel based on asset price to show ~1% range
-                // For BTC at $95000: 1% = $950, for 800px height: 950/400 = 2.375
-                // For ETH at $3500: 1% = $35, for 800px height: 35/400 = 0.0875
-                const targetRange = currentPrice * 0.01; // 1% of price
-                const optimalPricePerPixel = Math.max(targetRange / (height / 2), 0.01);
-                setPricePerPixel(optimalPricePerPixel);
+                const targetRange = currentPrice * 0.015;
+                const optimalPPP = Math.max(targetRange / (chartHeight / 2), 0.01);
+                setPricePerPixel(optimalPPP);
                 setAutoScaled(true);
             }
 
-            // Price range - use current pricePerPixel
-            const effectivePricePerPixel = pricePerPixel;
-            const priceRangeHalf = (height / 2) * effectivePricePerPixel;
+            // Price range
+            const ppp = pricePerPixel;
+            const priceRangeHalf = (chartHeight / 2) * ppp;
             const maxPrice = currentPrice + priceRangeHalf;
             const minPrice = currentPrice - priceRangeHalf;
 
-            const priceToY = (price: number) => Math.floor(height / 2 - (price - currentPrice) / effectivePricePerPixel);
+            const priceToY = (price: number) => Math.floor(chartHeight / 2 - (price - currentPrice) / ppp);
 
-            // Calculate intensity with contrast
+            // Intensity calculation
             const getIntensity = (quantity: number) => {
                 const base = Math.log10(quantity + 1) / Math.log10(maxQuantityRef.current + 1);
-                return Math.min(Math.pow(base, 1 / contrast), 1);
+                return Math.min(Math.pow(base, 0.7), 1);
             };
 
             // =====================
             // RENDER HEATMAP
             // =====================
             if (mode === 'heatmap' || mode === 'heatmap-bubbles') {
-                const numColumns = Math.floor(chartWidth / COLUMN_WIDTH);
+                const colWidth = 2;
+                const numColumns = Math.floor(chartWidth / colWidth);
                 const historyLen = historyRef.current.length;
+
+                // Calculate bar height based on price precision
+                const barHeight = Math.max(Math.ceil(1 / ppp), 1);
 
                 for (let col = 0; col < numColumns; col++) {
                     const historyIndex = historyLen - numColumns + col;
@@ -148,98 +177,63 @@ export default function BookmapCanvas({
                     const snapshot = historyRef.current[historyIndex];
                     if (!snapshot) continue;
 
-                    const x = col * COLUMN_WIDTH;
+                    const x = col * colWidth;
 
-                    // Draw bids (below best bid)
-                    snapshot.bids.forEach((qty, price) => {
+                    // Draw all levels
+                    const allLevels = new Map<number, number>();
+                    snapshot.bids.forEach((qty, price) => allLevels.set(price, qty));
+                    snapshot.asks.forEach((qty, price) => allLevels.set(price, qty));
+
+                    allLevels.forEach((qty, price) => {
                         if (price > maxPrice || price < minPrice) return;
 
                         const y = priceToY(price);
-                        const barHeight = Math.max(Math.ceil(1 / pricePerPixel), 2);
                         const intensity = getIntensity(qty);
-                        const colorIndex = Math.floor(intensity * 511);
+                        const colorIndex = Math.floor(intensity * 255);
 
                         ctx.fillStyle = colorLookup[colorIndex];
-                        ctx.fillRect(x, y, COLUMN_WIDTH, barHeight);
-                    });
-
-                    // Draw asks (above best ask)
-                    snapshot.asks.forEach((qty, price) => {
-                        if (price > maxPrice || price < minPrice) return;
-
-                        const y = priceToY(price);
-                        const barHeight = Math.max(Math.ceil(1 / pricePerPixel), 2);
-                        const intensity = getIntensity(qty);
-                        const colorIndex = Math.floor(intensity * 511);
-
-                        ctx.fillStyle = colorLookup[colorIndex];
-                        ctx.fillRect(x, y, COLUMN_WIDTH, barHeight);
-                    });
-
-                    // Draw best bid/ask lines for this column
-                    if (snapshot.bestBid > minPrice && snapshot.bestBid < maxPrice) {
-                        ctx.fillStyle = themeConfig.bidLineColor;
-                        ctx.fillRect(x, priceToY(snapshot.bestBid), COLUMN_WIDTH, 2);
-                    }
-                    if (snapshot.bestAsk > minPrice && snapshot.bestAsk < maxPrice) {
-                        ctx.fillStyle = themeConfig.askLineColor;
-                        ctx.fillRect(x, priceToY(snapshot.bestAsk), COLUMN_WIDTH, 2);
-                    }
-                }
-            }
-
-            // =====================
-            // RENDER COLUMNS (DOM View)
-            // =====================
-            if (mode === 'columns') {
-                const colWidth = 100;
-                const bidX = chartWidth - colWidth * 2;
-                const askX = chartWidth - colWidth;
-
-                // Column backgrounds
-                ctx.fillStyle = 'rgba(0,100,0,0.1)';
-                ctx.fillRect(bidX, 0, colWidth, height);
-                ctx.fillStyle = 'rgba(100,0,0,0.1)';
-                ctx.fillRect(askX, 0, colWidth, height);
-
-                if (dataRef.current) {
-                    // Draw bid bars
-                    dataRef.current.bids.forEach((qty, price) => {
-                        if (price > maxPrice || price < minPrice) return;
-                        const y = priceToY(price);
-                        const barWidth = Math.min((qty / maxQuantityRef.current) * colWidth * 0.9, colWidth * 0.9);
-                        const barHeight = Math.max(Math.ceil(1 / pricePerPixel), 3);
-
-                        ctx.fillStyle = themeConfig.bidLineColor;
-                        ctx.fillRect(bidX + colWidth - barWidth - 5, y, barWidth, barHeight);
-                    });
-
-                    // Draw ask bars
-                    dataRef.current.asks.forEach((qty, price) => {
-                        if (price > maxPrice || price < minPrice) return;
-                        const y = priceToY(price);
-                        const barWidth = Math.min((qty / maxQuantityRef.current) * colWidth * 0.9, colWidth * 0.9);
-                        const barHeight = Math.max(Math.ceil(1 / pricePerPixel), 3);
-
-                        ctx.fillStyle = themeConfig.askLineColor;
-                        ctx.fillRect(askX + 5, y, barWidth, barHeight);
+                        ctx.fillRect(x, y - barHeight / 2, colWidth, barHeight);
                     });
                 }
             }
 
             // =====================
-            // RENDER GRID LINES
+            // RENDER PRICE LINE
             // =====================
-            const gridStep = calculateNiceStep(priceRangeHalf * 2, 15);
-            const startGrid = Math.floor(minPrice / gridStep) * gridStep;
+            const priceLen = priceHistoryRef.current.length;
+            if (priceLen > 1) {
+                const colWidth = 2;
+                const numColumns = Math.floor(chartWidth / colWidth);
 
-            ctx.strokeStyle = themeConfig.gridColor;
-            ctx.lineWidth = 1;
-            for (let p = startGrid; p <= maxPrice; p += gridStep) {
-                const y = priceToY(p);
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(0, y + 0.5);
-                ctx.lineTo(chartWidth, y + 0.5);
+
+                let lastY = 0;
+                let lastIsBuy = true;
+
+                for (let col = 0; col < numColumns; col++) {
+                    const priceIndex = priceLen - numColumns + col;
+                    if (priceIndex < 0) continue;
+
+                    const point = priceHistoryRef.current[priceIndex];
+                    if (!point || point.price > maxPrice || point.price < minPrice) continue;
+
+                    const x = col * colWidth + colWidth / 2;
+                    const y = priceToY(point.price);
+
+                    if (col === 0 || priceIndex === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        // Change color based on direction
+                        ctx.strokeStyle = point.isBuy ? themeConfig.priceLineUp : themeConfig.priceLineDown;
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                    }
+                    lastY = y;
+                    lastIsBuy = point.isBuy;
+                }
                 ctx.stroke();
             }
 
@@ -248,63 +242,105 @@ export default function BookmapCanvas({
             // =====================
             if (mode === 'bubbles' || mode === 'heatmap-bubbles') {
                 const now = Date.now();
-                if (dataRef.current) {
-                    dataRef.current.trades.forEach(trade => {
-                        const age = now - trade.time;
-                        if (age > 500) return; // Only show last 500ms
-                        if (trade.price > maxPrice || trade.price < minPrice) return;
+                const trades = dataRef.current?.trades || [];
 
-                        const y = priceToY(trade.price);
-                        const x = chartWidth - (age / 500) * 150 - 10;
+                trades.forEach(trade => {
+                    const age = now - trade.time;
+                    if (age > 1000) return;
+                    if (trade.price > maxPrice || trade.price < minPrice) return;
 
-                        // Logarithmic radius
-                        const baseRadius = Math.log10(trade.quantity * 10000 + 1) * 3;
-                        const radius = Math.max(4, Math.min(baseRadius, 35));
+                    const y = priceToY(trade.price);
+                    const x = chartWidth - (age / 1000) * chartWidth * 0.3 - 10;
 
-                        // Fade out as bubble ages
-                        const alpha = 1 - (age / 500) * 0.5;
+                    const baseRadius = Math.log10(trade.quantity * 10000 + 1) * 4;
+                    const radius = Math.max(3, Math.min(baseRadius, 25));
+                    const alpha = 1 - (age / 1000) * 0.6;
 
-                        const bubbleConfig = trade.isBuyerMaker
-                            ? themeConfig.sellBubble
-                            : themeConfig.buyBubble;
+                    const bubbleConfig = trade.isBuyerMaker
+                        ? themeConfig.sellBubble
+                        : themeConfig.buyBubble;
 
-                        if (bubbleStyle === '3d') {
-                            // 3D style with gradient and glow
-                            // Glow
-                            ctx.beginPath();
-                            ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
-                            ctx.fillStyle = bubbleConfig.glow.replace('0.3', String(0.3 * alpha));
-                            ctx.fill();
+                    if (bubbleStyle === '3d') {
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+                        ctx.fillStyle = bubbleConfig.glow.replace('0.5', String(0.3 * alpha));
+                        ctx.fill();
 
-                            // Main bubble with gradient
-                            const grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius);
-                            grad.addColorStop(0, `rgba(255,255,255,${0.4 * alpha})`);
-                            grad.addColorStop(0.3, bubbleConfig.fill.replace(')', `,${alpha})`).replace('rgb', 'rgba'));
-                            grad.addColorStop(1, bubbleConfig.stroke.replace(')', `,${alpha})`).replace('rgb', 'rgba').replace('#', ''));
+                        const grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius);
+                        grad.addColorStop(0, `rgba(255,255,255,${0.5 * alpha})`);
+                        grad.addColorStop(0.5, hexToRgba(bubbleConfig.fill, alpha));
+                        grad.addColorStop(1, hexToRgba(bubbleConfig.stroke, alpha * 0.8));
 
-                            ctx.beginPath();
-                            ctx.arc(x, y, radius, 0, Math.PI * 2);
-                            ctx.fillStyle = grad;
-                            ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fillStyle = grad;
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fillStyle = hexToRgba(bubbleConfig.fill, alpha);
+                        ctx.fill();
+                        ctx.strokeStyle = hexToRgba(bubbleConfig.stroke, alpha);
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                });
+            }
 
-                            // Highlight
-                            ctx.beginPath();
-                            ctx.arc(x - radius * 0.25, y - radius * 0.25, radius * 0.3, 0, Math.PI * 2);
-                            ctx.fillStyle = `rgba(255,255,255,${0.4 * alpha})`;
-                            ctx.fill();
-                        } else {
-                            // 2D flat style
-                            ctx.beginPath();
-                            ctx.arc(x, y, radius, 0, Math.PI * 2);
-                            ctx.fillStyle = hexToRgba(bubbleConfig.fill, alpha);
-                            ctx.fill();
-                            ctx.strokeStyle = hexToRgba(bubbleConfig.stroke, alpha);
-                            ctx.lineWidth = 2;
-                            ctx.stroke();
-                        }
-                    });
+            // =====================
+            // RENDER VOLUME PROFILE (Bottom)
+            // =====================
+            ctx.fillStyle = themeConfig.axisBackground;
+            ctx.fillRect(0, chartHeight, chartWidth, VOLUME_HEIGHT);
+
+            const colWidth = 2;
+            const numCols = Math.floor(chartWidth / colWidth);
+            const histLen = historyRef.current.length;
+
+            let maxVol = 1;
+            for (let i = Math.max(0, histLen - numCols); i < histLen; i++) {
+                const snap = historyRef.current[i];
+                if (snap) {
+                    maxVol = Math.max(maxVol, snap.buyVolume + snap.sellVolume);
                 }
             }
+
+            for (let col = 0; col < numCols; col++) {
+                const idx = histLen - numCols + col;
+                if (idx < 0) continue;
+
+                const snap = historyRef.current[idx];
+                if (!snap) continue;
+
+                const x = col * colWidth;
+                const totalVol = snap.buyVolume + snap.sellVolume;
+                const volHeight = (totalVol / maxVol) * (VOLUME_HEIGHT - 10);
+
+                if (snap.buyVolume > snap.sellVolume) {
+                    ctx.fillStyle = themeConfig.volumeUp;
+                } else {
+                    ctx.fillStyle = themeConfig.volumeDown;
+                }
+                ctx.fillRect(x, chartHeight + VOLUME_HEIGHT - 5 - volHeight, colWidth - 1, volHeight);
+            }
+
+            // =====================
+            // RENDER GRID
+            // =====================
+            const gridStep = calculateNiceStep(priceRangeHalf * 2, 12);
+            const startGrid = Math.floor(minPrice / gridStep) * gridStep;
+
+            ctx.strokeStyle = themeConfig.gridColor;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 4]);
+            for (let p = startGrid; p <= maxPrice; p += gridStep) {
+                const y = priceToY(p);
+                ctx.beginPath();
+                ctx.moveTo(0, y + 0.5);
+                ctx.lineTo(chartWidth, y + 0.5);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
 
             // =====================
             // RENDER PRICE AXIS
@@ -312,19 +348,15 @@ export default function BookmapCanvas({
             ctx.fillStyle = themeConfig.axisBackground;
             ctx.fillRect(chartWidth, 0, AXIS_WIDTH, height);
 
-            // Price labels
             ctx.font = '10px monospace';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
 
             for (let p = startGrid; p <= maxPrice; p += gridStep) {
                 const y = priceToY(p);
-
-                // Tick
+                ctx.fillStyle = themeConfig.textMuted;
+                ctx.fillRect(chartWidth, y, 5, 1);
                 ctx.fillStyle = themeConfig.textColor;
-                ctx.fillRect(chartWidth, y, 4, 1);
-
-                // Label
                 const decimals = currentPrice < 10 ? 4 : (currentPrice < 1000 ? 2 : 0);
                 ctx.fillText(p.toFixed(decimals), chartWidth + 8, y);
             }
@@ -334,20 +366,12 @@ export default function BookmapCanvas({
                 const currentY = priceToY(currentPrice);
 
                 ctx.fillStyle = themeConfig.currentPriceBackground;
-                ctx.fillRect(chartWidth, currentY - 10, AXIS_WIDTH, 20);
+                ctx.fillRect(chartWidth, currentY - 9, AXIS_WIDTH, 18);
 
                 ctx.fillStyle = themeConfig.currentPriceText;
                 ctx.font = 'bold 11px monospace';
-                const decimals = currentPrice < 10 ? 4 : (currentPrice < 1000 ? 2 : 0);
+                const decimals = currentPrice < 10 ? 4 : 2;
                 ctx.fillText(currentPrice.toFixed(decimals), chartWidth + 6, currentY);
-            }
-
-            // Spread indicator
-            if (dataRef.current && dataRef.current.bestBid && dataRef.current.bestAsk) {
-                const spread = dataRef.current.bestAsk - dataRef.current.bestBid;
-                ctx.font = '9px monospace';
-                ctx.fillStyle = themeConfig.textColor;
-                ctx.fillText(`Spread: ${spread.toFixed(2)}`, chartWidth + 5, height - 10);
             }
 
             animationId = requestAnimationFrame(render);
@@ -355,17 +379,14 @@ export default function BookmapCanvas({
 
         animationId = requestAnimationFrame(render);
         return () => cancelAnimationFrame(animationId);
-    }, [symbol, theme, mode, bubbleStyle, colorLookup, themeConfig, pricePerPixel, contrast]);
+    }, [symbol, theme, mode, bubbleStyle, colorLookup, themeConfig, pricePerPixel, autoScaled]);
 
-    // Resize handler
+    // Resize
     useEffect(() => {
         const handleResize = () => {
-            if (canvasRef.current) {
-                const parent = canvasRef.current.parentElement;
-                if (parent) {
-                    canvasRef.current.width = parent.clientWidth;
-                    canvasRef.current.height = parent.clientHeight;
-                }
+            if (canvasRef.current?.parentElement) {
+                canvasRef.current.width = canvasRef.current.parentElement.clientWidth;
+                canvasRef.current.height = canvasRef.current.parentElement.clientHeight;
             }
         };
         window.addEventListener('resize', handleResize);
@@ -373,19 +394,20 @@ export default function BookmapCanvas({
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Clear history on symbol change
+    // Reset on symbol change
     useEffect(() => {
         historyRef.current = [];
+        priceHistoryRef.current = [];
         maxQuantityRef.current = 1;
         initialPriceRef.current = null;
         setAutoScaled(false);
     }, [symbol]);
 
-    // Zoom handler
+    // Zoom
     const handleWheel = useCallback((e: React.WheelEvent) => {
         e.preventDefault();
-        const delta = e.deltaY > 0 ? 1.08 : 0.92;
-        setPricePerPixel(prev => Math.max(0.0001, Math.min(prev * delta, 100)));
+        const delta = e.deltaY > 0 ? 1.1 : 0.9;
+        setPricePerPixel(prev => Math.max(0.0001, Math.min(prev * delta, 500)));
     }, []);
 
     return (
@@ -396,46 +418,31 @@ export default function BookmapCanvas({
                 onWheel={handleWheel}
             />
 
-            {/* Info Overlay */}
+            {/* Status Overlay */}
             <div
-                className="absolute top-3 left-3 text-xs p-2 rounded backdrop-blur-sm pointer-events-none"
-                style={{ background: `${themeConfig.axisBackground}DD`, color: themeConfig.textColor }}
+                className="absolute top-2 left-2 text-xs p-2 rounded pointer-events-none"
+                style={{ background: `${themeConfig.axisBackground}E0`, color: themeConfig.textColor }}
             >
-                <div className="flex items-center gap-2 font-bold">
+                <div className="flex items-center gap-2 font-semibold text-sm">
                     <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: status === 'connected' ? '#22c55e' : '#eab308' }}
+                        className="w-2 h-2 rounded-full animate-pulse"
+                        style={{ background: status === 'connected' ? '#3FB950' : '#F0B400' }}
                     />
                     {symbol}
                 </div>
-                <div className="mt-1">
-                    <span style={{ color: themeConfig.currentPriceBackground }}>
-                        {dataRef.current?.lastPrice?.toFixed(2) || '---'}
-                    </span>
+                <div className="mt-1 text-lg font-bold" style={{ color: themeConfig.currentPriceBackground }}>
+                    {dataRef.current?.lastPrice?.toFixed(2) || '---'}
+                </div>
+                <div className="text-[10px] mt-1" style={{ color: themeConfig.textMuted }}>
+                    {dataRef.current?.levelCount || 0} levels
                 </div>
             </div>
 
-            {/* Legend */}
-            <div
-                className="absolute bottom-3 left-3 text-[10px] p-2 rounded backdrop-blur-sm pointer-events-none flex gap-3"
-                style={{ background: `${themeConfig.axisBackground}DD`, color: themeConfig.textColor }}
-            >
-                <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full" style={{ background: themeConfig.buyBubble.fill }}></span>
-                    Buy
-                </div>
-                <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full" style={{ background: themeConfig.sellBubble.fill }}></span>
-                    Sell
-                </div>
-            </div>
-
-            {/* Loading */}
             {status === 'connecting' && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-10 h-10 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-orange-400 font-mono text-sm">Connecting to Binance...</span>
+                        <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-blue-300 text-sm">Loading order book...</span>
                     </div>
                 </div>
             )}
@@ -443,7 +450,6 @@ export default function BookmapCanvas({
     );
 }
 
-// Helpers
 function calculateNiceStep(range: number, targetSteps: number): number {
     const roughStep = range / targetSteps;
     const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
