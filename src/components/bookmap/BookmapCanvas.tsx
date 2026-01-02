@@ -31,7 +31,7 @@ type DepthSnapshot = {
     sellVolume: number;
 };
 
-const MAX_HISTORY = 400; // Optimized history length
+const MAX_HISTORY = 400;
 const SNAPSHOT_INTERVAL = 100;
 const VOLUME_HEIGHT = 60;
 const AXIS_WIDTH = 80;
@@ -68,18 +68,34 @@ export default function BookmapCanvas({
         let animationId: number;
         let lastTradeCount = 0;
 
+        // Initialize snapshot time if needed
+        if (lastSnapshotTime.current === 0) lastSnapshotTime.current = performance.now();
+
         const render = (timestamp: number) => {
             const width = canvas.width;
             const height = canvas.height;
             const chartHeight = height - VOLUME_HEIGHT;
             const chartWidth = width - AXIS_WIDTH;
 
-            // 1. DATA COLLECTION
-            if (timestamp - lastSnapshotTime.current > SNAPSHOT_INTERVAL && dataRef.current) {
+            // 1. DATA COLLECTION & GAP FILLING
+            // If tab was backgrounded or window dragged, we might have missed many frames.
+            // We need to fill the gap to keep time continuity.
+            // Using performance.now() or timestamp is generally consistent in RAF.
+            if (lastSnapshotTime.current === 0) lastSnapshotTime.current = timestamp;
+
+            const timeSinceLastSnapshot = timestamp - lastSnapshotTime.current;
+
+            if (timeSinceLastSnapshot > SNAPSHOT_INTERVAL && dataRef.current) {
+                // Calculate how many snapshots we missed
+                const stepsToFill = Math.floor(timeSinceLastSnapshot / SNAPSHOT_INTERVAL);
+
+                // Limit catch-up steps (e.g. max 200 = 20 seconds) to prevents hanging if suspended for hours
+                const steps = Math.min(stepsToFill, 200);
+
+                // Aggregate volume for the gap
                 let buyVol = 0, sellVol = 0;
                 const trades = dataRef.current.trades;
                 const len = trades.length;
-                // Only process new trades
                 const start = Math.max(0, lastTradeCount);
                 for (let i = start; i < len; i++) {
                     if (trades[i].isBuyerMaker) sellVol += trades[i].quantity;
@@ -87,39 +103,55 @@ export default function BookmapCanvas({
                 }
                 lastTradeCount = len;
 
-                const snapshot: DepthSnapshot = {
-                    time: timestamp,
-                    bids: new Map(dataRef.current.bids),
-                    asks: new Map(dataRef.current.asks),
-                    bestBid: dataRef.current.bestBid,
-                    bestAsk: dataRef.current.bestAsk,
-                    lastPrice: dataRef.current.lastPrice,
-                    buyVolume: buyVol,
-                    sellVolume: sellVol,
-                };
-                historyRef.current.push(snapshot);
+                // Distribute volume per step
+                const buyVolPerStep = buyVol / Math.max(steps, 1);
+                const sellVolPerStep = sellVol / Math.max(steps, 1);
 
-                if (historyRef.current.length > MAX_HISTORY) {
-                    historyRef.current.shift();
-                }
-                lastSnapshotTime.current = timestamp;
+                // Re-usable state objects for filling (Current State)
+                const currentBids = new Map(dataRef.current.bids);
+                const currentAsks = new Map(dataRef.current.asks);
+                const currentLastPrice = dataRef.current.lastPrice;
+                const currentTrades = dataRef.current.trades;
+                // Note: we use currentTrades just to determine direction of last price update
 
-                if (dataRef.current.lastPrice > 0) {
-                    priceHistoryRef.current.push({
-                        time: timestamp,
-                        price: dataRef.current.lastPrice,
-                        isBuy: !dataRef.current.trades[dataRef.current.trades.length - 1]?.isBuyerMaker
-                    });
-                    if (priceHistoryRef.current.length > MAX_HISTORY) {
-                        priceHistoryRef.current.shift();
+                for (let i = 0; i < steps; i++) {
+                    const snapshotTime = lastSnapshotTime.current + SNAPSHOT_INTERVAL;
+
+                    const snapshot: DepthSnapshot = {
+                        time: snapshotTime,
+                        bids: currentBids,
+                        asks: currentAsks,
+                        bestBid: dataRef.current.bestBid,
+                        bestAsk: dataRef.current.bestAsk,
+                        lastPrice: currentLastPrice,
+                        buyVolume: buyVolPerStep,
+                        sellVolume: sellVolPerStep,
+                    };
+                    historyRef.current.push(snapshot);
+
+                    if (historyRef.current.length > MAX_HISTORY) {
+                        historyRef.current.shift();
                     }
+
+                    // Also fill price history
+                    if (currentLastPrice > 0) {
+                        priceHistoryRef.current.push({
+                            time: snapshotTime,
+                            price: currentLastPrice,
+                            isBuy: !currentTrades[currentTrades.length - 1]?.isBuyerMaker
+                        });
+                        if (priceHistoryRef.current.length > MAX_HISTORY) {
+                            priceHistoryRef.current.shift();
+                        }
+                    }
+
+                    lastSnapshotTime.current = snapshotTime;
                 }
 
-                // Update maxQ roughly
+                // Update maxQ (once per batch)
                 let maxQ = 1;
-                snapshot.bids.forEach(q => { if (q > maxQ) maxQ = q; });
-                snapshot.asks.forEach(q => { if (q > maxQ) maxQ = q; });
-                // Fast decay
+                currentBids.forEach(q => { if (q > maxQ) maxQ = q; });
+                currentAsks.forEach(q => { if (q > maxQ) maxQ = q; });
                 maxQuantityRef.current = Math.max(maxQ, maxQuantityRef.current * 0.99);
             }
 
@@ -148,7 +180,6 @@ export default function BookmapCanvas({
             const maxPrice = currentPrice + priceRangeHalf;
             const minPrice = currentPrice - priceRangeHalf;
 
-            // Optimized coordinate mapper
             const priceToY = (price: number) => (effectiveChartHeightHalf - (price - currentPrice) / ppp) | 0;
 
             const maxQ = maxQuantityRef.current;
@@ -156,10 +187,10 @@ export default function BookmapCanvas({
 
             // 3. RENDER HEATMAP
             if (mode === 'heatmap' || mode === 'heatmap-bubbles') {
-                const colWidth = 4; // Wider columns for performance & visual blockiness
+                const colWidth = 4;
                 const numColumns = Math.ceil(chartWidth / colWidth);
                 const historyLen = historyRef.current.length;
-                const barHeight = Math.max(Math.ceil(2 / ppp * 4), 3); // Taller blocks
+                const barHeight = Math.max(Math.ceil(2 / ppp * 4), 3);
 
                 for (let col = 0; col < numColumns; col++) {
                     const historyIndex = historyLen - numColumns + col;
@@ -217,21 +248,17 @@ export default function BookmapCanvas({
                 }
             }
 
-            // 5. BUBBLES (Optimized)
+            // 5. BUBBLES
             if (mode === 'bubbles' || mode === 'heatmap-bubbles') {
                 const now = Date.now();
                 const trades = dataRef.current?.trades || [];
-                // Only loop reversed to find visible ones quickly? No, array is time sorted.
-                // We need recent trades.
-                // Loop backwards until age > 10s
                 for (let i = trades.length - 1; i >= 0; i--) {
                     const trade = trades[i];
                     const age = now - trade.time;
-                    if (age > 10000) break; // Optimization: stop if too old
+                    if (age > 10000) break;
                     if (trade.price > maxPrice || trade.price < minPrice) continue;
 
-                    const x = chartWidth - (age / 10000) * chartWidth; // 10s window on screen (overlay)
-                    // Note: This bubble logic is "overlay" style, moving left.
+                    const x = chartWidth - (age / 10000) * chartWidth;
 
                     const y = priceToY(trade.price);
                     const radius = Math.max(3, Math.min(Math.log10(trade.quantity * 100 + 1) * 3, 20));
@@ -240,7 +267,6 @@ export default function BookmapCanvas({
 
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
-                    // Simple flat fill
                     ctx.fillStyle = hexToRgba(bubbleColor.fill, 0.7);
                     ctx.fill();
                     ctx.lineWidth = 1;
@@ -258,7 +284,6 @@ export default function BookmapCanvas({
             ctx.fillRect(0, chartHeight, chartWidth, VOLUME_HEIGHT);
 
             let maxVolProfile = 0.001;
-            // Scan visible history for max volume
             const startIdx = Math.max(0, histLen - numCols);
             for (let i = startIdx; i < histLen; i++) {
                 const s = historyRef.current[i];
@@ -295,12 +320,10 @@ export default function BookmapCanvas({
 
             for (let p = startGrid; p <= maxPrice; p += gridStep) {
                 const y = priceToY(p);
-                // Draw Grid
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(chartWidth, y);
                 ctx.stroke();
-                // Draw Label
                 ctx.fillStyle = themeConfig.textColor;
                 ctx.fillText(p.toFixed(2), chartWidth + 5, y);
             }
@@ -342,6 +365,7 @@ export default function BookmapCanvas({
         priceHistoryRef.current = [];
         maxQuantityRef.current = 1;
         initialPriceRef.current = null;
+        lastSnapshotTime.current = 0; // Reset snapshot timer
         setAutoScaled(false);
     }, [symbol]);
 
