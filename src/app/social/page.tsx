@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { GlobeIcon, FireIcon, TrendUpIcon, TrendDownIcon, ArrowRightIcon, HeartIcon, HeartSolidIcon, UsersIcon } from '@/components/PremiumIcons';
 
 interface SocialFeedItem {
     id: number;
@@ -103,7 +104,7 @@ export default function SocialPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                            <span className="text-2xl">🌐</span>
+                            <GlobeIcon className="text-cyan-400" size="lg" />
                         </div>
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-bold">Social Feed</h1>
@@ -122,7 +123,8 @@ export default function SocialPage() {
                     <div className="lg:col-span-1">
                         <div className="glass rounded-2xl p-5 border border-[#1F2937] sticky top-24">
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                🔥 Trending Pairs
+                                <FireIcon className="text-orange-400" size="md" />
+                                Trending Pairs
                             </h3>
                             {trending.length > 0 ? (
                                 <div className="space-y-3">
@@ -134,10 +136,10 @@ export default function SocialPage() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-xs px-2 py-0.5 rounded ${pair.direction === 'BULLISH' ? 'bg-green-500/20 text-green-400' :
-                                                        pair.direction === 'BEARISH' ? 'bg-red-500/20 text-red-400' :
-                                                            'bg-slate-500/20 text-slate-400'
+                                                    pair.direction === 'BEARISH' ? 'bg-red-500/20 text-red-400' :
+                                                        'bg-slate-500/20 text-slate-400'
                                                     }`}>
-                                                    {pair.direction === 'BULLISH' ? '📈' : pair.direction === 'BEARISH' ? '📉' : '➡️'}
+                                                    {pair.direction === 'BULLISH' ? <TrendUpIcon className="text-green-400" size="sm" /> : pair.direction === 'BEARISH' ? <TrendDownIcon className="text-red-400" size="sm" /> : <ArrowRightIcon className="text-slate-400" size="sm" />}
                                                 </span>
                                                 <span className="text-xs text-[#64748B]">{pair.count} analyses</span>
                                             </div>
@@ -182,7 +184,7 @@ export default function SocialPage() {
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                                                <span className="text-sm">🦊</span>
+                                                <UsersIcon className="text-purple-400" size="sm" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium">Trader #{item.userHash}</p>
@@ -192,8 +194,8 @@ export default function SocialPage() {
                                         <div className="flex items-center gap-2">
                                             {item.confidence && (
                                                 <span className={`text-xs px-2 py-1 rounded-full ${item.confidence >= 80 ? 'bg-green-500/20 text-green-400' :
-                                                        item.confidence >= 60 ? 'bg-yellow-500/20 text-yellow-400' :
-                                                            'bg-slate-500/20 text-slate-400'
+                                                    item.confidence >= 60 ? 'bg-yellow-500/20 text-yellow-400' :
+                                                        'bg-slate-500/20 text-slate-400'
                                                     }`}>
                                                     {item.confidence}% confidence
                                                 </span>
@@ -209,7 +211,7 @@ export default function SocialPage() {
                                         {item.direction && (
                                             <span className={`text-sm px-3 py-1 rounded-full font-medium ${item.direction === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                                                 }`}>
-                                                {item.direction === 'BUY' ? '📈 BUY' : '📉 SELL'}
+                                                {item.direction === 'BUY' ? <><TrendUpIcon className="inline mr-1" size="sm" /> BUY</> : <><TrendDownIcon className="inline mr-1" size="sm" /> SELL</>}
                                             </span>
                                         )}
                                     </div>
@@ -249,11 +251,11 @@ export default function SocialPage() {
                                             onClick={() => handleLike(item.id)}
                                             disabled={likedSignals.has(item.id)}
                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${likedSignals.has(item.id)
-                                                    ? 'bg-pink-500/20 text-pink-400'
-                                                    : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151] hover:text-white'
+                                                ? 'bg-pink-500/20 text-pink-400'
+                                                : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151] hover:text-white'
                                                 }`}
                                         >
-                                            <span>{likedSignals.has(item.id) ? '❤️' : '🤍'}</span>
+                                            <span>{likedSignals.has(item.id) ? <HeartSolidIcon className="text-pink-500" size="sm" /> : <HeartIcon size="sm" />}</span>
                                             <span>{item.likes}</span>
                                         </button>
                                         <Link href={`/analisa-market?pair=${item.symbol}&tf=${item.timeframe || '1h'}`}>
@@ -266,7 +268,9 @@ export default function SocialPage() {
                             ))
                         ) : (
                             <div className="glass rounded-2xl p-12 border border-[#1F2937] text-center">
-                                <span className="text-5xl block mb-4">🌐</span>
+                                <div className="mb-4">
+                                    <GlobeIcon className="text-cyan-400 mx-auto" size="xl" />
+                                </div>
                                 <h3 className="text-xl font-semibold mb-2">No Signals Yet</h3>
                                 <p className="text-[#64748B] mb-4">
                                     Be the first to share! Analisa market Anda akan muncul di sini secara anonim.

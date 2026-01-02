@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { ChartIcon, TrashIcon, TrendUpIcon } from '@/components/PremiumIcons';
 
 interface Position {
     id: number;
@@ -181,7 +182,7 @@ export default function PortfolioPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                            <span className="text-2xl">📈</span>
+                            <ChartIcon className="text-purple-400" size="lg" />
                         </div>
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-bold">Portfolio Tracker</h1>
@@ -196,7 +197,10 @@ export default function PortfolioPage() {
                             onClick={() => fetchPortfolio(true)}
                             className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-sm font-medium text-blue-400 transition-all"
                         >
-                            🔄 Refresh
+                            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            Refresh
                         </button>
                         <button
                             onClick={() => setShowAddModal(true)}
@@ -320,7 +324,7 @@ export default function PortfolioPage() {
                                     onClick={() => handleDeletePosition(pos.id)}
                                     className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-all"
                                 >
-                                    🗑️
+                                    <TrashIcon className="text-red-400" size="sm" />
                                 </button>
                             </div>
                         </motion.div>
@@ -329,7 +333,9 @@ export default function PortfolioPage() {
 
                 {positions.length === 0 && (
                     <div className="glass rounded-2xl p-12 border border-[#1F2937] text-center">
-                        <span className="text-5xl block mb-4">📈</span>
+                        <div className="mb-4">
+                            <ChartIcon className="text-purple-400 mx-auto" size="xl" />
+                        </div>
                         <h3 className="text-xl font-semibold mb-2">No Open Positions</h3>
                         <p className="text-[#64748B] mb-4">Klik "Add Position" untuk mulai tracking.</p>
                         <button
@@ -370,8 +376,8 @@ export default function PortfolioPage() {
                                                 key={sym}
                                                 onClick={() => setFormSymbol(sym)}
                                                 className={`px-3 py-1 rounded-lg text-xs transition-all ${formSymbol === sym
-                                                        ? 'bg-purple-500 text-white'
-                                                        : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
+                                                    ? 'bg-purple-500 text-white'
+                                                    : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
                                                     }`}
                                             >
                                                 {sym}
@@ -394,8 +400,8 @@ export default function PortfolioPage() {
                                                 type="button"
                                                 onClick={() => setFormDirection('BUY')}
                                                 className={`flex-1 py-2 rounded-lg font-medium ${formDirection === 'BUY'
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-[#1F2937] text-[#94A3B8]'
+                                                    ? 'bg-green-500 text-white'
+                                                    : 'bg-[#1F2937] text-[#94A3B8]'
                                                     }`}
                                             >
                                                 BUY
@@ -404,8 +410,8 @@ export default function PortfolioPage() {
                                                 type="button"
                                                 onClick={() => setFormDirection('SELL')}
                                                 className={`flex-1 py-2 rounded-lg font-medium ${formDirection === 'SELL'
-                                                        ? 'bg-red-500 text-white'
-                                                        : 'bg-[#1F2937] text-[#94A3B8]'
+                                                    ? 'bg-red-500 text-white'
+                                                    : 'bg-[#1F2937] text-[#94A3B8]'
                                                     }`}
                                             >
                                                 SELL
