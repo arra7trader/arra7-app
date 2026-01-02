@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { WarningIcon } from '@/components/PremiumIcons';
 
 export default function TermsPage() {
     return (
@@ -82,7 +83,7 @@ export default function TermsPage() {
                     <section className="mb-8">
                         <h2 className="text-xl font-bold mb-4 text-white">5. Disclaimer Investasi</h2>
                         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-                            <p className="text-amber-400 font-semibold mb-2">⚠️ PERINGATAN RISIKO</p>
+                            <p className="text-amber-400 font-semibold mb-2 flex items-center gap-2"><WarningIcon className="text-amber-400" size="md" /> PERINGATAN RISIKO</p>
                             <p className="text-[#94A3B8] leading-relaxed">
                                 Trading Forex dan Saham melibatkan risiko tinggi dan mungkin tidak cocok untuk semua investor. Anda dapat kehilangan sebagian atau seluruh modal Anda. Analisa yang disediakan ARRA7 bersifat edukatif dan informatif, BUKAN merupakan saran investasi atau rekomendasi untuk membeli/menjual instrumen keuangan apapun.
                             </p>

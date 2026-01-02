@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { StarIcon, CurrencyIcon, TrophyIcon, FireIcon, BellIcon, WarningIcon } from '@/components/PremiumIcons';
 
 const expertAdvisors = [
     {
@@ -165,16 +166,16 @@ export default function ExpertAdvisorsPage() {
                                 {ea.priority && (
                                     <div className="absolute -top-3 right-4 z-20">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${ea.priority === 'FLAGSHIP'
-                                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                                                : ea.priority === 'HIGH PROFIT'
-                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                                                    : ea.priority === '75% WINRATE'
-                                                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                                        : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                            ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                                            : ea.priority === 'HIGH PROFIT'
+                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                                                : ea.priority === '75% WINRATE'
+                                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                                    : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                             }`}>
-                                            {ea.priority === 'FLAGSHIP' ? '⭐ FLAGSHIP' :
-                                                ea.priority === 'HIGH PROFIT' ? '💰 12%/MONTH' :
-                                                    ea.priority === '75% WINRATE' ? '🏆 75% WIN' : '🔥 POPULAR'}
+                                            {ea.priority === 'FLAGSHIP' ? <><StarIcon className="inline mr-1" size="sm" /> FLAGSHIP</> :
+                                                ea.priority === 'HIGH PROFIT' ? <><CurrencyIcon className="inline mr-1" size="sm" /> 12%/MONTH</> :
+                                                    ea.priority === '75% WINRATE' ? <><TrophyIcon className="inline mr-1" size="sm" /> 75% WIN</> : <><FireIcon className="inline mr-1" size="sm" /> POPULAR</>}
                                         </span>
                                     </div>
                                 )}
@@ -248,7 +249,7 @@ export default function ExpertAdvisorsPage() {
                         viewport={{ once: true }}
                         className="glass rounded-3xl p-8 md:p-12 border border-amber-500/30 text-center"
                     >
-                        <div className="text-4xl mb-4">🔔</div>
+                        <BellIcon className="text-amber-400 mx-auto mb-4" size="xl" />
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
                             Daftar <span className="text-amber-400">Waitlist</span>
                         </h2>
@@ -263,7 +264,7 @@ export default function ExpertAdvisorsPage() {
                                     whileTap={{ scale: 0.98 }}
                                     className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25"
                                 >
-                                    🔔 Join Waitlist
+                                    <BellIcon className="inline mr-2" size="sm" /> Join Waitlist
                                 </motion.button>
                             </Link>
                             <Link href="/analisa-market">
@@ -278,7 +279,7 @@ export default function ExpertAdvisorsPage() {
                         </div>
 
                         <p className="text-[#64748B] text-sm mt-6">
-                            ⚠️ Trading berisiko. EA memerlukan VPS untuk performa optimal.
+                            <WarningIcon className="inline mr-1" size="sm" /> Trading berisiko. EA memerlukan VPS untuk performa optimal.
                         </p>
                     </motion.div>
                 </div>
