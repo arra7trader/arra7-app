@@ -65,8 +65,17 @@ export async function POST(request: NextRequest) {
         const marketData = await getMarketData(pair as ForexPair, timeframe as Timeframe);
         const formattedData = formatMarketDataForAI(marketData, timeframe);
 
-        // Call AI for analysis
-        const aiResult = await analyzeWithGroq(formattedData);
+        // Check if learning mode is enabled
+        const learningMode = body.learningMode === true;
+
+        // Call AI for analysis (standard or learning mode)
+        let aiResult;
+        if (learningMode) {
+            const { analyzeWithLearningMode } = await import('@/lib/groq-ai');
+            aiResult = await analyzeWithLearningMode(formattedData);
+        } else {
+            aiResult = await analyzeWithGroq(formattedData);
+        }
 
         if (!aiResult.success) {
             return NextResponse.json(
@@ -80,6 +89,34 @@ export async function POST(request: NextRequest) {
         if (process.env.TURSO_DATABASE_URL) {
             await useQuota(userId);
             quotaStatus = await getQuotaStatus(userId);
+        }
+
+        // Auto-post to social feed (anonymized)
+        try {
+            const { addToSocialFeed, parseSignalFromAnalysis: parseForSocial } = await import('@/lib/social');
+            if (aiResult.analysis) {
+                const { direction, confidence, summary } = parseForSocial(aiResult.analysis);
+                if (direction) {
+                    // Extract entry/SL/TP from analysis
+                    const entryMatch = aiResult.analysis.match(/ENTRY[:\s]*([0-9.]+)/i);
+                    const slMatch = aiResult.analysis.match(/(?:SL|STOPLOSS)[:\s]*([0-9.]+)/i);
+                    const tpMatch = aiResult.analysis.match(/(?:TP1?|TAKE\s*PROFIT)[:\s]*([0-9.]+)/i);
+
+                    await addToSocialFeed(
+                        userId,
+                        pair,
+                        timeframe,
+                        direction,
+                        confidence,
+                        entryMatch ? parseFloat(entryMatch[1]) : undefined,
+                        slMatch ? parseFloat(slMatch[1]) : undefined,
+                        tpMatch ? parseFloat(tpMatch[1]) : undefined,
+                        summary
+                    );
+                }
+            }
+        } catch (socialError) {
+            console.error('Failed to post to social feed:', socialError);
         }
 
         // Save to history

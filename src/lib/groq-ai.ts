@@ -185,6 +185,60 @@ export async function analyzeWithGroq(marketDataText: string): Promise<AIAnalysi
     }
 }
 
+// Learning Mode Analysis - Extended educational explanations
+export async function analyzeWithLearningMode(marketDataText: string): Promise<AIAnalysisResult> {
+    if (!GROQ_API_KEY) {
+        return {
+            success: false,
+            error: 'GROQ_API_KEY tidak dikonfigurasi.',
+        };
+    }
+
+    // Import learning mode prompt
+    const { LEARNING_MODE_PROMPT } = await import('./learning-prompt');
+    const prompt = LEARNING_MODE_PROMPT.replace('{market_data}', marketDataText);
+
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+            },
+            body: JSON.stringify({
+                model: MODEL,
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.3,
+                max_tokens: 6000, // More tokens for educational content
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const analysisText = data.choices?.[0]?.message?.content;
+
+        if (!analysisText) {
+            throw new Error('No analysis returned from AI');
+        }
+
+        return {
+            success: true,
+            analysis: analysisText,
+            formattedHtml: formatAnalysisToHtml(analysisText),
+        };
+    } catch (error) {
+        console.error('Learning Mode API Error:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'API Error',
+        };
+    }
+}
+
 function formatAnalysisToHtml(text: string): string {
     let html = text;
 

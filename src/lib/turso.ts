@@ -133,6 +133,66 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+        // TIER 3 FEATURES: Trade Journal
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS trade_journal (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        signal_id INTEGER,
+        symbol TEXT NOT NULL,
+        direction TEXT NOT NULL,
+        entry_price REAL NOT NULL,
+        stop_loss REAL,
+        take_profit REAL,
+        lot_size REAL,
+        status TEXT DEFAULT 'OPEN',
+        exit_price REAL,
+        profit_loss REAL,
+        notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        closed_at DATETIME,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+        // TIER 3 FEATURES: User Positions for Portfolio Tracker
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS user_positions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        direction TEXT NOT NULL,
+        entry_price REAL NOT NULL,
+        lot_size REAL NOT NULL,
+        stop_loss REAL,
+        take_profit REAL,
+        status TEXT DEFAULT 'OPEN',
+        current_price REAL,
+        profit_loss REAL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        closed_at DATETIME,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+        // TIER 3 FEATURES: Social Feed (anonymized analyses)
+        await turso.execute(`
+      CREATE TABLE IF NOT EXISTS social_feed (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_hash TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        timeframe TEXT,
+        direction TEXT,
+        confidence INTEGER,
+        entry_price REAL,
+        stop_loss REAL,
+        take_profit REAL,
+        analysis_summary TEXT,
+        likes INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
         // Migrations: Add any missing columns to users table
         // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
         const migrations = [
