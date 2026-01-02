@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBookmap } from '@/hooks/useBookmap';
 import BookmapCanvas from '@/components/bookmap/BookmapCanvas';
 import OrderBookPanel from '@/components/bookmap/OrderBookPanel';
@@ -19,11 +19,87 @@ export default function BookmapPage() {
     const [bubbleStyle, setBubbleStyle] = useState<BubbleStyle>('3d');
     const [showSettings, setShowSettings] = useState(false);
 
+    // Access Control
+    const [isVVIP, setIsVVIP] = useState<boolean | null>(null); // null = loading
+    const [checkingAccess, setCheckingAccess] = useState(true);
+
     const { dataRef, status, tick } = useBookmap(symbol);
     const themeConfig = THEMES[theme];
 
+    // Check Membership
+    useEffect(() => {
+        const checkAccess = async () => {
+            try {
+                const res = await fetch('/api/user/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    // Check if membership is VVIP (case insensitive just in case)
+                    const membership = (data.membership || '').toUpperCase();
+                    setIsVVIP(membership === 'VVIP' || membership === 'ADMIN');
+                } else {
+                    setIsVVIP(false);
+                }
+            } catch (err) {
+                console.error('Access check failed', err);
+                setIsVVIP(false);
+            } finally {
+                setCheckingAccess(false);
+            }
+        };
+        checkAccess();
+    }, []);
+
     return (
         <div className="fixed inset-0 text-white flex flex-col" style={{ background: themeConfig.background }}>
+
+            {/* VVIP Restriction Overlay */}
+            {!checkingAccess && !isVVIP && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+                    <div className="bg-[#0D1117] border border-gray-800 p-8 rounded-2xl max-w-md text-center shadow-2xl relative overflow-hidden">
+                        {/* Glow effect */}
+                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-50"></div>
+
+                        <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+
+                        <h2 className="text-2xl font-bold text-white mb-2">VVIP Access Only</h2>
+                        <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+                            This institutional-grade market depth tool is exclusively available for <strong>VVIP Members</strong>.
+                            See hidden liquidity walls and whale activity in real-time.
+                        </p>
+
+                        <div className="space-y-3">
+                            <a
+                                href="/pricing"
+                                className="block w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-orange-900/20"
+                            >
+                                Upgrade to VVIP
+                            </a>
+                            <a
+                                href="/"
+                                className="block w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition-all"
+                            >
+                                Return Home
+                            </a>
+                        </div>
+
+                        <div className="mt-6 pt-6 border-t border-gray-800/50 flex justify-center gap-6">
+                            <div className="text-center">
+                                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Data Feed</div>
+                                <div className="text-sm font-mono text-green-400 font-bold">BINANCE L2</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Latency</div>
+                                <div className="text-sm font-mono text-blue-400 font-bold">{"<"}50ms</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div
                 className="h-14 mt-16 md:mt-20 border-b flex items-center px-3 md:px-4 justify-between backdrop-blur-sm z-10"
