@@ -1,119 +1,153 @@
-// Bookmap V4 Theme and Visualization Configuration
+// Bookmap V5 Theme Configuration - Softer Colors
 
-export type BookmapTheme = 'bookmap' | 'thermal' | 'grayscale' | 'ocean';
+export type BookmapTheme = 'professional' | 'midnight' | 'slate' | 'charcoal';
 export type VisualizationMode = 'heatmap' | 'heatmap-bubbles' | 'bubbles' | 'columns';
 export type BubbleStyle = '2d' | '3d';
 
 export interface ThemeConfig {
     name: string;
     background: string;
+    chartBackground: string; // Slightly different for depth
     axisBackground: string;
     textColor: string;
+    textMuted: string;
     gridColor: string;
     bidLineColor: string;
     askLineColor: string;
     currentPriceBackground: string;
     currentPriceText: string;
-    // Color gradient for heatmap (from low to high liquidity)
+    spreadColor: string;
+    // Heatmap gradient (softer, blends with background)
     heatmapColors: string[];
-    // Bubble colors
+    // Bubble styling
     buyBubble: { fill: string; stroke: string; glow: string };
     sellBubble: { fill: string; stroke: string; glow: string };
 }
 
 export const THEMES: Record<BookmapTheme, ThemeConfig> = {
-    bookmap: {
-        name: 'Bookmap Classic',
-        background: '#000000',
-        axisBackground: '#0A0A0A',
-        textColor: '#888888',
-        gridColor: 'rgba(50,50,80,0.15)',
-        bidLineColor: '#00FF00',
-        askLineColor: '#FF0000',
-        currentPriceBackground: '#FFD700',
-        currentPriceText: '#000000',
-        // Authentic Bookmap gradient: Black -> Dark Blue -> Blue -> Orange -> Red -> Yellow -> White
+    professional: {
+        name: 'Professional',
+        background: '#0D1117',      // Dark but not pure black
+        chartBackground: '#0D1117',
+        axisBackground: '#161B22',
+        textColor: '#C9D1D9',
+        textMuted: '#8B949E',
+        gridColor: 'rgba(48,54,61,0.6)',
+        bidLineColor: '#3FB950',
+        askLineColor: '#F85149',
+        currentPriceBackground: '#58A6FF',
+        currentPriceText: '#FFFFFF',
+        spreadColor: '#8B949E',
+        // Softer gradient that blends with dark navy background
         heatmapColors: [
-            '#000000', // 0% - Black (no liquidity)
-            '#000020', // 5%
-            '#000040', // 10%
-            '#000080', // 15% - Dark Blue
-            '#0000C0', // 20%
-            '#0000FF', // 30% - Blue
-            '#0040FF', // 35%
-            '#0080FF', // 40%
-            '#00C0FF', // 45%
-            '#FFA000', // 50% - Orange
-            '#FF8000', // 55%
-            '#FF6000', // 60%
-            '#FF4000', // 65%
-            '#FF0000', // 70% - Red
-            '#FF4040', // 75%
-            '#FF8080', // 80%
-            '#FFFF00', // 85% - Yellow
-            '#FFFF80', // 90%
-            '#FFFFC0', // 95%
-            '#FFFFFF', // 100% - White (max liquidity)
+            '#0D1117', // Background (invisible)
+            '#0E1824', '#0F1F31', '#10263E', '#112D4B',
+            '#123458', '#133B65', '#144272', '#15497F',
+            '#16508C', // Blue range
+            '#1A6B9A', '#1E86A8', '#22A1B6', '#26BCC4',
+            '#2AD7D2', // Cyan transition
+            '#4ADE80', // Green
+            '#84CC16', // Yellow-green
+            '#EAB308', // Yellow
+            '#F97316', // Orange
+            '#EF4444', // Red
+            '#FBBF24', // Bright yellow
+            '#FFFFFF', // White (max)
         ],
-        buyBubble: { fill: '#00FF00', stroke: '#00AA00', glow: 'rgba(0,255,0,0.3)' },
-        sellBubble: { fill: '#FF0000', stroke: '#AA0000', glow: 'rgba(255,0,0,0.3)' },
+        buyBubble: { fill: '#3FB950', stroke: '#238636', glow: 'rgba(63,185,80,0.4)' },
+        sellBubble: { fill: '#F85149', stroke: '#DA3633', glow: 'rgba(248,81,73,0.4)' },
     },
-    thermal: {
-        name: 'Thermal',
-        background: '#0A0A14',
-        axisBackground: '#080810',
-        textColor: '#64748B',
-        gridColor: 'rgba(100,116,139,0.08)',
-        bidLineColor: '#22C55E',
-        askLineColor: '#EF4444',
-        currentPriceBackground: '#EAB308',
-        currentPriceText: '#000000',
-        heatmapColors: [
-            '#000000', '#0D001A', '#1A0033', '#26004D', '#330066',
-            '#000080', '#0000CC', '#0066FF', '#00CCFF', '#00FFCC',
-            '#00FF66', '#33FF00', '#99FF00', '#CCFF00', '#FFFF00',
-            '#FFCC00', '#FF9900', '#FF6600', '#FF3300', '#FF0000',
-        ],
-        buyBubble: { fill: '#22C55E', stroke: '#16A34A', glow: 'rgba(34,197,94,0.3)' },
-        sellBubble: { fill: '#EF4444', stroke: '#DC2626', glow: 'rgba(239,68,68,0.3)' },
-    },
-    grayscale: {
-        name: 'Grayscale',
-        background: '#000000',
-        axisBackground: '#0A0A0A',
-        textColor: '#AAAAAA',
-        gridColor: 'rgba(255,255,255,0.05)',
-        bidLineColor: '#CCCCCC',
-        askLineColor: '#666666',
-        currentPriceBackground: '#FFFFFF',
-        currentPriceText: '#000000',
-        heatmapColors: [
-            '#000000', '#0D0D0D', '#1A1A1A', '#262626', '#333333',
-            '#404040', '#4D4D4D', '#595959', '#666666', '#737373',
-            '#808080', '#8C8C8C', '#999999', '#A6A6A6', '#B3B3B3',
-            '#C0C0C0', '#CCCCCC', '#D9D9D9', '#E6E6E6', '#FFFFFF',
-        ],
-        buyBubble: { fill: '#E0E0E0', stroke: '#AAAAAA', glow: 'rgba(255,255,255,0.2)' },
-        sellBubble: { fill: '#606060', stroke: '#404040', glow: 'rgba(100,100,100,0.2)' },
-    },
-    ocean: {
-        name: 'Ocean',
-        background: '#0A1628',
-        axisBackground: '#061020',
-        textColor: '#7DD3FC',
-        gridColor: 'rgba(125,211,252,0.06)',
+    midnight: {
+        name: 'Midnight Blue',
+        background: '#0A1929',      // Deep navy blue
+        chartBackground: '#0A1929',
+        axisBackground: '#0F2137',
+        textColor: '#B2BAC2',
+        textMuted: '#6B7280',
+        gridColor: 'rgba(30,58,95,0.5)',
         bidLineColor: '#22D3EE',
-        askLineColor: '#F97316',
+        askLineColor: '#FB7185',
         currentPriceBackground: '#38BDF8',
-        currentPriceText: '#0A1628',
+        currentPriceText: '#0A1929',
+        spreadColor: '#7DD3FC',
         heatmapColors: [
-            '#0A1628', '#0C1A30', '#0E1E38', '#102240', '#122648',
-            '#0D4F6F', '#087990', '#06A4B0', '#04CFD0', '#02FAF0',
-            '#00FFD0', '#00FFB0', '#00FF90', '#20FF70', '#40FF50',
-            '#80FF40', '#C0FF30', '#E0FF20', '#FFFF10', '#FFFF80',
+            '#0A1929', // Background
+            '#0B1E33', '#0C233D', '#0D2847', '#0E2D51',
+            '#0F325B', '#103765', '#113C6F', '#124179',
+            '#134683', // Deep blue
+            '#1E5A8F', '#296E9B', '#3482A7', '#3F96B3',
+            '#4AAABF', // Transition
+            '#55BECB', '#60D2D7', '#6BE6E3', '#76FAEF',
+            '#81FFFB', // Bright cyan
+            '#BFFF00', // Yellow-green highlight
+            '#FFFF00', // Yellow
+            '#FF8C00', // Orange
+            '#FF4500', // Red-orange
         ],
-        buyBubble: { fill: '#22D3EE', stroke: '#06B6D4', glow: 'rgba(34,211,238,0.3)' },
-        sellBubble: { fill: '#F97316', stroke: '#EA580C', glow: 'rgba(249,115,22,0.3)' },
+        buyBubble: { fill: '#22D3EE', stroke: '#0891B2', glow: 'rgba(34,211,238,0.4)' },
+        sellBubble: { fill: '#FB7185', stroke: '#E11D48', glow: 'rgba(251,113,133,0.4)' },
+    },
+    slate: {
+        name: 'Slate Gray',
+        background: '#1E1E2E',      // Soft dark purple-gray
+        chartBackground: '#1E1E2E',
+        axisBackground: '#27273A',
+        textColor: '#CDD6F4',
+        textMuted: '#9399B2',
+        gridColor: 'rgba(69,71,90,0.5)',
+        bidLineColor: '#A6E3A1',
+        askLineColor: '#F38BA8',
+        currentPriceBackground: '#89B4FA',
+        currentPriceText: '#1E1E2E',
+        spreadColor: '#BAC2DE',
+        heatmapColors: [
+            '#1E1E2E', // Background
+            '#222236', '#26263E', '#2A2A46', '#2E2E4E',
+            '#323256', '#36365E', '#3A3A66', '#3E3E6E',
+            '#424276', // Purple-gray
+            '#5B5B9D', '#7474C4', '#8D8DEB', '#A6A6FF',
+            '#B8C0FF', // Lavender
+            '#89DCEB', // Cyan
+            '#94E2D5', // Teal
+            '#A6E3A1', // Green
+            '#F9E2AF', // Yellow
+            '#FAB387', // Peach
+            '#F38BA8', // Pink-red
+            '#FFFFFF', // White
+        ],
+        buyBubble: { fill: '#A6E3A1', stroke: '#40A02B', glow: 'rgba(166,227,161,0.4)' },
+        sellBubble: { fill: '#F38BA8', stroke: '#D20F39', glow: 'rgba(243,139,168,0.4)' },
+    },
+    charcoal: {
+        name: 'Charcoal',
+        background: '#18181B',      // Warm dark gray
+        chartBackground: '#18181B',
+        axisBackground: '#27272A',
+        textColor: '#E4E4E7',
+        textMuted: '#A1A1AA',
+        gridColor: 'rgba(63,63,70,0.5)',
+        bidLineColor: '#4ADE80',
+        askLineColor: '#F87171',
+        currentPriceBackground: '#FBBF24',
+        currentPriceText: '#18181B',
+        spreadColor: '#D4D4D8',
+        heatmapColors: [
+            '#18181B', // Background
+            '#1C1C1F', '#202023', '#242427', '#28282B',
+            '#2C2C2F', '#303033', '#343437', '#38383B',
+            '#3C3C3F', // Dark gray
+            '#4A4A52', '#585865', '#666678', '#74748B',
+            '#82829E', // Mid gray-purple
+            '#6366F1', // Indigo
+            '#8B5CF6', // Violet
+            '#A855F7', // Purple
+            '#D946EF', // Fuchsia
+            '#EC4899', // Pink
+            '#F43F5E', // Rose
+            '#FFFFFF', // White
+        ],
+        buyBubble: { fill: '#4ADE80', stroke: '#22C55E', glow: 'rgba(74,222,128,0.4)' },
+        sellBubble: { fill: '#F87171', stroke: '#EF4444', glow: 'rgba(248,113,113,0.4)' },
     },
 };
 
@@ -124,32 +158,29 @@ export const VISUALIZATION_MODES: Record<VisualizationMode, { name: string; desc
     'columns': { name: 'Column View', description: 'DOM-style bars' },
 };
 
-// Generate interpolated color from theme gradient
-export function getHeatmapColor(theme: ThemeConfig, intensity: number): string {
-    const colors = theme.heatmapColors;
-    const clampedIntensity = Math.max(0, Math.min(1, intensity));
-    const index = clampedIntensity * (colors.length - 1);
-    const lowerIndex = Math.floor(index);
-    const upperIndex = Math.min(lowerIndex + 1, colors.length - 1);
-    const t = index - lowerIndex;
-
-    // Interpolate between two colors
-    const lower = hexToRgb(colors[lowerIndex]);
-    const upper = hexToRgb(colors[upperIndex]);
-
-    const r = Math.round(lower.r + (upper.r - lower.r) * t);
-    const g = Math.round(lower.g + (upper.g - lower.g) * t);
-    const b = Math.round(lower.b + (upper.b - lower.b) * t);
-
-    return `rgb(${r},${g},${b})`;
-}
-
-// Pre-generate 512 colors for faster lookup
+// Generate color lookup with smooth interpolation
 export function generateColorLookup(theme: ThemeConfig): string[] {
+    const colors = theme.heatmapColors;
     const lookup: string[] = new Array(512);
+
     for (let i = 0; i < 512; i++) {
-        lookup[i] = getHeatmapColor(theme, i / 511);
+        const t = i / 511;
+        const scaledIndex = t * (colors.length - 1);
+        const lowerIndex = Math.floor(scaledIndex);
+        const upperIndex = Math.min(lowerIndex + 1, colors.length - 1);
+        const localT = scaledIndex - lowerIndex;
+
+        const lower = hexToRgb(colors[lowerIndex]);
+        const upper = hexToRgb(colors[upperIndex]);
+
+        // Smooth interpolation
+        const r = Math.round(lower.r + (upper.r - lower.r) * localT);
+        const g = Math.round(lower.g + (upper.g - lower.g) * localT);
+        const b = Math.round(lower.b + (upper.b - lower.b) * localT);
+
+        lookup[i] = `rgb(${r},${g},${b})`;
     }
+
     return lookup;
 }
 

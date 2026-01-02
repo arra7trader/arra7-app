@@ -13,18 +13,25 @@ import {
 } from '@/lib/bookmap/themes';
 
 export default function BookmapPage() {
-    const [symbol, setSymbol] = useState<'BTCUSDT' | 'PAXGUSDT'>('BTCUSDT');
-    const [theme, setTheme] = useState<BookmapTheme>('bookmap');
+    const [symbol, setSymbol] = useState<'BTCUSDT' | 'ETHUSDT' | 'PAXGUSDT'>('BTCUSDT');
+    const [theme, setTheme] = useState<BookmapTheme>('professional');
     const [mode, setMode] = useState<VisualizationMode>('heatmap-bubbles');
     const [bubbleStyle, setBubbleStyle] = useState<BubbleStyle>('3d');
     const [showSettings, setShowSettings] = useState(false);
 
     const { dataRef, status, tick } = useBookmap(symbol);
+    const themeConfig = THEMES[theme];
 
     return (
-        <div className="fixed inset-0 bg-black text-white flex flex-col">
+        <div className="fixed inset-0 text-white flex flex-col" style={{ background: themeConfig.background }}>
             {/* Header */}
-            <div className="h-14 mt-16 md:mt-20 border-b border-gray-800/50 flex items-center px-3 md:px-4 justify-between bg-black/95 backdrop-blur-sm z-10">
+            <div
+                className="h-14 mt-16 md:mt-20 border-b flex items-center px-3 md:px-4 justify-between backdrop-blur-sm z-10"
+                style={{
+                    background: `${themeConfig.axisBackground}F0`,
+                    borderColor: themeConfig.gridColor
+                }}
+            >
                 {/* Left: Logo + Symbol */}
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="flex items-center gap-2">
@@ -34,23 +41,35 @@ export default function BookmapPage() {
                         <span className="font-bold text-sm md:text-lg hidden sm:block">Bookmap LP</span>
                     </div>
 
-                    {/* Symbol Toggle */}
-                    <div className="flex bg-gray-900 rounded-lg p-0.5">
+                    {/* Symbol Selector */}
+                    <div className="flex rounded-lg p-0.5" style={{ background: themeConfig.axisBackground }}>
                         <button
                             onClick={() => setSymbol('BTCUSDT')}
                             className={`px-2 md:px-3 py-1 text-xs md:text-sm font-medium rounded-md transition-all ${symbol === 'BTCUSDT'
-                                    ? 'bg-orange-500 text-white'
-                                    : 'text-gray-400 hover:text-white'
+                                ? 'bg-orange-500 text-white'
+                                : 'hover:bg-white/10'
                                 }`}
+                            style={{ color: symbol === 'BTCUSDT' ? undefined : themeConfig.textMuted }}
                         >
                             BTC
                         </button>
                         <button
+                            onClick={() => setSymbol('ETHUSDT')}
+                            className={`px-2 md:px-3 py-1 text-xs md:text-sm font-medium rounded-md transition-all ${symbol === 'ETHUSDT'
+                                ? 'bg-indigo-500 text-white'
+                                : 'hover:bg-white/10'
+                                }`}
+                            style={{ color: symbol === 'ETHUSDT' ? undefined : themeConfig.textMuted }}
+                        >
+                            ETH
+                        </button>
+                        <button
                             onClick={() => setSymbol('PAXGUSDT')}
                             className={`px-2 md:px-3 py-1 text-xs md:text-sm font-medium rounded-md transition-all ${symbol === 'PAXGUSDT'
-                                    ? 'bg-yellow-500 text-black'
-                                    : 'text-gray-400 hover:text-white'
+                                ? 'bg-yellow-500 text-black'
+                                : 'hover:bg-white/10'
                                 }`}
+                            style={{ color: symbol === 'PAXGUSDT' ? undefined : themeConfig.textMuted }}
                         >
                             GOLD
                         </button>
@@ -65,8 +84,8 @@ export default function BookmapPage() {
                             onClick={() => setMode(key as VisualizationMode)}
                             title={config.description}
                             className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mode === key
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-800'
                                 }`}
                         >
                             {config.name}

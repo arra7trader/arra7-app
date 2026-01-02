@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BinanceWebSocket, OrderBookLevel, Trade } from '@/lib/bookmap/websocket';
 
 export type BookmapState = {
@@ -40,35 +40,32 @@ export const useBookmap = (symbol: string) => {
         };
         setStatus('connecting');
 
+        // Disconnect previous WebSocket if exists
+        if (wsRef.current) {
+            wsRef.current.disconnect();
+        }
+
         wsRef.current = new BinanceWebSocket(symbol, {
             onDepthUpdate: (bids, asks) => {
-                const now = Date.now();
-
-                // Update Bids
+                // Update Bids - for depth20 we get full snapshot, so clear and rebuild
+                const newBids = new Map<number, number>();
                 bids.forEach(bid => {
-                    if (bid.quantity === 0) {
-                        dataRef.current.bids.delete(bid.price);
-                    } else {
-                        dataRef.current.bids.set(bid.price, bid.quantity);
+                    if (bid.quantity > 0) {
+                        newBids.set(bid.price, bid.quantity);
                     }
                 });
+                dataRef.current.bids = newBids;
 
                 // Update Asks
+                const newAsks = new Map<number, number>();
                 asks.forEach(ask => {
-                    if (ask.quantity === 0) {
-                        dataRef.current.asks.delete(ask.price);
-                    } else {
-                        dataRef.current.asks.set(ask.price, ask.quantity);
+                    if (ask.quantity > 0) {
+                        newAsks.set(ask.price, ask.quantity);
                     }
                 });
+                dataRef.current.asks = newAsks;
 
-                // Calculate Best Bid/Ask
-                // Note: Getting max/min from Map keys can be expensive if map is huge, 
-                // but for partial depth (depth20) it's fine. 
-                // However, we accumulate partial depths, so the map might grow.
-                // Binance's @depth20 stream already gives sorted arrays, but our local map isn't sorted.
-                // Optimization: Track max/min iteratively or assume high density.
-                // For now, simple spread usage (careful with performance)
+                // Calculate Best Bid/Ask from the new snapshot
                 if (dataRef.current.bids.size > 0) {
                     dataRef.current.bestBid = Math.max(...dataRef.current.bids.keys());
                 }
@@ -80,16 +77,17 @@ export const useBookmap = (symbol: string) => {
                 dataRef.current.trades.push(trade);
                 dataRef.current.lastPrice = trade.price;
 
-                // Keep only last 100 trades to avoid memory leak in this ref
-                // (The visualizer will have its own buffer)
+                // Keep only last 500 trades to avoid memory leak
                 if (dataRef.current.trades.length > 500) {
                     dataRef.current.trades = dataRef.current.trades.slice(-500);
                 }
+            },
+            onStatusChange: (newStatus) => {
+                setStatus(newStatus);
             }
         });
 
         wsRef.current.connect();
-        setStatus('connected');
 
         // Low-frequency update loop for UI panels (OrderBookPanel)
         const interval = setInterval(() => {
