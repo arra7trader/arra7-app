@@ -14,12 +14,10 @@ export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvas
 
     // Viewport state
     const [scaleY, setScaleY] = useState(100); // Pixels per unit price (zoomed in)
-    const [offsetY, setOffsetY] = useState(0); // Vertical scroll position
+    const [offsetY, setOffsetY] = useState(0); // Vertical scroll position (manual logic to be added later)
 
-    // Heatmap buffer state
-    // We use a history array: { time: number, levels: Map<price, qty> }[]
-    // Ideally this should be an OffscreenCanvas or a specialized data structure
-    const historyRef = useRef<{ time: number, bids: Map<number, number>, asks: Map<number, number> }[]>([]);
+    // Manual Price Center - if null, auto-center
+    const [centerPrice, setCenterPrice] = useState<number | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -30,10 +28,44 @@ export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvas
 
         let animationId: number;
         let lastTime = 0;
-        const speed = 1; // Pixels per frame scroll speed
+        const speed = 1.5; // Slightly faster scroll
+
+        // Thermal Color Map (Blue -> Green -> Yellow -> Red -> White)
+        // Pre-calculate 256 colors for fast lookup
+        const colorMap: string[] = [];
+        for (let i = 0; i < 256; i++) {
+            // Normalized 0-1
+            const t = i / 255;
+            let r = 0, g = 0, b = 0;
+
+            // Simple thermal gradient logic
+            if (t < 0.25) { // Black to Blue
+                b = Math.floor(255 * (t / 0.25));
+            } else if (t < 0.5) { // Blue to Green
+                b = Math.floor(255 * (1 - (t - 0.25) / 0.25));
+                g = Math.floor(255 * ((t - 0.25) / 0.25));
+            } else if (t < 0.75) { // Green to Red (via Yellowish)
+                g = Math.floor(255 * (1 - (t - 0.5) / 0.25 * 0.5)); // Keep some green
+                r = Math.floor(255 * ((t - 0.5) / 0.25));
+            } else { // Red to White
+                r = 255;
+                g = Math.floor(255 * ((t - 0.75) / 0.25));
+                b = Math.floor(255 * ((t - 0.75) / 0.25));
+            }
+            colorMap[i] = `rgb(${r},${g},${b})`;
+        }
+
+        // Custom simple heat function for better contrast
+        const getHeatColor = (qty: number) => {
+            // Logarithmic scale for volume to generic intensity
+            // Adjust divisor based on symbol later
+            const intensity = Math.min(Math.log10(qty + 1) / 3, 1);
+            const index = Math.floor(intensity * 255);
+            return colorMap[index];
+        };
 
         const render = (timestamp: number) => {
-            if (timestamp - lastTime < 16) { // Cap at ~60 FPS
+            if (timestamp - lastTime < 16) {
                 animationId = requestAnimationFrame(render);
                 return;
             }
@@ -41,95 +73,139 @@ export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvas
 
             const width = canvas.width;
             const height = canvas.height;
+            const CHART_RIGHT_MARGIN = 60; // Space for price labels
 
-            // 1. Data Snapshot Logic
-            // Every frame, we take a snapshot of the current book state and push it to history
-            // In a real optimized system, we wouldn't clone Maps every frame/interval.
-            // We would rely on the WebSocket hook to just update a shared buffer.
-            // For this implementation, we'll simple rendering:
-            // Shift entire canvas image to the left by 1 pixel
-
-            // Draw existing content shifted left
+            // 1. Shift Canvas
             ctx.drawImage(canvas, -speed, 0);
 
-            // Clear the new slice on the right
-            const sliceWidth = speed;
-            const sliceX = width - sliceWidth;
-            ctx.fillStyle = '#111111'; // Background color
-            ctx.fillRect(sliceX, 0, sliceWidth, height);
+            // 2. Clear New Slice
+            const sliceWidth = speed + 2; // +2 to cover anti-aliasing artifacts
+            const sliceX = width - CHART_RIGHT_MARGIN - speed;
+
+            // Clear chart area only
+            ctx.fillStyle = '#111111'; // Dark background
+            ctx.fillRect(sliceX, 0, sliceWidth + CHART_RIGHT_MARGIN, height); // Clear all the way to right
 
             if (!dataRef.current) return;
 
-            // Determine Center Price (Mid Price)
-            const currentPrice = dataRef.current.lastPrice || ((dataRef.current.bestBid + dataRef.current.bestAsk) / 2);
-            if (!currentPrice || currentPrice === 0) {
+            // Determine Center Price
+            const midPrice = dataRef.current.lastPrice || ((dataRef.current.bestBid + dataRef.current.bestAsk) / 2);
+            if (!midPrice || midPrice === 0) {
                 animationId = requestAnimationFrame(render);
                 return;
             }
 
-            // Auto-center logic (simple version)
-            // Center of screen (height/2) should be currentPrice
-            // Y = height/2 + (price - currentPrice) * scaleY
-            // Note: Canvas Y coordinates are inverted (0 is top)
-            // Normalized Y = height/2 - (price - currentPrice) * scaleY
+            // Use locked center price if user dragged (future feature), else auto-follow
+            const effectiveCenter = centerPrice || midPrice;
 
-            const getY = (price: number) => height / 2 - (price - currentPrice) * scaleY;
+            // Y Coordinate mapper
+            const getY = (price: number) => Math.floor(height / 2 - (price - effectiveCenter) * scaleY);
 
-            // 2. Render Heatmap (Rightmost Slice)
-            // Iterate Bids
+            // 3. Render Heatmap (Liquidity)
+            // Optimization: Only render visible range
+            const priceRangeVisible = (height / 2) / scaleY;
+            const maxVisiblePrice = effectiveCenter + priceRangeVisible;
+            const minVisiblePrice = effectiveCenter - priceRangeVisible;
+
+            // Bids
             dataRef.current.bids.forEach((qty, price) => {
+                if (price > maxVisiblePrice || price < minVisiblePrice) return;
                 const y = getY(price);
-                // Simple intensity mapping: darker -> brighter color
-                // Max visible liquidity handling needed for normalization
-                const intensity = Math.min(qty / 10, 1); // Mock normalization
-                const r = Math.floor(255 * intensity);
-                const g = Math.floor(100 * intensity);
-                ctx.fillStyle = `rgb(${r}, ${g}, 0)`; // Orange-ish
-                ctx.fillRect(sliceX, y, sliceWidth, scaleY * 0.1 || 1); // Thickness
+                const barHeight = Math.max(scaleY * 0.1, 2); // Minimum 2px visibility
+
+                ctx.fillStyle = getHeatColor(qty);
+                ctx.fillRect(sliceX, y, sliceWidth, barHeight);
             });
 
-            // Iterate Asks
+            // Asks
             dataRef.current.asks.forEach((qty, price) => {
+                if (price > maxVisiblePrice || price < minVisiblePrice) return;
                 const y = getY(price);
-                const intensity = Math.min(qty / 10, 1);
-                const r = Math.floor(255 * intensity);
-                const g = Math.floor(50 * intensity);
-                ctx.fillStyle = `rgb(${r}, ${g}, 0)`; // Red-ish
-                ctx.fillRect(sliceX, y, sliceWidth, scaleY * 0.1 || 1);
+                const barHeight = Math.max(scaleY * 0.1, 2); // Minimum 2px visibility
+
+                ctx.fillStyle = getHeatColor(qty);
+                ctx.fillRect(sliceX, y, sliceWidth, barHeight);
             });
 
-            // 3. Render Best Bid/Ask Lines (Overlay on top of heatmap)
-            // We draw these into the new slice
+            // 4. Render Best Bid/Ask Lines
             const bestBidY = getY(dataRef.current.bestBid);
             const bestAskY = getY(dataRef.current.bestAsk);
 
-            ctx.fillStyle = '#00FF00';
-            ctx.fillRect(sliceX, bestBidY, sliceWidth, 1);
+            // Draw slightly thicker lines
+            ctx.fillStyle = '#00FF00'; // Bid Green
+            ctx.fillRect(sliceX, bestBidY, sliceWidth, 1.5);
 
-            ctx.fillStyle = '#FF0000';
-            ctx.fillRect(sliceX, bestAskY, sliceWidth, 1);
+            ctx.fillStyle = '#FF0000'; // Ask Red
+            ctx.fillRect(sliceX, bestAskY, sliceWidth, 1.5);
 
-            // 4. Render Trades (Bubbles)
-            // Trades happen at discrete points in time.
-            // We need to render trades that happened since last frame.
-            // Or better, just draw them on the current slice if their timestamp is recent.
-            // Simplified: Draw last few trades if they are "new" (hacky without timestamp tracking per frame)
+            // 5. Render Price Axis (Static, Right Side)
+            // Clear right margin first (already done above but ensuring specific area)
+            ctx.fillStyle = '#0A0E14'; // Darker for axis
+            ctx.fillRect(width - CHART_RIGHT_MARGIN, 0, CHART_RIGHT_MARGIN, height);
 
-            // Actually, correct way: We have dataRef.current.trades array.
-            // We can filter for trades that happened in the last 100ms and draw them at the current X.
-            // Since we shift the canvas, this "bubble" will physically move left.
+            ctx.fillStyle = '#64748B'; // Text color
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+
+            // Draw ticks
+            // Dynamic step based on scaleY
+            const priceStep = 100 / scaleY; // Rough heuristic
+            // Round step to nice number (0.01, 0.1, 1, 10, 50, 100)
+            // Simplified:
+            const step = Math.pow(10, Math.floor(Math.log10(priceRangeVisible))) / 2;
+
+            const startTick = Math.floor(minVisiblePrice / step) * step;
+            for (let p = startTick; p <= maxVisiblePrice; p += step) {
+                const y = getY(p);
+                // Grid line (optional, draw across chart)
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                ctx.fillRect(0, y, width - CHART_RIGHT_MARGIN, 1);
+
+                // Label
+                ctx.fillStyle = '#64748B';
+                // Adjust precision based on price
+                const label = p.toFixed(p < 10 ? 4 : 2);
+                ctx.fillText(label, width - CHART_RIGHT_MARGIN + 5, y);
+            }
+
+            // Highlight Current Price on Axis
+            const currentY = getY(dataRef.current.lastPrice);
+            if (currentY > 0 && currentY < height) {
+                ctx.fillStyle = '#EAB308'; // Yellow background
+                ctx.fillRect(width - CHART_RIGHT_MARGIN, currentY - 8, CHART_RIGHT_MARGIN, 16);
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 10px monospace';
+                ctx.fillText(dataRef.current.lastPrice.toFixed(2), width - CHART_RIGHT_MARGIN + 5, currentY);
+            }
+
+
+            // 6. Render Trades (Bubbles)
             const now = Date.now();
             dataRef.current.trades.forEach(trade => {
                 // If trade is extremely recent (< 100ms), draw bubble
-                if (now - trade.time < 100) {
+                if (now - trade.time < 150) { // Slight buffer
                     const y = getY(trade.price);
-                    const radius = Math.max(2, Math.min(trade.quantity * 2, 20)); // Size based on volume
+
+                    // Logarithmic radius: Volume 0.001 -> 2px, 1 -> 8px, 10 -> 15px
+                    const radius = Math.max(3, Math.min(Math.log10(trade.quantity * 100) * 3, 25));
 
                     ctx.beginPath();
-                    ctx.arc(sliceX - 10, y, radius, 0, 2 * Math.PI); // Draw slightly offset to not be cut off
-                    ctx.fillStyle = trade.isBuyerMaker ? 'rgba(255, 50, 50, 0.7)' : 'rgba(50, 255, 50, 0.7)'; // Red for Sell (buyer is maker), Green for Buy
+                    ctx.arc(sliceX - radius / 2, y, radius, 0, 2 * Math.PI);
+
+                    // Fill with gradient for 3D effect
+                    const grad = ctx.createRadialGradient(sliceX - radius / 2, y, 0, sliceX - radius / 2, y, radius);
+                    if (trade.isBuyerMaker) { // Sell (Red)
+                        grad.addColorStop(0, 'rgba(255, 100, 100, 0.9)');
+                        grad.addColorStop(1, 'rgba(150, 0, 0, 0.8)');
+                    } else { // Buy (Green)
+                        grad.addColorStop(0, 'rgba(100, 255, 100, 0.9)');
+                        grad.addColorStop(1, 'rgba(0, 150, 0, 0.8)');
+                    }
+
+                    ctx.fillStyle = grad;
                     ctx.fill();
-                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }
@@ -147,8 +223,6 @@ export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvas
     useEffect(() => {
         const handleResize = () => {
             if (canvasRef.current) {
-                // Keep the buffer content on resize? Ideally yes, but tricky.
-                // Simple resize clears canvas.
                 canvasRef.current.width = window.innerWidth;
                 canvasRef.current.height = window.innerHeight - 80; // Minus navbar height
             }
@@ -162,11 +236,11 @@ export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvas
     const handleWheel = (e: React.WheelEvent) => {
         if (e.ctrlKey) {
             // Zoom (Scale Y)
-            const delta = -e.deltaY * 0.01;
-            setScaleY(s => Math.max(1, Math.min(s + delta * 10, 10000)));
+            e.preventDefault();
+            const delta = -e.deltaY * 0.001;
+            setScaleY(s => Math.max(1, Math.min(s * (1 + delta), 100000))); // Multiplicative zoom
         } else {
-            // Pan (Offset Y - TODO: Implement manual offset instead of auto-center)
-            // For now, let's keep it auto-centered on price
+            // Pan (Future implementation: adjust setCenterPrice)
         }
     };
 
@@ -177,12 +251,13 @@ export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvas
                 className="block cursor-crosshair"
                 onWheel={handleWheel}
             />
-            {/* Overlay Info */}
-            <div className="absolute top-4 left-4 pointer-events-none text-xs text-white/50">
-                <p>Symbol: {symbol}</p>
-                <p>Zoom: {scaleY.toFixed(1)}x</p>
-                <p>Status: {status}</p>
-                <p>Price: {dataRef.current.lastPrice?.toFixed(2)}</p>
+            {/* Overlay Info (Minimal) */}
+            <div className="absolute top-4 left-4 pointer-events-none text-xs text-white/50 bg-black/40 p-2 rounded backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ background: status === 'connected' ? '#22c55e' : '#eab308' }}></span>
+                    <span>{symbol}</span>
+                </div>
+                <div>Price: <span className="text-white">{dataRef.current.lastPrice?.toFixed(2)}</span></div>
             </div>
 
             {/* Loading Indicator */}
