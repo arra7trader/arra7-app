@@ -6,6 +6,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Script from 'next/script';
+import { SparklesIcon, GemIcon, RocketIcon } from '@/components/PremiumIcons';
 
 declare global {
     interface Window {
@@ -159,7 +160,7 @@ export default function PricingPage() {
                         {/* Festive decorations */}
                         <div className="absolute top-0 left-4 text-4xl">🎆</div>
                         <div className="absolute top-0 right-4 text-4xl">🎇</div>
-                        <div className="absolute -top-2 left-1/4 text-2xl animate-bounce">✨</div>
+                        <div className="absolute -top-2 left-1/4 text-2xl animate-bounce"><SparklesIcon className="text-yellow-400" size="md" /></div>
                         <div className="absolute -top-2 right-1/4 text-2xl animate-bounce delay-100">🎊</div>
 
                         <div className="flex flex-col items-center justify-center gap-4 text-center relative z-10">
@@ -229,7 +230,7 @@ export default function PricingPage() {
                         transition={{ delay: 0.1 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1F2937] bg-[#12141A]/50 backdrop-blur-sm mb-6"
                     >
-                        <span className="text-xl">💎</span>
+                        <GemIcon className="text-blue-400" size="lg" />
                         <span className="text-sm text-[#94A3B8]">Simple, Transparent Pricing</span>
                     </motion.span>
 
@@ -275,7 +276,7 @@ export default function PricingPage() {
                   bg-gradient-to-br ${plan.gradient} bg-opacity-20
                 `}>
                                     {plan.id === 'BASIC' && <span className="text-xl">🌱</span>}
-                                    {plan.id === 'PRO' && <span className="text-xl">🚀</span>}
+                                    {plan.id === 'PRO' && <RocketIcon className="text-blue-400" size="lg" />}
                                     {plan.id === 'VVIP' && <span className="text-xl">👑</span>}
                                 </div>
 

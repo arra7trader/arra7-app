@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ChartIcon, CheckCircleIcon, XCircleIcon, ClockIcon, TrophyIcon, DocumentIcon, WarningIcon, RocketIcon, TrendUpIcon } from '@/components/PremiumIcons';
 
 interface PerformanceData {
     overall: {
@@ -116,7 +117,7 @@ export default function PerformancePage() {
                     className="text-center mb-8"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1F2937] bg-[#12141A]/50 backdrop-blur-sm mb-6">
-                        <span className="text-xl">📊</span>
+                        <ChartIcon className="text-blue-400" size="lg" />
                         <span className="text-sm text-[#94A3B8]">Verified Stats</span>
                         <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">LIVE</span>
                     </div>
@@ -141,8 +142,8 @@ export default function PerformancePage() {
                                 key={p}
                                 onClick={() => setPeriod(p)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === p
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                                        : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                                    : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
                                     }`}
                             >
                                 {p === 'all' ? 'All Time' : p === '30d' ? '30 Hari' : '7 Hari'}
@@ -155,11 +156,11 @@ export default function PerformancePage() {
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                                        : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                                    : 'bg-[#1F2937] text-[#94A3B8] hover:bg-[#374151]'
                                     }`}
                             >
-                                {f === 'all' ? 'Semua' : f === 'forex' ? '📈 Forex' : '📊 Saham'}
+                                {f === 'all' ? 'Semua' : f === 'forex' ? <><TrendUpIcon className="inline mr-1" size="sm" /> Forex</> : <><ChartIcon className="inline mr-1" size="sm" /> Saham</>}
                             </button>
                         ))}
                     </div>
@@ -182,15 +183,15 @@ export default function PerformancePage() {
                     </div>
                     <div className="glass rounded-xl p-6 border border-[#1F2937] text-center">
                         <p className="text-3xl font-bold text-green-400">{overall.tpHit}</p>
-                        <p className="text-sm text-[#64748B]">✅ TP Hit</p>
+                        <p className="text-sm text-[#64748B] flex items-center gap-1"><CheckCircleIcon className="text-green-400" size="sm" /> TP Hit</p>
                     </div>
                     <div className="glass rounded-xl p-6 border border-[#1F2937] text-center">
                         <p className="text-3xl font-bold text-red-400">{overall.slHit}</p>
-                        <p className="text-sm text-[#64748B]">❌ SL Hit</p>
+                        <p className="text-sm text-[#64748B] flex items-center gap-1"><XCircleIcon className="text-red-400" size="sm" /> SL Hit</p>
                     </div>
                     <div className="glass rounded-xl p-6 border border-[#1F2937] text-center">
                         <p className="text-3xl font-bold text-yellow-400">{overall.pending}</p>
-                        <p className="text-sm text-[#64748B]">⏳ Pending</p>
+                        <p className="text-sm text-[#64748B] flex items-center gap-1"><ClockIcon className="text-yellow-400" size="sm" /> Pending</p>
                     </div>
                 </motion.div>
 
@@ -205,7 +206,7 @@ export default function PerformancePage() {
                     >
                         <div className="p-4 border-b border-[#1F2937]">
                             <h2 className="text-lg font-bold flex items-center gap-2">
-                                🏆 Top Performing Symbols
+                                <TrophyIcon className="text-yellow-400" size="md" /> Top Performing Symbols
                             </h2>
                         </div>
                         <div className="p-4">
@@ -243,7 +244,7 @@ export default function PerformancePage() {
                     >
                         <div className="p-4 border-b border-[#1F2937]">
                             <h2 className="text-lg font-bold flex items-center gap-2">
-                                📋 Recent Signals
+                                <DocumentIcon className="text-blue-400" size="md" /> Recent Signals
                             </h2>
                         </div>
                         <div className="p-4 max-h-80 overflow-y-auto">
@@ -253,7 +254,7 @@ export default function PerformancePage() {
                                         <div key={signal.id} className="flex items-center justify-between bg-[#12141A] rounded-lg p-3">
                                             <div className="flex items-center gap-3">
                                                 <span className={`px-2 py-1 rounded text-xs font-semibold border ${getStatusBadge(signal.status)}`}>
-                                                    {signal.status === 'TP_HIT' ? '✅' : signal.status === 'SL_HIT' ? '❌' : '⏳'}
+                                                    {signal.status === 'TP_HIT' ? <CheckCircleIcon className="text-green-400" size="sm" /> : signal.status === 'SL_HIT' ? <XCircleIcon className="text-red-400" size="sm" /> : <ClockIcon className="text-yellow-400" size="sm" />}
                                                 </span>
                                                 <div>
                                                     <p className="font-semibold text-sm">{signal.symbol}</p>
@@ -285,7 +286,7 @@ export default function PerformancePage() {
                     className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-center"
                 >
                     <p className="text-sm text-amber-400">
-                        ⚠️ <strong>Disclaimer:</strong> Performa masa lalu tidak menjamin hasil di masa depan.
+                        <WarningIcon className="text-amber-400 inline mr-1" size="sm" /> <strong>Disclaimer:</strong> Performa masa lalu tidak menjamin hasil di masa depan.
                         Selalu gunakan money management yang baik dan lakukan riset mandiri (DYOR).
                     </p>
                 </motion.div>
@@ -301,7 +302,7 @@ export default function PerformancePage() {
                         href="/analisa-market"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
                     >
-                        🚀 Coba Analisa AI Sekarang
+                        <RocketIcon className="inline mr-2" size="md" /> Coba Analisa AI Sekarang
                     </Link>
                 </motion.div>
             </div>

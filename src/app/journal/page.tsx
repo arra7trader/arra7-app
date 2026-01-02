@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { BookOpenIcon } from '@/components/PremiumIcons';
 
 interface JournalEntry {
     id: number;
@@ -179,7 +180,7 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
-                            <span className="text-2xl">📓</span>
+                            <BookOpenIcon className="text-green-400" size="lg" />
                         </div>
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-bold">Trade Journal</h1>
@@ -269,8 +270,8 @@ export default function JournalPage() {
                                         <td className="p-4">{entry.lotSize || '-'}</td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-500/20 text-blue-400' :
-                                                    entry.status === 'CLOSED' ? 'bg-slate-500/20 text-slate-400' :
-                                                        'bg-yellow-500/20 text-yellow-400'
+                                                entry.status === 'CLOSED' ? 'bg-slate-500/20 text-slate-400' :
+                                                    'bg-yellow-500/20 text-yellow-400'
                                                 }`}>
                                                 {entry.status}
                                             </span>
@@ -307,7 +308,9 @@ export default function JournalPage() {
                     </div>
                     {entries.length === 0 && (
                         <div className="p-12 text-center text-[#64748B]">
-                            <span className="text-4xl block mb-4">📓</span>
+                            <div className="mb-4">
+                                <BookOpenIcon className="text-green-400 mx-auto" size="xl" />
+                            </div>
                             Belum ada trade. Klik "Add Trade" untuk mulai tracking.
                         </div>
                     )}
