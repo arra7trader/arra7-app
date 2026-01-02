@@ -4,35 +4,33 @@ import { useState } from 'react';
 import { useBookmap } from '@/hooks/useBookmap';
 import BookmapCanvas from '@/components/bookmap/BookmapCanvas';
 import OrderBookPanel from '@/components/bookmap/OrderBookPanel';
-import Navbar from '@/components/Navbar'; // Assuming Navbar component exists
-// We need to import the Navbar to maintain consistency
-// Wait, Navbar is likely in layout, but let's check standard page structure.
-// Most pages in this app seem to include Navbar or it's in layout.tsx.
-// Based on previous file views, Navbar is used in layout usually. 
-// I will check layout.tsx later but for now I assume standard Next.js Layout.
-// Actually, looking at other pages, they don't import Navbar usually if it's in layout.
-// I'll stick to just the page content.
+import { BookmapTheme, THEMES } from '@/lib/bookmap/themes';
 
 export default function BookmapPage() {
     const [symbol, setSymbol] = useState<'BTCUSDT' | 'PAXGUSDT'>('BTCUSDT');
+    const [theme, setTheme] = useState<BookmapTheme>('classic');
     const { dataRef, status, tick } = useBookmap(symbol);
 
     return (
-        <div className="fixed inset-0 bg-[#0A0E14] text-white flex flex-col">
-            {/* Header / Toolbar directly above canvas (below main Navbar) */}
-            <div className="h-16 mt-16 md:mt-20 border-b border-[#1F2937] flex items-center px-4 justify-between bg-[#111]">
+        <div className="fixed inset-0 bg-black text-white flex flex-col">
+            {/* Header / Toolbar */}
+            <div className="h-14 mt-16 md:mt-20 border-b border-gray-800 flex items-center px-4 justify-between bg-black/90 backdrop-blur-sm z-10">
                 <div className="flex items-center gap-4">
+                    {/* Logo */}
                     <div className="flex items-center gap-2">
-                        <span className="text-xl">🔥</span>
+                        <svg className="w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                        </svg>
                         <h1 className="font-bold text-lg hidden md:block">Bookmap LP</h1>
                     </div>
 
-                    <div className="flex bg-[#1F2937] rounded-lg p-1">
+                    {/* Symbol Selector */}
+                    <div className="flex bg-gray-900 rounded-lg p-1">
                         <button
                             onClick={() => setSymbol('BTCUSDT')}
                             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${symbol === 'BTCUSDT'
                                     ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
-                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/5'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                                 }`}
                         >
                             BTC/USDT
@@ -41,38 +39,73 @@ export default function BookmapPage() {
                             onClick={() => setSymbol('PAXGUSDT')}
                             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${symbol === 'PAXGUSDT'
                                     ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/5'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                                 }`}
                         >
                             GOLD (PAXG)
                         </button>
                     </div>
+
+                    {/* Theme Selector */}
+                    <div className="hidden md:flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Theme:</span>
+                        <select
+                            value={theme}
+                            onChange={(e) => setTheme(e.target.value as BookmapTheme)}
+                            className="bg-gray-900 border border-gray-700 rounded-md px-2 py-1 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        >
+                            {Object.entries(THEMES).map(([key, config]) => (
+                                <option key={key} value={key}>
+                                    {config.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-[#64748B]">
-                    <div className="hidden md:flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                        Status: <span className={status === 'connected' ? 'text-green-400' : 'text-yellow-400'}>{status.toUpperCase()}</span>
+                <div className="flex items-center gap-4 text-xs">
+                    {/* Mobile Theme Selector */}
+                    <select
+                        value={theme}
+                        onChange={(e) => setTheme(e.target.value as BookmapTheme)}
+                        className="md:hidden bg-gray-900 border border-gray-700 rounded-md px-2 py-1 text-xs text-gray-300"
+                    >
+                        {Object.entries(THEMES).map(([key, config]) => (
+                            <option key={key} value={key}>
+                                {config.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Status */}
+                    <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                        <span className="text-gray-400 hidden sm:inline">{status.toUpperCase()}</span>
                     </div>
                 </div>
             </div>
 
             {/* Main Content Area */}
             <div className="flex-1 flex overflow-hidden">
-                {/* Left: Canvas (Heatmap) - Takes 80-85% width */}
-                <div className="flex-1 relative border-r border-[#1F2937]">
-                    <BookmapCanvas symbol={symbol} dataRef={dataRef} status={status} />
+                {/* Canvas (Heatmap) */}
+                <div className="flex-1 relative">
+                    <BookmapCanvas
+                        symbol={symbol}
+                        dataRef={dataRef}
+                        status={status}
+                        theme={theme}
+                    />
                 </div>
 
-                {/* Right: Order Book Panel - Takes remaining width */}
-                <div className="w-[280px] hidden md:block">
+                {/* Order Book Panel */}
+                <div className="w-[260px] hidden lg:block border-l border-gray-800">
                     <OrderBookPanel dataRef={dataRef} tick={tick} />
                 </div>
             </div>
 
-            {/* Mobile warning overlay (optional, since this is heavy data app) */}
-            <div className="md:hidden absolute bottom-0 left-0 right-0 bg-[#1F2937]/90 p-2 text-center text-[10px] text-gray-400 backdrop-blur-sm">
-                Best viewed on Desktop
+            {/* Mobile hint */}
+            <div className="lg:hidden absolute bottom-0 left-0 right-0 bg-gray-900/90 backdrop-blur-sm p-2 text-center text-[10px] text-gray-500">
+                Scroll to zoom • Best on Desktop
             </div>
         </div>
     );

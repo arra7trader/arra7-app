@@ -1,274 +1,349 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { BookmapState } from '@/hooks/useBookmap';
+import { BookmapTheme, THEMES, generateColorMap } from '@/lib/bookmap/themes';
 
 interface BookmapCanvasProps {
     symbol: string;
-    dataRef: React.MutableRefObject<BookmapState>; // Received from parent
+    dataRef: React.MutableRefObject<BookmapState>;
     status: 'connecting' | 'connected' | 'error';
+    theme: BookmapTheme;
 }
 
-export default function BookmapCanvas({ symbol, dataRef, status }: BookmapCanvasProps) {
+// Ring buffer for historical depth snapshots
+type DepthSnapshot = {
+    time: number;
+    bids: Map<number, number>;
+    asks: Map<number, number>;
+    lastPrice: number;
+};
+
+const MAX_HISTORY = 600; // ~10 seconds at 60fps
+const SNAPSHOT_INTERVAL = 50; // ms between snapshots
+
+export default function BookmapCanvas({ symbol, dataRef, status, theme }: BookmapCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const historyRef = useRef<DepthSnapshot[]>([]);
+    const lastSnapshotTime = useRef(0);
 
-    // Viewport state
-    const [scaleY, setScaleY] = useState(100); // Pixels per unit price (zoomed in)
-    const [offsetY, setOffsetY] = useState(0); // Vertical scroll position (manual logic to be added later)
+    // Pre-compute color map for current theme
+    const colorMap = useMemo(() => {
+        return generateColorMap(THEMES[theme].heatmapGradient);
+    }, [theme]);
 
-    // Manual Price Center - if null, auto-center
-    const [centerPrice, setCenterPrice] = useState<number | null>(null);
+    const themeConfig = THEMES[theme];
 
+    // Zoom state (pixels per price unit)
+    const [pricePerPixel, setPricePerPixel] = useState(0.5); // Lower = more zoomed in
+
+    // Main render loop
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d', { alpha: false }); // Optimize for speed
+        const ctx = canvas.getContext('2d', { alpha: false });
         if (!ctx) return;
 
         let animationId: number;
-        let lastTime = 0;
-        const speed = 1.5; // Slightly faster scroll
+        const AXIS_WIDTH = 70; // Right side price axis
+        const HEADER_HEIGHT = 0; // No header in canvas
 
-        // Thermal Color Map (Blue -> Green -> Yellow -> Red -> White)
-        // Pre-calculate 256 colors for fast lookup
-        const colorMap: string[] = [];
-        for (let i = 0; i < 256; i++) {
-            // Normalized 0-1
-            const t = i / 255;
-            let r = 0, g = 0, b = 0;
-
-            // Simple thermal gradient logic
-            if (t < 0.25) { // Black to Blue
-                b = Math.floor(255 * (t / 0.25));
-            } else if (t < 0.5) { // Blue to Green
-                b = Math.floor(255 * (1 - (t - 0.25) / 0.25));
-                g = Math.floor(255 * ((t - 0.25) / 0.25));
-            } else if (t < 0.75) { // Green to Red (via Yellowish)
-                g = Math.floor(255 * (1 - (t - 0.5) / 0.25 * 0.5)); // Keep some green
-                r = Math.floor(255 * ((t - 0.5) / 0.25));
-            } else { // Red to White
-                r = 255;
-                g = Math.floor(255 * ((t - 0.75) / 0.25));
-                b = Math.floor(255 * ((t - 0.75) / 0.25));
-            }
-            colorMap[i] = `rgb(${r},${g},${b})`;
-        }
-
-        // Custom simple heat function for better contrast
-        const getHeatColor = (qty: number) => {
-            // Logarithmic scale for volume to generic intensity
-            // Adjust divisor based on symbol later
-            const intensity = Math.min(Math.log10(qty + 1) / 3, 1);
-            const index = Math.floor(intensity * 255);
-            return colorMap[index];
-        };
+        // Heatmap column width in pixels
+        const COLUMN_WIDTH = 2;
 
         const render = (timestamp: number) => {
-            if (timestamp - lastTime < 16) {
-                animationId = requestAnimationFrame(render);
-                return;
-            }
-            lastTime = timestamp;
-
             const width = canvas.width;
             const height = canvas.height;
-            const CHART_RIGHT_MARGIN = 60; // Space for price labels
+            const chartWidth = width - AXIS_WIDTH;
 
-            // 1. Shift Canvas
-            ctx.drawImage(canvas, -speed, 0);
+            // 1. Take periodic snapshots of depth data
+            if (timestamp - lastSnapshotTime.current > SNAPSHOT_INTERVAL && dataRef.current) {
+                const snapshot: DepthSnapshot = {
+                    time: timestamp,
+                    bids: new Map(dataRef.current.bids),
+                    asks: new Map(dataRef.current.asks),
+                    lastPrice: dataRef.current.lastPrice,
+                };
+                historyRef.current.push(snapshot);
 
-            // 2. Clear New Slice
-            const sliceWidth = speed + 2; // +2 to cover anti-aliasing artifacts
-            const sliceX = width - CHART_RIGHT_MARGIN - speed;
+                // Trim old history
+                if (historyRef.current.length > MAX_HISTORY) {
+                    historyRef.current.shift();
+                }
+                lastSnapshotTime.current = timestamp;
+            }
 
-            // Clear chart area only
-            ctx.fillStyle = '#111111'; // Dark background
-            ctx.fillRect(sliceX, 0, sliceWidth + CHART_RIGHT_MARGIN, height); // Clear all the way to right
+            // 2. Clear canvas with background
+            ctx.fillStyle = themeConfig.background;
+            ctx.fillRect(0, 0, width, height);
 
-            if (!dataRef.current) return;
-
-            // Determine Center Price
-            const midPrice = dataRef.current.lastPrice || ((dataRef.current.bestBid + dataRef.current.bestAsk) / 2);
-            if (!midPrice || midPrice === 0) {
+            // 3. Determine center price
+            const currentPrice = dataRef.current?.lastPrice || 0;
+            if (currentPrice === 0) {
                 animationId = requestAnimationFrame(render);
                 return;
             }
 
-            // Use locked center price if user dragged (future feature), else auto-follow
-            const effectiveCenter = centerPrice || midPrice;
+            // Price range visible on screen
+            const priceRangeHalf = (height / 2) * pricePerPixel;
+            const maxPrice = currentPrice + priceRangeHalf;
+            const minPrice = currentPrice - priceRangeHalf;
 
-            // Y Coordinate mapper
-            const getY = (price: number) => Math.floor(height / 2 - (price - effectiveCenter) * scaleY);
+            // Helper: price to Y coordinate
+            const priceToY = (price: number) => {
+                return Math.floor(height / 2 - (price - currentPrice) / pricePerPixel);
+            };
 
-            // 3. Render Heatmap (Liquidity)
-            // Optimization: Only render visible range
-            const priceRangeVisible = (height / 2) / scaleY;
-            const maxVisiblePrice = effectiveCenter + priceRangeVisible;
-            const minVisiblePrice = effectiveCenter - priceRangeVisible;
+            // 4. Render Heatmap from history buffer
+            const numColumns = Math.floor(chartWidth / COLUMN_WIDTH);
+            const historyLen = historyRef.current.length;
 
-            // Bids
-            dataRef.current.bids.forEach((qty, price) => {
-                if (price > maxVisiblePrice || price < minVisiblePrice) return;
-                const y = getY(price);
-                const barHeight = Math.max(scaleY * 0.1, 2); // Minimum 2px visibility
+            // Calculate max quantity for normalization (across visible history)
+            let maxQty = 1;
+            for (let i = Math.max(0, historyLen - numColumns); i < historyLen; i++) {
+                const snapshot = historyRef.current[i];
+                snapshot.bids.forEach((qty) => { if (qty > maxQty) maxQty = qty; });
+                snapshot.asks.forEach((qty) => { if (qty > maxQty) maxQty = qty; });
+            }
 
-                ctx.fillStyle = getHeatColor(qty);
-                ctx.fillRect(sliceX, y, sliceWidth, barHeight);
-            });
+            // Apply logarithmic scaling to max
+            const logMaxQty = Math.log10(maxQty + 1);
 
-            // Asks
-            dataRef.current.asks.forEach((qty, price) => {
-                if (price > maxVisiblePrice || price < minVisiblePrice) return;
-                const y = getY(price);
-                const barHeight = Math.max(scaleY * 0.1, 2); // Minimum 2px visibility
+            // Draw columns from oldest to newest (left to right)
+            for (let col = 0; col < numColumns; col++) {
+                const historyIndex = historyLen - numColumns + col;
+                if (historyIndex < 0) continue;
 
-                ctx.fillStyle = getHeatColor(qty);
-                ctx.fillRect(sliceX, y, sliceWidth, barHeight);
-            });
+                const snapshot = historyRef.current[historyIndex];
+                if (!snapshot) continue;
 
-            // 4. Render Best Bid/Ask Lines
-            const bestBidY = getY(dataRef.current.bestBid);
-            const bestAskY = getY(dataRef.current.bestAsk);
+                const x = col * COLUMN_WIDTH;
 
-            // Draw slightly thicker lines
-            ctx.fillStyle = '#00FF00'; // Bid Green
-            ctx.fillRect(sliceX, bestBidY, sliceWidth, 1.5);
+                // Draw bids
+                snapshot.bids.forEach((qty, price) => {
+                    if (price > maxPrice || price < minPrice) return;
 
-            ctx.fillStyle = '#FF0000'; // Ask Red
-            ctx.fillRect(sliceX, bestAskY, sliceWidth, 1.5);
+                    const y = priceToY(price);
+                    const barHeight = Math.max(Math.ceil(1 / pricePerPixel), 1);
 
-            // 5. Render Price Axis (Static, Right Side)
-            // Clear right margin first (already done above but ensuring specific area)
-            ctx.fillStyle = '#0A0E14'; // Darker for axis
-            ctx.fillRect(width - CHART_RIGHT_MARGIN, 0, CHART_RIGHT_MARGIN, height);
+                    // Logarithmic intensity
+                    const intensity = Math.min(Math.log10(qty + 1) / logMaxQty, 1);
+                    const colorIndex = Math.floor(intensity * 255);
 
-            ctx.fillStyle = '#64748B'; // Text color
+                    ctx.fillStyle = colorMap[colorIndex];
+                    ctx.fillRect(x, y, COLUMN_WIDTH, barHeight);
+                });
+
+                // Draw asks
+                snapshot.asks.forEach((qty, price) => {
+                    if (price > maxPrice || price < minPrice) return;
+
+                    const y = priceToY(price);
+                    const barHeight = Math.max(Math.ceil(1 / pricePerPixel), 1);
+
+                    const intensity = Math.min(Math.log10(qty + 1) / logMaxQty, 1);
+                    const colorIndex = Math.floor(intensity * 255);
+
+                    ctx.fillStyle = colorMap[colorIndex];
+                    ctx.fillRect(x, y, COLUMN_WIDTH, barHeight);
+                });
+            }
+
+            // 5. Draw Grid Lines
+            ctx.fillStyle = themeConfig.gridColor;
+            const priceStep = calculateNiceStep(priceRangeHalf * 2, 10);
+            const startPrice = Math.floor(minPrice / priceStep) * priceStep;
+
+            for (let p = startPrice; p <= maxPrice; p += priceStep) {
+                const y = priceToY(p);
+                ctx.fillRect(0, y, chartWidth, 1);
+            }
+
+            // 6. Draw Best Bid/Ask Lines (on latest snapshot)
+            if (dataRef.current) {
+                const bestBid = dataRef.current.bestBid;
+                const bestAsk = dataRef.current.bestAsk;
+
+                if (bestBid > 0) {
+                    const y = priceToY(bestBid);
+                    ctx.fillStyle = themeConfig.bidLineColor;
+                    ctx.fillRect(0, y, chartWidth, 2);
+                }
+
+                if (bestAsk > 0) {
+                    const y = priceToY(bestAsk);
+                    ctx.fillStyle = themeConfig.askLineColor;
+                    ctx.fillRect(0, y, chartWidth, 2);
+                }
+            }
+
+            // 7. Render Volume Bubbles (trades)
+            const now = Date.now();
+            if (dataRef.current) {
+                dataRef.current.trades.forEach(trade => {
+                    // Only render recent trades (last 300ms)
+                    if (now - trade.time > 300) return;
+                    if (trade.price > maxPrice || trade.price < minPrice) return;
+
+                    const y = priceToY(trade.price);
+                    // Position bubble at rightmost visible area
+                    const tradeAge = now - trade.time;
+                    const x = chartWidth - (tradeAge / 300) * 100; // Slide left as it ages
+
+                    // Logarithmic radius based on volume
+                    const radius = Math.max(4, Math.min(Math.log10(trade.quantity * 1000 + 1) * 5, 30));
+
+                    // Draw bubble with gradient
+                    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                    if (trade.isBuyerMaker) {
+                        grad.addColorStop(0, themeConfig.sellBubbleGradient[0]);
+                        grad.addColorStop(1, themeConfig.sellBubbleGradient[1]);
+                    } else {
+                        grad.addColorStop(0, themeConfig.buyBubbleGradient[0]);
+                        grad.addColorStop(1, themeConfig.buyBubbleGradient[1]);
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                });
+            }
+
+            // 8. Draw Price Axis (Right Side)
+            ctx.fillStyle = themeConfig.axisBackground;
+            ctx.fillRect(chartWidth, 0, AXIS_WIDTH, height);
+
+            // Draw price labels
+            ctx.fillStyle = themeConfig.textColor;
             ctx.font = '10px monospace';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
 
-            // Draw ticks
-            // Dynamic step based on scaleY
-            const priceStep = 100 / scaleY; // Rough heuristic
-            // Round step to nice number (0.01, 0.1, 1, 10, 50, 100)
-            // Simplified:
-            const step = Math.pow(10, Math.floor(Math.log10(priceRangeVisible))) / 2;
+            for (let p = startPrice; p <= maxPrice; p += priceStep) {
+                const y = priceToY(p);
 
-            const startTick = Math.floor(minVisiblePrice / step) * step;
-            for (let p = startTick; p <= maxVisiblePrice; p += step) {
-                const y = getY(p);
-                // Grid line (optional, draw across chart)
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.fillRect(0, y, width - CHART_RIGHT_MARGIN, 1);
+                // Tick line
+                ctx.fillStyle = themeConfig.gridColor;
+                ctx.fillRect(chartWidth, y, 5, 1);
 
                 // Label
-                ctx.fillStyle = '#64748B';
-                // Adjust precision based on price
-                const label = p.toFixed(p < 10 ? 4 : 2);
-                ctx.fillText(label, width - CHART_RIGHT_MARGIN + 5, y);
+                ctx.fillStyle = themeConfig.textColor;
+                const label = p.toFixed(currentPrice < 10 ? 4 : 2);
+                ctx.fillText(label, chartWidth + 8, y);
             }
 
-            // Highlight Current Price on Axis
-            const currentY = getY(dataRef.current.lastPrice);
-            if (currentY > 0 && currentY < height) {
-                ctx.fillStyle = '#EAB308'; // Yellow background
-                ctx.fillRect(width - CHART_RIGHT_MARGIN, currentY - 8, CHART_RIGHT_MARGIN, 16);
-                ctx.fillStyle = '#000000';
-                ctx.font = 'bold 10px monospace';
-                ctx.fillText(dataRef.current.lastPrice.toFixed(2), width - CHART_RIGHT_MARGIN + 5, currentY);
+            // Current price highlight
+            if (currentPrice > 0) {
+                const currentY = priceToY(currentPrice);
+
+                // Highlight box
+                ctx.fillStyle = themeConfig.currentPriceBackground;
+                ctx.fillRect(chartWidth, currentY - 9, AXIS_WIDTH, 18);
+
+                // Label
+                ctx.fillStyle = themeConfig.currentPriceText;
+                ctx.font = 'bold 11px monospace';
+                const priceLabel = currentPrice.toFixed(currentPrice < 10 ? 4 : 2);
+                ctx.fillText(priceLabel, chartWidth + 6, currentY);
             }
-
-
-            // 6. Render Trades (Bubbles)
-            const now = Date.now();
-            dataRef.current.trades.forEach(trade => {
-                // If trade is extremely recent (< 100ms), draw bubble
-                if (now - trade.time < 150) { // Slight buffer
-                    const y = getY(trade.price);
-
-                    // Logarithmic radius: Volume 0.001 -> 2px, 1 -> 8px, 10 -> 15px
-                    const radius = Math.max(3, Math.min(Math.log10(trade.quantity * 100) * 3, 25));
-
-                    ctx.beginPath();
-                    ctx.arc(sliceX - radius / 2, y, radius, 0, 2 * Math.PI);
-
-                    // Fill with gradient for 3D effect
-                    const grad = ctx.createRadialGradient(sliceX - radius / 2, y, 0, sliceX - radius / 2, y, radius);
-                    if (trade.isBuyerMaker) { // Sell (Red)
-                        grad.addColorStop(0, 'rgba(255, 100, 100, 0.9)');
-                        grad.addColorStop(1, 'rgba(150, 0, 0, 0.8)');
-                    } else { // Buy (Green)
-                        grad.addColorStop(0, 'rgba(100, 255, 100, 0.9)');
-                        grad.addColorStop(1, 'rgba(0, 150, 0, 0.8)');
-                    }
-
-                    ctx.fillStyle = grad;
-                    ctx.fill();
-                    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                }
-            });
 
             animationId = requestAnimationFrame(render);
         };
 
         animationId = requestAnimationFrame(render);
 
-        return () => cancelAnimationFrame(animationId);
-    }, [symbol, scaleY]); // Re-init if symbol or scale changes
+        return () => {
+            cancelAnimationFrame(animationId);
+        };
+    }, [symbol, theme, colorMap, themeConfig, pricePerPixel]);
 
     // Resize handler
     useEffect(() => {
         const handleResize = () => {
             if (canvasRef.current) {
-                canvasRef.current.width = window.innerWidth;
-                canvasRef.current.height = window.innerHeight - 80; // Minus navbar height
+                const parent = canvasRef.current.parentElement;
+                if (parent) {
+                    canvasRef.current.width = parent.clientWidth;
+                    canvasRef.current.height = parent.clientHeight;
+                }
             }
         };
         window.addEventListener('resize', handleResize);
-        handleResize(); // Init
+        handleResize();
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Scroll/Zoom Interactivity
+    // Clear history on symbol change
+    useEffect(() => {
+        historyRef.current = [];
+    }, [symbol]);
+
+    // Zoom handler
     const handleWheel = (e: React.WheelEvent) => {
-        if (e.ctrlKey) {
-            // Zoom (Scale Y)
-            e.preventDefault();
-            const delta = -e.deltaY * 0.001;
-            setScaleY(s => Math.max(1, Math.min(s * (1 + delta), 100000))); // Multiplicative zoom
-        } else {
-            // Pan (Future implementation: adjust setCenterPrice)
-        }
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 1.1 : 0.9;
+        setPricePerPixel(prev => Math.max(0.001, Math.min(prev * delta, 100)));
     };
 
     return (
-        <div className="relative w-full h-full bg-[#111] overflow-hidden">
+        <div className="relative w-full h-full overflow-hidden" style={{ background: themeConfig.background }}>
             <canvas
                 ref={canvasRef}
                 className="block cursor-crosshair"
                 onWheel={handleWheel}
             />
-            {/* Overlay Info (Minimal) */}
-            <div className="absolute top-4 left-4 pointer-events-none text-xs text-white/50 bg-black/40 p-2 rounded backdrop-blur-sm">
+
+            {/* Minimal Overlay */}
+            <div
+                className="absolute top-3 left-3 pointer-events-none text-xs p-2 rounded backdrop-blur-sm"
+                style={{
+                    background: `${themeConfig.axisBackground}CC`,
+                    color: themeConfig.textColor
+                }}
+            >
                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full" style={{ background: status === 'connected' ? '#22c55e' : '#eab308' }}></span>
-                    <span>{symbol}</span>
+                    <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: status === 'connected' ? '#22c55e' : '#eab308' }}
+                    />
+                    <span className="font-bold">{symbol}</span>
                 </div>
-                <div>Price: <span className="text-white">{dataRef.current.lastPrice?.toFixed(2)}</span></div>
+                <div className="mt-1">
+                    Price: <span style={{ color: themeConfig.currentPriceBackground }}>
+                        {dataRef.current?.lastPrice?.toFixed(2) || '---'}
+                    </span>
+                </div>
             </div>
 
             {/* Loading Indicator */}
             {status === 'connecting' && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-orange-400 font-mono text-sm">Connecting to Binance Feed...</span>
+                        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-orange-400 font-mono text-sm">Connecting to Binance...</span>
                     </div>
                 </div>
             )}
         </div>
     );
+}
+
+// Helper: Calculate a "nice" step value for grid lines
+function calculateNiceStep(range: number, targetSteps: number): number {
+    const roughStep = range / targetSteps;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+    const residual = roughStep / magnitude;
+
+    let niceStep: number;
+    if (residual < 1.5) niceStep = 1;
+    else if (residual < 3) niceStep = 2;
+    else if (residual < 7) niceStep = 5;
+    else niceStep = 10;
+
+    return niceStep * magnitude;
 }
