@@ -93,6 +93,9 @@ export function useDepthMatrix(symbol: string) {
             },
         });
 
+        // Start the connection
+        wsRef.current.connect();
+
         return () => {
             wsRef.current?.disconnect();
         };
