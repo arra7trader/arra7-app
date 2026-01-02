@@ -8,6 +8,7 @@ export type BookmapState = {
     bestBid: number;
     bestAsk: number;
     lastPrice: number;
+    levelCount: number; // Track how many levels we have
 };
 
 export const useBookmap = (symbol: string) => {
@@ -21,9 +22,10 @@ export const useBookmap = (symbol: string) => {
         bestBid: 0,
         bestAsk: 0,
         lastPrice: 0,
+        levelCount: 0,
     });
 
-    // Force update for components that need low-frequency updates (like the side panel)
+    // Force update for components that need low-frequency updates
     const [tick, setTick] = useState(0);
 
     const wsRef = useRef<BinanceWebSocket | null>(null);
@@ -37,6 +39,7 @@ export const useBookmap = (symbol: string) => {
             bestBid: 0,
             bestAsk: 0,
             lastPrice: 0,
+            levelCount: 0,
         };
         setStatus('connecting');
 
@@ -47,37 +50,39 @@ export const useBookmap = (symbol: string) => {
 
         wsRef.current = new BinanceWebSocket(symbol, {
             onDepthUpdate: (bids, asks) => {
-                // Update Bids - for depth20 we get full snapshot, so clear and rebuild
+                // Full order book update (up to 1000 levels each side)
                 const newBids = new Map<number, number>();
-                bids.forEach(bid => {
-                    if (bid.quantity > 0) {
-                        newBids.set(bid.price, bid.quantity);
+                bids.forEach(level => {
+                    if (level.quantity > 0) {
+                        newBids.set(level.price, level.quantity);
                     }
                 });
                 dataRef.current.bids = newBids;
 
-                // Update Asks
                 const newAsks = new Map<number, number>();
-                asks.forEach(ask => {
-                    if (ask.quantity > 0) {
-                        newAsks.set(ask.price, ask.quantity);
+                asks.forEach(level => {
+                    if (level.quantity > 0) {
+                        newAsks.set(level.price, level.quantity);
                     }
                 });
                 dataRef.current.asks = newAsks;
 
-                // Calculate Best Bid/Ask from the new snapshot
+                // Calculate Best Bid/Ask
                 if (dataRef.current.bids.size > 0) {
                     dataRef.current.bestBid = Math.max(...dataRef.current.bids.keys());
                 }
                 if (dataRef.current.asks.size > 0) {
                     dataRef.current.bestAsk = Math.min(...dataRef.current.asks.keys());
                 }
+
+                // Track level count
+                dataRef.current.levelCount = dataRef.current.bids.size + dataRef.current.asks.size;
             },
             onTrade: (trade) => {
                 dataRef.current.trades.push(trade);
                 dataRef.current.lastPrice = trade.price;
 
-                // Keep only last 500 trades to avoid memory leak
+                // Keep only last 500 trades
                 if (dataRef.current.trades.length > 500) {
                     dataRef.current.trades = dataRef.current.trades.slice(-500);
                 }
@@ -89,10 +94,10 @@ export const useBookmap = (symbol: string) => {
 
         wsRef.current.connect();
 
-        // Low-frequency update loop for UI panels (OrderBookPanel)
+        // Low-frequency update loop for UI panels
         const interval = setInterval(() => {
             setTick(t => t + 1);
-        }, 500); // Update side panel every 500ms
+        }, 500);
 
         return () => {
             wsRef.current?.disconnect();
@@ -102,7 +107,7 @@ export const useBookmap = (symbol: string) => {
 
     return {
         status,
-        dataRef, // Direct access to mutable ref for Canvas
-        tick // Trigger for React components
+        dataRef,
+        tick
     };
 };

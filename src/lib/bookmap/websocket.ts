@@ -7,31 +7,44 @@ export type Trade = {
     price: number;
     quantity: number;
     time: number;
-    isBuyerMaker: boolean; // true = sell, false = buy
+    isBuyerMaker: boolean;
 };
 
-export type BookmapData = {
-    bids: Map<number, number>; // price -> quantity
-    asks: Map<number, number>; // price -> quantity
-    trades: Trade[];
+type DepthSnapshot = {
+    lastUpdateId: number;
+    bids: [string, string][];
+    asks: [string, string][];
 };
 
-type TradeUpdate = {
-    e: string; // Event type
-    E: number; // Event time
-    s: string; // Symbol
-    p: string; // Price
-    q: string; // Quantity
-    T: number; // Trade time
-    m: boolean; // Is the buyer the market maker?
+type DiffDepthEvent = {
+    e: string;      // Event type
+    E: number;      // Event time
+    s: string;      // Symbol
+    U: number;      // First update ID
+    u: number;      // Final update ID
+    b: [string, string][];  // Bids delta
+    a: [string, string][];  // Asks delta
 };
 
 export class BinanceWebSocket {
     private ws: WebSocket | null = null;
     private symbol: string;
+    private upperSymbol: string;
     private reconnectAttempts = 0;
     private maxReconnectAttempts = 5;
     private isManualClose = false;
+
+    // Order book state
+    private orderBook: {
+        bids: Map<number, number>;
+        asks: Map<number, number>;
+        lastUpdateId: number;
+    } = { bids: new Map(), asks: new Map(), lastUpdateId: 0 };
+
+    // Buffer for events before snapshot
+    private eventBuffer: DiffDepthEvent[] = [];
+    private snapshotReceived = false;
+
     private callbacks: {
         onDepthUpdate: (bids: OrderBookLevel[], asks: OrderBookLevel[]) => void;
         onTrade: (trade: Trade) => void;
@@ -47,16 +60,22 @@ export class BinanceWebSocket {
         }
     ) {
         this.symbol = symbol.toLowerCase();
+        this.upperSymbol = symbol.toUpperCase();
         this.callbacks = callbacks;
     }
 
-    connect() {
+    async connect() {
         if (this.isManualClose) return;
 
         this.callbacks.onStatusChange?.('connecting');
 
-        // Use combined streams for depth and trades
-        const streamUrl = `wss://stream.binance.com:9443/stream?streams=${this.symbol}@depth20@100ms/${this.symbol}@trade`;
+        // Reset state
+        this.orderBook = { bids: new Map(), asks: new Map(), lastUpdateId: 0 };
+        this.eventBuffer = [];
+        this.snapshotReceived = false;
+
+        // 1. Open WebSocket for diff depth and trades
+        const streamUrl = `wss://stream.binance.com:9443/stream?streams=${this.symbol}@depth@100ms/${this.symbol}@trade`;
 
         console.log(`[Bookmap] Connecting to ${streamUrl}`);
 
@@ -68,32 +87,42 @@ export class BinanceWebSocket {
             return;
         }
 
-        this.ws.onopen = () => {
-            console.log('[Bookmap] Connected to Binance WebSocket');
+        this.ws.onopen = async () => {
+            console.log('[Bookmap] WebSocket connected, fetching snapshot...');
             this.reconnectAttempts = 0;
-            this.callbacks.onStatusChange?.('connected');
+
+            // 2. Fetch snapshot via REST API (1000 levels)
+            try {
+                const snapshot = await this.fetchSnapshot();
+                this.processSnapshot(snapshot);
+                this.snapshotReceived = true;
+
+                // 3. Process buffered events
+                this.processBufferedEvents();
+
+                this.callbacks.onStatusChange?.('connected');
+                console.log(`[Bookmap] Order book initialized with ${this.orderBook.bids.size} bids and ${this.orderBook.asks.size} asks`);
+            } catch (error) {
+                console.error('[Bookmap] Failed to fetch snapshot:', error);
+                this.callbacks.onStatusChange?.('error');
+            }
         };
 
         this.ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
                 const data = message.data;
-
                 if (!data) return;
 
-                // Handle Depth Update (depth20 snapshot)
-                if (message.stream && message.stream.includes('@depth20')) {
-                    const bids: OrderBookLevel[] = (data.bids || []).map((b: string[]) => ({
-                        price: parseFloat(b[0]),
-                        quantity: parseFloat(b[1]),
-                    }));
-
-                    const asks: OrderBookLevel[] = (data.asks || []).map((a: string[]) => ({
-                        price: parseFloat(a[0]),
-                        quantity: parseFloat(a[1]),
-                    }));
-
-                    this.callbacks.onDepthUpdate(bids, asks);
+                // Handle Diff Depth Update
+                if (message.stream && message.stream.includes('@depth')) {
+                    if (!this.snapshotReceived) {
+                        // Buffer events until we have the snapshot
+                        this.eventBuffer.push(data as DiffDepthEvent);
+                    } else {
+                        // Process event directly
+                        this.processDiffEvent(data as DiffDepthEvent);
+                    }
                 }
 
                 // Handle Trade Update
@@ -119,18 +148,120 @@ export class BinanceWebSocket {
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
                 this.reconnectAttempts++;
                 const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-                console.log(`[Bookmap] Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+                console.log(`[Bookmap] Reconnecting in ${delay / 1000}s`);
                 setTimeout(() => this.connect(), delay);
             } else {
-                console.error('[Bookmap] Max reconnection attempts reached');
                 this.callbacks.onStatusChange?.('error');
             }
         };
 
         this.ws.onerror = (error) => {
             console.error('[Bookmap] WebSocket error:', error);
-            // Don't set error status here, let onclose handle it
         };
+    }
+
+    private async fetchSnapshot(): Promise<DepthSnapshot> {
+        // Fetch 1000 levels from REST API
+        const url = `https://api.binance.com/api/v3/depth?symbol=${this.upperSymbol}&limit=1000`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    }
+
+    private processSnapshot(snapshot: DepthSnapshot) {
+        this.orderBook.lastUpdateId = snapshot.lastUpdateId;
+
+        // Clear and populate bids
+        this.orderBook.bids.clear();
+        snapshot.bids.forEach(([price, qty]) => {
+            const p = parseFloat(price);
+            const q = parseFloat(qty);
+            if (q > 0) {
+                this.orderBook.bids.set(p, q);
+            }
+        });
+
+        // Clear and populate asks
+        this.orderBook.asks.clear();
+        snapshot.asks.forEach(([price, qty]) => {
+            const p = parseFloat(price);
+            const q = parseFloat(qty);
+            if (q > 0) {
+                this.orderBook.asks.set(p, q);
+            }
+        });
+
+        this.emitOrderBook();
+    }
+
+    private processBufferedEvents() {
+        // Filter events that are relevant (U <= lastUpdateId+1 AND u >= lastUpdateId+1)
+        let foundFirst = false;
+
+        for (const event of this.eventBuffer) {
+            if (!foundFirst) {
+                // First event to process: U <= lastUpdateId+1 AND u >= lastUpdateId+1
+                if (event.U <= this.orderBook.lastUpdateId + 1 && event.u >= this.orderBook.lastUpdateId + 1) {
+                    foundFirst = true;
+                    this.applyDiffEvent(event);
+                }
+            } else {
+                // Subsequent events
+                this.applyDiffEvent(event);
+            }
+        }
+
+        this.eventBuffer = [];
+    }
+
+    private processDiffEvent(event: DiffDepthEvent) {
+        // Validate event sequence
+        if (event.u <= this.orderBook.lastUpdateId) {
+            // Old event, ignore
+            return;
+        }
+
+        this.applyDiffEvent(event);
+    }
+
+    private applyDiffEvent(event: DiffDepthEvent) {
+        // Apply bid updates
+        event.b.forEach(([price, qty]) => {
+            const p = parseFloat(price);
+            const q = parseFloat(qty);
+            if (q === 0) {
+                this.orderBook.bids.delete(p);
+            } else {
+                this.orderBook.bids.set(p, q);
+            }
+        });
+
+        // Apply ask updates
+        event.a.forEach(([price, qty]) => {
+            const p = parseFloat(price);
+            const q = parseFloat(qty);
+            if (q === 0) {
+                this.orderBook.asks.delete(p);
+            } else {
+                this.orderBook.asks.set(p, q);
+            }
+        });
+
+        this.orderBook.lastUpdateId = event.u;
+        this.emitOrderBook();
+    }
+
+    private emitOrderBook() {
+        // Convert maps to arrays for callback
+        const bids: OrderBookLevel[] = Array.from(this.orderBook.bids.entries())
+            .map(([price, quantity]) => ({ price, quantity }));
+
+        const asks: OrderBookLevel[] = Array.from(this.orderBook.asks.entries())
+            .map(([price, quantity]) => ({ price, quantity }));
+
+        this.callbacks.onDepthUpdate(bids, asks);
     }
 
     disconnect() {
