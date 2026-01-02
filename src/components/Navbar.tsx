@@ -88,24 +88,30 @@ export default function Navbar() {
                                 {/* Premium Feature Links */}
                                 <Link
                                     href="/journal"
-                                    className="text-sm font-medium text-[#94A3B8] hover:text-green-400 transition-colors"
+                                    className="p-2 rounded-lg text-[#94A3B8] hover:text-green-400 hover:bg-green-400/10 transition-all"
                                     title="Trade Journal"
                                 >
-                                    📓
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                    </svg>
                                 </Link>
                                 <Link
                                     href="/portfolio"
-                                    className="text-sm font-medium text-[#94A3B8] hover:text-purple-400 transition-colors"
+                                    className="p-2 rounded-lg text-[#94A3B8] hover:text-purple-400 hover:bg-purple-400/10 transition-all"
                                     title="Portfolio Tracker"
                                 >
-                                    📈
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                    </svg>
                                 </Link>
                                 <Link
                                     href="/social"
-                                    className="text-sm font-medium text-[#94A3B8] hover:text-cyan-400 transition-colors"
+                                    className="p-2 rounded-lg text-[#94A3B8] hover:text-cyan-400 hover:bg-cyan-400/10 transition-all"
                                     title="Social Feed"
                                 >
-                                    🌐
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                                    </svg>
                                 </Link>
                                 <Popover.Root>
                                     <Popover.Trigger asChild>
@@ -140,19 +146,28 @@ export default function Navbar() {
                                                         href="/journal"
                                                         className="flex items-center gap-2 px-3 py-2 text-sm text-[#94A3B8] hover:bg-green-500/10 hover:text-green-400 rounded-lg transition-colors"
                                                     >
-                                                        <span>📓</span> Trade Journal
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                                        </svg>
+                                                        Trade Journal
                                                     </Link>
                                                     <Link
                                                         href="/portfolio"
                                                         className="flex items-center gap-2 px-3 py-2 text-sm text-[#94A3B8] hover:bg-purple-500/10 hover:text-purple-400 rounded-lg transition-colors"
                                                     >
-                                                        <span>📈</span> Portfolio
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                                        </svg>
+                                                        Portfolio
                                                     </Link>
                                                     <Link
                                                         href="/social"
                                                         className="flex items-center gap-2 px-3 py-2 text-sm text-[#94A3B8] hover:bg-cyan-500/10 hover:text-cyan-400 rounded-lg transition-colors"
                                                     >
-                                                        <span>🌐</span> Social Feed
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                                                        </svg>
+                                                        Social Feed
                                                     </Link>
                                                 </div>
                                                 <button
@@ -239,28 +254,40 @@ export default function Navbar() {
                                             className="block px-2 py-2 text-white hover:text-blue-400 font-medium transition-colors"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            🔮 Analisa Market
+                                            <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                                            </svg>
+                                            Analisa Market
                                         </Link>
                                         <Link
                                             href="/journal"
-                                            className="block px-2 py-2 text-[#94A3B8] hover:text-green-400 transition-colors"
+                                            className="flex items-center px-2 py-2 text-[#94A3B8] hover:text-green-400 transition-colors"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            📓 Trade Journal
+                                            <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                            </svg>
+                                            Trade Journal
                                         </Link>
                                         <Link
                                             href="/portfolio"
-                                            className="block px-2 py-2 text-[#94A3B8] hover:text-purple-400 transition-colors"
+                                            className="flex items-center px-2 py-2 text-[#94A3B8] hover:text-purple-400 transition-colors"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            📈 Portfolio Tracker
+                                            <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                            </svg>
+                                            Portfolio Tracker
                                         </Link>
                                         <Link
                                             href="/social"
-                                            className="block px-2 py-2 text-[#94A3B8] hover:text-cyan-400 transition-colors"
+                                            className="flex items-center px-2 py-2 text-[#94A3B8] hover:text-cyan-400 transition-colors"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            🌐 Social Feed
+                                            <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                                            </svg>
+                                            Social Feed
                                         </Link>
                                     </div>
                                 )}
