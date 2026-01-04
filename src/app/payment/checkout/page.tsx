@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
+import { CheckIcon } from '@/components/PremiumIcons';
 
 const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
 
@@ -81,7 +82,7 @@ function PaymentCheckoutContent() {
             <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center px-4">
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-8 md:p-12 max-w-lg w-full text-center border border-green-200 shadow-lg">
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-                        <svg className="w-12 h-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        <CheckIcon className="text-green-600" size="xl" />
                     </motion.div>
                     <h1 className="text-3xl font-bold mb-3 text-[var(--text-primary)]">Pembayaran Berhasil! 🎉</h1>
                     <p className="text-[var(--text-secondary)] mb-6">Akun Anda telah di-upgrade ke <strong className="text-[var(--text-primary)]">{plan.name}</strong></p>

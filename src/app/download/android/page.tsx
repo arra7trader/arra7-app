@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { DownloadIcon } from '@/components/PremiumIcons';
 
 export default function DownloadAndroidPage() {
     const [isAndroid, setIsAndroid] = useState(false);
@@ -75,9 +76,7 @@ export default function DownloadAndroidPage() {
                                     download="ARRA7_v2.1.apk"
                                     className="btn-primary inline-flex"
                                 >
-                                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M17.523 15.34l-.006-.026a3.002 3.002 0 00-2.83-2.314H9.313a3.002 3.002 0 00-2.83 2.314l-.006.026A9.957 9.957 0 015 12c0-3.859 2.18-7.211 5.375-8.89a3.003 3.003 0 003.25 0A9.959 9.959 0 0119 12c0 1.203-.216 2.355-.611 3.424z" />
-                                    </svg>
+                                    <DownloadIcon className="mr-2" size="md" />
                                     Download APK (v2.1)
                                 </a>
 

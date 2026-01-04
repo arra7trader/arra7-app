@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { DocumentIcon, TrendUpIcon, ChartIcon } from '@/components/PremiumIcons';
+import { DocumentIcon, TrendUpIcon, ChartIcon, ChevronDownIcon } from '@/components/PremiumIcons';
 
 interface HistoryItem {
     id: number;
@@ -128,9 +128,7 @@ export default function HistoryPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <span className="text-xs text-[var(--text-muted)]">{formatDate(item.createdAt)}</span>
-                                        <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${expandedId === item.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
+                                        <ChevronDownIcon className={`text-[var(--text-muted)] transition-transform ${expandedId === item.id ? 'rotate-180' : ''}`} size="sm" />
                                     </div>
                                 </button>
                                 <AnimatePresence>

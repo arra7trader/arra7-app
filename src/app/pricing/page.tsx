@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { CheckIcon, XIcon, ChevronDownIcon, ArrowRightIcon } from '@/components/PremiumIcons';
 
 const PRICING_PLANS = [
     {
@@ -172,15 +173,11 @@ export default function PricingPage() {
                                         <li key={i} className="flex items-center gap-3">
                                             {feature.included ? (
                                                 <span className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? 'bg-white/20' : 'bg-green-100'}`}>
-                                                    <svg className={`w-3 h-3 ${plan.popular ? 'text-white' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                    </svg>
+                                                    <CheckIcon className={plan.popular ? 'text-white' : 'text-green-600'} size="xs" />
                                                 </span>
                                             ) : (
                                                 <span className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? 'bg-white/10' : 'bg-gray-100'}`}>
-                                                    <svg className={`w-3 h-3 ${plan.popular ? 'text-white/40' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
+                                                    <XIcon className={plan.popular ? 'text-white/40' : 'text-gray-400'} size="xs" />
                                                 </span>
                                             )}
                                             <span className={feature.included ? '' : (plan.popular ? 'text-white/40' : 'text-[var(--text-muted)]')}>
@@ -259,9 +256,7 @@ export default function PricingPage() {
                                 <summary className="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-[var(--bg-secondary)] transition-colors">
                                     <span className="font-medium">{faq.question}</span>
                                     <span className="ml-4 flex-shrink-0 w-6 h-6 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center group-open:rotate-180 transition-transform duration-300">
-                                        <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
+                                        <ChevronDownIcon className="text-[var(--text-secondary)]" size="sm" />
                                     </span>
                                 </summary>
                                 <div className="px-5 pb-5 pt-0">
@@ -285,9 +280,7 @@ export default function PricingPage() {
                         <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
                             <button className="btn-primary">
                                 Coba {t('analisaMarket')} Gratis
-                                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
+                                <ArrowRightIcon className="ml-2" size="sm" />
                             </button>
                         </Link>
                     </motion.div>
