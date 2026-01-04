@@ -44,7 +44,6 @@ export default function JournalPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showCloseModal, setShowCloseModal] = useState<JournalEntry | null>(null);
 
-    // Form states
     const [formSymbol, setFormSymbol] = useState('XAUUSD');
     const [formDirection, setFormDirection] = useState<'BUY' | 'SELL'>('BUY');
     const [formEntryPrice, setFormEntryPrice] = useState('');
@@ -117,22 +116,14 @@ export default function JournalPage() {
                 ? (exitPrice - showCloseModal.entryPrice) * (showCloseModal.lotSize || 1) * 100
                 : (showCloseModal.entryPrice - exitPrice) * (showCloseModal.lotSize || 1) * 100;
 
-            const res = await fetch('/api/journal', {
+            await fetch('/api/journal', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: showCloseModal.id,
-                    action: 'close',
-                    exitPrice,
-                    profitLoss,
-                }),
+                body: JSON.stringify({ id: showCloseModal.id, action: 'close', exitPrice, profitLoss }),
             });
-            const data = await res.json();
-            if (data.status === 'success') {
-                setShowCloseModal(null);
-                setFormExitPrice('');
-                fetchJournal();
-            }
+            setShowCloseModal(null);
+            setFormExitPrice('');
+            fetchJournal();
         } catch (error) {
             console.error('Close trade error:', error);
         } finally {
@@ -162,8 +153,8 @@ export default function JournalPage() {
 
     if (status === 'loading' || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
+                <div className="w-10 h-10 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
@@ -171,31 +162,28 @@ export default function JournalPage() {
     if (!session) return null;
 
     return (
-        <div className="relative min-h-screen pt-24 lg:pt-28 pb-12 px-4 sm:px-6 lg:px-8">
-            <div className="absolute inset-0 bg-grid opacity-20" />
-            <div className="bg-orb bg-orb-blue w-[500px] h-[500px] -top-20 -right-40 opacity-20" />
-
-            <div className="relative max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+            <div className="container-wide section-padding pt-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
-                            <BookOpenIcon className="text-green-400" size="lg" />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                            <BookOpenIcon className="text-white" size="lg" />
                         </div>
                         <div>
-                            <h1 className="text-2xl lg:text-3xl font-bold">Trade Journal</h1>
-                            <p className="text-sm text-[#64748B]">Track dan analisa semua trade Anda</p>
+                            <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">Trade Journal</h1>
+                            <p className="text-sm text-[var(--text-secondary)]">Track dan analisa semua trade Anda</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg hover:shadow-green-500/25 rounded-lg text-sm font-medium transition-all"
+                            className="btn-primary"
                         >
                             + Add Trade
                         </button>
                         <Link href="/analisa-market">
-                            <button className="px-4 py-2 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm">
+                            <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-secondary)]">
                                 ← Back
                             </button>
                         </Link>
@@ -205,29 +193,29 @@ export default function JournalPage() {
                 {/* Stats Cards */}
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-                        <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                            <p className="text-xs text-[#64748B]">Total Trades</p>
-                            <p className="text-2xl font-bold">{stats.totalTrades}</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Total Trades</p>
+                            <p className="text-2xl font-bold text-[var(--text-primary)]">{stats.totalTrades}</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                            <p className="text-xs text-[#64748B]">Open</p>
-                            <p className="text-2xl font-bold text-blue-400">{stats.openTrades}</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Open</p>
+                            <p className="text-2xl font-bold text-[var(--accent-blue)]">{stats.openTrades}</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                            <p className="text-xs text-[#64748B]">Win Rate</p>
-                            <p className="text-2xl font-bold text-green-400">{stats.winRate.toFixed(1)}%</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Win Rate</p>
+                            <p className="text-2xl font-bold text-green-600">{stats.winRate.toFixed(1)}%</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                            <p className="text-xs text-[#64748B]">Wins</p>
-                            <p className="text-2xl font-bold text-green-400">{stats.winningTrades}</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Wins</p>
+                            <p className="text-2xl font-bold text-green-600">{stats.winningTrades}</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                            <p className="text-xs text-[#64748B]">Losses</p>
-                            <p className="text-2xl font-bold text-red-400">{stats.losingTrades}</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Losses</p>
+                            <p className="text-2xl font-bold text-red-600">{stats.losingTrades}</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                            <p className="text-xs text-[#64748B]">Total P/L</p>
-                            <p className={`text-2xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Total P/L</p>
+                            <p className={`text-2xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 ${stats.totalProfitLoss.toFixed(2)}
                             </p>
                         </div>
@@ -235,52 +223,48 @@ export default function JournalPage() {
                 )}
 
                 {/* Journal Table */}
-                <div className="glass rounded-2xl border border-[#1F2937] overflow-hidden">
+                <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-[#12141A]">
+                            <thead className="bg-[var(--bg-secondary)]">
                                 <tr>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Symbol</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Direction</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Entry</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">SL/TP</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Lot</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Status</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">P/L</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Date</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Actions</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Symbol</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Direction</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Entry</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">SL/TP</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Lot</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Status</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">P/L</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Date</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {entries.map((entry) => (
-                                    <tr key={entry.id} className="border-t border-[#1F2937] hover:bg-[#1A1D24]">
-                                        <td className="p-4 font-medium">{entry.symbol}</td>
+                                    <tr key={entry.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
+                                        <td className="p-4 font-medium text-[var(--text-primary)]">{entry.symbol}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.direction === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                                                }`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.direction === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                                 {entry.direction}
                                             </span>
                                         </td>
-                                        <td className="p-4 font-mono">{entry.entryPrice}</td>
+                                        <td className="p-4 font-mono text-[var(--text-primary)]">{entry.entryPrice}</td>
                                         <td className="p-4 text-sm">
-                                            <span className="text-red-400">{entry.stopLoss || '-'}</span>
-                                            <span className="text-[#64748B]"> / </span>
-                                            <span className="text-green-400">{entry.takeProfit || '-'}</span>
+                                            <span className="text-red-600">{entry.stopLoss || '-'}</span>
+                                            <span className="text-[var(--text-muted)]"> / </span>
+                                            <span className="text-green-600">{entry.takeProfit || '-'}</span>
                                         </td>
-                                        <td className="p-4">{entry.lotSize || '-'}</td>
+                                        <td className="p-4 text-[var(--text-primary)]">{entry.lotSize || '-'}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-500/20 text-blue-400' :
-                                                entry.status === 'CLOSED' ? 'bg-slate-500/20 text-slate-400' :
-                                                    'bg-yellow-500/20 text-yellow-400'
-                                                }`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
+                                                entry.status === 'CLOSED' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {entry.status}
                                             </span>
                                         </td>
-                                        <td className={`p-4 font-medium ${(entry.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-                                            }`}>
+                                        <td className={`p-4 font-medium ${(entry.profitLoss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                             {entry.profitLoss ? `$${entry.profitLoss.toFixed(2)}` : '-'}
                                         </td>
-                                        <td className="p-4 text-sm text-[#94A3B8]">
+                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
                                             {new Date(entry.createdAt).toLocaleDateString('id-ID')}
                                         </td>
                                         <td className="p-4">
@@ -288,14 +272,14 @@ export default function JournalPage() {
                                                 {entry.status === 'OPEN' && (
                                                     <button
                                                         onClick={() => setShowCloseModal(entry)}
-                                                        className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30"
+                                                        className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
                                                     >
                                                         Close
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleDeleteTrade(entry.id)}
-                                                    className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30"
+                                                    className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
                                                 >
                                                     Delete
                                                 </button>
@@ -307,9 +291,9 @@ export default function JournalPage() {
                         </table>
                     </div>
                     {entries.length === 0 && (
-                        <div className="p-12 text-center text-[#64748B]">
+                        <div className="p-12 text-center text-[var(--text-secondary)]">
                             <div className="mb-4">
-                                <BookOpenIcon className="text-green-400 mx-auto" size="xl" />
+                                <BookOpenIcon className="text-green-500 mx-auto" size="xl" />
                             </div>
                             Belum ada trade. Klik "Add Trade" untuk mulai tracking.
                         </div>
@@ -324,35 +308,35 @@ export default function JournalPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
                         onClick={() => setShowAddModal(false)}
                     >
                         <motion.div
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="glass rounded-2xl p-6 max-w-md w-full border border-[#1F2937]"
+                            className="bg-white rounded-2xl p-6 max-w-md w-full border border-[var(--border-light)] shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-semibold mb-4">Add New Trade</h3>
+                            <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Add New Trade</h3>
                             <form onSubmit={handleAddTrade} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-sm text-[#64748B] block mb-1">Symbol</label>
+                                        <label className="text-sm text-[var(--text-muted)] block mb-1">Symbol</label>
                                         <input
                                             type="text"
                                             value={formSymbol}
                                             onChange={e => setFormSymbol(e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-white"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-sm text-[#64748B] block mb-1">Direction</label>
+                                        <label className="text-sm text-[var(--text-muted)] block mb-1">Direction</label>
                                         <select
                                             value={formDirection}
                                             onChange={e => setFormDirection(e.target.value as 'BUY' | 'SELL')}
-                                            className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-white"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
                                         >
                                             <option value="BUY">BUY</option>
                                             <option value="SELL">SELL</option>
@@ -361,55 +345,55 @@ export default function JournalPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-sm text-[#64748B] block mb-1">Entry Price</label>
+                                        <label className="text-sm text-[var(--text-muted)] block mb-1">Entry Price</label>
                                         <input
                                             type="number"
                                             step="0.00001"
                                             value={formEntryPrice}
                                             onChange={e => setFormEntryPrice(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-white"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-sm text-[#64748B] block mb-1">Lot Size</label>
+                                        <label className="text-sm text-[var(--text-muted)] block mb-1">Lot Size</label>
                                         <input
                                             type="number"
                                             step="0.01"
                                             value={formLotSize}
                                             onChange={e => setFormLotSize(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-white"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
                                         />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-sm text-[#64748B] block mb-1">Stop Loss</label>
+                                        <label className="text-sm text-[var(--text-muted)] block mb-1">Stop Loss</label>
                                         <input
                                             type="number"
                                             step="0.00001"
                                             value={formStopLoss}
                                             onChange={e => setFormStopLoss(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-red-400"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-red-600"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-sm text-[#64748B] block mb-1">Take Profit</label>
+                                        <label className="text-sm text-[var(--text-muted)] block mb-1">Take Profit</label>
                                         <input
                                             type="number"
                                             step="0.00001"
                                             value={formTakeProfit}
                                             onChange={e => setFormTakeProfit(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-green-400"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-green-600"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-sm text-[#64748B] block mb-1">Notes</label>
+                                    <label className="text-sm text-[var(--text-muted)] block mb-1">Notes</label>
                                     <textarea
                                         value={formNotes}
                                         onChange={e => setFormNotes(e.target.value)}
-                                        className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-white"
+                                        className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
                                         rows={2}
                                     />
                                 </div>
@@ -417,14 +401,14 @@ export default function JournalPage() {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-semibold disabled:opacity-50"
+                                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold disabled:opacity-50"
                                     >
                                         {submitting ? 'Saving...' : 'Add Trade'}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowAddModal(false)}
-                                        className="px-6 py-3 border border-[#374151] rounded-xl text-[#94A3B8] hover:text-white"
+                                        className="px-6 py-3 border border-[var(--border-light)] rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
                                     >
                                         Cancel
                                     </button>
@@ -442,28 +426,28 @@ export default function JournalPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
                         onClick={() => setShowCloseModal(null)}
                     >
                         <motion.div
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="glass rounded-2xl p-6 max-w-sm w-full border border-[#1F2937]"
+                            className="bg-white rounded-2xl p-6 max-w-sm w-full border border-[var(--border-light)] shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-semibold mb-4">Close Trade</h3>
-                            <p className="text-sm text-[#94A3B8] mb-4">
+                            <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Close Trade</h3>
+                            <p className="text-sm text-[var(--text-secondary)] mb-4">
                                 {showCloseModal.symbol} {showCloseModal.direction} @ {showCloseModal.entryPrice}
                             </p>
                             <div className="mb-4">
-                                <label className="text-sm text-[#64748B] block mb-1">Exit Price</label>
+                                <label className="text-sm text-[var(--text-muted)] block mb-1">Exit Price</label>
                                 <input
                                     type="number"
                                     step="0.00001"
                                     value={formExitPrice}
                                     onChange={e => setFormExitPrice(e.target.value)}
-                                    className="w-full px-3 py-2 bg-[#12141A] border border-[#1F2937] rounded-lg text-white"
+                                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
                                     required
                                 />
                             </div>
@@ -471,13 +455,13 @@ export default function JournalPage() {
                                 <button
                                     onClick={handleCloseTrade}
                                     disabled={submitting || !formExitPrice}
-                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-semibold disabled:opacity-50"
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold disabled:opacity-50"
                                 >
                                     {submitting ? 'Closing...' : 'Close Trade'}
                                 </button>
                                 <button
                                     onClick={() => setShowCloseModal(null)}
-                                    className="px-6 py-3 border border-[#374151] rounded-xl text-[#94A3B8] hover:text-white"
+                                    className="px-6 py-3 border border-[var(--border-light)] rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
                                 >
                                     Cancel
                                 </button>
