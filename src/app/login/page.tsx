@@ -21,35 +21,30 @@ function LoginContent() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
+                <div className="w-8 h-8 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
     if (session) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-[#94A3B8]">{t('redirecting')}</p>
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
+                <p className="text-[var(--text-secondary)]">{t('redirecting')}</p>
             </div>
         );
     }
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center px-4">
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-grid opacity-30" />
-            <div className="bg-orb bg-orb-blue w-[400px] h-[400px] top-20 -left-20" />
-            <div className="bg-orb bg-orb-purple w-[300px] h-[300px] bottom-20 -right-20" />
-
+        <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg-secondary)]">
             <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="relative w-full max-w-md"
+                className="w-full max-w-md"
             >
                 {/* Card */}
-                <div className="glass rounded-2xl p-8 border border-[#1F2937]">
+                <div className="bg-white rounded-2xl p-8 shadow-xl border border-[var(--border-light)]">
                     {/* Logo */}
                     <div className="text-center mb-8">
                         <motion.div
@@ -60,11 +55,11 @@ function LoginContent() {
                         >
                             <span className="text-3xl font-bold tracking-tight">
                                 <span className="gradient-text">ARRA</span>
-                                <span className="text-white">7</span>
+                                <span className="text-[var(--text-primary)]">7</span>
                             </span>
                         </motion.div>
-                        <h1 className="text-2xl font-bold mb-2">{t('loginTitle')}</h1>
-                        <p className="text-[#64748B]">{t('loginSubtitle')}</p>
+                        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{t('loginTitle')}</h1>
+                        <p className="text-[var(--text-secondary)]">{t('loginSubtitle')}</p>
                     </div>
 
                     {/* Google Sign In Button */}
@@ -72,7 +67,7 @@ function LoginContent() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => signIn('google', { callbackUrl })}
-                        className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-medium transition-all"
+                        className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-[var(--text-primary)] hover:bg-gray-800 text-white font-medium transition-all"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
@@ -96,20 +91,9 @@ function LoginContent() {
                     </motion.button>
 
                     {/* Terms */}
-                    <p className="mt-6 text-center text-xs text-[#64748B]">
+                    <p className="mt-6 text-center text-xs text-[var(--text-muted)]">
                         By continuing, you agree to our Terms of Service and Privacy Policy
                     </p>
-                </div>
-
-                {/* Decorative Elements */}
-                <div className="absolute -z-10 -inset-4">
-                    <div
-                        className="w-full h-full rounded-3xl opacity-20"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
-                            filter: 'blur(40px)',
-                        }}
-                    />
                 </div>
             </motion.div>
         </div>
@@ -119,8 +103,8 @@ function LoginContent() {
 export default function LoginPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
+                <div className="w-8 h-8 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" />
             </div>
         }>
             <LoginContent />

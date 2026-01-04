@@ -5,25 +5,6 @@ import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Script from 'next/script';
-import { SparklesIcon, GemIcon, RocketIcon } from '@/components/PremiumIcons';
-
-declare global {
-    interface Window {
-        snap: {
-            pay: (token: string, options: {
-                onSuccess: (result: unknown) => void;
-                onPending: (result: unknown) => void;
-                onError: (result: unknown) => void;
-                onClose: () => void;
-            }) => void;
-        };
-    }
-}
-
-// New Year Promo ends: January 1, 2026 at 23:59:59 WIB (UTC+7)
-const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
-const isNewYearPromoActive = () => new Date() < NEW_YEAR_PROMO_END;
 
 const PRICING_PLANS = [
     {
@@ -31,8 +12,6 @@ const PRICING_PLANS = [
         name: 'Basic',
         price: 'FREE',
         originalPrice: null,
-        promoPrice: null,
-        discount: null,
         period: '',
         description: 'Untuk pemula yang ingin mencoba',
         features: [
@@ -46,15 +25,12 @@ const PRICING_PLANS = [
         ],
         cta: 'Mulai Gratis',
         popular: false,
-        gradient: 'from-slate-500 to-slate-600',
     },
     {
         id: 'PRO',
         name: 'Pro',
         price: 'Rp 149K',
         originalPrice: 'Rp 299K',
-        promoPrice: 'Rp 99K', // New Year promo price!
-        discount: 67, // 99K dari 299K = 67% off
         period: '/bulan',
         description: 'Untuk trader aktif',
         features: [
@@ -63,19 +39,16 @@ const PRICING_PLANS = [
             { text: 'Semua Timeframe', included: true },
             { text: 'Akses Semua Pairs + Crypto', included: true },
             { text: 'Economic Calendar', included: true },
-            { text: 'Free 1 Indikator ATAU 1 EA (pilih salah satu)', included: false },
+            { text: 'Free 1 Indikator ATAU 1 EA', included: false },
         ],
-        cta: '🎉 Ambil Promo Tahun Baru!',
+        cta: 'Upgrade ke Pro',
         popular: true,
-        gradient: 'from-blue-500 to-purple-500',
     },
     {
         id: 'VVIP',
         name: 'VVIP',
         price: 'Rp 399K',
         originalPrice: 'Rp 799K',
-        promoPrice: null,
-        discount: 50,
         period: '/bulan',
         description: 'Untuk trader profesional',
         features: [
@@ -84,11 +57,10 @@ const PRICING_PLANS = [
             { text: 'Semua Timeframe', included: true },
             { text: 'Akses Semua Pairs + Crypto', included: true },
             { text: 'Economic Calendar', included: true },
-            { text: 'Free 1 Indikator ATAU 1 EA (pilih salah satu)', included: true },
+            { text: 'Free 1 Indikator ATAU 1 EA', included: true },
         ],
         cta: 'Jadi VVIP',
         popular: false,
-        gradient: 'from-amber-500 to-orange-500',
     },
 ];
 
@@ -96,35 +68,6 @@ export default function PricingPage() {
     const { data: session } = useSession();
     const t = useTranslations('nav');
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
-    const [snapReady, setSnapReady] = useState(false);
-    const [newYearCountdown, setNewYearCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-    const [isPromoActive, setIsPromoActive] = useState(false);
-
-    // New Year Promo Countdown - Fixed end date
-    useEffect(() => {
-        const updateCountdown = () => {
-            const now = new Date();
-            const diff = NEW_YEAR_PROMO_END.getTime() - now.getTime();
-
-            if (diff <= 0) {
-                setIsPromoActive(false);
-                setNewYearCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-                return;
-            }
-
-            setIsPromoActive(true);
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            setNewYearCountdown({ days, hours, minutes, seconds });
-        };
-
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     const handleSubscribe = async (planId: string) => {
         if (!session) {
@@ -137,291 +80,219 @@ export default function PricingPage() {
             return;
         }
 
-        // Redirect to bank transfer page
         window.location.href = `/payment/transfer?plan=${planId}`;
     };
 
+    const fadeInUp = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+    };
+
     return (
-        <div className="relative min-h-screen pt-28 lg:pt-36 pb-20 px-4 sm:px-6 lg:px-8">
-
-            {/* Background */}
-            <div className="absolute inset-0 bg-grid opacity-20" />
-            <div className="bg-orb bg-orb-blue w-[600px] h-[600px] -top-40 left-1/4 opacity-20" />
-            <div className="bg-orb bg-orb-purple w-[500px] h-[500px] bottom-0 right-1/4 opacity-15" />
-
-            <div className="relative max-w-7xl mx-auto">
-                {/* New Year Promo Countdown Banner */}
-                {isPromoActive && (
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+            {/* Header */}
+            <section className="section-padding text-center">
+                <div className="container-apple">
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 border-2 border-purple-500/40 relative overflow-hidden"
+                        transition={{ duration: 0.5 }}
                     >
-                        {/* Festive decorations */}
-                        <div className="absolute top-0 left-4 text-4xl">🎆</div>
-                        <div className="absolute top-0 right-4 text-4xl">🎇</div>
-                        <div className="absolute -top-2 left-1/4 text-2xl animate-bounce"><SparklesIcon className="text-yellow-400" size="md" /></div>
-                        <div className="absolute -top-2 right-1/4 text-2xl animate-bounce delay-100">🎊</div>
-
-                        <div className="flex flex-col items-center justify-center gap-4 text-center relative z-10">
-                            <div className="flex flex-wrap items-center justify-center gap-2">
-                                <span className="text-3xl">🎉</span>
-                                <span className="font-bold text-2xl text-white">PROMO TAHUN BARU 2026!</span>
-                                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold animate-pulse">
-                                    HEMAT 200K!
-                                </span>
-                            </div>
-
-                            <div className="text-lg text-white">
-                                Paket <span className="font-bold text-blue-400">PRO</span> cuma{' '}
-                                <span className="font-bold text-3xl text-green-400">Rp 99K</span>
-                                <span className="text-[#94A3B8] line-through ml-2">Rp 299K</span>
-                            </div>
-
-                            <div className="flex flex-col items-center gap-2">
-                                <span className="text-sm text-[#94A3B8]">⏰ Promo berakhir dalam:</span>
-                                <div className="flex gap-2">
-                                    <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-purple-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
-                                            {String(newYearCountdown.days).padStart(2, '0')}
-                                        </span>
-                                        <span className="text-xs text-[#64748B] mt-1">Hari</span>
-                                    </div>
-                                    <span className="text-2xl text-purple-400 self-start mt-2">:</span>
-                                    <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-purple-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
-                                            {String(newYearCountdown.hours).padStart(2, '0')}
-                                        </span>
-                                        <span className="text-xs text-[#64748B] mt-1">Jam</span>
-                                    </div>
-                                    <span className="text-2xl text-purple-400 self-start mt-2">:</span>
-                                    <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-purple-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px]">
-                                            {String(newYearCountdown.minutes).padStart(2, '0')}
-                                        </span>
-                                        <span className="text-xs text-[#64748B] mt-1">Menit</span>
-                                    </div>
-                                    <span className="text-2xl text-purple-400 self-start mt-2">:</span>
-                                    <div className="flex flex-col items-center">
-                                        <span className="px-3 py-2 bg-blue-600 rounded-lg font-mono text-2xl text-white font-bold min-w-[60px] animate-pulse">
-                                            {String(newYearCountdown.seconds).padStart(2, '0')}
-                                        </span>
-                                        <span className="text-xs text-[#64748B] mt-1">Detik</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <p className="text-xs text-[#94A3B8]">
-                                🎆 Promo berlaku sampai 1 Januari 2026 pukul 23:59 WIB
-                            </p>
-                        </div>
+                        <span className="badge-apple mb-6 inline-flex">
+                            💎 Simple Pricing
+                        </span>
+                        <h1 className="headline-lg mb-4">
+                            Pilih Paket yang{' '}
+                            <span className="gradient-text">Tepat untuk Anda</span>
+                        </h1>
+                        <p className="body-lg max-w-2xl mx-auto">
+                            Tingkatkan trading Anda dengan analisa AI yang powerful.
+                        </p>
                     </motion.div>
-                )}
+                </div>
+            </section>
 
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-16"
-                >
-                    <motion.span
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1F2937] bg-[#12141A]/50 backdrop-blur-sm mb-6"
-                    >
-                        <GemIcon className="text-blue-400" size="lg" />
-                        <span className="text-sm text-[#94A3B8]">Simple, Transparent Pricing</span>
-                    </motion.span>
-
-                    <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-                        Pilih Paket yang{' '}
-                        <span className="gradient-text">Tepat untuk Anda</span>
-                    </h1>
-                    <p className="text-lg text-[#94A3B8] max-w-2xl mx-auto">
-                        Tingkatkan trading Anda dengan analisa AI yang powerful.
-                        Semua paket termasuk akses ke ARRA Quantum Strategist.
-                    </p>
-                </motion.div>
-
-                {/* Pricing Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                    {PRICING_PLANS.map((plan, index) => (
-                        <motion.div
-                            key={plan.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 + index * 0.1 }}
-                            className={`
-                relative rounded-2xl p-6 lg:p-8
-                ${plan.popular
-                                    ? 'bg-gradient-to-b from-[#1A1D24] to-[#12141A] border-2 border-blue-500/50 shadow-2xl shadow-blue-500/10'
-                                    : 'glass border border-[#1F2937]'
-                                }
-              `}
-                        >
-                            {/* Popular Badge */}
-                            {plan.popular && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                    <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold shadow-lg shadow-blue-500/25">
-                                        Most Popular
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Plan Header */}
-                            <div className="mb-6">
-                                <div className={`
-                  inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4
-                  bg-gradient-to-br ${plan.gradient} bg-opacity-20
-                `}>
-                                    {plan.id === 'BASIC' && <span className="text-xl">🌱</span>}
-                                    {plan.id === 'PRO' && <RocketIcon className="text-blue-400" size="lg" />}
-                                    {plan.id === 'VVIP' && <span className="text-xl">👑</span>}
-                                </div>
-
-                                <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-                                <p className="text-sm text-[#64748B]">{plan.description}</p>
-                            </div>
-
-                            {/* Price */}
-                            <div className="mb-6">
-                                {plan.originalPrice && (
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-lg text-[#64748B] line-through">{plan.originalPrice}</span>
-                                        {isPromoActive && plan.promoPrice ? (
-                                            <span className="px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold animate-pulse">
-                                                🎉 TAHUN BARU -{plan.discount}%
-                                            </span>
-                                        ) : (
-                                            <span className="px-2 py-0.5 rounded bg-red-500 text-white text-xs font-bold">-{plan.discount}%</span>
-                                        )}
+            {/* Pricing Cards */}
+            <section className="section-padding pt-0">
+                <div className="container-wide">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                        {PRICING_PLANS.map((plan, index) => (
+                            <motion.div
+                                key={plan.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + index * 0.1 }}
+                                className={`
+                                    relative rounded-2xl p-8
+                                    ${plan.popular
+                                        ? 'bg-[var(--text-primary)] text-white ring-2 ring-[var(--accent-blue)] shadow-xl'
+                                        : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
+                                    }
+                                `}
+                            >
+                                {/* Popular Badge */}
+                                {plan.popular && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                        <span className="px-4 py-1 rounded-full bg-[var(--accent-blue)] text-white text-sm font-medium">
+                                            Most Popular
+                                        </span>
                                     </div>
                                 )}
-                                <span className={`text-4xl font-bold ${plan.popular ? 'gradient-text' : plan.originalPrice ? 'text-green-400' : ''}`}>
-                                    {isPromoActive && plan.promoPrice ? plan.promoPrice : plan.price}
-                                </span>
-                                <span className="text-[#64748B]">{plan.period}</span>
-                            </div>
 
-                            {/* Features */}
-                            <ul className="space-y-3 mb-8">
-                                {plan.features.map((feature, i) => (
-                                    <li key={i} className="flex items-center gap-3">
-                                        {feature.included ? (
-                                            <span className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </span>
-                                        ) : (
-                                            <span className="w-5 h-5 rounded-full bg-[#1F2937] flex items-center justify-center">
-                                                <svg className="w-3 h-3 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </span>
-                                        )}
-                                        <span className={feature.included ? 'text-[#E2E8F0]' : 'text-[#64748B]'}>
-                                            {feature.text}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                                {/* Plan Header */}
+                                <div className="mb-6">
+                                    <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
+                                    <p className={`text-sm ${plan.popular ? 'text-white/70' : 'text-[var(--text-secondary)]'}`}>
+                                        {plan.description}
+                                    </p>
+                                </div>
 
-                            {/* CTA Button */}
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleSubscribe(plan.id)}
-                                disabled={isProcessing === plan.id}
-                                className={`
-                  w-full py-3.5 rounded-xl font-semibold transition-all
-                  ${plan.popular
-                                        ? 'glow-button text-white'
-                                        : 'bg-[#1F2937] hover:bg-[#374151] text-white border border-[#374151]'
-                                    }
-                  ${isProcessing === plan.id ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
-                            >
-                                {isProcessing === plan.id ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Memproses...
+                                {/* Price */}
+                                <div className="mb-8">
+                                    {plan.originalPrice && (
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className={`text-lg line-through ${plan.popular ? 'text-white/50' : 'text-[var(--text-muted)]'}`}>
+                                                {plan.originalPrice}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-green-500 text-white text-xs font-medium">
+                                                50% OFF
+                                            </span>
+                                        </div>
+                                    )}
+                                    <span className="text-4xl font-bold">{plan.price}</span>
+                                    <span className={plan.popular ? 'text-white/70' : 'text-[var(--text-secondary)]'}>
+                                        {plan.period}
                                     </span>
-                                ) : (
-                                    // Show promo CTA only during active promo for PRO plan
-                                    isPromoActive && plan.id === 'PRO' ? '🎉 Ambil Promo Tahun Baru!' :
-                                        plan.id === 'PRO' ? 'Upgrade ke Pro' : plan.cta
-                                )}
-                            </motion.button>
-                        </motion.div>
-                    ))}
+                                </div>
+
+                                {/* Features */}
+                                <ul className="space-y-4 mb-8">
+                                    {plan.features.map((feature, i) => (
+                                        <li key={i} className="flex items-center gap-3">
+                                            {feature.included ? (
+                                                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? 'bg-white/20' : 'bg-green-100'}`}>
+                                                    <svg className={`w-3 h-3 ${plan.popular ? 'text-white' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            ) : (
+                                                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? 'bg-white/10' : 'bg-gray-100'}`}>
+                                                    <svg className={`w-3 h-3 ${plan.popular ? 'text-white/40' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                            <span className={feature.included ? '' : (plan.popular ? 'text-white/40' : 'text-[var(--text-muted)]')}>
+                                                {feature.text}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                {/* CTA Button */}
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleSubscribe(plan.id)}
+                                    disabled={isProcessing === plan.id}
+                                    className={`
+                                        w-full py-3.5 rounded-full font-medium transition-all
+                                        ${plan.popular
+                                            ? 'bg-white text-[var(--text-primary)] hover:bg-gray-100'
+                                            : 'bg-[var(--text-primary)] text-white hover:bg-gray-800'
+                                        }
+                                        ${isProcessing === plan.id ? 'opacity-50 cursor-not-allowed' : ''}
+                                    `}
+                                >
+                                    {isProcessing === plan.id ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                                            Memproses...
+                                        </span>
+                                    ) : (
+                                        plan.cta
+                                    )}
+                                </motion.button>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
+            </section>
 
-                {/* FAQ Section - Accordion Style */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="mt-20 max-w-3xl mx-auto"
-                >
-                    <h2 className="text-3xl font-bold text-center mb-4">Pertanyaan Umum</h2>
-                    <p className="text-center text-[#94A3B8] mb-10">Temukan jawaban atas pertanyaan yang sering diajukan</p>
+            {/* FAQ Section */}
+            <section className="section-padding bg-[var(--bg-secondary)]">
+                <div className="container-apple">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-12"
+                    >
+                        <h2 className="headline-md mb-4">Pertanyaan Umum</h2>
+                        <p className="body-md">Temukan jawaban atas pertanyaan yang sering diajukan</p>
+                    </motion.div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-w-2xl mx-auto">
                         {[
                             {
                                 question: 'Metode pembayaran apa yang tersedia?',
-                                answer: 'Kami menggunakan metode pembayaran QRIS yang dapat di-scan melalui semua aplikasi e-wallet (GoPay, OVO, Dana, ShopeePay) dan mobile banking. Pembayaran diproses secara aman dan instan.',
+                                answer: 'Kami menggunakan metode pembayaran QRIS yang dapat di-scan melalui semua aplikasi e-wallet (GoPay, OVO, Dana, ShopeePay) dan mobile banking.',
                             },
                             {
                                 question: 'Bisakah upgrade atau downgrade paket?',
-                                answer: 'Ya! Anda bisa upgrade kapan saja. Sisa waktu paket lama akan di-prorate ke paket baru. Untuk downgrade, akan berlaku di periode berikutnya.',
+                                answer: 'Ya! Anda bisa upgrade kapan saja. Sisa waktu paket lama akan di-prorate ke paket baru.',
                             },
                             {
                                 question: 'Apa itu ARRA Quantum Strategist?',
-                                answer: 'AI trading assistant yang menganalisa market menggunakan 5 teknik profesional: SMC/ICT, Price Action, Chart Patterns, Candlestick Patterns, dan Fibonacci. Memberikan rekomendasi entry, stop loss, dan take profit.',
+                                answer: 'AI trading assistant yang menganalisa market menggunakan teknik profesional: SMC/ICT, Price Action, Chart Patterns, dan Fibonacci.',
                             },
                         ].map((faq, index) => (
-                            <details
+                            <motion.details
                                 key={index}
-                                className="group glass rounded-2xl border border-[#1F2937] overflow-hidden"
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.1 }}
+                                className="group bg-white rounded-xl border border-[var(--border-light)] overflow-hidden"
                             >
-                                <summary className="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-[#1A1D24] transition-colors">
-                                    <span className="font-semibold text-lg">{faq.question}</span>
-                                    <span className="ml-4 flex-shrink-0 w-8 h-8 rounded-full bg-[#1F2937] flex items-center justify-center group-open:rotate-180 transition-transform duration-300">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <summary className="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-[var(--bg-secondary)] transition-colors">
+                                    <span className="font-medium">{faq.question}</span>
+                                    <span className="ml-4 flex-shrink-0 w-6 h-6 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center group-open:rotate-180 transition-transform duration-300">
+                                        <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </span>
                                 </summary>
                                 <div className="px-5 pb-5 pt-0">
-                                    <p className="text-[#94A3B8] leading-relaxed">{faq.answer}</p>
+                                    <p className="text-[var(--text-secondary)] leading-relaxed">{faq.answer}</p>
                                 </div>
-                            </details>
+                            </motion.details>
                         ))}
                     </div>
-                </motion.div>
+                </div>
+            </section>
 
-                {/* Bottom CTA */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-20 text-center"
-                >
-                    <p className="text-[#94A3B8] mb-4">Masih ragu? Coba gratis dulu!</p>
-                    <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="px-8 py-3 rounded-xl border border-[#374151] hover:border-blue-500/50 bg-[#12141A] hover:bg-[#1A1D24] text-white font-medium transition-all"
-                        >
-                            Coba {t('analisaMarket')} Gratis →
-                        </motion.button>
-                    </Link>
-                </motion.div>
-            </div>
+            {/* Bottom CTA */}
+            <section className="section-padding">
+                <div className="container-apple text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                    >
+                        <p className="body-md mb-6">Masih ragu? Coba gratis dulu!</p>
+                        <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
+                            <button className="btn-primary">
+                                Coba {t('analisaMarket')} Gratis
+                                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                            </button>
+                        </Link>
+                    </motion.div>
+                </div>
+            </section>
         </div>
     );
 }

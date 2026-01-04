@@ -1,335 +1,399 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { ChartIcon, DevicePhoneIcon } from '@/components/PremiumIcons';
+import { useRef } from 'react';
 
 export default function Home() {
   const t = useTranslations('hero');
   const tFeatures = useTranslations('features');
   const { data: session } = useSession();
+  const heroRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Hero Background Image */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: 'url(/images/hero-bg.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.6,
-        }}
-      />
-
-      {/* Background Grid */}
-      <div className="absolute inset-0 bg-grid opacity-30" />
-
-      {/* Orb Images */}
-      <img
-        src="/images/orb-blue.png"
-        alt=""
-        className="absolute -top-20 -left-20 w-[500px] h-[500px] opacity-40 blur-sm pointer-events-none"
-      />
-      <img
-        src="/images/orb-purple.png"
-        alt=""
-        className="absolute top-1/3 -right-20 w-[400px] h-[400px] opacity-30 blur-sm pointer-events-none"
-      />
-
-      {/* Radial Gradient Overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-        }}
-      />
-
-      {/* Hero Content */}
-      <section className="relative pt-32 lg:pt-44 pb-20 px-4 sm:px-6 lg:px-8 z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1F2937] bg-[#12141A]/50 backdrop-blur-sm mb-8"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-              </span>
-              <span className="text-sm text-[#94A3B8]">{t('badge')}</span>
-            </motion.div>
-
-            {/* Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6"
-            >
-              {t('headline')}{' '}
-              <span className="gradient-text">{t('headlineHighlight')}</span>
-              <br />
-              {t('headlineEnd')}
-            </motion.h1>
-
-            {/* Subheadline */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-lg sm:text-xl text-[#94A3B8] max-w-2xl mx-auto mb-10 leading-relaxed"
-            >
-              {t('subheadline')}
-            </motion.p>
-
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
-              <Link
-                href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}
-              >
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="glow-button px-8 py-4 rounded-xl text-white font-semibold text-lg"
-                >
-                  {t('cta')}
-                </motion.button>
-              </Link>
-
-              <Link href={session ? '/analisa-saham' : '/login?callbackUrl=/analisa-saham'}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-8 py-4 rounded-xl border border-[#1F2937] hover:border-green-500/50 bg-[#12141A]/50 hover:bg-green-500/10 text-white font-semibold text-lg transition-all flex items-center gap-2"
-                >
-                  <ChartIcon className="inline mr-2" size="md" /> Analisa Saham
-                </motion.button>
-              </Link>
-            </motion.div>
-
-            {/* Android App Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="mt-8"
-            >
-              <Link href="/download/android">
-                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:border-green-500/60 transition-all cursor-pointer group">
-                  <DevicePhoneIcon className="text-green-400" size="lg" />
-                  <span className="text-green-400 font-medium">Download Android App</span>
-                  <span className="text-gray-400 group-hover:translate-x-1 transition-transform">→</span>
-                </div>
-              </Link>
-            </motion.div>
-          </div>
-
-
-          {/* Feature Cards */}
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      {/* Hero Section */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center section-padding pt-32">
+        <motion.div
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="container-apple text-center"
+        >
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-24 lg:mt-32 grid grid-cols-1 md:grid-cols-3 gap-6"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-6"
           >
-            {/* Indicators Card */}
-            <motion.div
-              whileHover={{ y: -8 }}
-              className="card-hover rounded-2xl p-6 bg-[#12141A]/50 backdrop-blur-sm"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{tFeatures('indicators')}</h3>
-              <p className="text-[#64748B]">{tFeatures('indicatorsDesc')}</p>
-            </motion.div>
+            <span className="badge-apple">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              {t('badge')}
+            </span>
+          </motion.div>
 
-            {/* EA Card */}
-            <motion.div
-              whileHover={{ y: -8 }}
-              className="card-hover rounded-2xl p-6 bg-[#12141A]/50 backdrop-blur-sm"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{tFeatures('ea')}</h3>
-              <p className="text-[#64748B]">{tFeatures('eaDesc')}</p>
-            </motion.div>
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="headline-xl mb-6"
+          >
+            {t('headline')}{' '}
+            <span className="gradient-text">{t('headlineHighlight')}</span>
+            <br />
+            {t('headlineEnd')}
+          </motion.h1>
 
-            {/* Analysis Card */}
-            <motion.div
-              whileHover={{ y: -8 }}
-              className="card-hover rounded-2xl p-6 bg-[#12141A]/50 backdrop-blur-sm"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-green-600/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          {/* Subheadline */}
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="body-lg max-w-2xl mx-auto mb-10"
+          >
+            {t('subheadline')}
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+          >
+            <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
+              <button className="btn-primary">
+                {t('cta')}
+                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
+              </button>
+            </Link>
+            <Link href="/pricing">
+              <button className="btn-secondary">
+                Lihat Harga
+              </button>
+            </Link>
+          </motion.div>
+
+          {/* Product Mockup */}
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="relative max-w-4xl mx-auto"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-[var(--bg-secondary)] p-2">
+              <div className="rounded-xl overflow-hidden bg-white">
+                <img
+                  src="/images/hero-bg.png"
+                  alt="ARRA7 Dashboard"
+                  className="w-full h-auto"
+                  style={{ aspectRatio: '16/9', objectFit: 'cover' }}
+                />
               </div>
-              <h3 className="text-xl font-semibold mb-2">{tFeatures('analysis')}</h3>
-              <p className="text-[#64748B]">{tFeatures('analysisDesc')}</p>
-            </motion.div>
+            </div>
+            {/* Glow effect behind */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20 blur-3xl -z-10 opacity-60" />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="section-padding bg-[var(--bg-secondary)]">
+        <div className="container-wide">
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center"
+          >
+            {[
+              { number: '1,000+', label: 'Active Traders' },
+              { number: '95%', label: 'Akurasi Sinyal' },
+              { number: '24/7', label: 'AI Support' },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                variants={fadeInUp}
+                className="p-8"
+              >
+                <div className="stat-number mb-2">{stat.number}</div>
+                <p className="body-md">{stat.label}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="section-padding">
+        <div className="container-wide">
+          {/* Feature 1 */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-32"
+          >
+            <div className="order-2 lg:order-1">
+              <h2 className="headline-lg mb-6">{tFeatures('indicators')}</h2>
+              <p className="body-lg mb-8">{tFeatures('indicatorsDesc')}</p>
+              <Link href="/products/indicators">
+                <button className="btn-secondary">
+                  Pelajari Lebih Lanjut
+                  <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </Link>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="card-feature">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-6">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="headline-md mb-4">Premium Indicators</h3>
+                <p className="body-md">Indikator teknikal profesional untuk analisa chart yang akurat</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Feature 2 */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-32"
+          >
+            <div>
+              <div className="card-feature">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="headline-md mb-4">Expert Advisors</h3>
+                <p className="body-md">Robot trading otomatis yang bekerja 24/7 untuk Anda</p>
+              </div>
+            </div>
+            <div>
+              <h2 className="headline-lg mb-6">{tFeatures('ea')}</h2>
+              <p className="body-lg mb-8">{tFeatures('eaDesc')}</p>
+              <Link href="/products/expert-advisors">
+                <button className="btn-secondary">
+                  Pelajari Lebih Lanjut
+                  <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* Feature 3 */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center"
+          >
+            <div className="order-2 lg:order-1">
+              <h2 className="headline-lg mb-6">{tFeatures('analysis')}</h2>
+              <p className="body-lg mb-8">{tFeatures('analysisDesc')}</p>
+              <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
+                <button className="btn-primary">
+                  Coba Sekarang
+                  <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </Link>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="card-feature">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-6">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <h3 className="headline-md mb-4">AI Analysis</h3>
+                <p className="body-md">Analisa market real-time dengan kecerdasan buatan</p>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
-        <div className="max-w-7xl mx-auto">
+      <section className="section-padding bg-[var(--bg-secondary)]">
+        <div className="container-wide">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className="headline-lg mb-4">
               Apa Kata <span className="gradient-text">Mereka</span>?
             </h2>
-            <p className="text-[#94A3B8] max-w-2xl mx-auto">
+            <p className="body-lg max-w-2xl mx-auto">
               Trader Indonesia yang sudah merasakan manfaat ARRA7
             </p>
           </motion.div>
 
-          {/* Scrolling Testimonials */}
-          <div className="relative overflow-hidden">
-            <motion.div
-              className="flex gap-6"
-              animate={{ x: [0, -1800] }}
-              transition={{
-                x: {
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  duration: 30,
-                  ease: "linear",
-                },
-              }}
-            >
-              {[
-                {
-                  name: 'Rizky Pratama',
-                  role: 'Day Trader • Jakarta',
-                  avatar: 'RP',
-                  rating: 5,
-                  text: 'Gila sih ini AI nya. Gue udah lama nyari tools yang bisa bantu analisa tanpa ribet. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah 149k/bulan mah.',
-                  color: 'from-blue-500 to-cyan-500',
-                },
-                {
-                  name: 'Dewi Anggraini',
-                  role: 'Swing Trader • Surabaya',
-                  avatar: 'DA',
-                  rating: 5,
-                  text: 'Awalnya skeptis karena udah sering kena tipu tools abal-abal. Tapi ARRA7 beda, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede dan gak asal entry.',
-                  color: 'from-purple-500 to-pink-500',
-                },
-                {
-                  name: 'Budi Santoso',
-                  role: 'Part-time Trader • Bandung',
-                  avatar: 'BS',
-                  rating: 5,
-                  text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, langsung tau mau entry di mana. Simple tapi powerful. Profitnya lumayan buat tambahan gaji 😂',
-                  color: 'from-amber-500 to-orange-500',
-                },
-                {
-                  name: 'Andi Wijaya',
-                  role: 'Crypto Trader • Medan',
-                  avatar: 'AW',
-                  rating: 5,
-                  text: 'Yang VVIP mantap! Bisa analisa crypto juga. Kemarin BTC sama ETH signal dari AI nya bener semua. Support resistance nya akurat, SL TP nya udah dikasih. Tinggal eksekusi aja.',
-                  color: 'from-green-500 to-emerald-500',
-                },
-                {
-                  name: 'Siti Nurhaliza',
-                  role: 'Newbie Trader • Yogyakarta',
-                  avatar: 'SN',
-                  rating: 5,
-                  text: 'Baru belajar trading 3 bulan. Berkat analisa AI ARRA7 jadi ngerti kapan harus entry sama exit. Penjelasannya gampang dimengerti, cocok banget buat pemula kayak gue.',
-                  color: 'from-red-500 to-rose-500',
-                },
-                {
-                  name: 'Fajar Rahman',
-                  role: 'Full-time Trader • Bali',
-                  avatar: 'FR',
-                  rating: 5,
-                  text: 'Udah pake dari awal launching. AI analisanya makin akurat, support nya fast respond. Sekarang gak perlu buka banyak chart, tinggal minta analisa sesuai pair yang mau ditrade.',
-                  color: 'from-indigo-500 to-violet-500',
-                },
-                // Duplicate for seamless loop
-                {
-                  name: 'Rizky Pratama',
-                  role: 'Day Trader • Jakarta',
-                  avatar: 'RP',
-                  rating: 5,
-                  text: 'Gila sih ini AI nya. Gue udah lama nyari tools yang bisa bantu analisa tanpa ribet. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah 149k/bulan mah.',
-                  color: 'from-blue-500 to-cyan-500',
-                },
-                {
-                  name: 'Dewi Anggraini',
-                  role: 'Swing Trader • Surabaya',
-                  avatar: 'DA',
-                  rating: 5,
-                  text: 'Awalnya skeptis karena udah sering kena tipu tools abal-abal. Tapi ARRA7 beda, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede dan gak asal entry.',
-                  color: 'from-purple-500 to-pink-500',
-                },
-                {
-                  name: 'Budi Santoso',
-                  role: 'Part-time Trader • Bandung',
-                  avatar: 'BS',
-                  rating: 5,
-                  text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, langsung tau mau entry di mana. Simple tapi powerful. Profitnya lumayan buat tambahan gaji 😂',
-                  color: 'from-amber-500 to-orange-500',
-                },
-              ].map((testimonial, index) => (
-                <div
-                  key={index}
-                  className="flex-shrink-0 w-[350px] glass rounded-2xl p-6 border border-[#1F2937] hover:border-[#374151] transition-colors"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}>
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                      <p className="text-sm text-[#64748B]">{testimonial.role}</p>
-                    </div>
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {[
+              {
+                name: 'Rizky Pratama',
+                role: 'Day Trader • Jakarta',
+                avatar: 'RP',
+                text: 'Gila sih ini AI nya. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah!',
+                color: 'from-blue-500 to-cyan-500',
+              },
+              {
+                name: 'Dewi Anggraini',
+                role: 'Swing Trader • Surabaya',
+                avatar: 'DA',
+                text: 'ARRA7 beda dari yang lain, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede.',
+                color: 'from-purple-500 to-pink-500',
+              },
+              {
+                name: 'Budi Santoso',
+                role: 'Part-time Trader • Bandung',
+                avatar: 'BS',
+                text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, simple tapi powerful.',
+                color: 'from-amber-500 to-orange-500',
+              },
+            ].map((testimonial, index) => (
+              <motion.div
+                key={index}
+                variants={fadeInUp}
+                className="testimonial-card"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}>
+                    {testimonial.avatar}
                   </div>
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
+                  <div>
+                    <h4 className="font-semibold text-[var(--text-primary)]">{testimonial.name}</h4>
+                    <p className="text-sm text-[var(--text-muted)]">{testimonial.role}</p>
                   </div>
-                  <p className="text-[#94A3B8] text-sm leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
                 </div>
-              ))}
-            </motion.div>
-          </div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-[var(--text-secondary)] leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Bottom Gradient Fade */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, #0B0C10 0%, transparent 100%)',
-        }}
-      />
+      {/* CTA Section */}
+      <section className="section-padding cta-section">
+        <div className="container-apple text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="headline-lg mb-6">
+              Siap Memulai Trading?
+            </h2>
+            <p className="body-lg max-w-xl mx-auto mb-10">
+              Bergabung dengan ribuan trader Indonesia yang sudah merasakan manfaat analisa AI ARRA7.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href={session ? '/analisa-market' : '/login'}>
+                <button className="btn-primary text-lg px-10 py-4">
+                  Mulai Sekarang — Gratis
+                </button>
+              </Link>
+              <Link href="/download/android">
+                <button className="btn-secondary text-lg">
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.523 2.047a.5.5 0 00-.473.054l-9.74 6.89a1 1 0 00-.41.808v4.402a1 1 0 00.41.808l9.74 6.89a.5.5 0 00.77-.42V2.52a.5.5 0 00-.297-.473zM3.5 7.5v9a.5.5 0 00.854.354L8 13.207V10.793l-3.646-3.647A.5.5 0 003.5 7.5z" />
+                  </svg>
+                  Download Android
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="footer-apple py-12">
+        <div className="container-wide">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <span className="text-xl font-bold">
+                <span className="gradient-text">ARRA</span>7
+              </span>
+              <p className="text-sm text-[var(--text-muted)] mt-1">
+                AI-Powered Trading Analysis
+              </p>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)]">
+              <Link href="/privacy" className="hover:text-[var(--accent-blue)] transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:text-[var(--accent-blue)] transition-colors">
+                Terms
+              </Link>
+              <Link href="/faq" className="hover:text-[var(--accent-blue)] transition-colors">
+                FAQ
+              </Link>
+            </div>
+            <p className="text-sm text-[var(--text-muted)]">
+              © 2026 ARRA7. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

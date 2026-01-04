@@ -1,4 +1,4 @@
-import getTursoClient, { getUserMembership, isTursoConfigured } from './turso';
+import getTursoClient, { getUserMembership, isTursoConfigured, checkUserPromo } from './turso';
 
 // Quota limits per membership level (Forex Analysis)
 export const QUOTA_LIMITS = {
@@ -6,6 +6,9 @@ export const QUOTA_LIMITS = {
     PRO: 25,
     VVIP: Infinity, // Unlimited
 } as const;
+
+// PROMO quota (for APK download promotion)
+export const PROMO_QUOTA_LIMIT = 10; // 10 analyses per day during promo
 
 // Stock Analysis Quota limits (same as Forex)
 export const STOCK_QUOTA_LIMITS = {
@@ -75,8 +78,17 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
 
     try {
         const membership = (await getUserMembership(userId)) as Membership;
-        const dailyLimit = QUOTA_LIMITS[membership] || QUOTA_LIMITS.BASIC;
-        const allowedTimeframes = ALLOWED_TIMEFRAMES[membership] || ALLOWED_TIMEFRAMES.BASIC;
+        let dailyLimit = QUOTA_LIMITS[membership] || QUOTA_LIMITS.BASIC;
+        let allowedTimeframes = ALLOWED_TIMEFRAMES[membership] || ALLOWED_TIMEFRAMES.BASIC;
+
+        // Check if user has active promo
+        const promoStatus = await checkUserPromo(userId);
+        if (promoStatus.hasPromo) {
+            // Override with promo limits (10/day, all timeframes, all pairs)
+            dailyLimit = Math.max(dailyLimit, PROMO_QUOTA_LIMIT);
+            allowedTimeframes = ALLOWED_TIMEFRAMES.VVIP; // All timeframes during promo
+            console.log(`[PROMO] User ${userId} has active promo until ${promoStatus.expiresAt}`);
+        }
 
         const today = getTodayDate();
 
@@ -118,8 +130,11 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
 
     const status = await getQuotaStatus(userId);
 
-    // Check pair restriction for BASIC
-    if (pair && status.membership === 'BASIC' && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
+    // Check if user has promo (allows all pairs)
+    const promoStatus = await checkUserPromo(userId);
+
+    // Check pair restriction for BASIC (skip if promo is active)
+    if (pair && status.membership === 'BASIC' && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
         return {
             allowed: false,
             message: `Pair ${pair} tidak tersedia untuk paket BASIC. Upgrade ke PRO untuk akses semua pairs termasuk Crypto & Indices.`,
@@ -228,7 +243,15 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
 
     try {
         const membership = (await getUserMembership(userId)) as Membership;
-        const dailyLimit = STOCK_QUOTA_LIMITS[membership] || STOCK_QUOTA_LIMITS.BASIC;
+        let dailyLimit = STOCK_QUOTA_LIMITS[membership] || STOCK_QUOTA_LIMITS.BASIC;
+
+        // Check if user has active promo
+        const promoStatus = await checkUserPromo(userId);
+        if (promoStatus.hasPromo) {
+            // Override with promo limits (10/day for stock too)
+            dailyLimit = Math.max(dailyLimit, PROMO_QUOTA_LIMIT);
+            console.log(`[PROMO] User ${userId} has active stock promo until ${promoStatus.expiresAt}`);
+        }
 
         const today = getTodayDate();
 
