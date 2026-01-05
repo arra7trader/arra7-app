@@ -71,9 +71,9 @@ export default function Home() {
             className="headline-xl mb-6"
           >
             {t('headline')}{' '}
-            <span className="gradient-text">{t('headlineHighlight')}</span>
+            <span className="gradient-text">Whale Order Flow</span>
             <br />
-            {t('headlineEnd')}
+            & AI Analisa Saham
           </motion.h1>
 
           {/* Subheadline */}
@@ -93,16 +93,21 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
-            <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
-              <button className="btn-primary">
-                Analisa Market
+            <Link href={session ? '/dom-arra' : '/login?callbackUrl=/dom-arra'}>
+              <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-amber-500/20">
+                <span className="mr-2">🔥</span>
+                DOM Heatmap
                 <ArrowRightIcon className="ml-2" size="sm" />
               </button>
             </Link>
             <Link href={session ? '/analisa-saham' : '/login?callbackUrl=/analisa-saham'}>
-              <button className="btn-primary">
+              <button className="btn-secondary">
                 Analisa Saham
-                <ArrowRightIcon className="ml-2" size="sm" />
+              </button>
+            </Link>
+            <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
+              <button className="btn-secondary">
+                Forex AI
               </button>
             </Link>
             <Link href="/pricing">
@@ -232,9 +237,9 @@ export default function Home() {
             {[
               {
                 icon: <ChartIcon className="text-white" size="lg" />,
-                title: 'Analisa Forex Real-time',
-                desc: 'Gold, Major Pairs, Crypto, Indices - semuanya bisa dianalisa dengan AI',
-                color: 'from-blue-500 to-cyan-500'
+                title: 'DOM Heatmap & Whale Tracking',
+                desc: 'Lihat limit order raksasa (Whale) dan likuiditas masa depan secara real-time. Data institusional level.',
+                color: 'from-amber-500 to-orange-500'
               },
               {
                 icon: <SparklesIcon className="text-white" size="lg" />,
