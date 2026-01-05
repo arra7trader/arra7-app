@@ -4,11 +4,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { LockIcon, ChartIcon, BellIcon, RefreshIcon, SparklesIcon } from '@/components/PremiumIcons';
+import { LockIcon, ChartIcon, SparklesIcon, ScaleIcon, SignalIcon, CircleStackIcon } from '@/components/PremiumIcons';
 import { OrderBook, DOMPrediction, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
 import { analyzeOrderFlow, calculateOrderBookMetrics } from '@/lib/dom-analysis';
+import HeatmapBubbleChart, { FlowDataPoint } from '@/components/dom/HeatmapBubble';
 
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+const MAX_FLOW_HISTORY = 60; // Keep last 60 data points
 
 // Order Book Component
 function OrderBookVisualization({ orderBook, maxLevels = 15 }: { orderBook: OrderBook | null; maxLevels?: number }) {
@@ -339,6 +341,8 @@ export default function DomArraPage() {
     const [prediction, setPrediction] = useState<DOMPrediction | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+    const [flowHistory, setFlowHistory] = useState<FlowDataPoint[]>([]);
+    const [activeTab, setActiveTab] = useState<'orderbook' | 'heatmap'>('orderbook');
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const currentSymbolRef = useRef<DOMSymbolId>(selectedSymbol);
@@ -404,6 +408,19 @@ export default function DomArraPage() {
                 // Analyze order flow
                 const newPrediction = analyzeOrderFlow(newOrderBook);
                 setPrediction(newPrediction);
+
+                // Add to flow history
+                setFlowHistory(prev => {
+                    const newPoint: FlowDataPoint = {
+                        timestamp: Date.now(),
+                        buyVolume: newOrderBook.totalBidVolume,
+                        sellVolume: newOrderBook.totalAskVolume,
+                        imbalance: newOrderBook.imbalance,
+                        price: newOrderBook.midPrice,
+                    };
+                    const updated = [...prev, newPoint];
+                    return updated.slice(-MAX_FLOW_HISTORY);
+                });
             } catch (error) {
                 console.error('Error parsing Binance data:', error);
             }
@@ -436,9 +453,10 @@ export default function DomArraPage() {
     useEffect(() => {
         if (!isAdmin) return;
 
-        // Clear order book when switching symbols
+        // Clear data when switching symbols
         setOrderBook(null);
         setPrediction(null);
+        setFlowHistory([]);
 
         // Connect to Binance for the selected symbol
         connectBinanceStream(selectedSymbol);
@@ -530,26 +548,62 @@ export default function DomArraPage() {
                     ))}
                 </motion.div>
 
+                {/* Tab Selector */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex gap-2 mb-6"
+                >
+                    <button
+                        onClick={() => setActiveTab('orderbook')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'orderbook'
+                                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                                : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                            }`}
+                    >
+                        <CircleStackIcon size="sm" />
+                        Order Book
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('heatmap')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'heatmap'
+                                ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                                : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                            }`}
+                    >
+                        <ChartIcon size="sm" />
+                        Heatmap & Flow
+                    </button>
+                </motion.div>
+
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Order Book - Left 2 columns */}
+                    {/* Left Content - 2 columns */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="lg:col-span-2 bg-white rounded-2xl p-6 border border-[var(--border-light)]"
+                        className="lg:col-span-2"
                     >
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                                📊 Order Book - {symbolConfig.name}
-                            </h2>
-                            {lastUpdate && (
-                                <span className="text-xs text-[var(--text-muted)]">
-                                    Last update: {lastUpdate.toLocaleTimeString()}
-                                </span>
-                            )}
-                        </div>
-                        <OrderBookVisualization orderBook={orderBook} />
+                        {activeTab === 'orderbook' ? (
+                            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                                        <CircleStackIcon size="md" className="text-blue-600" />
+                                        Order Book - {symbolConfig.name}
+                                    </h2>
+                                    {lastUpdate && (
+                                        <span className="text-xs text-[var(--text-muted)]">
+                                            Last update: {lastUpdate.toLocaleTimeString()}
+                                        </span>
+                                    )}
+                                </div>
+                                <OrderBookVisualization orderBook={orderBook} />
+                            </div>
+                        ) : (
+                            <HeatmapBubbleChart orderBook={orderBook} flowHistory={flowHistory} />
+                        )}
                     </motion.div>
 
                     {/* Right Sidebar - Imbalance & Prediction */}
