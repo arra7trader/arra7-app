@@ -105,7 +105,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
         // Layout Constants
         const RIGHT_MARGIN_PRICE = 90; // Increased to fit Volume text
         const BOTTOM_MARGIN_TIME = 20; // Space for Time Axis
-        const FUTURE_ZONE_WIDTH = 120;
+        const FUTURE_ZONE_WIDTH = 180;
         const CHART_WIDTH = width - RIGHT_MARGIN_PRICE;
         const CHART_HEIGHT = height - BOTTOM_MARGIN_TIME;
         const TIME_WIDTH = CHART_WIDTH - FUTURE_ZONE_WIDTH;
