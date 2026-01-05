@@ -102,7 +102,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
         const { width, height } = dimensions;
 
         // Layout Constants
-        const RIGHT_MARGIN_PRICE = 70;
+        const RIGHT_MARGIN_PRICE = 90; // Increased to fit Volume text
         const FUTURE_ZONE_WIDTH = 120;
         const CHART_WIDTH = width - RIGHT_MARGIN_PRICE;
         const TIME_WIDTH = CHART_WIDTH - FUTURE_ZONE_WIDTH;
@@ -295,17 +295,21 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
             [...significantAsks, ...significantBids].forEach(level => {
                 const y = getY(level.price);
                 // Only draw if within bounds
-                if (y > 10 && y < height - 10) {
+                if (y > 15 && y < height - 15) {
                     // Label Background
                     ctx.fillStyle = '#fef3c7'; // Amber 100 (Gold-ish)
-                    ctx.fillRect(CHART_WIDTH + 1, y - 8, RIGHT_MARGIN_PRICE - 2, 16);
-                    // Text
+                    ctx.fillRect(CHART_WIDTH + 1, y - 10, RIGHT_MARGIN_PRICE - 2, 20); // Taller box
+
+                    // Price Text
+                    ctx.font = 'bold 11px sans-serif';
                     ctx.fillStyle = '#b45309'; // Amber 700
-                    ctx.fillText(level.price.toFixed(2), CHART_WIDTH + 4, y);
-                    // Vol indicator
-                    ctx.fillStyle = '#d97706';
-                    ctx.font = '9px sans-serif';
-                    ctx.fillText(`Vol:${level.volume.toFixed(0)}`, CHART_WIDTH + 4, y + 8);
+                    ctx.fillText(level.price.toFixed(2), CHART_WIDTH + 4, y - 3);
+
+                    // Volume Text (Big & Clear)
+                    ctx.font = 'bold 10px sans-serif'; // Monospace for numbers
+                    ctx.fillStyle = '#d97706'; // Darker Amber
+                    ctx.fillText(`Vol: ${level.volume.toFixed(2)}`, CHART_WIDTH + 4, y + 7);
+
                     ctx.font = '11px sans-serif'; // Reset font
                 }
             });
