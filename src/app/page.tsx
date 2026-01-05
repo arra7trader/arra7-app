@@ -99,26 +99,7 @@ export default function Home() {
             </Link>
           </motion.div>
 
-          {/* Product Mockup */}
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="relative max-w-4xl mx-auto"
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-[var(--bg-secondary)] p-2">
-              <div className="rounded-xl overflow-hidden bg-white">
-                <img
-                  src="/images/hero-bg.png"
-                  alt="ARRA7 Dashboard"
-                  className="w-full h-auto"
-                  style={{ aspectRatio: '16/9', objectFit: 'cover' }}
-                />
-              </div>
-            </div>
-            {/* Glow effect behind */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20 blur-3xl -z-10 opacity-60" />
-          </motion.div>
+
         </motion.div>
       </section>
 
