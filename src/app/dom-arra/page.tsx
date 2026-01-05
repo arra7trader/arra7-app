@@ -343,9 +343,12 @@ export default function DomArraPage() {
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const [flowHistory, setFlowHistory] = useState<HeatmapDataPoint[]>([]);
     const [activeTab, setActiveTab] = useState<'orderbook' | 'heatmap'>('orderbook');
+    const [usePolling, setUsePolling] = useState(false); // Fallback mode for ISP blocks
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const currentSymbolRef = useRef<DOMSymbolId>(selectedSymbol);
+    const wsFailCountRef = useRef(0); // Track consecutive failures
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
     const symbolConfig = DOM_SYMBOLS[selectedSymbol];
@@ -441,14 +444,91 @@ export default function DomArraPage() {
         ws.onerror = (error) => {
             console.error('Binance WebSocket error:', error);
             setIsConnected(false);
+            wsFailCountRef.current++;
+
+            // After 2 consecutive failures, switch to polling fallback
+            if (wsFailCountRef.current >= 2) {
+                console.log('WebSocket blocked, switching to proxy polling...');
+                setUsePolling(true);
+            }
         };
 
         wsRef.current = ws;
     }, []);
 
+    // Proxy Polling Fallback (for ISP-blocked connections)
+    const fetchViaProxy = useCallback(async (symbol: DOMSymbolId) => {
+        try {
+            const binanceSymbol = DOM_SYMBOLS[symbol].binanceSymbol;
+            const response = await fetch(`/api/binance/depth?symbol=${binanceSymbol}&limit=20`);
+
+            if (!response.ok) throw new Error('Proxy fetch failed');
+
+            const data = await response.json();
+
+            // Parse data (same format as WebSocket)
+            const bids = data.bids.map(([price, volume]: [string, string]) => ({
+                price: parseFloat(price),
+                volume: parseFloat(volume),
+            }));
+            const asks = data.asks.map(([price, volume]: [string, string]) => ({
+                price: parseFloat(price),
+                volume: parseFloat(volume),
+            }));
+
+            const newOrderBook = calculateOrderBookMetrics(bids, asks, symbol, 'REAL');
+            setOrderBook(newOrderBook);
+            setLastUpdate(new Date());
+            setIsConnected(true);
+
+            const newPrediction = analyzeOrderFlow(newOrderBook);
+            setPrediction(newPrediction);
+
+            setFlowHistory(prev => {
+                const newPoint: HeatmapDataPoint = {
+                    timestamp: Date.now(),
+                    orderBook: newOrderBook
+                };
+                const updated = [...prev, newPoint];
+                return updated.slice(-MAX_FLOW_HISTORY);
+            });
+        } catch (error) {
+            console.error('Proxy fetch error:', error);
+            setIsConnected(false);
+        }
+    }, []);
+
+    // Effect: Start polling when in fallback mode
+    useEffect(() => {
+        if (!usePolling || !isAdmin) return;
+
+        // Close WebSocket if still open
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+
+        // Start polling every 500ms
+        console.log('Starting proxy polling for', selectedSymbol);
+        fetchViaProxy(selectedSymbol); // Initial fetch
+        pollingIntervalRef.current = setInterval(() => {
+            fetchViaProxy(selectedSymbol);
+        }, 500);
+
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+            }
+        };
+    }, [usePolling, selectedSymbol, isAdmin, fetchViaProxy]);
+
     // Effect: Connect on symbol change
     useEffect(() => {
-        if (!isAdmin) return;
+        if (!isAdmin || usePolling) return;
+
+        // Reset failure count on symbol change
+        wsFailCountRef.current = 0;
 
         // Clear data when switching symbols
         setOrderBook(null);
@@ -468,7 +548,7 @@ export default function DomArraPage() {
                 wsRef.current = null;
             }
         };
-    }, [selectedSymbol, isAdmin, connectBinanceStream]);
+    }, [selectedSymbol, isAdmin, usePolling, connectBinanceStream]);
 
     // Loading state
     if (status === 'loading') {
