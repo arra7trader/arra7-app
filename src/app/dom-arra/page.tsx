@@ -341,29 +341,43 @@ export default function DomArraPage() {
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const currentSymbolRef = useRef<DOMSymbolId>(selectedSymbol);
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
     const symbolConfig = DOM_SYMBOLS[selectedSymbol];
 
+    // Update ref when symbol changes
+    useEffect(() => {
+        currentSymbolRef.current = selectedSymbol;
+    }, [selectedSymbol]);
+
     // Unified Binance WebSocket connection for both symbols
-    const connectBinanceStream = useCallback(() => {
+    const connectBinanceStream = useCallback((symbol: DOMSymbolId) => {
+        // Clear any pending reconnect
+        if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+        }
+
         // Close existing connection
         if (wsRef.current) {
             wsRef.current.close();
+            wsRef.current = null;
         }
 
         // Get the binance symbol from config
-        const binanceSymbol = DOM_SYMBOLS[selectedSymbol].binanceSymbol;
+        const binanceSymbol = DOM_SYMBOLS[symbol].binanceSymbol;
         if (!binanceSymbol) {
-            console.error('No Binance symbol configured for', selectedSymbol);
+            console.error('No Binance symbol configured for', symbol);
             return;
         }
 
+        console.log(`Connecting to Binance for ${symbol} (${binanceSymbol})...`);
         const wsUrl = `wss://stream.binance.com:9443/ws/${binanceSymbol}@depth20@100ms`;
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            console.log(`Binance WebSocket connected for ${selectedSymbol} (${binanceSymbol})`);
+            console.log(`Binance WebSocket connected for ${symbol} (${binanceSymbol})`);
             setIsConnected(true);
         };
 
@@ -382,8 +396,8 @@ export default function DomArraPage() {
                     volume: parseFloat(volume),
                 }));
 
-                // Calculate order book metrics
-                const newOrderBook = calculateOrderBookMetrics(bids, asks, selectedSymbol, 'REAL');
+                // Calculate order book metrics - use the symbol this connection was created for
+                const newOrderBook = calculateOrderBookMetrics(bids, asks, symbol, 'REAL');
                 setOrderBook(newOrderBook);
                 setLastUpdate(new Date());
 
@@ -399,10 +413,15 @@ export default function DomArraPage() {
             console.log('Binance WebSocket disconnected');
             setIsConnected(false);
 
-            // Reconnect after 5 seconds
-            reconnectTimeoutRef.current = setTimeout(() => {
-                connectBinanceStream();
-            }, 5000);
+            // Only reconnect if this is still the current symbol
+            if (currentSymbolRef.current === symbol) {
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    // Double-check the symbol hasn't changed
+                    if (currentSymbolRef.current === symbol) {
+                        connectBinanceStream(symbol);
+                    }
+                }, 5000);
+            }
         };
 
         ws.onerror = (error) => {
@@ -411,21 +430,27 @@ export default function DomArraPage() {
         };
 
         wsRef.current = ws;
-    }, [selectedSymbol]);
+    }, []);
 
     // Effect: Connect on symbol change
     useEffect(() => {
         if (!isAdmin) return;
 
-        // Connect to Binance for both symbols
-        connectBinanceStream();
+        // Clear order book when switching symbols
+        setOrderBook(null);
+        setPrediction(null);
+
+        // Connect to Binance for the selected symbol
+        connectBinanceStream(selectedSymbol);
 
         return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);
+                reconnectTimeoutRef.current = null;
+            }
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
             }
         };
     }, [selectedSymbol, isAdmin, connectBinanceStream]);
