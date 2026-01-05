@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { LockIcon, ChartIcon, SparklesIcon, ScaleIcon, SignalIcon, CircleStackIcon } from '@/components/PremiumIcons';
 import { OrderBook, DOMPrediction, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
 import { analyzeOrderFlow, calculateOrderBookMetrics } from '@/lib/dom-analysis';
-import HeatmapBubbleChart, { FlowDataPoint } from '@/components/dom/HeatmapBubble';
+import BookmapChart, { HeatmapDataPoint } from '@/components/dom/HeatmapBubble';
 
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
-const MAX_FLOW_HISTORY = 60; // Keep last 60 data points
+const MAX_FLOW_HISTORY = 600; // Keep last 1 minute of data (100ms * 600)
 
 // Order Book Component
 function OrderBookVisualization({ orderBook, maxLevels = 15 }: { orderBook: OrderBook | null; maxLevels?: number }) {
@@ -341,7 +341,7 @@ export default function DomArraPage() {
     const [prediction, setPrediction] = useState<DOMPrediction | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-    const [flowHistory, setFlowHistory] = useState<FlowDataPoint[]>([]);
+    const [flowHistory, setFlowHistory] = useState<HeatmapDataPoint[]>([]);
     const [activeTab, setActiveTab] = useState<'orderbook' | 'heatmap'>('orderbook');
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -411,12 +411,9 @@ export default function DomArraPage() {
 
                 // Add to flow history
                 setFlowHistory(prev => {
-                    const newPoint: FlowDataPoint = {
+                    const newPoint: HeatmapDataPoint = {
                         timestamp: Date.now(),
-                        buyVolume: newOrderBook.totalBidVolume,
-                        sellVolume: newOrderBook.totalAskVolume,
-                        imbalance: newOrderBook.imbalance,
-                        price: newOrderBook.midPrice,
+                        orderBook: newOrderBook
                     };
                     const updated = [...prev, newPoint];
                     return updated.slice(-MAX_FLOW_HISTORY);
@@ -558,8 +555,8 @@ export default function DomArraPage() {
                     <button
                         onClick={() => setActiveTab('orderbook')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'orderbook'
-                                ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                            : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                     >
                         <CircleStackIcon size="sm" />
@@ -568,8 +565,8 @@ export default function DomArraPage() {
                     <button
                         onClick={() => setActiveTab('heatmap')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'heatmap'
-                                ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                                : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                            ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                            : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                     >
                         <ChartIcon size="sm" />
@@ -602,7 +599,7 @@ export default function DomArraPage() {
                                 <OrderBookVisualization orderBook={orderBook} />
                             </div>
                         ) : (
-                            <HeatmapBubbleChart orderBook={orderBook} flowHistory={flowHistory} />
+                            <BookmapChart currentOrderBook={orderBook} history={flowHistory} />
                         )}
                     </motion.div>
 
