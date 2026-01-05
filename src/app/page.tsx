@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRef } from 'react';
-import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon } from '@/components/PremiumIcons';
+import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon } from '@/components/PremiumIcons';
 
 export default function Home() {
   const t = useTranslations('hero');
@@ -187,9 +187,9 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Pilih Pair', desc: 'Pilih forex pair, crypto, atau saham Indonesia yang ingin dianalisa', icon: '🎯' },
-              { step: '02', title: 'Klik Analisa', desc: 'ARRA Quantum Strategist akan menganalisa dengan AI dalam hitungan detik', icon: '🚀' },
-              { step: '03', title: 'Trading!', desc: 'Dapatkan entry zone, SL, TP, dan investment thesis lengkap', icon: '💰' },
+              { step: '01', title: 'Pilih Pair', desc: 'Pilih forex pair, crypto, atau saham Indonesia yang ingin dianalisa', icon: <CrosshairIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-blue-500 to-cyan-500' },
+              { step: '02', title: 'Klik Analisa', desc: 'ARRA Quantum Strategist akan menganalisa dengan AI dalam hitungan detik', icon: <RocketIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-purple-500 to-pink-500' },
+              { step: '03', title: 'Trading!', desc: 'Dapatkan entry zone, SL, TP, dan investment thesis lengkap', icon: <CurrencyIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-green-500 to-emerald-500' },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -197,12 +197,14 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="relative bg-white rounded-2xl p-8 border border-[var(--border-light)] text-center group hover:border-[var(--accent-blue)]/30 transition-all"
+                className="relative bg-white rounded-2xl p-8 border border-[var(--border-light)] text-center group hover:border-[var(--accent-blue)]/30 transition-all hover:shadow-lg"
               >
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[var(--accent-blue)] text-white text-sm font-bold flex items-center justify-center">
                   {item.step}
                 </div>
-                <div className="text-4xl mb-4 mt-2">{item.icon}</div>
+                <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${item.color} bg-opacity-10 flex items-center justify-center mb-4 mt-2`}>
+                  {item.icon}
+                </div>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">{item.title}</h3>
                 <p className="text-[var(--text-secondary)]">{item.desc}</p>
               </motion.div>
