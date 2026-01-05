@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon } from '@/components/PremiumIcons';
+import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
@@ -274,7 +274,7 @@ export default function AnalisaMarketPage() {
                         {/* Category Tabs */}
                         <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                <span>📁</span> Kategori
+                                <DocumentIcon size="sm" /> Kategori
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {PAIR_CATEGORIES.map((category) => (
@@ -325,7 +325,7 @@ export default function AnalisaMarketPage() {
                         {/* Timeframe Selection */}
                         <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                <span>⏳</span> Timeframe
+                                <ClockIcon size="sm" /> Timeframe
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {TIMEFRAMES.map((tf) => (
@@ -473,7 +473,7 @@ export default function AnalisaMarketPage() {
                         {/* News */}
                         <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                <span>📰</span> Economic News
+                                <BellIcon size="sm" /> Economic News
                             </h3>
                             <div
                                 className="text-sm space-y-1 max-h-32 overflow-y-auto text-[var(--text-secondary)]"
@@ -546,7 +546,7 @@ export default function AnalisaMarketPage() {
                                         className="flex flex-col items-center justify-center h-full py-20"
                                     >
                                         <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-6">
-                                            <span className="text-4xl">📊</span>
+                                            <ChartIcon size="xl" className="text-[var(--accent-blue)]" />
                                         </div>
                                         <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">Ready to Analyze</h3>
                                         <p className="text-[var(--text-secondary)] text-center max-w-md">

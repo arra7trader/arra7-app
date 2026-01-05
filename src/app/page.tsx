@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRef } from 'react';
-import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, AndroidIcon } from '@/components/PremiumIcons';
+import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon } from '@/components/PremiumIcons';
 
 export default function Home() {
   const t = useTranslations('hero');
@@ -38,10 +38,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center section-padding pt-32">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center section-padding pt-32 overflow-hidden">
+        {/* Subtle Background Gradient Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 -right-32 w-80 h-80 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl" />
+        </div>
+
         <motion.div
           style={{ opacity: heroOpacity, scale: heroScale }}
-          className="container-apple text-center"
+          className="container-apple text-center relative z-10"
         >
           {/* Badge */}
           <motion.div
@@ -88,7 +95,13 @@ export default function Home() {
           >
             <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
               <button className="btn-primary">
-                {t('cta')}
+                Analisa Market
+                <ArrowRightIcon className="ml-2" size="sm" />
+              </button>
+            </Link>
+            <Link href={session ? '/analisa-saham' : '/login?callbackUrl=/analisa-saham'}>
+              <button className="btn-primary">
+                Analisa Saham
                 <ArrowRightIcon className="ml-2" size="sm" />
               </button>
             </Link>
@@ -111,12 +124,11 @@ export default function Home() {
             whileInView="animate"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center"
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center max-w-2xl mx-auto"
           >
             {[
-              { number: '1,000+', label: 'Active Traders' },
+              { number: '100+', label: 'Active Traders' },
               { number: '95%', label: 'Akurasi Sinyal' },
-              { number: '24/7', label: 'AI Support' },
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -131,95 +143,144 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Trust Badges */}
+      <section className="py-8 border-y border-[var(--border-light)]">
+        <div className="container-wide">
+          <div className="flex flex-wrap items-center justify-center gap-8 text-[var(--text-muted)] text-sm">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              <span>Gratis Selamanya untuk BASIC</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              <span>Tanpa Kartu Kredit</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              <span>Daftar dalam 30 Detik</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              <span>Support via Telegram</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
       <section className="section-padding">
         <div className="container-wide">
-          {/* Feature 1 */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-32"
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <div className="order-2 lg:order-1">
-              <h2 className="headline-lg mb-6">{tFeatures('indicators')}</h2>
-              <p className="body-lg mb-8">{tFeatures('indicatorsDesc')}</p>
-              <Link href="/products/indicators">
-                <button className="btn-secondary">
-                  Pelajari Lebih Lanjut
-                  <ArrowRightIcon className="ml-2" size="sm" />
-                </button>
-              </Link>
-            </div>
-            <div className="order-1 lg:order-2">
-              <div className="card-feature">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-6">
-                  <ChartIcon className="text-white" size="xl" />
-                </div>
-                <h3 className="headline-md mb-4">Premium Indicators</h3>
-                <p className="body-md">Indikator teknikal profesional untuk analisa chart yang akurat</p>
-              </div>
-            </div>
+            <span className="badge-apple mb-4 inline-flex">Mudah & Cepat</span>
+            <h2 className="headline-lg mb-4">
+              Cara <span className="gradient-text">Kerjanya</span>
+            </h2>
+            <p className="body-lg max-w-2xl mx-auto">
+              Hanya 3 langkah untuk mendapatkan analisa trading profesional
+            </p>
           </motion.div>
 
-          {/* Feature 2 */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-32"
-          >
-            <div>
-              <div className="card-feature">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
-                  <CpuChipIcon className="text-white" size="xl" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { step: '01', title: 'Pilih Pair', desc: 'Pilih forex pair, crypto, atau saham Indonesia yang ingin dianalisa', icon: '🎯' },
+              { step: '02', title: 'Klik Analisa', desc: 'ARRA Quantum Strategist akan menganalisa dengan AI dalam hitungan detik', icon: '🚀' },
+              { step: '03', title: 'Trading!', desc: 'Dapatkan entry zone, SL, TP, dan investment thesis lengkap', icon: '💰' },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative bg-white rounded-2xl p-8 border border-[var(--border-light)] text-center group hover:border-[var(--accent-blue)]/30 transition-all"
+              >
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[var(--accent-blue)] text-white text-sm font-bold flex items-center justify-center">
+                  {item.step}
                 </div>
-                <h3 className="headline-md mb-4">Expert Advisors</h3>
-                <p className="body-md">Robot trading otomatis yang bekerja 24/7 untuk Anda</p>
-              </div>
-            </div>
-            <div>
-              <h2 className="headline-lg mb-6">{tFeatures('ea')}</h2>
-              <p className="body-lg mb-8">{tFeatures('eaDesc')}</p>
-              <Link href="/products/expert-advisors">
-                <button className="btn-secondary">
-                  Pelajari Lebih Lanjut
-                  <ArrowRightIcon className="ml-2" size="sm" />
-                </button>
-              </Link>
-            </div>
+                <div className="text-4xl mb-4 mt-2">{item.icon}</div>
+                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">{item.title}</h3>
+                <p className="text-[var(--text-secondary)]">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - Updated for AI Analysis */}
+      <section className="section-padding bg-[var(--bg-secondary)]">
+        <div className="container-wide">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="badge-apple mb-4 inline-flex">Fitur Unggulan</span>
+            <h2 className="headline-lg mb-4">
+              Kenapa Trader Pilih <span className="gradient-text">ARRA7</span>?
+            </h2>
           </motion.div>
 
-          {/* Feature 3 */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center"
-          >
-            <div className="order-2 lg:order-1">
-              <h2 className="headline-lg mb-6">{tFeatures('analysis')}</h2>
-              <p className="body-lg mb-8">{tFeatures('analysisDesc')}</p>
-              <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
-                <button className="btn-primary">
-                  Coba Sekarang
-                  <ArrowRightIcon className="ml-2" size="sm" />
-                </button>
-              </Link>
-            </div>
-            <div className="order-1 lg:order-2">
-              <div className="card-feature">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-6">
-                  <SparklesIcon className="text-white" size="xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: <ChartIcon className="text-white" size="lg" />,
+                title: 'Analisa Forex Real-time',
+                desc: 'Gold, Major Pairs, Crypto, Indices - semuanya bisa dianalisa dengan AI',
+                color: 'from-blue-500 to-cyan-500'
+              },
+              {
+                icon: <SparklesIcon className="text-white" size="lg" />,
+                title: 'Analisa Saham Indonesia',
+                desc: 'Fundamental & teknikal emiten IDX dengan metodologi institusional',
+                color: 'from-green-500 to-emerald-500'
+              },
+              {
+                icon: <CpuChipIcon className="text-white" size="lg" />,
+                title: 'AI Quantum Strategist',
+                desc: 'Didukung LLM 70B parameter untuk analisa setingkat hedge fund',
+                color: 'from-purple-500 to-pink-500'
+              },
+              {
+                icon: <RocketIcon className="text-white" size="lg" />,
+                title: 'Entry & Exit Zone',
+                desc: 'Rekomendasi entry, stop loss, dan take profit yang jelas',
+                color: 'from-amber-500 to-orange-500'
+              },
+              {
+                icon: <TrophyIcon className="text-white" size="lg" />,
+                title: 'Investment Thesis',
+                desc: 'Alasan logis di balik setiap rekomendasi trading',
+                color: 'from-red-500 to-rose-500'
+              },
+              {
+                icon: <BellIcon className="text-white" size="lg" />,
+                title: 'Update Setiap Saat',
+                desc: 'Analisa selalu fresh dengan data market terbaru',
+                color: 'from-indigo-500 to-violet-500'
+              },
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white rounded-2xl p-6 border border-[var(--border-light)] hover:shadow-lg transition-all"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
+                  {feature.icon}
                 </div>
-                <h3 className="headline-md mb-4">AI Analysis</h3>
-                <p className="body-md">Analisa market real-time dengan kecerdasan buatan</p>
-              </div>
-            </div>
-          </motion.div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">{feature.title}</h3>
+                <p className="text-sm text-[var(--text-secondary)]">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -297,7 +358,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section with Urgency */}
       <section className="section-padding cta-section">
         <div className="container-apple text-center">
           <motion.div
@@ -306,22 +367,39 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
+            <span className="inline-block px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold mb-6">
+              🔥 Promo Tahun Baru — Diskon hingga 50%!
+            </span>
             <h2 className="headline-lg mb-6">
-              Siap Memulai Trading?
+              Siap Meningkatkan Trading Anda?
             </h2>
-            <p className="body-lg max-w-xl mx-auto mb-10">
-              Bergabung dengan ribuan trader Indonesia yang sudah merasakan manfaat analisa AI ARRA7.
+            <p className="body-lg max-w-xl mx-auto mb-6">
+              Bergabung dengan 100+ trader Indonesia yang sudah profit dengan analisa AI ARRA7.
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                Akun BASIC gratis selamanya
+              </div>
+              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                Tidak perlu kartu kredit
+              </div>
+              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                Cancel kapan saja
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href={session ? '/analisa-market' : '/login'}>
                 <button className="btn-primary text-lg px-10 py-4">
                   Mulai Sekarang — Gratis
                 </button>
               </Link>
-              <Link href="/download/android">
+              <Link href="/pricing">
                 <button className="btn-secondary text-lg">
-                  <AndroidIcon className="mr-2" size="md" />
-                  Download Android
+                  Lihat Paket PRO
+                  <ArrowRightIcon className="ml-2" size="sm" />
                 </button>
               </Link>
             </div>

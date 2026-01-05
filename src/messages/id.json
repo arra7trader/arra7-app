@@ -12,13 +12,13 @@
         "analisaSaham": "Analisa Saham"
     },
     "hero": {
-        "badge": "Alat Trading Presisi",
-        "headline": "Trading dengan",
-        "headlineHighlight": "Presisi",
-        "headlineEnd": "& Percaya Diri",
-        "subheadline": "Indikator Forex dan Expert Advisors kelas profesional yang dirancang untuk memberikan keunggulan di pasar. Didukung oleh algoritma canggih dan analisis real-time.",
+        "badge": "AI Trading Analysis",
+        "headline": "Analisa Trading dengan",
+        "headlineHighlight": "AI",
+        "headlineEnd": "& Akurasi Tinggi",
+        "subheadline": "Platform analisa Forex dan Saham Indonesia berbasis AI. Dapatkan sinyal trading, entry/exit zone, dan investment thesis dari ARRA Quantum Strategist.",
         "cta": "Analisa Market",
-        "ctaSecondary": "Lihat Produk"
+        "ctaSecondary": "Lihat Harga"
     },
     "features": {
         "indicators": "Indikator Premium",

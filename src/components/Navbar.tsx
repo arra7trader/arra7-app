@@ -24,8 +24,7 @@ export default function Navbar() {
 
     const navItems = [
         { label: t('home'), href: '/' },
-        { label: t('indicators'), href: '/products/indicators' },
-        { label: t('expertAdvisors'), href: '/products/expert-advisors' },
+        { label: 'DOM ARRA', href: '/dom-arra' },
         { label: t('pricing'), href: '/pricing' },
         { label: 'FAQ', href: '/faq' },
     ];
@@ -77,19 +76,6 @@ export default function Navbar() {
                             <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] animate-pulse" />
                         ) : session ? (
                             <div className="flex items-center gap-3">
-                                <Link
-                                    href="/analisa-market"
-                                    className="nav-link-apple font-medium"
-                                >
-                                    {t('analisaMarket')}
-                                </Link>
-                                <Link
-                                    href="/analisa-saham"
-                                    className="nav-link-apple font-medium"
-                                >
-                                    {t('analisaSaham')}
-                                </Link>
-
                                 {/* Quick Links */}
                                 <div className="flex items-center gap-1">
                                     <Link
@@ -233,20 +219,6 @@ export default function Navbar() {
 
                                 {session && (
                                     <div className="px-4 pt-4 border-t border-[var(--border-light)] space-y-1">
-                                        <Link
-                                            href="/analisa-market"
-                                            className="block py-3 text-[var(--accent-blue)] font-medium"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            {t('analisaMarket')}
-                                        </Link>
-                                        <Link
-                                            href="/analisa-saham"
-                                            className="block py-3 text-[var(--accent-blue)] font-medium"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            {t('analisaSaham')}
-                                        </Link>
                                         <Link
                                             href="/journal"
                                             className="block py-3 text-[var(--text-secondary)]"
