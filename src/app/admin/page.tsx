@@ -236,8 +236,8 @@ Tim ARRA7`;
     };
 
     return (
-        <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-            <div className="absolute inset-0 bg-grid opacity-20" />
+        <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+            <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle, #0071e3 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
             {/* Notification Modal */}
             <AnimatePresence>
@@ -253,7 +253,7 @@ Tim ARRA7`;
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="glass rounded-2xl p-6 max-w-lg w-full border border-green-500/30"
+                            className="bg-white rounded-2xl p-6 max-w-lg w-full border border-[var(--border-light)] shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="flex items-center gap-3 mb-4">
@@ -263,13 +263,13 @@ Tim ARRA7`;
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold text-white">Upgrade Berhasil!</h3>
-                                    <p className="text-sm text-[#94A3B8]">Copy pesan ini untuk dikirim ke customer</p>
+                                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Upgrade Berhasil!</h3>
+                                    <p className="text-sm text-[var(--text-secondary)]">Copy pesan ini untuk dikirim ke customer</p>
                                 </div>
                             </div>
 
-                            <div className="bg-[#12141A] rounded-xl p-4 mb-4 max-h-64 overflow-y-auto">
-                                <pre className="text-sm text-[#94A3B8] whitespace-pre-wrap font-sans">
+                            <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-4 max-h-64 overflow-y-auto">
+                                <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap font-sans">
                                     {getNotificationMessage()}
                                 </pre>
                             </div>
@@ -300,7 +300,7 @@ Tim ARRA7`;
                                 </button>
                                 <button
                                     onClick={() => setNotification(null)}
-                                    className="px-6 py-3 rounded-xl border border-[#374151] text-[#94A3B8] hover:text-white transition-colors"
+                                    className="px-6 py-3 rounded-xl border border-[var(--border-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                     Tutup
                                 </button>
@@ -314,8 +314,8 @@ Tim ARRA7`;
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                        <p className="text-[#94A3B8]">Kelola users dan membership</p>
+                        <h1 className="text-3xl font-bold text-[var(--text-primary)]">Admin Dashboard</h1>
+                        <p className="text-[var(--text-secondary)]">Kelola users dan membership</p>
                     </div>
                     <div className="flex gap-2 flex-wrap">
                         <Link href="/admin/crm">
@@ -374,7 +374,7 @@ Tim ARRA7`;
                             <LightbulbIcon className="inline" size="sm" /> Verify Signals
                         </button>
                         <Link href="/">
-                            <button className="px-4 py-2 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm">
+                            <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-primary)]">
                                 ← Kembali
                             </button>
                         </Link>
@@ -397,32 +397,32 @@ Tim ARRA7`;
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                        <p className="text-sm text-[#64748B]">Total Users</p>
-                        <p className="text-2xl font-bold">{stats.total}</p>
+                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <p className="text-sm text-[var(--text-muted)]">Total Users</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)]">{stats.total}</p>
                     </div>
-                    <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                        <p className="text-sm text-[#64748B]">Basic</p>
-                        <p className="text-2xl font-bold text-slate-400">{stats.basic}</p>
+                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <p className="text-sm text-[var(--text-muted)]">Basic</p>
+                        <p className="text-2xl font-bold text-slate-500">{stats.basic}</p>
                     </div>
-                    <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                        <p className="text-sm text-[#64748B]">Pro</p>
-                        <p className="text-2xl font-bold text-blue-400">{stats.pro}</p>
+                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <p className="text-sm text-[var(--text-muted)]">Pro</p>
+                        <p className="text-2xl font-bold text-blue-600">{stats.pro}</p>
                     </div>
-                    <div className="glass rounded-xl p-4 border border-[#1F2937]">
-                        <p className="text-sm text-[#64748B]">VVIP</p>
-                        <p className="text-2xl font-bold text-amber-400">{stats.vvip}</p>
+                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <p className="text-sm text-[var(--text-muted)]">VVIP</p>
+                        <p className="text-2xl font-bold text-amber-600">{stats.vvip}</p>
                     </div>
                 </div>
 
                 {/* Telegram Marketing Section */}
-                <div className="mb-8 glass rounded-2xl border border-[#1F2937] p-6">
+                <div className="mb-8 bg-white rounded-2xl border border-[var(--border-light)] p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">📢</span>
                             <div>
-                                <h3 className="text-lg font-semibold">Telegram Marketing</h3>
-                                <p className="text-sm text-[#64748B]">
+                                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Telegram Marketing</h3>
+                                <p className="text-sm text-[var(--text-secondary)]">
                                     2 templates • Auto-post setiap 5 jam
                                     {telegramConfigured ? (
                                         <span className="ml-2 text-green-400">● Connected</span>
@@ -452,10 +452,10 @@ Tim ARRA7`;
                     )}
 
                     {/* Start/Stop Auto-Post Toggle */}
-                    <div className="mb-6 p-4 bg-[#12141A] rounded-xl flex items-center justify-between">
+                    <div className="mb-6 p-4 bg-[var(--bg-secondary)] rounded-xl flex items-center justify-between">
                         <div>
-                            <p className="font-medium text-white">Auto-Posting Control</p>
-                            <p className="text-sm text-[#64748B]">Toggle auto-posting setiap 5 jam</p>
+                            <p className="font-medium text-[var(--text-primary)]">Auto-Posting Control</p>
+                            <p className="text-sm text-[var(--text-secondary)]">Toggle auto-posting setiap 5 jam</p>
                         </div>
                         <div className="flex gap-3">
                             <button
@@ -486,25 +486,25 @@ Tim ARRA7`;
                         <button
                             onClick={() => sendTelegramPromo('arra7')}
                             disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-2 p-4 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="flex flex-col items-center gap-2 p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             <span className="text-3xl">🔮</span>
                             <span className="font-medium">ARRA7</span>
-                            <span className="text-xs text-[#94A3B8]">AI Trading Analysis</span>
+                            <span className="text-xs text-purple-500">AI Trading Analysis</span>
                         </button>
 
                         <button
-                            onClick={() => sendTelegramPromo('cryptologic')}
+                            onClick={() => sendTelegramPromo('saham')}
                             disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-2 p-4 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="flex flex-col items-center gap-2 p-4 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl text-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                            <span className="text-3xl">🌟</span>
-                            <span className="font-medium">Cryptologic</span>
-                            <span className="text-xs text-[#94A3B8]">Financial Astrology</span>
+                            <span className="text-3xl">📈</span>
+                            <span className="font-medium">Saham Indonesia</span>
+                            <span className="text-xs text-green-500">Analisa IDX AI</span>
                         </button>
                     </div>
 
-                    <p className="mt-4 text-xs text-[#64748B] text-center">
+                    <p className="mt-4 text-xs text-[var(--text-muted)] text-center">
                         {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post bergantian setiap 5 jam'}
                     </p>
 
@@ -526,12 +526,12 @@ Tim ARRA7`;
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Cari email atau nama..."
-                            className="w-full pl-12 pr-4 py-3 bg-[#12141A] border border-[#1F2937] rounded-xl text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500 transition-colors"
+                            className="w-full pl-12 pr-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500 transition-colors"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -540,44 +540,44 @@ Tim ARRA7`;
                         )}
                     </div>
                     {searchQuery && (
-                        <p className="mt-2 text-sm text-[#64748B]">
+                        <p className="mt-2 text-sm text-[var(--text-muted)]">
                             Ditemukan {filteredUsers.length} dari {users.length} users
                         </p>
                     )}
                 </div>
 
                 {/* Users Table */}
-                <div className="glass rounded-2xl border border-[#1F2937] overflow-hidden">
+                <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-[#12141A]">
+                            <thead className="bg-[var(--bg-secondary)]">
                                 <tr>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">User</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Lokasi Login</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Tanggal Daftar</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Membership</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Expires</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Usage Today</th>
-                                    <th className="text-left p-4 text-sm text-[#64748B]">Actions</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">User</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Lokasi Login</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Tanggal Daftar</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Membership</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Expires</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Usage Today</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.map((user) => (
-                                    <tr key={user.id} className="border-t border-[#1F2937] hover:bg-[#1A1D24]">
+                                    <tr key={user.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
                                         <td className="p-4">
                                             <div>
-                                                <p className="font-medium">{user.name || 'No Name'}</p>
-                                                <p className="text-sm text-[#64748B]">{user.email}</p>
+                                                <p className="font-medium text-[var(--text-primary)]">{user.name || 'No Name'}</p>
+                                                <p className="text-sm text-[var(--text-secondary)]">{user.email}</p>
                                             </div>
                                         </td>
                                         <td className="p-4 text-sm">
                                             {user.lastLoginCity || user.lastLoginCountry ? (
                                                 <div className="flex flex-col">
-                                                    <span className="text-white">
+                                                    <span className="text-[var(--text-primary)]">
                                                         📍 {user.lastLoginCity}{user.lastLoginCity && user.lastLoginCountry ? ', ' : ''}{user.lastLoginCountry}
                                                     </span>
                                                     {user.lastLoginAt && (
-                                                        <span className="text-xs text-[#64748B]">
+                                                        <span className="text-xs text-[var(--text-muted)]">
                                                             {new Date(user.lastLoginAt).toLocaleDateString('id-ID', {
                                                                 day: 'numeric',
                                                                 month: 'short',
@@ -588,10 +588,10 @@ Tim ARRA7`;
                                                     )}
                                                 </div>
                                             ) : (
-                                                <span className="text-[#64748B]">-</span>
+                                                <span className="text-[var(--text-muted)]">-</span>
                                             )}
                                         </td>
-                                        <td className="p-4 text-sm text-[#94A3B8]">
+                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
                                             {user.createdAt
                                                 ? new Date(user.createdAt).toLocaleDateString('id-ID', {
                                                     day: 'numeric',
@@ -611,7 +611,7 @@ Tim ARRA7`;
                                                 {user.membership}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-sm text-[#94A3B8]">
+                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
                                             {user.membershipExpires
                                                 ? new Date(user.membershipExpires).toLocaleDateString('id-ID')
                                                 : '-'
@@ -619,8 +619,8 @@ Tim ARRA7`;
                                         </td>
                                         <td className="p-4 text-sm">
                                             <div className="flex flex-col">
-                                                <span className="text-white">{user.todayUsage}x total</span>
-                                                <span className="text-xs text-[#64748B]">
+                                                <span className="text-[var(--text-primary)]">{user.todayUsage}x total</span>
+                                                <span className="text-xs text-[var(--text-muted)]">
                                                     Forex: {user.forexUsage || 0} | Saham: {user.stockUsage || 0}
                                                 </span>
                                             </div>
@@ -663,7 +663,7 @@ Tim ARRA7`;
                     </div>
 
                     {users.length === 0 && (
-                        <div className="p-8 text-center text-[#64748B]">
+                        <div className="p-8 text-center text-[var(--text-muted)]">
                             Belum ada users terdaftar
                         </div>
                     )}

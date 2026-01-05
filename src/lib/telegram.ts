@@ -60,82 +60,79 @@ export async function sendTelegramMessage(message: string, parseMode: 'HTML' | '
 // ============================================
 
 export const MARKETING_TEMPLATES: Record<string, string> = {
-    // 1. ARRA7 - AI Trading Analysis
+    // 1. ARRA7 - AI Trading Analysis (Updated)
     arra7: `🔮 <b>ARRA7 - AI Trading Analysis</b>
 
-Trade with Precision & Confidence!
+Analisa Trading dengan AI & Akurasi Tinggi!
 
-🤖 <b>Analisa Trading dengan AI Level Institusional:</b>
-✅ Forex (XAUUSD, EUR/USD, GBP/USD, dll)
-✅ Crypto (BTC, ETH, SOL, dll)  
-✅ Saham Indonesia (BBCA, BBRI, TLKM, dll)
+🤖 <b>Platform Analisa AI Level Institusional:</b>
+✅ Forex (XAUUSD, EUR/USD, GBP/JPY, dll)
+✅ Crypto (BTC, ETH, SOL, XRP, dll)  
+✅ Saham Indonesia (BBCA, BBRI, TLKM, ANTM, dll)
 
-⚡ <b>Fitur Premium:</b>
-• SMC/ICT Analysis (Order Block, FVG, BOS)
-• Fibonacci Retracement & Extension
-• Entry, Stop Loss, Take Profit otomatis
-• Risk:Reward Ratio terhitung
+⚡ <b>Fitur Unggulan:</b>
+• AI Quantum Strategist - LLM 70B parameter
+• Entry Zone, Stop Loss, Take Profit otomatis
+• Investment Thesis lengkap
+• Analisa Fundamental & Teknikal
 
-📊 <b>5 Teknik Analisa Sekaligus:</b>
-1️⃣ Smart Money Concepts
-2️⃣ Price Action
-3️⃣ Candlestick Patterns
-4️⃣ Fibonacci Analysis
-5️⃣ Trend Analysis
+📊 <b>Cara Kerjanya (3 Langkah!):</b>
+1️⃣ Pilih Pair/Saham
+2️⃣ Klik Analisa
+3️⃣ Trading dengan percaya diri!
 
 💰 <b>Harga:</b>
 • GRATIS - 2x analisa/hari
-• PRO - <b>Rp 99.000/bulan</b> (25x analisa/hari)
+• PRO - <b>Rp 99.000/bulan</b> (25x/hari)
 • VVIP - <b>Rp 399.000/bulan</b> (UNLIMITED!)
 
-🔗 <b>Coba Sekarang:</b>
+🔥 <b>PROMO TAHUN BARU - Diskon hingga 50%!</b>
+
+🔗 <b>Coba Sekarang (GRATIS!):</b>
 👉 https://arra7-app.vercel.app
 
-📱 Download Android App:
-👉 https://arra7-app.vercel.app/download/android
+🚀 <b>Coming Soon: DOM ARRA</b>
+Depth of Market + AI Order Flow Analysis
 
-#ARRA7 #AITrading #Forex #Crypto #SahamIndonesia #TradingAI`,
+#ARRA7 #AITrading #Forex #Crypto #SahamIndonesia`,
 
-    // 2. CRYPTOLOGIC - Financial Astrology Crypto Analytics
-    cryptologic: `🌟 <b>CRYPTOLOGIC - Sinyal Surgawi, Profit Kosmis!</b>
+    // 2. ARRA7 Saham Indonesia Focus
+    saham: `📈 <b>ANALISA SAHAM INDONESIA dengan AI</b>
 
-Analitik Crypto Level Glassnode + Financial Astrology!
+Analisa setingkat Mandiri Sekuritas & Morgan Stanley!
 
-🔮 <b>Fitur Unik yang Tidak Ada di Tempat Lain:</b>
+🏢 <b>ARRA Institutional Research:</b>
+• Fundamental Scorecard (Valuasi, Profitabilitas, Growth)
+• Technical Outlook (Support, Resistance, Trend)
+• Investment Thesis lengkap
+• Key Risks identification
+• Overall Score 1-10
 
-⭐ <b>Data Ephemeris NASA JPL Real</b>
-→ Posisi planet akurat dari NASA, bukan simulasi!
+📊 <b>Contoh Emiten Populer:</b>
+BBCA | BBRI | BMRI | TLKM | ANTM
+ASII | UNVR | ICBP | GOTO | BREN
 
-📊 <b>15,000+ Kripto Tersedia</b>
-→ Analisis lengkap untuk semua koin di market
+💡 <b>Yang Kamu Dapat:</b>
+✅ Verdict: BUY / HOLD / SELL
+✅ Entry Zone & Target Price
+✅ Stop Loss recommendation
+✅ Risk/Reward Ratio
 
-🎯 <b>Cosmic Score™ Analysis</b>
-→ Algoritma eksklusif gabungan astrologi + data on-chain
+💰 <b>Harga Spesial:</b>
+• GRATIS - 2x analisa/hari
+• PRO - Rp 99.000/bulan (unlimited emiten!)
+• VVIP - Rp 399.000/bulan (ALL ACCESS)
 
-📋 <b>Watchlist Pribadi</b>
-→ Lacak koin favorit & dapat notifikasi peluang
+🔗 <b>Mulai Analisa Saham:</b>
+👉 https://arra7-app.vercel.app
 
-⏰ <b>Update Real-Time</b>
-→ Data harga langsung, jangan lewatkan momen!
-
-📈 <b>Analisis Historis</b>
-→ Lihat korelasi sinyal planet dengan harga masa lalu
-
-━━━━━━━━━━━━━━━━━━━━━
-
-💰 <b>HARGA SPESIAL:</b>
-Nilai <s>$1,999/bulan</s> — <b>Hemat 99%!</b>
-
-🆓 <b>Coba GRATIS sekarang!</b>
-👉 https://cryptologic-weld.vercel.app
-
-#Cryptologic #CryptoAnalysis #FinancialAstrology #Bitcoin #Trading #Crypto`,
+#SahamIndonesia #IDXAnalysis #IHSG #InvestasiSaham #ARRA7`,
 };
 
 // Template metadata for admin display
 export const TEMPLATE_METADATA: Record<string, { name: string; emoji: string; description: string }> = {
     arra7: { name: 'ARRA7', emoji: '🔮', description: 'AI Trading Analysis - Forex, Crypto, Saham' },
-    cryptologic: { name: 'Cryptologic', emoji: '🌟', description: 'Financial Astrology Crypto Analytics' },
+    saham: { name: 'Saham Indonesia', emoji: '📈', description: 'Analisa Saham IDX dengan AI Institusional' },
 };
 
 // Get all template keys for iteration
