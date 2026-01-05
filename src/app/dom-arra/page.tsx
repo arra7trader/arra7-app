@@ -377,7 +377,7 @@ export default function DomArraPage() {
         }
 
         console.log(`Connecting to Binance for ${symbol} (${binanceSymbol})...`);
-        const wsUrl = `wss://stream.binance.com:9443/ws/${binanceSymbol}@depth20@100ms`;
+        const wsUrl = `wss://stream.binance.com/ws/${binanceSymbol}@depth20@100ms`;
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {

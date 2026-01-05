@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo } from 'react';
-import { OrderBook, OrderBookLevel } from '@/types/dom';
+import { OrderBook, OrderBookLevel, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
 import { CircleStackIcon, ChartIcon } from '@/components/PremiumIcons';
 
 export interface HeatmapDataPoint {
@@ -98,6 +98,11 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
 
         const ctx = canvas.getContext('2d', { alpha: false }); // Optimize for no alpha channel if possible
         if (!ctx) return;
+
+        // Get Symbol Config
+        const symbolConfig = DOM_SYMBOLS[currentOrderBook.symbol as DOMSymbolId];
+        const priceDecimals = symbolConfig?.decimals || 2;
+        const volDecimals = symbolConfig?.volumeDecimals ?? 2;
 
         const { width, height } = dimensions;
 
@@ -306,12 +311,12 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
                     // Price Text
                     ctx.font = 'bold 11px sans-serif';
                     ctx.fillStyle = '#b45309'; // Amber 700
-                    ctx.fillText(level.price.toFixed(2), CHART_WIDTH + 4, y - 3);
+                    ctx.fillText(level.price.toFixed(priceDecimals), CHART_WIDTH + 4, y - 3);
 
                     // Volume Text (Big & Clear)
                     ctx.font = 'bold 10px sans-serif'; // Monospace for numbers
                     ctx.fillStyle = '#d97706'; // Darker Amber
-                    ctx.fillText(`Vol: ${level.volume.toFixed(2)}`, CHART_WIDTH + 4, y + 7);
+                    ctx.fillText(`Vol: ${level.volume.toFixed(volDecimals)}`, CHART_WIDTH + 4, y + 7);
 
                     ctx.font = '11px sans-serif'; // Reset font
                 }
@@ -333,7 +338,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
 
                 // Draw standard tick only if it doesn't overlap strongly with Current Price
                 if (Math.abs(y - currentY) > 15) {
-                    ctx.fillText(price.toFixed(2), CHART_WIDTH + 4, y);
+                    ctx.fillText(price.toFixed(priceDecimals), CHART_WIDTH + 4, y);
                 }
             }
 
@@ -351,7 +356,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
 
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 11px sans-serif';
-            ctx.fillText(currentOrderBook.midPrice.toFixed(2), CHART_WIDTH + 6, labelY);
+            ctx.fillText(currentOrderBook.midPrice.toFixed(priceDecimals), CHART_WIDTH + 6, labelY);
 
 
             // 6. TIME AXIS (Bottom)
