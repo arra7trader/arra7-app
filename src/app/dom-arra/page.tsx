@@ -207,7 +207,7 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
                 <div className="bg-[var(--bg-secondary)] rounded-xl p-3 text-center">
                     <p className="text-xs text-[var(--text-muted)]">Whale Activity</p>
                     <p className={`text-lg font-bold ${prediction.whaleActivity === 'HIGH' ? 'text-purple-600' :
-                            prediction.whaleActivity === 'MEDIUM' ? 'text-blue-600' : 'text-gray-500'
+                        prediction.whaleActivity === 'MEDIUM' ? 'text-blue-600' : 'text-gray-500'
                         }`}>
                         {prediction.whaleActivity === 'HIGH' ? '🐋 High' :
                             prediction.whaleActivity === 'MEDIUM' ? '🐬 Medium' : '🐟 Low'}
@@ -228,7 +228,7 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
                         {prediction.signals.slice(0, 5).map((signal, i) => (
                             <div key={i} className="text-xs p-2 bg-[var(--bg-secondary)] rounded-lg flex items-start gap-2">
                                 <span className={`px-1.5 py-0.5 rounded text-white text-[10px] ${signal.level === 'HIGH' ? 'bg-red-500' :
-                                        signal.level === 'MEDIUM' ? 'bg-amber-500' : 'bg-gray-400'
+                                    signal.level === 'MEDIUM' ? 'bg-amber-500' : 'bg-gray-400'
                                     }`}>
                                     {signal.level}
                                 </span>
@@ -345,19 +345,25 @@ export default function DomArraPage() {
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
     const symbolConfig = DOM_SYMBOLS[selectedSymbol];
 
-    // Connect to Binance WebSocket for BTCUSD
-    const connectBinance = useCallback(() => {
-        if (selectedSymbol !== 'BTCUSD') return;
-
+    // Unified Binance WebSocket connection for both symbols
+    const connectBinanceStream = useCallback(() => {
         // Close existing connection
         if (wsRef.current) {
             wsRef.current.close();
         }
 
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@depth20@100ms');
+        // Get the binance symbol from config
+        const binanceSymbol = DOM_SYMBOLS[selectedSymbol].binanceSymbol;
+        if (!binanceSymbol) {
+            console.error('No Binance symbol configured for', selectedSymbol);
+            return;
+        }
+
+        const wsUrl = `wss://stream.binance.com:9443/ws/${binanceSymbol}@depth20@100ms`;
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            console.log('Binance WebSocket connected');
+            console.log(`Binance WebSocket connected for ${selectedSymbol} (${binanceSymbol})`);
             setIsConnected(true);
         };
 
@@ -377,7 +383,7 @@ export default function DomArraPage() {
                 }));
 
                 // Calculate order book metrics
-                const newOrderBook = calculateOrderBookMetrics(bids, asks, 'BTCUSD', 'REAL');
+                const newOrderBook = calculateOrderBookMetrics(bids, asks, selectedSymbol, 'REAL');
                 setOrderBook(newOrderBook);
                 setLastUpdate(new Date());
 
@@ -395,9 +401,7 @@ export default function DomArraPage() {
 
             // Reconnect after 5 seconds
             reconnectTimeoutRef.current = setTimeout(() => {
-                if (selectedSymbol === 'BTCUSD') {
-                    connectBinance();
-                }
+                connectBinanceStream();
             }, 5000);
         };
 
@@ -409,54 +413,12 @@ export default function DomArraPage() {
         wsRef.current = ws;
     }, [selectedSymbol]);
 
-    // Generate simulated order book for XAUUSD
-    const generateXAUOrderBook = useCallback(() => {
-        if (selectedSymbol !== 'XAUUSD') return;
-
-        // Simulated gold price around current market (~2650)
-        const basePrice = 2650 + (Math.random() - 0.5) * 20;
-
-        const bids: { price: number; volume: number }[] = [];
-        const asks: { price: number; volume: number }[] = [];
-
-        // Generate 20 levels each side
-        for (let i = 0; i < 20; i++) {
-            const bidPrice = basePrice - (i * 0.1) - (Math.random() * 0.05);
-            const askPrice = basePrice + (i * 0.1) + (Math.random() * 0.05);
-
-            // Random volume with some larger orders
-            const bidVolume = Math.random() * 10 + (Math.random() > 0.9 ? 50 : 0);
-            const askVolume = Math.random() * 10 + (Math.random() > 0.9 ? 50 : 0);
-
-            bids.push({ price: bidPrice, volume: bidVolume });
-            asks.push({ price: askPrice, volume: askVolume });
-        }
-
-        const newOrderBook = calculateOrderBookMetrics(bids, asks, 'XAUUSD', 'SIMULATED');
-        setOrderBook(newOrderBook);
-        setLastUpdate(new Date());
-
-        const newPrediction = analyzeOrderFlow(newOrderBook);
-        setPrediction(newPrediction);
-    }, [selectedSymbol]);
-
     // Effect: Connect on symbol change
     useEffect(() => {
         if (!isAdmin) return;
 
-        if (selectedSymbol === 'BTCUSD') {
-            connectBinance();
-        } else {
-            // Close WebSocket when switching to XAUUSD
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
-            // Generate initial data
-            generateXAUOrderBook();
-            // Update every second for simulated data
-            const interval = setInterval(generateXAUOrderBook, 1000);
-            return () => clearInterval(interval);
-        }
+        // Connect to Binance for both symbols
+        connectBinanceStream();
 
         return () => {
             if (wsRef.current) {
@@ -466,7 +428,7 @@ export default function DomArraPage() {
                 clearTimeout(reconnectTimeoutRef.current);
             }
         };
-    }, [selectedSymbol, isAdmin, connectBinance, generateXAUOrderBook]);
+    }, [selectedSymbol, isAdmin, connectBinanceStream]);
 
     // Loading state
     if (status === 'loading') {
@@ -527,15 +489,15 @@ export default function DomArraPage() {
                             key={key}
                             onClick={() => setSelectedSymbol(key as DOMSymbolId)}
                             className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${selectedSymbol === key
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white border border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white border border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
                                 }`}
                         >
                             <span className="text-xl">{config.icon}</span>
                             <span>{config.id}</span>
                             <span className={`text-xs px-1.5 py-0.5 rounded ${config.dataSource === 'REAL'
-                                    ? 'bg-green-500/20 text-green-500'
-                                    : 'bg-amber-500/20 text-amber-500'
+                                ? 'bg-green-500/20 text-green-500'
+                                : 'bg-amber-500/20 text-amber-500'
                                 }`}>
                                 {config.dataSource}
                             </span>

@@ -82,13 +82,13 @@ export const DOM_SYMBOLS = {
     },
     XAUUSD: {
         id: 'XAUUSD',
-        name: 'Gold / USD',
-        binanceSymbol: null, // No direct Binance support
+        name: 'Gold / USD (PAXG)',
+        binanceSymbol: 'paxgusdt', // PAX Gold - tokenized gold on Binance
         tickSize: 0.01,
         decimals: 2,
-        volumeDecimals: 2,
+        volumeDecimals: 4,
         icon: '🥇',
-        dataSource: 'SIMULATED' as const,
+        dataSource: 'REAL' as const,
     },
 } as const;
 
