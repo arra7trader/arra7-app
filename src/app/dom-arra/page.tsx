@@ -1,14 +1,252 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { LockIcon } from '@/components/PremiumIcons';
+import { LockIcon, ChartIcon, BellIcon, RefreshIcon, SparklesIcon } from '@/components/PremiumIcons';
+import { OrderBook, DOMPrediction, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
+import { analyzeOrderFlow, calculateOrderBookMetrics } from '@/lib/dom-analysis';
 
-export default function DomArraPage() {
+const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+
+// Order Book Component
+function OrderBookVisualization({ orderBook, maxLevels = 15 }: { orderBook: OrderBook | null; maxLevels?: number }) {
+    if (!orderBook) {
+        return (
+            <div className="h-full flex items-center justify-center text-[var(--text-muted)]">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <p>Menghubungkan ke market...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const bids = orderBook.bids.slice(0, maxLevels);
+    const asks = orderBook.asks.slice(0, maxLevels).reverse(); // Reverse for display
+
+    return (
+        <div className="grid grid-cols-2 gap-4 h-full">
+            {/* Asks (Sell Orders) - Top */}
+            <div className="col-span-2">
+                <div className="text-xs text-[var(--text-muted)] mb-2 flex justify-between">
+                    <span>SELL ORDERS (Asks)</span>
+                    <span>Total: {orderBook.totalAskVolume.toFixed(4)}</span>
+                </div>
+                <div className="space-y-1">
+                    {asks.map((level, i) => (
+                        <div key={`ask-${i}`} className="flex items-center gap-2 text-sm">
+                            <div className="w-24 text-right font-mono text-red-600">
+                                {level.price.toFixed(2)}
+                            </div>
+                            <div className="flex-1 h-6 bg-[var(--bg-secondary)] rounded overflow-hidden relative">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${level.percentage}%` }}
+                                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-500/30 to-red-500/60"
+                                />
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-secondary)] font-mono">
+                                    {level.volume.toFixed(4)}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Spread Indicator */}
+            <div className="col-span-2 py-3 px-4 bg-[var(--bg-secondary)] rounded-xl flex items-center justify-between">
+                <div className="text-center">
+                    <span className="text-xs text-[var(--text-muted)]">Best Bid</span>
+                    <p className="text-lg font-bold text-green-600">{orderBook.bids[0]?.price.toFixed(2) || '-'}</p>
+                </div>
+                <div className="text-center px-4">
+                    <span className="text-xs text-[var(--text-muted)]">Spread</span>
+                    <p className="text-lg font-bold text-[var(--text-primary)]">{orderBook.spread.toFixed(2)}</p>
+                    <span className="text-xs text-[var(--text-muted)]">({orderBook.spreadPercent.toFixed(3)}%)</span>
+                </div>
+                <div className="text-center">
+                    <span className="text-xs text-[var(--text-muted)]">Best Ask</span>
+                    <p className="text-lg font-bold text-red-600">{orderBook.asks[0]?.price.toFixed(2) || '-'}</p>
+                </div>
+            </div>
+
+            {/* Bids (Buy Orders) - Bottom */}
+            <div className="col-span-2">
+                <div className="text-xs text-[var(--text-muted)] mb-2 flex justify-between">
+                    <span>BUY ORDERS (Bids)</span>
+                    <span>Total: {orderBook.totalBidVolume.toFixed(4)}</span>
+                </div>
+                <div className="space-y-1">
+                    {bids.map((level, i) => (
+                        <div key={`bid-${i}`} className="flex items-center gap-2 text-sm">
+                            <div className="w-24 text-right font-mono text-green-600">
+                                {level.price.toFixed(2)}
+                            </div>
+                            <div className="flex-1 h-6 bg-[var(--bg-secondary)] rounded overflow-hidden relative">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${level.percentage}%` }}
+                                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500/30 to-green-500/60"
+                                />
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-secondary)] font-mono">
+                                    {level.volume.toFixed(4)}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Imbalance Meter Component
+function ImbalanceMeter({ imbalance }: { imbalance: number }) {
+    // Clamp to -100 to +100
+    const value = Math.max(-100, Math.min(100, imbalance));
+    const percentage = (value + 100) / 2; // Convert to 0-100 scale
+
+    const getColor = () => {
+        if (value > 30) return 'text-green-600';
+        if (value < -30) return 'text-red-600';
+        return 'text-amber-600';
+    };
+
+    const getLabel = () => {
+        if (value > 50) return 'Strong Buyers';
+        if (value > 20) return 'Buyers Active';
+        if (value < -50) return 'Strong Sellers';
+        if (value < -20) return 'Sellers Active';
+        return 'Balanced';
+    };
+
+    return (
+        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                <span>⚖️</span> Order Imbalance
+            </h3>
+
+            {/* Gauge */}
+            <div className="relative h-4 bg-[var(--bg-secondary)] rounded-full overflow-hidden mb-4">
+                <div className="absolute inset-0 flex">
+                    <div className="w-1/2 bg-gradient-to-r from-red-500 to-red-300 opacity-30" />
+                    <div className="w-1/2 bg-gradient-to-r from-green-300 to-green-500 opacity-30" />
+                </div>
+                <motion.div
+                    className="absolute top-0 w-3 h-full bg-[var(--text-primary)] rounded-full shadow-lg"
+                    initial={{ left: '50%' }}
+                    animate={{ left: `calc(${percentage}% - 6px)` }}
+                    transition={{ type: 'spring', stiffness: 100 }}
+                />
+            </div>
+
+            <div className="flex justify-between text-xs text-[var(--text-muted)] mb-4">
+                <span>Sellers</span>
+                <span>Neutral</span>
+                <span>Buyers</span>
+            </div>
+
+            <div className="text-center">
+                <p className={`text-2xl font-bold ${getColor()}`}>
+                    {value > 0 ? '+' : ''}{value.toFixed(1)}%
+                </p>
+                <p className="text-sm text-[var(--text-secondary)]">{getLabel()}</p>
+            </div>
+        </div>
+    );
+}
+
+// Prediction Panel Component
+function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
+    if (!prediction) {
+        return (
+            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)] h-full flex items-center justify-center">
+                <p className="text-[var(--text-muted)]">Analyzing...</p>
+            </div>
+        );
+    }
+
+    const directionColors = {
+        BULLISH: 'from-green-500 to-emerald-500',
+        BEARISH: 'from-red-500 to-rose-500',
+        NEUTRAL: 'from-amber-500 to-orange-500',
+    };
+
+    const directionIcons = {
+        BULLISH: '📈',
+        BEARISH: '📉',
+        NEUTRAL: '➡️',
+    };
+
+    return (
+        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                <SparklesIcon size="sm" className="text-purple-500" />
+                AI Prediction
+            </h3>
+
+            {/* Direction Badge */}
+            <div className={`bg-gradient-to-r ${directionColors[prediction.direction]} rounded-xl p-4 text-white mb-4`}>
+                <div className="flex items-center gap-3">
+                    <span className="text-3xl">{directionIcons[prediction.direction]}</span>
+                    <div>
+                        <p className="text-lg font-bold">{prediction.direction}</p>
+                        <p className="text-sm opacity-90">Strength: {prediction.strength.toFixed(0)}%</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Confidence & Whale Activity */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-[var(--bg-secondary)] rounded-xl p-3 text-center">
+                    <p className="text-xs text-[var(--text-muted)]">Confidence</p>
+                    <p className="text-lg font-bold text-[var(--text-primary)]">{prediction.confidence}%</p>
+                </div>
+                <div className="bg-[var(--bg-secondary)] rounded-xl p-3 text-center">
+                    <p className="text-xs text-[var(--text-muted)]">Whale Activity</p>
+                    <p className={`text-lg font-bold ${prediction.whaleActivity === 'HIGH' ? 'text-purple-600' :
+                            prediction.whaleActivity === 'MEDIUM' ? 'text-blue-600' : 'text-gray-500'
+                        }`}>
+                        {prediction.whaleActivity === 'HIGH' ? '🐋 High' :
+                            prediction.whaleActivity === 'MEDIUM' ? '🐬 Medium' : '🐟 Low'}
+                    </p>
+                </div>
+            </div>
+
+            {/* Recommendation */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <p className="text-sm text-blue-800">{prediction.recommendation}</p>
+            </div>
+
+            {/* Signals */}
+            {prediction.signals.length > 0 && (
+                <div>
+                    <p className="text-xs text-[var(--text-muted)] mb-2">Detected Signals</p>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {prediction.signals.slice(0, 5).map((signal, i) => (
+                            <div key={i} className="text-xs p-2 bg-[var(--bg-secondary)] rounded-lg flex items-start gap-2">
+                                <span className={`px-1.5 py-0.5 rounded text-white text-[10px] ${signal.level === 'HIGH' ? 'bg-red-500' :
+                                        signal.level === 'MEDIUM' ? 'bg-amber-500' : 'bg-gray-400'
+                                    }`}>
+                                    {signal.level}
+                                </span>
+                                <span className="text-[var(--text-secondary)]">{signal.description}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Coming Soon Component (for non-admin users)
+function ComingSoonView() {
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
             <div className="container-apple section-padding">
-                {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -25,7 +263,6 @@ export default function DomArraPage() {
                     </p>
                 </motion.div>
 
-                {/* Locked Feature Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -33,7 +270,6 @@ export default function DomArraPage() {
                     className="max-w-2xl mx-auto"
                 >
                     <div className="relative bg-white rounded-3xl border border-[var(--border-light)] overflow-hidden">
-                        {/* Lock Overlay */}
                         <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
                             <motion.div
                                 initial={{ scale: 0 }}
@@ -60,7 +296,6 @@ export default function DomArraPage() {
                             </div>
                         </div>
 
-                        {/* Blurred Preview Content */}
                         <div className="p-8 opacity-30 blur-sm">
                             <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-4"></div>
                             <div className="grid grid-cols-3 gap-4">
@@ -72,39 +307,6 @@ export default function DomArraPage() {
                     </div>
                 </motion.div>
 
-                {/* Features Preview */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
-                >
-                    {[
-                        {
-                            icon: '📈',
-                            title: 'Real-time DOM',
-                            desc: 'Lihat kedalaman pasar secara real-time dengan visualisasi yang intuitif'
-                        },
-                        {
-                            icon: '🔥',
-                            title: 'Liquidity Zones',
-                            desc: 'Identifikasi area likuiditas tinggi untuk entry dan exit yang optimal'
-                        },
-                        {
-                            icon: '🤖',
-                            title: 'AI Analysis',
-                            desc: 'Analisis order flow dengan kecerdasan buatan untuk prediksi pergerakan'
-                        }
-                    ].map((feature, i) => (
-                        <div key={i} className="bg-white rounded-2xl p-6 border border-[var(--border-light)] text-center">
-                            <div className="text-3xl mb-4">{feature.icon}</div>
-                            <h3 className="font-semibold text-[var(--text-primary)] mb-2">{feature.title}</h3>
-                            <p className="text-sm text-[var(--text-secondary)]">{feature.desc}</p>
-                        </div>
-                    ))}
-                </motion.div>
-
-                {/* CTA */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -119,12 +321,290 @@ export default function DomArraPage() {
                     </Link>
                 </motion.div>
 
-                {/* Back Link */}
                 <div className="text-center mt-8">
                     <Link href="/" className="text-[var(--accent-blue)] hover:underline">
                         ← Kembali ke Beranda
                     </Link>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+// Main DOM ARRA Component
+export default function DomArraPage() {
+    const { data: session, status } = useSession();
+    const [selectedSymbol, setSelectedSymbol] = useState<DOMSymbolId>('BTCUSD');
+    const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
+    const [prediction, setPrediction] = useState<DOMPrediction | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
+    const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+    const wsRef = useRef<WebSocket | null>(null);
+    const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const symbolConfig = DOM_SYMBOLS[selectedSymbol];
+
+    // Connect to Binance WebSocket for BTCUSD
+    const connectBinance = useCallback(() => {
+        if (selectedSymbol !== 'BTCUSD') return;
+
+        // Close existing connection
+        if (wsRef.current) {
+            wsRef.current.close();
+        }
+
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@depth20@100ms');
+
+        ws.onopen = () => {
+            console.log('Binance WebSocket connected');
+            setIsConnected(true);
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                // Parse Binance depth data
+                const bids = data.bids.map(([price, volume]: [string, string]) => ({
+                    price: parseFloat(price),
+                    volume: parseFloat(volume),
+                }));
+
+                const asks = data.asks.map(([price, volume]: [string, string]) => ({
+                    price: parseFloat(price),
+                    volume: parseFloat(volume),
+                }));
+
+                // Calculate order book metrics
+                const newOrderBook = calculateOrderBookMetrics(bids, asks, 'BTCUSD', 'REAL');
+                setOrderBook(newOrderBook);
+                setLastUpdate(new Date());
+
+                // Analyze order flow
+                const newPrediction = analyzeOrderFlow(newOrderBook);
+                setPrediction(newPrediction);
+            } catch (error) {
+                console.error('Error parsing Binance data:', error);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('Binance WebSocket disconnected');
+            setIsConnected(false);
+
+            // Reconnect after 5 seconds
+            reconnectTimeoutRef.current = setTimeout(() => {
+                if (selectedSymbol === 'BTCUSD') {
+                    connectBinance();
+                }
+            }, 5000);
+        };
+
+        ws.onerror = (error) => {
+            console.error('Binance WebSocket error:', error);
+            setIsConnected(false);
+        };
+
+        wsRef.current = ws;
+    }, [selectedSymbol]);
+
+    // Generate simulated order book for XAUUSD
+    const generateXAUOrderBook = useCallback(() => {
+        if (selectedSymbol !== 'XAUUSD') return;
+
+        // Simulated gold price around current market (~2650)
+        const basePrice = 2650 + (Math.random() - 0.5) * 20;
+
+        const bids: { price: number; volume: number }[] = [];
+        const asks: { price: number; volume: number }[] = [];
+
+        // Generate 20 levels each side
+        for (let i = 0; i < 20; i++) {
+            const bidPrice = basePrice - (i * 0.1) - (Math.random() * 0.05);
+            const askPrice = basePrice + (i * 0.1) + (Math.random() * 0.05);
+
+            // Random volume with some larger orders
+            const bidVolume = Math.random() * 10 + (Math.random() > 0.9 ? 50 : 0);
+            const askVolume = Math.random() * 10 + (Math.random() > 0.9 ? 50 : 0);
+
+            bids.push({ price: bidPrice, volume: bidVolume });
+            asks.push({ price: askPrice, volume: askVolume });
+        }
+
+        const newOrderBook = calculateOrderBookMetrics(bids, asks, 'XAUUSD', 'SIMULATED');
+        setOrderBook(newOrderBook);
+        setLastUpdate(new Date());
+
+        const newPrediction = analyzeOrderFlow(newOrderBook);
+        setPrediction(newPrediction);
+    }, [selectedSymbol]);
+
+    // Effect: Connect on symbol change
+    useEffect(() => {
+        if (!isAdmin) return;
+
+        if (selectedSymbol === 'BTCUSD') {
+            connectBinance();
+        } else {
+            // Close WebSocket when switching to XAUUSD
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+            // Generate initial data
+            generateXAUOrderBook();
+            // Update every second for simulated data
+            const interval = setInterval(generateXAUOrderBook, 1000);
+            return () => clearInterval(interval);
+        }
+
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+            }
+        };
+    }, [selectedSymbol, isAdmin, connectBinance, generateXAUOrderBook]);
+
+    // Loading state
+    if (status === 'loading') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
+                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    // Show coming soon for non-admin users
+    if (!isAdmin) {
+        return <ComingSoonView />;
+    }
+
+    // Admin View - Full DOM
+    return (
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-20 pb-12">
+            <div className="max-w-7xl mx-auto px-4">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-between mb-6"
+                >
+                    <div>
+                        <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-3">
+                            <ChartIcon size="lg" className="text-blue-600" />
+                            DOM ARRA
+                            <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">DEV MODE</span>
+                        </h1>
+                        <p className="text-[var(--text-secondary)]">Real-time Depth of Market Analysis</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {/* Connection Status */}
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isConnected ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                            }`}>
+                            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+                            {isConnected ? 'Connected' : 'Disconnected'}
+                        </div>
+                        <Link href="/admin">
+                            <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-primary)]">
+                                ← Admin
+                            </button>
+                        </Link>
+                    </div>
+                </motion.div>
+
+                {/* Symbol Selector */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex gap-3 mb-6"
+                >
+                    {Object.entries(DOM_SYMBOLS).map(([key, config]) => (
+                        <button
+                            key={key}
+                            onClick={() => setSelectedSymbol(key as DOMSymbolId)}
+                            className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${selectedSymbol === key
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white border border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                                }`}
+                        >
+                            <span className="text-xl">{config.icon}</span>
+                            <span>{config.id}</span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${config.dataSource === 'REAL'
+                                    ? 'bg-green-500/20 text-green-500'
+                                    : 'bg-amber-500/20 text-amber-500'
+                                }`}>
+                                {config.dataSource}
+                            </span>
+                        </button>
+                    ))}
+                </motion.div>
+
+                {/* Main Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Order Book - Left 2 columns */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="lg:col-span-2 bg-white rounded-2xl p-6 border border-[var(--border-light)]"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                                📊 Order Book - {symbolConfig.name}
+                            </h2>
+                            {lastUpdate && (
+                                <span className="text-xs text-[var(--text-muted)]">
+                                    Last update: {lastUpdate.toLocaleTimeString()}
+                                </span>
+                            )}
+                        </div>
+                        <OrderBookVisualization orderBook={orderBook} />
+                    </motion.div>
+
+                    {/* Right Sidebar - Imbalance & Prediction */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="space-y-6"
+                    >
+                        <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
+                        <PredictionPanel prediction={prediction} />
+                    </motion.div>
+                </div>
+
+                {/* Stats Footer */}
+                {orderBook && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"
+                    >
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Mid Price</p>
+                            <p className="text-xl font-bold text-[var(--text-primary)]">${orderBook.midPrice.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Total Bid Volume</p>
+                            <p className="text-xl font-bold text-green-600">{orderBook.totalBidVolume.toFixed(4)}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Total Ask Volume</p>
+                            <p className="text-xl font-bold text-red-600">{orderBook.totalAskVolume.toFixed(4)}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Data Source</p>
+                            <p className={`text-xl font-bold ${orderBook.dataSource === 'REAL' ? 'text-green-600' : 'text-amber-600'}`}>
+                                {orderBook.dataSource === 'REAL' ? '🔴 Live' : '🟡 Simulated'}
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
             </div>
         </div>
     );
