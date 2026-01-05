@@ -36,8 +36,8 @@ export default function Navbar() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                    ? 'nav-apple shadow-sm'
-                    : 'bg-transparent'
+                ? 'nav-apple shadow-sm'
+                : 'bg-transparent'
                 }`}
         >
             <nav className="container-wide">
@@ -82,6 +82,12 @@ export default function Navbar() {
                                     className="nav-link-apple font-medium"
                                 >
                                     {t('analisaMarket')}
+                                </Link>
+                                <Link
+                                    href="/analisa-saham"
+                                    className="nav-link-apple font-medium"
+                                >
+                                    {t('analisaSaham')}
                                 </Link>
 
                                 {/* Quick Links */}
@@ -233,6 +239,13 @@ export default function Navbar() {
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
                                             {t('analisaMarket')}
+                                        </Link>
+                                        <Link
+                                            href="/analisa-saham"
+                                            className="block py-3 text-[var(--accent-blue)] font-medium"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            {t('analisaSaham')}
                                         </Link>
                                         <Link
                                             href="/journal"

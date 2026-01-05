@@ -7,7 +7,9 @@
     "expertAdvisors": "Expert Advisors",
     "login": "Login with Google",
     "logout": "Logout",
-    "analisaMarket": "Analisa Market"
+    "logout": "Logout",
+    "analisaMarket": "Analisa Market",
+    "analisaSaham": "Stock Analysis"
   },
   "hero": {
     "badge": "Precision Trading Tools",

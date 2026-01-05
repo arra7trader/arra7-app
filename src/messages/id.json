@@ -7,7 +7,9 @@
         "expertAdvisors": "Expert Advisors",
         "login": "Masuk dengan Google",
         "logout": "Keluar",
-        "analisaMarket": "Analisa Market"
+        "logout": "Keluar",
+        "analisaMarket": "Analisa Market",
+        "analisaSaham": "Analisa Saham"
     },
     "hero": {
         "badge": "Alat Trading Presisi",
