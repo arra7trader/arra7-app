@@ -80,7 +80,7 @@ export default function AdminReportPage() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
                 <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             </div>
         );
@@ -91,11 +91,7 @@ export default function AdminReportPage() {
     }
 
     return (
-        <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-            {/* Background */}
-            <div className="absolute inset-0 bg-grid opacity-20" />
-            <div className="bg-orb bg-orb-blue w-[600px] h-[600px] -top-40 left-1/4 opacity-20" />
-
+        <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
             <div className="relative max-w-4xl mx-auto">
                 {/* Header */}
                 <motion.div
@@ -104,14 +100,14 @@ export default function AdminReportPage() {
                     className="mb-8"
                 >
                     <div className="flex items-center gap-4 mb-4">
-                        <Link href="/admin" className="text-[#64748B] hover:text-white">
+                        <Link href="/admin" className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                             ← Back to Admin
                         </Link>
                     </div>
-                    <h1 className="text-3xl font-bold mb-2">
+                    <h1 className="text-3xl font-bold mb-2 text-[var(--text-primary)]">
                         📊 Daily Report <span className="gradient-text">Manager</span>
                     </h1>
-                    <p className="text-[#94A3B8]">
+                    <p className="text-[var(--text-secondary)]">
                         Generate dan kirim report harian ke channel Telegram
                     </p>
                 </motion.div>
@@ -122,8 +118,8 @@ export default function AdminReportPage() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`p-4 rounded-xl mb-6 ${message.type === 'success'
-                                ? 'bg-green-500/20 border border-green-500/30 text-green-400'
-                                : 'bg-red-500/20 border border-red-500/30 text-red-400'
+                            ? 'bg-green-50 border border-green-200 text-green-700'
+                            : 'bg-red-50 border border-red-200 text-red-700'
                             }`}
                     >
                         {message.text}
@@ -138,25 +134,25 @@ export default function AdminReportPage() {
                         transition={{ delay: 0.1 }}
                         className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"
                     >
-                        <div className="glass rounded-xl p-4 border border-[#1F2937] text-center">
-                            <p className="text-2xl font-bold">{summary.total}</p>
-                            <p className="text-xs text-[#64748B]">Total</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                            <p className="text-2xl font-bold text-[var(--text-primary)]">{summary.total}</p>
+                            <p className="text-xs text-[var(--text-muted)]">Total</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937] text-center">
-                            <p className="text-2xl font-bold text-green-400">{summary.tpHit}</p>
-                            <p className="text-xs text-[#64748B]">TP Hit</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                            <p className="text-2xl font-bold text-green-600">{summary.tpHit}</p>
+                            <p className="text-xs text-[var(--text-muted)]">TP Hit</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937] text-center">
-                            <p className="text-2xl font-bold text-red-400">{summary.slHit}</p>
-                            <p className="text-xs text-[#64748B]">SL Hit</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                            <p className="text-2xl font-bold text-red-600">{summary.slHit}</p>
+                            <p className="text-xs text-[var(--text-muted)]">SL Hit</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937] text-center">
-                            <p className="text-2xl font-bold text-yellow-400">{summary.pending}</p>
-                            <p className="text-xs text-[#64748B]">Pending</p>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                            <p className="text-2xl font-bold text-amber-600">{summary.pending}</p>
+                            <p className="text-xs text-[var(--text-muted)]">Pending</p>
                         </div>
-                        <div className="glass rounded-xl p-4 border border-[#1F2937] text-center">
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
                             <p className="text-2xl font-bold gradient-text">{summary.winRate}%</p>
-                            <p className="text-xs text-[#64748B]">Win Rate</p>
+                            <p className="text-xs text-[var(--text-muted)]">Win Rate</p>
                         </div>
                     </motion.div>
                 )}
@@ -166,9 +162,9 @@ export default function AdminReportPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="glass rounded-xl p-6 border border-[#1F2937] mb-6"
+                    className="bg-white rounded-xl p-6 border border-[var(--border-light)] mb-6"
                 >
-                    <h2 className="text-lg font-bold mb-4">Step 1: Generate Report</h2>
+                    <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 1: Generate Report</h2>
                     <button
                         onClick={generateReport}
                         disabled={loading}
@@ -183,14 +179,14 @@ export default function AdminReportPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="glass rounded-xl p-6 border border-[#1F2937] mb-6"
+                        className="bg-white rounded-xl p-6 border border-[var(--border-light)] mb-6"
                     >
-                        <h2 className="text-lg font-bold mb-4">Step 2: Preview & Edit</h2>
+                        <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 2: Preview & Edit</h2>
                         <textarea
                             value={report}
                             onChange={(e) => setReport(e.target.value)}
                             rows={15}
-                            className="w-full bg-[#12141A] border border-[#1F2937] rounded-xl p-4 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl p-4 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--text-primary)]"
                         />
                     </motion.div>
                 )}
@@ -200,12 +196,12 @@ export default function AdminReportPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="glass rounded-xl p-6 border border-[#1F2937]"
+                        className="bg-white rounded-xl p-6 border border-[var(--border-light)]"
                     >
-                        <h2 className="text-lg font-bold mb-4">Step 3: Send to Telegram</h2>
+                        <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 3: Send to Telegram</h2>
 
                         <div className="mb-4">
-                            <label className="block text-sm text-[#94A3B8] mb-2">
+                            <label className="block text-sm text-[var(--text-secondary)] mb-2">
                                 Channel ID (optional, uses default if empty)
                             </label>
                             <input
@@ -213,14 +209,14 @@ export default function AdminReportPage() {
                                 value={channelId}
                                 onChange={(e) => setChannelId(e.target.value)}
                                 placeholder="@arra7trader atau -100xxxxxxxxxx"
-                                className="w-full bg-[#12141A] border border-[#1F2937] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--text-primary)]"
                             />
                         </div>
 
                         <button
                             onClick={sendToTelegram}
                             disabled={sending}
-                            className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {sending ? (
                                 'Sending...'
@@ -234,7 +230,7 @@ export default function AdminReportPage() {
                             )}
                         </button>
 
-                        <p className="text-xs text-[#64748B] mt-4 text-center">
+                        <p className="text-xs text-[var(--text-muted)] mt-4 text-center">
                             ⚠️ Pastikan Bot Telegram sudah dikonfigurasi di environment variables
                         </p>
                     </motion.div>
@@ -245,10 +241,10 @@ export default function AdminReportPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="mt-8 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl"
+                    className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl"
                 >
-                    <h3 className="font-semibold text-blue-400 mb-2">ℹ️ Setup Telegram Bot</h3>
-                    <ol className="list-decimal list-inside text-sm text-[#94A3B8] space-y-1">
+                    <h3 className="font-semibold text-blue-700 mb-2">ℹ️ Setup Telegram Bot</h3>
+                    <ol className="list-decimal list-inside text-sm text-blue-600 space-y-1">
                         <li>Buat bot di @BotFather di Telegram</li>
                         <li>Dapatkan Bot Token</li>
                         <li>Add bot ke channel sebagai Admin</li>

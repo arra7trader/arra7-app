@@ -77,7 +77,7 @@ export default function RevenueDashboard() {
 
     if (status === 'loading' || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
                 <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
             </div>
         );
@@ -85,26 +85,26 @@ export default function RevenueDashboard() {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-red-500 mb-2">🚫 Access Denied</h1>
-                    <p className="text-gray-400">Admin only.</p>
+                    <p className="text-[var(--text-muted)]">Admin only.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#0B0C10] text-white pt-24 pb-12">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
             <div className="max-w-6xl mx-auto px-4">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold">💰 Revenue Dashboard</h1>
-                        <p className="text-gray-400 text-sm">Track pendapatan dari membership</p>
+                        <h1 className="text-2xl font-bold text-[var(--text-primary)]">💰 Revenue Dashboard</h1>
+                        <p className="text-[var(--text-secondary)] text-sm">Track pendapatan dari membership</p>
                     </div>
                     <Link href="/admin">
-                        <button className="px-4 py-2 bg-[#1F2937] hover:bg-[#374151] rounded-lg text-sm">
+                        <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-primary)]">
                             ← Kembali
                         </button>
                     </Link>
@@ -115,44 +115,44 @@ export default function RevenueDashboard() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-5 border border-green-500/30"
+                        className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-200"
                     >
-                        <p className="text-sm text-green-400 mb-1">Total Revenue</p>
-                        <p className="text-2xl font-bold text-white">{formatCurrency(data?.totalRevenue || 0)}</p>
-                        <p className="text-xs text-gray-400 mt-1">All time</p>
+                        <p className="text-sm text-green-700 mb-1">Total Revenue</p>
+                        <p className="text-2xl font-bold text-green-800">{formatCurrency(data?.totalRevenue || 0)}</p>
+                        <p className="text-xs text-green-600 mt-1">All time</p>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="bg-[#12141A] rounded-xl p-5 border border-[#1F2937]"
+                        className="bg-white rounded-xl p-5 border border-[var(--border-light)]"
                     >
-                        <p className="text-sm text-gray-400 mb-1">Bulan Ini</p>
-                        <p className="text-2xl font-bold text-blue-400">{formatCurrency(data?.monthlyRevenue || 0)}</p>
-                        <p className="text-xs text-gray-500 mt-1">{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+                        <p className="text-sm text-[var(--text-muted)] mb-1">Bulan Ini</p>
+                        <p className="text-2xl font-bold text-blue-600">{formatCurrency(data?.monthlyRevenue || 0)}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-[#12141A] rounded-xl p-5 border border-[#1F2937]"
+                        className="bg-white rounded-xl p-5 border border-[var(--border-light)]"
                     >
-                        <p className="text-sm text-gray-400 mb-1">Minggu Ini</p>
-                        <p className="text-2xl font-bold text-purple-400">{formatCurrency(data?.weeklyRevenue || 0)}</p>
-                        <p className="text-xs text-gray-500 mt-1">7 hari terakhir</p>
+                        <p className="text-sm text-[var(--text-muted)] mb-1">Minggu Ini</p>
+                        <p className="text-2xl font-bold text-purple-600">{formatCurrency(data?.weeklyRevenue || 0)}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">7 hari terakhir</p>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-[#12141A] rounded-xl p-5 border border-[#1F2937]"
+                        className="bg-white rounded-xl p-5 border border-[var(--border-light)]"
                     >
-                        <p className="text-sm text-gray-400 mb-1">Hari Ini</p>
-                        <p className="text-2xl font-bold text-amber-400">{formatCurrency(data?.todayRevenue || 0)}</p>
-                        <p className="text-xs text-gray-500 mt-1">{new Date().toLocaleDateString('id-ID')}</p>
+                        <p className="text-sm text-[var(--text-muted)] mb-1">Hari Ini</p>
+                        <p className="text-2xl font-bold text-amber-600">{formatCurrency(data?.todayRevenue || 0)}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{new Date().toLocaleDateString('id-ID')}</p>
                     </motion.div>
                 </div>
 
@@ -162,27 +162,27 @@ export default function RevenueDashboard() {
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-[#12141A] rounded-2xl p-6 border border-[#1F2937]"
+                        className="bg-white rounded-2xl p-6 border border-[var(--border-light)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
                                 <span className="text-2xl">💎</span>
                             </div>
                             <div>
-                                <h3 className="font-semibold">PRO Members</h3>
-                                <p className="text-sm text-gray-400">{formatCurrency(PRICES.PRO)} / bulan</p>
+                                <h3 className="font-semibold text-[var(--text-primary)]">PRO Members</h3>
+                                <p className="text-sm text-[var(--text-muted)]">{formatCurrency(PRICES.PRO)} / bulan</p>
                             </div>
                         </div>
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-4xl font-bold text-blue-400">{data?.proCount || 0}</p>
-                                <p className="text-sm text-gray-500">total members</p>
+                                <p className="text-4xl font-bold text-blue-600">{data?.proCount || 0}</p>
+                                <p className="text-sm text-[var(--text-muted)]">total members</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-lg font-semibold text-green-400">
+                                <p className="text-lg font-semibold text-green-600">
                                     {formatCurrency((data?.proCount || 0) * PRICES.PRO)}
                                 </p>
-                                <p className="text-xs text-gray-500">potential monthly</p>
+                                <p className="text-xs text-[var(--text-muted)]">potential monthly</p>
                             </div>
                         </div>
                     </motion.div>
@@ -191,39 +191,39 @@ export default function RevenueDashboard() {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-[#12141A] rounded-2xl p-6 border border-[#1F2937]"
+                        className="bg-white rounded-2xl p-6 border border-[var(--border-light)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
                                 <span className="text-2xl">👑</span>
                             </div>
                             <div>
-                                <h3 className="font-semibold">VVIP Members</h3>
-                                <p className="text-sm text-gray-400">{formatCurrency(PRICES.VVIP)} / bulan</p>
+                                <h3 className="font-semibold text-[var(--text-primary)]">VVIP Members</h3>
+                                <p className="text-sm text-[var(--text-muted)]">{formatCurrency(PRICES.VVIP)} / bulan</p>
                             </div>
                         </div>
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-4xl font-bold text-amber-400">{data?.vvipCount || 0}</p>
-                                <p className="text-sm text-gray-500">total members</p>
+                                <p className="text-4xl font-bold text-amber-600">{data?.vvipCount || 0}</p>
+                                <p className="text-sm text-[var(--text-muted)]">total members</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-lg font-semibold text-green-400">
+                                <p className="text-lg font-semibold text-green-600">
                                     {formatCurrency((data?.vvipCount || 0) * PRICES.VVIP)}
                                 </p>
-                                <p className="text-xs text-gray-500">potential monthly</p>
+                                <p className="text-xs text-[var(--text-muted)]">potential monthly</p>
                             </div>
                         </div>
                     </motion.div>
                 </div>
 
-                {/* Monthly Chart Placeholder */}
+                {/* Monthly Chart */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#12141A] rounded-2xl p-6 border border-[#1F2937] mb-8"
+                    className="bg-white rounded-2xl p-6 border border-[var(--border-light)] mb-8"
                 >
-                    <h3 className="font-semibold mb-4">📊 Revenue Trend</h3>
+                    <h3 className="font-semibold mb-4 text-[var(--text-primary)]">📊 Revenue Trend</h3>
                     <div className="h-48 flex items-end justify-between gap-2">
                         {(data?.monthlyStats || []).slice(-6).map((stat, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center">
@@ -233,12 +233,12 @@ export default function RevenueDashboard() {
                                         height: `${Math.max(20, (stat.revenue / Math.max(...(data?.monthlyStats || []).map(s => s.revenue), 1)) * 150)}px`
                                     }}
                                 />
-                                <p className="text-xs text-gray-500 mt-2">{stat.month}</p>
-                                <p className="text-xs text-gray-400">{formatCurrency(stat.revenue).replace('Rp', '')}</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-2">{stat.month}</p>
+                                <p className="text-xs text-[var(--text-secondary)]">{formatCurrency(stat.revenue).replace('Rp', '')}</p>
                             </div>
                         ))}
                         {(!data?.monthlyStats || data.monthlyStats.length === 0) && (
-                            <div className="w-full text-center text-gray-500 py-16">
+                            <div className="w-full text-center text-[var(--text-muted)] py-16">
                                 Belum ada data revenue
                             </div>
                         )}
@@ -249,47 +249,47 @@ export default function RevenueDashboard() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#12141A] rounded-2xl border border-[#1F2937] overflow-hidden"
+                    className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden"
                 >
-                    <div className="p-6 border-b border-[#1F2937]">
-                        <h3 className="font-semibold">📋 Recent Upgrades</h3>
+                    <div className="p-6 border-b border-[var(--border-light)]">
+                        <h3 className="font-semibold text-[var(--text-primary)]">📋 Recent Upgrades</h3>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-[#0B0C10]">
+                            <thead className="bg-[var(--bg-secondary)]">
                                 <tr>
-                                    <th className="text-left p-4 text-sm text-gray-400">User</th>
-                                    <th className="text-left p-4 text-sm text-gray-400">Membership</th>
-                                    <th className="text-left p-4 text-sm text-gray-400">Amount</th>
-                                    <th className="text-left p-4 text-sm text-gray-400">Date</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">User</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Membership</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Amount</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {(data?.recentTransactions || []).map((tx, i) => (
-                                    <tr key={tx.id || i} className="border-t border-[#1F2937]">
+                                    <tr key={tx.id || i} className="border-t border-[var(--border-light)]">
                                         <td className="p-4">
-                                            <p className="font-medium">{tx.userName || 'User'}</p>
-                                            <p className="text-xs text-gray-500">{tx.userEmail}</p>
+                                            <p className="font-medium text-[var(--text-primary)]">{tx.userName || 'User'}</p>
+                                            <p className="text-xs text-[var(--text-muted)]">{tx.userEmail}</p>
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${tx.membership === 'VVIP'
-                                                    ? 'bg-amber-500/20 text-amber-400'
-                                                    : 'bg-blue-500/20 text-blue-400'
+                                                ? 'bg-amber-100 text-amber-700'
+                                                : 'bg-blue-100 text-blue-700'
                                                 }`}>
                                                 {tx.membership}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-green-400 font-medium">
+                                        <td className="p-4 text-green-600 font-medium">
                                             {formatCurrency(tx.amount)}
                                         </td>
-                                        <td className="p-4 text-sm text-gray-400">
+                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
                                             {new Date(tx.date).toLocaleDateString('id-ID')}
                                         </td>
                                     </tr>
                                 ))}
                                 {(!data?.recentTransactions || data.recentTransactions.length === 0) && (
                                     <tr>
-                                        <td colSpan={4} className="p-8 text-center text-gray-500">
+                                        <td colSpan={4} className="p-8 text-center text-[var(--text-muted)]">
                                             Belum ada transaksi upgrade
                                         </td>
                                     </tr>
@@ -300,13 +300,13 @@ export default function RevenueDashboard() {
                 </motion.div>
 
                 {/* Quick Stats Footer */}
-                <div className="mt-8 p-4 bg-[#12141A] rounded-xl border border-[#1F2937] flex items-center justify-between flex-wrap gap-4">
-                    <div className="text-sm text-gray-400">
+                <div className="mt-8 p-4 bg-white rounded-xl border border-[var(--border-light)] flex items-center justify-between flex-wrap gap-4">
+                    <div className="text-sm text-[var(--text-muted)]">
                         💡 PRO: {formatCurrency(PRICES.PRO)} | VVIP: {formatCurrency(PRICES.VVIP)}
                     </div>
                     <button
                         onClick={fetchRevenueData}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                     >
                         🔄 Refresh Data
                     </button>

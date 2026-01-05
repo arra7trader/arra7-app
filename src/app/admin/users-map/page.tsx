@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 // Dynamic import for Leaflet (client-side only)
 const MapContainer = dynamic(
@@ -131,7 +132,7 @@ export default function UsersMapPage() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
                 <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
             </div>
         );
@@ -139,10 +140,10 @@ export default function UsersMapPage() {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-red-500 mb-2">🚫 Access Denied</h1>
-                    <p className="text-gray-400">This page is for administrators only.</p>
+                    <p className="text-[var(--text-muted)]">This page is for administrators only.</p>
                 </div>
             </div>
         );
@@ -155,23 +156,23 @@ export default function UsersMapPage() {
     }, {} as Record<string, number>);
 
     return (
-        <div className="min-h-screen bg-[#0B0C10] text-white">
+        <div className="min-h-screen bg-[var(--bg-primary)]">
             {/* Header */}
-            <div className="border-b border-[#1F2937] bg-[#12141A]">
+            <div className="border-b border-[var(--border-light)] bg-white">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
-                            <h1 className="text-xl font-bold">🗺️ User Locations Map</h1>
-                            <p className="text-gray-400 text-sm">
+                            <h1 className="text-xl font-bold text-[var(--text-primary)]">🗺️ User Locations Map</h1>
+                            <p className="text-[var(--text-secondary)] text-sm">
                                 Tracking {users.length} users
-                                {trackedUser && <span className="text-green-400 ml-2">• Following: {trackedUser.name}</span>}
+                                {trackedUser && <span className="text-green-600 ml-2">• Following: {trackedUser.name}</span>}
                             </p>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                             {/* User Tracker Toggle */}
                             <button
                                 onClick={() => setShowTracker(!showTracker)}
-                                className={`px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${showTracker ? 'bg-green-600 text-white' : 'bg-[#1F2937] text-gray-300 hover:bg-[#374151]'
+                                className={`px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${showTracker ? 'bg-green-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)]'
                                     }`}
                             >
                                 🎯 User Tracker
@@ -179,7 +180,7 @@ export default function UsersMapPage() {
                             {trackedUser && (
                                 <button
                                     onClick={stopTracking}
-                                    className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"
+                                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
                                 >
                                     ✕ Stop Tracking
                                 </button>
@@ -187,7 +188,7 @@ export default function UsersMapPage() {
                             <select
                                 value={period}
                                 onChange={(e) => setPeriod(e.target.value)}
-                                className="bg-[#1F2937] border border-[#374151] rounded-lg px-3 py-2 text-sm"
+                                className="bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)]"
                             >
                                 <option value="all">All Time</option>
                                 <option value="7d">Last 7 Days</option>
@@ -195,10 +196,15 @@ export default function UsersMapPage() {
                             </select>
                             <button
                                 onClick={fetchUserLocations}
-                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
+                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             >
                                 🔄
                             </button>
+                            <Link href="/admin">
+                                <button className="px-3 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-primary)]">
+                                    ← Admin
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -215,10 +221,10 @@ export default function UsersMapPage() {
                                 exit={{ width: 0, opacity: 0 }}
                                 className="shrink-0 overflow-hidden"
                             >
-                                <div className="bg-[#12141A] rounded-xl border border-[#1F2937] p-4 h-[600px] flex flex-col">
-                                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <div className="bg-white rounded-xl border border-[var(--border-light)] p-4 h-[600px] flex flex-col">
+                                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-[var(--text-primary)]">
                                         🎯 User Tracker
-                                        <span className="text-xs text-gray-500">({filteredUsers.length})</span>
+                                        <span className="text-xs text-[var(--text-muted)]">({filteredUsers.length})</span>
                                     </h3>
 
                                     {/* Search */}
@@ -228,9 +234,9 @@ export default function UsersMapPage() {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Search user..."
-                                            className="w-full bg-[#1F2937] border border-[#374151] rounded-lg px-3 py-2 text-sm pr-8"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-sm pr-8 text-[var(--text-primary)]"
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
                                     </div>
 
                                     {/* User List */}
@@ -242,8 +248,8 @@ export default function UsersMapPage() {
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 className={`w-full text-left p-3 rounded-lg border transition-all ${trackedUser?.id === user.id
-                                                        ? 'bg-green-500/20 border-green-500/50'
-                                                        : 'bg-[#1F2937] border-[#374151] hover:border-blue-500/50'
+                                                    ? 'bg-green-50 border-green-300'
+                                                    : 'bg-[var(--bg-secondary)] border-[var(--border-light)] hover:border-blue-300'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-2">
@@ -254,22 +260,22 @@ export default function UsersMapPage() {
                                                             className="w-8 h-8 rounded-full"
                                                         />
                                                     ) : (
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">
                                                             {user.name[0]}
                                                         </div>
                                                     )}
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-sm font-medium truncate flex items-center gap-1">
+                                                        <div className="text-sm font-medium truncate flex items-center gap-1 text-[var(--text-primary)]">
                                                             {user.name}
                                                             {trackedUser?.id === user.id && (
-                                                                <span className="text-green-400">📍</span>
+                                                                <span className="text-green-600">📍</span>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs text-gray-500 truncate">{user.city}, {user.country}</div>
+                                                        <div className="text-xs text-[var(--text-muted)] truncate">{user.city}, {user.country}</div>
                                                     </div>
-                                                    <span className={`text-xs px-1.5 py-0.5 rounded ${user.membership === 'VVIP' ? 'bg-amber-500/20 text-amber-400' :
-                                                            user.membership === 'PRO' ? 'bg-blue-500/20 text-blue-400' :
-                                                                'bg-gray-500/20 text-gray-400'
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded ${user.membership === 'VVIP' ? 'bg-amber-100 text-amber-700' :
+                                                        user.membership === 'PRO' ? 'bg-blue-100 text-blue-700' :
+                                                            'bg-gray-100 text-gray-600'
                                                         }`}>
                                                         {user.membership}
                                                     </span>
@@ -278,7 +284,7 @@ export default function UsersMapPage() {
                                         ))}
 
                                         {filteredUsers.length === 0 && (
-                                            <div className="text-center text-gray-500 py-8">
+                                            <div className="text-center text-[var(--text-muted)] py-8">
                                                 No users found
                                             </div>
                                         )}
@@ -286,14 +292,14 @@ export default function UsersMapPage() {
 
                                     {/* Tracked User Detail */}
                                     {trackedUser && (
-                                        <div className="mt-3 pt-3 border-t border-[#374151]">
-                                            <div className="text-xs text-gray-400 mb-1">Currently Tracking:</div>
-                                            <div className="text-sm font-medium text-green-400">{trackedUser.name}</div>
-                                            <div className="text-xs text-gray-500">{trackedUser.email}</div>
-                                            <div className="text-xs text-gray-500 mt-1">
+                                        <div className="mt-3 pt-3 border-t border-[var(--border-light)]">
+                                            <div className="text-xs text-[var(--text-muted)] mb-1">Currently Tracking:</div>
+                                            <div className="text-sm font-medium text-green-700">{trackedUser.name}</div>
+                                            <div className="text-xs text-[var(--text-muted)]">{trackedUser.email}</div>
+                                            <div className="text-xs text-[var(--text-muted)] mt-1">
                                                 📍 {trackedUser.city}, {trackedUser.country}
                                             </div>
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-[var(--text-muted)]">
                                                 🕐 {new Date(trackedUser.lastSeen).toLocaleString('id-ID')}
                                             </div>
                                         </div>
@@ -308,7 +314,7 @@ export default function UsersMapPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-[#12141A] rounded-xl overflow-hidden border border-[#1F2937]"
+                            className="bg-white rounded-xl overflow-hidden border border-[var(--border-light)]"
                             style={{ height: '600px' }}
                         >
                             {mapReady && !loading ? (
@@ -320,7 +326,7 @@ export default function UsersMapPage() {
                                 >
                                     <TileLayer
                                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                     />
                                     {users.map((user) => (
                                         <Marker
@@ -371,27 +377,27 @@ export default function UsersMapPage() {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="bg-[#12141A] rounded-xl p-4 border border-[#1F2937]"
+                            className="bg-white rounded-xl p-4 border border-[var(--border-light)]"
                         >
-                            <h3 className="text-gray-400 text-sm mb-2">Total Users</h3>
-                            <div className="text-3xl font-bold">{users.length}</div>
+                            <h3 className="text-[var(--text-muted)] text-sm mb-2">Total Users</h3>
+                            <div className="text-3xl font-bold text-[var(--text-primary)]">{users.length}</div>
                         </motion.div>
 
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-[#12141A] rounded-xl p-4 border border-[#1F2937]"
+                            className="bg-white rounded-xl p-4 border border-[var(--border-light)]"
                         >
-                            <h3 className="text-gray-400 text-sm mb-3">By Country</h3>
+                            <h3 className="text-[var(--text-muted)] text-sm mb-3">By Country</h3>
                             <div className="space-y-2">
                                 {Object.entries(countryStats)
                                     .sort((a, b) => b[1] - a[1])
                                     .slice(0, 8)
                                     .map(([country, count]) => (
                                         <div key={country} className="flex items-center justify-between">
-                                            <span className="text-sm truncate">{country}</span>
-                                            <span className="text-blue-400 font-medium">{count}</span>
+                                            <span className="text-sm truncate text-[var(--text-secondary)]">{country}</span>
+                                            <span className="text-blue-600 font-medium">{count}</span>
                                         </div>
                                     ))}
                             </div>
@@ -401,26 +407,26 @@ export default function UsersMapPage() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-[#12141A] rounded-xl p-4 border border-[#1F2937]"
+                            className="bg-white rounded-xl p-4 border border-[var(--border-light)]"
                         >
-                            <h3 className="text-gray-400 text-sm mb-3">Recent Activity</h3>
+                            <h3 className="text-[var(--text-muted)] text-sm mb-3">Recent Activity</h3>
                             <div className="space-y-2">
                                 {users.slice(0, 4).map((user) => (
                                     <button
                                         key={user.id}
                                         onClick={() => { setShowTracker(true); trackUser(user); }}
-                                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-[#1F2937] transition-colors"
+                                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
                                     >
                                         {user.image ? (
                                             <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full" />
                                         ) : (
-                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px]">
+                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px] text-white">
                                                 {user.name[0]}
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0 text-left">
-                                            <div className="text-xs font-medium truncate">{user.name}</div>
-                                            <div className="text-[10px] text-gray-500">{user.city}</div>
+                                            <div className="text-xs font-medium truncate text-[var(--text-primary)]">{user.name}</div>
+                                            <div className="text-[10px] text-[var(--text-muted)]">{user.city}</div>
                                         </div>
                                     </button>
                                 ))}
@@ -431,7 +437,7 @@ export default function UsersMapPage() {
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
                         {error}
                     </div>
                 )}
