@@ -3,14 +3,26 @@
 
 import { OrderBook, DOMPrediction, DOMSignal } from '@/types/dom';
 
+// --- Smoothing Configuration ---
+const SMOOTHING_FACTOR = 0.3; // EMA alpha (lower = smoother, 0.1-0.4 recommended)
+let prevSmoothedImbalance: number | null = null;
+let prevSmoothedStrength: number | null = null;
+let prevSmoothedConfidence: number | null = null;
+
+// Simple EMA function
+function ema(current: number, previous: number | null, alpha: number): number {
+    if (previous === null) return current;
+    return alpha * current + (1 - alpha) * previous;
+}
+
 /**
- * Analyze order book and generate prediction
+ * Analyze order book and generate prediction (with smoothing)
  */
 export function analyzeOrderFlow(orderBook: OrderBook): DOMPrediction {
     const signals: DOMSignal[] = [];
 
     // 1. Calculate imbalance
-    const imbalance = orderBook.imbalance;
+    const rawImbalance = orderBook.imbalance;
 
     // 2. Detect whale orders (large volumes at single price level)
     const whaleSignals = detectWhaleOrders(orderBook);
@@ -24,21 +36,31 @@ export function analyzeOrderFlow(orderBook: OrderBook): DOMPrediction {
     const srSignals = detectSupportResistance(orderBook);
     signals.push(...srSignals);
 
-    // 5. Calculate direction and strength
-    const { direction, strength, confidence } = calculatePrediction(orderBook, signals);
+    // 5. Calculate direction and strength (raw)
+    const { direction, strength: rawStrength, confidence: rawConfidence } = calculatePrediction(orderBook, signals);
 
-    // 6. Determine whale activity level
+    // 6. Apply EMA Smoothing to prevent jerky movements
+    const smoothedImbalance = ema(rawImbalance, prevSmoothedImbalance, SMOOTHING_FACTOR);
+    const smoothedStrength = ema(rawStrength, prevSmoothedStrength, SMOOTHING_FACTOR);
+    const smoothedConfidence = ema(rawConfidence, prevSmoothedConfidence, SMOOTHING_FACTOR);
+
+    // Store for next iteration
+    prevSmoothedImbalance = smoothedImbalance;
+    prevSmoothedStrength = smoothedStrength;
+    prevSmoothedConfidence = smoothedConfidence;
+
+    // 7. Determine whale activity level
     const whaleActivity = whaleSignals.length >= 3 ? 'HIGH' : whaleSignals.length >= 1 ? 'MEDIUM' : 'LOW';
 
-    // 7. Generate recommendation
-    const recommendation = generateRecommendation(direction, strength, imbalance, whaleActivity);
+    // 8. Generate recommendation
+    const recommendation = generateRecommendation(direction, Math.round(smoothedStrength), smoothedImbalance, whaleActivity);
 
     return {
         direction,
-        strength,
-        confidence,
+        strength: Math.round(smoothedStrength),
+        confidence: Math.round(smoothedConfidence),
         signals,
-        imbalance,
+        imbalance: Math.round(smoothedImbalance * 10) / 10, // Round to 1 decimal
         whaleActivity,
         recommendation,
         timestamp: Date.now(),
