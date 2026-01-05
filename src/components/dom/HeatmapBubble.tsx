@@ -102,15 +102,18 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
         const { width, height } = dimensions;
 
         // Layout Constants
+        // Layout Constants
         const RIGHT_MARGIN_PRICE = 90; // Increased to fit Volume text
+        const BOTTOM_MARGIN_TIME = 20; // Space for Time Axis
         const FUTURE_ZONE_WIDTH = 120;
         const CHART_WIDTH = width - RIGHT_MARGIN_PRICE;
+        const CHART_HEIGHT = height - BOTTOM_MARGIN_TIME;
         const TIME_WIDTH = CHART_WIDTH - FUTURE_ZONE_WIDTH;
 
         // 1. Calculate Scale
         const priceRange = getPriceRange(history, currentOrderBook);
         const priceSpan = priceRange.max - priceRange.min;
-        const getY = (price: number) => height - ((price - priceRange.min) / priceSpan) * height;
+        const getY = (price: number) => CHART_HEIGHT - ((price - priceRange.min) / priceSpan) * CHART_HEIGHT;
 
         // 2. Heatmap Logic (Offscreen/Scrolling Optim)
         if (!offscreenRef.current) {
@@ -164,7 +167,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
                     const intensity = Math.min(1, ask.volume / maxVol);
                     ctx.fillStyle = `rgba(239, 68, 68, ${intensity})`; // Simple alpha
                     // Height = 1-2px for density
-                    const h = Math.max(1, height / 100);
+                    const h = Math.max(1, CHART_HEIGHT / 100);
                     ctx.fillRect(x, Math.floor(y), Math.ceil(pointWidth), Math.ceil(h));
                 });
 
@@ -173,7 +176,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
                     const y = getY(bid.price);
                     const intensity = Math.min(1, bid.volume / maxVol);
                     ctx.fillStyle = `rgba(34, 197, 94, ${intensity})`;
-                    const h = Math.max(1, height / 100);
+                    const h = Math.max(1, CHART_HEIGHT / 100);
                     ctx.fillRect(x, Math.floor(y), Math.ceil(pointWidth), Math.ceil(h));
                 });
             });
@@ -202,7 +205,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
             ctx.strokeStyle = '#e2e8f0';
             ctx.setLineDash([4, 4]);
             ctx.moveTo(futureStartX, 0);
-            ctx.lineTo(futureStartX, height);
+            ctx.lineTo(futureStartX, CHART_HEIGHT);
             ctx.stroke();
             ctx.setLineDash([]);
 
@@ -222,7 +225,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
                 gradient.addColorStop(1, `rgba(239, 68, 68, 0)`);
 
                 ctx.fillStyle = gradient;
-                const h = Math.max(2, height / 80);
+                const h = Math.max(2, CHART_HEIGHT / 80);
                 ctx.fillRect(futureStartX, y - h / 2, FUTURE_ZONE_WIDTH, h);
 
                 // Highlight Whale Levels
@@ -250,7 +253,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
                 gradient.addColorStop(1, `rgba(34, 197, 94, 0)`);
 
                 ctx.fillStyle = gradient;
-                const h = Math.max(2, height / 80);
+                const h = Math.max(2, CHART_HEIGHT / 80);
                 ctx.fillRect(futureStartX, y - h / 2, FUTURE_ZONE_WIDTH, h);
 
                 if (isWhale) {
@@ -274,13 +277,13 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
 
             // 5. PRICE AXIS
             ctx.fillStyle = '#f8fafc';
-            ctx.fillRect(CHART_WIDTH, 0, RIGHT_MARGIN_PRICE, height);
+            ctx.fillRect(CHART_WIDTH, 0, RIGHT_MARGIN_PRICE, CHART_HEIGHT);
 
             // Draw Axis Border
             ctx.beginPath();
             ctx.strokeStyle = '#e2e8f0';
             ctx.moveTo(CHART_WIDTH, 0);
-            ctx.lineTo(CHART_WIDTH, height);
+            ctx.lineTo(CHART_WIDTH, CHART_HEIGHT);
             ctx.stroke();
 
             ctx.font = '11px sans-serif';
@@ -295,7 +298,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
             [...significantAsks, ...significantBids].forEach(level => {
                 const y = getY(level.price);
                 // Only draw if within bounds
-                if (y > 15 && y < height - 15) {
+                if (y > 15 && y < CHART_HEIGHT - 15) {
                     // Label Background
                     ctx.fillStyle = '#fef3c7'; // Amber 100 (Gold-ish)
                     ctx.fillRect(CHART_WIDTH + 1, y - 10, RIGHT_MARGIN_PRICE - 2, 20); // Taller box
@@ -335,7 +338,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
             }
 
             // Current Price Label (Always on top)
-            const labelY = Math.max(12, Math.min(height - 12, currentY));
+            const labelY = Math.max(12, Math.min(CHART_HEIGHT - 12, currentY));
             ctx.fillStyle = '#2563eb'; // Blue bg
             ctx.fillRect(CHART_WIDTH, labelY - 10, RIGHT_MARGIN_PRICE, 20);
 
@@ -349,6 +352,57 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 11px sans-serif';
             ctx.fillText(currentOrderBook.midPrice.toFixed(2), CHART_WIDTH + 6, labelY);
+
+
+            // 6. TIME AXIS (Bottom)
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, CHART_HEIGHT, width, BOTTOM_MARGIN_TIME);
+
+            // Draw Axis Border
+            ctx.beginPath();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.moveTo(0, CHART_HEIGHT);
+            ctx.lineTo(width, CHART_HEIGHT);
+            ctx.stroke();
+
+            // Draw Time Ticks
+            ctx.fillStyle = '#64748b';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Draw ~6 ticks across visible history
+            const TICK_INTERVAL_POINTS = Math.floor(visibleHistory.length / 5);
+
+            if (TICK_INTERVAL_POINTS > 0) {
+                visibleHistory.forEach((point, i) => {
+                    if (i % TICK_INTERVAL_POINTS === 0) {
+                        const x = i * pointWidth;
+                        const date = new Date(point.timestamp);
+                        // Format: HH:mm:ss
+                        const timeStr = date.toLocaleTimeString('id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+
+                        // Tick mark
+                        ctx.beginPath();
+                        ctx.moveTo(x, CHART_HEIGHT);
+                        ctx.lineTo(x, CHART_HEIGHT + 4);
+                        ctx.stroke();
+
+                        // Label
+                        ctx.fillText(timeStr, x, CHART_HEIGHT + 6);
+                    }
+                });
+            }
+
+            // Draw 'Now' Label at the end of history
+            const nowX = visibleHistory.length * pointWidth;
+            ctx.fillText("Now", nowX, CHART_HEIGHT + 6);
         }
 
     }, [dimensions, currentOrderBook, history]);
