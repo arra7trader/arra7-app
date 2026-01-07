@@ -29,7 +29,8 @@ export async function POST(request: Request) {
                 direction_code: prediction.direction_code,
                 confidence: prediction.confidence,
                 model_used: prediction.model_used,
-                initial_price: prediction.initial_price
+                initial_price: prediction.initial_price,
+                signals: prediction.signals // Pass signals for self-learning
             };
 
             const id = await saveMLPrediction(record);

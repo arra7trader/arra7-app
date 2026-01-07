@@ -228,6 +228,15 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // AI CONFIG: Store dynamic weights for self-optimizing models
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS ml_config (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
@@ -244,6 +253,8 @@ export async function initDatabase(): Promise<boolean> {
       // Promo feature columns
       { column: 'promo_expires', sql: `ALTER TABLE users ADD COLUMN promo_expires DATETIME` },
       { column: 'promo_type', sql: `ALTER TABLE users ADD COLUMN promo_type TEXT` },
+      // AI Self-Learning: Signals breakdown
+      { column: 'signals', sql: `ALTER TABLE ml_predictions ADD COLUMN signals TEXT` },
     ];
 
     for (const migration of migrations) {
@@ -441,6 +452,7 @@ export interface MLPredictionRecord {
   confidence: number;
   model_used: string;
   initial_price: number;
+  signals?: any[]; // Detailed signal breakdown
 }
 
 // Save a new ML prediction for later verification
@@ -449,9 +461,11 @@ export async function saveMLPrediction(prediction: MLPredictionRecord): Promise<
   if (!turso) return null;
 
   try {
+    const signalsJson = prediction.signals ? JSON.stringify(prediction.signals) : null;
+
     const result = await turso.execute({
-      sql: `INSERT INTO ml_predictions (symbol, horizon, direction, direction_code, confidence, model_used, initial_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO ml_predictions (symbol, horizon, direction, direction_code, confidence, model_used, initial_price, signals)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         prediction.symbol,
         prediction.horizon,
@@ -459,13 +473,50 @@ export async function saveMLPrediction(prediction: MLPredictionRecord): Promise<
         prediction.direction_code,
         prediction.confidence,
         prediction.model_used,
-        prediction.initial_price
+        prediction.initial_price,
+        signalsJson
       ]
     });
     return Number(result.lastInsertRowid);
   } catch (error) {
     console.error('Save ML prediction error:', error);
     return null;
+  }
+}
+
+// Get ML Config (Weights)
+export async function getMLConfig(key: string): Promise<any | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+  try {
+    const result = await turso.execute({
+      sql: 'SELECT value FROM ml_config WHERE key = ?',
+      args: [key]
+    });
+    if (result.rows.length > 0) {
+      return JSON.parse(result.rows[0].value as string);
+    }
+    return null;
+  } catch (e) {
+    console.error('Get ML config error:', e);
+    return null;
+  }
+}
+
+// Upsert ML Config
+export async function upsertMLConfig(key: string, value: any): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+  try {
+    await turso.execute({
+      sql: `INSERT INTO ml_config (key, value) VALUES (?, ?) 
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`,
+      args: [key, JSON.stringify(value)]
+    });
+    return true;
+  } catch (e) {
+    console.error('Upsert ML config error:', e);
+    return false;
   }
 }
 
