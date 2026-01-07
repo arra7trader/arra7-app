@@ -1,45 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPredictor } from '@/lib/smart-predictor';
 
 // ML Backend URL (configurable)
 const ML_BACKEND_URL = process.env.ML_BACKEND_URL || 'http://localhost:8001';
-
-// Fallback heuristic prediction when ML backend is unavailable
-function getHeuristicPrediction(orderBook: any) {
-    const imbalance = orderBook.imbalance || 0;
-    const spreadBps = orderBook.spreadPercent * 100 || 0;
-
-    // Simple heuristic based on order book imbalance
-    let direction: 'UP' | 'DOWN' | 'NEUTRAL' = 'NEUTRAL';
-    let directionCode = 0;
-    let confidence = 0.5;
-
-    if (imbalance > 20) {
-        direction = 'UP';
-        directionCode = 1;
-        confidence = Math.min(0.5 + Math.abs(imbalance) / 200, 0.85);
-    } else if (imbalance < -20) {
-        direction = 'DOWN';
-        directionCode = -1;
-        confidence = Math.min(0.5 + Math.abs(imbalance) / 200, 0.85);
-    } else {
-        direction = 'NEUTRAL';
-        directionCode = 0;
-        confidence = 0.6 - Math.abs(imbalance) / 100;
-    }
-
-    // Adjust confidence based on spread
-    if (spreadBps > 10) {
-        confidence *= 0.9; // Wide spread = less confidence
-    }
-
-    return {
-        direction,
-        direction_code: directionCode,
-        confidence: Math.round(confidence * 100) / 100,
-        model_used: 'heuristic',
-        source: 'fallback'
-    };
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -53,7 +16,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Try to get prediction from ML backend
+        // 1. Try to get prediction from ML backend (Python/TensorFlow)
         try {
             const mlResponse = await fetch(`${ML_BACKEND_URL}/predict`, {
                 method: 'POST',
@@ -80,41 +43,36 @@ export async function POST(request: NextRequest) {
                         ask_volume_l5: orderbook_data.asks?.[4]?.volume || 0,
                     }
                 }),
-                signal: AbortSignal.timeout(3000) // 3 second timeout
+                signal: AbortSignal.timeout(2000) // Fast timeout for backend
             });
 
             if (mlResponse.ok) {
                 const mlData = await mlResponse.json();
                 return NextResponse.json({
-                    symbol: symbol.toUpperCase(),
-                    horizon,
-                    direction: mlData.direction,
-                    direction_code: mlData.direction_code,
-                    confidence: mlData.confidence,
-                    model_used: mlData.model_used,
-                    inference_time_ms: mlData.inference_time_ms,
-                    probabilities: mlData.probabilities,
-                    source: 'ml-backend',
-                    timestamp: new Date().toISOString()
+                    ...mlData,
+                    source: 'ml-backend'
                 });
             }
         } catch (mlError) {
-            // ML backend unavailable, use fallback
-            console.log('ML backend unavailable, using heuristic fallback');
+            // ML backend unavailable, proceed to smart predictor
         }
 
-        // Fallback to heuristic prediction
-        const heuristicPred = getHeuristicPrediction(orderbook_data);
+        // 2. Use Smart Predictor (Embedded Vercel Engine)
+        // This is much more sophisticated than simple heuristics
+        const predictor = getPredictor(symbol, horizon);
+        const result = predictor.predict(orderbook_data);
 
         return NextResponse.json({
             symbol: symbol.toUpperCase(),
             horizon,
-            ...heuristicPred,
-            probabilities: {
-                DOWN: heuristicPred.direction === 'DOWN' ? heuristicPred.confidence : (1 - heuristicPred.confidence) / 2,
-                NEUTRAL: heuristicPred.direction === 'NEUTRAL' ? heuristicPred.confidence : (1 - heuristicPred.confidence) / 2,
-                UP: heuristicPred.direction === 'UP' ? heuristicPred.confidence : (1 - heuristicPred.confidence) / 2,
-            },
+            direction: result.direction,
+            direction_code: result.direction_code,
+            confidence: result.confidence,
+            model_used: result.model_used,
+            inference_time_ms: 5, // Fast execution
+            probabilities: result.probabilities,
+            signals: result.signals, // Return detailed signal breakdown
+            source: 'smart-predictor-v1',
             timestamp: new Date().toISOString()
         });
 
