@@ -160,9 +160,9 @@ export default function AdminMLDashboard() {
                         {data.modelRanking.map((model, idx) => (
                             <div key={model.model} className="flex items-center gap-3">
                                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                        idx === 1 ? 'bg-gray-300 text-gray-700' :
-                                            idx === 2 ? 'bg-amber-600 text-white' :
-                                                'bg-gray-100 text-gray-500'
+                                    idx === 1 ? 'bg-gray-300 text-gray-700' :
+                                        idx === 2 ? 'bg-amber-600 text-white' :
+                                            'bg-gray-100 text-gray-500'
                                     }`}>
                                     {idx + 1}
                                 </span>
@@ -223,7 +223,7 @@ export default function AdminMLDashboard() {
 
                     {/* Confidence Analysis */}
                     <div className="mt-6 pt-4 border-t border-gray-100">
-                        <h4 className="text-sm font-medium text-gray-600 mb-3">High Confidence Analysis (>70%)</h4>
+                        <h4 className="text-sm font-medium text-gray-600 mb-3">High Confidence Analysis (&gt;70%)</h4>
                         <div className="grid grid-cols-2 gap-3 text-center">
                             <div className="bg-blue-50 rounded-lg p-3">
                                 <p className="text-2xl font-bold text-blue-600">
@@ -261,8 +261,8 @@ export default function AdminMLDashboard() {
                                 <tr key={pred.id} className="border-b border-gray-50 hover:bg-gray-50">
                                     <td className="py-2">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${pred.direction === 'UP' ? 'bg-green-100 text-green-700' :
-                                                pred.direction === 'DOWN' ? 'bg-red-100 text-red-700' :
-                                                    'bg-amber-100 text-amber-700'
+                                            pred.direction === 'DOWN' ? 'bg-red-100 text-red-700' :
+                                                'bg-amber-100 text-amber-700'
                                             }`}>
                                             {pred.direction}
                                         </span>
