@@ -9,7 +9,6 @@ import { OrderBook, DOMPrediction, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom'
 import { analyzeOrderFlow, calculateOrderBookMetrics } from '@/lib/dom-analysis';
 import BookmapChart, { HeatmapDataPoint } from '@/components/dom/HeatmapBubble';
 import TradeSetupPanel from '@/components/dom/TradeSetupPanel';
-import MLPredictionPanel from '@/components/dom/MLPredictionPanel';
 import { MLPrediction, fetchMLPrediction } from '@/types/ml-prediction';
 import MLSettingsPanel, { PredictionSettings, DEFAULT_SETTINGS } from '@/components/dom/MLSettingsPanel';
 import AccuracyTrackerPanel, { useAccuracyTracker } from '@/components/dom/AccuracyTracker';
@@ -744,7 +743,6 @@ export default function DomArraPage() {
                     >
                         <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
                         <TradeSetupPanel prediction={mlPrediction} isLoading={mlLoading} />
-                        <MLPredictionPanel prediction={mlPrediction} isLoading={mlLoading} />
                         <MLSettingsPanel settings={mlSettings} onSettingsChange={setMLSettings} />
                         <AccuracyTrackerPanel stats={accuracyStats} pendingCount={pendingCount} />
                         <PredictionPanel prediction={prediction} />

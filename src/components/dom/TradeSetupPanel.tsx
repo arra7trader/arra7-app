@@ -56,12 +56,34 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
     }, [prediction, stableSetup]);
 
     if (!stableSetup || stableSetup.action === 'WAIT') {
+        const currentConfidence = prediction?.confidence ? Math.round(prediction.confidence * 100) : 0;
+        const currentDirection = prediction?.direction || 'NEUTRAL';
+        const dirColor = currentDirection === 'UP' ? 'text-green-600' : currentDirection === 'DOWN' ? 'text-red-600' : 'text-gray-500';
+
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 h-[120px] flex items-center justify-center">
-                <div className="text-center text-gray-400">
-                    <div className="text-2xl mb-2">⏳</div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="text-center text-gray-500 mb-3">
+                    <div className="text-2xl mb-1">⏳</div>
                     <p className="text-sm font-medium">Scanning for High Confidence Setup...</p>
-                    <p className="text-xs mt-1">AI ensures &gt; 75% accuracy</p>
+                    <p className="text-xs text-gray-400">Signal appears when AI &gt; 75%</p>
+                </div>
+
+                {/* Live ML Confidence Display */}
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-medium text-gray-500">Current AI Reading</span>
+                        <span className={`text-xs font-bold ${dirColor}`}>{currentDirection}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div
+                                className={`h-full transition-all duration-500 ${currentConfidence >= 75 ? 'bg-green-500' : currentConfidence >= 50 ? 'bg-yellow-500' : 'bg-red-400'}`}
+                                style={{ width: `${currentConfidence}%` }}
+                            />
+                        </div>
+                        <span className="text-sm font-bold text-gray-700">{currentConfidence}%</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1 text-center">Threshold: 75% for signal</p>
                 </div>
             </div>
         );

@@ -165,7 +165,7 @@ export default function BookmapChart({ currentOrderBook, history, height = 500, 
         // --- Layout ---
         const RIGHT_MARGIN = 80;
         const BOTTOM_MARGIN = 24;
-        const FUTURE_WIDTH = 180;
+        const FUTURE_WIDTH = 280;
         const CHART_WIDTH = width - RIGHT_MARGIN;
         const HISTORY_WIDTH = CHART_WIDTH - FUTURE_WIDTH;
         const CHART_HEIGHT = height - BOTTOM_MARGIN;
