@@ -15,6 +15,14 @@ export interface MLPrediction {
     };
     source: 'ml-backend' | 'fallback';
     timestamp: string;
+    tradeSetup?: {
+        action: 'LONG' | 'SHORT' | 'WAIT';
+        entry: number;
+        tp: number;
+        sl: number;
+        riskRewardRatio: number;
+        quality: 'HIGH' | 'MEDIUM' | 'LOW';
+    };
 }
 
 export interface PredictionHistoryItem {

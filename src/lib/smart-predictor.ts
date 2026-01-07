@@ -15,26 +15,118 @@ interface OrderBookData {
     asks: Array<{ price: number; volume: number }>;
 }
 
-interface PriceHistory {
-    price: number;
-    timestamp: number;
-    volume?: number;
+// ... imports
+
+export interface TradeSetup {
+    action: 'LONG' | 'SHORT' | 'WAIT';
+    entry: number;
+    tp: number;
+    sl: number;
+    riskRewardRatio: number;
+    quality: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
-interface PredictionResult {
+export interface PredictionResult {
     direction: 'UP' | 'DOWN' | 'NEUTRAL';
     direction_code: -1 | 0 | 1;
     confidence: number;
     signals: SignalResult[];
     model_used: string;
     probabilities: { UP: number; DOWN: number; NEUTRAL: number };
+    tradeSetup?: TradeSetup; // New field
 }
 
-interface SignalResult {
-    name: string;
-    value: number;
-    signal: -1 | 0 | 1;
-    weight: number;
+// ... existing code ...
+
+/**
+ * Generate prediction from order book data
+ */
+predict(orderBook: OrderBookData): PredictionResult {
+    // ... (existing signal calculation) ...
+    // ... (calculate aggregateScore and confidence) ...
+
+    // ... (calculate probabilities) ...
+
+    const result: PredictionResult = {
+        direction,
+        direction_code,
+        confidence: Math.round(confidence * 100) / 100,
+        signals,
+        model_used: 'smart-predictor-v1-adaptive',
+        probabilities
+    };
+
+    // Generate Trade Setup if confidence is sufficient
+    if (confidence > 0.60 && direction !== 'NEUTRAL') {
+        result.tradeSetup = this.calculateTradeSetup(orderBook.midPrice, direction, confidence, history);
+    } else {
+        result.tradeSetup = {
+            action: 'WAIT',
+            entry: 0,
+            tp: 0,
+            sl: 0,
+            riskRewardRatio: 0,
+            quality: 'LOW'
+        };
+    }
+
+    return result;
+}
+
+    private calculateTradeSetup(
+    currentPrice: number,
+    direction: 'UP' | 'DOWN',
+    confidence: number,
+    history: PriceHistory[]
+): TradeSetup {
+    // 1. Calculate Volatility (Simple ATR approximation)
+    // If history is short, use a fallback percentage (0.2%)
+    let volatility = currentPrice * 0.002;
+
+    if (history.length > 10) {
+        const high = Math.max(...history.slice(-10).map(h => h.price));
+        const low = Math.min(...history.slice(-10).map(h => h.price));
+        const range = high - low;
+        if (range > 0) volatility = range;
+    }
+
+    // 2. Define Risk Parameters based on Volatility
+    // Conservative: Stop at 1x Vol, Target at 1.5x - 2x Vol
+    const riskUnit = volatility * 1.2;
+    const rewardUnit = volatility * 2.0;
+
+    let tp, sl;
+
+    if (direction === 'UP') {
+        tp = currentPrice + rewardUnit;
+        sl = currentPrice - riskUnit;
+    } else {
+        tp = currentPrice - rewardUnit;
+        sl = currentPrice + riskUnit;
+    }
+
+    const rr = rewardUnit / riskUnit;
+
+    // 3. Determine Quality
+    let quality: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
+    if (confidence > 0.75) quality = 'HIGH';
+    else if (confidence > 0.65) quality = 'MEDIUM';
+
+    return {
+        action: direction === 'UP' ? 'LONG' : 'SHORT',
+        entry: currentPrice,
+        tp: Number(tp.toFixed(2)),
+        sl: Number(sl.toFixed(2)),
+        riskRewardRatio: Number(rr.toFixed(2)),
+        quality
+    };
+}
+
+// ... (rest of private methods)
+name: string;
+value: number;
+signal: -1 | 0 | 1;
+weight: number;
 }
 
 // Price history cache (in-memory, per edge function instance)
@@ -108,16 +200,54 @@ function calculateVwapDeviation(history: PriceHistory[], currentPrice: number): 
     return ((currentPrice - vwap) / vwap) * 10000; // Deviation in bps
 }
 
+import { updatePriceHistory, PriceHistory } from './price-history-utils'; // Assuming utils are split or kept same
+// We need to import getMLConfig without cycle if possible. 
+// Since SmartPredictor is used in API, it can import db utils.
+import { getMLConfig } from './turso';
+
+// ... (Keep existing interfaces)
+
+interface SignalWeights {
+    [key: string]: number;
+}
+
+const DEFAULT_WEIGHTS: SignalWeights = {
+    'Order Book Imbalance': 0.25,
+    'Volume Concentration': 0.15,
+    'Spread Analysis': 0.10,
+    'Depth Ratio': 0.15,
+    'Price Momentum': 0.15,
+    'VWAP Deviation': 0.10,
+    'Liquidity Wall': 0.05,
+    'Volatility Factor': 0.05
+};
+
 /**
  * Smart DOM Predictor Class
  */
 export class SmartPredictor {
     private symbol: string;
     private horizon: number;
+    private weights: SignalWeights;
 
     constructor(symbol: string, horizon: number = 10) {
         this.symbol = symbol;
         this.horizon = horizon;
+        this.weights = { ...DEFAULT_WEIGHTS };
+
+        // Async load dynamic weights (fire and forget update)
+        this.loadDynamicWeights();
+    }
+
+    private async loadDynamicWeights() {
+        try {
+            const config = await getMLConfig('smart_predictor_weights');
+            if (config) {
+                this.weights = { ...this.weights, ...config };
+            }
+        } catch (e) {
+            // Fallback to default silently
+        }
     }
 
     /**
@@ -130,78 +260,78 @@ export class SmartPredictor {
         // Update price history
         updatePriceHistory(this.symbol, orderBook.midPrice);
 
-        // === Signal 1: Order Book Imbalance (Weight: 0.25) ===
+        // === Signal 1: Order Book Imbalance ===
         const imbalanceSignal = this.calculateImbalanceSignal(orderBook.imbalance);
         signals.push({
             name: 'Order Book Imbalance',
             value: orderBook.imbalance,
             signal: imbalanceSignal,
-            weight: 0.25
+            weight: this.weights['Order Book Imbalance']
         });
 
-        // === Signal 2: Volume Concentration (Weight: 0.15) ===
+        // === Signal 2: Volume Concentration ===
         const volumeConcentration = this.calculateVolumeConcentration(orderBook);
         signals.push({
             name: 'Volume Concentration',
             value: volumeConcentration.value,
             signal: volumeConcentration.signal,
-            weight: 0.15
+            weight: this.weights['Volume Concentration']
         });
 
-        // === Signal 3: Spread Analysis (Weight: 0.10) ===
+        // === Signal 3: Spread Analysis ===
         const spreadSignal = this.analyzeSpread(orderBook.spreadPercent);
         signals.push({
             name: 'Spread Analysis',
             value: orderBook.spreadPercent * 100,
             signal: spreadSignal.signal,
-            weight: 0.10
+            weight: this.weights['Spread Analysis']
         });
 
-        // === Signal 4: Depth Ratio (Weight: 0.15) ===
+        // === Signal 4: Depth Ratio ===
         const depthRatio = this.calculateDepthRatio(orderBook);
         signals.push({
             name: 'Depth Ratio',
             value: depthRatio.value,
             signal: depthRatio.signal,
-            weight: 0.15
+            weight: this.weights['Depth Ratio']
         });
 
-        // === Signal 5: Momentum (Weight: 0.15) ===
+        // === Signal 5: Momentum ===
         const { momentum, roc } = calculateMomentum(history);
         signals.push({
             name: 'Price Momentum',
             value: roc,
             signal: momentum as -1 | 0 | 1,
-            weight: 0.15
+            weight: this.weights['Price Momentum']
         });
 
-        // === Signal 6: VWAP Deviation (Weight: 0.10) ===
+        // === Signal 6: VWAP Deviation ===
         const vwapDev = calculateVwapDeviation(history, orderBook.midPrice);
         const vwapSignal: -1 | 0 | 1 = vwapDev > 5 ? -1 : vwapDev < -5 ? 1 : 0; // Mean reversion
         signals.push({
             name: 'VWAP Deviation',
             value: vwapDev,
             signal: vwapSignal,
-            weight: 0.10
+            weight: this.weights['VWAP Deviation']
         });
 
-        // === Signal 7: Liquidity Wall Detection (Weight: 0.05) ===
+        // === Signal 7: Liquidity Wall Detection ===
         const liquidityWall = this.detectLiquidityWall(orderBook);
         signals.push({
             name: 'Liquidity Wall',
             value: liquidityWall.strength,
             signal: liquidityWall.signal,
-            weight: 0.05
+            weight: this.weights['Liquidity Wall']
         });
 
-        // === Signal 8: Volatility Adjustment (Weight: 0.05) ===
+        // === Signal 8: Volatility Adjustment ===
         const volatility = calculateVolatility(history);
         const volSignal: -1 | 0 | 1 = volatility > 20 ? 0 : imbalanceSignal; // High vol = uncertain
         signals.push({
             name: 'Volatility Factor',
             value: volatility,
             signal: volSignal,
-            weight: 0.05
+            weight: this.weights['Volatility Factor']
         });
 
         // === Aggregate Signals ===
@@ -213,8 +343,9 @@ export class SmartPredictor {
             totalWeight += s.weight;
         }
 
-        const aggregateScore = weightedSum / totalWeight;
+        const aggregateScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
+        // ... rest of logic ... (keeping same)
         // Determine direction
         let direction: 'UP' | 'DOWN' | 'NEUTRAL';
         let direction_code: -1 | 0 | 1;
@@ -243,11 +374,12 @@ export class SmartPredictor {
             direction_code,
             confidence: Math.round(confidence * 100) / 100,
             signals,
-            model_used: 'smart-predictor-v1',
+            model_used: 'smart-predictor-v1-adaptive',
             probabilities
         };
     }
 
+    // ... private methods identical ...
     private calculateImbalanceSignal(imbalance: number): -1 | 0 | 1 {
         if (imbalance > 15) return 1;
         if (imbalance < -15) return -1;

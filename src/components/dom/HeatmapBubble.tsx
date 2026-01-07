@@ -268,6 +268,42 @@ export default function BookmapChart({ currentOrderBook, history, height = 500, 
         currentOrderBook.asks.forEach(a => drawFutureBar(a.price, a.volume));
         currentOrderBook.bids.forEach(b => drawFutureBar(b.price, b.volume));
 
+        // --- 4b. FUTURE WHALE WALLS (Visual Labels) ---
+        // Only label walls that are significant relative to the max volume
+        const whaleThreshold = Math.max(avgVol * 3, maxVol * 0.6);
+
+        const drawWhaleWall = (price: number, volume: number, type: 'ASK' | 'BID') => {
+            if (volume < whaleThreshold) return;
+
+            const y = getY(price);
+            const color = type === 'ASK' ? 'rgba(239, 68, 68, 0.8)' : 'rgba(34, 197, 94, 0.8)'; // Red/Green
+
+            // Line extending to future
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 4]); // Dotted
+            ctx.moveTo(futureX, y);
+            ctx.lineTo(CHART_WIDTH, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Label background
+            const labelText = volume.toFixed(volDecimals); // e.g. "500"
+            const textWidth = ctx.measureText(labelText).width;
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; // Dark bg for text
+            ctx.fillRect(CHART_WIDTH - textWidth - 2, y - 8, textWidth + 4, 10);
+
+            // Text Label
+            ctx.fillStyle = color;
+            ctx.font = 'bold 9px Inter, monospace';
+            ctx.fillText(labelText, CHART_WIDTH - textWidth, y);
+        };
+
+        currentOrderBook.asks.forEach(a => drawWhaleWall(a.price, a.volume, 'ASK'));
+        currentOrderBook.bids.forEach(b => drawWhaleWall(b.price, b.volume, 'BID'));
+
         // --- 5. ML PREDICTION OVERLAY ---
         if (mlPrediction && mlPrediction.confidence > 0.5) {
             const predColor = getPredictionColor(mlPrediction.direction);
