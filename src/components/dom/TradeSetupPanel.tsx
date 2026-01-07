@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MLPrediction } from '@/types/ml-prediction';
-import { ChevronUpIcon, ChevronDownIcon, ClockIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
+
+// TradeSetup type (matches MLPrediction.tradeSetup)
+interface TradeSetup {
+    action: 'LONG' | 'SHORT' | 'WAIT';
+    entry: number;
+    tp: number;
+    sl: number;
+    riskRewardRatio: number;
+    quality: 'HIGH' | 'MEDIUM' | 'LOW';
+}
 
 interface TradeSetupPanelProps {
     prediction: MLPrediction | null;
@@ -10,10 +19,9 @@ interface TradeSetupPanelProps {
 }
 
 export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPanelProps) {
-    // Stability State
-    const [stableSetup, setStableSetup] = useState<typeof prediction.tradeSetup | null>(null);
+    // Stability State - Use explicit type instead of typeof
+    const [stableSetup, setStableSetup] = useState<TradeSetup | null>(null);
     const lastUpdateRef = useRef<number>(0);
-    const pendingSetupRef = useRef<typeof prediction.tradeSetup | null>(null);
 
     // Filter Logic:
     // Only update the displayed setup if the new signal persists for > 2 seconds
@@ -45,13 +53,13 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
             setStableSetup(newSetup);
         }
 
-    }, [prediction]);
+    }, [prediction, stableSetup]);
 
     if (!stableSetup || stableSetup.action === 'WAIT') {
         return (
             <div className="bg-white rounded-xl border border-gray-200 p-4 h-[120px] flex items-center justify-center">
                 <div className="text-center text-gray-400">
-                    <ClockIcon className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                    <div className="text-2xl mb-2">⏳</div>
                     <p className="text-sm font-medium">Scanning for High Confidence Setup...</p>
                     <p className="text-xs mt-1">AI ensures &gt; 65% stability</p>
                 </div>
@@ -60,15 +68,13 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
     }
 
     const isLong = stableSetup.action === 'LONG';
-    const colorClass = isLong ? 'text-green-600 bg-green-50 border-green-200' : 'text-red-600 bg-red-50 border-red-200';
-    const btnColor = isLong ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
 
     return (
         <div className={`rounded-xl border p-4 ${isLong ? 'border-green-100 bg-green-50/30' : 'border-red-100 bg-red-50/30'}`}>
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${isLong ? 'bg-green-100' : 'bg-red-100'}`}>
-                        {isLong ? <ChevronUpIcon className="w-6 h-6 text-green-700" /> : <ChevronDownIcon className="w-6 h-6 text-red-700" />}
+                    <div className={`p-2 rounded-lg text-xl ${isLong ? 'bg-green-100' : 'bg-red-100'}`}>
+                        {isLong ? '📈' : '📉'}
                     </div>
                     <div>
                         <h3 className={`text-lg font-bold ${isLong ? 'text-green-700' : 'text-red-700'}`}>
@@ -108,7 +114,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
 
             <div className="flex items-center justify-between text-xs text-gray-400 px-1">
                 <div className="flex items-center gap-1">
-                    <ShieldCheckIcon className="w-3 h-3" />
+                    <span>🤖</span>
                     <span>AI Validated Strategy</span>
                 </div>
                 <span>Updates every 3s</span>
