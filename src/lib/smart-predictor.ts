@@ -1,10 +1,8 @@
-/**
- * Smart DOM Predictor
- * Multi-signal prediction algorithm that runs directly in Vercel
- * Uses 8 technical indicators for direction prediction
- */
+import { getMLConfig } from './turso';
 
-interface OrderBookData {
+// === Interfaces ===
+
+export interface OrderBookData {
     midPrice: number;
     spread: number;
     spreadPercent: number;
@@ -15,8 +13,6 @@ interface OrderBookData {
     asks: Array<{ price: number; volume: number }>;
 }
 
-// ... imports
-
 export interface TradeSetup {
     action: 'LONG' | 'SHORT' | 'WAIT';
     entry: number;
@@ -26,6 +22,13 @@ export interface TradeSetup {
     quality: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
+export interface SignalResult {
+    name: string;
+    value: number;
+    signal: -1 | 0 | 1;
+    weight: number;
+}
+
 export interface PredictionResult {
     direction: 'UP' | 'DOWN' | 'NEUTRAL';
     direction_code: -1 | 0 | 1;
@@ -33,101 +36,31 @@ export interface PredictionResult {
     signals: SignalResult[];
     model_used: string;
     probabilities: { UP: number; DOWN: number; NEUTRAL: number };
-    tradeSetup?: TradeSetup; // New field
+    tradeSetup?: TradeSetup;
 }
 
-// ... existing code ...
-
-/**
- * Generate prediction from order book data
- */
-predict(orderBook: OrderBookData): PredictionResult {
-    // ... (existing signal calculation) ...
-    // ... (calculate aggregateScore and confidence) ...
-
-    // ... (calculate probabilities) ...
-
-    const result: PredictionResult = {
-        direction,
-        direction_code,
-        confidence: Math.round(confidence * 100) / 100,
-        signals,
-        model_used: 'smart-predictor-v1-adaptive',
-        probabilities
-    };
-
-    // Generate Trade Setup if confidence is sufficient
-    if (confidence > 0.60 && direction !== 'NEUTRAL') {
-        result.tradeSetup = this.calculateTradeSetup(orderBook.midPrice, direction, confidence, history);
-    } else {
-        result.tradeSetup = {
-            action: 'WAIT',
-            entry: 0,
-            tp: 0,
-            sl: 0,
-            riskRewardRatio: 0,
-            quality: 'LOW'
-        };
-    }
-
-    return result;
+export interface PriceHistory {
+    price: number;
+    timestamp: number;
+    volume?: number;
 }
 
-    private calculateTradeSetup(
-    currentPrice: number,
-    direction: 'UP' | 'DOWN',
-    confidence: number,
-    history: PriceHistory[]
-): TradeSetup {
-    // 1. Calculate Volatility (Simple ATR approximation)
-    // If history is short, use a fallback percentage (0.2%)
-    let volatility = currentPrice * 0.002;
-
-    if (history.length > 10) {
-        const high = Math.max(...history.slice(-10).map(h => h.price));
-        const low = Math.min(...history.slice(-10).map(h => h.price));
-        const range = high - low;
-        if (range > 0) volatility = range;
-    }
-
-    // 2. Define Risk Parameters based on Volatility
-    // Conservative: Stop at 1x Vol, Target at 1.5x - 2x Vol
-    const riskUnit = volatility * 1.2;
-    const rewardUnit = volatility * 2.0;
-
-    let tp, sl;
-
-    if (direction === 'UP') {
-        tp = currentPrice + rewardUnit;
-        sl = currentPrice - riskUnit;
-    } else {
-        tp = currentPrice - rewardUnit;
-        sl = currentPrice + riskUnit;
-    }
-
-    const rr = rewardUnit / riskUnit;
-
-    // 3. Determine Quality
-    let quality: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
-    if (confidence > 0.75) quality = 'HIGH';
-    else if (confidence > 0.65) quality = 'MEDIUM';
-
-    return {
-        action: direction === 'UP' ? 'LONG' : 'SHORT',
-        entry: currentPrice,
-        tp: Number(tp.toFixed(2)),
-        sl: Number(sl.toFixed(2)),
-        riskRewardRatio: Number(rr.toFixed(2)),
-        quality
-    };
+interface SignalWeights {
+    [key: string]: number;
 }
 
-// ... (rest of private methods)
-name: string;
-value: number;
-signal: -1 | 0 | 1;
-weight: number;
-}
+// === Constants & State ===
+
+const DEFAULT_WEIGHTS: SignalWeights = {
+    'Order Book Imbalance': 0.25,
+    'Volume Concentration': 0.15,
+    'Spread Analysis': 0.10,
+    'Depth Ratio': 0.15,
+    'Price Momentum': 0.15,
+    'VWAP Deviation': 0.10,
+    'Liquidity Wall': 0.05,
+    'Volatility Factor': 0.05
+};
 
 // Price history cache (in-memory, per edge function instance)
 const priceHistoryCache: Map<string, PriceHistory[]> = new Map();
@@ -147,9 +80,8 @@ export function updatePriceHistory(symbol: string, price: number, volume?: numbe
     priceHistoryCache.set(symbol, history);
 }
 
-/**
- * Calculate momentum indicators
- */
+// === Helper Functions ===
+
 function calculateMomentum(history: PriceHistory[]): { momentum: number; roc: number } {
     if (history.length < 5) {
         return { momentum: 0, roc: 0 };
@@ -164,9 +96,6 @@ function calculateMomentum(history: PriceHistory[]): { momentum: number; roc: nu
     return { momentum, roc };
 }
 
-/**
- * Calculate volatility (standard deviation of returns)
- */
 function calculateVolatility(history: PriceHistory[]): number {
     if (history.length < 5) return 0;
 
@@ -181,9 +110,6 @@ function calculateVolatility(history: PriceHistory[]): number {
     return Math.sqrt(variance) * 10000; // In bps
 }
 
-/**
- * Calculate VWAP deviation
- */
 function calculateVwapDeviation(history: PriceHistory[], currentPrice: number): number {
     if (history.length < 3) return 0;
 
@@ -200,31 +126,8 @@ function calculateVwapDeviation(history: PriceHistory[], currentPrice: number): 
     return ((currentPrice - vwap) / vwap) * 10000; // Deviation in bps
 }
 
-import { updatePriceHistory, PriceHistory } from './price-history-utils'; // Assuming utils are split or kept same
-// We need to import getMLConfig without cycle if possible. 
-// Since SmartPredictor is used in API, it can import db utils.
-import { getMLConfig } from './turso';
+// === SmartPredictor Class ===
 
-// ... (Keep existing interfaces)
-
-interface SignalWeights {
-    [key: string]: number;
-}
-
-const DEFAULT_WEIGHTS: SignalWeights = {
-    'Order Book Imbalance': 0.25,
-    'Volume Concentration': 0.15,
-    'Spread Analysis': 0.10,
-    'Depth Ratio': 0.15,
-    'Price Momentum': 0.15,
-    'VWAP Deviation': 0.10,
-    'Liquidity Wall': 0.05,
-    'Volatility Factor': 0.05
-};
-
-/**
- * Smart DOM Predictor Class
- */
 export class SmartPredictor {
     private symbol: string;
     private horizon: number;
@@ -253,7 +156,7 @@ export class SmartPredictor {
     /**
      * Generate prediction from order book data
      */
-    predict(orderBook: OrderBookData): PredictionResult {
+    public predict(orderBook: OrderBookData): PredictionResult {
         const signals: SignalResult[] = [];
         const history = priceHistoryCache.get(this.symbol) || [];
 
@@ -345,7 +248,6 @@ export class SmartPredictor {
 
         const aggregateScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
-        // ... rest of logic ... (keeping same)
         // Determine direction
         let direction: 'UP' | 'DOWN' | 'NEUTRAL';
         let direction_code: -1 | 0 | 1;
@@ -369,17 +271,79 @@ export class SmartPredictor {
         // Calculate probabilities
         const probabilities = this.calculateProbabilities(aggregateScore, confidence);
 
-        return {
+        const result: PredictionResult = {
             direction,
             direction_code,
             confidence: Math.round(confidence * 100) / 100,
             signals,
             model_used: 'smart-predictor-v1-adaptive',
-            probabilities
+            probabilities,
+            tradeSetup: {
+                action: 'WAIT',
+                entry: 0, tp: 0, sl: 0, riskRewardRatio: 0, quality: 'LOW'
+            }
+        };
+
+        // Generate Trade Setup if confidence is sufficient
+        if (confidence > 0.60 && direction !== 'NEUTRAL') {
+            result.tradeSetup = this.calculateTradeSetup(orderBook.midPrice, direction, confidence, history);
+        }
+
+        return result;
+    }
+
+    public calculateTradeSetup(
+        currentPrice: number,
+        direction: 'UP' | 'DOWN',
+        confidence: number,
+        history: PriceHistory[] = []
+    ): TradeSetup {
+        // If history is not provided, try to get it from cache
+        if (history.length === 0) {
+            history = priceHistoryCache.get(this.symbol) || [];
+        }
+
+        // 1. Calculate Volatility (Simple ATR approximation)
+        let volatility = currentPrice * 0.002;
+
+        if (history.length > 10) {
+            const high = Math.max(...history.slice(-10).map(h => h.price));
+            const low = Math.min(...history.slice(-10).map(h => h.price));
+            const range = high - low;
+            if (range > 0) volatility = range;
+        }
+
+        // 2. Define Risk Parameters
+        const riskUnit = volatility * 1.2;
+        const rewardUnit = volatility * 2.0;
+
+        let tp, sl;
+
+        if (direction === 'UP') {
+            tp = currentPrice + rewardUnit;
+            sl = currentPrice - riskUnit;
+        } else {
+            tp = currentPrice - rewardUnit;
+            sl = currentPrice + riskUnit;
+        }
+
+        const rr = rewardUnit / riskUnit;
+
+        // 3. Determine Quality
+        let quality: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
+        if (confidence > 0.75) quality = 'HIGH';
+        else if (confidence > 0.65) quality = 'MEDIUM';
+
+        return {
+            action: direction === 'UP' ? 'LONG' : 'SHORT',
+            entry: currentPrice,
+            tp: Number(tp.toFixed(2)),
+            sl: Number(sl.toFixed(2)),
+            riskRewardRatio: Number(rr.toFixed(2)),
+            quality
         };
     }
 
-    // ... private methods identical ...
     private calculateImbalanceSignal(imbalance: number): -1 | 0 | 1 {
         if (imbalance > 15) return 1;
         if (imbalance < -15) return -1;
@@ -494,5 +458,9 @@ export function getPredictor(symbol: string, horizon: number = 10): SmartPredict
     if (!predictors.has(key)) {
         predictors.set(key, new SmartPredictor(symbol, horizon));
     }
-    return predictors.get(key)!;
+    const predictor = predictors.get(key);
+    if (!predictor) {
+        throw new Error(`Failed to create predictor for ${symbol}`);
+    }
+    return predictor;
 }

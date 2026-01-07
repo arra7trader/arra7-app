@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPredictor } from '@/lib/smart-predictor';
+import { getPredictor, updatePriceHistory } from '@/lib/smart-predictor';
 
 // ML Backend URL (configurable)
 const ML_BACKEND_URL = process.env.ML_BACKEND_URL || 'http://localhost:8001';
@@ -48,8 +48,23 @@ export async function POST(request: NextRequest) {
 
             if (mlResponse.ok) {
                 const mlData = await mlResponse.json();
+
+                // Enhance backend prediction with Smart Predictor's Trade Setup logic
+                const predictor = getPredictor(symbol, horizon);
+
+                // Update history first
+                updatePriceHistory(symbol, orderbook_data.midPrice);
+
+                // Calculate Trade Setup based on backend confidence/direction
+                const tradeSetup = predictor.calculateTradeSetup(
+                    orderbook_data.midPrice,
+                    mlData.direction,
+                    mlData.confidence
+                );
+
                 return NextResponse.json({
                     ...mlData,
+                    tradeSetup,
                     source: 'ml-backend'
                 });
             }
