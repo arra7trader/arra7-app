@@ -285,7 +285,7 @@ export class SmartPredictor {
         };
 
         // Generate Trade Setup if confidence is sufficient
-        if (confidence > 0.60 && direction !== 'NEUTRAL') {
+        if (confidence > 0.75 && direction !== 'NEUTRAL') {
             result.tradeSetup = this.calculateTradeSetup(orderBook.midPrice, direction, confidence, history);
         }
 
