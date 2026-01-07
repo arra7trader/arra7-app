@@ -563,19 +563,27 @@ export default function DomArraPage() {
         };
     }, [selectedSymbol, isAdmin, usePolling, connectBinanceStream]);
 
-    // Effect: Fetch ML predictions based on settings
+    // Keep track of latest order book for interval-based prediction
+    const orderBookRef = useRef<OrderBook | null>(null);
     useEffect(() => {
-        if (!isAdmin || !orderBook) return;
+        orderBookRef.current = orderBook;
+    }, [orderBook]);
+
+    // Effect: Fetch ML predictions based on settings (Interval based)
+    useEffect(() => {
+        if (!isAdmin) return;
 
         const fetchPrediction = async () => {
+            if (!orderBookRef.current) return;
+
             try {
                 setMLLoading(true);
-                const pred = await fetchMLPrediction(selectedSymbol, mlSettings.horizon, orderBook);
+                const pred = await fetchMLPrediction(selectedSymbol, mlSettings.horizon, orderBookRef.current);
                 setMLPrediction(pred);
 
                 // Track for accuracy
-                if (orderBook.midPrice) {
-                    trackPrediction(pred, orderBook.midPrice);
+                if (orderBookRef.current.midPrice) {
+                    trackPrediction(pred, orderBookRef.current.midPrice);
                 }
             } catch (error) {
                 console.error('ML prediction error:', error);
@@ -591,7 +599,7 @@ export default function DomArraPage() {
         const interval = setInterval(fetchPrediction, mlSettings.refreshInterval * 1000);
 
         return () => clearInterval(interval);
-    }, [selectedSymbol, isAdmin, orderBook, mlSettings.horizon, mlSettings.refreshInterval, trackPrediction]);
+    }, [selectedSymbol, isAdmin, mlSettings.horizon, mlSettings.refreshInterval, trackPrediction]);
 
     // Loading state
     if (status === 'loading') {
