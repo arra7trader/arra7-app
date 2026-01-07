@@ -350,7 +350,7 @@ export default function DomArraPage() {
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const [flowHistory, setFlowHistory] = useState<HeatmapDataPoint[]>([]);
     const [activeTab, setActiveTab] = useState<'orderbook' | 'heatmap'>('orderbook');
-    const { stats: accuracyStats, pendingCount, trackPrediction, verifyPrediction } = useAccuracyTracker();
+    const { stats: accuracyStats, pendingCount, trackPrediction, setGetCurrentPrice } = useAccuracyTracker(selectedSymbol);
     const [usePolling, setUsePolling] = useState(false); // Fallback mode for ISP blocks
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -360,6 +360,11 @@ export default function DomArraPage() {
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
     const symbolConfig = DOM_SYMBOLS[selectedSymbol];
+
+    // Set up price getter for accuracy verification
+    useEffect(() => {
+        setGetCurrentPrice(() => orderBook?.midPrice || 0);
+    }, [orderBook, setGetCurrentPrice]);
 
     // Update ref when symbol changes
     useEffect(() => {
