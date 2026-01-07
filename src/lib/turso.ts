@@ -193,6 +193,41 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // DOM ML PREDICTIONS: Store prediction history for accuracy tracking
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS ml_predictions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT NOT NULL,
+        horizon INTEGER NOT NULL,
+        direction TEXT NOT NULL,
+        direction_code INTEGER NOT NULL,
+        confidence REAL NOT NULL,
+        model_used TEXT NOT NULL,
+        initial_price REAL NOT NULL,
+        actual_price REAL,
+        actual_direction INTEGER,
+        is_correct INTEGER,
+        verified_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // DOM ML STATS: Aggregate performance stats
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS ml_prediction_stats (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        model TEXT NOT NULL,
+        total_predictions INTEGER DEFAULT 0,
+        correct_predictions INTEGER DEFAULT 0,
+        accuracy REAL DEFAULT 0,
+        avg_confidence REAL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(date, symbol, model)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
@@ -393,5 +428,206 @@ export async function givePromoToAllUsers(durationDays: number = 3, promoType: s
   } catch (error) {
     console.error('Give promo to all users error:', error);
     return { success: false, count: 0 };
+  }
+}
+
+// ===== DOM ML PREDICTION FUNCTIONS =====
+
+export interface MLPredictionRecord {
+  symbol: string;
+  horizon: number;
+  direction: string;
+  direction_code: number;
+  confidence: number;
+  model_used: string;
+  initial_price: number;
+}
+
+// Save a new ML prediction for later verification
+export async function saveMLPrediction(prediction: MLPredictionRecord): Promise<number | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+
+  try {
+    const result = await turso.execute({
+      sql: `INSERT INTO ml_predictions (symbol, horizon, direction, direction_code, confidence, model_used, initial_price)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        prediction.symbol,
+        prediction.horizon,
+        prediction.direction,
+        prediction.direction_code,
+        prediction.confidence,
+        prediction.model_used,
+        prediction.initial_price
+      ]
+    });
+    return Number(result.lastInsertRowid);
+  } catch (error) {
+    console.error('Save ML prediction error:', error);
+    return null;
+  }
+}
+
+// Verify a prediction with actual price
+export async function verifyMLPrediction(
+  predictionId: number,
+  actualPrice: number
+): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    // Get the original prediction
+    const pred = await turso.execute({
+      sql: 'SELECT initial_price, direction_code FROM ml_predictions WHERE id = ?',
+      args: [predictionId]
+    });
+
+    if (pred.rows.length === 0) return false;
+
+    const initialPrice = pred.rows[0].initial_price as number;
+    const predictedDirection = pred.rows[0].direction_code as number;
+
+    // Calculate actual direction
+    const priceChange = actualPrice - initialPrice;
+    const priceChangePct = (priceChange / initialPrice) * 10000; // bps
+
+    let actualDirection: number;
+    if (priceChangePct > 1) {
+      actualDirection = 1; // UP
+    } else if (priceChangePct < -1) {
+      actualDirection = -1; // DOWN
+    } else {
+      actualDirection = 0; // NEUTRAL
+    }
+
+    const isCorrect = predictedDirection === actualDirection ? 1 : 0;
+
+    // Update the prediction
+    await turso.execute({
+      sql: `UPDATE ml_predictions 
+            SET actual_price = ?, actual_direction = ?, is_correct = ?, verified_at = datetime('now')
+            WHERE id = ?`,
+      args: [actualPrice, actualDirection, isCorrect, predictionId]
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Verify ML prediction error:', error);
+    return false;
+  }
+}
+
+// Get ML accuracy stats for a symbol and date range
+export interface MLAccuracyStats {
+  total: number;
+  correct: number;
+  accuracy: number;
+  byModel: Record<string, { total: number; correct: number; accuracy: number }>;
+  byDirection: Record<string, { total: number; correct: number; accuracy: number }>;
+}
+
+export async function getMLAccuracyStats(
+  symbol: string,
+  days: number = 7
+): Promise<MLAccuracyStats> {
+  const turso = getTursoClient();
+  const defaultStats: MLAccuracyStats = {
+    total: 0,
+    correct: 0,
+    accuracy: 0,
+    byModel: {},
+    byDirection: {}
+  };
+
+  if (!turso) return defaultStats;
+
+  try {
+    // Overall stats
+    const overall = await turso.execute({
+      sql: `SELECT COUNT(*) as total, SUM(is_correct) as correct 
+            FROM ml_predictions 
+            WHERE symbol = ? AND verified_at IS NOT NULL 
+            AND created_at > datetime('now', '-${days} days')`,
+      args: [symbol]
+    });
+
+    const total = (overall.rows[0]?.total as number) || 0;
+    const correct = (overall.rows[0]?.correct as number) || 0;
+
+    // By model
+    const byModelResult = await turso.execute({
+      sql: `SELECT model_used, COUNT(*) as total, SUM(is_correct) as correct 
+            FROM ml_predictions 
+            WHERE symbol = ? AND verified_at IS NOT NULL 
+            AND created_at > datetime('now', '-${days} days')
+            GROUP BY model_used`,
+      args: [symbol]
+    });
+
+    const byModel: Record<string, { total: number; correct: number; accuracy: number }> = {};
+    for (const row of byModelResult.rows) {
+      const modelTotal = row.total as number;
+      const modelCorrect = row.correct as number;
+      byModel[row.model_used as string] = {
+        total: modelTotal,
+        correct: modelCorrect,
+        accuracy: modelTotal > 0 ? modelCorrect / modelTotal : 0
+      };
+    }
+
+    // By direction
+    const byDirResult = await turso.execute({
+      sql: `SELECT direction, COUNT(*) as total, SUM(is_correct) as correct 
+            FROM ml_predictions 
+            WHERE symbol = ? AND verified_at IS NOT NULL 
+            AND created_at > datetime('now', '-${days} days')
+            GROUP BY direction`,
+      args: [symbol]
+    });
+
+    const byDirection: Record<string, { total: number; correct: number; accuracy: number }> = {};
+    for (const row of byDirResult.rows) {
+      const dirTotal = row.total as number;
+      const dirCorrect = row.correct as number;
+      byDirection[row.direction as string] = {
+        total: dirTotal,
+        correct: dirCorrect,
+        accuracy: dirTotal > 0 ? dirCorrect / dirTotal : 0
+      };
+    }
+
+    return {
+      total,
+      correct,
+      accuracy: total > 0 ? correct / total : 0,
+      byModel,
+      byDirection
+    };
+  } catch (error) {
+    console.error('Get ML accuracy stats error:', error);
+    return defaultStats;
+  }
+}
+
+// Get recent predictions for display
+export async function getRecentMLPredictions(symbol: string, limit: number = 20) {
+  const turso = getTursoClient();
+  if (!turso) return [];
+
+  try {
+    const result = await turso.execute({
+      sql: `SELECT * FROM ml_predictions 
+            WHERE symbol = ? 
+            ORDER BY created_at DESC 
+            LIMIT ?`,
+      args: [symbol, limit]
+    });
+
+    return result.rows;
+  } catch (error) {
+    console.error('Get recent predictions error:', error);
+    return [];
   }
 }
