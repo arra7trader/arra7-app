@@ -571,8 +571,7 @@ export default function DomArraPage() {
 
     // Effect: Fetch ML predictions based on settings (Interval based)
     useEffect(() => {
-        if (!isAdmin) return;
-
+        // ML predictions now available for ALL users (not just admin)
         const fetchPrediction = async () => {
             if (!orderBookRef.current) return;
 
@@ -581,7 +580,7 @@ export default function DomArraPage() {
                 const pred = await fetchMLPrediction(selectedSymbol, mlSettings.horizon, orderBookRef.current);
                 setMLPrediction(pred);
 
-                // Track for accuracy
+                // Track for accuracy (all users contribute to learning)
                 if (orderBookRef.current.midPrice) {
                     trackPrediction(pred, orderBookRef.current.midPrice);
                 }
@@ -599,7 +598,7 @@ export default function DomArraPage() {
         const interval = setInterval(fetchPrediction, mlSettings.refreshInterval * 1000);
 
         return () => clearInterval(interval);
-    }, [selectedSymbol, isAdmin, mlSettings.horizon, mlSettings.refreshInterval, trackPrediction]);
+    }, [selectedSymbol, mlSettings.horizon, mlSettings.refreshInterval, trackPrediction]);
 
     // Loading state
     if (status === 'loading') {
