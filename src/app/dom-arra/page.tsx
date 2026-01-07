@@ -705,16 +705,41 @@ export default function DomArraPage() {
                     </button>
                 </motion.div>
 
-                {/* Main Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Content - 2 columns */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="lg:col-span-2"
-                    >
-                        {activeTab === 'orderbook' ? (
+                {/* Main Grid - Conditional layout based on active tab */}
+                {activeTab === 'heatmap' ? (
+                    /* Full Width Heatmap Layout */
+                    <div className="space-y-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <BookmapChart currentOrderBook={orderBook} history={flowHistory} mlPrediction={mlPrediction} />
+                        </motion.div>
+
+                        {/* Sidebar panels in horizontal row below chart */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+                        >
+                            <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
+                            <TradeSetupPanel prediction={mlPrediction} isLoading={mlLoading} />
+                            <MLSettingsPanel settings={mlSettings} onSettingsChange={setMLSettings} />
+                            <AccuracyTrackerPanel stats={accuracyStats} pendingCount={pendingCount} />
+                        </motion.div>
+                    </div>
+                ) : (
+                    /* Original 3-column layout for Order Book */
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left Content - 2 columns */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="lg:col-span-2"
+                        >
                             <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
@@ -729,25 +754,23 @@ export default function DomArraPage() {
                                 </div>
                                 <OrderBookVisualization orderBook={orderBook} />
                             </div>
-                        ) : (
-                            <BookmapChart currentOrderBook={orderBook} history={flowHistory} mlPrediction={mlPrediction} />
-                        )}
-                    </motion.div>
+                        </motion.div>
 
-                    {/* Right Sidebar - Imbalance & Prediction */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="space-y-4"
-                    >
-                        <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
-                        <TradeSetupPanel prediction={mlPrediction} isLoading={mlLoading} />
-                        <MLSettingsPanel settings={mlSettings} onSettingsChange={setMLSettings} />
-                        <AccuracyTrackerPanel stats={accuracyStats} pendingCount={pendingCount} />
-                        <PredictionPanel prediction={prediction} />
-                    </motion.div>
-                </div>
+                        {/* Right Sidebar - Imbalance & Prediction */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="space-y-4"
+                        >
+                            <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
+                            <TradeSetupPanel prediction={mlPrediction} isLoading={mlLoading} />
+                            <MLSettingsPanel settings={mlSettings} onSettingsChange={setMLSettings} />
+                            <AccuracyTrackerPanel stats={accuracyStats} pendingCount={pendingCount} />
+                            <PredictionPanel prediction={prediction} />
+                        </motion.div>
+                    </div>
+                )}
 
                 {/* Stats Footer */}
                 {orderBook && (
