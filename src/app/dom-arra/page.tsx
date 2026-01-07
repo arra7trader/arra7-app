@@ -8,6 +8,10 @@ import { LockIcon, ChartIcon, SparklesIcon, ScaleIcon, SignalIcon, CircleStackIc
 import { OrderBook, DOMPrediction, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
 import { analyzeOrderFlow, calculateOrderBookMetrics } from '@/lib/dom-analysis';
 import BookmapChart, { HeatmapDataPoint } from '@/components/dom/HeatmapBubble';
+import MLPredictionPanel from '@/components/dom/MLPredictionPanel';
+import { MLPrediction, fetchMLPrediction } from '@/types/ml-prediction';
+import MLSettingsPanel, { PredictionSettings, DEFAULT_SETTINGS } from '@/components/dom/MLSettingsPanel';
+import AccuracyTrackerPanel, { useAccuracyTracker } from '@/components/dom/AccuracyTracker';
 
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 const MAX_FLOW_HISTORY = 600; // Keep last 1 minute of data (100ms * 600)
@@ -339,10 +343,14 @@ export default function DomArraPage() {
     const [selectedSymbol, setSelectedSymbol] = useState<DOMSymbolId>('BTCUSD');
     const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
     const [prediction, setPrediction] = useState<DOMPrediction | null>(null);
+    const [mlPrediction, setMLPrediction] = useState<MLPrediction | null>(null);
+    const [mlLoading, setMLLoading] = useState(false);
+    const [mlSettings, setMLSettings] = useState<PredictionSettings>(DEFAULT_SETTINGS);
     const [isConnected, setIsConnected] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const [flowHistory, setFlowHistory] = useState<HeatmapDataPoint[]>([]);
     const [activeTab, setActiveTab] = useState<'orderbook' | 'heatmap'>('orderbook');
+    const { stats: accuracyStats, pendingCount, trackPrediction, verifyPrediction } = useAccuracyTracker();
     const [usePolling, setUsePolling] = useState(false); // Fallback mode for ISP blocks
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -550,6 +558,36 @@ export default function DomArraPage() {
         };
     }, [selectedSymbol, isAdmin, usePolling, connectBinanceStream]);
 
+    // Effect: Fetch ML predictions based on settings
+    useEffect(() => {
+        if (!isAdmin || !orderBook) return;
+
+        const fetchPrediction = async () => {
+            try {
+                setMLLoading(true);
+                const pred = await fetchMLPrediction(selectedSymbol, mlSettings.horizon, orderBook);
+                setMLPrediction(pred);
+
+                // Track for accuracy
+                if (orderBook.midPrice) {
+                    trackPrediction(pred, orderBook.midPrice);
+                }
+            } catch (error) {
+                console.error('ML prediction error:', error);
+            } finally {
+                setMLLoading(false);
+            }
+        };
+
+        // Initial fetch
+        fetchPrediction();
+
+        // Fetch based on settings interval
+        const interval = setInterval(fetchPrediction, mlSettings.refreshInterval * 1000);
+
+        return () => clearInterval(interval);
+    }, [selectedSymbol, isAdmin, orderBook, mlSettings.horizon, mlSettings.refreshInterval, trackPrediction]);
+
     // Loading state
     if (status === 'loading') {
         return (
@@ -679,7 +717,7 @@ export default function DomArraPage() {
                                 <OrderBookVisualization orderBook={orderBook} />
                             </div>
                         ) : (
-                            <BookmapChart currentOrderBook={orderBook} history={flowHistory} />
+                            <BookmapChart currentOrderBook={orderBook} history={flowHistory} mlPrediction={mlPrediction} />
                         )}
                     </motion.div>
 
@@ -688,9 +726,12 @@ export default function DomArraPage() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="space-y-6"
+                        className="space-y-4"
                     >
                         <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
+                        <MLPredictionPanel prediction={mlPrediction} isLoading={mlLoading} />
+                        <MLSettingsPanel settings={mlSettings} onSettingsChange={setMLSettings} />
+                        <AccuracyTrackerPanel stats={accuracyStats} pendingCount={pendingCount} />
                         <PredictionPanel prediction={prediction} />
                     </motion.div>
                 </div>

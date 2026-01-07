@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { OrderBook, OrderBookLevel, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
 import { CircleStackIcon, ChartIcon } from '@/components/PremiumIcons';
+import { MLPrediction, getPredictionColor } from '@/types/ml-prediction';
 
 export interface HeatmapDataPoint {
     timestamp: number;
@@ -13,6 +14,7 @@ interface HeatmapBubbleProps {
     currentOrderBook: OrderBook | null;
     history: HeatmapDataPoint[];
     height?: number;
+    mlPrediction?: MLPrediction | null;
 }
 
 // Helper: Calculate statistics for auto-scaling color intensity
@@ -67,7 +69,7 @@ function getPriceRange(history: HeatmapDataPoint[], currentBook: OrderBook | nul
     return { min: minPrice - padding, max: maxPrice + padding };
 }
 
-export default function BookmapChart({ currentOrderBook, history, height = 500 }: HeatmapBubbleProps) {
+export default function BookmapChart({ currentOrderBook, history, height = 500, mlPrediction }: HeatmapBubbleProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
@@ -278,6 +280,70 @@ export default function BookmapChart({ currentOrderBook, history, height = 500 }
             ctx.moveTo(futureStartX, currentY);
             ctx.lineTo(CHART_WIDTH, currentY);
             ctx.stroke();
+
+            // ML PREDICTION OVERLAY
+            if (mlPrediction && mlPrediction.confidence > 0.5) {
+                const predColor = getPredictionColor(mlPrediction.direction);
+                const confidencePct = Math.round(mlPrediction.confidence * 100);
+
+                // Calculate predicted price change
+                const priceChange = mlPrediction.direction === 'UP'
+                    ? currentOrderBook.midPrice * 0.001  // +0.1%
+                    : mlPrediction.direction === 'DOWN'
+                        ? -currentOrderBook.midPrice * 0.001  // -0.1%
+                        : 0;
+                const predictedPrice = currentOrderBook.midPrice + priceChange;
+                const predictedY = getY(predictedPrice);
+
+                // Dashed prediction line
+                ctx.beginPath();
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = predColor;
+                ctx.lineWidth = 2;
+                ctx.moveTo(futureStartX, currentY);
+                ctx.lineTo(CHART_WIDTH, predictedY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Direction arrow
+                const arrowX = futureStartX + (FUTURE_ZONE_WIDTH * 0.6);
+                const arrowY = (currentY + predictedY) / 2;
+                const arrowSize = 12;
+
+                ctx.fillStyle = predColor;
+                ctx.beginPath();
+                if (mlPrediction.direction === 'UP') {
+                    ctx.moveTo(arrowX, arrowY - arrowSize);
+                    ctx.lineTo(arrowX - arrowSize * 0.7, arrowY + arrowSize * 0.5);
+                    ctx.lineTo(arrowX + arrowSize * 0.7, arrowY + arrowSize * 0.5);
+                } else if (mlPrediction.direction === 'DOWN') {
+                    ctx.moveTo(arrowX, arrowY + arrowSize);
+                    ctx.lineTo(arrowX - arrowSize * 0.7, arrowY - arrowSize * 0.5);
+                    ctx.lineTo(arrowX + arrowSize * 0.7, arrowY - arrowSize * 0.5);
+                } else {
+                    // Neutral - right arrow
+                    ctx.moveTo(arrowX + arrowSize, arrowY);
+                    ctx.lineTo(arrowX - arrowSize * 0.3, arrowY - arrowSize * 0.5);
+                    ctx.lineTo(arrowX - arrowSize * 0.3, arrowY + arrowSize * 0.5);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                // Confidence badge
+                const badgeX = futureStartX + 10;
+                const badgeY = 40;
+                ctx.fillStyle = predColor;
+                ctx.globalAlpha = 0.9;
+                ctx.beginPath();
+                ctx.roundRect(badgeX, badgeY, 75, 25, 5);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`AI: ${confidencePct}%`, badgeX + 37, badgeY + 17);
+            }
 
 
             // 5. PRICE AXIS
