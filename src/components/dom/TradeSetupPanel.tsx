@@ -53,7 +53,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                 <div className="text-center text-gray-400">
                     <ClockIcon className="w-6 h-6 mx-auto mb-2 opacity-50" />
                     <p className="text-sm font-medium">Scanning for High Confidence Setup...</p>
-                    <p className="text-xs mt-1">AI ensures > 65% stability</p>
+                    <p className="text-xs mt-1">AI ensures &gt; 65% stability</p>
                 </div>
             </div>
         );
