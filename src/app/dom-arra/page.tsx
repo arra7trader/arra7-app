@@ -363,8 +363,9 @@ export default function DomArraPage() {
 
     // Set up price getter for accuracy verification
     useEffect(() => {
-        setGetCurrentPrice(() => orderBook?.midPrice || 0);
-    }, [orderBook, setGetCurrentPrice]);
+        // Pass a function that returns current price (not the price itself)
+        setGetCurrentPrice(() => orderBookRef.current?.midPrice || 0);
+    }, [setGetCurrentPrice]);
 
     // Update ref when symbol changes
     useEffect(() => {
