@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -19,19 +19,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Viewport configuration (separated from metadata in Next.js 16+)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#3B82F6",
+};
+
 export const metadata: Metadata = {
   title: "ARRA7 - AI Trading Analysis",
   description: "Analisa Trading Forex & Saham Indonesia dengan AI Level Institusional. Entry, SL, TP otomatis. Smart Money Concepts.",
   keywords: ["forex", "saham", "trading", "analisa", "AI", "indonesia", "XAUUSD", "gold", "IDX", "indicators", "expert advisors"],
   authors: [{ name: "ARRA7" }],
   manifest: "/manifest.json",
-  themeColor: "#3B82F6",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
