@@ -17,6 +17,34 @@ interface HeatmapBubbleProps {
     timeframe?: 1 | 5 | 15 | 30; // Minutes to display
 }
 
+// Wall persistence tracking
+interface TrackedWall {
+    price: number;
+    volume: number;
+    type: 'ASK' | 'BID';
+    firstSeen: number;
+    lastSeen: number;
+    sizeClass: 'MEGA' | 'LARGE' | 'MEDIUM' | 'SMALL';
+}
+
+// Classify order size
+function classifyOrderSize(volume: number, avgVol: number): 'MEGA' | 'LARGE' | 'MEDIUM' | 'SMALL' {
+    if (volume > avgVol * 10) return 'MEGA';
+    if (volume > avgVol * 5) return 'LARGE';
+    if (volume > avgVol * 2) return 'MEDIUM';
+    return 'SMALL';
+}
+
+// Get size icon
+function getSizeIcon(sizeClass: 'MEGA' | 'LARGE' | 'MEDIUM' | 'SMALL'): string {
+    switch (sizeClass) {
+        case 'MEGA': return '🐋';
+        case 'LARGE': return '🦈';
+        case 'MEDIUM': return '📦';
+        case 'SMALL': return '';
+    }
+}
+
 // Turbo Colormap (Approximation)
 function getHeatmapColor(intensity: number, alpha: number = 1): string {
     const t = Math.max(0, Math.min(1, intensity));
@@ -146,6 +174,9 @@ export default function BookmapChart({ currentOrderBook, history, mlPrediction, 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [dimensions, setDimensions] = useState({ width: 1200, height: 500 });
+
+    // Wall persistence tracking - stores walls with their first/last seen timestamps
+    const wallHistoryRef = useRef<Map<string, TrackedWall>>(new Map());
 
     // Resize handler
     useEffect(() => {
@@ -307,55 +338,126 @@ export default function BookmapChart({ currentOrderBook, history, mlPrediction, 
         currentOrderBook.asks.forEach(a => drawFutureBar(a.price, a.volume, 'ASK'));
         currentOrderBook.bids.forEach(b => drawFutureBar(b.price, b.volume, 'BID'));
 
-        // === 5. WHALE WALLS (Enhanced - Bigger Labels) ===
-        const whaleThreshold = Math.max(avgVol * 2.5, maxVol * 0.5);
+        // === 5. WHALE WALLS with Persistence Tracking ===
+        const whaleThreshold = Math.max(avgVol * 2, maxVol * 0.4);
+        const now = Date.now();
+        const wallHistory = wallHistoryRef.current;
 
-        const drawWhaleWall = (price: number, volume: number, type: 'ASK' | 'BID') => {
+        // Update wall history with current orders
+        const updateWallHistory = (price: number, volume: number, type: 'ASK' | 'BID') => {
+            if (volume < avgVol * 1.5) return; // Only track significant orders
+
+            const key = `${type}-${price.toFixed(priceDecimals)}`;
+            const existing = wallHistory.get(key);
+            const sizeClass = classifyOrderSize(volume, avgVol);
+
+            if (existing) {
+                // Update existing wall
+                existing.lastSeen = now;
+                existing.volume = volume;
+                existing.sizeClass = sizeClass;
+            } else {
+                // New wall
+                wallHistory.set(key, {
+                    price,
+                    volume,
+                    type,
+                    firstSeen: now,
+                    lastSeen: now,
+                    sizeClass
+                });
+            }
+        };
+
+        // Track all current orders
+        currentOrderBook.asks.forEach(a => updateWallHistory(a.price, a.volume, 'ASK'));
+        currentOrderBook.bids.forEach(b => updateWallHistory(b.price, b.volume, 'BID'));
+
+        // Clean up stale walls (not seen for 3 seconds)
+        wallHistory.forEach((wall, key) => {
+            if (now - wall.lastSeen > 3000) {
+                wallHistory.delete(key);
+            }
+        });
+
+        // Draw walls with persistence info
+        const drawStickyWall = (price: number, volume: number, type: 'ASK' | 'BID') => {
             if (volume < whaleThreshold) return;
 
+            const key = `${type}-${price.toFixed(priceDecimals)}`;
+            const wallData = wallHistory.get(key);
+            const ageMs = wallData ? now - wallData.firstSeen : 0;
+            const ageSeconds = Math.floor(ageMs / 1000);
+            const sizeClass = wallData?.sizeClass || classifyOrderSize(volume, avgVol);
+
             const y = getY(price);
-            const color = type === 'ASK' ? '#ef4444' : '#22c55e';
-            const bgColor = type === 'ASK' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)';
+            const baseColor = type === 'ASK' ? '#ef4444' : '#22c55e';
 
-            // Horizontal zone highlight
+            // Opacity increases with age (more stable = more solid)
+            const stabilityAlpha = Math.min(0.3 + (ageSeconds / 20) * 0.5, 0.8);
+            const bgColor = type === 'ASK'
+                ? `rgba(239, 68, 68, ${stabilityAlpha})`
+                : `rgba(34, 197, 94, ${stabilityAlpha})`;
+
+            // Horizontal zone highlight - thicker for older walls
+            const zoneHeight = ageSeconds > 10 ? 20 : ageSeconds > 5 ? 16 : 12;
             ctx.fillStyle = bgColor;
-            ctx.fillRect(futureX, y - 8, FUTURE_WIDTH, 16);
+            ctx.fillRect(futureX, y - zoneHeight / 2, FUTURE_WIDTH, zoneHeight);
 
-            // Strong line
+            // Line - thicker for confirmed walls
+            const lineWidth = ageSeconds > 15 ? 4 : ageSeconds > 5 ? 3 : 2;
             ctx.beginPath();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = lineWidth;
             ctx.setLineDash([]);
             ctx.moveTo(futureX, y);
             ctx.lineTo(CHART_WIDTH, y);
             ctx.stroke();
 
-            // BIG LABEL
-            const labelText = `${type === 'ASK' ? '🔴' : '🟢'} ${volume.toFixed(volDecimals)}`;
-            ctx.font = 'bold 14px Inter, sans-serif';
+            // Build label with size icon and stability
+            const sizeIcon = getSizeIcon(sizeClass);
+            const dirIcon = type === 'ASK' ? '🔴' : '🟢';
+            let labelText = `${dirIcon}${sizeIcon} ${volume.toFixed(volDecimals)}`;
+
+            // Add stability badge
+            if (ageSeconds >= 15) {
+                labelText += ' ✅';
+            } else if (ageSeconds >= 5) {
+                labelText += ` (${ageSeconds}s)`;
+            }
+
+            ctx.font = 'bold 13px Inter, sans-serif';
             const textWidth = ctx.measureText(labelText).width;
 
-            // Label background
+            // Label background - gold border for confirmed
             ctx.fillStyle = '#0f172a';
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = ageSeconds >= 15 ? '#fbbf24' : baseColor;
+            ctx.lineWidth = ageSeconds >= 15 ? 3 : 2;
             ctx.beginPath();
-            ctx.roundRect(CHART_WIDTH - textWidth - 24, y - 12, textWidth + 20, 24, 6);
+            ctx.roundRect(CHART_WIDTH - textWidth - 26, y - 14, textWidth + 22, 28, 6);
             ctx.fill();
             ctx.stroke();
 
             // Label text
-            ctx.fillStyle = color;
-            ctx.fillText(labelText, CHART_WIDTH - textWidth - 14, y + 5);
+            ctx.fillStyle = ageSeconds >= 15 ? '#fbbf24' : baseColor;
+            ctx.fillText(labelText, CHART_WIDTH - textWidth - 16, y + 5);
+
+            // Size class label above for MEGA/LARGE
+            if (sizeClass === 'MEGA' || sizeClass === 'LARGE') {
+                ctx.font = 'bold 9px Inter, sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                const sizeLabel = sizeClass === 'MEGA' ? 'MEGA WALL' : 'LARGE WALL';
+                ctx.fillText(sizeLabel, futureX + 10, y - zoneHeight / 2 - 4);
+            }
 
             // Price tag
             ctx.font = 'bold 10px Inter, monospace';
             ctx.fillStyle = '#94a3b8';
-            ctx.fillText(price.toFixed(priceDecimals), futureX + 10, y - 12);
+            ctx.fillText(price.toFixed(priceDecimals), futureX + 10, y - 14);
         };
 
-        currentOrderBook.asks.forEach(a => drawWhaleWall(a.price, a.volume, 'ASK'));
-        currentOrderBook.bids.forEach(b => drawWhaleWall(b.price, b.volume, 'BID'));
+        currentOrderBook.asks.forEach(a => drawStickyWall(a.price, a.volume, 'ASK'));
+        currentOrderBook.bids.forEach(b => drawStickyWall(b.price, b.volume, 'BID'));
 
         // === 6. ML PREDICTION OVERLAY ===
         if (mlPrediction && mlPrediction.confidence > 0.5) {
