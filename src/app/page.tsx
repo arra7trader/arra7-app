@@ -8,8 +8,15 @@ import { useRef } from 'react';
 import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon, CheckCircleSolidIcon } from '@/components/PremiumIcons';
 
 export default function Home() {
-  const t = useTranslations('hero');
+  const tHero = useTranslations('hero');
+  const tStats = useTranslations('stats');
+  const tTrust = useTranslations('trust');
+  const tHowItWorks = useTranslations('howItWorks');
   const tFeatures = useTranslations('features');
+  const tTestimonials = useTranslations('testimonials');
+  const tCta = useTranslations('ctaSection');
+  const tFooter = useTranslations('footer');
+
   const { data: session } = useSession();
   const heroRef = useRef(null);
 
@@ -59,7 +66,7 @@ export default function Home() {
           >
             <span className="badge-apple">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              {t('badge')}
+              {tHero('badge')}
             </span>
           </motion.div>
 
@@ -70,10 +77,8 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="headline-xl mb-6"
           >
-            {t('headline')}{' '}
-            <span className="gradient-text">Whale Order Flow</span>
-            <br />
-            & AI Analisa Saham
+            {tHero('headline')}{' '}
+            <span className="gradient-text">{tHero('titleSuffix')}</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -83,7 +88,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="body-lg max-w-2xl mx-auto mb-10"
           >
-            {t('subheadline')}
+            {tHero('subheadline')}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -96,23 +101,23 @@ export default function Home() {
             <Link href={session ? '/dom-arra' : '/login?callbackUrl=/dom-arra'}>
               <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-amber-500/20">
                 <span className="mr-2">🔥</span>
-                DOM Heatmap
+                {tHero('ctaBookmap')}
                 <ArrowRightIcon className="ml-2" size="sm" />
               </button>
             </Link>
             <Link href={session ? '/analisa-saham' : '/login?callbackUrl=/analisa-saham'}>
               <button className="btn-secondary">
-                Analisa Saham
+                {tHero('ctaStock')}
               </button>
             </Link>
             <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
               <button className="btn-secondary">
-                Forex AI
+                {tHero('ctaForex')}
               </button>
             </Link>
             <Link href="/pricing">
               <button className="btn-secondary">
-                Lihat Harga
+                {tHero('ctaPricing')}
               </button>
             </Link>
           </motion.div>
@@ -132,8 +137,8 @@ export default function Home() {
             className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center max-w-2xl mx-auto"
           >
             {[
-              { number: '100+', label: 'Active Traders' },
-              { number: '95%', label: 'Akurasi Sinyal' },
+              { number: '100+', label: tStats('activeTraders') },
+              { number: '95%', label: tStats('signalAccuracy') },
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -152,22 +157,14 @@ export default function Home() {
       <section className="py-8 border-y border-[var(--border-light)]">
         <div className="container-wide">
           <div className="flex flex-wrap items-center justify-center gap-8 text-[var(--text-muted)] text-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircleSolidIcon className="text-green-500" size="md" />
-              <span>Gratis Selamanya untuk BASIC</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircleSolidIcon className="text-green-500" size="md" />
-              <span>Tanpa Kartu Kredit</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircleSolidIcon className="text-green-500" size="md" />
-              <span>Daftar dalam 30 Detik</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircleSolidIcon className="text-green-500" size="md" />
-              <span>Support via Telegram</span>
-            </div>
+            {[
+              tTrust('freeBasic'), tTrust('noCreditCard'), tTrust('fastSignup'), tTrust('telegramSupport')
+            ].map((text, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <CheckCircleSolidIcon className="text-green-500" size="md" />
+                <span>{text}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -181,20 +178,20 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="badge-apple mb-4 inline-flex">Mudah & Cepat</span>
+            <span className="badge-apple mb-4 inline-flex">{tHowItWorks('badge')}</span>
             <h2 className="headline-lg mb-4">
-              Cara <span className="gradient-text">Kerjanya</span>
+              {tHowItWorks('title')}
             </h2>
             <p className="body-lg max-w-2xl mx-auto">
-              Hanya 3 langkah untuk mendapatkan analisa trading profesional
+              {tHowItWorks('desc')}
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Pilih Pair', desc: 'Pilih forex pair, crypto, atau saham Indonesia yang ingin dianalisa', icon: <CrosshairIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-blue-500 to-cyan-500' },
-              { step: '02', title: 'Klik Analisa', desc: 'ARRA Quantum Strategist akan menganalisa dengan AI dalam hitungan detik', icon: <RocketIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-purple-500 to-pink-500' },
-              { step: '03', title: 'Trading!', desc: 'Dapatkan entry zone, SL, TP, dan investment thesis lengkap', icon: <CurrencyIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-green-500 to-emerald-500' },
+              { step: '01', title: tHowItWorks('steps.01.title'), desc: tHowItWorks('steps.01.desc'), icon: <CrosshairIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-blue-500 to-cyan-500' },
+              { step: '02', title: tHowItWorks('steps.02.title'), desc: tHowItWorks('steps.02.desc'), icon: <RocketIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-purple-500 to-pink-500' },
+              { step: '03', title: tHowItWorks('steps.03.title'), desc: tHowItWorks('steps.03.desc'), icon: <CurrencyIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-green-500 to-emerald-500' },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -227,9 +224,9 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="badge-apple mb-4 inline-flex">Fitur Unggulan</span>
+            <span className="badge-apple mb-4 inline-flex">{tFeatures('badge')}</span>
             <h2 className="headline-lg mb-4">
-              Kenapa Trader Pilih <span className="gradient-text">ARRA7</span>?
+              {tFeatures('title')}
             </h2>
           </motion.div>
 
@@ -237,38 +234,38 @@ export default function Home() {
             {[
               {
                 icon: <ChartIcon className="text-white" size="lg" />,
-                title: 'DOM Heatmap & Whale Tracking',
-                desc: 'Lihat limit order raksasa (Whale) dan likuiditas masa depan secara real-time. Data institusional level.',
+                title: tFeatures('items.heatmap.title'),
+                desc: tFeatures('items.heatmap.desc'),
                 color: 'from-amber-500 to-orange-500'
               },
               {
                 icon: <SparklesIcon className="text-white" size="lg" />,
-                title: 'Analisa Saham Indonesia',
-                desc: 'Fundamental & teknikal emiten IDX dengan metodologi institusional',
+                title: tFeatures('items.stock.title'),
+                desc: tFeatures('items.stock.desc'),
                 color: 'from-green-500 to-emerald-500'
               },
               {
                 icon: <CpuChipIcon className="text-white" size="lg" />,
-                title: 'AI Quantum Strategist',
-                desc: 'Didukung LLM 70B parameter untuk analisa setingkat hedge fund',
+                title: tFeatures('items.ai.title'),
+                desc: tFeatures('items.ai.desc'),
                 color: 'from-purple-500 to-pink-500'
               },
               {
                 icon: <RocketIcon className="text-white" size="lg" />,
-                title: 'Entry & Exit Zone',
-                desc: 'Rekomendasi entry, stop loss, dan take profit yang jelas',
+                title: tFeatures('items.zones.title'),
+                desc: tFeatures('items.zones.desc'),
                 color: 'from-amber-500 to-orange-500'
               },
               {
                 icon: <TrophyIcon className="text-white" size="lg" />,
-                title: 'Investment Thesis',
-                desc: 'Alasan logis di balik setiap rekomendasi trading',
+                title: tFeatures('items.thesis.title'),
+                desc: tFeatures('items.thesis.desc'),
                 color: 'from-red-500 to-rose-500'
               },
               {
                 icon: <BellIcon className="text-white" size="lg" />,
-                title: 'Update Setiap Saat',
-                desc: 'Analisa selalu fresh dengan data market terbaru',
+                title: tFeatures('items.updates.title'),
+                desc: tFeatures('items.updates.desc'),
                 color: 'from-indigo-500 to-violet-500'
               },
             ].map((feature, i) => (
@@ -302,10 +299,10 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="headline-lg mb-4">
-              Apa Kata <span className="gradient-text">Mereka</span>?
+              {tTestimonials('title')}
             </h2>
             <p className="body-lg max-w-2xl mx-auto">
-              Trader Indonesia yang sudah merasakan manfaat ARRA7
+              {tTestimonials('desc')}
             </p>
           </motion.div>
 
@@ -321,21 +318,21 @@ export default function Home() {
                 name: 'Rizky Pratama',
                 role: 'Day Trader • Jakarta',
                 avatar: 'RP',
-                text: 'Gila sih ini AI nya. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah!',
+                text: tTestimonials('items.0.text'),
                 color: 'from-blue-500 to-cyan-500',
               },
               {
                 name: 'Dewi Anggraini',
                 role: 'Swing Trader • Surabaya',
                 avatar: 'DA',
-                text: 'ARRA7 beda dari yang lain, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede.',
+                text: tTestimonials('items.1.text'),
                 color: 'from-purple-500 to-pink-500',
               },
               {
                 name: 'Budi Santoso',
                 role: 'Part-time Trader • Bandung',
                 avatar: 'BS',
-                text: 'Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, simple tapi powerful.',
+                text: tTestimonials('items.2.text'),
                 color: 'from-amber-500 to-orange-500',
               },
             ].map((testimonial, index) => (
@@ -375,37 +372,31 @@ export default function Home() {
             transition={{ duration: 0.6 }}
           >
             <span className="inline-block px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold mb-6">
-              🔥 Promo Tahun Baru — Diskon hingga 50%!
+              {tCta('promoBadge')}
             </span>
             <h2 className="headline-lg mb-6">
-              Siap Meningkatkan Trading Anda?
+              {tCta('title')}
             </h2>
             <p className="body-lg max-w-xl mx-auto mb-6">
-              Bergabung dengan 100+ trader Indonesia yang sudah profit dengan analisa AI ARRA7.
+              {tCta('desc')}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <CheckCircleSolidIcon className="text-green-500" size="md" />
-                Akun BASIC gratis selamanya
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <CheckCircleSolidIcon className="text-green-500" size="md" />
-                Tidak perlu kartu kredit
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <CheckCircleSolidIcon className="text-green-500" size="md" />
-                Cancel kapan saja
-              </div>
+              {[tCta('list.freeBasic'), tCta('list.noCreditCard'), tCta('list.cancelAnytime')].map((text, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                  <CheckCircleSolidIcon className="text-green-500" size="md" />
+                  {text}
+                </div>
+              ))}
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href={session ? '/analisa-market' : '/login'}>
                 <button className="btn-primary text-lg px-10 py-4">
-                  Mulai Sekarang — Gratis
+                  {tCta('btnStart')}
                 </button>
               </Link>
               <Link href="/pricing">
                 <button className="btn-secondary text-lg">
-                  Lihat Paket PRO
+                  {tCta('btnPro')}
                   <ArrowRightIcon className="ml-2" size="sm" />
                 </button>
               </Link>
@@ -423,22 +414,22 @@ export default function Home() {
                 <span className="gradient-text">ARRA</span>7
               </span>
               <p className="text-sm text-[var(--text-muted)] mt-1">
-                AI-Powered Trading Analysis
+                {tFooter('subtitle')}
               </p>
             </div>
             <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)]">
               <Link href="/privacy" className="hover:text-[var(--accent-blue)] transition-colors">
-                Privacy
+                {tFooter('privacy')}
               </Link>
               <Link href="/terms" className="hover:text-[var(--accent-blue)] transition-colors">
-                Terms
+                {tFooter('terms')}
               </Link>
               <Link href="/faq" className="hover:text-[var(--accent-blue)] transition-colors">
-                FAQ
+                {tFooter('faq')}
               </Link>
             </div>
             <p className="text-sm text-[var(--text-muted)]">
-              © 2026 ARRA7. All rights reserved.
+              {tFooter('copyright')}
             </p>
           </div>
         </div>

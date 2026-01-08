@@ -19,17 +19,105 @@
     "headline": "Trade Analysis with",
     "headlineHighlight": "AI",
     "headlineEnd": "& High Accuracy",
+    "titleSuffix": "Whale Order Flow & AI Stock Analysis",
     "subheadline": "AI-powered Forex and Indonesian Stock analysis platform. Get trading signals, entry/exit zones, and investment thesis from ARRA Quantum Strategist.",
-    "cta": "Market Analysis",
-    "ctaSecondary": "View Pricing"
+    "ctaBookmap": "Bookmap Heatmap",
+    "ctaStock": "Stock Analysis",
+    "ctaForex": "Forex AI",
+    "ctaPricing": "View Pricing"
+  },
+  "stats": {
+    "activeTraders": "Active Traders",
+    "signalAccuracy": "Signal Accuracy"
+  },
+  "trust": {
+    "freeBasic": "Free Forever for BASIC",
+    "noCreditCard": "No Credit Card Required",
+    "fastSignup": "Register in 30 Seconds",
+    "telegramSupport": "Support via Telegram"
+  },
+  "howItWorks": {
+    "badge": "Easy & Fast",
+    "title": "How It Works",
+    "desc": "Just 3 steps to get professional trading analysis",
+    "steps": {
+      "01": {
+        "title": "Select Pair",
+        "desc": "Choose forex pair, crypto, or Indonesian stocks to analyze"
+      },
+      "02": {
+        "title": "Click Analyze",
+        "desc": "ARRA Quantum Strategist will analyze with AI in seconds"
+      },
+      "03": {
+        "title": "Start Trading!",
+        "desc": "Get entry zones, SL, TP, and complete investment thesis"
+      }
+    }
   },
   "features": {
-    "indicators": "Premium Indicators",
-    "indicatorsDesc": "Advanced technical analysis tools",
-    "ea": "Expert Advisors",
-    "eaDesc": "Automated trading solutions",
-    "analysis": "Market Analysis",
-    "analysisDesc": "Real-time market insights"
+    "badge": "Key Features",
+    "title": "Why Traders Choose ARRA7?",
+    "items": {
+      "heatmap": {
+        "title": "DOM Heatmap & Whale Tracking",
+        "desc": "See giant limit orders (Whales) and future liquidity in real-time. Institutional level data."
+      },
+      "stock": {
+        "title": "Indonesian Stock Analysis",
+        "desc": "Fundamental & technical analysis of IDX issuers with institutional methodology"
+      },
+      "ai": {
+        "title": "AI Quantum Strategist",
+        "desc": "Powered by 70B parameter LLM for hedge fund level analysis"
+      },
+      "zones": {
+        "title": "Entry & Exit Zone",
+        "desc": "Clear entry, stop loss, and take profit recommendations"
+      },
+      "thesis": {
+        "title": "Investment Thesis",
+        "desc": "Logical reasoning behind every trading recommendation"
+      },
+      "updates": {
+        "title": "Always Updated Pro",
+        "desc": "Analysis always fresh with the latest market data"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "What They Say",
+    "desc": "Indonesian traders who have benefited from ARRA7",
+    "items": [
+      {
+        "text": "This AI is crazy. The entry points are very accurate, just yesterday verified 200 pips profit on XAUUSD. Totally worth it!"
+      },
+      {
+        "text": "ARRA7 is different. The analysis is very detailed using SMC and Fibo. Trading is much more confident now."
+      },
+      {
+        "text": "Office work makes it hard to monitor charts. With ARRA7 just check AI analysis, simple but powerful."
+      }
+    ]
+  },
+  "ctaSection": {
+    "promoBadge": "🔥 New Year Promo — Up to 50% Off!",
+    "title": "Ready to Upgrade Your Trading?",
+    "desc": "Join 100+ traders who are already profitable with ARRA7 AI analysis.",
+    "list": {
+      "freeBasic": "BASIC account free forever",
+      "noCreditCard": "No credit card needed",
+      "cancelAnytime": "Cancel anytime"
+    },
+    "btnStart": "Start Now — Free",
+    "btnPro": "View PRO Plans"
+  },
+  "footer": {
+    "subtitle": "AI-Powered Trading Analysis",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "faq": "FAQ",
+    "copyright": "© 2026 ARRA7. All rights reserved."
   },
   "auth": {
     "loginTitle": "Welcome to ARRA7",

@@ -19,17 +19,105 @@
         "headline": "Analisa Trading dengan",
         "headlineHighlight": "AI",
         "headlineEnd": "& Akurasi Tinggi",
+        "titleSuffix": "Whale Order Flow & AI Analisa Saham",
         "subheadline": "Platform analisa Forex dan Saham Indonesia berbasis AI. Dapatkan sinyal trading, entry/exit zone, dan investment thesis dari ARRA Quantum Strategist.",
-        "cta": "Analisa Market",
-        "ctaSecondary": "Lihat Harga"
+        "ctaBookmap": "Bookmap Heatmap",
+        "ctaStock": "Analisa Saham",
+        "ctaForex": "Forex AI",
+        "ctaPricing": "Lihat Harga"
+    },
+    "stats": {
+        "activeTraders": "Active Traders",
+        "signalAccuracy": "Akurasi Sinyal"
+    },
+    "trust": {
+        "freeBasic": "Gratis Selamanya untuk BASIC",
+        "noCreditCard": "Tanpa Kartu Kredit",
+        "fastSignup": "Daftar dalam 30 Detik",
+        "telegramSupport": "Support via Telegram"
+    },
+    "howItWorks": {
+        "badge": "Mudah & Cepat",
+        "title": "Cara Kerjanya",
+        "desc": "Hanya 3 langkah untuk mendapatkan analisa trading profesional",
+        "steps": {
+            "01": {
+                "title": "Pilih Pair",
+                "desc": "Pilih forex pair, crypto, atau saham Indonesia yang ingin dianalisa"
+            },
+            "02": {
+                "title": "Klik Analisa",
+                "desc": "ARRA Quantum Strategist akan menganalisa dengan AI dalam hitungan detik"
+            },
+            "03": {
+                "title": "Trading!",
+                "desc": "Dapatkan entry zone, SL, TP, dan investment thesis lengkap"
+            }
+        }
     },
     "features": {
-        "indicators": "Indikator Premium",
-        "indicatorsDesc": "Alat analisis teknikal canggih",
-        "ea": "Expert Advisors",
-        "eaDesc": "Solusi trading otomatis",
-        "analysis": "Analisa Market",
-        "analysisDesc": "Wawasan pasar real-time"
+        "badge": "Fitur Unggulan",
+        "title": "Kenapa Trader Pilih ARRA7?",
+        "items": {
+            "heatmap": {
+                "title": "DOM Heatmap & Whale Tracking",
+                "desc": "Lihat limit order raksasa (Whale) dan likuiditas masa depan secara real-time. Data institusional level."
+            },
+            "stock": {
+                "title": "Analisa Saham Indonesia",
+                "desc": "Fundamental & teknikal emiten IDX dengan metodologi institusional"
+            },
+            "ai": {
+                "title": "AI Quantum Strategist",
+                "desc": "Didukung LLM 70B parameter untuk analisa setingkat hedge fund"
+            },
+            "zones": {
+                "title": "Entry & Exit Zone",
+                "desc": "Rekomendasi entry, stop loss, dan take profit yang jelas"
+            },
+            "thesis": {
+                "title": "Investment Thesis",
+                "desc": "Alasan logis di balik setiap rekomendasi trading"
+            },
+            "updates": {
+                "title": "Update Setiap Saat",
+                "desc": "Analisa selalu fresh dengan data market terbaru"
+            }
+        }
+    },
+    "testimonials": {
+        "title": "Apa Kata Mereka?",
+        "desc": "Trader Indonesia yang sudah merasakan manfaat ARRA7",
+        "items": [
+            {
+                "text": "Gila sih ini AI nya. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah!"
+            },
+            {
+                "text": "ARRA7 beda dari yang lain, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede."
+            },
+            {
+                "text": "Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, simple tapi powerful."
+            }
+        ]
+    },
+    "ctaSection": {
+        "promoBadge": "🔥 Promo Tahun Baru — Diskon hingga 50%!",
+        "title": "Siap Meningkatkan Trading Anda?",
+        "desc": "Bergabung dengan 100+ trader Indonesia yang sudah profit dengan analisa AI ARRA7.",
+        "list": {
+            "freeBasic": "Akun BASIC gratis selamanya",
+            "noCreditCard": "Tidak perlu kartu kredit",
+            "cancelAnytime": "Cancel kapan saja"
+        },
+        "btnStart": "Mulai Sekarang — Gratis",
+        "btnPro": "Lihat Paket PRO"
+    },
+    "footer": {
+        "subtitle": "AI-Powered Trading Analysis",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "faq": "FAQ",
+        "copyright": "© 2026 ARRA7. All rights reserved."
     },
     "auth": {
         "loginTitle": "Selamat Datang di ARRA7",
