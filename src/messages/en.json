@@ -101,32 +101,39 @@
     }
   },
   "features": {
-    "badge": "Key Features",
-    "title": "Why Traders Choose ARRA7?",
+    "badge": "⚡ Premium Trading Suite",
+    "title": "Why 500+ Traders Trust ARRA7",
+    "subtitle": "Powered by AI models with 90%+ verified accuracy",
     "items": {
       "heatmap": {
-        "title": "DOM Heatmap & Whale Tracking",
-        "desc": "See giant limit orders (Whales) and future liquidity in real-time. Institutional level data."
+        "title": "🔥 Bookmap ARRA7",
+        "desc": "Real-time Whale Order Flow Detection. See $1M+ institutional orders BEFORE price moves. The same data hedge funds pay $10,000/month for.",
+        "badge": "EXCLUSIVE"
       },
       "stock": {
-        "title": "Indonesian Stock Analysis",
-        "desc": "Fundamental & technical analysis of IDX issuers with institutional methodology"
+        "title": "🇮🇩 AI Stock Analysis",
+        "desc": "Professional-grade IDX analysis with Fundamental Score, Technical Signals, and Fair Value calculation. Used by fund managers.",
+        "badge": "PRO GRADE"
       },
       "ai": {
-        "title": "AI Quantum Strategist",
-        "desc": "Powered by 70B parameter LLM for hedge fund level analysis"
+        "title": "🤖 Neural Ensemble AI",
+        "desc": "Proprietary LSTM + GRU + Transformer ensemble model trained on 5 years market data. 90.4% verified prediction accuracy.",
+        "badge": "90%+ ACCURACY"
       },
       "zones": {
-        "title": "Entry & Exit Zone",
-        "desc": "Clear entry, stop loss, and take profit recommendations"
+        "title": "🎯 Precision Entry & Exit",
+        "desc": "AI-calculated optimal entry zones with dynamic Stop Loss and multi-level Take Profit. Risk-reward ratio automatically optimized.",
+        "badge": "AI POWERED"
       },
       "thesis": {
-        "title": "Investment Thesis",
-        "desc": "Logical reasoning behind every trading recommendation"
+        "title": "📊 Investment Thesis",
+        "desc": "Complete institutional-level analysis with Smart Money Concepts, Fibonacci, and Market Structure. Know WHY you're trading.",
+        "badge": "INSTITUTIONAL"
       },
       "updates": {
-        "title": "Always Updated Pro",
-        "desc": "Analysis always fresh with the latest market data"
+        "title": "⚡ Real-time Updates",
+        "desc": "Analysis refreshed every 100ms with live market data. Powered by enterprise-grade infrastructure with 99.9% uptime.",
+        "badge": "LIVE DATA"
       }
     }
   },

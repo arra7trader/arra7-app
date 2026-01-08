@@ -69,8 +69,8 @@ function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === tab
-                ? `bg-gradient-to-r ${tabConfig[tab].color} text-white shadow-lg scale-105`
-                : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+              ? `bg-gradient-to-r ${tabConfig[tab].color} text-white shadow-lg scale-105`
+              : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
               }`}
           >
             {tHowItWorks(`tabs.${tab}`)}
@@ -321,8 +321,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section - Updated for AI Analysis */}
-      <section className="section-padding bg-[var(--bg-secondary)]">
+      {/* Features Section - Premium Trading Suite */}
+      <section className="section-padding bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
         <div className="container-wide">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -330,49 +330,64 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="badge-apple mb-4 inline-flex">{tFeatures('badge')}</span>
+            <span className="badge-apple mb-4 inline-flex bg-gradient-to-r from-purple-100 to-blue-100 border-purple-200">{tFeatures('badge')}</span>
             <h2 className="headline-lg mb-4">
               {tFeatures('title')}
             </h2>
+            <p className="body-lg text-[var(--text-secondary)] max-w-xl mx-auto">
+              {tFeatures('subtitle')}
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <ChartIcon className="text-white" size="lg" />,
+                icon: <FireIcon className="text-white" size="lg" />,
                 title: tFeatures('items.heatmap.title'),
                 desc: tFeatures('items.heatmap.desc'),
-                color: 'from-amber-500 to-orange-500'
+                badge: tFeatures('items.heatmap.badge'),
+                color: 'from-amber-500 to-orange-600',
+                badgeColor: 'bg-amber-100 text-amber-700 border-amber-200'
               },
               {
-                icon: <SparklesIcon className="text-white" size="lg" />,
+                icon: <TrophyIcon className="text-white" size="lg" />,
                 title: tFeatures('items.stock.title'),
                 desc: tFeatures('items.stock.desc'),
-                color: 'from-green-500 to-emerald-500'
+                badge: tFeatures('items.stock.badge'),
+                color: 'from-green-500 to-emerald-600',
+                badgeColor: 'bg-green-100 text-green-700 border-green-200'
               },
               {
                 icon: <CpuChipIcon className="text-white" size="lg" />,
                 title: tFeatures('items.ai.title'),
                 desc: tFeatures('items.ai.desc'),
-                color: 'from-purple-500 to-pink-500'
+                badge: tFeatures('items.ai.badge'),
+                color: 'from-purple-500 to-violet-600',
+                badgeColor: 'bg-purple-100 text-purple-700 border-purple-200'
               },
               {
-                icon: <RocketIcon className="text-white" size="lg" />,
+                icon: <CrosshairIcon className="text-white" size="lg" />,
                 title: tFeatures('items.zones.title'),
                 desc: tFeatures('items.zones.desc'),
-                color: 'from-amber-500 to-orange-500'
+                badge: tFeatures('items.zones.badge'),
+                color: 'from-blue-500 to-cyan-600',
+                badgeColor: 'bg-blue-100 text-blue-700 border-blue-200'
               },
               {
-                icon: <TrophyIcon className="text-white" size="lg" />,
+                icon: <ChartIcon className="text-white" size="lg" />,
                 title: tFeatures('items.thesis.title'),
                 desc: tFeatures('items.thesis.desc'),
-                color: 'from-red-500 to-rose-500'
+                badge: tFeatures('items.thesis.badge'),
+                color: 'from-rose-500 to-red-600',
+                badgeColor: 'bg-rose-100 text-rose-700 border-rose-200'
               },
               {
-                icon: <BellIcon className="text-white" size="lg" />,
+                icon: <SignalIcon className="text-white" size="lg" />,
                 title: tFeatures('items.updates.title'),
                 desc: tFeatures('items.updates.desc'),
-                color: 'from-indigo-500 to-violet-500'
+                badge: tFeatures('items.updates.badge'),
+                color: 'from-indigo-500 to-violet-600',
+                badgeColor: 'bg-indigo-100 text-indigo-700 border-indigo-200'
               },
             ].map((feature, i) => (
               <motion.div
@@ -380,14 +395,23 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-2xl p-6 border border-[var(--border-light)] hover:shadow-lg transition-all"
+                transition={{ delay: i * 0.08 }}
+                className="relative bg-white rounded-3xl p-8 border border-[var(--border-light)] hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
-                  {feature.icon}
+                {/* Badge */}
+                <span className={`absolute top-4 right-4 text-[10px] font-bold px-2.5 py-1 rounded-full border ${feature.badgeColor}`}>
+                  {feature.badge}
+                </span>
+
+                {/* Icon with Glow */}
+                <div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.color} blur-xl opacity-40 group-hover:opacity-60 transition-opacity`} />
+                  <div className="relative z-10">{feature.icon}</div>
                 </div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">{feature.title}</h3>
-                <p className="text-sm text-[var(--text-secondary)]">{feature.desc}</p>
+
+                {/* Content */}
+                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">{feature.title}</h3>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
