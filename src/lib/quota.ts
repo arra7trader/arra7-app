@@ -77,9 +77,9 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
     if (!turso) return getDefaultQuota();
 
     try {
-        const membership = (await getUserMembership(userId)) as Membership;
-        let dailyLimit = QUOTA_LIMITS[membership] || QUOTA_LIMITS.BASIC;
-        let allowedTimeframes = ALLOWED_TIMEFRAMES[membership] || ALLOWED_TIMEFRAMES.BASIC;
+        const { membership } = await getUserMembership(userId);
+        let dailyLimit = QUOTA_LIMITS[membership as Membership] || QUOTA_LIMITS.BASIC;
+        let allowedTimeframes = ALLOWED_TIMEFRAMES[membership as Membership] || ALLOWED_TIMEFRAMES.BASIC;
 
         // Check if user has active promo
         const promoStatus = await checkUserPromo(userId);
@@ -102,7 +102,7 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
         return {
-            membership,
+            membership: membership as Membership,
             dailyLimit,
             used,
             remaining,
@@ -242,8 +242,8 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
     if (!turso) return getDefaultStockQuota();
 
     try {
-        const membership = (await getUserMembership(userId)) as Membership;
-        let dailyLimit = STOCK_QUOTA_LIMITS[membership] || STOCK_QUOTA_LIMITS.BASIC;
+        const { membership } = await getUserMembership(userId);
+        let dailyLimit = STOCK_QUOTA_LIMITS[membership as Membership] || STOCK_QUOTA_LIMITS.BASIC;
 
         // Check if user has active promo
         const promoStatus = await checkUserPromo(userId);
@@ -265,7 +265,7 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
         return {
-            membership,
+            membership: membership as Membership,
             dailyLimit,
             used,
             remaining,

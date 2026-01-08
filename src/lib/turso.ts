@@ -304,24 +304,79 @@ export async function upsertUser(user: {
   }
 }
 
-export async function getUserMembership(userId: string): Promise<string> {
+export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null }> {
   const turso = getTursoClient();
-  if (!turso) return 'BASIC';
+  if (!turso) return { membership: 'BASIC', createdAt: null };
 
   try {
     const result = await turso.execute({
-      sql: 'SELECT membership FROM users WHERE id = ?',
+      sql: 'SELECT membership, created_at FROM users WHERE id = ?',
       args: [userId],
     });
 
     if (result.rows.length > 0) {
-      return (result.rows[0].membership as string) || 'BASIC';
+      return {
+        membership: (result.rows[0].membership as string) || 'BASIC',
+        createdAt: result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null
+      };
     }
-    return 'BASIC';
+    return { membership: 'BASIC', createdAt: null };
   } catch (error) {
     console.error('Get membership error:', error);
-    return 'BASIC';
+    return { membership: 'BASIC', createdAt: null };
   }
+}
+
+export interface AccessResult {
+  allowed: boolean;
+  reason: 'GRANTED' | 'TRIAL_ACTIVE' | 'TRIAL_EXPIRED' | 'NO_ACCESS';
+  daysLeft?: number;
+  membership: string;
+}
+
+export async function checkBookmapAccess(userId: string): Promise<AccessResult> {
+  const { membership, createdAt } = await getUserMembership(userId);
+
+  // 1. PRO and VVIP have unlimited access
+  if (membership === 'PRO' || membership === 'VVIP' || membership === 'ADMIN') {
+    return { allowed: true, reason: 'GRANTED', membership };
+  }
+
+  // 2. Check for Active Promo (Overrides BASIC restrictions)
+  const promo = await checkUserPromo(userId);
+  if (promo.hasPromo && promo.expiresAt) {
+    const now = new Date();
+    const expires = new Date(promo.expiresAt);
+    const msLeft = expires.getTime() - now.getTime();
+    const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+
+    if (daysLeft > 0) {
+      return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft, membership };
+    }
+  }
+
+  // 3. BASIC users check registration trial period (3 days)
+  if (membership === 'BASIC' || !membership) {
+    if (!createdAt) {
+      // If no createdAt, assume new user or data error, allow trial (safe default)
+      // Or block if strict. Let's allow but treat as Day 1.
+      return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft: 3, membership };
+    }
+
+    const now = new Date();
+    const trialDuration = 3 * 24 * 60 * 60 * 1000; // 3 days in ms
+    const timeDiff = now.getTime() - createdAt.getTime();
+
+    if (timeDiff < trialDuration) {
+      const msLeft = trialDuration - timeDiff;
+      const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+      return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft, membership };
+    } else {
+      return { allowed: false, reason: 'TRIAL_EXPIRED', daysLeft: 0, membership };
+    }
+  }
+
+  return { allowed: false, reason: 'NO_ACCESS', membership };
 }
 
 export async function updateUserMembership(userId: string, membership: string): Promise<boolean> {
