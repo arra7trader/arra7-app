@@ -253,6 +253,8 @@ export async function initDatabase(): Promise<boolean> {
       // Promo feature columns
       { column: 'promo_expires', sql: `ALTER TABLE users ADD COLUMN promo_expires DATETIME` },
       { column: 'promo_type', sql: `ALTER TABLE users ADD COLUMN promo_type TEXT` },
+      // Bookmap trial tracking
+      { column: 'bookmap_first_access', sql: `ALTER TABLE users ADD COLUMN bookmap_first_access DATETIME` },
       // AI Self-Learning: Signals breakdown
       { column: 'signals', sql: `ALTER TABLE ml_predictions ADD COLUMN signals TEXT` },
     ];
@@ -335,7 +337,7 @@ export interface AccessResult {
 }
 
 export async function checkBookmapAccess(userId: string): Promise<AccessResult> {
-  const { membership, createdAt } = await getUserMembership(userId);
+  const { membership } = await getUserMembership(userId);
 
   // 1. PRO and VVIP have unlimited access
   if (membership === 'PRO' || membership === 'VVIP' || membership === 'ADMIN') {
@@ -355,24 +357,48 @@ export async function checkBookmapAccess(userId: string): Promise<AccessResult> 
     }
   }
 
-  // 3. BASIC users check registration trial period (3 days)
+  // 3. BASIC users: Check 1-day trial from FIRST Bookmap access
   if (membership === 'BASIC' || !membership) {
-    if (!createdAt) {
-      // If no createdAt, assume new user or data error, allow trial (safe default)
-      // Or block if strict. Let's allow but treat as Day 1.
-      return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft: 3, membership };
-    }
+    const turso = getTursoClient();
+    if (!turso) return { allowed: false, reason: 'NO_ACCESS', membership };
 
-    const now = new Date();
-    const trialDuration = 3 * 24 * 60 * 60 * 1000; // 3 days in ms
-    const timeDiff = now.getTime() - createdAt.getTime();
+    try {
+      // Get first access timestamp
+      const result = await turso.execute({
+        sql: 'SELECT bookmap_first_access FROM users WHERE id = ?',
+        args: [userId],
+      });
 
-    if (timeDiff < trialDuration) {
-      const msLeft = trialDuration - timeDiff;
-      const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
-      return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft, membership };
-    } else {
-      return { allowed: false, reason: 'TRIAL_EXPIRED', daysLeft: 0, membership };
+      let firstAccess: Date | null = null;
+      if (result.rows.length > 0 && result.rows[0].bookmap_first_access) {
+        firstAccess = new Date(result.rows[0].bookmap_first_access as string);
+      }
+
+      // If no first access, set it NOW and grant trial
+      if (!firstAccess) {
+        const now = new Date();
+        await turso.execute({
+          sql: 'UPDATE users SET bookmap_first_access = ? WHERE id = ?',
+          args: [now.toISOString(), userId],
+        });
+        console.log(`[BOOKMAP] First access recorded for user ${userId}`);
+        return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft: 1, membership };
+      }
+
+      // Calculate trial status (1 day = 24 hours)
+      const now = new Date();
+      const trialDuration = 1 * 24 * 60 * 60 * 1000; // 1 day in ms
+      const timeDiff = now.getTime() - firstAccess.getTime();
+
+      if (timeDiff < trialDuration) {
+        const hoursLeft = Math.ceil((trialDuration - timeDiff) / (60 * 60 * 1000));
+        return { allowed: true, reason: 'TRIAL_ACTIVE', daysLeft: hoursLeft > 24 ? 1 : 0, membership };
+      } else {
+        return { allowed: false, reason: 'TRIAL_EXPIRED', daysLeft: 0, membership };
+      }
+    } catch (error) {
+      console.error('Bookmap access check error:', error);
+      return { allowed: false, reason: 'NO_ACCESS', membership };
     }
   }
 

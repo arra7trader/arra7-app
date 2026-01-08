@@ -23,7 +23,7 @@ const PRICING_PLANS = [
             { text: '2x Analisa Saham IDX per hari', included: true, highlight: false },
             { text: 'Timeframe M1 - M30', included: true, highlight: false },
             { text: 'Akses Gold & Major Pairs', included: true, highlight: false },
-            { text: '🔥 Bookmap ARRA7 - Trial 3 Hari', included: true, highlight: true },
+            { text: '🔥 Bookmap ARRA7 - Trial 1 Hari', included: true, highlight: true },
             { text: 'Semua Timeframe', included: false, highlight: false },
             { text: 'Crypto & Indices', included: false, highlight: false },
         ],
@@ -47,7 +47,6 @@ const PRICING_PLANS = [
             { text: 'Akses Semua Pairs + Crypto', included: true, highlight: false },
             { text: '🔥 Bookmap ARRA7 - UNLIMITED', included: true, highlight: true },
             { text: 'AI Neural Ensemble (90%+ Accuracy)', included: true, highlight: true },
-            { text: 'Priority Support via Telegram', included: true, highlight: false },
         ],
         cta: 'Upgrade ke Pro',
         popular: true,
@@ -69,8 +68,6 @@ const PRICING_PLANS = [
             { text: 'Akses Semua Pairs + Crypto + Indices', included: true, highlight: false },
             { text: '🔥 Bookmap ARRA7 - UNLIMITED', included: true, highlight: true },
             { text: 'AI Neural Ensemble (90%+ Accuracy)', included: true, highlight: true },
-            { text: 'Private VVIP Telegram Group', included: true, highlight: true },
-            { text: 'Early Access Fitur Baru', included: true, highlight: false },
         ],
         cta: 'Jadi VVIP',
         popular: false,
@@ -286,13 +283,6 @@ export default function PricingPage() {
                                             </span>
                                         )}
                                     </motion.button>
-
-                                    {/* Money Back Guarantee */}
-                                    {(plan.popular || plan.id === 'VVIP') && (
-                                        <p className="text-center text-xs mt-4 text-white/60">
-                                            ✓ Garansi Uang Kembali 7 Hari
-                                        </p>
-                                    )}
                                 </div>
                             </motion.div>
                         ))}
