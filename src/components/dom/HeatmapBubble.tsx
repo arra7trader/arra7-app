@@ -14,6 +14,7 @@ interface HeatmapBubbleProps {
     history: HeatmapDataPoint[];
     height?: number;
     mlPrediction?: MLPrediction | null;
+    timeframe?: 1 | 5 | 15 | 30; // Minutes to display
 }
 
 // Turbo Colormap (Approximation)
@@ -141,7 +142,7 @@ function calculateVolumeProfile(history: HeatmapDataPoint[], currentBook: OrderB
     return { buckets, maxBucket, bucketSize };
 }
 
-export default function BookmapChart({ currentOrderBook, history, mlPrediction }: HeatmapBubbleProps) {
+export default function BookmapChart({ currentOrderBook, history, mlPrediction, timeframe = 5 }: HeatmapBubbleProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [dimensions, setDimensions] = useState({ width: 1200, height: 500 });
@@ -184,13 +185,18 @@ export default function BookmapChart({ currentOrderBook, history, mlPrediction }
         const CHART_HEIGHT = height - BOTTOM_MARGIN;
 
         // === STATS & SCALE ===
-        const { max: maxVol, avg: avgVol } = getVolumeStats(history, currentOrderBook);
-        const priceRange = getPriceRange(history, currentOrderBook);
+        // Filter history based on timeframe (1m, 5m, 15m, 30m)
+        const timeframeMsMap = { 1: 60000, 5: 300000, 15: 900000, 30: 1800000 };
+        const cutoffTime = Date.now() - (timeframeMsMap[timeframe] || 300000);
+        const filteredHistory = history.filter(h => h.timestamp >= cutoffTime);
+
+        const { max: maxVol, avg: avgVol } = getVolumeStats(filteredHistory, currentOrderBook);
+        const priceRange = getPriceRange(filteredHistory, currentOrderBook);
         const priceSpan = priceRange.max - priceRange.min;
         const getY = (price: number) => CHART_HEIGHT - ((price - priceRange.min) / priceSpan) * CHART_HEIGHT;
 
         // === VOLUME PROFILE ===
-        const volumeProfile = calculateVolumeProfile(history, currentOrderBook, priceRange, 40);
+        const volumeProfile = calculateVolumeProfile(filteredHistory, currentOrderBook, priceRange, 40);
 
         // === 1. BACKGROUND ===
         ctx.fillStyle = '#0a0f1a'; // Darker background
@@ -208,7 +214,7 @@ export default function BookmapChart({ currentOrderBook, history, mlPrediction }
         }
 
         // === 2. HEATMAP (History) ===
-        const pointsToDraw = history.slice(-Math.floor(HISTORY_WIDTH / 2));
+        const pointsToDraw = filteredHistory.slice(-Math.floor(HISTORY_WIDTH / 2));
         const pointWidth = Math.max(2, HISTORY_WIDTH / Math.max(pointsToDraw.length, 1));
 
         pointsToDraw.forEach((point, i) => {
@@ -494,7 +500,7 @@ export default function BookmapChart({ currentOrderBook, history, mlPrediction }
             });
         }
 
-    }, [dimensions, currentOrderBook, history, mlPrediction]);
+    }, [dimensions, currentOrderBook, history, mlPrediction, timeframe]);
 
     if (!currentOrderBook) {
         return (

@@ -350,6 +350,7 @@ export default function DomArraPage() {
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const [flowHistory, setFlowHistory] = useState<HeatmapDataPoint[]>([]);
     const [activeTab, setActiveTab] = useState<'orderbook' | 'heatmap'>('orderbook');
+    const [heatmapTimeframe, setHeatmapTimeframe] = useState<1 | 5 | 15 | 30>(5); // Minutes
     const { stats: accuracyStats, pendingCount, trackPrediction, setGetCurrentPrice } = useAccuracyTracker(selectedSymbol);
     const [usePolling, setUsePolling] = useState(false); // Fallback mode for ISP blocks
     const wsRef = useRef<WebSocket | null>(null);
@@ -709,12 +710,43 @@ export default function DomArraPage() {
                 {activeTab === 'heatmap' ? (
                     /* Full Width Heatmap Layout */
                     <div className="space-y-4">
+                        {/* Timeframe Selector */}
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
+                            className="flex items-center justify-between"
                         >
-                            <BookmapChart currentOrderBook={orderBook} history={flowHistory} mlPrediction={mlPrediction} />
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-[var(--text-secondary)]">Timeframe:</span>
+                                {([1, 5, 15, 30] as const).map((tf) => (
+                                    <button
+                                        key={tf}
+                                        onClick={() => setHeatmapTimeframe(tf)}
+                                        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${heatmapTimeframe === tf
+                                                ? 'bg-blue-600 text-white shadow-md'
+                                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {tf}m
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                                Showing last {heatmapTimeframe} minute{heatmapTimeframe > 1 ? 's' : ''} of data
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                        >
+                            <BookmapChart
+                                currentOrderBook={orderBook}
+                                history={flowHistory}
+                                mlPrediction={mlPrediction}
+                                timeframe={heatmapTimeframe}
+                            />
                         </motion.div>
 
                         {/* Sidebar panels in horizontal row below chart */}
