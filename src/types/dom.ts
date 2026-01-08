@@ -90,26 +90,6 @@ export const DOM_SYMBOLS = {
         icon: '🥇',
         dataSource: 'REAL' as const,
     },
-    EURUSD: {
-        id: 'EURUSD',
-        name: 'Euro / USD',
-        binanceSymbol: 'eurusdt',
-        tickSize: 0.0001,
-        decimals: 5,
-        volumeDecimals: 0,
-        icon: '💶',
-        dataSource: 'REAL' as const,
-    },
-    GBPUSD: {
-        id: 'GBPUSD',
-        name: 'GBP / USD',
-        binanceSymbol: 'gbpusdt',
-        tickSize: 0.0001,
-        decimals: 5,
-        volumeDecimals: 0,
-        icon: '💷',
-        dataSource: 'REAL' as const,
-    },
 } as const;
 
 export type DOMSymbolId = keyof typeof DOM_SYMBOLS;

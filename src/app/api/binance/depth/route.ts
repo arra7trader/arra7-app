@@ -7,8 +7,6 @@ const BINANCE_API = 'https://api.binance.com/api/v3/depth';
 const VALID_SYMBOLS: Record<string, string> = {
     btcusdt: 'BTCUSDT',
     paxgusdt: 'PAXGUSDT',
-    eurusdt: 'EURUSDT',
-    gbpusdt: 'GBPUSDT',
     ethusdt: 'ETHUSDT',
 };
 
