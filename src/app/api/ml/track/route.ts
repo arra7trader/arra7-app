@@ -18,36 +18,55 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { prediction, action } = body;
+        const { prediction, action, predictionId, actualPrice } = body;
 
         if (action === 'save') {
-            // Save new prediction
+            // Validate required fields
+            if (!prediction) {
+                return NextResponse.json({ error: 'Missing prediction data' }, { status: 400 });
+            }
+
+            if (!prediction.symbol || !prediction.direction) {
+                return NextResponse.json({
+                    error: 'Missing required fields: symbol or direction',
+                    received: { symbol: prediction.symbol, direction: prediction.direction }
+                }, { status: 400 });
+            }
+
+            // Build record with fallbacks for optional fields
             const record: MLPredictionRecord = {
                 symbol: prediction.symbol,
-                horizon: prediction.horizon,
+                horizon: prediction.horizon || 10,
                 direction: prediction.direction,
-                direction_code: prediction.direction_code,
-                confidence: prediction.confidence,
-                model_used: prediction.model_used,
-                initial_price: prediction.initial_price,
-                signals: prediction.signals // Pass signals for self-learning
+                direction_code: prediction.direction_code ?? (prediction.direction === 'UP' ? 1 : prediction.direction === 'DOWN' ? -1 : 0),
+                confidence: prediction.confidence || 0.5,
+                model_used: prediction.model_used || 'smart-predictor-v1',
+                initial_price: prediction.initial_price || 0,
+                signals: prediction.signals
             };
 
             const id = await saveMLPrediction(record);
+
+            if (id === null) {
+                return NextResponse.json({ error: 'Database save failed' }, { status: 500 });
+            }
+
             return NextResponse.json({ success: true, id });
 
         } else if (action === 'verify') {
             // Verify an existing prediction
-            const { predictionId, actualPrice } = body;
+            if (!predictionId || !actualPrice) {
+                return NextResponse.json({ error: 'Missing predictionId or actualPrice' }, { status: 400 });
+            }
             const success = await verifyMLPrediction(predictionId, actualPrice);
             return NextResponse.json({ success });
         }
 
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid action', received: action }, { status: 400 });
 
     } catch (error) {
         console.error('ML Track Error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
     }
 }
 
