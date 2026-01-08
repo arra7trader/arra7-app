@@ -398,9 +398,20 @@ export default function DomArraPage() {
         const wsUrl = `wss://stream.binance.com/ws/${binanceSymbol}@depth20@100ms`;
         const ws = new WebSocket(wsUrl);
 
+        // Connection timeout - if no connection in 5 seconds, switch to polling
+        const connectionTimeout = setTimeout(() => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log(`WebSocket connection timeout for ${symbol}, switching to polling...`);
+                ws.close();
+                setUsePolling(true);
+            }
+        }, 5000);
+
         ws.onopen = () => {
+            clearTimeout(connectionTimeout);
             console.log(`Binance WebSocket connected for ${symbol} (${binanceSymbol})`);
             setIsConnected(true);
+            wsFailCountRef.current = 0; // Reset failure count on success
         };
 
         ws.onmessage = (event) => {
@@ -461,9 +472,10 @@ export default function DomArraPage() {
             setIsConnected(false);
             wsFailCountRef.current++;
 
-            // After 2 consecutive failures, switch to polling fallback
-            if (wsFailCountRef.current >= 2) {
-                console.log('WebSocket blocked, switching to proxy polling...');
+            // For non-BTC symbols, switch to polling faster (1 failure instead of 2)
+            const failThreshold = symbol === 'BTCUSD' ? 2 : 1;
+            if (wsFailCountRef.current >= failThreshold) {
+                console.log(`WebSocket blocked for ${symbol}, switching to proxy polling...`);
                 setUsePolling(true);
             }
         };
@@ -723,8 +735,8 @@ export default function DomArraPage() {
                                         key={tf}
                                         onClick={() => setHeatmapTimeframe(tf)}
                                         className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${heatmapTimeframe === tf
-                                                ? 'bg-blue-600 text-white shadow-md'
-                                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                             }`}
                                     >
                                         {tf}m
@@ -732,7 +744,12 @@ export default function DomArraPage() {
                                 ))}
                             </div>
                             <div className="text-xs text-gray-400">
-                                Showing last {heatmapTimeframe} minute{heatmapTimeframe > 1 ? 's' : ''} of data
+                                Showing last {heatmapTimeframe}m • {flowHistory.length} data points
+                                {flowHistory.length > 0 && (
+                                    <span className="ml-1">
+                                        ({Math.round((Date.now() - flowHistory[0].timestamp) / 60000)}m collected)
+                                    </span>
+                                )}
                             </div>
                         </motion.div>
 
