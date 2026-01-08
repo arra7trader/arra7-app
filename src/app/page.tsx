@@ -1,11 +1,140 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useRef } from 'react';
-import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon, CheckCircleSolidIcon } from '@/components/PremiumIcons';
+import { useRef, useState } from 'react';
+import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon, CheckCircleSolidIcon, FireIcon, ScaleIcon, SignalIcon } from '@/components/PremiumIcons';
+
+type TutorialTab = 'bookmap' | 'forex' | 'stock';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
+  const [activeTab, setActiveTab] = useState<TutorialTab>('bookmap');
+
+  const tabConfig = {
+    bookmap: {
+      color: 'from-amber-500 to-orange-500',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      textColor: 'text-amber-700',
+      icon: <FireIcon className="text-amber-600" size="lg" />,
+      steps: ['step1', 'step2', 'step3', 'step4'],
+      stepIcons: [
+        <CrosshairIcon key="1" className="text-amber-600" size="lg" />,
+        <ChartIcon key="2" className="text-amber-600" size="lg" />,
+        <SignalIcon key="3" className="text-amber-600" size="lg" />,
+        <SparklesIcon key="4" className="text-amber-600" size="lg" />,
+      ],
+    },
+    forex: {
+      color: 'from-blue-500 to-cyan-500',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      textColor: 'text-blue-700',
+      icon: <CurrencyIcon className="text-blue-600" size="lg" />,
+      steps: ['step1', 'step2', 'step3', 'step4'],
+      stepIcons: [
+        <ScaleIcon key="1" className="text-blue-600" size="lg" />,
+        <ChartIcon key="2" className="text-blue-600" size="lg" />,
+        <CpuChipIcon key="3" className="text-blue-600" size="lg" />,
+        <CheckCircleSolidIcon key="4" className="text-blue-600" size="lg" />,
+      ],
+    },
+    stock: {
+      color: 'from-green-500 to-emerald-500',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700',
+      icon: <TrophyIcon className="text-green-600" size="lg" />,
+      steps: ['step1', 'step2', 'step3', 'step4'],
+      stepIcons: [
+        <CrosshairIcon key="1" className="text-green-600" size="lg" />,
+        <ScaleIcon key="2" className="text-green-600" size="lg" />,
+        <RocketIcon key="3" className="text-green-600" size="lg" />,
+        <SparklesIcon key="4" className="text-green-600" size="lg" />,
+      ],
+    },
+  };
+
+  const config = tabConfig[activeTab];
+
+  return (
+    <div>
+      {/* Tab Buttons */}
+      <div className="flex flex-wrap justify-center gap-3 mb-10">
+        {(['bookmap', 'forex', 'stock'] as TutorialTab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === tab
+                ? `bg-gradient-to-r ${tabConfig[tab].color} text-white shadow-lg scale-105`
+                : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+              }`}
+          >
+            {tHowItWorks(`tabs.${tab}`)}
+          </button>
+        ))}
+      </div>
+
+      {/* Step Cards */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          {config.steps.map((step, i) => (
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className={`relative ${config.bgColor} ${config.borderColor} border rounded-2xl p-6 text-center hover:shadow-lg transition-all`}
+            >
+              {/* Step Number Badge */}
+              <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-r ${config.color} text-white text-sm font-bold flex items-center justify-center shadow-md`}>
+                {i + 1}
+              </div>
+
+              {/* Icon */}
+              <div className="w-14 h-14 mx-auto rounded-xl bg-white/80 flex items-center justify-center mb-4 mt-2 shadow-sm">
+                {config.stepIcons[i]}
+              </div>
+
+              {/* Title & Description */}
+              <h3 className={`text-lg font-semibold ${config.textColor} mb-2`}>
+                {tHowItWorks(`${activeTab}.${step}.title`)}
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {tHowItWorks(`${activeTab}.${step}.desc`)}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* CTA Button for current feature */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="text-center mt-10"
+      >
+        <Link href={activeTab === 'bookmap' ? '/dom-arra' : activeTab === 'forex' ? '/analisa-market' : '/analisa-saham'}>
+          <button className={`btn-primary bg-gradient-to-r ${config.color} border-none shadow-lg`}>
+            Coba {tHowItWorks(`tabs.${activeTab}`)} Sekarang
+            <ArrowRightIcon className="ml-2" size="sm" />
+          </button>
+        </Link>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function Home() {
   const tHero = useTranslations('hero');
@@ -169,14 +298,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works - Interactive Tutorial Section */}
       <section className="section-padding">
         <div className="container-wide">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
             <span className="badge-apple mb-4 inline-flex">{tHowItWorks('badge')}</span>
             <h2 className="headline-lg mb-4">
@@ -187,31 +316,8 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { step: '01', title: tHowItWorks('steps.01.title'), desc: tHowItWorks('steps.01.desc'), icon: <CrosshairIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-blue-500 to-cyan-500' },
-              { step: '02', title: tHowItWorks('steps.02.title'), desc: tHowItWorks('steps.02.desc'), icon: <RocketIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-purple-500 to-pink-500' },
-              { step: '03', title: tHowItWorks('steps.03.title'), desc: tHowItWorks('steps.03.desc'), icon: <CurrencyIcon className="text-[var(--accent-blue)]" size="xl" />, color: 'from-green-500 to-emerald-500' },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="relative bg-white rounded-2xl p-8 border border-[var(--border-light)] text-center group hover:border-[var(--accent-blue)]/30 transition-all hover:shadow-lg"
-              >
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[var(--accent-blue)] text-white text-sm font-bold flex items-center justify-center">
-                  {item.step}
-                </div>
-                <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${item.color} bg-opacity-10 flex items-center justify-center mb-4 mt-2`}>
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">{item.title}</h3>
-                <p className="text-[var(--text-secondary)]">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+          {/* Tutorial Tabs Component */}
+          <TutorialTabs tHowItWorks={tHowItWorks} />
         </div>
       </section>
 

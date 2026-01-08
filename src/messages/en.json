@@ -37,21 +37,66 @@
     "telegramSupport": "Support via Telegram"
   },
   "howItWorks": {
-    "badge": "Easy & Fast",
-    "title": "How It Works",
-    "desc": "Just 3 steps to get professional trading analysis",
-    "steps": {
-      "01": {
+    "badge": "Tutorial Guide",
+    "title": "How to Use ARRA7",
+    "desc": "Complete guide to using all ARRA7 features",
+    "tabs": {
+      "bookmap": "🔥 Bookmap ARRA7",
+      "forex": "📊 Forex Analysis",
+      "stock": "🇮🇩 Stock Analysis"
+    },
+    "bookmap": {
+      "step1": {
+        "title": "Select Asset",
+        "desc": "Choose BTC/USD or XAUUSD from the dropdown menu"
+      },
+      "step2": {
+        "title": "Read Heatmap",
+        "desc": "Green = Buy Pressure, Red = Sell Pressure. Darker = Stronger"
+      },
+      "step3": {
+        "title": "Whale Alerts",
+        "desc": "AI detects large institutional orders in real-time"
+      },
+      "step4": {
+        "title": "Follow AI Signal",
+        "desc": "Get BUY/SELL recommendations with confidence level"
+      }
+    },
+    "forex": {
+      "step1": {
         "title": "Select Pair",
-        "desc": "Choose forex pair, crypto, or Indonesian stocks to analyze"
+        "desc": "Choose forex pair (EURUSD, GBPUSD, XAUUSD, etc.)"
       },
-      "02": {
+      "step2": {
+        "title": "Select Timeframe",
+        "desc": "Choose M1, M5, M15, M30, H1, H4, or D1"
+      },
+      "step3": {
         "title": "Click Analyze",
-        "desc": "ARRA Quantum Strategist will analyze with AI in seconds"
+        "desc": "AI will analyze the market in seconds"
       },
-      "03": {
-        "title": "Start Trading!",
-        "desc": "Get entry zones, SL, TP, and complete investment thesis"
+      "step4": {
+        "title": "Read Results",
+        "desc": "View Entry Zone, TP, SL, and complete thesis"
+      }
+    },
+    "stock": {
+      "step1": {
+        "title": "Select Stock",
+        "desc": "Enter stock code (BBCA, TLKM, ASII, etc.)"
+      },
+      "step2": {
+        "title": "Select Method",
+        "desc": "Choose Technical, Fundamental, or Combined"
+      },
+      "step3": {
+        "title": "Run Analysis",
+        "desc": "AI processes real-time IDX data"
+      },
+      "step4": {
+        "title": "Get Insights",
+        "desc": "Complete recommendations with target price"
       }
     }
   },

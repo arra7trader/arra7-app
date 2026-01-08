@@ -37,21 +37,66 @@
         "telegramSupport": "Support via Telegram"
     },
     "howItWorks": {
-        "badge": "Mudah & Cepat",
-        "title": "Cara Kerjanya",
-        "desc": "Hanya 3 langkah untuk mendapatkan analisa trading profesional",
-        "steps": {
-            "01": {
+        "badge": "Panduan Tutorial",
+        "title": "Cara Menggunakan ARRA7",
+        "desc": "Panduan lengkap menggunakan semua fitur ARRA7",
+        "tabs": {
+            "bookmap": "🔥 Bookmap ARRA7",
+            "forex": "📊 Analisa Forex",
+            "stock": "🇮🇩 Analisa Saham"
+        },
+        "bookmap": {
+            "step1": {
+                "title": "Pilih Aset",
+                "desc": "Pilih BTC/USD atau XAUUSD dari dropdown menu"
+            },
+            "step2": {
+                "title": "Baca Heatmap",
+                "desc": "Hijau = Tekanan Beli, Merah = Tekanan Jual. Makin gelap = Makin kuat"
+            },
+            "step3": {
+                "title": "Whale Alerts",
+                "desc": "AI mendeteksi order institusi besar secara real-time"
+            },
+            "step4": {
+                "title": "Ikuti Sinyal AI",
+                "desc": "Dapatkan rekomendasi BUY/SELL dengan tingkat kepercayaan"
+            }
+        },
+        "forex": {
+            "step1": {
                 "title": "Pilih Pair",
-                "desc": "Pilih forex pair, crypto, atau saham Indonesia yang ingin dianalisa"
+                "desc": "Pilih pair forex (EURUSD, GBPUSD, XAUUSD, dll.)"
             },
-            "02": {
+            "step2": {
+                "title": "Pilih Timeframe",
+                "desc": "Pilih M1, M5, M15, M30, H1, H4, atau D1"
+            },
+            "step3": {
                 "title": "Klik Analisa",
-                "desc": "ARRA Quantum Strategist akan menganalisa dengan AI dalam hitungan detik"
+                "desc": "AI akan menganalisa market dalam hitungan detik"
             },
-            "03": {
-                "title": "Trading!",
-                "desc": "Dapatkan entry zone, SL, TP, dan investment thesis lengkap"
+            "step4": {
+                "title": "Baca Hasil",
+                "desc": "Lihat Entry Zone, TP, SL, dan thesis lengkap"
+            }
+        },
+        "stock": {
+            "step1": {
+                "title": "Pilih Emiten",
+                "desc": "Ketik kode saham (BBCA, TLKM, ASII, dll.)"
+            },
+            "step2": {
+                "title": "Pilih Metode",
+                "desc": "Pilih Technical, Fundamental, atau Combine"
+            },
+            "step3": {
+                "title": "Jalankan Analisa",
+                "desc": "AI memproses data real-time IDX"
+            },
+            "step4": {
+                "title": "Dapatkan Insight",
+                "desc": "Rekomendasi lengkap dengan target harga"
             }
         }
     },
