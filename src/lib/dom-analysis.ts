@@ -5,9 +5,22 @@ import { OrderBook, DOMPrediction, DOMSignal } from '@/types/dom';
 
 // --- Smoothing Configuration ---
 const SMOOTHING_FACTOR = 0.3; // EMA alpha (lower = smoother, 0.1-0.4 recommended)
-let prevSmoothedImbalance: number | null = null;
-let prevSmoothedStrength: number | null = null;
-let prevSmoothedConfidence: number | null = null;
+
+// Type for smoothing state (instance-based, not global)
+export interface SmoothingState {
+    prevSmoothedImbalance: number | null;
+    prevSmoothedStrength: number | null;
+    prevSmoothedConfidence: number | null;
+}
+
+// Factory function to create new smoothing state
+export function createSmoothingState(): SmoothingState {
+    return {
+        prevSmoothedImbalance: null,
+        prevSmoothedStrength: null,
+        prevSmoothedConfidence: null
+    };
+}
 
 // Simple EMA function
 function ema(current: number, previous: number | null, alpha: number): number {
@@ -17,8 +30,12 @@ function ema(current: number, previous: number | null, alpha: number): number {
 
 /**
  * Analyze order book and generate prediction (with smoothing)
+ * Returns both prediction and updated smoothing state
  */
-export function analyzeOrderFlow(orderBook: OrderBook): DOMPrediction {
+export function analyzeOrderFlow(
+    orderBook: OrderBook,
+    smoothingState: SmoothingState = createSmoothingState()
+): { prediction: DOMPrediction; updatedState: SmoothingState } {
     const signals: DOMSignal[] = [];
 
     // 1. Calculate imbalance
@@ -40,22 +57,24 @@ export function analyzeOrderFlow(orderBook: OrderBook): DOMPrediction {
     const { direction, strength: rawStrength, confidence: rawConfidence } = calculatePrediction(orderBook, signals);
 
     // 6. Apply EMA Smoothing to prevent jerky movements
-    const smoothedImbalance = ema(rawImbalance, prevSmoothedImbalance, SMOOTHING_FACTOR);
-    const smoothedStrength = ema(rawStrength, prevSmoothedStrength, SMOOTHING_FACTOR);
-    const smoothedConfidence = ema(rawConfidence, prevSmoothedConfidence, SMOOTHING_FACTOR);
+    const smoothedImbalance = ema(rawImbalance, smoothingState.prevSmoothedImbalance, SMOOTHING_FACTOR);
+    const smoothedStrength = ema(rawStrength, smoothingState.prevSmoothedStrength, SMOOTHING_FACTOR);
+    const smoothedConfidence = ema(rawConfidence, smoothingState.prevSmoothedConfidence, SMOOTHING_FACTOR);
 
-    // Store for next iteration
-    prevSmoothedImbalance = smoothedImbalance;
-    prevSmoothedStrength = smoothedStrength;
-    prevSmoothedConfidence = smoothedConfidence;
+    // 7. Create updated smoothing state
+    const updatedState: SmoothingState = {
+        prevSmoothedImbalance: smoothedImbalance,
+        prevSmoothedStrength: smoothedStrength,
+        prevSmoothedConfidence: smoothedConfidence
+    };
 
-    // 7. Determine whale activity level
+    // 8. Determine whale activity level
     const whaleActivity = whaleSignals.length >= 3 ? 'HIGH' : whaleSignals.length >= 1 ? 'MEDIUM' : 'LOW';
 
-    // 8. Generate recommendation
+    // 9. Generate recommendation
     const recommendation = generateRecommendation(direction, Math.round(smoothedStrength), smoothedImbalance, whaleActivity);
 
-    return {
+    const prediction: DOMPrediction = {
         direction,
         strength: Math.round(smoothedStrength),
         confidence: Math.round(smoothedConfidence),
@@ -65,6 +84,8 @@ export function analyzeOrderFlow(orderBook: OrderBook): DOMPrediction {
         recommendation,
         timestamp: Date.now(),
     };
+
+    return { prediction, updatedState };
 }
 
 /**

@@ -6,12 +6,15 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { LockIcon, ChartIcon, SparklesIcon, ScaleIcon, SignalIcon, CircleStackIcon } from '@/components/PremiumIcons';
 import { OrderBook, DOMPrediction, DOM_SYMBOLS, DOMSymbolId } from '@/types/dom';
-import { analyzeOrderFlow, calculateOrderBookMetrics } from '@/lib/dom-analysis';
+import { analyzeOrderFlow, calculateOrderBookMetrics, createSmoothingState, SmoothingState } from '@/lib/dom-analysis';
 import BookmapChart, { HeatmapDataPoint } from '@/components/dom/HeatmapBubble';
 import TradeSetupPanel from '@/components/dom/TradeSetupPanel';
 import { MLPrediction, fetchMLPrediction } from '@/types/ml-prediction';
 import MLSettingsPanel, { PredictionSettings, DEFAULT_SETTINGS } from '@/components/dom/MLSettingsPanel';
 import AccuracyTrackerPanel, { useAccuracyTracker } from '@/components/dom/AccuracyTracker';
+import CVDIndicator from '@/components/dom/CVDIndicator';
+import ImbalanceChart from '@/components/dom/ImbalanceChart';
+import { useAlertSystem, AlertPanel, AlertToastContainer, AlertSettings, DEFAULT_ALERT_SETTINGS } from '@/components/dom/AlertSystem';
 
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 const MAX_FLOW_HISTORY = 600; // Keep last 1 minute of data (100ms * 600)
@@ -358,9 +361,19 @@ export default function DomArraPage() {
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const currentSymbolRef = useRef<DOMSymbolId>(selectedSymbol);
     const wsFailCountRef = useRef(0); // Track consecutive failures
+    const smoothingStateRef = useRef<SmoothingState>(createSmoothingState()); // Instance-based smoothing state
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
     const symbolConfig = DOM_SYMBOLS[selectedSymbol];
+
+    // Alert system
+    const [alertSettings, setAlertSettings] = useState<AlertSettings>(DEFAULT_ALERT_SETTINGS);
+    const { alerts, activeAlerts, dismissAlert, clearAlerts } = useAlertSystem(
+        orderBook,
+        prediction,
+        mlPrediction,
+        alertSettings
+    );
 
     // Set up price getter for accuracy verification
     useEffect(() => {
@@ -434,8 +447,9 @@ export default function DomArraPage() {
                 setOrderBook(newOrderBook);
                 setLastUpdate(new Date());
 
-                // Analyze order flow
-                const newPrediction = analyzeOrderFlow(newOrderBook);
+                // Analyze order flow with instance-based smoothing state
+                const { prediction: newPrediction, updatedState } = analyzeOrderFlow(newOrderBook, smoothingStateRef.current);
+                smoothingStateRef.current = updatedState;
                 setPrediction(newPrediction);
 
                 // Add to flow history
@@ -508,7 +522,8 @@ export default function DomArraPage() {
             setLastUpdate(new Date());
             setIsConnected(true);
 
-            const newPrediction = analyzeOrderFlow(newOrderBook);
+            const { prediction: newPrediction, updatedState } = analyzeOrderFlow(newOrderBook, smoothingStateRef.current);
+            smoothingStateRef.current = updatedState;
             setPrediction(newPrediction);
 
             setFlowHistory(prev => {
@@ -561,6 +576,7 @@ export default function DomArraPage() {
         setOrderBook(null);
         setPrediction(null);
         setFlowHistory([]);
+        smoothingStateRef.current = createSmoothingState(); // Reset smoothing state
 
         // Connect to Binance for the selected symbol
         connectBinanceStream(selectedSymbol);
@@ -631,6 +647,9 @@ export default function DomArraPage() {
     // Admin View - Full DOM
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20 pb-12">
+            {/* Floating Alert Toasts */}
+            <AlertToastContainer alerts={alerts} onDismiss={dismissAlert} />
+
             <div className="max-w-7xl mx-auto px-4">
                 {/* Header */}
                 <motion.div
@@ -766,17 +785,36 @@ export default function DomArraPage() {
                             />
                         </motion.div>
 
+                        {/* CVD and Imbalance Charts */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+                        >
+                            <CVDIndicator
+                                history={flowHistory}
+                                currentOrderBook={orderBook}
+                                height={180}
+                            />
+                            <ImbalanceChart
+                                history={flowHistory}
+                                height={180}
+                            />
+                        </motion.div>
+
                         {/* Sidebar panels in horizontal row below chart */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
                         >
                             <ImbalanceMeter imbalance={orderBook?.imbalance || 0} />
                             <TradeSetupPanel prediction={mlPrediction} isLoading={mlLoading} />
                             <MLSettingsPanel settings={mlSettings} onSettingsChange={setMLSettings} />
                             <AccuracyTrackerPanel stats={accuracyStats} pendingCount={pendingCount} />
+                            <AlertPanel alerts={alerts} onDismiss={dismissAlert} onClear={clearAlerts} />
                         </motion.div>
                     </div>
                 ) : (

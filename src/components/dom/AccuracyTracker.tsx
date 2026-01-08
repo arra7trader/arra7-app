@@ -37,11 +37,19 @@ export function useAccuracyTracker(symbol: string = 'BTCUSD') {
     const [pendingPredictions, setPendingPredictions] = useState<PendingPrediction[]>([]);
     const [dbStats, setDbStats] = useState<AccuracyStats | null>(null);
     const getCurrentPriceRef = useRef<(() => number) | null>(null);
+    // Use ref to track pending predictions - prevents closure issues in setTimeout callbacks
+    const pendingPredictionsRef = useRef<PendingPrediction[]>([]);
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        pendingPredictionsRef.current = pendingPredictions;
+    }, [pendingPredictions]);
 
     // Set price getter function
     const setGetCurrentPrice = useCallback((fn: () => number) => {
         getCurrentPriceRef.current = fn;
     }, []);
+
 
     // Load stats from database on mount
     useEffect(() => {
@@ -114,9 +122,10 @@ export function useAccuracyTracker(symbol: string = 'BTCUSD') {
         }
     }, []);
 
-    // Verify a pending prediction
+    // Verify a pending prediction - uses ref to prevent stale closure issues
     const verifyPendingPrediction = useCallback(async (predictionId: number) => {
-        const pending = pendingPredictions.find(p => p.id === predictionId);
+        // Use ref for fresh data (prevents stale closure in setTimeout)
+        const pending = pendingPredictionsRef.current.find(p => p.id === predictionId);
         if (!pending) return;
 
         // Get current price
@@ -161,7 +170,7 @@ export function useAccuracyTracker(symbol: string = 'BTCUSD') {
         } catch (error) {
             console.error('Failed to verify prediction:', error);
         }
-    }, [pendingPredictions]);
+    }, []); // Empty deps - uses refs for fresh data
 
     // Combine local and DB stats
     const stats: AccuracyStats = {
