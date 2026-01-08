@@ -290,7 +290,7 @@ function ComingSoonView() {
                             </motion.div>
                             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Coming Soon</h2>
                             <p className="text-[var(--text-secondary)] mb-6 text-center px-8">
-                                Fitur DOM ARRA sedang dalam pengembangan dan akan segera hadir
+                                Fitur Bookmap ARRA7 sedang dalam pengembangan dan akan segera hadir
                             </p>
                             <div className="flex flex-wrap gap-3 justify-center">
                                 <span className="px-4 py-2 rounded-full bg-[var(--bg-secondary)] text-sm text-[var(--text-secondary)]">
@@ -322,7 +322,7 @@ function ComingSoonView() {
                     transition={{ delay: 0.3 }}
                     className="text-center mt-12"
                 >
-                    <p className="text-[var(--text-muted)] mb-4">Ingin notifikasi saat DOM ARRA tersedia?</p>
+                    <p className="text-[var(--text-muted)] mb-4">Ingin notifikasi saat Bookmap ARRA7 tersedia?</p>
                     <Link href="https://t.me/arra7trader" target="_blank" rel="noopener noreferrer">
                         <button className="btn-primary">
                             Join Telegram untuk Update
@@ -660,8 +660,8 @@ export default function DomArraPage() {
                     <div>
                         <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-3">
                             <ChartIcon size="lg" className="text-blue-600" />
-                            DOM ARRA
-                            <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">DEV MODE</span>
+                            Bookmap ARRA7
+                            <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">BETA</span>
                         </h1>
                         <p className="text-[var(--text-secondary)]">Real-time Depth of Market Analysis</p>
                     </div>

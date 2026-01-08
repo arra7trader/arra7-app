@@ -7,9 +7,12 @@
     "expertAdvisors": "Expert Advisors",
     "login": "Login with Google",
     "logout": "Logout",
-    "logout": "Logout",
-    "analisaMarket": "Analisa Market",
-    "analisaSaham": "Stock Analysis"
+    "analisaMarket": "Market Analysis",
+    "analisaSaham": "Stock Analysis",
+    "bookmap": "Bookmap ARRA7",
+    "tradeJournal": "Trade Journal",
+    "portfolio": "Portfolio",
+    "socialFeed": "Social Feed"
   },
   "hero": {
     "badge": "AI Trading Analysis",
@@ -17,7 +20,7 @@
     "headlineHighlight": "AI",
     "headlineEnd": "& High Accuracy",
     "subheadline": "AI-powered Forex and Indonesian Stock analysis platform. Get trading signals, entry/exit zones, and investment thesis from ARRA Quantum Strategist.",
-    "cta": "Analisa Market",
+    "cta": "Market Analysis",
     "ctaSecondary": "View Pricing"
   },
   "features": {
@@ -38,5 +41,17 @@
     "title": "Market Analysis",
     "subtitle": "Real-time forex market analysis powered by AI",
     "welcome": "Welcome back"
+  },
+  "bookmap": {
+    "title": "Bookmap ARRA7",
+    "comingSoon": "Bookmap ARRA7 feature is under development and will be available soon",
+    "notifyMe": "Want to be notified when Bookmap ARRA7 is available?",
+    "mlSettings": "ML Settings",
+    "predictionHorizon": "Prediction Horizon",
+    "minConfidence": "Min Confidence",
+    "refreshInterval": "Refresh Interval",
+    "showOnHeatmap": "Show on Heatmap",
+    "showPredictionOverlay": "Show prediction overlay on heatmap",
+    "resetDefaults": "Reset to Defaults"
   }
 }

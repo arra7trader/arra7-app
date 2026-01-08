@@ -7,12 +7,15 @@
         "expertAdvisors": "Expert Advisors",
         "login": "Masuk dengan Google",
         "logout": "Keluar",
-        "logout": "Keluar",
         "analisaMarket": "Analisa Market",
-        "analisaSaham": "Analisa Saham"
+        "analisaSaham": "Analisa Saham",
+        "bookmap": "Bookmap ARRA7",
+        "tradeJournal": "Jurnal Trading",
+        "portfolio": "Portfolio",
+        "socialFeed": "Feed Sosial"
     },
     "hero": {
-        "badge": "AI Trading Analysis",
+        "badge": "Analisa Trading AI",
         "headline": "Analisa Trading dengan",
         "headlineHighlight": "AI",
         "headlineEnd": "& Akurasi Tinggi",
@@ -38,5 +41,17 @@
         "title": "Analisa Market",
         "subtitle": "Analisis pasar forex real-time didukung AI",
         "welcome": "Selamat datang kembali"
+    },
+    "bookmap": {
+        "title": "Bookmap ARRA7",
+        "comingSoon": "Fitur Bookmap ARRA7 sedang dalam pengembangan dan akan segera hadir",
+        "notifyMe": "Ingin notifikasi saat Bookmap ARRA7 tersedia?",
+        "mlSettings": "Pengaturan ML",
+        "predictionHorizon": "Horizon Prediksi",
+        "minConfidence": "Kepercayaan Minimum",
+        "refreshInterval": "Interval Refresh",
+        "showOnHeatmap": "Tampilkan di Heatmap",
+        "showPredictionOverlay": "Tampilkan overlay prediksi di heatmap",
+        "resetDefaults": "Reset ke Default"
     }
 }

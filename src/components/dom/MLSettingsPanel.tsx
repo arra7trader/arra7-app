@@ -87,8 +87,8 @@ export default function MLSettingsPanel({
                                             key={h}
                                             onClick={() => updateSetting('horizon', h as 5 | 10 | 30)}
                                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${settings.horizon === h
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                 }`}
                                         >
                                             {h}s
@@ -97,24 +97,8 @@ export default function MLSettingsPanel({
                                 </div>
                             </div>
 
-                            {/* Model Selection */}
-                            <div>
-                                <label className="text-xs font-medium text-[var(--text-secondary)] mb-2 block">
-                                    Model
-                                </label>
-                                <select
-                                    value={settings.model}
-                                    onChange={(e) => updateSetting('model', e.target.value as PredictionSettings['model'])}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                >
-                                    <option value="ensemble">🤖 Ensemble (Recommended)</option>
-                                    <option value="auto">🎯 Auto (Select Best)</option>
-                                    <option value="bilstm">Bi-LSTM</option>
-                                    <option value="lstm">LSTM</option>
-                                    <option value="gru">GRU (Fastest)</option>
-                                    <option value="conv1d">Conv1D</option>
-                                </select>
-                            </div>
+                            {/* Model Selection - Hidden from users, using ensemble by default */}
+                            {/* The model is set internally and users don't need to see this */}
 
                             {/* Confidence Threshold */}
                             <div>
@@ -150,8 +134,8 @@ export default function MLSettingsPanel({
                                             key={s}
                                             onClick={() => updateSetting('refreshInterval', s)}
                                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${settings.refreshInterval === s
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                 }`}
                                         >
                                             {s}s
