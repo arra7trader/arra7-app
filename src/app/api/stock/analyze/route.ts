@@ -9,16 +9,48 @@ const MODEL = 'llama-3.3-70b-versatile';
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
+        let userId: string | null = null;
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+
+        if (session?.user?.id) {
+            userId = session.user.id;
+        } else {
+            // Try Mobile Bearer Token
+            const authHeader = request.headers.get('Authorization');
+            if (authHeader?.startsWith('Bearer ')) {
+                const token = authHeader.split(' ')[1];
+                const { verifyMobileToken } = await import('@/lib/mobile-auth');
+                const userEmail = await verifyMobileToken(token);
+
+                if (userEmail) {
+                    const turso = (await import('@/lib/turso')).default();
+                    if (turso) {
+                        try {
+                            const userRes = await turso.execute({
+                                sql: 'SELECT id FROM users WHERE email = ?',
+                                args: [userEmail]
+                            });
+                            if (userRes.rows.length > 0) {
+                                userId = userRes.rows[0].id as string;
+                            }
+                        } catch (e) { console.error(e); }
+                    }
+                }
+            }
+        }
+
+        if (!userId) {
             return NextResponse.json(
                 { status: 'error', message: 'Silakan login terlebih dahulu' },
                 { status: 401 }
             );
         }
 
+        // Session wrapper for quota function compatibility
+        const userSessionId = userId;
+
         // Check stock quota
-        const quotaCheck = await checkStockQuota(session.user.id);
+        const quotaCheck = await checkStockQuota(userSessionId);
         if (!quotaCheck.allowed) {
             return NextResponse.json(
                 {
@@ -212,7 +244,7 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
         }
 
         // Use quota after successful analysis
-        await useStockQuota(session.user.id);
+        await useStockQuota(userSessionId);
 
         // Save to history
         try {
@@ -220,7 +252,7 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
             if (turso) {
                 await turso.execute({
                     sql: 'INSERT INTO analysis_history (user_id, type, symbol, timeframe, result) VALUES (?, ?, ?, ?, ?)',
-                    args: [session.user.id, 'stock', symbol, null, analysis],
+                    args: [userSessionId, 'stock', symbol, null, analysis],
                 });
             }
         } catch (historyError) {
@@ -229,6 +261,7 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
         }
 
         // Save signal for performance tracking
+        let nativeSignalData = null;
         try {
             const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
             if (analysis) {
@@ -236,6 +269,7 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
                 if (signalData) {
                     const saved = await saveSignal(signalData);
                     console.log('[StockAnalyze] Signal saved via parsing:', saved);
+                    nativeSignalData = signalData;
                 } else {
                     // Fallback: try to determine direction and force save with current price
                     const lowerAnalysis = analysis.toLowerCase();
@@ -248,7 +282,14 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
 
                     if (direction !== 'HOLD' && stockData.currentPrice > 0) {
                         const saved = await forceSaveSignal('stock', symbol, direction, stockData.currentPrice);
-                        console.log('[StockAnalyze] Signal saved via forceSave:', saved, 'Direction:', direction, 'Price:', stockData.currentPrice);
+                        nativeSignalData = {
+                            type: direction,
+                            entry: stockData.currentPrice,
+                            sl: 0,
+                            tp: 0,
+                            confidence: 0,
+                            analysis: 'AI Analysis'
+                        };
                     }
                 }
             }
@@ -259,6 +300,7 @@ ${stockData.historicalData?.slice(-10).map((d: { date: string; close: number }) 
         return NextResponse.json({
             status: 'success',
             analysis,
+            parsedSignal: nativeSignalData,
             timestamp: new Date().toISOString(),
         });
 
