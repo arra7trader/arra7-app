@@ -396,7 +396,7 @@ function BlockedView({ reason }: { reason: string }) {
                                 <h4 className="font-semibold mb-2 flex items-center gap-2">Basic</h4>
                                 <ul className="text-sm space-y-2 text-[var(--text-muted)]">
                                     <li className="flex items-center gap-2">✅ Analisa Market Basic</li>
-                                    <li className="flex items-center gap-2">❌ Bookmap Heatmap</li>
+                                    <li className="flex items-center gap-2">❌ Bookmap ARRA7</li>
                                     <li className="flex items-center gap-2">❌ Whale Alerts</li>
                                 </ul>
                             </div>
@@ -404,7 +404,7 @@ function BlockedView({ reason }: { reason: string }) {
                                 <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">Recommended</span></h4>
                                 <ul className="text-sm space-y-2 text-blue-800">
                                     <li className="flex items-center gap-2">✅ Analisa Market Premium</li>
-                                    <li className="flex items-center gap-2">✅ Bookmap Heatmap Unlimited</li>
+                                    <li className="flex items-center gap-2">✅ Bookmap ARRA7 Unlimited</li>
                                     <li className="flex items-center gap-2">✅ Whale Alerts Real-time</li>
                                 </ul>
                             </div>
