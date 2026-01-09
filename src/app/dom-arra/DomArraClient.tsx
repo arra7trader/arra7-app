@@ -20,13 +20,13 @@ const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 const MAX_FLOW_HISTORY = 600; // Keep last 1 minute of data (100ms * 600)
 
 // Order Book Component
-function OrderBookVisualization({ orderBook, maxLevels = 15 }: { orderBook: OrderBook | null; maxLevels?: number }) {
+function OrderBookVisualization({ orderBook, maxLevels = 15, statusMessage }: { orderBook: OrderBook | null; maxLevels?: number; statusMessage?: string }) {
     if (!orderBook) {
         return (
             <div className="h-full flex items-center justify-center text-[var(--text-muted)]">
                 <div className="text-center">
                     <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    <p>Menghubungkan ke market...</p>
+                    <p className="text-sm font-mono text-blue-400">{statusMessage || 'Menghubungkan ke market...'}</p>
                 </div>
             </div>
         );
@@ -439,6 +439,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
     const { data: session, status } = useSession();
     const [selectedSymbol, setSelectedSymbol] = useState<DOMSymbolId>('BTCUSD');
     const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
+    const [statusMessage, setStatusMessage] = useState('Initializing...');
 
     // Check access immediately
     if (!accessResult.allowed) {
@@ -510,6 +511,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
         }
 
         console.log(`Connecting to Binance for ${symbol} (${binanceSymbol})...`);
+        setStatusMessage('Connecting WS...');
         const wsUrl = `wss://stream.binance.com/ws/${binanceSymbol}@depth20@100ms`;
         const ws = new WebSocket(wsUrl);
 
@@ -518,12 +520,14 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
         const connectionTimeout = setTimeout(() => {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 console.log(`WebSocket connection timeout for ${symbol}, switching to polling...`);
+                setStatusMessage('WS Timeout. Switching to Proxy...');
                 ws.close();
                 setUsePolling(true);
             }
         }, 2000);
 
         ws.onopen = () => {
+            setStatusMessage('Connected (WS)');
             clearTimeout(connectionTimeout);
             console.log(`Binance WebSocket connected for ${symbol} (${binanceSymbol})`);
             setIsConnected(true);
@@ -593,6 +597,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
             const failThreshold = symbol === 'BTCUSD' ? 2 : 1;
             if (wsFailCountRef.current >= failThreshold) {
                 console.log(`WebSocket blocked for ${symbol}, switching to proxy polling...`);
+                setStatusMessage('WS Blocked. Switching to Proxy...');
                 setUsePolling(true);
             }
         };
@@ -603,6 +608,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
     // Proxy Polling Fallback (for ISP-blocked connections)
     const fetchViaProxy = useCallback(async (symbol: DOMSymbolId) => {
         try {
+            if (orderBook === null) setStatusMessage('Connecting via Proxy...');
             const binanceSymbol = DOM_SYMBOLS[symbol].binanceSymbol;
             const response = await fetch(`/api/binance/depth?symbol=${binanceSymbol}&limit=20`);
 
@@ -624,6 +630,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
             setOrderBook(newOrderBook);
             setLastUpdate(new Date());
             setIsConnected(true);
+            setStatusMessage('Connected (Proxy)');
 
             const { prediction: newPrediction, updatedState } = analyzeOrderFlow(newOrderBook, smoothingStateRef.current);
             smoothingStateRef.current = updatedState;
@@ -639,6 +646,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
             });
         } catch (error) {
             console.error('Proxy fetch error:', error);
+            setStatusMessage('Proxy Error: ' + (error instanceof Error ? error.message : 'Unknown'));
             setIsConnected(false);
         }
     }, []);
@@ -945,7 +953,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                                         </span>
                                     )}
                                 </div>
-                                <OrderBookVisualization orderBook={orderBook} />
+                                <OrderBookVisualization orderBook={orderBook} statusMessage={statusMessage} />
                             </div>
                         </motion.div>
 
