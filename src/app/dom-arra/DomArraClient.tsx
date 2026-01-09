@@ -741,10 +741,8 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
         );
     }
 
-    // Show coming soon for non-admin users
-    if (!isAdmin) {
-        return <ComingSoonView />;
-    }
+    // Admin check removed, relying on accessResult
+    // if (!isAdmin) { return <ComingSoonView />; }
 
     // Admin View - Full DOM
     return (
