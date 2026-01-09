@@ -645,7 +645,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
 
     // Effect: Start polling when in fallback mode
     useEffect(() => {
-        if (!usePolling || !isAdmin) return;
+        if (!usePolling) return;
 
         // Close WebSocket if still open
         if (wsRef.current) {
@@ -666,11 +666,11 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                 pollingIntervalRef.current = null;
             }
         };
-    }, [usePolling, selectedSymbol, isAdmin, fetchViaProxy]);
+    }, [usePolling, selectedSymbol, fetchViaProxy]);
 
     // Effect: Connect on symbol change
     useEffect(() => {
-        if (!isAdmin || usePolling) return;
+        if (usePolling) return;
 
         // Reset failure count on symbol change
         wsFailCountRef.current = 0;
@@ -694,7 +694,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                 wsRef.current = null;
             }
         };
-    }, [selectedSymbol, isAdmin, usePolling, connectBinanceStream]);
+    }, [selectedSymbol, usePolling, connectBinanceStream]);
 
     // Keep track of latest order book for interval-based prediction
     const orderBookRef = useRef<OrderBook | null>(null);
