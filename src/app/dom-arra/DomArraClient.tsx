@@ -513,14 +513,15 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
         const wsUrl = `wss://stream.binance.com/ws/${binanceSymbol}@depth20@100ms`;
         const ws = new WebSocket(wsUrl);
 
-        // Connection timeout - if no connection in 5 seconds, switch to polling
+        // Connection timeout - if no connection in 2 seconds, switch to polling
+        // (Reduced from 5s to help users in blocked regions switch to proxy faster)
         const connectionTimeout = setTimeout(() => {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 console.log(`WebSocket connection timeout for ${symbol}, switching to polling...`);
                 ws.close();
                 setUsePolling(true);
             }
-        }, 5000);
+        }, 2000);
 
         ws.onopen = () => {
             clearTimeout(connectionTimeout);
