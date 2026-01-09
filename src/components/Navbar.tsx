@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import * as Popover from '@radix-ui/react-popover';
 import LanguageSwitcher from './LanguageSwitcher';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function Navbar() {
     const { data: session, status } = useSession();
@@ -28,6 +29,21 @@ export default function Navbar() {
         { label: t('pricing'), href: '/pricing' },
         { label: 'FAQ', href: '/faq' },
     ];
+
+    const searchParams = useSearchParams();
+    const isAppMode = searchParams?.get('mode') === 'app';
+
+    // If in App Mode, hide Navbar and reset page padding
+    if (isAppMode) {
+        return (
+            <style jsx global>{`
+                header { display: none !important; }
+                .pt-20 { padding-top: 0 !important; }
+                /* Hide footer if needed too */
+                footer { display: none !important; }
+            `}</style>
+        );
+    }
 
     return (
         <motion.header
