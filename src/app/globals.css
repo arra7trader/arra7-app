@@ -235,6 +235,21 @@ body {
   animation: scaleIn 0.6s ease forwards;
 }
 
+/* Shimmer Animation for Skeleton Loading */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite linear;
+}
+
 /* Stagger delays */
 .delay-100 {
   animation-delay: 0.1s;

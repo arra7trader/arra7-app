@@ -29,10 +29,31 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "ARRA7 - AI Trading Analysis",
-  description: "Analisa Trading Forex & Saham Indonesia dengan AI Level Institusional. Entry, SL, TP otomatis. Smart Money Concepts.",
-  keywords: ["forex", "saham", "trading", "analisa", "AI", "indonesia", "XAUUSD", "gold", "IDX", "indicators", "expert advisors"],
-  authors: [{ name: "ARRA7" }],
+  title: {
+    default: "ARRA7 - AI Trading Analysis Platform",
+    template: "%s | ARRA7"
+  },
+  description: "Platform trading Indonesia #1 dengan AI Neural Ensemble 90%+ akurasi. Bookmap Whale Order Flow, Analisa Forex & Saham IDX profesional. Entry, SL, TP otomatis.",
+  keywords: [
+    "trading indonesia", "analisa forex", "analisa saham", "AI trading",
+    "XAUUSD", "gold trading", "IDX saham", "bookmap", "order flow",
+    "whale tracking", "smart money concepts", "trading signals",
+    "forex indonesia", "crypto trading", "neural network trading"
+  ],
+  authors: [{ name: "ARRA7", url: "https://arra7-app.vercel.app" }],
+  creator: "ARRA7",
+  publisher: "ARRA7",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -40,15 +61,26 @@ export const metadata: Metadata = {
     title: "ARRA7",
   },
   openGraph: {
-    title: "ARRA7 - AI Trading Analysis",
-    description: "Analisa Trading Forex & Saham Indonesia dengan AI Level Institusional",
+    title: "ARRA7 - AI Trading Analysis Platform",
+    description: "Platform trading Indonesia dengan AI 90%+ akurasi. Bookmap Order Flow, Forex & Saham Analysis.",
     type: "website",
     siteName: "ARRA7",
+    locale: "id_ID",
+    url: "https://arra7-app.vercel.app",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "ARRA7 AI Trading Platform",
+      }
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ARRA7 - AI Trading Analysis",
-    description: "Analisa Trading Forex & Saham Indonesia dengan AI",
+    description: "Analisa Trading Forex & Saham Indonesia dengan AI 90%+ akurasi",
+    images: ["/og-image.png"],
   },
   icons: {
     icon: [
@@ -59,6 +91,10 @@ export const metadata: Metadata = {
       { url: "/icons/icon-180x180.png", sizes: "180x180", type: "image/png" },
     ],
   },
+  verification: {
+    google: "your-google-verification-code", // TODO: Add actual verification code
+  },
+  category: "Finance",
 };
 
 export default async function RootLayout({
