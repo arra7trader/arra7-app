@@ -8,16 +8,45 @@ import { checkQuota, useQuota, getQuotaStatus } from '@/lib/quota';
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
+        let userId: string | null = null;
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        if (session?.user?.id) {
+            userId = session.user.id;
+        } else {
+            // Try Mobile Bearer Token
+            const authHeader = request.headers.get('Authorization');
+            if (authHeader?.startsWith('Bearer ')) {
+                const token = authHeader.split(' ')[1];
+                const { verifyMobileToken } = await import('@/lib/mobile-auth');
+                const userEmail = await verifyMobileToken(token);
+
+                if (userEmail) {
+                    // Get User ID from DB
+                    const turso = (await import('@/lib/turso')).default();
+                    if (turso) {
+                        try {
+                            const userRes = await turso.execute({
+                                sql: 'SELECT id FROM users WHERE email = ?',
+                                args: [userEmail]
+                            });
+                            if (userRes.rows.length > 0) {
+                                userId = userRes.rows[0].id as string;
+                            }
+                        } catch (e) {
+                            console.error('DB fetch user error:', e);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!userId) {
             return NextResponse.json(
                 { status: 'error', message: 'Silakan login terlebih dahulu' },
                 { status: 401 }
             );
         }
-
-        const userId = session.user.id;
 
         // Parse request body
         const body = await request.json();
@@ -132,7 +161,8 @@ export async function POST(request: NextRequest) {
             console.error('Failed to save to history:', historyError);
         }
 
-        // Save signal for performance tracking
+        // Save signal for performance tracking & prepare native response
+        let nativeSignalData = null;
         try {
             const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
             if (aiResult.analysis) {
@@ -140,8 +170,9 @@ export async function POST(request: NextRequest) {
                 if (signalData) {
                     const saved = await saveSignal(signalData);
                     console.log('[Analyze] Signal saved via parsing:', saved);
+                    nativeSignalData = signalData;
                 } else {
-                    // Fallback: try to determine direction and force save with current price
+                    // Fallback: try to determine direction and force save
                     const lowerAnalysis = aiResult.analysis.toLowerCase();
                     let direction: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
                     if (lowerAnalysis.includes('buy') || lowerAnalysis.includes('bullish') || lowerAnalysis.includes('beli')) {
@@ -153,6 +184,14 @@ export async function POST(request: NextRequest) {
                     if (direction !== 'HOLD' && marketData.current_price > 0) {
                         const saved = await forceSaveSignal('forex', pair, direction, marketData.current_price, timeframe);
                         console.log('[Analyze] Signal saved via forceSave:', saved, 'Direction:', direction, 'Price:', marketData.current_price);
+                        nativeSignalData = {
+                            type: direction,
+                            entry: marketData.current_price,
+                            sl: 0,
+                            tp: 0,
+                            confidence: 0,
+                            analysis: 'AI Analysis'
+                        };
                     }
                 }
             }
@@ -178,6 +217,7 @@ export async function POST(request: NextRequest) {
                 change: marketData.change_percent,
                 isRealtime: marketData.is_realtime,
             },
+            parsedSignal: nativeSignalData,
             quotaStatus: serializedQuotaStatus,
             timestamp: new Date().toISOString(),
         });
