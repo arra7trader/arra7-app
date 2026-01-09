@@ -756,8 +756,8 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
     // Admin View - Full DOM
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20 pb-12">
-            {/* Floating Alert Toasts */}
-            <AlertToastContainer alerts={alerts} onDismiss={dismissAlert} />
+            {/* Floating Alert Toasts - Disabled by user request */}
+            {/* <AlertToastContainer alerts={alerts} onDismiss={dismissAlert} /> */}
 
             {/* Trial Banner for BASIC users */}
             {accessResult.reason === 'TRIAL_ACTIVE' && accessResult.daysLeft !== undefined && (
