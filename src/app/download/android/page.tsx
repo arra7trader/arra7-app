@@ -14,10 +14,10 @@ export default function DownloadAndroidPage() {
     }, []);
 
     const features = [
-        { icon: '🔥', title: 'Native Heatmap', desc: 'New High-Performance Engine with 60fps rendering' },
-        { icon: '🔍', title: '0.05% Precision', desc: 'Deep Zoom capability for identifying hidden liquidity' },
-        { icon: '🌊', title: 'Soft Follow', desc: 'Smart viewport that follows price naturally' },
-        { icon: '🤖', title: 'AI Prediction', desc: 'Real-time ML signals with confidence score' },
+        { icon: '🐋', title: 'Institutional Heatmap', desc: 'Visualisasi Order Flow kelas dunia. Deteksi "Whale Walls" dan manipulasi harga yang tidak terlihat di chart biasa.' },
+        { icon: '🧠', title: 'AI Smart Predictor', desc: 'Analisa market otomatis dengan Machine Learning. Dapatkan sinyal arah tren dengan Confidence Score real-time.' },
+        { icon: '⚡', title: 'Native Performance', desc: 'Engine v3.0 super ringan. Zoom 0.05% presisi tinggi & "Soft Follow" viewport untuk pengalaman trading tanpa lag.' },
+        { icon: '🛠️', title: 'All-in-One Tools', desc: 'Lengkap dengan CVD, Volume Profile, dan Multi-asset analysis (Crypto, Forex, Saham) dalam satu aplikasi.' },
     ];
 
     return (
