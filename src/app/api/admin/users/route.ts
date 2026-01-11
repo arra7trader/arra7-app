@@ -117,6 +117,7 @@ export async function GET(request: NextRequest) {
                 lastLoginCountry: row.last_login_country || null,
                 lastLoginCity: row.last_login_city || null,
                 lastLoginAt: row.last_login_at || null,
+                downloadedApk: row.downloaded_apk === 1,
             };
         });
 

@@ -52,7 +52,13 @@ export default function DownloadAppSection() {
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                 <Link href="/download/android">
-                                    <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-lg shadow-amber-500/20 px-8 py-4 text-lg group w-full sm:w-auto flex items-center justify-center">
+                                    <button
+                                        onClick={() => {
+                                            // Track download
+                                            fetch('/api/user/track-download', { method: 'POST' });
+                                        }}
+                                        className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-lg shadow-amber-500/20 px-8 py-4 text-lg group w-full sm:w-auto flex items-center justify-center"
+                                    >
                                         <img src="/images/android-logo.png" alt="Android" className="w-6 h-6 mr-2 object-contain invert brightness-0" />
                                         Download Android
                                         <ArrowRightIcon className="ml-2 group-hover:translate-x-1 transition-transform" size="sm" />

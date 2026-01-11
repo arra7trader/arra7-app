@@ -257,6 +257,9 @@ export async function initDatabase(): Promise<boolean> {
       { column: 'bookmap_first_access', sql: `ALTER TABLE users ADD COLUMN bookmap_first_access DATETIME` },
       // AI Self-Learning: Signals breakdown
       { column: 'signals', sql: `ALTER TABLE ml_predictions ADD COLUMN signals TEXT` },
+      // APK Tracking
+      { column: 'downloaded_apk', sql: `ALTER TABLE users ADD COLUMN downloaded_apk INTEGER DEFAULT 0` },
+      { column: 'apk_downloaded_at', sql: `ALTER TABLE users ADD COLUMN apk_downloaded_at DATETIME` },
     ];
 
     for (const migration of migrations) {

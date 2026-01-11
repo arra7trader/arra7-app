@@ -22,6 +22,7 @@ interface User {
     lastLoginCountry: string | null;
     lastLoginCity: string | null;
     lastLoginAt: string | null;
+    downloadedApk: boolean;
 }
 
 interface UpgradeNotification {
@@ -566,7 +567,12 @@ Tim ARRA7`;
                                     <tr key={user.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
                                         <td className="p-4">
                                             <div>
-                                                <p className="font-medium text-[var(--text-primary)]">{user.name || 'No Name'}</p>
+                                                <p className="font-medium text-[var(--text-primary)] flex items-center gap-2">
+                                                    {user.name || 'No Name'}
+                                                    {user.downloadedApk && (
+                                                        <span title="User sudah download APK">🤖</span>
+                                                    )}
+                                                </p>
                                                 <p className="text-sm text-[var(--text-secondary)]">{user.email}</p>
                                             </div>
                                         </td>
