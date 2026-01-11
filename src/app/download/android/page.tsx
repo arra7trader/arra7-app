@@ -56,7 +56,7 @@ export default function DownloadAndroidPage() {
                         >
                             <div className="relative rounded-[2.5rem] border-[8px] border-slate-900 overflow-hidden shadow-2xl bg-slate-900 aspect-[9/19]">
                                 <img
-                                    src="/images/android-preview-v3.png"
+                                    src="/images/android-showcase.png"
                                     alt="ARRA7 Android App Interface"
                                     className="w-full h-full object-cover"
                                 />
@@ -75,8 +75,12 @@ export default function DownloadAndroidPage() {
                         >
                             <div className="bg-white rounded-3xl border border-[var(--border-light)] p-8 shadow-sm">
                                 <div className="flex items-center gap-6 mb-8">
-                                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg text-white font-bold text-3xl">
-                                        A7
+                                    <div className="w-20 h-20 shrink-0">
+                                        <img
+                                            src="/icons/apk-logo.png"
+                                            alt="ARRA7 App Icon"
+                                            className="w-full h-full object-contain drop-shadow-lg"
+                                        />
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-bold text-[var(--text-primary)]">ARRA7 Trading App</h2>
