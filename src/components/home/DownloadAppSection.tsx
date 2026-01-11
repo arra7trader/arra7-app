@@ -52,16 +52,16 @@ export default function DownloadAppSection() {
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                 <Link href="/download/android">
-                                    <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-lg shadow-amber-500/20 px-8 py-4 text-lg group w-full sm:w-auto">
-                                        <span className="mr-2">📲</span>
+                                    <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-lg shadow-amber-500/20 px-8 py-4 text-lg group w-full sm:w-auto flex items-center justify-center">
+                                        <img src="/images/android-logo.png" alt="Android" className="w-6 h-6 mr-2 object-contain invert brightness-0" />
                                         Download Android
                                         <ArrowRightIcon className="ml-2 group-hover:translate-x-1 transition-transform" size="sm" />
                                     </button>
                                 </Link>
 
                                 <Link href="/download/ios">
-                                    <button className="btn-secondary px-8 py-4 text-lg w-full sm:w-auto hover:bg-white/50 backdrop-blur-sm">
-                                        <span className="mr-2">🍎</span>
+                                    <button className="btn-secondary px-8 py-4 text-lg w-full sm:w-auto hover:bg-white/50 backdrop-blur-sm flex items-center justify-center">
+                                        <img src="/images/apple-logo.png" alt="iOS" className="w-6 h-6 mr-2 object-contain" />
                                         iOS / Web App
                                     </button>
                                 </Link>
