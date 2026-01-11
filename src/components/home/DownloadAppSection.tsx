@@ -50,13 +50,22 @@ export default function DownloadAppSection() {
                                 ))}
                             </div>
 
-                            <Link href="/download/android">
-                                <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-lg shadow-amber-500/20 px-8 py-4 text-lg group">
-                                    <span className="mr-2">📲</span>
-                                    Download Android App
-                                    <ArrowRightIcon className="ml-2 group-hover:translate-x-1 transition-transform" size="sm" />
-                                </button>
-                            </Link>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                <Link href="/download/android">
+                                    <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-lg shadow-amber-500/20 px-8 py-4 text-lg group w-full sm:w-auto">
+                                        <span className="mr-2">📲</span>
+                                        Download Android
+                                        <ArrowRightIcon className="ml-2 group-hover:translate-x-1 transition-transform" size="sm" />
+                                    </button>
+                                </Link>
+
+                                <Link href="/download/ios">
+                                    <button className="btn-secondary px-8 py-4 text-lg w-full sm:w-auto hover:bg-white/50 backdrop-blur-sm">
+                                        <span className="mr-2">🍎</span>
+                                        iOS / Web App
+                                    </button>
+                                </Link>
+                            </div>
 
                             <p className="mt-4 text-xs text-[var(--text-muted)]">
                                 *Support Android 10+ • iOS Coming Soon
