@@ -14,136 +14,121 @@ export default function DownloadAndroidPage() {
     }, []);
 
     const features = [
-        { icon: '🔮', title: 'AI Trading Analysis', desc: 'Analisa Forex, Crypto, Saham dengan AI' },
-        { icon: '📊', title: 'Real-time Data', desc: 'Data market live dari berbagai sumber' },
-        { icon: '🔔', title: 'Notifikasi', desc: 'Alert untuk sinyal trading penting' },
-        { icon: '⚡', title: 'Fast & Lightweight', desc: 'Hanya ~13MB, cepat dan ringan' },
+        { icon: '🔥', title: 'Native Heatmap', desc: 'New High-Performance Engine with 60fps rendering' },
+        { icon: '🔍', title: '0.05% Precision', desc: 'Deep Zoom capability for identifying hidden liquidity' },
+        { icon: '🌊', title: 'Soft Follow', desc: 'Smart viewport that follows price naturally' },
+        { icon: '🤖', title: 'AI Prediction', desc: 'Real-time ML signals with confidence score' },
     ];
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
             {/* Header */}
-            <section className="section-padding text-center">
+            <section className="section-padding text-center pb-0">
                 <div className="container-apple">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                     >
-                        <span className="badge-apple mb-6 inline-flex">
-                            📱 Android App
+                        <span className="badge-apple mb-6 inline-flex bg-blue-50 text-blue-600 border-blue-100">
+                            🚀 New Update v3.0
                         </span>
                         <h1 className="headline-lg mb-4">
-                            Download <span className="gradient-text">ARRA7</span> untuk Android
+                            ARRA7 <span className="gradient-text">Native Heatmap</span>
                         </h1>
-                        <p className="body-lg max-w-2xl mx-auto">
-                            Trading analysis di genggaman Anda. Install sekarang.
+                        <p className="body-lg max-w-2xl mx-auto text-[var(--text-secondary)]">
+                            Experience the new native engine. Faster, smoother, and more detailed than ever.
                         </p>
                     </motion.div>
                 </div>
             </section>
 
-            {/* Download Card */}
-            <section className="section-padding pt-0">
+            {/* Main Showcase */}
+            <section className="section-padding pt-12">
                 <div className="container-apple">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-white rounded-2xl border border-[var(--border-light)] p-8"
-                    >
-                        <div className="flex flex-col md:flex-row items-center gap-8">
-                            {/* App Icon */}
-                            <div className="shrink-0">
-                                <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-[var(--accent-blue)] to-cyan-500 flex items-center justify-center shadow-xl">
-                                    <span className="text-4xl font-bold text-white">A7</span>
-                                </div>
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+
+                        {/* Left: Phone Mockup */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="relative mx-auto md:mx-0 max-w-[320px]"
+                        >
+                            <div className="relative rounded-[2.5rem] border-[8px] border-slate-900 overflow-hidden shadow-2xl bg-slate-900 aspect-[9/19]">
+                                <img
+                                    src="/images/android-preview-v3.png"
+                                    alt="ARRA7 Android App Interface"
+                                    className="w-full h-full object-cover"
+                                />
+                                {/* Glossy Reflection */}
+                                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
                             </div>
+                            {/* Decorative Blob */}
+                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[80%] bg-blue-500/20 blur-[80px] rounded-full"></div>
+                        </motion.div>
 
-                            {/* Info */}
-                            <div className="flex-1 text-center md:text-left">
-                                <h2 className="text-2xl font-bold mb-2 text-[var(--text-primary)]">ARRA7 Trading App</h2>
-                                <p className="text-[var(--text-secondary)] mb-4">Version 2.1 • ~13 MB</p>
-
-                                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-6">
-                                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">AI Analysis</span>
-                                    <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm">Forex</span>
-                                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">Saham</span>
-                                    <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm">Crypto</span>
-                                </div>
-
-                                <a
-                                    href="https://raw.githubusercontent.com/arra7trader/arra7-app/main/ARRA7_v2.1.apk"
-                                    download="ARRA7_v2.1.apk"
-                                    className="btn-primary inline-flex"
-                                >
-                                    <DownloadIcon className="mr-2" size="md" />
-                                    Download APK (v2.1)
-                                </a>
-
-                                <p className="text-sm text-[var(--text-muted)] mt-3">
-                                    ⚠️ Aktifkan "Install from Unknown Sources" di Settings
-                                </p>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Features */}
-            <section className="section-padding bg-[var(--bg-secondary)]">
-                <div className="container-apple">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-4"
-                    >
-                        {features.map((feature, i) => (
-                            <div key={i} className="card-feature text-center py-6">
-                                <div className="text-3xl mb-3">{feature.icon}</div>
-                                <h3 className="font-semibold mb-1 text-[var(--text-primary)]">{feature.title}</h3>
-                                <p className="text-xs text-[var(--text-secondary)]">{feature.desc}</p>
-                            </div>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Installation Steps */}
-            <section className="section-padding">
-                <div className="container-apple">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-white rounded-2xl border border-[var(--border-light)] p-8"
-                    >
-                        <h3 className="text-xl font-bold mb-6 text-[var(--text-primary)]">📲 Cara Install</h3>
-                        <div className="space-y-5">
-                            {[
-                                { step: '1', title: 'Download APK', desc: 'Klik tombol download di atas' },
-                                { step: '2', title: 'Aktifkan Unknown Sources', desc: 'Settings → Security → Allow Unknown Sources' },
-                                { step: '3', title: 'Install APK', desc: 'Buka file APK dan install' },
-                                { step: '✓', title: 'Login & Enjoy!', desc: 'Login dengan Google dan mulai trading', done: true },
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-start gap-4">
-                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-white ${item.done ? 'bg-green-500' : 'bg-[var(--accent-blue)]'}`}>
-                                        {item.step}
-                                    </span>
+                        {/* Right: Download & Info */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                        >
+                            <div className="bg-white rounded-3xl border border-[var(--border-light)] p-8 shadow-sm">
+                                <div className="flex items-center gap-6 mb-8">
+                                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg text-white font-bold text-3xl">
+                                        A7
+                                    </div>
                                     <div>
-                                        <h4 className="font-semibold text-[var(--text-primary)]">{item.title}</h4>
-                                        <p className="text-sm text-[var(--text-secondary)]">{item.desc}</p>
+                                        <h2 className="text-2xl font-bold text-[var(--text-primary)]">ARRA7 Trading App</h2>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-sm font-medium px-2 py-0.5 rounded bg-green-100 text-green-700">Stable</span>
+                                            <span className="text-[var(--text-secondary)] text-sm">v3.0.0 • Native Engine</span>
+                                        </div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </motion.div>
+
+                                <div className="space-y-4 mb-8">
+                                    {features.map((f, i) => (
+                                        <div key={i} className="flex items-start gap-3">
+                                            <span className="text-xl mt-0.5">{f.icon}</span>
+                                            <div>
+                                                <h4 className="font-semibold text-[var(--text-primary)] text-sm">{f.title}</h4>
+                                                <p className="text-xs text-[var(--text-secondary)]">{f.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-col gap-3">
+                                    <a
+                                        href="https://github.com/arra7trader/arra7-app/raw/main/ARRA7_v3.0_Native.apk"
+                                        download="ARRA7_v3.0.apk"
+                                        className="btn-primary w-full py-4 justify-center text-lg shadow-blue-500/25"
+                                    >
+                                        <DownloadIcon className="mr-2" size="md" />
+                                        Download APK (v3.0)
+                                    </a>
+                                    <p className="text-xs text-center text-[var(--text-muted)]">
+                                        Compatible with Android 10+ • 64-bit Architecture
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Installation Note */}
+                            <div className="mt-6 bg-yellow-50 border border-yellow-100 rounded-xl p-4 flex gap-3">
+                                <span className="text-xl">⚠️</span>
+                                <p className="text-sm text-yellow-800">
+                                    Jika update dari versi lama gagal, silakan <b>Uninstall</b> versi lama terlebih dahulu, lalu install versi v3.0 ini.
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
                 </div>
             </section>
 
             {/* Back to Home */}
-            <div className="text-center py-8">
-                <Link href="/" className="text-[var(--accent-blue)] hover:underline">
+            <div className="text-center pb-12">
+                <Link href="/" className="text-[var(--text-secondary)] hover:text-[var(--accent-blue)] transition-colors text-sm font-medium">
                     ← Kembali ke Beranda
                 </Link>
             </div>

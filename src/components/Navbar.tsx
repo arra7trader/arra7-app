@@ -28,6 +28,15 @@ export default function Navbar() {
         { label: t('bookmap'), href: '/dom-arra' },
         { label: t('pricing'), href: '/pricing' },
         { label: 'FAQ', href: '/faq' },
+        {
+            label: (
+                <div className="flex items-center gap-2">
+                    <img src="/icons/apk-logo.png" alt="APK" className="w-5 h-5 object-contain" />
+                    <span>App</span>
+                </div>
+            ),
+            href: '/download/android'
+        },
     ];
 
     const searchParams = useSearchParams();
