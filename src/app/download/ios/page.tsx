@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ShareIcon, Square2StackIcon } from '@/components/PremiumIcons';
 import Link from 'next/link';
-import { ShareIcon, Square2StackIcon } from '@heroicons/react/24/outline';
 
 const fadeInUp = {
     initial: { opacity: 0, y: 30 },

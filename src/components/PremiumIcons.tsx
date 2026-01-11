@@ -180,6 +180,12 @@ export const TrashIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) 
     </svg>
 );
 
+export const ArrowLeftIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+    </svg>
+);
+
 export const ArrowRightIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
     <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -325,6 +331,18 @@ export const FireSolidIcon: React.FC<IconProps> = ({ className = '', size = 'md'
 export const CheckCircleSolidIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
     <svg className={`${sizeMap[size]} ${className}`} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+);
+
+export const ShareIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+    </svg>
+);
+
+export const Square2StackIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 00-2.25 2.25v6" />
     </svg>
 );
 
