@@ -30,7 +30,7 @@ const PRICING_PLANS = [
     {
         id: 'PRO',
         name: 'Pro',
-        price: 'Rp 149K',
+        price: 'Rp 99K',
         originalPrice: 'Rp 299K',
         period: '/bulan',
         description: 'Untuk trader aktif yang serius profit',

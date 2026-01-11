@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
+const NEW_YEAR_PROMO_END = new Date('2026-12-31T23:59:59+07:00');
 
 function TransferContent() {
     const { data: session, status } = useSession();
