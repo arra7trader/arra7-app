@@ -503,6 +503,16 @@ Tim ARRA7`;
                             <span className="font-medium">Saham Indonesia</span>
                             <span className="text-xs text-green-500">Analisa IDX AI</span>
                         </button>
+
+                        <button
+                            onClick={() => sendTelegramPromo('bookmap_ai')}
+                            disabled={sendingTelegram || !telegramConfigured}
+                            className="col-span-2 flex flex-col items-center gap-2 p-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            <span className="text-3xl">🚀</span>
+                            <span className="font-medium">Bookmap X AI</span>
+                            <span className="text-xs text-amber-600">Promo Heatmap & AI (Short & Cool)</span>
+                        </button>
                     </div>
 
                     <p className="mt-4 text-xs text-[var(--text-muted)] text-center">

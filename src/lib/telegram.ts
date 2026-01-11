@@ -127,12 +127,29 @@ ASII | UNVR | ICBP | GOTO | BREN
 👉 https://arra7-app.vercel.app
 
 #SahamIndonesia #IDXAnalysis #IHSG #InvestasiSaham #ARRA7`,
+
+    // 3. Bookmap X AI (Short & Cool)
+    bookmap_ai: `🚀 <b>Next Level Trading!</b>
+
+Mau lihat Whale sembunyi di mana? 👀
+Analisa market jadi makin transparan dengan <b>Bookmap Heatmap</b> & <b>AI Prediction</b> di ARRA7.
+
+✅ <b>Real-time Order Flow</b> - Liat tembok buy/sell asli.
+✅ <b>AI Signal</b> - Akurasi tinggi, bukan tebak-tebakan.
+✅ <b>Download APK</b> - Trading pro dalam genggaman.
+
+🔥 <b>Upgrade ke PRO sekarang!</b>
+Coba fitur premium tanpa ribet.
+
+🔗 <b>Download:</b> https://arra7-app.vercel.app/download/android
+#ARRA7 #TradingSmart #Bookmap #AITrading`,
 };
 
 // Template metadata for admin display
 export const TEMPLATE_METADATA: Record<string, { name: string; emoji: string; description: string }> = {
     arra7: { name: 'ARRA7', emoji: '🔮', description: 'AI Trading Analysis - Forex, Crypto, Saham' },
     saham: { name: 'Saham Indonesia', emoji: '📈', description: 'Analisa Saham IDX dengan AI Institusional' },
+    bookmap_ai: { name: 'Bookmap X AI', emoji: '🚀', description: 'Promo fitur Heatmap & AI' },
 };
 
 // Get all template keys for iteration
