@@ -19,14 +19,14 @@ export const STOCK_QUOTA_LIMITS = {
 
 // Allowed timeframes per membership
 export const ALLOWED_TIMEFRAMES = {
-    BASIC: ['1m', '5m', '15m', '30m'], // M1 to M30 only
+    BASIC: ['5m', '15m'], // M5 and M15 only
     PRO: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
     VVIP: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
 } as const;
 
 // Allowed pair categories per membership
 export const ALLOWED_PAIR_CATEGORIES = {
-    BASIC: ['major', 'minor', 'gold'], // Forex Major, Minor, and Gold only
+    BASIC: ['major', 'gold'], // Forex Major and Gold only
     PRO: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
     VVIP: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
 } as const;
@@ -35,11 +35,7 @@ export const ALLOWED_PAIR_CATEGORIES = {
 export const BASIC_ALLOWED_PAIRS = [
     // Forex Major
     'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD',
-    // Forex Minor
-    'EURGBP', 'EURJPY', 'GBPJPY', 'EURCHF', 'EURAUD', 'EURCAD', 'GBPCHF',
-    'GBPAUD', 'AUDJPY', 'CADJPY', 'CHFJPY', 'NZDJPY', 'AUDCAD', 'AUDCHF',
-    'AUDNZD', 'EURNZD', 'GBPCAD', 'GBPNZD',
-    // Gold only from commodities
+    // Gold
     'XAUUSD',
 ];
 
@@ -92,13 +88,23 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
 
         const today = getTodayDate();
 
-        // Get today's usage
-        const result = await turso.execute({
-            sql: 'SELECT count FROM quota_usage WHERE user_id = ? AND date = ?',
-            args: [userId, today],
-        });
+        // Get usage for last 3 days (for BASIC) or today (for others)
+        let used = 0;
 
-        const used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
+        if (membership === 'BASIC' && !promoStatus.hasPromo) {
+            const result = await turso.execute({
+                sql: "SELECT SUM(count) as total FROM quota_usage WHERE user_id = ? AND date >= date('now', '-2 days')",
+                args: [userId],
+            });
+            used = result.rows.length > 0 && result.rows[0].total ? Number(result.rows[0].total) : 0;
+        } else {
+            // PRO/VVIP - Daily limit
+            const result = await turso.execute({
+                sql: 'SELECT count FROM quota_usage WHERE user_id = ? AND date = ?',
+                args: [userId, today],
+            });
+            used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
+        }
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
         return {

@@ -390,7 +390,7 @@ export async function checkBookmapAccess(userId: string): Promise<AccessResult> 
 
       // Calculate trial status (1 day = 24 hours)
       const now = new Date();
-      const trialDuration = 1 * 24 * 60 * 60 * 1000; // 1 day in ms
+      const trialDuration = 3 * 24 * 60 * 60 * 1000; // 3 days in ms
       const timeDiff = now.getTime() - firstAccess.getTime();
 
       if (timeDiff < trialDuration) {
