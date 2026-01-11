@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon, CheckCircleSolidIcon, FireIcon, ScaleIcon, SignalIcon } from '@/components/PremiumIcons';
+import DownloadAppSection from '@/components/home/DownloadAppSection';
 
 type TutorialTab = 'bookmap' | 'forex' | 'stock';
 
@@ -417,6 +418,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Mobile App Download Section */}
+      <DownloadAppSection />
 
       {/* Testimonials Section */}
       <section className="section-padding bg-[var(--bg-secondary)]">
