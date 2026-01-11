@@ -31,7 +31,7 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-2">
-                    <img src="/icons/apk-logo.png" alt="APK" className="w-5 h-5 object-contain" />
+                    <img src="/icons/a7-icon.jpg" alt="A7" className="w-5 h-5 object-contain rounded-md" />
                     <span>App</span>
                 </div>
             ),

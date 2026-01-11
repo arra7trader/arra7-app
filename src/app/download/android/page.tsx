@@ -77,9 +77,9 @@ export default function DownloadAndroidPage() {
                                 <div className="flex items-center gap-6 mb-8">
                                     <div className="w-20 h-20 shrink-0">
                                         <img
-                                            src="/icons/apk-logo.png"
+                                            src="/icons/a7-icon.jpg"
                                             alt="ARRA7 App Icon"
-                                            className="w-full h-full object-contain drop-shadow-lg"
+                                            className="w-full h-full object-contain drop-shadow-lg rounded-2xl"
                                         />
                                     </div>
                                     <div>
