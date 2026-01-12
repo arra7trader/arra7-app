@@ -105,7 +105,7 @@ export default function DownloadAndroidPage() {
 
                                 <div className="flex flex-col gap-3">
                                     <a
-                                        href="https://github.com/arra7trader/arra7-app/raw/main/Arra7.apk"
+                                        href="/ARRA7_v3.0.apk"
                                         download="ARRA7_v3.0.apk"
                                         className="btn-primary w-full py-4 justify-center text-lg shadow-blue-500/25"
                                     >
