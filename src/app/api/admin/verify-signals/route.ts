@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyPendingSignals } from '@/lib/signal-verifier';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
     try {
         const result = await verifyPendingSignals();

@@ -5,6 +5,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 import AuthProvider from "@/components/providers/AuthProvider";
 import Navbar from "@/components/Navbar";
 import TelegramWidget from "@/components/TelegramWidget";
+import ArraBot from "@/components/chat/ArraBot";
 import LocationTracker from "@/components/LocationTracker";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
@@ -119,6 +120,7 @@ export default async function RootLayout({
               {children}
             </main>
             <TelegramWidget />
+            <ArraBot />
           </NextIntlClientProvider>
         </AuthProvider>
       </body>

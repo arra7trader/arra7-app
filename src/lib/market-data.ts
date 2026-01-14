@@ -176,13 +176,16 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
     }
 
     try {
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${pairConfig.yahoo}?interval=${tfConfig.interval}&range=${tfConfig.period}`;
+        // [MODIFIED] Force cache bust to ensure realtime data
+        const timestamp = new Date().getTime();
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${pairConfig.yahoo}?interval=${tfConfig.interval}&range=${tfConfig.period}&_=${timestamp}`;
 
         const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             },
-            next: { revalidate: 60 },
+            cache: 'no-store', // [MODIFIED] Critical: Disable caching
+            // next: { revalidate: 0 }, // Alternative if cache: 'no-store' is tricky in some Next versions
         });
 
         if (!response.ok) {
@@ -223,10 +226,19 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
             ? ((lastCandle.close - prevCandle.close) / prevCandle.close) * 100
             : 0;
 
+        // [MODIFIED] Ensure we are looking at the VERY LATEST price available
+        const currentPrice = meta.regularMarketPrice || lastCandle?.close || 0;
+
+        // Calculate data freshness (in seconds)
+        const lastTime = new Date(lastCandle.time).getTime();
+        const now = Date.now();
+        const freshness = (now - lastTime) / 1000;
+        const isFresh = freshness < 300; // Consider < 5 mins "fresh" for free API standards
+
         return {
             symbol: pair,
             name: pairConfig.name,
-            current_price: meta.regularMarketPrice || lastCandle?.close || 0,
+            current_price: currentPrice,
             open: lastCandle?.open || 0,
             high: lastCandle?.high || 0,
             low: lastCandle?.low || 0,
@@ -235,7 +247,7 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
             volume: lastCandle?.volume || 0,
             timestamp: new Date().toISOString(),
             candles,
-            is_realtime: true,
+            is_realtime: isFresh, // Only mark Realtime if data is fresh
         };
 
     } catch (error) {

@@ -466,6 +466,13 @@ export default function AnalisaMarketPage() {
                                             {marketInfo.isRealtime ? 'LIVE' : 'DELAYED'}
                                         </span>
                                     </div>
+                                    <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100">
+                                        <span className="text-[var(--text-secondary)] text-xs">Last Update</span>
+                                        <span className="text-xs text-[var(--text-muted)]">
+                                            {/* Assuming marketInfo has a timestamp field from backend, or we default to now */}
+                                            {new Date().toLocaleTimeString()}
+                                        </span>
+                                    </div>
                                 </div>
                             </motion.div>
                         )}

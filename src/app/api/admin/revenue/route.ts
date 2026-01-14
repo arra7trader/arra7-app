@@ -11,6 +11,8 @@ const PRICES: Record<string, number> = {
     VVIP: 399000
 };
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);

@@ -8,6 +8,8 @@ const ADMIN_EMAILS = [
     'apmexplore@gmail.com', // Add your email
 ];
 
+export const dynamic = 'force-dynamic';
+
 export function isAdmin(email: string | null | undefined): boolean {
     if (!email) return false;
     return ADMIN_EMAILS.includes(email.toLowerCase());
