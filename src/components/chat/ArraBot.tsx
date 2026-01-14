@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'; // Adjust import based on your icon library
-// If PremiumIcons.tsx has specific icons, we can use those too, but heroicons is standard.
-// Using standard SVGs to be safe if icons are missing.
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -129,7 +129,15 @@ export default function ArraBot() {
                                             }
                                         `}
                                     >
-                                        {msg.content}
+                                        {msg.role === 'user' ? (
+                                            msg.content
+                                        ) : (
+                                            <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 text-gray-700">
+                                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
