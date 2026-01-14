@@ -36,7 +36,7 @@ const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 
 // Harga membership
 const PRICES = {
-    PRO: 99000,
+    PRO: 149000,
     VVIP: 399000
 };
 

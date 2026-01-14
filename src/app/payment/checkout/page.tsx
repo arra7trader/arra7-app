@@ -28,7 +28,7 @@ function PaymentCheckoutContent() {
 
     const plan = useMemo(() => {
         if (planId === 'PRO') {
-            return { id: 'PRO', name: 'Pro', price: isPromoActive ? 99000 : 149000, priceFormatted: isPromoActive ? 'Rp 99.000' : 'Rp 149.000', originalPrice: 'Rp 299.000', promoActive: isPromoActive, description: '25x Analisa/hari, Semua Timeframe', color: 'from-blue-500 to-purple-500' };
+            return { id: 'PRO', name: 'Pro', price: 149000, priceFormatted: 'Rp 149.000', originalPrice: 'Rp 299.000', promoActive: false, description: '25x Analisa/hari, Semua Timeframe', color: 'from-blue-500 to-purple-500' };
         } else if (planId === 'VVIP') {
             return { id: 'VVIP', name: 'VVIP', price: 399000, priceFormatted: 'Rp 399.000', originalPrice: null, promoActive: false, description: 'UNLIMITED Analisa, Free Custom EA', color: 'from-amber-500 to-orange-500' };
         }

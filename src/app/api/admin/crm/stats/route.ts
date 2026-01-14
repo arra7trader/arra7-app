@@ -6,8 +6,8 @@ import { isAdmin } from '../../users/route';
 
 // Pricing constants for revenue calculation
 const PRICING = {
-    PRO: 49000,   // Rp 49.000/month
-    VVIP: 99000,  // Rp 99.000/month
+    PRO: 149000,
+    VVIP: 399000
 };
 
 export async function GET() {

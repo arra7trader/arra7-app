@@ -47,7 +47,7 @@ export const DOKU_PLANS = {
     PRO: {
         id: 'PRO',
         name: isNewYearPromoActive() ? 'ARRA7 Pro Membership (Promo Tahun Baru)' : 'ARRA7 Pro Membership',
-        price: isNewYearPromoActive() ? 99000 : 149000,
+        price: 149000,
         duration: 30,
     },
     VVIP: {

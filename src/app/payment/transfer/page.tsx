@@ -17,7 +17,7 @@ function TransferContent() {
     const isPromoActive = useMemo(() => new Date() < NEW_YEAR_PROMO_END, []);
 
     const plan = useMemo(() => {
-        if (planId === 'PRO') return { name: 'Pro', price: isPromoActive ? 99000 : 149000, priceDisplay: isPromoActive ? 'Rp 99.000' : 'Rp 149.000', originalPrice: isPromoActive ? 'Rp 299.000' : null, promoActive: isPromoActive, period: '/bulan' };
+        if (planId === 'PRO') return { name: 'Pro', price: 149000, priceDisplay: 'Rp 149.000', originalPrice: 'Rp 299.000', promoActive: false, period: '/bulan' };
         if (planId === 'VVIP') return { name: 'VVIP', price: 399000, priceDisplay: 'Rp 399.000', originalPrice: null, promoActive: false, period: '/bulan' };
         return null;
     }, [planId, isPromoActive]);
