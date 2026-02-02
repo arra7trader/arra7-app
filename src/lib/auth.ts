@@ -52,12 +52,24 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             if (session.user && token.sub) {
                 session.user.id = token.sub;
+                session.user.tier = token.tier || 'BASIC';
             }
             return session;
         },
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                // On sign in, fetch membership
+                if (process.env.TURSO_DATABASE_URL) {
+                    try {
+                        const { getUserMembership } = await import('./turso');
+                        const { membership } = await getUserMembership(user.id);
+                        token.tier = (membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
+                    } catch (e) {
+                        console.error('Error fetching membership for token:', e);
+                        token.tier = 'BASIC';
+                    }
+                }
             }
             return token;
         },

@@ -7,6 +7,7 @@ declare module 'next-auth' {
             name?: string | null;
             email?: string | null;
             image?: string | null;
+            tier?: 'BASIC' | 'PRO' | 'VVIP';
         };
     }
 }
@@ -14,5 +15,6 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
     interface JWT {
         id?: string;
+        tier?: 'BASIC' | 'PRO' | 'VVIP';
     }
 }
