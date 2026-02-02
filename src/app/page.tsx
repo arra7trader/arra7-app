@@ -181,6 +181,22 @@ export default function Home() {
           <div className="absolute top-1/4 -left-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl" />
           <div className="absolute top-1/3 -right-32 w-80 h-80 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl" />
+
+          {/* Subtle Chart Background Pattern */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.03]" preserveAspectRatio="none" viewBox="0 0 1440 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 800V550C150 560 250 480 400 500C550 520 650 350 800 380C950 410 1050 250 1200 280C1300 300 1380 200 1440 180V800H0Z" fill="url(#chartGradient)" />
+            <path d="M0 548C150 558 250 478 400 498C550 518 650 348 800 378C950 408 1050 248 1200 278C1300 298 1380 198 1440 178" stroke="url(#lineGradient)" strokeWidth="2" />
+            <defs>
+              <linearGradient id="chartGradient" x1="720" y1="200" x2="720" y2="800" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#0071E3" />
+                <stop offset="1" stopColor="#0071E3" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="lineGradient" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#0071E3" />
+                <stop offset="1" stopColor="#A855F7" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
 
         <motion.div

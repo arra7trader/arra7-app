@@ -18,21 +18,38 @@ export async function GET(request: NextRequest) {
             ? symbol.toUpperCase()
             : `${symbol.toUpperCase()}.JK`;
 
-        // Fetch from Yahoo Finance
-        const response = await fetch(
-            `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=3mo`,
-            {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                },
-            }
-        );
+        // Yahoo Finance Hosts Loop (Failover)
+        const hosts = ['query2.finance.yahoo.com', 'query1.finance.yahoo.com'];
+        let lastError;
+        let diffResponse;
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch stock data');
+        for (const host of hosts) {
+            try {
+                // Fetch from Yahoo Finance
+                const response = await fetch(
+                    `https://${host}/v8/finance/chart/${yahooSymbol}?interval=1d&range=3mo`,
+                    {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        },
+                        cache: 'no-store',
+                    }
+                );
+
+                if (response.ok) {
+                    diffResponse = response;
+                    break;
+                }
+            } catch (err) {
+                lastError = err;
+            }
         }
 
-        const data = await response.json();
+        if (!diffResponse || !diffResponse.ok) {
+            throw new Error('Failed to fetch stock data (All hosts failed)');
+        }
+
+        const data = await diffResponse.json();
         const result = data.chart?.result?.[0];
 
         if (!result) {

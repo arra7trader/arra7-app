@@ -156,6 +156,7 @@ export interface MarketData {
     timestamp: string;
     candles: CandleData[];
     is_realtime: boolean;
+    is_simulated?: boolean; // New flag for dummy data
 }
 
 export interface CandleData {
@@ -175,85 +176,189 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
         return generateDummyData(pair, pair);
     }
 
-    try {
-        // [MODIFIED] Force cache bust to ensure realtime data
-        const timestamp = new Date().getTime();
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${pairConfig.yahoo}?interval=${tfConfig.interval}&range=${tfConfig.period}&_=${timestamp}`;
+    // [New] Strategy:
+    // 1. If Crypto, try Binance First (Fastest, Realtime)
+    // 2. If Forex/Stocks or Binance fails, try Yahoo (Query2 -> Query1)
 
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
-            cache: 'no-store', // [MODIFIED] Critical: Disable caching
-            // next: { revalidate: 0 }, // Alternative if cache: 'no-store' is tricky in some Next versions
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch market data');
-        }
-
-        const data = await response.json();
-        const result = data.chart?.result?.[0];
-
-        if (!result) {
-            throw new Error('No data available');
-        }
-
-        const quote = result.indicators?.quote?.[0];
-        const timestamps = result.timestamp || [];
-        const meta = result.meta;
-
-        const candles: CandleData[] = [];
-        const limit = Math.min(timestamps.length, 50);
-
-        for (let i = timestamps.length - limit; i < timestamps.length; i++) {
-            if (quote.open[i] && quote.close[i]) {
-                candles.push({
-                    time: new Date(timestamps[i] * 1000).toISOString(),
-                    open: quote.open[i],
-                    high: quote.high[i],
-                    low: quote.low[i],
-                    close: quote.close[i],
-                    volume: quote.volume?.[i] || 0,
-                });
+    // BINANCE STRATEGY for Crypto
+    if (Object.keys(CRYPTO).includes(pair)) {
+        try {
+            const binanceSymbol = pair.replace('USD', 'USDT'); // Map to USDT
+            const data = await fetchBinancePrice(binanceSymbol, tfConfig.interval);
+            if (data && data.current_price !== undefined) {
+                return {
+                    symbol: pair,
+                    name: pairConfig.name,
+                    current_price: data.current_price,
+                    open: data.open || 0,
+                    high: data.high || 0,
+                    low: data.low || 0,
+                    close: data.close || 0,
+                    change_percent: data.change_percent || 0,
+                    volume: data.volume || 0,
+                    timestamp: data.timestamp || new Date().toISOString(),
+                    candles: data.candles || [],
+                    is_realtime: true,
+                    is_simulated: false
+                };
             }
+        } catch (e) {
+            console.warn(`Binance failed for ${pair}, falling back to Yahoo.`);
         }
-
-        const lastCandle = candles[candles.length - 1];
-        const prevCandle = candles[candles.length - 2];
-
-        const change_percent = prevCandle
-            ? ((lastCandle.close - prevCandle.close) / prevCandle.close) * 100
-            : 0;
-
-        // [MODIFIED] Ensure we are looking at the VERY LATEST price available
-        const currentPrice = meta.regularMarketPrice || lastCandle?.close || 0;
-
-        // Calculate data freshness (in seconds)
-        const lastTime = new Date(lastCandle.time).getTime();
-        const now = Date.now();
-        const freshness = (now - lastTime) / 1000;
-        const isFresh = freshness < 300; // Consider < 5 mins "fresh" for free API standards
-
-        return {
-            symbol: pair,
-            name: pairConfig.name,
-            current_price: currentPrice,
-            open: lastCandle?.open || 0,
-            high: lastCandle?.high || 0,
-            low: lastCandle?.low || 0,
-            close: lastCandle?.close || 0,
-            change_percent: Number(change_percent.toFixed(4)),
-            volume: lastCandle?.volume || 0,
-            timestamp: new Date().toISOString(),
-            candles,
-            is_realtime: isFresh, // Only mark Realtime if data is fresh
-        };
-
-    } catch (error) {
-        console.error('Market data error:', error);
-        return generateDummyData(pair, pairConfig?.name || pair);
     }
+
+    // YAHOO STRATEGY (Round Robin query1/query2)
+    const hosts = ['query2.finance.yahoo.com', 'query1.finance.yahoo.com'];
+    let lastError;
+
+    for (const host of hosts) {
+        try {
+            const timestamp = new Date().getTime();
+            const url = `https://${host}/v8/finance/chart/${pairConfig.yahoo}?interval=${tfConfig.interval}&range=${tfConfig.period}&_=${timestamp}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                },
+                cache: 'no-store',
+            });
+
+            if (!response.ok) {
+                if (response.status === 429) continue; // Rate limit, try next host
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const result = data.chart?.result?.[0];
+
+            if (!result) continue;
+
+            const quote = result.indicators?.quote?.[0];
+            const timestamps = result.timestamp || [];
+            const meta = result.meta;
+
+            const candles: CandleData[] = [];
+            const limit = Math.min(timestamps.length, 50);
+
+            for (let i = timestamps.length - limit; i < timestamps.length; i++) {
+                if (quote.open[i] !== null && quote.close[i] !== null) { // Strict null check
+                    candles.push({
+                        time: new Date(timestamps[i] * 1000).toISOString(),
+                        open: quote.open[i] || 0,
+                        high: quote.high[i] || 0,
+                        low: quote.low[i] || 0,
+                        close: quote.close[i] || 0,
+                        volume: quote.volume?.[i] || 0,
+                    });
+                }
+            }
+
+            if (candles.length === 0) throw new Error('No valid candles found');
+
+            const lastCandle = candles[candles.length - 1];
+            const prevCandle = candles.length > 1 ? candles[candles.length - 2] : lastCandle;
+
+            const change_percent = prevCandle.close > 0
+                ? ((lastCandle.close - prevCandle.close) / prevCandle.close) * 100
+                : 0;
+
+            const currentPrice = meta.regularMarketPrice || lastCandle.close;
+
+            // Freshness check
+            const lastTime = new Date(lastCandle.time).getTime();
+            const freshness = (Date.now() - lastTime) / 1000;
+            const isFresh = freshness < 900; // Relaxed to 15 mins for Yahoo
+
+            return {
+                symbol: pair,
+                name: pairConfig.name,
+                current_price: currentPrice,
+                open: lastCandle.open,
+                high: lastCandle.high,
+                low: lastCandle.low,
+                close: lastCandle.close,
+                change_percent: Number(change_percent.toFixed(4)),
+                volume: lastCandle.volume,
+                timestamp: new Date().toISOString(),
+                candles,
+                is_realtime: isFresh,
+                is_simulated: false
+            };
+
+        } catch (error) {
+            lastError = error;
+            console.warn(`Yahoo host ${host} failed for ${pair}:`, error);
+        }
+    }
+
+    // Fallback to Dummy Only if ALL failed
+    console.error(`All sources failed for ${pair}. Returning SIMULATED data.`);
+    const dummy = generateDummyData(pair, pairConfig?.name || pair);
+    dummy.is_realtime = false;
+    dummy.is_simulated = true; // Explicitly mark as simulated
+    return dummy;
+}
+
+// Helper: Fetch from Binance (Public API)
+async function fetchBinancePrice(symbol: string, interval: string): Promise<Partial<MarketData> | null> {
+    // Map intervals: 1m->1m, 1h->1h, 1d->1d. No change needed mostly.
+    const binanceInterval = interval;
+
+    // Failover endpoints
+    const endpoints = [
+        'https://api.binance.com/api/v3/klines',
+        'https://data-api.binance.vision/api/v3/klines',
+        'https://api.binance.us/api/v3/klines'
+    ];
+
+    for (const ep of endpoints) {
+        try {
+            // Adjust symbol for US if needed
+            let targetSymbol = symbol;
+            if (ep.includes('binance.us')) {
+                targetSymbol = symbol.replace('USDT', 'USD');
+            }
+
+            const res = await fetch(`${ep}?symbol=${targetSymbol}&interval=${binanceInterval}&limit=50`, {
+                cache: 'no-store'
+            });
+
+            if (!res.ok) continue;
+
+            const data = await res.json();
+            if (!Array.isArray(data) || data.length === 0) continue;
+
+            // Parse Candles (Binance format: [time, open, high, low, close, vol, ...])
+            const candles: CandleData[] = data.map((d: any) => ({
+                time: new Date(d[0]).toISOString(),
+                open: parseFloat(d[1]),
+                high: parseFloat(d[2]),
+                low: parseFloat(d[3]),
+                close: parseFloat(d[4]),
+                volume: parseFloat(d[5]),
+            }));
+
+            const last = candles[candles.length - 1];
+            const prev = candles.length > 1 ? candles[candles.length - 2] : last;
+            const change = ((last.close - prev.close) / prev.close) * 100;
+
+            return {
+                current_price: last.close,
+                open: last.open,
+                high: last.high,
+                low: last.low,
+                close: last.close,
+                change_percent: Number(change.toFixed(4)),
+                volume: last.volume,
+                timestamp: new Date().toISOString(),
+                candles
+            };
+
+        } catch (err) {
+            // Try next endpoint
+        }
+    }
+    return null;
 }
 
 function generateDummyData(symbol: string, name: string): MarketData {
@@ -301,6 +406,7 @@ function generateDummyData(symbol: string, name: string): MarketData {
         timestamp: new Date().toISOString(),
         candles,
         is_realtime: false,
+        is_simulated: true,
     };
 }
 
