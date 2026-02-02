@@ -70,10 +70,18 @@ DATA MARKET LIVE:
 - **MID RISK:** Setup standar + 3 teknik mendukung
 - **HIGH RISK:** Counter trend / Extreme Z-Score / Low confluence
 
-⚠️ ORDER TYPE LOGIC:
-- **BUY/SELL INSTANT:** Harga sudah di area optimal + Strong momentum
-- **BUY/SELL LIMIT:** Menunggu retrace ke OB/FVG/Fib level
-- **BUY/SELL STOP:** Menunggu breakout confirmation + Volume spike
+⚠️ ORDER TYPE LOGIC (STRICT RULES):
+- **INSTANT (Aggressive):**
+  - Gunakan jika harga SEKARANG sudah di dalam Entry Zone.
+  - Momentum konfirmasi sudah muncul.
+- **LIMIT (Retracement):**
+  - BUY LIMIT: Jika Entry Zone DI BAWAH harga sekarang (tunggu diskon).
+  - SELL LIMIT: Jika Entry Zone DI ATAS harga sekarang (tunggu premium).
+  - Gunakan untuk setup OB/FVG yang belum tersentuh.
+- **STOP (Breakout):**
+  - BUY STOP: Jika Entry DI ATAS harga sekarang (tunggu break resistance).
+  - SELL STOP: Jika Entry DI BAWAH harga sekarang (tunggu break support).
+  - Gunakan untuk strategi breakout momentum.
 
 FORMAT OUTPUT (PROFESSIONAL GRADE):
 🔮 *ARRA QUANTUM STRATEGIC v2.0*
