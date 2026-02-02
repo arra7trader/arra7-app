@@ -78,16 +78,6 @@ DATA MARKET LIVE:
 FORMAT OUTPUT (PROFESSIONAL GRADE):
 🔮 *ARRA QUANTUM STRATEGIC v2.0*
 ━━━━━━━━━━━━━━━━━━━━━━
-💠 [PAIR]  |  ⏳ [TF]  |  🎯 [CONFIDENCE: XX%]
-🧬 Teknik: [List semua teknik yang confluent]
-📊 RISK: [LOW/MID/HIGH] | Z-Score: [nilai]
-━━━━━━━━━━━━━━━━━━━━━━
-📈 *STATISTICAL EDGE*
-• Win Probability: [XX%]
-• Optimal R:R: 1:[X]
-• ATR Current: [value]
-• Session: [Asia/London/NY]
-━━━━━━━━━━━━━━━━━━━━━━
 🔥 *ACTION CALL*
 🚀 *[BUY/SELL] [INSTANT/LIMIT/STOP]*
 📍 ENTRY: [Harga Spesifik atau Range]
@@ -100,6 +90,16 @@ FORMAT OUTPUT (PROFESSIONAL GRADE):
 ✅ TP1: [Harga] (+[Pips], RR 1:[X]) - Conservative
 ✅ TP2: [Harga] (+[Pips], RR 1:[X]) - Standard
 ✅ TP3: [Harga] (+[Pips], RR 1:[X]) - Aggressive
+━━━━━━━━━━━━━━━━━━━━━━
+💠 [PAIR]  |  ⏳ [TF]  |  🎯 [CONFIDENCE: XX%]
+📊 RISK: [LOW/MID/HIGH] | Z-Score: [nilai]
+🧬 Teknik: [List semua teknik yang confluent, pisahkan dengan koma]
+━━━━━━━━━━━━━━━━━━━━━━
+📈 *STATISTICAL EDGE*
+• Win Probability: [XX%]
+• Optimal R:R: 1:[X]
+• ATR Current: [value]
+• Session: [Asia/London/NY]
 ━━━━━━━━━━━━━━━━━━━━━━
 📝 *QUANTUM DEEP ANALYSIS*
 
@@ -250,59 +250,44 @@ function formatAnalysisToHtml(text: string): string {
 
     // Detect signal type
     let signalClass = 'neutral';
-    let signalIcon = 'pause';
+    let signalIconSvg = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'; // Pause icon default
+
     if (html.includes('BUY')) {
         signalClass = 'buy';
-        signalIcon = 'trending_up';
+        // Trending Up Icon
+        signalIconSvg = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>';
     } else if (html.includes('SELL')) {
         signalClass = 'sell';
-        signalIcon = 'trending_down';
+        // Trending Down Icon
+        signalIconSvg = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>';
     }
 
-    // Wrap sections
-    html = html.replace(
-        /🔮\s*ARRA PRO STRATEGIC/,
-        `<div class="analysis-header"><span class="icon">🔮</span> ARRA PRO STRATEGIC</div>`
-    );
+    // Helper for Icons
+    const iconMap = {
+        crystalBall: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>', // Terminal/Code like
+        dna: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>', // Flask/Science
+        fire: '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path></svg>'
+    };
 
+    // Warp sections using Regex replacements
     html = html.replace(
-        /💠\s*(.*?)\s*\|\s*⏳\s*(.*?)(?:\n|$)/,
-        `<div class="meta-row"><span class="badge pair">$1</span><span class="badge tf">$2</span></div>`
-    );
-
-    html = html.replace(
-        /🧬\s*(.*?)(?:\n|$)/,
-        `<div class="tech-row"><span class="icon">🧬</span> $1</div>`
-    );
-
-    html = html.replace(
-        /📊\s*\[?RISK:\s*(LOW|MID|HIGH)\]?/gi,
-        `<div class="risk-badge risk-$1">RISK: $1</div>`
+        /🔮\s*ARRA QUANTUM STRATEGIC/,
+        `<div class="analysis-header">${iconMap.crystalBall} ARRA QUANTUM STRATEGIC</div>`
     );
 
     html = html.replace(
         /🔥\s*ACTION CALL/,
-        `<div class="section-divider"></div><div class="action-header"><span class="icon">🔥</span> ACTION CALL</div>`
+        `<div class="action-header">${iconMap.fire} ACTION CALL</div>`
     );
 
     html = html.replace(
         /🚀\s*\[?(BUY|SELL|WAIT)\]?\s*\[?(INSTANT|LIMIT|STOP)?\]?/gi,
-        `<div class="signal-box signal-${signalClass}"><span class="signal-type">$1</span><span class="order-type">$2</span><span class="material-icons signal-icon">${signalIcon}</span></div>`
-    );
-
-    html = html.replace(
-        /📍\s*ENTRY\s*:\s*(.*?)(?:\n|$)/,
-        `<div class="trade-row"><span class="label">📍 ENTRY ZONE</span><span class="value entry">$1</span></div>`
-    );
-
-    html = html.replace(
-        /💡\s*Alasan Order Type:\s*(.*?)(?:\n|$)/,
-        `<div class="order-reason"><span class="label">💡 Order Type</span><span class="text">$1</span></div>`
+        `<div class="signal-box signal-${signalClass}"><div class="flex items-center gap-3"><span class="signal-icon-wrapper">${signalIconSvg}</span><div><span class="signal-type text-2xl font-bold">$1</span><span class="order-type text-sm opacity-80 block">$2</span></div></div></div>`
     );
 
     html = html.replace(
         /🛡️\s*STOPLOSS/,
-        `<div class="section-title risk">🛡️ STOPLOSS</div>`
+        `<div class="section-title risk mt-4">🛡️ STOPLOSS</div>`
     );
 
     html = html.replace(
@@ -312,7 +297,7 @@ function formatAnalysisToHtml(text: string): string {
 
     html = html.replace(
         /🎯\s*TARGET PROFIT/,
-        `<div class="section-title reward">🎯 TARGET PROFIT</div>`
+        `<div class="section-title reward mt-4">🎯 TARGET PROFIT</div>`
     );
 
     html = html.replace(
@@ -321,13 +306,40 @@ function formatAnalysisToHtml(text: string): string {
     );
 
     html = html.replace(
-        /📝\s*ANALISIS QUANTUM/,
-        `<div class="section-divider"></div><div class="analysis-section"><div class="section-title">📝 ANALISIS QUANTUM</div><div class="analysis-text">`
+        /💠\s*(.*?)\s*\|\s*⏳\s*(.*?)(?:\n|$)/,
+        `<div class="meta-row mt-6 pt-4 border-t border-gray-700/50"><span class="badge pair">$1</span><span class="badge tf">$2</span></div>`
+    );
+
+    html = html.replace(
+        /📊\s*\[?RISK:\s*(LOW|MID|HIGH)\]?(\s*\|\s*Z-Score:\s*\[?([-\d.]+)\]?)?/gi,
+        `<div class="flex flex-wrap gap-2 mt-2"><div class="risk-badge risk-$1">RISK: $1</div><div class="risk-badge zscore">Z: $3</div></div>`
+    );
+
+    // Format 'Teknik' list as Badges
+    // Regex to capture "Teknik: [list]"
+    // Using a callback to process the list inside
+    html = html.replace(
+        /🧬\s*Teknik:\s*(.*?)(?:\n|$)/,
+        (match, techniqueList) => {
+            const techniques = techniqueList.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+            const badges = techniques.map((t: string) => `<span class="tech-badge">${t}</span>`).join('');
+            return `<div class="tech-row mt-2"><div class="flex items-center mb-1 text-sm text-gray-400">${iconMap.dna} Confluence:</div><div class="flex flex-wrap gap-1">${badges}</div></div>`;
+        }
+    );
+
+    html = html.replace(
+        /📈\s*STATISTICAL EDGE/,
+        `<div class="section-divider"></div><div class="analysis-header text-sm opacity-80">📈 STATISTICAL EDGE</div>`
+    );
+
+    html = html.replace(
+        /📝\s*QUANTUM DEEP ANALYSIS/,
+        `<div class="section-divider"></div><div class="analysis-section"><div class="section-title">📝 QUANTUM DEEP ANALYSIS</div><div class="analysis-text text-justify">`
     );
 
     html = html.replace(
         /⚠️\s*Disclaimer:?\s*(.*?)(?:\n|$)/gi,
-        `</div></div><div class="disclaimer">⚠️ Disclaimer: $1</div>`
+        `</div></div><div class="disclaimer mt-8 text-xs text-gray-500 text-center italic">⚠️ Disclaimer: $1</div>`
     );
 
     // Replace line separators
