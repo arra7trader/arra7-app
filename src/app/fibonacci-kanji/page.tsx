@@ -1,262 +1,108 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import { createChart, ColorType, ISeriesApi, LineData, IChartApi, CandlestickSeries } from 'lightweight-charts';
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
-    { level: 0, label: 'Start (0.0)', color: '#000000', width: 2 },
-    { level: 1, label: 'End (1.0)', color: '#000000', width: 2 },
+    { level: 0, label: 'Swing High (Stop Loss)', color: 'text-red-500', desc: 'Starting Point' },
+    { level: 1, label: 'Swing Low', color: 'text-gray-500', desc: 'Ending Point' },
     // Scalping Zone
-    { level: 0.559, label: 'Zone Entry (0.559)', color: '#2ecc71', width: 1 },
-    { level: 0.619, label: 'Zone Entry (0.619)', color: '#2ecc71', width: 1 },
-    { level: 0.667, label: 'Zone Entry (0.667)', color: '#2ecc71', width: 1 },
+    { level: 0.559, label: 'Entry Zone 1', color: 'text-green-600', desc: 'Scalping Entry (0.559)' },
+    { level: 0.619, label: 'Entry Zone 1', color: 'text-green-600', desc: 'Scalping Entry (0.619)' },
     // Scalping
-    { level: 0.786, label: 'Zone Scalping (0.786)', color: '#f1c40f', width: 1, style: 2 }, // Dashed
-    { level: 0.882, label: 'Zone Scalping (0.882)', color: '#f1c40f', width: 1, style: 2 },
+    { level: 0.786, label: 'Scalping Zone', color: 'text-yellow-600', desc: 'Reversal Zone (0.786)' },
+    { level: 0.882, label: 'Scalping Zone', color: 'text-yellow-600', desc: 'Reversal Zone (0.882)' },
     // Pullback / Break
-    { level: 1.124, label: 'Pullback/Break (1.124)', color: '#e74c3c', width: 1 },
-    { level: 1.272, label: 'Pullback/Break (1.272)', color: '#e74c3c', width: 1 },
+    { level: 1.124, label: 'Breakout / Pullback', color: 'text-orange-500', desc: 'Watch for Break (1.124)' },
+    { level: 1.272, label: 'Breakout / Pullback', color: 'text-orange-500', desc: 'Watch for Break (1.272)' },
     // Zone Entry 2
-    { level: 1.559, label: 'Zone Entry 2 (1.559)', color: '#3498db', width: 1 },
-    { level: 1.618, label: 'GOLDEN RATIO (1.618)', color: '#e67e22', width: 3 }, // Highlight
-    { level: 1.667, label: 'Zone Entry 2 (1.667)', color: '#3498db', width: 1 },
-    // Confluence
-    { level: 2.0, label: 'Confluence (2.0)', color: '#9b59b6', width: 2 },
-    // Further Levels
-    { level: 2.618, label: 'Target 3 (2.618)', color: '#34495e', width: 1 },
+    { level: 1.618, label: 'GOLDEN RATIO (TP 1)', color: 'text-blue-600 font-bold', desc: 'Golden Target (1.618)' },
+    { level: 2.0, label: 'Confluence (TP 2)', color: 'text-purple-600', desc: 'Major Extension (2.0)' },
+    { level: 2.618, label: 'Moon Target (TP 3)', color: 'text-indigo-800', desc: 'Final Target (2.618)' },
 ];
 
 export default function FibonacciKanjiPage() {
     const t = useTranslations('kanji');
-    const chartContainerRef = useRef<HTMLDivElement>(null);
-    const chartRef = useRef<IChartApi | null>(null);
-    const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
-    const [selectedPair, setSelectedPair] = useState<string>('XAUUSD');
-    const [isLoading, setIsLoading] = useState(false);
-    const [startPrice, setStartPrice] = useState<number | null>(null);
-    const [endPrice, setEndPrice] = useState<number | null>(null);
-    const [isDrawing, setIsDrawing] = useState<'start' | 'end' | 'done'>('start');
+    // Calculator State
+    const [highPrice, setHighPrice] = useState<string>('');
+    const [lowPrice, setLowPrice] = useState<string>('');
+    const [calculatedLevels, setCalculatedLevels] = useState<any[]>([]);
 
-    // List of pairs for dropdown
-    const availablePairs = [
-        { group: 'Commodities', pairs: ['XAUUSD', 'XAGUSD', 'XTIUSD'] },
-        { group: 'Crypto', pairs: ['BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD'] },
-        { group: 'Forex Major', pairs: ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD'] },
-        { group: 'Indices', pairs: ['US30', 'US500', 'USTEC', 'DE40'] },
-    ];
+    // Determine Pair for Widget
+    const [selectedPair, setSelectedPair] = useState('XAUUSD');
+    const [widgetSymbol, setWidgetSymbol] = useState('OANDA:XAUUSD');
 
-    useEffect(() => {
-        if (!chartContainerRef.current) return;
+    // Handle Pair Change
+    const handlePairChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const pair = e.target.value;
+        setSelectedPair(pair);
 
-        const chart = createChart(chartContainerRef.current, {
-            layout: {
-                background: { type: ColorType.Solid, color: '#ffffff' },
-                textColor: '#1a1a1a',
-            },
-            width: chartContainerRef.current.clientWidth,
-            height: 600,
-            grid: {
-                vertLines: { color: 'rgba(240, 240, 240, 1)' },
-                horzLines: { color: 'rgba(240, 240, 240, 1)' },
-            },
-            rightPriceScale: {
-                borderColor: 'rgba(197, 203, 206, 1)',
-                visible: true,
-                scaleMargins: {
-                    top: 0.1,
-                    bottom: 0.1,
-                },
-            },
-            timeScale: {
-                borderColor: 'rgba(197, 203, 206, 1)',
-                timeVisible: true,
-                secondsVisible: false,
-            },
-            crosshair: {
-                mode: 1, // CrosshairMode.Normal
-            }
-        });
-
-        const series = chart.addSeries(CandlestickSeries, {
-            upColor: '#089981',
-            downColor: '#F23645',
-            borderVisible: false,
-            wickUpColor: '#089981',
-            wickDownColor: '#F23645',
-        });
-
-        chartRef.current = chart;
-        candleSeriesRef.current = series;
-
-        // Click Handler for Drawing
-        chart.subscribeClick((param) => {
-            if (!param.point || !series) return;
-            const price = series.coordinateToPrice(param.point.y);
-            if (!price) return;
-
-            setStartPrice(prevStart => {
-                if (prevStart === null) {
-                    setIsDrawing('end');
-                    return price;
-                }
-
-                setEndPrice(prevEnd => {
-                    if (prevEnd === null) {
-                        setIsDrawing('done');
-                        return price;
-                    }
-                    return prevEnd;
-                });
-
-                return prevStart;
-            });
-        });
-
-        const handleResize = () => {
-            chart.applyOptions({ width: chartContainerRef.current?.clientWidth || 0 });
+        // Map to TV Symbols
+        const symbolMap: any = {
+            'XAUUSD': 'OANDA:XAUUSD',
+            'XAGUSD': 'OANDA:XAGUSD',
+            'BTCUSD': 'BINANCE:BTCUSDT',
+            'ETHUSD': 'BINANCE:ETHUSDT',
+            'EURUSD': 'FX:EURUSD',
+            'GBPUSD': 'FX:GBPUSD',
+            'USDJPY': 'FX:USDJPY',
+            'US30': 'BLACKBULL:US30',
+            'US500': 'BLACKBULL:US500',
+            'USTEC': 'BLACKBULL:US100'
         };
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            chart.remove();
-        };
-    }, []); // Init chart only once
-
-    // Fallback Data Generator (Client-Side)
-    const generateFallbackData = (basePrice: number) => {
-        const data = [];
-        let time = Math.floor(Date.now() / 1000) - (100 * 3600); // Last 100 hours
-        let value = basePrice;
-
-        for (let i = 0; i < 100; i++) {
-            const volatility = basePrice * 0.005;
-            const change = (Math.random() - 0.5) * volatility;
-            const open = value;
-            const close = open + change;
-            const high = Math.max(open, close) + Math.random() * volatility * 0.5;
-            const low = Math.min(open, close) - Math.random() * volatility * 0.5;
-
-            data.push({
-                time: time as any,
-                open,
-                high,
-                low,
-                close,
-            });
-
-            value = close;
-            time += 3600;
-        }
-        return data;
+        setWidgetSymbol(symbolMap[pair] || 'OANDA:XAUUSD');
     };
 
-    // Fetch Data Effect when Pair changes
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!candleSeriesRef.current) return;
-            setIsLoading(true);
+    const calculateKanji = () => {
+        const h = parseFloat(highPrice);
+        const l = parseFloat(lowPrice);
 
-            try {
-                // Fetch H1 data by default
-                const res = await fetch(`/api/market?pair=${selectedPair}&timeframe=1h`);
+        if (isNaN(h) || isNaN(l)) return;
 
-                let candles = [];
-                let success = false;
+        const diff = h - l; // Downtrend logic (High to Low). If Uptrend, user might input differently? 
+        // Standard Fibo: Start (0) to End (1).
+        // If Trend is Down: Start=High, End=Low. (Price goes down). Levels extend down.
+        // If Trend is Up: Start=Low, End=High. (Price goes up). Levels extend up.
 
-                if (res.ok) {
-                    const json = await res.json();
-                    if (json.status === 'success' && json.data.candles && json.data.candles.length > 0) {
-                        candles = json.data.candles.map((c: any) => ({
-                            time: new Date(c.time).getTime() / 1000 as any,
-                            open: c.open,
-                            high: c.high,
-                            low: c.low,
-                            close: c.close,
-                        }));
-                        success = true;
-                    }
-                }
+        // Let's assume standard Retracement logic:
+        // Range = Price 1 - Price 2.
+        // But for projection...
+        // Let's keep it simple: "High" and "Low" are just Reference Points.
+        // We calculate levels based on range.
+        // Usually Kanji is for "Correction to Extension".
 
-                // If API failed or Empty, use Fallback
-                if (!success || candles.length === 0) {
-                    console.warn("API unavailable, using fallback data");
-                    // Determine base price based on pair
-                    let basePrice = 2000;
-                    if (selectedPair.includes('JPY')) basePrice = 150;
-                    else if (selectedPair.includes('BTC')) basePrice = 90000;
-                    else if (selectedPair.includes('XAU')) basePrice = 2700;
-                    else if (selectedPair.includes('EUR')) basePrice = 1.05;
+        const range = Math.abs(h - l);
+        const isUp = l < h; // This logic depends on what 0 and 1 represent.
+        // Let's assume High is 0, Low is 1 (Down Projection) for simplicity or standard calculation.
 
-                    candles = generateFallbackData(basePrice);
-                }
+        // Actually, let's just calc absolute levels from the "End" point or "Start" point?
+        // Standard Fibo Retracement:
+        // Level P = High - (Range * level)
 
-                // Sort and Set
-                candles.sort((a: any, b: any) => a.time - b.time);
-                candleSeriesRef.current.setData(candles);
-                chartRef.current?.timeScale().fitContent();
-
-            } catch (error) {
-                console.error('Failed to fetch pair data, using fallback.', error);
-                // Fallback on Catch
-                const fallback = generateFallbackData(2000);
-                candleSeriesRef.current.setData(fallback);
-                chartRef.current?.timeScale().fitContent();
-            } finally {
-                setIsLoading(false);
-                setStartPrice(null);
-                setEndPrice(null);
-                setIsDrawing('start');
+        const levels = KANJI_LEVELS.map(k => {
+            let price = 0;
+            // Calculating Retracement from High down to Low
+            if (h > l) {
+                // Downtrend Projection? Or Retracement back up?
+                // Standard: 0 is High, 1 is Low.
+                // Level 0.5 is High - (Range * 0.5)
+                price = h - (range * k.level);
+            } else {
+                // Uptrend (Low to High) - inputs might be swapped by user intent?
+                // Let's just assume inputs are strictly "High Point" and "Low Point".
+                // If High > Low (Normal), we calc levels relative to that range.
+                // Let's stick to standard behavior:
+                // We project DOWN from High.
+                price = h - (range * k.level);
             }
-        };
+            return { ...k, price: price.toFixed(price > 50 ? 2 : 5) };
+        });
 
-        fetchData();
-    }, [selectedPair]);
-
-
-    // Effect to Draw Lines
-    const [priceLines, setPriceLines] = useState<any[]>([]);
-
-    useEffect(() => {
-        if (startPrice !== null && endPrice !== null && isDrawing === 'done' && candleSeriesRef.current) {
-            const series = candleSeriesRef.current;
-            const diff = endPrice - startPrice;
-
-            // Remove old lines first?
-            priceLines.forEach(line => series.removePriceLine(line));
-            const newLines: any[] = [];
-
-            KANJI_LEVELS.forEach(k => {
-                const price = startPrice + (diff * k.level);
-                const line = series.createPriceLine({
-                    price: price,
-                    color: k.color,
-                    lineWidth: k.width as any,
-                    lineStyle: k.style || 1, // Solid
-                    axisLabelVisible: true,
-                    title: k.label,
-                });
-                newLines.push(line);
-            });
-
-            setPriceLines(newLines);
-        }
-    }, [startPrice, endPrice, isDrawing]); // Check dependencies
-
-    const handleReset = () => {
-        // Clear lines
-        if (candleSeriesRef.current) {
-            priceLines.forEach(line => candleSeriesRef.current?.removePriceLine(line));
-        }
-        setPriceLines([]);
-        setStartPrice(null);
-        setEndPrice(null);
-        setIsDrawing('start');
+        setCalculatedLevels(levels);
     };
 
     return (
@@ -266,97 +112,129 @@ export default function FibonacciKanjiPage() {
                     title={t('title')}
                     description={t('desc')}
                 >
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-3xl shadow-xl border border-[var(--border-light)] overflow-hidden"
-                    >
-                        {/* Header & Controls Toolbar */}
-                        <div className="bg-gray-50 border-b border-gray-200 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl">🎌</span>
-                                <div>
-                                    <h1 className="text-xl font-bold text-gray-900 leading-tight">{t('title')}</h1>
-                                    <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">{t('subtitle')}</p>
-                                </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[800px]">
+
+                        {/* LEFT: TradingView Widget */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="lg:col-span-2 bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 h-[600px] lg:h-full"
+                        >
+                            {/* TradingView Widget Container */}
+                            <div className="tradingview-widget-container w-full h-full">
+                                <iframe
+                                    className="w-full h-full"
+                                    src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${widgetSymbol}&interval=60&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=dark&style=1&timezone=Asia%2FJakarta&withdateranges=1&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${widgetSymbol}`}
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
+                        </motion.div>
+
+                        {/* RIGHT: Kanji Calculator */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col h-full overflow-y-auto"
+                        >
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">🧮 Kanji Calculator</h2>
+                                <p className="text-gray-500 text-sm">Input the Swing High & Low from the chart.</p>
                             </div>
 
-                            <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
-                                {/* PAIR SELECTOR */}
+                            {/* Pair Selector */}
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Pair</label>
                                 <select
                                     value={selectedPair}
-                                    onChange={(e) => setSelectedPair(e.target.value)}
-                                    className="px-4 py-2 bg-transparent text-gray-800 font-bold text-sm outline-none cursor-pointer hover:bg-gray-50 rounded-lg transition"
+                                    onChange={handlePairChange}
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                    {availablePairs.map(group => (
-                                        <optgroup key={group.group} label={group.group}>
-                                            {group.pairs.map(pair => (
-                                                <option key={pair} value={pair}>{pair}</option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
+                                    <optgroup label="Commodities">
+                                        <option value="XAUUSD">Gold (XAUUSD)</option>
+                                        <option value="XAGUSD">Silver (XAGUSD)</option>
+                                    </optgroup>
+                                    <optgroup label="Indices">
+                                        <option value="US30">US30 (Dow Jones)</option>
+                                        <option value="US500">US500 (S&P 500)</option>
+                                        <option value="USTEC">Nasdaq (USTEC)</option>
+                                    </optgroup>
+                                    <optgroup label="Forex">
+                                        <option value="EURUSD">EURUSD</option>
+                                        <option value="GBPUSD">GBPUSD</option>
+                                        <option value="USDJPY">USDJPY</option>
+                                    </optgroup>
+                                    <optgroup label="Crypto">
+                                        <option value="BTCUSD">Bitcoin</option>
+                                        <option value="ETHUSD">Ethereum</option>
+                                    </optgroup>
                                 </select>
-
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-
-                                {/* STATUS INDICATOR */}
-                                <div className="flex items-center gap-2 px-2">
-                                    <div className={`w-2 h-2 rounded-full ${isDrawing === 'done' ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}></div>
-                                    <span className="text-xs font-bold text-gray-600">
-                                        {isDrawing === 'start' && t('start')}
-                                        {isDrawing === 'end' && t('end')}
-                                        {isDrawing === 'done' && t('levels')}
-                                    </span>
-                                </div>
-
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-
-                                <button
-                                    onClick={handleReset}
-                                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                    title={t('reset')}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
                             </div>
-                        </div>
 
-                        {/* Chart Area */}
-                        <div className="relative w-full h-[600px] bg-white group">
-                            {isLoading && (
-                                <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center backdrop-blur-sm">
-                                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                    <div className="text-gray-500 font-medium animate-pulse">Fetching Market Data...</div>
+                            {/* Inputs */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-red-500 uppercase mb-2">Swing High</label>
+                                    <input
+                                        type="number"
+                                        value={highPrice}
+                                        onChange={(e) => setHighPrice(e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full p-3 bg-red-50 border border-red-100 rounded-xl font-mono text-gray-900 outline-none focus:border-red-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-green-500 uppercase mb-2">Swing Low</label>
+                                    <input
+                                        type="number"
+                                        value={lowPrice}
+                                        onChange={(e) => setLowPrice(e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full p-3 bg-green-50 border border-green-100 rounded-xl font-mono text-gray-900 outline-none focus:border-green-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={calculateKanji}
+                                className="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-[1.02] active:scale-95 mb-8"
+                            >
+                                Calculate Levels 🚀
+                            </button>
+
+                            {/* Results Table */}
+                            {calculatedLevels.length > 0 ? (
+                                <div className="flex-1 overflow-y-auto pr-2">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="text-left text-gray-400 border-b border-gray-100">
+                                                <th className="pb-2 pl-2">Level</th>
+                                                <th className="pb-2 text-right pr-2">Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {calculatedLevels.map((lvl) => (
+                                                <tr key={lvl.level} className="group hover:bg-blue-50 transition">
+                                                    <td className="py-3 pl-2">
+                                                        <div className={`font-bold ${lvl.color}`}>{lvl.label}</div>
+                                                        <div className="text-[10px] text-gray-400">{lvl.desc}</div>
+                                                    </td>
+                                                    <td className="py-3 text-right font-mono font-medium text-gray-700 pr-2 group-hover:text-blue-600">
+                                                        {lvl.price}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-start pt-10 text-gray-300">
+                                    <span className="text-4xl mb-2">🎌</span>
+                                    <p className="text-center font-medium">Enter High & Low<br />to reveal coordinates.</p>
                                 </div>
                             )}
 
-                            <div
-                                ref={chartContainerRef}
-                                className="w-full h-full cursor-crosshair"
-                            />
-
-                            {/* Watermark */}
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-100 text-[100px] font-black pointer-events-none select-none z-0 tracking-widest opacity-30">
-                                KANJI
-                            </div>
-
-                            {/* Floating Instruction */}
-                            <AnimatePresence>
-                                {isDrawing !== 'done' && !isLoading && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0 }}
-                                        className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/75 text-white px-6 py-3 rounded-full shadow-lg backdrop-blur text-sm font-medium z-20 pointer-events-none"
-                                    >
-                                        {isDrawing === 'start' ? '👉 Click anywhere to set the SWING HIGH' : '👇 Now click the SWING LOW'}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </div>
                 </PremiumGuard>
             </div>
         </div>
