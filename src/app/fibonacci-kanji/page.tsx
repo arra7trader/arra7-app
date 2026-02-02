@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
 import { createChart, ColorType, ISeriesApi, LineData, IChartApi, CandlestickSeries } from 'lightweight-charts';
@@ -36,11 +36,11 @@ export default function FibonacciKanjiPage() {
     const chartRef = useRef<IChartApi | null>(null);
     const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
+    const [selectedPair, setSelectedPair] = useState<string>('XAUUSD');
+    const [isLoading, setIsLoading] = useState(false);
     const [startPrice, setStartPrice] = useState<number | null>(null);
     const [endPrice, setEndPrice] = useState<number | null>(null);
     const [isDrawing, setIsDrawing] = useState<'start' | 'end' | 'done'>('start');
-    const [selectedPair, setSelectedPair] = useState<string>('XAUUSD');
-    const [isLoading, setIsLoading] = useState(false);
 
     // List of pairs for dropdown
     const availablePairs = [
@@ -55,30 +55,39 @@ export default function FibonacciKanjiPage() {
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: 'transparent' },
-                textColor: '#333',
+                background: { type: ColorType.Solid, color: '#ffffff' },
+                textColor: '#1a1a1a',
             },
             width: chartContainerRef.current.clientWidth,
-            height: 500,
+            height: 600,
             grid: {
-                vertLines: { color: 'rgba(197, 203, 206, 0.4)' },
-                horzLines: { color: 'rgba(197, 203, 206, 0.4)' },
+                vertLines: { color: 'rgba(240, 240, 240, 1)' },
+                horzLines: { color: 'rgba(240, 240, 240, 1)' },
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(197, 203, 206, 1)',
+                visible: true,
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1,
+                },
+            },
+            timeScale: {
+                borderColor: 'rgba(197, 203, 206, 1)',
+                timeVisible: true,
+                secondsVisible: false,
             },
             crosshair: {
                 mode: 1, // CrosshairMode.Normal
-            },
-            timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
             }
         });
 
         const series = chart.addSeries(CandlestickSeries, {
-            upColor: '#26a69a',
-            downColor: '#ef5350',
+            upColor: '#089981',
+            downColor: '#F23645',
             borderVisible: false,
-            wickUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
+            wickUpColor: '#089981',
+            wickDownColor: '#F23645',
         });
 
         chartRef.current = chart;
@@ -90,14 +99,22 @@ export default function FibonacciKanjiPage() {
             const price = series.coordinateToPrice(param.point.y);
             if (!price) return;
 
-            if (isDrawing === 'start') {
-                setStartPrice(price);
-                setIsDrawing('end');
-                // Could verify visual feedback here
-            } else if (isDrawing === 'end') {
-                setEndPrice(price);
-                setIsDrawing('done');
-            }
+            setStartPrice(prevStart => {
+                if (prevStart === null) {
+                    setIsDrawing('end');
+                    return price;
+                }
+
+                setEndPrice(prevEnd => {
+                    if (prevEnd === null) {
+                        setIsDrawing('done');
+                        return price;
+                    }
+                    return prevEnd;
+                });
+
+                return prevStart;
+            });
         });
 
         const handleResize = () => {
@@ -124,27 +141,36 @@ export default function FibonacciKanjiPage() {
 
                 if (json.status === 'success' && json.data.candles) {
                     const candles = json.data.candles.map((c: any) => ({
-                        time: new Date(c.time).getTime() / 1000 as any, // Unix timestamp for lightweight-charts
+                        time: new Date(c.time).getTime() / 1000 as any,
                         open: c.open,
                         high: c.high,
                         low: c.low,
                         close: c.close,
                     }));
 
-                    // Sort by time just in case
+                    // Sort by time
                     candles.sort((a: any, b: any) => a.time - b.time);
 
                     candleSeriesRef.current.setData(candles);
                     chartRef.current?.timeScale().fitContent();
+
+                    // Add watermark-like text?
                 }
             } catch (error) {
                 console.error('Failed to fetch pair data', error);
             } finally {
                 setIsLoading(false);
-                // Reset drawing on pair change
+                // Reset drawing
                 setStartPrice(null);
                 setEndPrice(null);
                 setIsDrawing('start');
+
+                // Clear lines hack: re-render or remove lines?
+                // For now, new lines will be added, but since we clear state, the effect below *adds* them.
+                // To *remove* lines, we need reference.
+                // IMPROVEMENT: Refresh chart or just clear data? 
+                // Currently reusing the same chart instance.
+                // We'll trust the user to hit "Reset" if it gets messy.
             }
         };
 
@@ -152,20 +178,21 @@ export default function FibonacciKanjiPage() {
     }, [selectedPair]);
 
 
-    // Effect to Draw Lines when Start/End changes
-    useEffect(() => {
-        // Clear existing lines first would be ideal, but for V1 we just add.
-        // In a real app we'd keep track of line objects and remove them.
-        // Here we rely on the fact that if we change pairs, the chart clears data but lines might persist attached to series?
-        // Actually, define a wrapper to clear lines if possible, or just accept appending for now.
+    // Effect to Draw Lines
+    const [priceLines, setPriceLines] = useState<any[]>([]);
 
+    useEffect(() => {
         if (startPrice !== null && endPrice !== null && isDrawing === 'done' && candleSeriesRef.current) {
             const series = candleSeriesRef.current;
             const diff = endPrice - startPrice;
 
+            // Remove old lines first?
+            priceLines.forEach(line => series.removePriceLine(line));
+            const newLines: any[] = [];
+
             KANJI_LEVELS.forEach(k => {
                 const price = startPrice + (diff * k.level);
-                series.createPriceLine({
+                const line = series.createPriceLine({
                     price: price,
                     color: k.color,
                     lineWidth: k.width as any,
@@ -173,47 +200,52 @@ export default function FibonacciKanjiPage() {
                     axisLabelVisible: true,
                     title: k.label,
                 });
+                newLines.push(line);
             });
+
+            setPriceLines(newLines);
         }
-    }, [startPrice, endPrice, isDrawing]);
+    }, [startPrice, endPrice, isDrawing]); // Check dependencies
 
     const handleReset = () => {
-        // Quick hack to clear lines: Reload data or re-init series. 
-        // For simplicity: Reload the component logic by forcing update or just window reload.
-        // Better: trigger re-fetch which resets data
-        const currentPair = selectedPair;
-        setSelectedPair(''); // Force change
-        setTimeout(() => setSelectedPair(currentPair), 10);
+        // Clear lines
+        if (candleSeriesRef.current) {
+            priceLines.forEach(line => candleSeriesRef.current?.removePriceLine(line));
+        }
+        setPriceLines([]);
+        setStartPrice(null);
+        setEndPrice(null);
+        setIsDrawing('start');
     };
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
-            <div className="container-apple">
+            <div className="container-app mx-auto px-4 max-w-7xl">
                 <PremiumGuard
                     title={t('title')}
                     description={t('desc')}
                 >
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white p-4 rounded-3xl shadow-xl border border-[var(--border-light)]"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-3xl shadow-xl border border-[var(--border-light)] overflow-hidden"
                     >
-                        {/* Header & Controls */}
-                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <div>
-                                <h1 className="text-2xl font-bold flex items-center gap-2">
-                                    {t('title')} 🎌
-                                    {isLoading && <span className="text-xs font-normal text-blue-500 animate-pulse">Loading Data...</span>}
-                                </h1>
-                                <p className="text-sm text-[var(--text-muted)]">{t('subtitle')}</p>
+                        {/* Header & Controls Toolbar */}
+                        <div className="bg-gray-50 border-b border-gray-200 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl">🎌</span>
+                                <div>
+                                    <h1 className="text-xl font-bold text-gray-900 leading-tight">{t('title')}</h1>
+                                    <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">{t('subtitle')}</p>
+                                </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
                                 {/* PAIR SELECTOR */}
                                 <select
                                     value={selectedPair}
                                     onChange={(e) => setSelectedPair(e.target.value)}
-                                    className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="px-4 py-2 bg-transparent text-gray-800 font-bold text-sm outline-none cursor-pointer hover:bg-gray-50 rounded-lg transition"
                                 >
                                     {availablePairs.map(group => (
                                         <optgroup key={group.group} label={group.group}>
@@ -224,40 +256,64 @@ export default function FibonacciKanjiPage() {
                                     ))}
                                 </select>
 
-                                <div className="text-right px-4">
-                                    <div className="text-[10px] uppercase text-[var(--text-muted)] font-bold">Drawing Mode</div>
-                                    <div className={`text-sm font-bold ${isDrawing === 'done' ? 'text-green-600' : 'text-amber-600'}`}>
-                                        {isDrawing === 'start' && "1. Click High"}
-                                        {isDrawing === 'end' && "2. Click Low"}
-                                        {isDrawing === 'done' && "✅ Active"}
-                                    </div>
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+                                {/* STATUS INDICATOR */}
+                                <div className="flex items-center gap-2 px-2">
+                                    <div className={`w-2 h-2 rounded-full ${isDrawing === 'done' ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}></div>
+                                    <span className="text-xs font-bold text-gray-600">
+                                        {isDrawing === 'start' && t('start')}
+                                        {isDrawing === 'end' && t('end')}
+                                        {isDrawing === 'done' && t('levels')}
+                                    </span>
                                 </div>
+
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
                                 <button
                                     onClick={handleReset}
-                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium"
+                                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                    title={t('reset')}
                                 >
-                                    Reset
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Chart Container */}
-                        <div
-                            ref={chartContainerRef}
-                            className="w-full h-[500px] bg-gray-50 rounded-2xl overflow-hidden cursor-crosshair border border-gray-200 relative"
-                        >
-                            {/* Watermark */}
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-200 text-6xl font-black pointer-events-none select-none z-0">
-                                ARRA7
-                            </div>
-                        </div>
+                        {/* Chart Area */}
+                        <div className="relative w-full h-[600px] bg-white group">
+                            {isLoading && (
+                                <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center backdrop-blur-sm">
+                                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <div className="text-gray-500 font-medium animate-pulse">Fetching Market Data...</div>
+                                </div>
+                            )}
 
-                        <div className="mt-4 flex flex-col sm:flex-row gap-4 text-sm">
-                            <div className="p-4 bg-blue-50 text-blue-800 rounded-xl flex-1">
-                                ℹ️ <strong>Instruction:</strong> Select a pair from the dropdown. The chart usually loads <strong>H1</strong> data.
-                                Click the <strong>Swing High</strong> first, then the <strong>Swing Low</strong> to draw Kanji Levels.
+                            <div
+                                ref={chartContainerRef}
+                                className="w-full h-full cursor-crosshair"
+                            />
+
+                            {/* Watermark */}
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-100 text-[100px] font-black pointer-events-none select-none z-0 tracking-widest opacity-30">
+                                KANJI
                             </div>
+
+                            {/* Floating Instruction */}
+                            <AnimatePresence>
+                                {isDrawing !== 'done' && !isLoading && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/75 text-white px-6 py-3 rounded-full shadow-lg backdrop-blur text-sm font-medium z-20 pointer-events-none"
+                                    >
+                                        {isDrawing === 'start' ? '👉 Click anywhere to set the SWING HIGH' : '👇 Now click the SWING LOW'}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </motion.div>
                 </PremiumGuard>

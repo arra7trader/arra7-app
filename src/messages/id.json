@@ -273,5 +273,15 @@
         "newsFeed": "Feed Berita AI Langsung",
         "all": "Semua",
         "highImpact": "Dampak Tinggi"
+    },
+    "kanji": {
+        "title": "Kanji Tuls",
+        "subtitle": "Fibonacci Kanji Interaktif",
+        "desc": "Gambar High dan Low untuk melihat geometri pasar tersembunyi.",
+        "start": "1. Klik Swing High",
+        "end": "2. Klik Swing Low",
+        "reset": "Reset Chart",
+        "levels": "Level Kanji",
+        "instruction": "Cara Pakai: Pilih pair -> Tunggu Chart -> Klik High -> Klik Low."
     }
 }

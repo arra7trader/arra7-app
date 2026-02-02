@@ -136,15 +136,6 @@
         "title": "Early Entry",
         "desc": "Enter trades before the price action reflects the news"
       }
-    },
-    "kanji": {
-      "title": "Kanji Tuls",
-      "subtitle": "Interactive Fibonacci Kanji",
-      "desc": "Draw your High and Low to reveal hidden market geometry.",
-      "start": "Click to Set Swing High (Start)",
-      "end": "Click to Set Swing Low (End)",
-      "reset": "Reset Chart",
-      "levels": "Kanji Levels"
     }
   },
   "features": {
@@ -273,5 +264,15 @@
     "newsFeed": "Live AI News Feed",
     "all": "All",
     "highImpact": "High Impact"
+  },
+  "kanji": {
+    "title": "Kanji Tuls",
+    "subtitle": "Interactive Fibonacci Kanji",
+    "desc": "Draw your High, Low, and Breakdown (optional) points to reveal hidden market geometry.",
+    "start": "1. Click Swing High",
+    "end": "2. Click Swing Low",
+    "reset": "Reset Chart",
+    "levels": "Kanji Levels",
+    "instruction": "Usage: Select pair -> Chart loads -> Click High -> Click Low."
   }
 }
