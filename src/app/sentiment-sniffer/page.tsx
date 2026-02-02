@@ -2,14 +2,17 @@
 
 import { motion } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
+import { useTranslations } from 'next-intl';
 
 export default function SentimentSnifferPage() {
+    const t = useTranslations('sentiment');
+
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
             <div className="container-apple">
                 <PremiumGuard
-                    title="Sentiment Sniffer"
-                    description="Real-time news intelligence and market sentiment analysis. Know the news before the charts move."
+                    title={t('title')}
+                    description={t('subtitle')}
                 >
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -20,16 +23,16 @@ export default function SentimentSnifferPage() {
                         <div className="flex flex-col md:flex-row items-end justify-between mb-8 gap-4">
                             <div>
                                 <h1 className="text-3xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                                    Sentiment <span className="gradient-text">Sniffer</span> 📡
+                                    {t('title')} 📡
                                 </h1>
-                                <p className="text-[var(--text-secondary)]">AI Analysis of 10,000+ News Sources & Social Signals</p>
+                                <p className="text-[var(--text-secondary)]">{t('subtitle')}</p>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-green-500 bg-green-50 px-3 py-1 rounded-full">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                 </span>
-                                Live Stream Active
+                                {t('liveStream')}
                             </div>
                         </div>
 
@@ -37,30 +40,30 @@ export default function SentimentSnifferPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             {/* Gauge USD */}
                             <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                                <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">USD SENTIMENT</h3>
-                                <div className="text-4xl font-bold text-green-600 mb-1">Strong Bullish</div>
+                                <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">{t('usdSentiment')}</h3>
+                                <div className="text-4xl font-bold text-green-600 mb-1">{t('strongBullish')}</div>
                                 <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                                     <div className="bg-green-500 h-2 rounded-full" style={{ width: '85%' }}></div>
                                 </div>
-                                <p className="text-xs text-[var(--text-secondary)]">Driven by: <span className="font-semibold">NFP Expectation</span></p>
+                                <p className="text-xs text-[var(--text-secondary)]">{t('drivenBy')} <span className="font-semibold">NFP Expectation</span></p>
                             </div>
 
                             {/* Gauge GOLD */}
                             <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                                <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">XAU/USD SENTIMENT</h3>
-                                <div className="text-4xl font-bold text-red-600 mb-1">Bearish</div>
+                                <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">{t('goldSentiment')}</h3>
+                                <div className="text-4xl font-bold text-red-600 mb-1">{t('bearish')}</div>
                                 <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                                     <div className="bg-red-500 h-2 rounded-full" style={{ width: '65%' }}></div>
                                 </div>
-                                <p className="text-xs text-[var(--text-secondary)]">Driven by: <span className="font-semibold">Strong Dollar</span></p>
+                                <p className="text-xs text-[var(--text-secondary)]">{t('drivenBy')} <span className="font-semibold">Strong Dollar</span></p>
                             </div>
 
                             {/* Gauge RISK */}
                             <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                                <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">MARKET MOOD</h3>
-                                <div className="text-4xl font-bold text-amber-500 mb-1">Risk Off</div>
+                                <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">{t('marketMood')}</h3>
+                                <div className="text-4xl font-bold text-amber-500 mb-1">{t('riskOff')}</div>
                                 <p className="text-sm mt-3 text-[var(--text-secondary)]">
-                                    Investors are fleeing to safety. Safe haven assets (USD, JPY) favored.
+                                    {t('riskOffDesc')}
                                 </p>
                             </div>
                         </div>
@@ -68,10 +71,10 @@ export default function SentimentSnifferPage() {
                         {/* Bottom Section: News Feed */}
                         <div className="bg-white dark:bg-gray-800 rounded-3xl border border-[var(--border-light)] overflow-hidden">
                             <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center">
-                                <h3 className="font-bold">Live AI News Feed</h3>
+                                <h3 className="font-bold">{t('newsFeed')}</h3>
                                 <div className="flex gap-2">
-                                    <button className="px-3 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded-lg">All</button>
-                                    <button className="px-3 py-1 text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] rounded-lg">High Impact</button>
+                                    <button className="px-3 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded-lg">{t('all')}</button>
+                                    <button className="px-3 py-1 text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] rounded-lg">{t('highImpact')}</button>
                                 </div>
                             </div>
                             <div className="divide-y divide-[var(--border-light)]">

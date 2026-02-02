@@ -193,5 +193,38 @@
     "showOnHeatmap": "Show on Heatmap",
     "showPredictionOverlay": "Show prediction overlay on heatmap",
     "resetDefaults": "Reset to Defaults"
+  },
+  "aiDoctor": {
+    "title": "AI Trade Doctor",
+    "subtitle": "AI-Powered Coaching",
+    "description": "Stop bleeding money. Upload your MT4/MT5 history and discover exactly <span class='font-semibold text-[var(--text-primary)]'>why you keep losing</span> and how to fix it.",
+    "uploadTitle": "Drop your Statement Here",
+    "uploadDesc": "Supports .HTML report from MT4/MT5/cTrader",
+    "selectFile": "Select File",
+    "criticalFlaw": "Critical Flaw Detected",
+    "hiddenSuperpower": "Hidden Superpower",
+    "prescription": "Prescription:",
+    "revengeTrading": "Revenge Trading",
+    "revengeDesc": "You have a 85% probability of losing trades entered within 15 minutes of a Stop Loss hit.",
+    "revengeFix": "Force 1 Hour Cooldown after SL.",
+    "londonSession": "London Session",
+    "londonDesc": "Your Win Rate is 72% between 2 PM - 5 PM (GMT+7). You are most in-sync with London Open.",
+    "londonFix": "Increase Lot Size by 20% only in this window."
+  },
+  "sentiment": {
+    "title": "Sentiment Sniffer",
+    "subtitle": "AI Analysis of 10,000+ News Sources & Social Signals",
+    "liveStream": "Live Stream Active",
+    "marketMood": "MARKET MOOD",
+    "usdSentiment": "USD SENTIMENT",
+    "goldSentiment": "XAU/USD SENTIMENT",
+    "strongBullish": "Strong Bullish",
+    "bearish": "Bearish",
+    "riskOff": "Risk Off",
+    "riskOffDesc": "Investors are fleeing to safety. Safe haven assets (USD, JPY) favored.",
+    "drivenBy": "Driven by:",
+    "newsFeed": "Live AI News Feed",
+    "all": "All",
+    "highImpact": "High Impact"
   }
 }

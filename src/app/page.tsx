@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon, CheckCircleSolidIcon, FireIcon, ScaleIcon, SignalIcon } from '@/components/PremiumIcons';
 import DownloadAppSection from '@/components/home/DownloadAppSection';
+import AppGrid from '@/components/home/AppGrid';
 
 type TutorialTab = 'bookmap' | 'forex' | 'stock';
 
@@ -287,36 +288,8 @@ export default function Home() {
             {tHero('subheadline')}
           </motion.p>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
-          >
-            <Link href={session ? '/dom-arra' : '/login?callbackUrl=/dom-arra'}>
-              <button className="btn-primary bg-gradient-to-r from-amber-500 to-orange-600 border-none shadow-amber-500/20">
-                <span className="mr-2">🔥</span>
-                {tHero('ctaBookmap')}
-                <ArrowRightIcon className="ml-2" size="sm" />
-              </button>
-            </Link>
-            <Link href={session ? '/analisa-saham' : '/login?callbackUrl=/analisa-saham'}>
-              <button className="btn-secondary">
-                {tHero('ctaStock')}
-              </button>
-            </Link>
-            <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
-              <button className="btn-secondary">
-                {tHero('ctaForex')}
-              </button>
-            </Link>
-            <Link href="/pricing">
-              <button className="btn-secondary">
-                {tHero('ctaPricing')}
-              </button>
-            </Link>
-          </motion.div>
+          {/* App Grid Launcher - Replaces CTA Buttons */}
+          <AppGrid />
 
 
         </motion.div>

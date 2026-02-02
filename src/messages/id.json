@@ -193,5 +193,38 @@
         "showOnHeatmap": "Tampilkan di Heatmap",
         "showPredictionOverlay": "Tampilkan overlay prediksi di heatmap",
         "resetDefaults": "Reset ke Default"
+    },
+    "aiDoctor": {
+        "title": "Dokter Trading AI",
+        "subtitle": "Pelatih Trading Berbasis AI",
+        "description": "Berhenti buang uang. Upload history MT4/MT5 Anda dan temukan secara tepat <span class='font-semibold text-[var(--text-primary)]'>kenapa Anda loss</span> dan cara memperbaikinya.",
+        "uploadTitle": "Tarik Statement Anda ke Sini",
+        "uploadDesc": "Mendukung laporan .HTML dari MT4/MT5/cTrader",
+        "selectFile": "Pilih File",
+        "criticalFlaw": "Kelemahan Kritis Terdeteksi",
+        "hiddenSuperpower": "Kekuatan Tersembunyi",
+        "prescription": "Resep:",
+        "revengeTrading": "Revenge Trading",
+        "revengeDesc": "Anda memiliki probabilitas loss 85% untuk trade yang dibuka dalam 15 menit setelah kena Stop Loss.",
+        "revengeFix": "Paksa Cooldown 1 Jam setelah SL.",
+        "londonSession": "Sesi London",
+        "londonDesc": "Win Rate Anda 72% antara jam 14:00 - 17:00 (WIB). Anda paling sinkron dengan Pembukaan London.",
+        "londonFix": "Naikkan Lot Size sebesar 20% hanya di jam ini."
+    },
+    "sentiment": {
+        "title": "Pelacak Sentimen",
+        "subtitle": "Analisa AI dari 10.000+ Berita & Sinyal Sosial",
+        "liveStream": "Live Stream Aktif",
+        "marketMood": "MOOD PASAR",
+        "usdSentiment": "SENTIMEN USD",
+        "goldSentiment": "SENTIMEN XAU/USD",
+        "strongBullish": "Sangat Bullish",
+        "bearish": "Bearish",
+        "riskOff": "Risk Off (Hindari Resiko)",
+        "riskOffDesc": "Investor lari ke aset aman. Aset Safe Haven (USD, JPY) lebih disukai.",
+        "drivenBy": "Didorong oleh:",
+        "newsFeed": "Feed Berita AI Langsung",
+        "all": "Semua",
+        "highImpact": "Dampak Tinggi"
     }
 }
