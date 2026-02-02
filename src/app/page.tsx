@@ -182,18 +182,68 @@ export default function Home() {
           <div className="absolute top-1/3 -right-32 w-80 h-80 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl" />
 
-          {/* Subtle Chart Background Pattern */}
+          {/* Candlestick Chart Background Pattern */}
           <svg className="absolute inset-0 w-full h-full opacity-[0.15]" preserveAspectRatio="none" viewBox="0 0 1440 800" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 800V550C150 560 250 480 400 500C550 520 650 350 800 380C950 410 1050 250 1200 280C1300 300 1380 200 1440 180V800H0Z" fill="url(#chartGradient)" />
-            <path d="M0 548C150 558 250 478 400 498C550 518 650 348 800 378C950 408 1050 248 1200 278C1300 298 1380 198 1440 178" stroke="url(#lineGradient)" strokeWidth="2" />
+            {/* Candle 1 (Bull) */}
+            <line x1="100" y1="580" x2="100" y2="680" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="85" y="600" width="30" height="60" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 2 (Bear) */}
+            <line x1="200" y1="580" x2="200" y2="650" stroke="#A855F7" strokeWidth="2" opacity="0.5" />
+            <rect x="185" y="590" width="30" height="40" rx="4" fill="url(#candleDown)" />
+
+            {/* Candle 3 (Bull - Large) */}
+            <line x1="300" y1="450" x2="300" y2="600" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="285" y="480" width="30" height="100" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 4 (Bull - Gap Up) */}
+            <line x1="400" y1="380" x2="400" y2="490" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="385" y="400" width="30" height="70" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 5 (Bear - Pullback) */}
+            <line x1="500" y1="390" x2="500" y2="480" stroke="#A855F7" strokeWidth="2" opacity="0.5" />
+            <rect x="485" y="400" width="30" height="50" rx="4" fill="url(#candleDown)" />
+
+            {/* Candle 6 (Bull - Continuation) */}
+            <line x1="600" y1="300" x2="600" y2="420" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="585" y="320" width="30" height="80" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 7 (Bull - Spike) */}
+            <line x1="700" y1="200" x2="700" y2="350" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="685" y="240" width="30" height="90" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 8 (Bear) */}
+            <line x1="800" y1="230" x2="800" y2="290" stroke="#A855F7" strokeWidth="2" opacity="0.5" />
+            <rect x="785" y="240" width="30" height="40" rx="4" fill="url(#candleDown)" />
+
+            {/* Candle 9 (Bull) */}
+            <line x1="900" y1="180" x2="900" y2="260" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="885" y="200" width="30" height="50" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 10 (Bull - High) */}
+            <line x1="1000" y1="100" x2="1000" y2="220" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="985" y="140" width="30" height="70" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 11 (Bear - Top) */}
+            <line x1="1100" y1="130" x2="1100" y2="190" stroke="#A855F7" strokeWidth="2" opacity="0.5" />
+            <rect x="1085" y="140" width="30" height="40" rx="4" fill="url(#candleDown)" />
+
+            {/* Candle 12 (Bull) */}
+            <line x1="1200" y1="80" x2="1200" y2="160" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="1185" y="100" width="30" height="50" rx="4" fill="url(#candleUp)" />
+
+            {/* Candle 13 (Bull - End) */}
+            <line x1="1300" y1="50" x2="1300" y2="120" stroke="#0071E3" strokeWidth="2" opacity="0.5" />
+            <rect x="1285" y="70" width="30" height="40" rx="4" fill="url(#candleUp)" />
+
             <defs>
-              <linearGradient id="chartGradient" x1="720" y1="200" x2="720" y2="800" gradientUnits="userSpaceOnUse">
+              <linearGradient id="candleUp" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
                 <stop stopColor="#0071E3" />
-                <stop offset="1" stopColor="#0071E3" stopOpacity="0" />
+                <stop offset="1" stopColor="#3b82f6" />
               </linearGradient>
-              <linearGradient id="lineGradient" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#0071E3" />
-                <stop offset="1" stopColor="#A855F7" />
+              <linearGradient id="candleDown" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#A855F7" />
+                <stop offset="1" stopColor="#ec4899" />
               </linearGradient>
             </defs>
           </svg>
