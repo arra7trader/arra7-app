@@ -11,7 +11,8 @@ import {
     BookOpenIcon,
     BriefcaseIcon,
     NewspaperIcon,
-    HeartIcon
+    HeartIcon,
+    CurrencyYenIcon
 } from '@heroicons/react/24/solid';
 
 export default function AppGrid() {
@@ -56,6 +57,13 @@ export default function AppGrid() {
             icon: <NewspaperIcon className="w-8 h-8 text-purple-500" />,
             href: '/sentiment-sniffer',
             color: 'bg-purple-50 group-hover:bg-purple-100',
+        },
+        {
+            id: 'kanji',
+            label: "Kanji Tuls",
+            icon: <CurrencyYenIcon className="w-8 h-8 text-red-600" />,
+            href: '/fibonacci-kanji',
+            color: 'bg-red-50 group-hover:bg-red-100',
         },
         {
             id: 'journal',

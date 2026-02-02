@@ -136,6 +136,15 @@
                 "title": "Entry Awal",
                 "desc": "Masuk pasar sebelum harga bergerak karena berita"
             }
+        },
+        "kanji": {
+            "title": "Kanji Tuls",
+            "subtitle": "Fibonacci Kanji Interaktif",
+            "desc": "Tentukan High dan Low untuk melihat geometri pasar tersembunyi.",
+            "start": "Klik untuk Set Swing High (Start)",
+            "end": "Klik untuk Set Swing Low (End)",
+            "reset": "Reset Chart",
+            "levels": "Level Kanji"
         }
     },
     "features": {
