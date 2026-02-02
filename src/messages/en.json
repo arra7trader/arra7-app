@@ -43,7 +43,9 @@
     "tabs": {
       "bookmap": "🔥 Bookmap ARRA7",
       "forex": "📊 Forex Analysis",
-      "stock": "🇮🇩 Stock Analysis"
+      "stock": "🇮🇩 Stock Analysis",
+      "doctor": "🩺 AI Doctor",
+      "sentiment": "📡 Sentiment"
     },
     "bookmap": {
       "step1": {
@@ -97,6 +99,42 @@
       "step4": {
         "title": "Get Insights",
         "desc": "Complete recommendations with target price"
+      }
+    },
+    "doctor": {
+      "step1": {
+        "title": "Upload History",
+        "desc": "Drag & drop your MT4/MT5 HTML report"
+      },
+      "step2": {
+        "title": "AI Diagnosis",
+        "desc": "AI scans for patterns, mistakes, and hidden strengths"
+      },
+      "step3": {
+        "title": "Get Prescription",
+        "desc": "Receive actionable advice to fix your bad habits"
+      },
+      "step4": {
+        "title": "Improve Winrate",
+        "desc": "Apply the fix and track your improvement"
+      }
+    },
+    "sentiment": {
+      "step1": {
+        "title": "Check Mood",
+        "desc": "See if the market is Risk-On (Greed) or Risk-Off (Fear)"
+      },
+      "step2": {
+        "title": "Scan Gauges",
+        "desc": "Monitor USD and Gold sentiment meters in real-time"
+      },
+      "step3": {
+        "title": "Read Feed",
+        "desc": "AI filters 10,000+ news sources for high-impact events"
+      },
+      "step4": {
+        "title": "Early Entry",
+        "desc": "Enter trades before the price action reflects the news"
       }
     }
   },

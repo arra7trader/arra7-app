@@ -43,7 +43,9 @@
         "tabs": {
             "bookmap": "🔥 Bookmap ARRA7",
             "forex": "📊 Analisa Forex",
-            "stock": "🇮🇩 Analisa Saham"
+            "stock": "🇮🇩 Analisa Saham",
+            "doctor": "🩺 AI Doctor",
+            "sentiment": "📡 Sentiment"
         },
         "bookmap": {
             "step1": {
@@ -97,6 +99,42 @@
             "step4": {
                 "title": "Dapatkan Insight",
                 "desc": "Rekomendasi lengkap dengan target harga"
+            }
+        },
+        "doctor": {
+            "step1": {
+                "title": "Upload History",
+                "desc": "Tarik & lepas laporan HTML MT4/MT5 Anda"
+            },
+            "step2": {
+                "title": "Diagnosa AI",
+                "desc": "AI memindai pola, kesalahan, dan kelebihan tersembunyi"
+            },
+            "step3": {
+                "title": "Dapat Resep",
+                "desc": "Terima saran praktis untuk perbaiki kebiasaan buruk"
+            },
+            "step4": {
+                "title": "Tingkatkan Winrate",
+                "desc": "Terapkan perbaikan dan pantau kemajuan Anda"
+            }
+        },
+        "sentiment": {
+            "step1": {
+                "title": "Cek Mood",
+                "desc": "Lihat apakah pasar Risk-On (Greed) atau Risk-Off (Fear)"
+            },
+            "step2": {
+                "title": "Pantau Meteran",
+                "desc": "Monitor sentimen USD dan Gold secara real-time"
+            },
+            "step3": {
+                "title": "Baca Feed",
+                "desc": "AI menyaring 10.000+ berita untuk event berdampak tinggi"
+            },
+            "step4": {
+                "title": "Entry Awal",
+                "desc": "Masuk pasar sebelum harga bergerak karena berita"
             }
         }
     },

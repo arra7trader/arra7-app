@@ -9,7 +9,7 @@ import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, Ro
 import DownloadAppSection from '@/components/home/DownloadAppSection';
 import AppGrid from '@/components/home/AppGrid';
 
-type TutorialTab = 'bookmap' | 'forex' | 'stock';
+type TutorialTab = 'bookmap' | 'forex' | 'stock' | 'doctor' | 'sentiment';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
@@ -58,6 +58,34 @@ function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
         <SparklesIcon key="4" className="text-green-600" size="lg" />,
       ],
     },
+    doctor: {
+      color: 'from-rose-500 to-red-500',
+      bgColor: 'bg-rose-50',
+      borderColor: 'border-rose-200',
+      textColor: 'text-rose-700',
+      icon: <FireIcon className="text-rose-600" size="lg" />,
+      steps: ['step1', 'step2', 'step3', 'step4'],
+      stepIcons: [
+        <TrophyIcon key="1" className="text-rose-600" size="lg" />,
+        <ChartIcon key="2" className="text-rose-600" size="lg" />,
+        <CheckCircleSolidIcon key="3" className="text-rose-600" size="lg" />,
+        <RocketIcon key="4" className="text-rose-600" size="lg" />,
+      ],
+    },
+    sentiment: {
+      color: 'from-purple-500 to-violet-500',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      textColor: 'text-purple-700',
+      icon: <SparklesIcon className="text-purple-600" size="lg" />,
+      steps: ['step1', 'step2', 'step3', 'step4'],
+      stepIcons: [
+        <ScaleIcon key="1" className="text-purple-600" size="lg" />,
+        <BellIcon key="2" className="text-purple-600" size="lg" />,
+        <SignalIcon key="3" className="text-purple-600" size="lg" />,
+        <CrosshairIcon key="4" className="text-purple-600" size="lg" />,
+      ],
+    },
   };
 
   const config = tabConfig[activeTab];
@@ -66,7 +94,7 @@ function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
     <div>
       {/* Tab Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-10">
-        {(['bookmap', 'forex', 'stock'] as TutorialTab[]).map((tab) => (
+        {(['bookmap', 'forex', 'stock', 'doctor', 'sentiment'] as TutorialTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
