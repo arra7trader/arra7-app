@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import { createChart, ColorType, ISeriesApi, LineData, IChartApi } from 'lightweight-charts';
+import { createChart, ColorType, ISeriesApi, LineData, IChartApi, CandlestickSeries } from 'lightweight-charts';
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
@@ -73,8 +73,7 @@ export default function FibonacciKanjiPage() {
             }
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const series = (chart as any).addCandlestickSeries({
+        const series = chart.addSeries(CandlestickSeries, {
             upColor: '#26a69a',
             downColor: '#ef5350',
             borderVisible: false,
