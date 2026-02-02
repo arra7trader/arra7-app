@@ -58,48 +58,57 @@ export default function FibonacciKanjiPage() {
     };
 
     const calculateKanji = () => {
-        const h = parseFloat(highPrice);
-        const l = parseFloat(lowPrice);
+        // Sanitize inputs (handle commas for ID locale)
+        const cleanH = highPrice.replace(/,/g, '.');
+        const cleanL = lowPrice.replace(/,/g, '.');
 
-        if (isNaN(h) || isNaN(l)) return;
+        const h = parseFloat(cleanH);
+        const l = parseFloat(cleanL);
 
-        const diff = h - l; // Downtrend logic (High to Low). If Uptrend, user might input differently? 
-        // Standard Fibo: Start (0) to End (1).
-        // If Trend is Down: Start=High, End=Low. (Price goes down). Levels extend down.
-        // If Trend is Up: Start=Low, End=High. (Price goes up). Levels extend up.
-
-        // Let's assume standard Retracement logic:
-        // Range = Price 1 - Price 2.
-        // But for projection...
-        // Let's keep it simple: "High" and "Low" are just Reference Points.
-        // We calculate levels based on range.
-        // Usually Kanji is for "Correction to Extension".
+        if (isNaN(h) || isNaN(l)) {
+            // Optional: Show error
+            alert("Please enter valid numbers for High and Low");
+            return;
+        }
 
         const range = Math.abs(h - l);
-        const isUp = l < h; // This logic depends on what 0 and 1 represent.
-        // Let's assume High is 0, Low is 1 (Down Projection) for simplicity or standard calculation.
-
-        // Actually, let's just calc absolute levels from the "End" point or "Start" point?
-        // Standard Fibo Retracement:
-        // Level P = High - (Range * level)
 
         const levels = KANJI_LEVELS.map(k => {
             let price = 0;
-            // Calculating Retracement from High down to Low
+            // Standard Projection: Always Down from High or Up from Low?
+            // Kanji Logic: Projecting Key Levels based on swing.
+            // If High > Low (Bearish/Correction), usually we look for extensions below or retracements above.
+            // Let's assume Retracement logic mainly: 
+            // If H > L (Down move), Levels are High - (Range * Level).
+            // If L > H (Up move), Levels are Low + (Range * Level).
+
             if (h > l) {
-                // Downtrend Projection? Or Retracement back up?
-                // Standard: 0 is High, 1 is Low.
-                // Level 0.5 is High - (Range * 0.5)
+                // High is Top, Low is Bottom. 
+                // Level 0 = High. Level 1 = Low.
+                // Level 1.618 = Below Low (Extension).
                 price = h - (range * k.level);
             } else {
-                // Uptrend (Low to High) - inputs might be swapped by user intent?
-                // Let's just assume inputs are strictly "High Point" and "Low Point".
-                // If High > Low (Normal), we calc levels relative to that range.
-                // Let's stick to standard behavior:
-                // We project DOWN from High.
-                price = h - (range * k.level);
+                // Low is Start, High is End.
+                // Level 0 = Low. Level 1 = High.
+                // But typically user enters "Swing High" and "Swing Low" fields.
+                // Let's stick to the Field Labels. High is value A, Low is value B.
+                // We project FROM High (Start) TO Low (End). 
+                // Price = Start - (Range * Level) where Range = Start - End.
+                // Wait, if High < Low (User put Low in High field?), we just respect value.
+                // Let's simplify: High is the higher price, Low is the lower price effectively defining range.
+                // But direction matters.
+                // Let's just use the Input Field Labels as truth. 
+                // "Swing High" = Anchor A. "Swing Low" = Anchor B.
+                // The directions follows A -> B.
+                price = h - ((h - l) * k.level);
             }
-            return { ...k, price: price.toFixed(price > 50 ? 2 : 5) };
+
+            // Format price based on magnitude
+            const isYen = selectedPair.includes('JPY');
+            const isIndo = selectedPair === 'USDIDR';
+            const decimals = (price > 1000 && !isIndo) ? 2 : (price > 50 ? 2 : 5);
+
+            return { ...k, price: price.toFixed(decimals) };
         });
 
         setCalculatedLevels(levels);
@@ -107,18 +116,18 @@ export default function FibonacciKanjiPage() {
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
-            <div className="container-app mx-auto px-4 max-w-7xl">
+            <div className="container-fluid mx-auto px-4 max-w-[1800px]">
                 <PremiumGuard
                     title={t('title')}
                     description={t('desc')}
                 >
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[800px]">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[85vh] min-h-[700px]">
 
                         {/* LEFT: TradingView Widget */}
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="lg:col-span-2 bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 h-[600px] lg:h-full"
+                            className="lg:col-span-3 bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 h-full"
                         >
                             {/* TradingView Widget Container */}
                             <div className="tradingview-widget-container w-full h-full">
@@ -134,105 +143,106 @@ export default function FibonacciKanjiPage() {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col h-full overflow-y-auto"
+                            className="lg:col-span-1 bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col h-full overflow-hidden"
                         >
-                            <div className="mb-6">
+                            <div className="mb-4 flex-shrink-0">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-1">🧮 Kanji Calculator</h2>
-                                <p className="text-gray-500 text-sm">Input the Swing High & Low from the chart.</p>
+                                <p className="text-gray-500 text-xs">Input Swing High & Low from chart.</p>
                             </div>
 
-                            {/* Pair Selector */}
-                            <div className="mb-6">
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Pair</label>
-                                <select
-                                    value={selectedPair}
-                                    onChange={handlePairChange}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
+                            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                                {/* Pair Selector */}
+                                <div className="mb-4">
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select Pair</label>
+                                    <select
+                                        value={selectedPair}
+                                        onChange={handlePairChange}
+                                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <optgroup label="Commodities">
+                                            <option value="XAUUSD">Gold (XAUUSD)</option>
+                                            <option value="XAGUSD">Silver (XAGUSD)</option>
+                                        </optgroup>
+                                        <optgroup label="Indices">
+                                            <option value="US30">US30 (Dow Jones)</option>
+                                            <option value="US500">US500 (S&P 500)</option>
+                                            <option value="USTEC">Nasdaq (USTEC)</option>
+                                        </optgroup>
+                                        <optgroup label="Forex">
+                                            <option value="EURUSD">EURUSD</option>
+                                            <option value="GBPUSD">GBPUSD</option>
+                                            <option value="USDJPY">USDJPY</option>
+                                        </optgroup>
+                                        <optgroup label="Crypto">
+                                            <option value="BTCUSD">Bitcoin</option>
+                                            <option value="ETHUSD">Ethereum</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+
+                                {/* Inputs */}
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-red-500 uppercase mb-1">Swing High</label>
+                                        <input
+                                            type="text"
+                                            value={highPrice}
+                                            onChange={(e) => setHighPrice(e.target.value)}
+                                            placeholder="0.00"
+                                            className="w-full p-2.5 bg-red-50 border border-red-100 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-red-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-green-500 uppercase mb-1">Swing Low</label>
+                                        <input
+                                            type="text"
+                                            value={lowPrice}
+                                            onChange={(e) => setLowPrice(e.target.value)}
+                                            placeholder="0.00"
+                                            className="w-full p-2.5 bg-green-50 border border-green-100 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-green-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={calculateKanji}
+                                    className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-bold shadow-md transition transform hover:scale-[1.01] active:scale-95 mb-4 text-sm"
                                 >
-                                    <optgroup label="Commodities">
-                                        <option value="XAUUSD">Gold (XAUUSD)</option>
-                                        <option value="XAGUSD">Silver (XAGUSD)</option>
-                                    </optgroup>
-                                    <optgroup label="Indices">
-                                        <option value="US30">US30 (Dow Jones)</option>
-                                        <option value="US500">US500 (S&P 500)</option>
-                                        <option value="USTEC">Nasdaq (USTEC)</option>
-                                    </optgroup>
-                                    <optgroup label="Forex">
-                                        <option value="EURUSD">EURUSD</option>
-                                        <option value="GBPUSD">GBPUSD</option>
-                                        <option value="USDJPY">USDJPY</option>
-                                    </optgroup>
-                                    <optgroup label="Crypto">
-                                        <option value="BTCUSD">Bitcoin</option>
-                                        <option value="ETHUSD">Ethereum</option>
-                                    </optgroup>
-                                </select>
-                            </div>
+                                    Calculate Levels 🚀
+                                </button>
 
-                            {/* Inputs */}
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-red-500 uppercase mb-2">Swing High</label>
-                                    <input
-                                        type="number"
-                                        value={highPrice}
-                                        onChange={(e) => setHighPrice(e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full p-3 bg-red-50 border border-red-100 rounded-xl font-mono text-gray-900 outline-none focus:border-red-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-green-500 uppercase mb-2">Swing Low</label>
-                                    <input
-                                        type="number"
-                                        value={lowPrice}
-                                        onChange={(e) => setLowPrice(e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full p-3 bg-green-50 border border-green-100 rounded-xl font-mono text-gray-900 outline-none focus:border-green-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={calculateKanji}
-                                className="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold shadow-lg transition transform hover:scale-[1.02] active:scale-95 mb-8"
-                            >
-                                Calculate Levels 🚀
-                            </button>
-
-                            {/* Results Table */}
-                            {calculatedLevels.length > 0 ? (
-                                <div className="flex-1 overflow-y-auto pr-2">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="text-left text-gray-400 border-b border-gray-100">
-                                                <th className="pb-2 pl-2">Level</th>
-                                                <th className="pb-2 text-right pr-2">Price</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-50">
-                                            {calculatedLevels.map((lvl) => (
-                                                <tr key={lvl.level} className="group hover:bg-blue-50 transition">
-                                                    <td className="py-3 pl-2">
-                                                        <div className={`font-bold ${lvl.color}`}>{lvl.label}</div>
-                                                        <div className="text-[10px] text-gray-400">{lvl.desc}</div>
-                                                    </td>
-                                                    <td className="py-3 text-right font-mono font-medium text-gray-700 pr-2 group-hover:text-blue-600">
-                                                        {lvl.price}
-                                                    </td>
+                                {/* Results Table */}
+                                {calculatedLevels.length > 0 ? (
+                                    <div className="w-full">
+                                        <table className="w-full text-xs">
+                                            <thead>
+                                                <tr className="text-left text-gray-400 border-b border-gray-100">
+                                                    <th className="pb-2">Level</th>
+                                                    <th className="pb-2 text-right">Price</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className="flex-1 flex flex-col items-center justify-start pt-10 text-gray-300">
-                                    <span className="text-4xl mb-2">🎌</span>
-                                    <p className="text-center font-medium">Enter High & Low<br />to reveal coordinates.</p>
-                                </div>
-                            )}
-
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-50">
+                                                {calculatedLevels.map((lvl) => (
+                                                    <tr key={lvl.level} className="group hover:bg-blue-50 transition">
+                                                        <td className="py-2.5">
+                                                            <div className={`font-bold ${lvl.color}`}>{lvl.label}</div>
+                                                            <div className="text-[9px] text-gray-400">{lvl.desc}</div>
+                                                        </td>
+                                                        <td className="py-2.5 text-right font-mono font-medium text-gray-700 group-hover:text-blue-600">
+                                                            {lvl.price}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="py-8 text-center text-gray-300">
+                                        <span className="text-3xl block mb-2">🎌</span>
+                                        <p className="font-medium text-xs">Enter coordinates to<br />reveal geometry.</p>
+                                    </div>
+                                )}
+                            </div>
                         </motion.div>
                     </div>
                 </PremiumGuard>
