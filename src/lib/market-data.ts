@@ -154,12 +154,12 @@ export interface MarketData {
     change_percent: number;
     volume: number;
     timestamp: string;
-    candles: CandleData[];
+    candles: Candle[];
     is_realtime: boolean;
     is_simulated?: boolean; // New flag for dummy data
 }
 
-export interface CandleData {
+export interface Candle {
     time: string;
     open: number;
     high: number;
@@ -237,7 +237,7 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
             const timestamps = result.timestamp || [];
             const meta = result.meta;
 
-            const candles: CandleData[] = [];
+            const candles: Candle[] = [];
             const limit = Math.min(timestamps.length, 50);
 
             for (let i = timestamps.length - limit; i < timestamps.length; i++) {
@@ -329,7 +329,7 @@ async function fetchBinancePrice(symbol: string, interval: string): Promise<Part
             if (!Array.isArray(data) || data.length === 0) continue;
 
             // Parse Candles (Binance format: [time, open, high, low, close, vol, ...])
-            const candles: CandleData[] = data.map((d: any) => ({
+            const candles: Candle[] = data.map((d: any) => ({
                 time: new Date(d[0]).toISOString(),
                 open: parseFloat(d[1]),
                 high: parseFloat(d[2]),
@@ -373,7 +373,7 @@ function generateDummyData(symbol: string, name: string): MarketData {
                                     1.0850;
 
     const variance = basePrice * 0.002;
-    const candles: CandleData[] = [];
+    const candles: Candle[] = [];
 
     for (let i = 0; i < 20; i++) {
         const open = basePrice + (Math.random() - 0.5) * variance;

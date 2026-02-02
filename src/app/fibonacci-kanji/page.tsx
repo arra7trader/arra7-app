@@ -57,61 +57,82 @@ export default function FibonacciKanjiPage() {
         setWidgetSymbol(symbolMap[pair] || 'OANDA:XAUUSD');
     };
 
-    const calculateKanji = () => {
-        // Sanitize inputs (handle commas for ID locale)
-        const cleanH = highPrice.replace(/,/g, '.');
-        const cleanL = lowPrice.replace(/,/g, '.');
+    // AI Scanner State
+    const [isAutoScan, setIsAutoScan] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
 
-        const h = parseFloat(cleanH);
-        const l = parseFloat(cleanL);
+    // AI Scanner Effect
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
 
-        if (isNaN(h) || isNaN(l)) {
-            // Optional: Show error
-            alert("Please enter valid numbers for High and Low");
-            return;
+        const scanMarket = async () => {
+            if (!isAutoScan) return;
+            setIsScanning(true);
+            try {
+                const res = await fetch(`/api/kanji/detect?pair=${selectedPair}&timeframe=1h`);
+                const json = await res.json();
+
+                if (json.status === 'success' && json.data) {
+                    const { high, low } = json.data;
+
+                    // Only update if different to avoid jitter?
+                    // Or just force update.
+                    setHighPrice(high.toString());
+                    setLowPrice(low.toString());
+
+                    // Auto Calculate
+                    // We need to call calculateKanji, but state updates (setHighPrice) are async.
+                    // Better to clean and calc directly here or stick to useEffect dependency?
+                    // Let's rely on a separate Effect or just call explicit calc function with params.
+
+                    // Trigger manual click logic simulation or just reuse logic:
+                    // Duplicating check logic for simplicity inside effect:
+                    if (high && low) {
+                        // wait for state update? No, use local vars
+                        calculateKanjiInternal(high.toString(), low.toString());
+                    }
+                }
+            } catch (e) {
+                console.error("AI Scan failed", e);
+            } finally {
+                setIsScanning(false);
+            }
+        };
+
+        if (isAutoScan) {
+            scanMarket(); // Initial call
+            interval = setInterval(scanMarket, 60000); // Poll every minute
         }
 
-        const range = Math.abs(h - l);
+        return () => clearInterval(interval);
+    }, [isAutoScan, selectedPair]);
 
+    // Refactored Calc Logic to accept args
+    const calculateKanjiInternal = (hStr: string, lStr: string) => {
+        const cleanH = hStr.replace(/,/g, '.');
+        const cleanL = lStr.replace(/,/g, '.');
+        const h = parseFloat(cleanH);
+        const l = parseFloat(cleanL);
+        if (isNaN(h) || isNaN(l)) return;
+
+        const range = Math.abs(h - l);
         const levels = KANJI_LEVELS.map(k => {
             let price = 0;
-            // Standard Projection: Always Down from High or Up from Low?
-            // Kanji Logic: Projecting Key Levels based on swing.
-            // If High > Low (Bearish/Correction), usually we look for extensions below or retracements above.
-            // Let's assume Retracement logic mainly: 
-            // If H > L (Down move), Levels are High - (Range * Level).
-            // If L > H (Up move), Levels are Low + (Range * Level).
-
             if (h > l) {
-                // High is Top, Low is Bottom. 
-                // Level 0 = High. Level 1 = Low.
-                // Level 1.618 = Below Low (Extension).
                 price = h - (range * k.level);
             } else {
-                // Low is Start, High is End.
-                // Level 0 = Low. Level 1 = High.
-                // But typically user enters "Swing High" and "Swing Low" fields.
-                // Let's stick to the Field Labels. High is value A, Low is value B.
-                // We project FROM High (Start) TO Low (End). 
-                // Price = Start - (Range * Level) where Range = Start - End.
-                // Wait, if High < Low (User put Low in High field?), we just respect value.
-                // Let's simplify: High is the higher price, Low is the lower price effectively defining range.
-                // But direction matters.
-                // Let's just use the Input Field Labels as truth. 
-                // "Swing High" = Anchor A. "Swing Low" = Anchor B.
-                // The directions follows A -> B.
                 price = h - ((h - l) * k.level);
             }
-
-            // Format price based on magnitude
             const isYen = selectedPair.includes('JPY');
             const isIndo = selectedPair === 'USDIDR';
             const decimals = (price > 1000 && !isIndo) ? 2 : (price > 50 ? 2 : 5);
-
             return { ...k, price: price.toFixed(decimals) };
         });
-
         setCalculatedLevels(levels);
+    };
+
+    const calculateKanji = () => {
+        calculateKanjiInternal(highPrice, lowPrice);
     };
 
     return (
@@ -151,7 +172,27 @@ export default function FibonacciKanjiPage() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-                                {/* Pair Selector */}
+                                {/* Auto Scan Toggle */}
+                                <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xl ${isScanning ? 'animate-spin' : ''}`}>🤖</span>
+                                        <div>
+                                            <div className="text-sm font-bold text-gray-900">AI Auto-Detect</div>
+                                            <div className="text-[10px] text-gray-500">Auto Swing Detection (1m)</div>
+                                        </div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAutoScan}
+                                            onChange={(e) => setIsAutoScan(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* Pair Selector - EXISTING */}
                                 <div className="mb-4">
                                     <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select Pair</label>
                                     <select
@@ -180,7 +221,7 @@ export default function FibonacciKanjiPage() {
                                     </select>
                                 </div>
 
-                                {/* Inputs */}
+                                {/* Inputs - EXISTING */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
                                         <label className="block text-[10px] font-bold text-red-500 uppercase mb-1">Swing High</label>
@@ -211,7 +252,7 @@ export default function FibonacciKanjiPage() {
                                     Calculate Levels 🚀
                                 </button>
 
-                                {/* Results Table */}
+                                {/* Results Table - EXISTING */}
                                 {calculatedLevels.length > 0 ? (
                                     <div className="w-full">
                                         <table className="w-full text-xs">
