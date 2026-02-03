@@ -211,16 +211,31 @@ export default function FibonacciKanjiPage() {
                                 </div>
                             </div>
 
-                            {/* Chart Content */}
-                            <div className="flex-1 relative w-full h-full">
+                            {/* Chart Content - Now Price Ladder + Trade Wizard */}
+                            <div className="flex-1 relative w-full h-full overflow-y-auto p-6">
                                 {calculatedLevels.length > 0 ? (
-                                    <FibonacciChart
-                                        pair={selectedPair}
-                                        timeframe={timeframe}
-                                        calculatedLevels={calculatedLevels}
-                                    />
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Price Ladder */}
+                                        <div>
+                                            <PriceLadder
+                                                levels={calculatedLevels}
+                                                currentPrice={currentPrice}
+                                                trend={trend}
+                                            />
+                                        </div>
+
+                                        {/* Trade Wizard */}
+                                        <div className="sticky top-6">
+                                            <TradeWizard
+                                                levels={calculatedLevels}
+                                                currentPrice={currentPrice}
+                                                trend={trend}
+                                                onTrendChange={setTrend}
+                                            />
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-black">
+                                    <div className="w-full h-full flex items-center justify-center bg-black rounded-2xl">
                                         <div className="text-center">
                                             <div className="text-6xl mb-4">🧮</div>
                                             <p className="text-gray-400 text-sm mb-2">Calculate Fibonacci Levels</p>
