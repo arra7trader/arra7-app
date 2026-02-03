@@ -15,7 +15,7 @@ export interface SwingPoints {
  * @param lookback Number of candles to analyze for local highs/lows (default 50)
  */
 export function detectSwingPoints(candles: Candle[], lookback: number = 80): SwingPoints {
-    if (!candles || candles.length < 20) {
+    if (!candles || candles.length < 5) {
         return { high: 0, low: 0, trend: 'DOWN', confidence: 0 };
     }
 

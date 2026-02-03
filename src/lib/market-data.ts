@@ -44,7 +44,7 @@ export const FOREX_MINOR = {
 // COMMODITIES (Metals & Energy)
 // ===================
 export const COMMODITIES = {
-    'XAUUSD': { yahoo: 'GC=F', name: 'XAU/USD', description: 'Gold / US Dollar' },
+    'XAUUSD': { yahoo: 'XAUUSD=X', name: 'XAU/USD', description: 'Gold / US Dollar' },
     'XAGUSD': { yahoo: 'SI=F', name: 'XAG/USD', description: 'Silver / US Dollar' },
     'XPTUSD': { yahoo: 'PL=F', name: 'XPT/USD', description: 'Platinum / US Dollar' },
     'XPDUSD': { yahoo: 'PA=F', name: 'XPD/USD', description: 'Palladium / US Dollar' },
@@ -375,14 +375,14 @@ function generateDummyData(symbol: string, name: string): MarketData {
     const variance = basePrice * 0.002;
     const candles: Candle[] = [];
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 50; i++) {
         const open = basePrice + (Math.random() - 0.5) * variance;
         const close = open + (Math.random() - 0.5) * variance;
         const high = Math.max(open, close) + Math.random() * variance * 0.5;
         const low = Math.min(open, close) - Math.random() * variance * 0.5;
 
         candles.push({
-            time: new Date(Date.now() - (20 - i) * 3600000).toISOString(),
+            time: new Date(Date.now() - (50 - i) * 3600000).toISOString(),
             open,
             high,
             low,
