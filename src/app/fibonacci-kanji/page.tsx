@@ -220,7 +220,11 @@ export default function FibonacciKanjiPage() {
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
             <div className="container-fluid mx-auto px-4 max-w-[1900px]">
-                <PremiumGuard title={t('title')} description={t('desc')}>
+                <PremiumGuard
+                    title={t('title')}
+                    description={t('desc')}
+                    minTier="PRO"
+                >
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[85vh] min-h-[700px]">
 
                         {/* CHART AREA */}
