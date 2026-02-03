@@ -70,18 +70,39 @@ export default function FibonacciKanjiPage() {
             try {
                 const response = await fetch(`/api/market-data?pair=${selectedPair}&timeframe=${timeframe}`);
                 const data = await response.json();
-                if (data.status === 'success' && data.currentPrice) {
-                    setCurrentPrice(data.currentPrice);
+
+                // Try both 'currentPrice' and 'current_price' keys
+                const price = data.currentPrice || data.current_price;
+
+                if (data.status === 'success' && price) {
+                    setCurrentPrice(price);
+                } else {
+                    // Fallback: use midpoint of high/low if available
+                    if (highPrice && lowPrice) {
+                        const high = parseFloat(highPrice);
+                        const low = parseFloat(lowPrice);
+                        if (!isNaN(high) && !isNaN(low)) {
+                            setCurrentPrice((high + low) / 2);
+                        }
+                    }
                 }
             } catch (err) {
                 console.error('Failed to fetch current price:', err);
+                // Fallback: use midpoint of high/low if available
+                if (highPrice && lowPrice) {
+                    const high = parseFloat(highPrice);
+                    const low = parseFloat(lowPrice);
+                    if (!isNaN(high) && !isNaN(low)) {
+                        setCurrentPrice((high + low) / 2);
+                    }
+                }
             }
         };
 
         fetchCurrentPrice();
         const interval = setInterval(fetchCurrentPrice, 10000); // Update every 10s
         return () => clearInterval(interval);
-    }, [selectedPair, timeframe]);
+    }, [selectedPair, timeframe, highPrice, lowPrice]);
 
     // Handle Pair Change
     const handlePairChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
