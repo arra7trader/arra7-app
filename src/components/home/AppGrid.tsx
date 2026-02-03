@@ -60,10 +60,11 @@ export default function AppGrid() {
         },
         {
             id: 'kanji',
-            label: "Kanji Tuls",
+            label: "Fibonacci Kanji",
             icon: <CurrencyYenIcon className="w-8 h-8 text-red-600" />,
             href: '/fibonacci-kanji',
             color: 'bg-red-50 group-hover:bg-red-100',
+            isNew: true,
         },
         {
             id: 'journal',
@@ -101,7 +102,7 @@ export default function AppGrid() {
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300"
+                            className="flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 relative"
                         >
                             <div className={`w-16 h-16 rounded-2xl ${app.color} flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-all`}>
                                 {app.icon}
@@ -109,7 +110,11 @@ export default function AppGrid() {
                             <span className="text-sm font-semibold text-[var(--text-primary)] text-center line-clamp-1">
                                 {app.label}
                             </span>
-                            {/* Optional sublabel for hover info if needed */}
+                            {app.isNew && (
+                                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                                    NEW
+                                </span>
+                            )}
                         </motion.div>
                     </Link>
                 ))}

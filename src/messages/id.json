@@ -138,7 +138,7 @@
             }
         },
         "kanji": {
-            "title": "Kanji Tuls",
+            "title": "Fibonacci Kanji",
             "subtitle": "Fibonacci Kanji Interaktif",
             "desc": "Tentukan High dan Low untuk melihat geometri pasar tersembunyi.",
             "start": "Klik untuk Set Swing High (Start)",
@@ -275,7 +275,7 @@
         "highImpact": "Dampak Tinggi"
     },
     "kanji": {
-        "title": "Kanji Tuls",
+        "title": "Fibonacci Kanji",
         "subtitle": "Fibonacci Kanji Interaktif",
         "desc": "Gambar High dan Low untuk melihat geometri pasar tersembunyi.",
         "start": "1. Klik Swing High",
