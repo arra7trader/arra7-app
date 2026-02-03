@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface FibonacciChartProps {
     pair: string;
@@ -15,199 +15,179 @@ interface FibonacciChartProps {
     }>;
 }
 
+interface CandleData {
+    time: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+}
+
 export default function FibonacciChart({ pair, timeframe, calculatedLevels }: FibonacciChartProps) {
-    const chartContainerRef = useRef<HTMLDivElement>(null);
-    const chartRef = useRef<any>(null);
-    const candlestickSeriesRef = useRef<any>(null);
+    const [candles, setCandles] = useState<CandleData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [chartReady, setChartReady] = useState(false);
+    const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
 
-    // Initialize chart
+    // Fetch market data
     useEffect(() => {
-        if (!chartContainerRef.current) return;
-
-        let isMounted = true;
-
-        // Dynamic import of lightweight-charts to prevent SSR issues
-        import('lightweight-charts').then((LightweightCharts) => {
-            if (!isMounted || !chartContainerRef.current) return;
-
-            const { createChart, ColorType } = LightweightCharts;
-
-            // Create chart instance
-            const chart = createChart(chartContainerRef.current, {
-                width: chartContainerRef.current.clientWidth,
-                height: chartContainerRef.current.clientHeight,
-                layout: {
-                    background: { type: ColorType.Solid, color: '#000000' },
-                    textColor: '#d1d4dc',
-                },
-                grid: {
-                    vertLines: { color: '#2B2B43' },
-                    horzLines: { color: '#2B2B43' },
-                },
-                timeScale: {
-                    borderColor: '#2B2B43',
-                    timeVisible: true,
-                    secondsVisible: false,
-                },
-                rightPriceScale: {
-                    borderColor: '#2B2B43',
-                },
-            });
-
-            // Add candlestick series
-            const candlestickSeries = (chart as any).addCandlestickSeries({
-                upColor: '#26a69a',
-                downColor: '#ef5350',
-                borderVisible: false,
-                wickUpColor: '#26a69a',
-                wickDownColor: '#ef5350',
-            });
-
-            chartRef.current = chart;
-            candlestickSeriesRef.current = candlestickSeries;
-            setChartReady(true);
-
-            // Handle resize
-            const handleResize = () => {
-                if (chartContainerRef.current && chartRef.current) {
-                    chartRef.current.applyOptions({
-                        width: chartContainerRef.current.clientWidth,
-                        height: chartContainerRef.current.clientHeight,
-                    });
-                }
-            };
-
-            window.addEventListener('resize', handleResize);
-
-            // Cleanup
-            return () => {
-                window.removeEventListener('resize', handleResize);
-                if (chartRef.current) {
-                    chartRef.current.remove();
-                    chartRef.current = null;
-                }
-            };
-        }).catch((err) => {
-            console.error('Failed to load chart library:', err);
-            setError('Failed to initialize chart');
-        });
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    // Fetch and display market data
-    useEffect(() => {
-        const fetchMarketData = async () => {
-            if (!candlestickSeriesRef.current || !chartReady) return;
-
+        const fetchData = async () => {
             setIsLoading(true);
             setError(null);
 
             try {
-                const response = await fetch(`/api/kanji/detect?pair=${pair}&timeframe=${timeframe}`);
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch market data');
-                }
-
+                const response = await fetch(`/api/market-data?pair=${pair}&timeframe=${timeframe}`);
                 const data = await response.json();
 
-                if (data.status !== 'success' || !data.data) {
-                    throw new Error('Invalid data format');
-                }
+                if (data.status === 'success' && data.candles && data.candles.length > 0) {
+                    setCandles(data.candles);
 
-                // Get candles from the market-data endpoint
-                const marketDataResponse = await fetch(`/api/market-data?pair=${pair}&timeframe=${timeframe}`);
-                const marketData = await marketDataResponse.json();
-
-                if (marketData.candles && marketData.candles.length > 0) {
-                    const formattedCandles = marketData.candles.map((candle: any) => ({
-                        time: new Date(candle.time).getTime() / 1000, // Convert to seconds
-                        open: candle.open,
-                        high: candle.high,
-                        low: candle.low,
-                        close: candle.close,
-                    }));
-
-                    candlestickSeriesRef.current.setData(formattedCandles);
-
-                    // Auto-fit content
-                    if (chartRef.current) {
-                        chartRef.current.timeScale().fitContent();
-                    }
+                    // Calculate price range
+                    const prices = data.candles.flatMap((c: CandleData) => [c.high, c.low]);
+                    const min = Math.min(...prices);
+                    const max = Math.max(...prices);
+                    setPriceRange({ min, max });
+                } else {
+                    throw new Error('No candle data available');
                 }
 
                 setIsLoading(false);
             } catch (err) {
                 console.error('Chart data fetch error:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load chart data');
+                setError(err instanceof Error ? err.message : 'Failed to load data');
                 setIsLoading(false);
             }
         };
 
-        fetchMarketData();
-    }, [pair, timeframe, chartReady]);
+        fetchData();
+    }, [pair, timeframe]);
 
-    // Draw Fibonacci levels as horizontal price lines
-    useEffect(() => {
-        if (!candlestickSeriesRef.current || !chartRef.current || calculatedLevels.length === 0 || !chartReady) {
-            return;
-        }
+    // Convert price to Y position (percentage)
+    const priceToY = (price: number): number => {
+        if (priceRange.max === priceRange.min) return 50;
+        return ((priceRange.max - price) / (priceRange.max - priceRange.min)) * 100;
+    };
 
-        // Dynamic import for LineStyle to prevent SSR issues
-        import('lightweight-charts').then((LightweightCharts) => {
-            const { LineStyle } = LightweightCharts;
+    if (isLoading) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-black">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-3"></div>
+                    <p className="text-gray-300 text-sm">Loading chart...</p>
+                </div>
+            </div>
+        );
+    }
 
-            // Draw new price lines for each Fibonacci level
-            calculatedLevels.forEach((level) => {
-                if (!candlestickSeriesRef.current) return;
-
-                const price = parseFloat(level.price);
-                if (isNaN(price)) return;
-
-                try {
-                    candlestickSeriesRef.current.createPriceLine({
-                        price: price,
-                        color: level.color,
-                        lineWidth: (level.width || 1) as 1 | 2 | 3 | 4,
-                        lineStyle: level.style === 2 ? LineStyle.Dashed : LineStyle.Solid,
-                        axisLabelVisible: true,
-                        title: level.label,
-                    });
-                } catch (err) {
-                    console.error(`Failed to create price line for ${level.label}:`, err);
-                }
-            });
-        });
-
-    }, [calculatedLevels, chartReady]);
+    if (error) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-black">
+                <div className="text-center bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md">
+                    <p className="text-red-400 text-sm mb-2">⚠️ Chart Error</p>
+                    <p className="text-gray-300 text-xs">{error}</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
-            {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-10">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-3"></div>
-                        <p className="text-gray-300 text-sm">Loading chart data...</p>
-                    </div>
-                </div>
-            )}
+        <div className="relative w-full h-full bg-black overflow-hidden">
+            {/* Price Grid Background */}
+            <div className="absolute inset-0">
+                {[0, 20, 40, 60, 80, 100].map((y) => (
+                    <div
+                        key={y}
+                        className="absolute w-full border-t border-gray-800"
+                        style={{ top: `${y}%` }}
+                    />
+                ))}
+            </div>
 
-            {error && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-10">
-                    <div className="text-center bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md">
-                        <p className="text-red-400 text-sm mb-2">⚠️ Chart Error</p>
-                        <p className="text-gray-300 text-xs">{error}</p>
-                    </div>
-                </div>
-            )}
+            {/* Candlestick Chart */}
+            <div className="absolute inset-0 flex items-stretch px-4">
+                {candles.slice(-50).map((candle, idx) => {
+                    const isGreen = candle.close >= candle.open;
+                    const bodyTop = Math.min(candle.open, candle.close);
+                    const bodyBottom = Math.max(candle.open, candle.close);
+                    const bodyHeight = bodyBottom - bodyTop;
 
-            <div ref={chartContainerRef} className="w-full h-full" />
+                    return (
+                        <div
+                            key={idx}
+                            className="relative flex-1 flex flex-col items-center justify-center"
+                            style={{ minWidth: '2px', maxWidth: '20px' }}
+                        >
+                            {/* Wick (High-Low) */}
+                            <div
+                                className="absolute w-[2px] bg-gray-500"
+                                style={{
+                                    top: `${priceToY(candle.high)}%`,
+                                    height: `${priceToY(candle.low) - priceToY(candle.high)}%`,
+                                }}
+                            />
+                            {/* Body (Open-Close) */}
+                            <div
+                                className={`absolute ${isGreen ? 'bg-green-500' : 'bg-red-500'}`}
+                                style={{
+                                    top: `${priceToY(bodyTop)}%`,
+                                    height: `${Math.max(priceToY(bodyBottom) - priceToY(bodyTop), 0.5)}%`,
+                                    width: '80%',
+                                }}
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Fibonacci Levels */}
+            {calculatedLevels.map((level, idx) => {
+                const price = parseFloat(level.price);
+                if (isNaN(price) || price < priceRange.min || price > priceRange.max) return null;
+
+                const yPos = priceToY(price);
+                const isDashed = level.style === 2;
+
+                return (
+                    <div key={idx} className="absolute w-full" style={{ top: `${yPos}%` }}>
+                        {/* Line */}
+                        <div
+                            className="w-full"
+                            style={{
+                                height: `${level.width || 1}px`,
+                                backgroundColor: level.color,
+                                opacity: 0.8,
+                                borderTop: isDashed ? `${level.width || 1}px dashed ${level.color}` : 'none',
+                            }}
+                        />
+                        {/* Label */}
+                        <div
+                            className="absolute right-2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+                            style={{
+                                backgroundColor: level.color,
+                                color: '#000',
+                            }}
+                        >
+                            {level.label} ({level.price})
+                        </div>
+                    </div>
+                );
+            })}
+
+            {/* Price Scale (Right Axis) */}
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gray-900/50 border-l border-gray-800">
+                {[0, 25, 50, 75, 100].map((y) => {
+                    const price = priceRange.max - ((priceRange.max - priceRange.min) * y) / 100;
+                    return (
+                        <div
+                            key={y}
+                            className="absolute right-1 text-xs text-gray-400 -translate-y-1/2"
+                            style={{ top: `${y}%` }}
+                        >
+                            {price.toFixed(2)}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
