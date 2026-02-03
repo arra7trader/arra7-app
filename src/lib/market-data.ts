@@ -44,14 +44,14 @@ export const FOREX_MINOR = {
 // COMMODITIES (Metals & Energy)
 // ===================
 export const COMMODITIES = {
-    'XAUUSD': { yahoo: 'XAUUSD=X', name: 'XAU/USD', description: 'Gold / US Dollar' },
-    'XAGUSD': { yahoo: 'SI=F', name: 'XAG/USD', description: 'Silver / US Dollar' },
-    'XPTUSD': { yahoo: 'PL=F', name: 'XPT/USD', description: 'Platinum / US Dollar' },
-    'XPDUSD': { yahoo: 'PA=F', name: 'XPD/USD', description: 'Palladium / US Dollar' },
-    'XTIUSD': { yahoo: 'CL=F', name: 'WTI Oil', description: 'Crude Oil WTI' },
-    'XBRUSD': { yahoo: 'BZ=F', name: 'Brent Oil', description: 'Brent Crude Oil' },
-    'XNGUSD': { yahoo: 'NG=F', name: 'Natural Gas', description: 'Natural Gas' },
-    'XCUUSD': { yahoo: 'HG=F', name: 'Copper', description: 'Copper' },
+    'XAUUSD': { yahoo: 'GC=F', name: 'XAU/USD', description: 'Gold / US Dollar' },        // Gold Futures CMX
+    'XAGUSD': { yahoo: 'SI=F', name: 'XAG/USD', description: 'Silver / US Dollar' },      // Already correct
+    'XPTUSD': { yahoo: 'PL=F', name: 'XPT/USD', description: 'Platinum / US Dollar' },    // Already correct
+    'XPDUSD': { yahoo: 'PA=F', name: 'XPD/USD', description: 'Palladium / US Dollar' },   // Already correct
+    'XTIUSD': { yahoo: 'CL=F', name: 'WTI Oil', description: 'Crude Oil WTI' },          // Already correct
+    'XBRUSD': { yahoo: 'BZ=F', name: 'Brent Oil', description: 'Brent Crude Oil' },       // Already correct
+    'XNGUSD': { yahoo: 'NG=F', name: 'Natural Gas', description: 'Natural Gas' },         // Already correct
+    'XCUUSD': { yahoo: 'HG=F', name: 'Copper', description: 'Copper' },                   // Already correct
 } as const;
 
 // ===================
