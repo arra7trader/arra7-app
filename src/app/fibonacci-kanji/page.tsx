@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import TradingViewWidget from '@/components/TradingViewWidget';
+import FibonacciChart from '@/components/FibonacciChart';
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
@@ -35,7 +35,7 @@ export default function FibonacciKanjiPage() {
     const [lowPrice, setLowPrice] = useState<string>('');
     const [calculatedLevels, setCalculatedLevels] = useState<any[]>([]);
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
-    const [widgetSymbol, setWidgetSymbol] = useState('OANDA:XAUUSD');
+    const [timeframe, setTimeframe] = useState<'1h' | '4h' | '1d'>('1h'); // Added timeframe state
 
     // AI Scanner State
     const [isAutoScan, setIsAutoScan] = useState(false);
@@ -43,17 +43,7 @@ export default function FibonacciKanjiPage() {
 
     // Handle Pair Change
     const handlePairChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const pair = e.target.value;
-        setSelectedPair(pair);
-
-        // Map to TV Symbols
-        const symbolMap: any = {
-            'XAUUSD': 'OANDA:XAUUSD', 'XAGUSD': 'OANDA:XAGUSD',
-            'BTCUSD': 'BINANCE:BTCUSDT', 'ETHUSD': 'BINANCE:ETHUSDT',
-            'EURUSD': 'FX:EURUSD', 'GBPUSD': 'FX:GBPUSD', 'USDJPY': 'FX:USDJPY',
-            'US30': 'BLACKBULL:US30', 'US500': 'BLACKBULL:US500', 'USTEC': 'BLACKBULL:US100'
-        };
-        setWidgetSymbol(symbolMap[pair] || 'OANDA:XAUUSD');
+        setSelectedPair(e.target.value);
     };
 
     // --- CALCULATION LOGIC ---
@@ -176,19 +166,31 @@ export default function FibonacciKanjiPage() {
                             {/* Header */}
                             <div className="bg-gray-900 border-b border-gray-800 p-2 flex justify-between items-center px-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-blue-400 text-sm">📺</span>
-                                    <span className="text-white text-xs font-bold">TradingView Chart</span>
+                                    <span className="text-blue-400 text-sm">📊</span>
+                                    <span className="text-white text-xs font-bold">Fibonacci Levels Visualization</span>
                                 </div>
                                 <div className="text-gray-500 text-[10px] font-mono">
-                                    {selectedPair} • REAL-TIME FEED
+                                    {selectedPair} • {calculatedLevels.length > 0 ? `${calculatedLevels.length} LEVELS` : 'REAL-TIME FEED'}
                                 </div>
                             </div>
 
-                            {/* Chart Content - TradingView Only */}
+                            {/* Chart Content */}
                             <div className="flex-1 relative w-full h-full">
-                                <div className="w-full h-full">
-                                    <TradingViewWidget symbol={widgetSymbol} />
-                                </div>
+                                {calculatedLevels.length > 0 ? (
+                                    <FibonacciChart
+                                        pair={selectedPair}
+                                        timeframe={timeframe}
+                                        calculatedLevels={calculatedLevels}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-black">
+                                        <div className="text-center">
+                                            <div className="text-6xl mb-4">🧮</div>
+                                            <p className="text-gray-400 text-sm mb-2">Calculate Fibonacci Levels</p>
+                                            <p className="text-gray-600 text-xs">Enter High/Low prices or enable AI Auto-Detect</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
