@@ -43,16 +43,34 @@ export default function FibonacciKanjiPage() {
     const t = useTranslations('kanji');
 
     // State
-    const [trend, setTrend] = useState<'UP' | 'DOWN'>('DOWN'); // New Trend State
+    const [selectedPair, setSelectedPair] = useState<string>('XAUUSD');
+    const [timeframe, setTimeframe] = useState<'1h' | '4h' | '1d'>('1h');
+    const [trend, setTrend] = useState<'UP' | 'DOWN'>('UP');
     const [highPrice, setHighPrice] = useState<string>('');
     const [lowPrice, setLowPrice] = useState<string>('');
-    const [calculatedLevels, setCalculatedLevels] = useState<any[]>([]);
-    const [selectedPair, setSelectedPair] = useState('XAUUSD');
-    const [timeframe, setTimeframe] = useState<'1h' | '4h' | '1d'>('1h'); // Added timeframe state
-
-    // AI Scanner State
+    const [calculatedLevels, setCalculatedLevels] = useState<any[]>([]); // Assuming CalculatedLevel[] is meant to be any[] or a defined type
     const [isAutoScan, setIsAutoScan] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
+    const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+
+    // Fetch current price
+    useEffect(() => {
+        const fetchCurrentPrice = async () => {
+            try {
+                const response = await fetch(`/api/market-data?pair=${selectedPair}&timeframe=${timeframe}`);
+                const data = await response.json();
+                if (data.status === 'success' && data.currentPrice) {
+                    setCurrentPrice(data.currentPrice);
+                }
+            } catch (err) {
+                console.error('Failed to fetch current price:', err);
+            }
+        };
+
+        fetchCurrentPrice();
+        const interval = setInterval(fetchCurrentPrice, 10000); // Update every 10s
+        return () => clearInterval(interval);
+    }, [selectedPair, timeframe]);
 
     // Handle Pair Change
     const handlePairChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -394,6 +412,80 @@ export default function FibonacciKanjiPage() {
                                                 ))}
                                             </tbody>
                                         </table>
+
+                                        {/* Auto Trade Setup Generator */}
+                                        {calculatedLevels.length > 0 && currentPrice && (
+                                            <div className="mt-4 p-4 bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-xl">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="text-lg">🎯</span>
+                                                    <h3 className="text-sm font-bold text-indigo-900">Smart Trade Setup</h3>
+                                                </div>
+
+                                                {(() => {
+                                                    // Find Entry Zone (0.559)
+                                                    const entryZone = calculatedLevels.find(l => l.level === 0.559);
+                                                    // Find TP zones
+                                                    const tp1 = calculatedLevels.find(l => l.level === 1.618); // Golden Ratio
+                                                    const tp2 = calculatedLevels.find(l => l.level === 2.0); // Confluence
+                                                    const tp3 = calculatedLevels.find(l => l.level === 2.618); // Moon Target
+                                                    // Find SL zone (below entry)
+                                                    const slZone = calculatedLevels.find(l => l.level === 0.382);
+
+                                                    if (!entryZone || !tp1 || !slZone) return null;
+
+                                                    const entry = parseFloat(entryZone.price);
+                                                    const stopLoss = parseFloat(slZone.price);
+                                                    const takeProfit1 = parseFloat(tp1.price);
+                                                    const takeProfit2 = tp2 ? parseFloat(tp2.price) : null;
+
+                                                    const risk = Math.abs(entry - stopLoss);
+                                                    const reward = Math.abs(takeProfit1 - entry);
+                                                    const rr = reward / risk;
+
+                                                    return (
+                                                        <div className="space-y-2 text-xs">
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div className="bg-white p-2 rounded-lg">
+                                                                    <div className="text-[9px] text-gray-500 font-bold mb-1">ENTRY</div>
+                                                                    <div className="font-mono font-bold text-indigo-700">{entry.toFixed(2)}</div>
+                                                                    <div className="text-[8px] text-gray-400">{entryZone.label}</div>
+                                                                </div>
+                                                                <div className="bg-white p-2 rounded-lg">
+                                                                    <div className="text-[9px] text-gray-500 font-bold mb-1">STOP LOSS</div>
+                                                                    <div className="font-mono font-bold text-red-600">{stopLoss.toFixed(2)}</div>
+                                                                    <div className="text-[8px] text-gray-400">-{risk.toFixed(2)} pips</div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-white p-2 rounded-lg">
+                                                                <div className="text-[9px] text-gray-500 font-bold mb-1">TAKE PROFIT LEVELS</div>
+                                                                <div className="space-y-1">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className="text-[9px] text-gray-600">TP1 (Golden):</span>
+                                                                        <span className="font-mono font-bold text-green-600">{takeProfit1.toFixed(2)}</span>
+                                                                    </div>
+                                                                    {takeProfit2 && (
+                                                                        <div className="flex justify-between items-center">
+                                                                            <span className="text-[9px] text-gray-600">TP2 (Conf):</span>
+                                                                            <span className="font-mono font-bold text-green-600">{takeProfit2.toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className={`p-2 rounded-lg ${rr >= 2 ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300'}`}>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-[9px] font-bold text-gray-700">Risk/Reward:</span>
+                                                                    <span className={`font-bold ${rr >= 2 ? 'text-green-700' : 'text-yellow-700'}`}>
+                                                                        1:{rr.toFixed(2)} {rr >= 2 ? '✅' : '⚠️'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        )}
 
                                         {/* Quick Actions */}
                                         <div className="flex gap-2 mt-4">
