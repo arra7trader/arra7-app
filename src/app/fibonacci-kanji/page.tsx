@@ -637,6 +637,257 @@ export default function FibonacciKanjiPage() {
                         </motion.div>
 
                     </div>
+
+                    {/* TUTORIAL & GLOSSARY SECTION */}
+                    <div className="mt-8 max-w-7xl mx-auto space-y-6">
+                        {/* HOW TO USE TUTORIAL */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-8 border border-blue-200 dark:border-blue-800"
+                        >
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center">
+                                    <span className="text-2xl">📚</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cara Menggunakan</h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Panduan lengkap Fibonacci Kanji</p>
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Step 1 */}
+                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Pilih Asset Pair</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Pilih instrumen yang ingin dianalisa dari dropdown menu (Gold, Forex, Crypto, dll)</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Step 2 */}
+                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Tentukan Trend</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Pilih Bullish (📈) jika trend naik, atau Bearish (📉) jika trend turun</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Step 3 */}
+                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Input High & Low</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Masukkan harga Swing High dan Swing Low secara manual, atau aktifkan AI Auto-Detect</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Step 4 */}
+                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Lihat Level & Trade</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Gunakan level yang dihitung untuk planning entry, stop loss, dan take profit Anda</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Pro Tips */}
+                            <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <span className="text-xl">💡</span>
+                                    <div>
+                                        <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-1">Pro Tips</h4>
+                                        <ul className="text-sm text-amber-800 dark:text-amber-400 space-y-1">
+                                            <li>• Gunakan timeframe lebih tinggi (4H, Daily) untuk swing point yang lebih akurat</li>
+                                            <li>• Konfirmasi dengan price action sebelum entry di zone yang diberikan</li>
+                                            <li>• Selalu perhatikan Risk/Reward Ratio minimal 1:2</li>
+                                            <li>• AI Auto-Detect bekerja optimal di kondisi trending market</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* TERMINOLOGY GLOSSARY */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-200 dark:border-gray-800 shadow-lg"
+                        >
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center">
+                                    <span className="text-2xl">📖</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Glossary Istilah</h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Penjelasan lengkap setiap zone & istilah</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Entry Zones */}
+                                <div className="p-5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 rounded-xl border border-teal-200 dark:border-teal-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-teal-500 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-teal-900 dark:text-teal-300 text-lg mb-2">Entry Zone 1 & 2</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                Zone optimal untuk melakukan entry position. Entry Zone 1 adalah zona entry pertama, sementara Entry Zone 2 adalah zona entry alternatif jika price melewati zone pertama.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Strategi:</strong> Wait for price action confirmation (candlestick pattern, support/resistance test) sebelum entry di zone ini.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Scalping Zones */}
+                                <div className="p-5 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-yellow-500 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-yellow-900 dark:text-yellow-300 text-lg mb-2">Scalping Zone A & B</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                Zone reversal yang kuat, sering digunakan untuk scalping atau swing trading. Zone ini menandakan area di mana price kemungkinan besar akan mengalami reversal atau pullback signifikan.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Strategi:</strong> Ideal untuk counter-trend entry atau taking profit jika sudah dalam posisi. Watch for rejection candlestick patterns.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Breakout Zones */}
+                                <div className="p-5 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl border border-orange-200 dark:border-orange-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-orange-500 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-orange-900 dark:text-orange-300 text-lg mb-2">Breakout Zone 1 & 2</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                Zone di mana price kemungkinan melakukan breakout atau pullback setelah melewati swing point. Zone ini penting untuk monitoring continuation atau reversal pattern.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Strategi:</strong> Watch for volume confirmation saat breakout. Jika breakout gagal (false breakout), ini bisa menjadi signal reversal yang kuat.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Take Profit Levels */}
+                                <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-blue-600 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-blue-900 dark:text-blue-300 text-lg mb-2">Golden Ratio, Confluence & Moon Target</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                Tiga level Take Profit utama. <strong>Golden Ratio (TP1)</strong> adalah target pertama dengan probabilitas tertinggi, <strong>Confluence (TP2)</strong> adalah target kedua untuk extension move, dan <strong>Moon Target (TP3)</strong> adalah target maksimal untuk momentum ekstrim.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Strategi:</strong> Close sebagian position di TP1 (50%), sebagian di TP2 (30%), dan sisanya target TP3. Move stop loss ke breakeven setelah TP1 tercapai.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Trend Direction */}
+                                <div className="p-5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-green-600 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-green-900 dark:text-green-300 text-lg mb-2">Bullish vs Bearish Trend</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                <strong>Bullish (📈):</strong> Trend naik, level dihitung dari Low ke High, mencari buy opportunity.<br />
+                                                <strong>Bearish (📉):</strong> Trend turun, level dihitung dari High ke Low, mencari sell opportunity.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Tip:</strong> Identifikasi trend dengan higher highs & higher lows (bullish) atau lower highs & lower lows (bearish). Gunakan timeframe lebih tinggi untuk trend confirmation.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Risk Reward Ratio */}
+                                <div className="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-purple-600 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-purple-900 dark:text-purple-300 text-lg mb-2">Risk/Reward Ratio</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                Perbandingan antara potential profit (reward) dengan potential loss (risk). Ratio 1:2 berarti jika risk Anda 100 pips, target profit minimal 200 pips.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Rule:</strong> Minimum R:R adalah 1:2. Dengan R:R 1:2 dan win rate 40%, Anda masih profitable. R:R 1:3 atau lebih tinggi adalah excellent.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* AI Auto-Detect */}
+                                <div className="p-5 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-3 h-3 bg-indigo-600 rounded-full mt-1"></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-indigo-900 dark:text-indigo-300 text-lg mb-2">🤖 AI Auto-Detect</h3>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                                Fitur AI yang secara otomatis mendeteksi Swing High dan Swing Low terbaru dari chart, serta menentukan trend direction. AI melakukan scan setiap 60 detik untuk update level secara real-time.
+                                            </p>
+                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                    <strong>Best Use:</strong> Ideal untuk trending market. Di ranging market, manual input mungkin lebih akurat. Toggle ON untuk monitoring real-time, OFF untuk analisa manual.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* DISCLAIMER */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                        >
+                            <div className="flex items-start gap-3">
+                                <span className="text-2xl">⚠️</span>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">Disclaimer</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Fibonacci Kanji adalah tools analisa teknikal. Hasil analisa bukan merupakan rekomendasi trading atau jaminan profit.
+                                        Selalu lakukan analisa fundamental, gunakan proper risk management, dan trading sesuai dengan risk tolerance Anda.
+                                        Past performance tidak menjamin future results.
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
                 </PremiumGuard>
             </div>
         </div>
