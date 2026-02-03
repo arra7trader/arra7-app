@@ -324,23 +324,63 @@ export default function FibonacciKanjiPage() {
                                         onChange={handlePairChange}
                                         className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer hover:bg-gray-100 transition"
                                     >
-                                        <optgroup label="Commodities">
+                                        <optgroup label="🥇 Commodities">
                                             <option value="XAUUSD">Gold (XAUUSD)</option>
                                             <option value="XAGUSD">Silver (XAGUSD)</option>
+                                            <option value="XTIUSD">Crude Oil (WTI)</option>
+                                            <option value="XBRUSD">Brent Oil</option>
+                                            <option value="XNGUSD">Natural Gas</option>
                                         </optgroup>
-                                        <optgroup label="Indices">
+                                        <optgroup label="📈 US Indices">
                                             <option value="US30">US30 (Dow Jones)</option>
                                             <option value="US500">US500 (S&P 500)</option>
-                                            <option value="USTEC">Nasdaq (USTEC)</option>
+                                            <option value="USTEC">Nasdaq 100 (USTEC)</option>
                                         </optgroup>
-                                        <optgroup label="Forex">
-                                            <option value="EURUSD">EURUSD</option>
-                                            <option value="GBPUSD">GBPUSD</option>
-                                            <option value="USDJPY">USDJPY</option>
+                                        <optgroup label="🌍 Global Indices">
+                                            <option value="GER40">DAX 40 (Germany)</option>
+                                            <option value="UK100">FTSE 100 (UK)</option>
+                                            <option value="FRA40">CAC 40 (France)</option>
+                                            <option value="JPN225">Nikkei 225 (Japan)</option>
+                                            <option value="AUS200">ASX 200 (Australia)</option>
                                         </optgroup>
-                                        <optgroup label="Crypto">
-                                            <option value="BTCUSD">Bitcoin</option>
-                                            <option value="ETHUSD">Ethereum</option>
+                                        <optgroup label="💱 Forex - Major Pairs">
+                                            <option value="EURUSD">EUR/USD (Euro Dollar)</option>
+                                            <option value="GBPUSD">GBP/USD (Cable)</option>
+                                            <option value="USDJPY">USD/JPY (Gopher)</option>
+                                            <option value="USDCHF">USD/CHF (Swissy)</option>
+                                            <option value="AUDUSD">AUD/USD (Aussie)</option>
+                                            <option value="USDCAD">USD/CAD (Loonie)</option>
+                                            <option value="NZDUSD">NZD/USD (Kiwi)</option>
+                                        </optgroup>
+                                        <optgroup label="💱 Forex - Minor Pairs">
+                                            <option value="EURGBP">EUR/GBP</option>
+                                            <option value="EURJPY">EUR/JPY</option>
+                                            <option value="GBPJPY">GBP/JPY</option>
+                                            <option value="EURCHF">EUR/CHF</option>
+                                            <option value="EURAUD">EUR/AUD</option>
+                                            <option value="GBPAUD">GBP/AUD</option>
+                                            <option value="AUDJPY">AUD/JPY</option>
+                                            <option value="NZDJPY">NZD/JPY</option>
+                                        </optgroup>
+                                        <optgroup label="💱 Forex - Exotic Pairs">
+                                            <option value="USDIDR">USD/IDR (Rupiah)</option>
+                                            <option value="USDSGD">USD/SGD</option>
+                                            <option value="USDTHB">USD/THB</option>
+                                            <option value="USDMXN">USD/MXN</option>
+                                            <option value="USDZAR">USD/ZAR</option>
+                                            <option value="USDTRY">USD/TRY</option>
+                                        </optgroup>
+                                        <optgroup label="₿ Crypto - Top Coins">
+                                            <option value="BTCUSD">Bitcoin (BTC)</option>
+                                            <option value="ETHUSD">Ethereum (ETH)</option>
+                                            <option value="BNBUSD">Binance Coin (BNB)</option>
+                                            <option value="XRPUSD">Ripple (XRP)</option>
+                                            <option value="SOLUSD">Solana (SOL)</option>
+                                            <option value="ADAUSD">Cardano (ADA)</option>
+                                            <option value="DOGEUSD">Dogecoin (DOGE)</option>
+                                            <option value="MATICUSD">Polygon (MATIC)</option>
+                                            <option value="LINKUSD">Chainlink (LINK)</option>
+                                            <option value="AVAXUSD">Avalanche (AVAX)</option>
                                         </optgroup>
                                     </select>
                                 </div>
