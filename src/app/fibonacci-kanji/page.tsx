@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import KanjiAnalysisChart from '@/components/kanji/KanjiAnalysisChart';
+import ZoneVisualChart from '@/components/kanji/ZoneVisualChart';
 import TradingViewWidget from '@/components/TradingViewWidget';
 
 // KANJI LEVELS CONFIGURATION
@@ -198,7 +198,7 @@ export default function FibonacciKanjiPage() {
                                     </button>
                                 </div>
                                 <div className="text-gray-500 text-[10px] font-mono">
-                                    {selectedPair} • {viewMode === 'analysis' ? 'KANJI DATA FEED' : 'TRADINGVIEW FEED'}
+                                    {selectedPair} • {viewMode === 'analysis' ? 'ZONE VISUAL' : 'TRADINGVIEW FEED'}
                                 </div>
                             </div>
 
@@ -213,10 +213,9 @@ export default function FibonacciKanjiPage() {
                                 {/* Using hidden class instead of unmount to preserve state/load? No, remounting ensures correct sizing. */}
                                 {viewMode === 'analysis' && (
                                     <div className="w-full h-full">
-                                        <KanjiAnalysisChart
-                                            pair={selectedPair}
+                                        <ZoneVisualChart
                                             levels={calculatedLevels}
-                                            onPriceClick={handleChartClick}
+                                            trend={trend}
                                         />
                                     </div>
                                 )}
