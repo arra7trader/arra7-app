@@ -142,7 +142,7 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
             {/* Fibonacci Levels */}
             {calculatedLevels.map((level, idx) => {
                 const price = parseFloat(level.price);
-                if (isNaN(price) || price < priceRange.min || price > priceRange.max) return null;
+                if (isNaN(price)) return null;
 
                 const yPos = priceToY(price);
                 const isDashed = level.style === 2;
