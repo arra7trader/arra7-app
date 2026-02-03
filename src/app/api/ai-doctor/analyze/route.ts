@@ -36,10 +36,22 @@ interface Trade {
     size: number;
 }
 
+interface Diagnosis {
+    type: string;
+    title: string;
+    severity?: 'low' | 'medium' | 'high';
+    description: string;
+    prescription: string;
+    count?: number;
+    winRate?: number;
+    avgTradesPerDay?: number;
+    avgRR?: number;
+}
+
 async function analyzeTrades(trades: Trade[]) {
-    const criticalFlaws = [];
-    const strengths = [];
-    const recommendations = [];
+    const criticalFlaws: Diagnosis[] = [];
+    const strengths: Diagnosis[] = [];
+    const recommendations: any[] = [];
 
     // 1. Revenge Trading Detection
     const revengeAnalysis = detectRevengeTrading(trades);
