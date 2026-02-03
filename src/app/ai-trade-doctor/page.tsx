@@ -153,12 +153,116 @@ export default function AITradeDoctorPage() {
                             />
                         </div>
 
+                        {/* Tutorial Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-3xl p-8 mb-8 border border-indigo-200 dark:border-indigo-800"
+                        >
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center">
+                                    <span className="text-2xl">📖</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cara Export Trading Statement</h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Panduan lengkap untuk MT4 & MT5</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* MT4 Tutorial */}
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className="text-2xl">📊</span>
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">MetaTrader 4</h3>
+                                    </div>
+                                    <ol className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+                                            <span>Buka <strong>MetaTrader 4</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+                                            <span>Buka tab <strong>"Account History"</strong> di bagian bawah</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+                                            <span>Klik kanan di area history → pilih <strong>"Save as Report"</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+                                            <span>Pilih format <strong>"Open HTML"</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">5</span>
+                                            <span>Save file (akan otomatis terbuka di browser)</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">6</span>
+                                            <span>Upload file <strong>.html</strong> tersebut di sini</span>
+                                        </li>
+                                    </ol>
+                                </div>
+
+                                {/* MT5 Tutorial */}
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className="text-2xl">📈</span>
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">MetaTrader 5</h3>
+                                    </div>
+                                    <ol className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+                                            <span>Buka <strong>MetaTrader 5</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+                                            <span>Buka tab <strong>"History"</strong> atau tekan <strong>Ctrl+T</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+                                            <span>Klik kanan di area trades → pilih <strong>"Report"</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+                                            <span>Pilih template <strong>"Standard"</strong> atau <strong>"Detailed"</strong></span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">5</span>
+                                            <span>Klik <strong>"Open in browser"</strong> atau save as HTML</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">6</span>
+                                            <span>Upload file <strong>.html</strong> tersebut di sini</span>
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            {/* Important Notes */}
+                            <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                                <div className="flex gap-2 items-start">
+                                    <span className="text-xl">⚠️</span>
+                                    <div className="flex-1">
+                                        <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-1">Penting:</h4>
+                                        <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+                                            <li>✅ Format yang diterima: <strong>.html</strong> atau <strong>.htm</strong></li>
+                                            <li>❌ Format yang TIDAK diterima: .pdf, .xlsx, .csv, .txt</li>
+                                            <li>💡 Pastikan file berisi minimal <strong>10 trades</strong> untuk analisis yang akurat</li>
+                                            <li>🔒 Data Anda <strong>tidak disimpan</strong> - hanya diproses sementara untuk analisis</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
                         {/* Upload Area */}
                         <div
                             {...getRootProps()}
                             className={`bg-white dark:bg-gray-800 rounded-3xl border-dashed border-2 p-12 text-center mb-12 transition-all cursor-pointer ${isDragActive
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                    : 'border-[var(--border-light)] hover:border-blue-400'
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                : 'border-[var(--border-light)] hover:border-blue-400'
                                 }`}
                         >
                             <input {...getInputProps()} />
@@ -291,8 +395,8 @@ export default function AITradeDoctorPage() {
                                                             <h3 className="font-bold text-red-700 dark:text-red-400">{flaw.title}</h3>
                                                             {flaw.severity && (
                                                                 <span className={`text-xs font-bold px-2 py-1 rounded ${flaw.severity === 'high'
-                                                                        ? 'bg-red-200 text-red-800'
-                                                                        : 'bg-orange-200 text-orange-800'
+                                                                    ? 'bg-red-200 text-red-800'
+                                                                    : 'bg-orange-200 text-orange-800'
                                                                     }`}>
                                                                     {flaw.severity.toUpperCase()}
                                                                 </span>
