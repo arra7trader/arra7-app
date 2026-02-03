@@ -367,6 +367,14 @@ export default function FibonacciKanjiPage() {
                                             </div>
                                         </div>
 
+                                        {/* Current Price Badge */}
+                                        {currentPrice && (
+                                            <div className="mb-3 p-3 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl text-white shadow-lg">
+                                                <div className="text-[10px] font-bold opacity-80 mb-1">💰 CURRENT PRICE</div>
+                                                <div className="text-2xl font-mono font-bold">{currentPrice.toFixed(2)}</div>
+                                            </div>
+                                        )}
+
                                         {/* Table Header */}
                                         <div className="flex items-center justify-between mb-2">
                                             <h3 className="text-xs font-bold text-gray-400 uppercase">Kanji Levels</h3>
@@ -375,41 +383,73 @@ export default function FibonacciKanjiPage() {
                                         {/* Interactive Table */}
                                         <table className="w-full text-xs">
                                             <tbody className="divide-y divide-gray-50 border-t border-gray-100">
-                                                {calculatedLevels.map((lvl) => (
-                                                    <tr
-                                                        key={lvl.level}
-                                                        className="group hover:bg-blue-50 transition cursor-pointer"
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(lvl.price);
-                                                            // Visual feedback
-                                                            const el = document.getElementById(`price-${lvl.level}`);
-                                                            if (el) {
-                                                                el.classList.add('text-green-600', 'scale-110');
-                                                                setTimeout(() => el.classList.remove('text-green-600', 'scale-110'), 300);
-                                                            }
-                                                        }}
-                                                        title="Click to copy price"
-                                                    >
-                                                        <td className="py-2.5 pl-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: lvl.color }}></div>
-                                                                <div>
-                                                                    <div className="font-bold text-gray-700 group-hover:text-blue-700">{lvl.label}</div>
-                                                                    <div className="text-[9px] text-gray-400">{lvl.desc}</div>
+                                                {calculatedLevels.map((lvl) => {
+                                                    const levelPrice = parseFloat(lvl.price);
+                                                    const distance = currentPrice ? Math.abs(currentPrice - levelPrice) : null;
+                                                    const isAbove = currentPrice ? currentPrice > levelPrice : false;
+                                                    const isNear = distance && currentPrice ? (distance / currentPrice) < 0.002 : false;
+
+                                                    let status = '⚪ PENDING';
+                                                    let statusColor = 'text-gray-400';
+                                                    if (currentPrice) {
+                                                        const percentDiff = Math.abs(currentPrice - levelPrice) / currentPrice;
+                                                        if (percentDiff < 0.001) {
+                                                            status = '🟢 ACTIVE';
+                                                            statusColor = 'text-green-600';
+                                                        } else if (
+                                                            (trend === 'UP' && currentPrice > levelPrice) ||
+                                                            (trend === 'DOWN' && currentPrice < levelPrice)
+                                                        ) {
+                                                            status = '🔴 BREACHED';
+                                                            statusColor = 'text-red-600';
+                                                        }
+                                                    }
+
+                                                    return (
+                                                        <tr
+                                                            key={lvl.level}
+                                                            className={`group hover:bg-blue-50 transition cursor-pointer ${isNear ? 'bg-yellow-50' : ''}`}
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(lvl.price);
+                                                                const el = document.getElementById(`price-${lvl.level}`);
+                                                                if (el) {
+                                                                    el.classList.add('text-green-600', 'scale-110');
+                                                                    setTimeout(() => el.classList.remove('text-green-600', 'scale-110'), 300);
+                                                                }
+                                                            }}
+                                                            title="Click to copy price"
+                                                        >
+                                                            <td className="py-2.5 pl-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: lvl.color }}></div>
+                                                                    <div className="flex-1">
+                                                                        <div className="font-bold text-gray-700 group-hover:text-blue-700">{lvl.label}</div>
+                                                                        <div className="text-[9px] text-gray-400">{lvl.desc}</div>
+                                                                        <div className={`text-[8px] font-bold ${statusColor} mt-0.5`}>
+                                                                            {status}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-2.5 text-right pr-1">
-                                                            <span
-                                                                id={`price-${lvl.level}`}
-                                                                className="font-mono font-medium text-gray-900 group-hover:text-blue-600 transition-all duration-150"
-                                                            >
-                                                                {lvl.price}
-                                                            </span>
-                                                            <span className="text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition text-[10px]">📋</span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                            </td>
+                                                            <td className="py-2.5 text-right pr-1">
+                                                                <div className="flex flex-col items-end gap-1">
+                                                                    <span
+                                                                        id={`price-${lvl.level}`}
+                                                                        className="font-mono font-medium text-gray-900 group-hover:text-blue-600 transition-all duration-150"
+                                                                    >
+                                                                        {lvl.price}
+                                                                    </span>
+                                                                    {distance !== null && (
+                                                                        <span className={`text-[8px] font-bold ${isNear ? 'text-orange-600' : 'text-gray-400'}`}>
+                                                                            {isAbove ? '↑' : '↓'} {distance.toFixed(2)} pips
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition text-[10px]">📋</span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
 
