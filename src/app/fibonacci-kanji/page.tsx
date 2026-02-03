@@ -19,6 +19,10 @@ const FibonacciChart = dynamic(() => import('@/components/FibonacciChart'), {
     ),
 });
 
+// Dynamic imports for PriceLadder and TradeWizard
+const PriceLadder = dynamic(() => import('@/components/PriceLadder'), { ssr: false });
+const TradeWizard = dynamic(() => import('@/components/TradeWizard'), { ssr: false });
+
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
     { level: 0, label: 'Swing High (Stop Loss)', color: '#ef5350', desc: 'Starting Point', width: 2 },
