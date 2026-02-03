@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
 import KanjiAnalysisChart from '@/components/kanji/KanjiAnalysisChart';
+import TradingViewWidget from '@/components/TradingViewWidget';
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
@@ -64,7 +65,10 @@ export default function FibonacciKanjiPage() {
         const cleanL = lStr.replace(/,/g, '.');
         const h = parseFloat(cleanH);
         const l = parseFloat(cleanL);
-        if (isNaN(h) || isNaN(l)) return;
+        if (isNaN(h) || isNaN(l)) {
+            setCalculatedLevels([]);
+            return;
+        }
 
         const range = Math.abs(h - l);
 
@@ -112,6 +116,15 @@ export default function FibonacciKanjiPage() {
         }
     };
 
+    // --- AUTO CALCULATION ON INPUT CHANGE ---
+    useEffect(() => {
+        if (highPrice && lowPrice) {
+            calculateKanjiInternal(highPrice, lowPrice, trend);
+        } else {
+            setCalculatedLevels([]);
+        }
+    }, [highPrice, lowPrice, trend, calculateKanjiInternal]);
+
     // --- AI AUTO SCAN ---
     useEffect(() => {
         const scan = async () => {
@@ -130,9 +143,10 @@ export default function FibonacciKanjiPage() {
                         const newTrend = detectedTrend === 'UP' ? 'UP' : 'DOWN';
                         setTrend(newTrend);
 
-                        calculateKanjiInternal(high.toString(), low.toString(), newTrend);
-                        // Optional: Auto switch to analysis? Maybe too intrusive.
-                        // setViewMode('analysis'); 
+                        // Triggering setHigh/setLow will trigger the Auto Calculation useEffect above
+                        // But we might want to ensure we call it explicitly just in case of race condition or just rely on useEffect
+                        // Actually relying on useEffect is safer. But let's keep the explicit call in scan() if needed?
+                        // No, if we set state, useEffect will fire.
                     }
                 }
             } catch (e) { console.error(e) }
@@ -145,7 +159,7 @@ export default function FibonacciKanjiPage() {
             interval = setInterval(scan, 60000);
         }
         return () => clearInterval(interval);
-    }, [isAutoScan, selectedPair, calculateKanjiInternal]);
+    }, [isAutoScan, selectedPair]);
 
     // Handle Click on Analysis Chart
     const handleChartClick = (price: number) => {
@@ -191,12 +205,8 @@ export default function FibonacciKanjiPage() {
                             {/* Chart Content */}
                             <div className="flex-1 relative w-full h-full">
                                 {viewMode === 'tradingview' && (
-                                    <div className="tradingview-widget-container w-full h-full">
-                                        <iframe
-                                            className="w-full h-full"
-                                            src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${widgetSymbol}&interval=60&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=dark&style=1&timezone=Asia%2FJakarta&withdateranges=1&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${widgetSymbol}`}
-                                            allowFullScreen
-                                        ></iframe>
+                                    <div className="w-full h-full">
+                                        <TradingViewWidget symbol={widgetSymbol} />
                                     </div>
                                 )}
 
