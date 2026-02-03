@@ -79,7 +79,7 @@ function parseMT4HTML(html: string): { trades: Trade[], summary: Summary } {
 
     // Simple regex-based parsing for MT4 HTML tables
     // Match table rows with trade data
-    const tableRowRegex = /<tr[^>]*>(.*?)<\/tr>/gis;
+    const tableRowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
     const cellRegex = /<td[^>]*>(.*?)<\/td>/gi;
 
     const rows = html.match(tableRowRegex) || [];
