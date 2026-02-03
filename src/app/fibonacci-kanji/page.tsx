@@ -41,7 +41,7 @@ export default function FibonacciKanjiPage() {
     const [widgetSymbol, setWidgetSymbol] = useState('OANDA:XAUUSD');
 
     // AI Scanner State
-    const [isAutoScan, setIsAutoScan] = useState(false);
+    const [isAutoScan, setIsAutoScan] = useState(true);
     const [isScanning, setIsScanning] = useState(false);
 
     // Handle Pair Change
@@ -341,33 +341,92 @@ export default function FibonacciKanjiPage() {
                                     <span>🚀</span>
                                 </button>
 
-                                {/* Results Table */}
+                                {/* Results Section */}
                                 {calculatedLevels.length > 0 && (
                                     <div className="w-full pb-4">
+                                        {/* Trend Badge */}
+                                        <div className={`mb-3 p-3 rounded-xl flex items-center gap-3 ${trend === 'UP' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                            <div className={`text-2xl ${trend === 'UP' ? 'animate-bounce' : ''}`}>
+                                                {trend === 'UP' ? '📈' : '📉'}
+                                            </div>
+                                            <div>
+                                                <div className={`font-bold text-sm ${trend === 'UP' ? 'text-green-700' : 'text-red-700'}`}>
+                                                    {trend === 'UP' ? 'BULLISH TREND' : 'BEARISH TREND'}
+                                                </div>
+                                                <div className="text-[10px] text-gray-500">
+                                                    {trend === 'UP' ? 'Low → High Projection' : 'High → Low Projection'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Table Header with Toggle */}
                                         <div className="flex items-center justify-between mb-2">
                                             <h3 className="text-xs font-bold text-gray-400 uppercase">Kanji Levels</h3>
-                                            {viewMode === 'analysis' && <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Lines Active</span>}
+                                            <div className="flex items-center gap-2">
+                                                {viewMode === 'analysis' && <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Zones Active</span>}
+                                            </div>
                                         </div>
+
+                                        {/* Interactive Table */}
                                         <table className="w-full text-xs">
                                             <tbody className="divide-y divide-gray-50 border-t border-gray-100">
                                                 {calculatedLevels.map((lvl) => (
-                                                    <tr key={lvl.level} className="group hover:bg-gray-50 transition cursor-default">
+                                                    <tr
+                                                        key={lvl.level}
+                                                        className="group hover:bg-blue-50 transition cursor-pointer"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(lvl.price);
+                                                            // Visual feedback
+                                                            const el = document.getElementById(`price-${lvl.level}`);
+                                                            if (el) {
+                                                                el.classList.add('text-green-600', 'scale-110');
+                                                                setTimeout(() => el.classList.remove('text-green-600', 'scale-110'), 300);
+                                                            }
+                                                        }}
+                                                        title="Click to copy price"
+                                                    >
                                                         <td className="py-2.5 pl-1">
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: lvl.color }}></div>
+                                                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: lvl.color }}></div>
                                                                 <div>
-                                                                    <div className="font-bold text-gray-700">{lvl.label}</div>
+                                                                    <div className="font-bold text-gray-700 group-hover:text-blue-700">{lvl.label}</div>
                                                                     <div className="text-[9px] text-gray-400">{lvl.desc}</div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="py-2.5 text-right font-mono font-medium text-gray-900 group-hover:text-blue-600 pr-1">
-                                                            {lvl.price}
+                                                        <td className="py-2.5 text-right pr-1">
+                                                            <span
+                                                                id={`price-${lvl.level}`}
+                                                                className="font-mono font-medium text-gray-900 group-hover:text-blue-600 transition-all duration-150"
+                                                            >
+                                                                {lvl.price}
+                                                            </span>
+                                                            <span className="text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition text-[10px]">📋</span>
                                                         </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
+
+                                        {/* Quick Actions */}
+                                        <div className="flex gap-2 mt-4">
+                                            <button
+                                                onClick={() => {
+                                                    const text = calculatedLevels.map(l => `${l.label}: ${l.price}`).join('\n');
+                                                    navigator.clipboard.writeText(text);
+                                                    alert('All levels copied to clipboard!');
+                                                }}
+                                                className="flex-1 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition"
+                                            >
+                                                <span>📋</span> Copy All
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('analysis')}
+                                                className="flex-1 py-2 px-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition"
+                                            >
+                                                <span>🎯</span> View Zones
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
