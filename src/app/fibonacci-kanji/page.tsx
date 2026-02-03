@@ -41,7 +41,7 @@ export default function FibonacciKanjiPage() {
     const [widgetSymbol, setWidgetSymbol] = useState('OANDA:XAUUSD');
 
     // AI Scanner State
-    const [isAutoScan, setIsAutoScan] = useState(true);
+    const [isAutoScan, setIsAutoScan] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
 
     // Handle Pair Change

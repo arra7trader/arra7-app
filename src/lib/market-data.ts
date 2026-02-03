@@ -362,7 +362,7 @@ async function fetchBinancePrice(symbol: string, interval: string): Promise<Part
 }
 
 function generateDummyData(symbol: string, name: string): MarketData {
-    const basePrice = symbol.includes('XAU') ? 2650 :
+    const basePrice = symbol.includes('XAU') ? 2830 :
         symbol.includes('XAG') ? 30 :
             symbol.includes('XTI') || symbol.includes('XBR') ? 75 :
                 symbol.includes('BTC') ? 100000 :
