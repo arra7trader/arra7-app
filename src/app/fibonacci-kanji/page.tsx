@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import { createChart, ColorType, ISeriesApi, IChartApi, CandlestickSeries } from 'lightweight-charts';
+import KanjiAnalysisChart from '@/components/kanji/KanjiAnalysisChart';
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
@@ -25,187 +25,41 @@ const KANJI_LEVELS = [
     { level: 2.618, label: 'Moon Target (TP 3)', color: '#37474f', desc: 'Final Target', width: 1 },
 ];
 
+type ViewMode = 'tradingview' | 'analysis';
+
 export default function FibonacciKanjiPage() {
     const t = useTranslations('kanji');
 
-    // Chart Refs
-    const chartContainerRef = useRef<HTMLDivElement>(null);
-    const chartRef = useRef<IChartApi | null>(null);
-    const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-    const [priceLines, setPriceLines] = useState<any[]>([]);
-
     // State
+    const [viewMode, setViewMode] = useState<ViewMode>('tradingview');
+    const [trend, setTrend] = useState<'UP' | 'DOWN'>('DOWN'); // New Trend State
     const [highPrice, setHighPrice] = useState<string>('');
     const [lowPrice, setLowPrice] = useState<string>('');
     const [calculatedLevels, setCalculatedLevels] = useState<any[]>([]);
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
-    const [isLoading, setIsLoading] = useState(false);
+    const [widgetSymbol, setWidgetSymbol] = useState('OANDA:XAUUSD');
 
     // AI Scanner State
     const [isAutoScan, setIsAutoScan] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
 
-    // --- CHART INITIALIZATION ---
-    useEffect(() => {
-        if (!chartContainerRef.current) return;
+    // Handle Pair Change
+    const handlePairChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const pair = e.target.value;
+        setSelectedPair(pair);
 
-        const chart = createChart(chartContainerRef.current, {
-            layout: {
-                background: { type: ColorType.Solid, color: '#000000' }, // Dark Background
-                textColor: '#d1d4dc',
-            },
-            width: chartContainerRef.current.clientWidth,
-            height: 600, // Matches container
-            grid: {
-                vertLines: { color: 'rgba(42, 46, 57, 0.2)' },
-                horzLines: { color: 'rgba(42, 46, 57, 0.2)' },
-            },
-            rightPriceScale: {
-                borderColor: 'rgba(197, 203, 206, 0.8)',
-            },
-            timeScale: {
-                borderColor: 'rgba(197, 203, 206, 0.8)',
-                timeVisible: true,
-            },
-            crosshair: {
-                mode: 1,
-            },
-        });
-
-        const series = chart.addSeries(CandlestickSeries, {
-            upColor: '#26a69a',
-            downColor: '#ef5350',
-            borderVisible: false,
-            wickUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
-        });
-
-        chartRef.current = chart;
-        candleSeriesRef.current = series;
-
-        // Resize Handler
-        const handleResize = () => {
-            chart.applyOptions({ width: chartContainerRef.current?.clientWidth || 0 });
+        // Map to TV Symbols
+        const symbolMap: any = {
+            'XAUUSD': 'OANDA:XAUUSD', 'XAGUSD': 'OANDA:XAGUSD',
+            'BTCUSD': 'BINANCE:BTCUSDT', 'ETHUSD': 'BINANCE:ETHUSDT',
+            'EURUSD': 'FX:EURUSD', 'GBPUSD': 'FX:GBPUSD', 'USDJPY': 'FX:USDJPY',
+            'US30': 'BLACKBULL:US30', 'US500': 'BLACKBULL:US500', 'USTEC': 'BLACKBULL:US100'
         };
-        window.addEventListener('resize', handleResize);
-
-        // Click to set High/Low (Interactive Mode)
-        chart.subscribeClick((param) => {
-            if (!param.point || !series) return;
-            const price = series.coordinateToPrice(param.point.y);
-            if (price) {
-                // Simple toggle logic: Fill High if empty, else Low
-                if (!highPrice || (highPrice && lowPrice)) {
-                    setHighPrice(price.toFixed(price > 50 ? 2 : 5));
-                    setLowPrice(''); // Reset low to force input
-                } else {
-                    setLowPrice(price.toFixed(price > 50 ? 2 : 5));
-                }
-            }
-        });
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            chart.remove();
-        };
-    }, []); // eslint-disable-line
-
-    // --- DATA FALLBACK LOGIC ---
-    const generateFallbackData = (basePrice: number) => {
-        const data = [];
-        let time = Math.floor(Date.now() / 1000) - (100 * 3600);
-        let value = basePrice;
-        for (let i = 0; i < 200; i++) {
-            const volatility = basePrice * 0.002;
-            const change = (Math.random() - 0.5) * volatility;
-            const open = value;
-            const close = open + change;
-            const high = Math.max(open, close) + Math.random() * volatility * 0.2;
-            const low = Math.min(open, close) - Math.random() * volatility * 0.2;
-            data.push({ time: time as any, open, high, low, close });
-            value = close;
-            time += 3600;
-        }
-        return data;
-    };
-
-    // --- API FETCHING ---
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!candleSeriesRef.current) return;
-            setIsLoading(true);
-            try {
-                const res = await fetch(`/api/market?pair=${selectedPair}&timeframe=1h`);
-                let success = false;
-                let candles = [];
-
-                if (res.ok) {
-                    const json = await res.json();
-                    if (json.status === 'success' && json.data.candles?.length > 0) {
-                        candles = json.data.candles.map((c: any) => ({
-                            time: new Date(c.time).getTime() / 1000 as any,
-                            open: c.open, high: c.high, low: c.low, close: c.close
-                        })).sort((a: any, b: any) => a.time - b.time);
-                        success = true;
-                    }
-                }
-
-                if (!success || candles.length === 0) {
-                    console.warn("Using Fallback Data");
-                    let basePrice = 2000;
-                    if (selectedPair.includes('JPY')) basePrice = 150;
-                    else if (selectedPair.includes('BTC')) basePrice = 90000;
-                    else if (selectedPair.includes('EUR')) basePrice = 1.05;
-                    candles = generateFallbackData(basePrice);
-                }
-
-                candleSeriesRef.current.setData(candles);
-                chartRef.current?.timeScale().fitContent();
-
-            } catch (err) {
-                console.error("Fetch error, fallback", err);
-                const fallback = generateFallbackData(2000);
-                candleSeriesRef.current.setData(fallback);
-                chartRef.current?.timeScale().fitContent();
-            } finally {
-                setIsLoading(false);
-                clearLines();
-                setHighPrice('');
-                setLowPrice('');
-                setCalculatedLevels([]);
-            }
-        };
-        fetchData();
-    }, [selectedPair]);
-
-    // --- DRAWING LOGIC ---
-    const clearLines = () => {
-        if (!candleSeriesRef.current) return;
-        priceLines.forEach(l => candleSeriesRef.current?.removePriceLine(l));
-        setPriceLines([]);
-    };
-
-    const drawLines = (levels: any[]) => {
-        if (!candleSeriesRef.current) return;
-        clearLines(); // Clear existing
-
-        const newLines: any[] = [];
-        levels.forEach(lvl => {
-            const line = candleSeriesRef.current?.createPriceLine({
-                price: parseFloat(lvl.price),
-                color: lvl.color,
-                lineWidth: lvl.width || 1,
-                lineStyle: lvl.style || 1, // Solid
-                axisLabelVisible: true,
-                title: lvl.label,
-            });
-            newLines.push(line);
-        });
-        setPriceLines(newLines);
+        setWidgetSymbol(symbolMap[pair] || 'OANDA:XAUUSD');
     };
 
     // --- CALCULATION LOGIC ---
-    const calculateKanjiInternal = useCallback((hStr: string, lStr: string) => {
+    const calculateKanjiInternal = useCallback((hStr: string, lStr: string, currentTrend: 'UP' | 'DOWN') => {
         const cleanH = hStr.replace(/,/g, '.');
         const cleanL = lStr.replace(/,/g, '.');
         const h = parseFloat(cleanH);
@@ -213,26 +67,49 @@ export default function FibonacciKanjiPage() {
         if (isNaN(h) || isNaN(l)) return;
 
         const range = Math.abs(h - l);
+
         const levels = KANJI_LEVELS.map(k => {
             let finalPrice = 0;
-            // Standard Logic: Projection
-            if (h > l) {
+            let finalLabel = k.label;
+
+            // DYNAMIC CALCULATION BASED ON TREND
+            if (currentTrend === 'DOWN') {
+                // Bearish: Start at High (Level 0), Project Down
+                // Price = High - (Range * Level)
                 finalPrice = h - (range * k.level);
+
+                // Labels fine as is for Bearish default, but let's be explicit
+                if (k.level === 0) finalLabel = 'Swing High (Stop Loss)';
+                if (k.level === 1) finalLabel = 'Swing Low';
+
             } else {
-                finalPrice = h - ((h - l) * k.level);
+                // Bullish: Start at Low (Level 0), Project Up
+                // Price = Low + (Range * Level)
+                finalPrice = l + (range * k.level);
+
+                // Update Labels for Bullish
+                if (k.level === 0) finalLabel = 'Swing Low (Stop Loss)'; // Start point
+                if (k.level === 1) finalLabel = 'Swing High'; // End point
             }
 
             const isIndo = selectedPair === 'USDIDR';
             const decimals = (finalPrice > 1000 && !isIndo) ? 2 : (finalPrice > 50 ? 2 : 5);
-            return { ...k, price: finalPrice.toFixed(decimals) };
+            return {
+                ...k,
+                label: finalLabel,
+                price: finalPrice.toFixed(decimals)
+            };
         });
 
         setCalculatedLevels(levels);
-        drawLines(levels); // DRAW ON CHART
-    }, [selectedPair]); // eslint-disable-line
+    }, [selectedPair]);
 
     const calculateKanji = () => {
-        calculateKanjiInternal(highPrice, lowPrice);
+        calculateKanjiInternal(highPrice, lowPrice, trend);
+        // Switch to analysis mode on manual calc if not already
+        if (viewMode !== 'analysis') {
+            setViewMode('analysis');
+        }
     };
 
     // --- AI AUTO SCAN ---
@@ -244,11 +121,18 @@ export default function FibonacciKanjiPage() {
                 const res = await fetch(`/api/kanji/detect?pair=${selectedPair}&timeframe=1h`);
                 const json = await res.json();
                 if (json.status === 'success' && json.data) {
-                    const { high, low } = json.data;
+                    const { high, low, trend: detectedTrend } = json.data;
                     if (high && low) {
                         setHighPrice(high.toString());
                         setLowPrice(low.toString());
-                        calculateKanjiInternal(high.toString(), low.toString());
+
+                        // Auto-set trend from AI
+                        const newTrend = detectedTrend === 'UP' ? 'UP' : 'DOWN';
+                        setTrend(newTrend);
+
+                        calculateKanjiInternal(high.toString(), low.toString(), newTrend);
+                        // Optional: Auto switch to analysis? Maybe too intrusive.
+                        // setViewMode('analysis'); 
                     }
                 }
             } catch (e) { console.error(e) }
@@ -263,6 +147,15 @@ export default function FibonacciKanjiPage() {
         return () => clearInterval(interval);
     }, [isAutoScan, selectedPair, calculateKanjiInternal]);
 
+    // Handle Click on Analysis Chart
+    const handleChartClick = (price: number) => {
+        if (!highPrice || (highPrice && lowPrice)) {
+            setHighPrice(price.toFixed(price > 50 ? 2 : 5));
+            setLowPrice('');
+        } else {
+            setLowPrice(price.toFixed(price > 50 ? 2 : 5));
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
@@ -271,28 +164,56 @@ export default function FibonacciKanjiPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[85vh] min-h-[700px]">
 
                         {/* CHART AREA */}
-                        <div className="lg:col-span-3 bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative group">
-                            {isLoading && (
-                                <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center backdrop-blur-sm">
-                                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                    <div className="text-gray-400 font-medium animate-pulse">Fetching Market Data...</div>
-                                </div>
-                            )}
-                            <div ref={chartContainerRef} className="w-full h-full cursor-crosshair" />
+                        <div className="lg:col-span-3 bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative flex flex-col">
 
-                            {/* Tools Overlay */}
-                            <div className="absolute top-4 left-4 flex gap-2">
-                                <div className="bg-black/60 text-gray-300 text-xs px-3 py-1.5 rounded-lg backdrop-blur border border-white/10 flex items-center gap-2">
-                                    <span>📍 Click chart to set High/Low</span>
+                            {/* View Toggle */}
+                            <div className="bg-gray-900 border-b border-gray-800 p-2 flex justify-between items-center px-4">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setViewMode('tradingview')}
+                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${viewMode === 'tradingview' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                                    >
+                                        <span>📺 TV Widget</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('analysis')}
+                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${viewMode === 'analysis' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                                    >
+                                        <span>🎯 Analysis Visuals</span>
+                                        {calculatedLevels.length > 0 && <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>}
+                                    </button>
+                                </div>
+                                <div className="text-gray-500 text-[10px] font-mono">
+                                    {selectedPair} • {viewMode === 'analysis' ? 'KANJI DATA FEED' : 'TRADINGVIEW FEED'}
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-4 left-4 text-[80px] font-black text-white/5 pointer-events-none select-none">
-                                KANJI
+                            {/* Chart Content */}
+                            <div className="flex-1 relative w-full h-full">
+                                {viewMode === 'tradingview' && (
+                                    <div className="tradingview-widget-container w-full h-full">
+                                        <iframe
+                                            className="w-full h-full"
+                                            src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${widgetSymbol}&interval=60&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=dark&style=1&timezone=Asia%2FJakarta&withdateranges=1&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${widgetSymbol}`}
+                                            allowFullScreen
+                                        ></iframe>
+                                    </div>
+                                )}
+
+                                {/* Using hidden class instead of unmount to preserve state/load? No, remounting ensures correct sizing. */}
+                                {viewMode === 'analysis' && (
+                                    <div className="w-full h-full">
+                                        <KanjiAnalysisChart
+                                            pair={selectedPair}
+                                            levels={calculatedLevels}
+                                            onPriceClick={handleChartClick}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* CONTROLS */}
+                        {/* SIDEBAR CONTROLS */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -331,7 +252,7 @@ export default function FibonacciKanjiPage() {
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asset Pair</label>
                                     <select
                                         value={selectedPair}
-                                        onChange={(e) => setSelectedPair(e.target.value)}
+                                        onChange={handlePairChange}
                                         className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer hover:bg-gray-100 transition"
                                     >
                                         <optgroup label="Commodities">
@@ -355,26 +276,49 @@ export default function FibonacciKanjiPage() {
                                     </select>
                                 </div>
 
+                                {/* TREND SELECTOR (NEW) */}
+                                <div className="mb-4">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Trend Direction</label>
+                                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                                        <button
+                                            onClick={() => setTrend('UP')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition ${trend === 'UP' ? 'bg-green-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+                                        >
+                                            <span>📈 Bullish</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setTrend('DOWN')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition ${trend === 'DOWN' ? 'bg-red-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+                                        >
+                                            <span>📉 Bearish</span>
+                                        </button>
+                                    </div>
+                                </div>
+
                                 {/* Inputs */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-red-500 uppercase mb-1">Swing High</label>
+                                        <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">
+                                            {trend === 'UP' ? 'Swing Low (Start)' : 'Swing High (Start)'}
+                                        </label>
                                         <input
                                             type="text"
-                                            value={highPrice}
-                                            onChange={(e) => setHighPrice(e.target.value)}
+                                            value={trend === 'UP' ? lowPrice : highPrice}
+                                            onChange={(e) => trend === 'UP' ? setLowPrice(e.target.value) : setHighPrice(e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full p-2.5 bg-red-50 border border-red-100 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-green-500 uppercase mb-1">Swing Low</label>
+                                        <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">
+                                            {trend === 'UP' ? 'Swing High (End)' : 'Swing Low (End)'}
+                                        </label>
                                         <input
                                             type="text"
-                                            value={lowPrice}
-                                            onChange={(e) => setLowPrice(e.target.value)}
+                                            value={trend === 'UP' ? highPrice : lowPrice}
+                                            onChange={(e) => trend === 'UP' ? setHighPrice(e.target.value) : setLowPrice(e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full p-2.5 bg-green-50 border border-green-100 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
                                 </div>
@@ -388,11 +332,11 @@ export default function FibonacciKanjiPage() {
                                 </button>
 
                                 {/* Results Table */}
-                                {calculatedLevels.length > 0 ? (
+                                {calculatedLevels.length > 0 && (
                                     <div className="w-full pb-4">
                                         <div className="flex items-center justify-between mb-2">
                                             <h3 className="text-xs font-bold text-gray-400 uppercase">Kanji Levels</h3>
-                                            <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Live on Chart</span>
+                                            {viewMode === 'analysis' && <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Lines Active</span>}
                                         </div>
                                         <table className="w-full text-xs">
                                             <tbody className="divide-y divide-gray-50 border-t border-gray-100">
@@ -414,11 +358,6 @@ export default function FibonacciKanjiPage() {
                                                 ))}
                                             </tbody>
                                         </table>
-                                    </div>
-                                ) : (
-                                    <div className="py-10 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
-                                        <span className="text-3xl block mb-2 opacity-50">📉</span>
-                                        <p className="font-medium text-xs text-gray-400">Chart Waiting for Input...</p>
                                     </div>
                                 )}
                             </div>
