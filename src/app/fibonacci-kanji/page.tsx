@@ -35,14 +35,14 @@ const KANJI_LEVELS = [
     { level: 0, label: 'Swing High (Stop Loss)', color: '#ef5350', desc: 'Starting Point', width: 2 },
     { level: 1, label: 'Swing Low', color: '#78909c', desc: 'Ending Point', width: 2 },
     // Scalping Zone
-    { level: 0.559, label: 'Entry Zone 1 (0.559)', color: '#26a69a', desc: 'Scalping Entry', width: 1 },
-    { level: 0.619, label: 'Entry Zone 1 (0.619)', color: '#26a69a', desc: 'Scalping Entry', width: 1 },
+    { level: 0.559, label: 'Entry Zone 1', color: '#26a69a', desc: 'Scalping Entry', width: 1 },
+    { level: 0.619, label: 'Entry Zone 2', color: '#26a69a', desc: 'Scalping Entry', width: 1 },
     // Scalping
-    { level: 0.786, label: 'Scalping Zone (0.786)', color: '#fbc02d', desc: 'Reversal Zone', width: 1, style: 2 },
-    { level: 0.882, label: 'Scalping Zone (0.882)', color: '#fbc02d', desc: 'Reversal Zone', width: 1, style: 2 },
+    { level: 0.786, label: 'Scalping Zone A', color: '#fbc02d', desc: 'Reversal Zone', width: 1, style: 2 },
+    { level: 0.882, label: 'Scalping Zone B', color: '#fbc02d', desc: 'Reversal Zone', width: 1, style: 2 },
     // Pullback / Break
-    { level: 1.124, label: 'Breakout / Pullback (1.124)', color: '#ff9800', desc: 'Watch for Break', width: 1 },
-    { level: 1.272, label: 'Breakout / Pullback (1.272)', color: '#ff9800', desc: 'Watch for Break', width: 1 },
+    { level: 1.124, label: 'Breakout Zone 1', color: '#ff9800', desc: 'Watch for Break', width: 1 },
+    { level: 1.272, label: 'Breakout Zone 2', color: '#ff9800', desc: 'Watch for Break', width: 1 },
     // Zone Entry 2
     { level: 1.618, label: 'GOLDEN RATIO (TP 1)', color: '#2962ff', desc: 'Golden Target', width: 3 }, // Thick
     { level: 2.0, label: 'Confluence (TP 2)', color: '#ab47bc', desc: 'Major Extension', width: 2 },
@@ -553,14 +553,14 @@ export default function FibonacciKanjiPage() {
                                                 </div>
 
                                                 {(() => {
-                                                    // Find Entry Zone (0.559)
+                                                    // Find Entry Zone
                                                     const entryZone = calculatedLevels.find(l => l.level === 0.559);
                                                     // Find TP zones
                                                     const tp1 = calculatedLevels.find(l => l.level === 1.618); // Golden Ratio
                                                     const tp2 = calculatedLevels.find(l => l.level === 2.0); // Confluence
                                                     const tp3 = calculatedLevels.find(l => l.level === 2.618); // Moon Target
-                                                    // Find SL zone (below entry)
-                                                    const slZone = calculatedLevels.find(l => l.level === 0.382);
+                                                    // Find SL zone (swing point)
+                                                    const slZone = calculatedLevels.find(l => l.level === 0);
 
                                                     if (!entryZone || !tp1 || !slZone) return null;
 
