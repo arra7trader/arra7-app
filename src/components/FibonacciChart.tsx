@@ -115,14 +115,15 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
                         <div
                             key={idx}
                             className="relative flex-1 flex flex-col items-center justify-center"
-                            style={{ minWidth: '2px', maxWidth: '20px' }}
+                            style={{ minWidth: '4px', maxWidth: '30px' }}
                         >
                             {/* Wick (High-Low) */}
                             <div
-                                className="absolute w-[2px] bg-gray-500"
+                                className={`absolute ${isGreen ? 'bg-green-400' : 'bg-red-400'}`}
                                 style={{
                                     top: `${priceToY(candle.high)}%`,
                                     height: `${priceToY(candle.low) - priceToY(candle.high)}%`,
+                                    width: '2px',
                                 }}
                             />
                             {/* Body (Open-Close) */}
@@ -130,8 +131,9 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
                                 className={`absolute ${isGreen ? 'bg-green-500' : 'bg-red-500'}`}
                                 style={{
                                     top: `${priceToY(bodyTop)}%`,
-                                    height: `${Math.max(priceToY(bodyBottom) - priceToY(bodyTop), 0.5)}%`,
-                                    width: '80%',
+                                    height: `${Math.max(priceToY(bodyBottom) - priceToY(bodyTop), 1)}%`,
+                                    width: '85%',
+                                    minHeight: '2px',
                                 }}
                             />
                         </div>
@@ -174,13 +176,13 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
             })}
 
             {/* Price Scale (Right Axis) */}
-            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gray-900/50 border-l border-gray-800">
-                {[0, 25, 50, 75, 100].map((y) => {
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gray-900 border-l-2 border-gray-700">
+                {[0, 20, 40, 60, 80, 100].map((y) => {
                     const price = priceRange.max - ((priceRange.max - priceRange.min) * y) / 100;
                     return (
                         <div
                             key={y}
-                            className="absolute right-1 text-xs text-gray-400 -translate-y-1/2"
+                            className="absolute right-2 text-xs text-gray-300 font-mono -translate-y-1/2 bg-gray-800 px-1 rounded"
                             style={{ top: `${y}%` }}
                         >
                             {price.toFixed(2)}
