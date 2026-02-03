@@ -170,12 +170,12 @@ function detectRevengeTrading(trades: Trade[]) {
             detected: true,
             count: revengeTrades.length,
             winRate,
-            severity: winRate < 40 ? 'high' : 'medium',
+            severity: (winRate < 40 ? 'high' : 'medium') as 'high' | 'medium',
             avgTimeAfterLoss: avgTime
         };
     }
 
-    return { detected: false, count: 0, winRate: 0, severity: 'low', avgTimeAfterLoss: 0 };
+    return { detected: false, count: 0, winRate: 0, severity: 'low' as 'low', avgTimeAfterLoss: 0 };
 }
 
 function analyzeSessionPerformance(trades: Trade[]) {
