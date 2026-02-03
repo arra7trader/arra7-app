@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import ZoneVisualChart from '@/components/kanji/ZoneVisualChart';
 import TradingViewWidget from '@/components/TradingViewWidget';
 
 // KANJI LEVELS CONFIGURATION
@@ -26,13 +25,11 @@ const KANJI_LEVELS = [
     { level: 2.618, label: 'Moon Target (TP 3)', color: '#37474f', desc: 'Final Target', width: 1 },
 ];
 
-type ViewMode = 'tradingview' | 'analysis';
 
 export default function FibonacciKanjiPage() {
     const t = useTranslations('kanji');
 
     // State
-    const [viewMode, setViewMode] = useState<ViewMode>('tradingview');
     const [trend, setTrend] = useState<'UP' | 'DOWN'>('DOWN'); // New Trend State
     const [highPrice, setHighPrice] = useState<string>('');
     const [lowPrice, setLowPrice] = useState<string>('');
@@ -110,10 +107,6 @@ export default function FibonacciKanjiPage() {
 
     const calculateKanji = () => {
         calculateKanjiInternal(highPrice, lowPrice, trend);
-        // Switch to analysis mode on manual calc if not already
-        if (viewMode !== 'analysis') {
-            setViewMode('analysis');
-        }
     };
 
     // --- AUTO CALCULATION ON INPUT CHANGE ---
@@ -180,45 +173,22 @@ export default function FibonacciKanjiPage() {
                         {/* CHART AREA */}
                         <div className="lg:col-span-3 bg-black rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative flex flex-col">
 
-                            {/* View Toggle */}
+                            {/* Header */}
                             <div className="bg-gray-900 border-b border-gray-800 p-2 flex justify-between items-center px-4">
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setViewMode('tradingview')}
-                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${viewMode === 'tradingview' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                                    >
-                                        <span>📺 TV Widget</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('analysis')}
-                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${viewMode === 'analysis' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                                    >
-                                        <span>🎯 Analysis Visuals</span>
-                                        {calculatedLevels.length > 0 && <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>}
-                                    </button>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-blue-400 text-sm">📺</span>
+                                    <span className="text-white text-xs font-bold">TradingView Chart</span>
                                 </div>
                                 <div className="text-gray-500 text-[10px] font-mono">
-                                    {selectedPair} • {viewMode === 'analysis' ? 'ZONE VISUAL' : 'TRADINGVIEW FEED'}
+                                    {selectedPair} • REAL-TIME FEED
                                 </div>
                             </div>
 
-                            {/* Chart Content */}
+                            {/* Chart Content - TradingView Only */}
                             <div className="flex-1 relative w-full h-full">
-                                {viewMode === 'tradingview' && (
-                                    <div className="w-full h-full">
-                                        <TradingViewWidget symbol={widgetSymbol} />
-                                    </div>
-                                )}
-
-                                {/* Using hidden class instead of unmount to preserve state/load? No, remounting ensures correct sizing. */}
-                                {viewMode === 'analysis' && (
-                                    <div className="w-full h-full">
-                                        <ZoneVisualChart
-                                            levels={calculatedLevels}
-                                            trend={trend}
-                                        />
-                                    </div>
-                                )}
+                                <div className="w-full h-full">
+                                    <TradingViewWidget symbol={widgetSymbol} />
+                                </div>
                             </div>
                         </div>
 
@@ -358,12 +328,9 @@ export default function FibonacciKanjiPage() {
                                             </div>
                                         </div>
 
-                                        {/* Table Header with Toggle */}
+                                        {/* Table Header */}
                                         <div className="flex items-center justify-between mb-2">
                                             <h3 className="text-xs font-bold text-gray-400 uppercase">Kanji Levels</h3>
-                                            <div className="flex items-center gap-2">
-                                                {viewMode === 'analysis' && <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Zones Active</span>}
-                                            </div>
                                         </div>
 
                                         {/* Interactive Table */}
@@ -418,12 +385,6 @@ export default function FibonacciKanjiPage() {
                                                 className="flex-1 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition"
                                             >
                                                 <span>📋</span> Copy All
-                                            </button>
-                                            <button
-                                                onClick={() => setViewMode('analysis')}
-                                                className="flex-1 py-2 px-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition"
-                                            >
-                                                <span>🎯</span> View Zones
                                             </button>
                                         </div>
                                     </div>
