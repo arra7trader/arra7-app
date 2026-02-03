@@ -4,7 +4,20 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
-import FibonacciChart from '@/components/FibonacciChart';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for FibonacciChart to avoid SSR issues with lightweight-charts
+const FibonacciChart = dynamic(() => import('@/components/FibonacciChart'), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-full flex items-center justify-center bg-black">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-3"></div>
+                <p className="text-gray-300 text-sm">Loading chart...</p>
+            </div>
+        </div>
+    ),
+});
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
