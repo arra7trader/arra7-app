@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, ColorType, LineStyle } from 'lightweight-charts';
 
 interface FibonacciChartProps {
     pair: string;
@@ -16,85 +15,95 @@ interface FibonacciChartProps {
     }>;
 }
 
-interface CandleData {
-    time: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-}
-
 export default function FibonacciChart({ pair, timeframe, calculatedLevels }: FibonacciChartProps) {
     const chartContainerRef = useRef<HTMLDivElement>(null);
-    const chartRef = useRef<IChartApi | null>(null);
-    const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+    const chartRef = useRef<any>(null);
+    const candlestickSeriesRef = useRef<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [chartReady, setChartReady] = useState(false);
 
     // Initialize chart
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
-        // Create chart instance
-        const chart = createChart(chartContainerRef.current, {
-            width: chartContainerRef.current.clientWidth,
-            height: chartContainerRef.current.clientHeight,
-            layout: {
-                background: { type: ColorType.Solid, color: '#000000' },
-                textColor: '#d1d4dc',
-            },
-            grid: {
-                vertLines: { color: '#2B2B43' },
-                horzLines: { color: '#2B2B43' },
-            },
-            timeScale: {
-                borderColor: '#2B2B43',
-                timeVisible: true,
-                secondsVisible: false,
-            },
-            rightPriceScale: {
-                borderColor: '#2B2B43',
-            },
+        let isMounted = true;
+
+        // Dynamic import of lightweight-charts to prevent SSR issues
+        import('lightweight-charts').then((LightweightCharts) => {
+            if (!isMounted || !chartContainerRef.current) return;
+
+            const { createChart, ColorType } = LightweightCharts;
+
+            // Create chart instance
+            const chart = createChart(chartContainerRef.current, {
+                width: chartContainerRef.current.clientWidth,
+                height: chartContainerRef.current.clientHeight,
+                layout: {
+                    background: { type: ColorType.Solid, color: '#000000' },
+                    textColor: '#d1d4dc',
+                },
+                grid: {
+                    vertLines: { color: '#2B2B43' },
+                    horzLines: { color: '#2B2B43' },
+                },
+                timeScale: {
+                    borderColor: '#2B2B43',
+                    timeVisible: true,
+                    secondsVisible: false,
+                },
+                rightPriceScale: {
+                    borderColor: '#2B2B43',
+                },
+            });
+
+            // Add candlestick series
+            const candlestickSeries = (chart as any).addCandlestickSeries({
+                upColor: '#26a69a',
+                downColor: '#ef5350',
+                borderVisible: false,
+                wickUpColor: '#26a69a',
+                wickDownColor: '#ef5350',
+            });
+
+            chartRef.current = chart;
+            candlestickSeriesRef.current = candlestickSeries;
+            setChartReady(true);
+
+            // Handle resize
+            const handleResize = () => {
+                if (chartContainerRef.current && chartRef.current) {
+                    chartRef.current.applyOptions({
+                        width: chartContainerRef.current.clientWidth,
+                        height: chartContainerRef.current.clientHeight,
+                    });
+                }
+            };
+
+            window.addEventListener('resize', handleResize);
+
+            // Cleanup
+            return () => {
+                window.removeEventListener('resize', handleResize);
+                if (chartRef.current) {
+                    chartRef.current.remove();
+                    chartRef.current = null;
+                }
+            };
+        }).catch((err) => {
+            console.error('Failed to load chart library:', err);
+            setError('Failed to initialize chart');
         });
 
-        // Add candlestick series (type assertion needed for v5 API)
-        const candlestickSeries = (chart as any).addCandlestickSeries({
-            upColor: '#26a69a',
-            downColor: '#ef5350',
-            borderVisible: false,
-            wickUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
-        }) as ISeriesApi<'Candlestick'>;
-
-        chartRef.current = chart;
-        candlestickSeriesRef.current = candlestickSeries;
-
-        // Handle resize
-        const handleResize = () => {
-            if (chartContainerRef.current && chartRef.current) {
-                chartRef.current.applyOptions({
-                    width: chartContainerRef.current.clientWidth,
-                    height: chartContainerRef.current.clientHeight,
-                });
-            }
-        };
-
-        window.addEventListener('resize', handleResize);
-
-        // Cleanup
         return () => {
-            window.removeEventListener('resize', handleResize);
-            if (chartRef.current) {
-                chartRef.current.remove();
-                chartRef.current = null;
-            }
+            isMounted = false;
         };
     }, []);
 
     // Fetch and display market data
     useEffect(() => {
         const fetchMarketData = async () => {
-            if (!candlestickSeriesRef.current) return;
+            if (!candlestickSeriesRef.current || !chartReady) return;
 
             setIsLoading(true);
             setError(null);
@@ -112,8 +121,7 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
                     throw new Error('Invalid data format');
                 }
 
-                // Get candles from the kanji/detect endpoint
-                // We need to transform the data from market-data format
+                // Get candles from the market-data endpoint
                 const marketDataResponse = await fetch(`/api/market-data?pair=${pair}&timeframe=${timeframe}`);
                 const marketData = await marketDataResponse.json();
 
@@ -143,40 +151,41 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
         };
 
         fetchMarketData();
-    }, [pair, timeframe]);
+    }, [pair, timeframe, chartReady]);
 
     // Draw Fibonacci levels as horizontal price lines
     useEffect(() => {
-        if (!candlestickSeriesRef.current || !chartRef.current || calculatedLevels.length === 0) {
+        if (!candlestickSeriesRef.current || !chartRef.current || calculatedLevels.length === 0 || !chartReady) {
             return;
         }
 
-        // Remove all existing price lines (if any)
-        // Note: lightweight-charts doesn't have a direct "remove all lines" method
-        // We need to track them separately or recreate the series
+        // Dynamic import for LineStyle to prevent SSR issues
+        import('lightweight-charts').then((LightweightCharts) => {
+            const { LineStyle } = LightweightCharts;
 
-        // Draw new price lines for each Fibonacci level
-        calculatedLevels.forEach((level) => {
-            if (!candlestickSeriesRef.current) return;
+            // Draw new price lines for each Fibonacci level
+            calculatedLevels.forEach((level) => {
+                if (!candlestickSeriesRef.current) return;
 
-            const price = parseFloat(level.price);
-            if (isNaN(price)) return;
+                const price = parseFloat(level.price);
+                if (isNaN(price)) return;
 
-            try {
-                candlestickSeriesRef.current.createPriceLine({
-                    price: price,
-                    color: level.color,
-                    lineWidth: (level.width || 1) as 1 | 2 | 3 | 4,
-                    lineStyle: level.style === 2 ? LineStyle.Dashed : LineStyle.Solid,
-                    axisLabelVisible: true,
-                    title: level.label,
-                });
-            } catch (err) {
-                console.error(`Failed to create price line for ${level.label}:`, err);
-            }
+                try {
+                    candlestickSeriesRef.current.createPriceLine({
+                        price: price,
+                        color: level.color,
+                        lineWidth: (level.width || 1) as 1 | 2 | 3 | 4,
+                        lineStyle: level.style === 2 ? LineStyle.Dashed : LineStyle.Solid,
+                        axisLabelVisible: true,
+                        title: level.label,
+                    });
+                } catch (err) {
+                    console.error(`Failed to create price line for ${level.label}:`, err);
+                }
+            });
         });
 
-    }, [calculatedLevels]);
+    }, [calculatedLevels, chartReady]);
 
     return (
         <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
