@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumGuard from '@/components/layout/PremiumGuard';
 import { useTranslations } from 'next-intl';
@@ -19,9 +19,16 @@ const FibonacciChart = dynamic(() => import('@/components/FibonacciChart'), {
     ),
 });
 
-// Dynamic imports for PriceLadder and TradeWizard
-const PriceLadder = dynamic(() => import('@/components/PriceLadder'), { ssr: false });
-const TradeWizard = dynamic(() => import('@/components/TradeWizard'), { ssr: false });
+// Dynamic imports for PriceLadder and TradeWizard with proper typing
+const PriceLadder = dynamic(() => import('@/components/PriceLadder'), {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-100 rounded-xl h-96"></div>
+}) as React.ComponentType<any>;
+
+const TradeWizard = dynamic(() => import('@/components/TradeWizard'), {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-100 rounded-xl h-96"></div>
+}) as React.ComponentType<any>;
 
 // KANJI LEVELS CONFIGURATION
 const KANJI_LEVELS = [
