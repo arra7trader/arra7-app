@@ -92,7 +92,15 @@ export async function POST(request: NextRequest) {
 
         // Get market data
         const marketData = await getMarketData(pair as ForexPair, timeframe as Timeframe);
-        const formattedData = formatMarketDataForAI(marketData, timeframe);
+
+        // Add freshness context to the formatted data
+        const freshnessInfo = marketData.is_simulated
+            ? '⚠️ WARNING: Data SIMULASI (API gagal). Analisa untuk demo saja!'
+            : !marketData.is_realtime
+                ? `⏰ WARNING: Data DELAYED (${marketData.freshnessSeconds ? Math.floor(marketData.freshnessSeconds / 60) : '?'} menit yang lalu). Gunakan dengan hati-hati!`
+                : `✅ Data REAL-TIME (fresh: ${marketData.freshnessSeconds || 0}s ago) dari ${marketData.timestampSource}`;
+
+        const formattedData = formatMarketDataForAI(marketData, timeframe) + `\n\n=== DATA QUALITY ===\n${freshnessInfo}`;
 
         // Check if learning mode is enabled
         const learningMode = body.learningMode === true;
@@ -216,6 +224,11 @@ export async function POST(request: NextRequest) {
                 price: marketData.current_price,
                 change: marketData.change_percent,
                 isRealtime: marketData.is_realtime,
+                isSimulated: marketData.is_simulated || false,
+                timestamp: marketData.timestamp,
+                dataSource: marketData.timestampSource || 'unknown',
+                freshnessSeconds: marketData.freshnessSeconds || 0,
+                lastCandleTime: marketData.candles.length > 0 ? marketData.candles[marketData.candles.length - 1].time : null,
             },
             parsedSignal: nativeSignalData,
             quotaStatus: serializedQuotaStatus,

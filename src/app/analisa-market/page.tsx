@@ -113,6 +113,11 @@ interface MarketInfo {
     price: number;
     change: number;
     isRealtime: boolean;
+    isSimulated?: boolean;
+    timestamp?: string;
+    dataSource?: string;
+    freshnessSeconds?: number;
+    lastCandleTime?: string | null;
 }
 
 interface QuotaStatus {
@@ -445,6 +450,36 @@ export default function AnalisaMarketPage() {
                                 className="bg-white rounded-2xl p-4 border border-[var(--border-light)]"
                             >
                                 <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2"><ChartIcon size="sm" /> Market Info</h3>
+
+                                {/* Simulated Data Warning */}
+                                {marketInfo.isSimulated && (
+                                    <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-3 rounded">
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-red-600 text-lg">⚠️</span>
+                                            <div>
+                                                <p className="text-xs font-semibold text-red-800">Data Simulasi</p>
+                                                <p className="text-xs text-red-600 mt-1">API gagal. Data ini adalah simulasi untuk demo saja. Jangan gunakan untuk trading!</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Delayed Data Warning */}
+                                {!marketInfo.isRealtime && !marketInfo.isSimulated && (
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-3 rounded">
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-yellow-600 text-lg">⏰</span>
+                                            <div>
+                                                <p className="text-xs font-semibold text-yellow-800">Data Delayed</p>
+                                                <p className="text-xs text-yellow-700 mt-1">
+                                                    Data sudah {marketInfo.freshnessSeconds ? Math.floor(marketInfo.freshnessSeconds / 60) : '?'} menit yang lalu.
+                                                    {' '}Gunakan dengan hati-hati untuk trading.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-[var(--text-secondary)]">Symbol</span>
@@ -461,16 +496,35 @@ export default function AnalisaMarketPage() {
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-[var(--text-secondary)]">Data</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${marketInfo.isRealtime ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                            {marketInfo.isRealtime ? 'LIVE' : 'DELAYED'}
+                                        <span className="text-[var(--text-secondary)]">Status</span>
+                                        <span className={`text-xs px-2 py-0.5 rounded font-semibold ${marketInfo.isSimulated
+                                                ? 'bg-red-100 text-red-700'
+                                                : marketInfo.isRealtime
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                            {marketInfo.isSimulated ? '🔴 SIMULATED' : marketInfo.isRealtime ? '🟢 LIVE' : '🟡 DELAYED'}
                                         </span>
                                     </div>
+                                    {marketInfo.dataSource && (
+                                        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                            <span className="text-[var(--text-secondary)] text-xs">Source</span>
+                                            <span className="text-xs text-[var(--text-muted)] font-mono">{marketInfo.dataSource}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100">
                                         <span className="text-[var(--text-secondary)] text-xs">Last Update</span>
                                         <span className="text-xs text-[var(--text-muted)]">
-                                            {/* Assuming marketInfo has a timestamp field from backend, or we default to now */}
-                                            {new Date().toLocaleTimeString()}
+                                            {marketInfo.lastCandleTime
+                                                ? new Date(marketInfo.lastCandleTime).toLocaleTimeString('id-ID')
+                                                : new Date().toLocaleTimeString('id-ID')}
+                                            {marketInfo.freshnessSeconds !== undefined && marketInfo.freshnessSeconds > 0 && (
+                                                <span className="ml-1 text-[var(--text-muted)]">
+                                                    ({marketInfo.freshnessSeconds < 60
+                                                        ? `${marketInfo.freshnessSeconds}s`
+                                                        : `${Math.floor(marketInfo.freshnessSeconds / 60)}m`} ago)
+                                                </span>
+                                            )}
                                         </span>
                                     </div>
                                 </div>

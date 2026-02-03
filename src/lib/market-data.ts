@@ -157,6 +157,8 @@ export interface MarketData {
     candles: Candle[];
     is_realtime: boolean;
     is_simulated?: boolean; // New flag for dummy data
+    timestampSource?: 'binance-rest' | 'yahoo-query1' | 'yahoo-query2' | 'simulated'; // Data source tracking
+    freshnessSeconds?: number; // Age of data in seconds
 }
 
 export interface Candle {
@@ -185,7 +187,13 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
         try {
             const binanceSymbol = pair.replace('USD', 'USDT'); // Map to USDT
             const data = await fetchBinancePrice(binanceSymbol, tfConfig.interval);
-            if (data && data.current_price !== undefined) {
+            if (data && data.current_price !== undefined && data.candles && data.candles.length > 0) {
+                // Calculate freshness for crypto (stricter threshold: 2 minutes)
+                const lastCandle = data.candles[data.candles.length - 1];
+                const lastTime = new Date(lastCandle.time).getTime();
+                const freshnessSeconds = Math.floor((Date.now() - lastTime) / 1000);
+                const isFresh = freshnessSeconds < 120; // 2 minutes for crypto
+
                 return {
                     symbol: pair,
                     name: pairConfig.name,
@@ -198,8 +206,10 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
                     volume: data.volume || 0,
                     timestamp: data.timestamp || new Date().toISOString(),
                     candles: data.candles || [],
-                    is_realtime: true,
-                    is_simulated: false
+                    is_realtime: isFresh,
+                    is_simulated: false,
+                    timestampSource: 'binance-rest',
+                    freshnessSeconds
                 };
             }
         } catch (e) {
@@ -264,10 +274,22 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
 
             const currentPrice = meta.regularMarketPrice || lastCandle.close;
 
-            // Freshness check
+            // Freshness check - IMPROVED: Different thresholds based on asset type
             const lastTime = new Date(lastCandle.time).getTime();
-            const freshness = (Date.now() - lastTime) / 1000;
-            const isFresh = freshness < 900; // Relaxed to 15 mins for Yahoo
+            const freshnessSeconds = Math.floor((Date.now() - lastTime) / 1000);
+
+            // Determine freshness threshold based on asset type
+            let freshnessThreshold = 300; // Default: 5 minutes for forex
+            if (Object.keys(CRYPTO).includes(pair)) {
+                freshnessThreshold = 120; // 2 minutes for crypto
+            } else if (Object.keys(INDICES).includes(pair)) {
+                freshnessThreshold = 300; // 5 minutes for indices
+            }
+
+            const isFresh = freshnessSeconds < freshnessThreshold;
+            const dataSource = host.includes('query1') ? 'yahoo-query1' : 'yahoo-query2';
+
+            console.log(`[Market Data] ${pair} from ${dataSource}: ${freshnessSeconds}s old, fresh=${isFresh} (threshold=${freshnessThreshold}s)`);
 
             return {
                 symbol: pair,
@@ -282,7 +304,9 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
                 timestamp: new Date().toISOString(),
                 candles,
                 is_realtime: isFresh,
-                is_simulated: false
+                is_simulated: false,
+                timestampSource: dataSource,
+                freshnessSeconds
             };
 
         } catch (error) {
@@ -296,6 +320,8 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
     const dummy = generateDummyData(pair, pairConfig?.name || pair);
     dummy.is_realtime = false;
     dummy.is_simulated = true; // Explicitly mark as simulated
+    dummy.timestampSource = 'simulated';
+    dummy.freshnessSeconds = 0; // Simulated data has no real freshness
     return dummy;
 }
 
@@ -407,6 +433,8 @@ function generateDummyData(symbol: string, name: string): MarketData {
         candles,
         is_realtime: false,
         is_simulated: true,
+        timestampSource: 'simulated',
+        freshnessSeconds: 0,
     };
 }
 
