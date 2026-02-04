@@ -34,7 +34,7 @@ export default function Navbar() {
                     <span>App</span>
                 </div>
             ),
-            href: '/download/android'
+            href: '/download-app'
         },
     ];
 
