@@ -98,7 +98,7 @@ export default function DownloadAppPage() {
                 {/* Download Section */}
                 <div className="max-w-md mx-auto text-center mb-8">
                     <a
-                        href="/downloads/arra7-v1.0.0.apk"
+                        href="/downloads/arra7-v1.0.1.apk"
                         download
                         className="block"
                     >
