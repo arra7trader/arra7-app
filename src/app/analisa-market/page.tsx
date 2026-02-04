@@ -211,7 +211,7 @@ export default function AnalisaMarketPage() {
                 body: JSON.stringify({
                     pair: selectedPair,
                     timeframe: selectedTimeframe,
-                    broker: 'dukascopy' // Always use Dukascopy for best MT4/MT5 accuracy
+                    broker: 'swissquote' // Swissquote Bank (real-time, no auth)
                 }),
             });
 

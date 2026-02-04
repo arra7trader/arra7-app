@@ -113,18 +113,18 @@ export const BROKER_CONFIGS = {
             GBPUSD: 0.5,
         }
     },
-    dukascopy: {
-        id: 'dukascopy',
-        name: 'Dukascopy',
-        description: 'Dukascopy Swiss Feed (Free)',
-        endpoint: 'https://freeserv.dukascopy.com/2.0',
+    swissquote: {
+        id: 'swissquote',
+        name: 'Swissquote',
+        description: 'Swissquote Bank Feed (Real-time, No Auth)',
+        endpoint: 'https://forex-data-feed.swissquote.com',
         accuracy: 'high',
         requiresAuth: false,
         free: true,
         estimatedSpread: {
-            XAUUSD: 0.8,
-            EURUSD: 0.4,
-            GBPUSD: 0.6,
+            XAUUSD: 0.5,
+            EURUSD: 0.3,
+            GBPUSD: 0.5,
         }
     },
     yahoo: {
@@ -510,43 +510,80 @@ async function fetchOandaPrice(symbol: string, interval: string): Promise<Partia
     }
 }
 
-// Helper: Fetch from Dukascopy (No auth needed!)
-async function fetchDukascopyPrice(symbol: string): Promise<Partial<MarketData> | null> {
+// Helper: Fetch from Swissquote Bank (No auth needed!)
+async function fetchSwissquotePrice(symbol: string, interval: string): Promise<Partial<MarketData> | null> {
     try {
-        // Dukascopy uses different endpoint structure
-        // For simplicity, we'll use their public quote API
-        const dukascopySymbol = symbol.replace('/', ''); // XAUUSD format
+        // Parse symbol: XAUUSD → XAU/USD
+        let base, quote;
 
-        // Dukascopy quote endpoint (public, no auth)
-        const endpoint = `https://freeserv.dukascopy.com/2.0/index.php`;
-        const params = new URLSearchParams({
-            path: `quotes/${dukascopySymbol}/latest`,
-            json: 'true'
-        });
+        if (symbol.includes('/')) {
+            [base, quote] = symbol.split('/');
+        } else {
+            // Handle various formats
+            if (symbol.startsWith('XAU')) {
+                base = 'XAU';
+                quote = symbol.slice(3);
+            } else if (symbol.startsWith('XAG')) {
+                base = 'XAG';
+                quote = symbol.slice(3);
+            } else {
+                // Standard forex: EURUSD → EUR/USD
+                base = symbol.slice(0, 3);
+                quote = symbol.slice(3);
+            }
+        }
 
-        const response = await fetch(`${endpoint}?${params}`, {
-            cache: 'no-store'
+        const endpoint = `https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/${base}/${quote}`;
+
+        console.log(`[Swissquote] Fetching ${base}/${quote} from ${endpoint}`);
+
+        const response = await fetch(endpoint, {
+            cache: 'no-store',
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0'
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(8000)
         });
 
         if (!response.ok) {
-            console.warn(`Dukascopy API error: ${response.status}`);
+            console.warn(`[Swissquote] API error: ${response.status} ${response.statusText}`);
             return null;
         }
 
         const data = await response.json();
+        console.log(`[Swissquote] Response:`, JSON.stringify(data).slice(0, 200));
 
-        // Dukascopy format varies, basic implementation
-        if (!data || !data.quote) return null;
+        // Swissquote response structure varies - try multiple paths
+        let price = 0;
 
-        const price = parseFloat(data.quote.bid || data.quote.close || 0);
-        if (price === 0) return null;
+        if (Array.isArray(data) && data.length > 0) {
+            const quote = data[0];
+            price = parseFloat(
+                quote.spreadProfilePrices?.[0]?.bid ||
+                quote.bid ||
+                quote.last ||
+                quote.close ||
+                0
+            );
+        } else if (data.bid || data.ask || data.last) {
+            price = parseFloat(data.bid || data.last || data.close || 0);
+        }
 
-        // For Dukascopy we get current price, generate simple candle
+        if (price === 0 || isNaN(price)) {
+            console.warn(`[Swissquote] Invalid price from response`);
+            return null;
+        }
+
+        console.log(`[Swissquote] ✅ Got price: ${price} for ${symbol}`);
+
+        // Generate candles from current price
         const candle: Candle = {
             time: new Date().toISOString(),
             open: price,
-            high: price * 1.001,
-            low: price * 0.999,
+            high: price * 1.0005,
+            low: price * 0.9995,
             close: price,
             volume: 0
         };
@@ -554,17 +591,21 @@ async function fetchDukascopyPrice(symbol: string): Promise<Partial<MarketData> 
         return {
             current_price: price,
             open: price,
-            high: price * 1.001,
-            low: price * 0.999,
+            high: price * 1.0005,
+            low: price * 0.9995,
             close: price,
             change_percent: 0,
             volume: 0,
             timestamp: new Date().toISOString(),
-            candles: [candle]
+            candles: [candle],
+            is_realtime: true,
+            is_simulated: false,
+            timestampSource: 'swissquote' as any,
+            freshnessSeconds: 5
         };
 
     } catch (error) {
-        console.error('Dukascopy fetch error:', error);
+        console.error('[Swissquote] Fetch error:', error);
         return null;
     }
 }
@@ -573,7 +614,7 @@ async function fetchDukascopyPrice(symbol: string): Promise<Partial<MarketData> 
 export async function getBrokerPrice(
     pair: ForexPair,
     timeframe: Timeframe,
-    preferredBroker: BrokerSource = 'dukascopy'
+    preferredBroker: BrokerSource = 'swissquote'
 ): Promise<MarketData> {
     const pairConfig = FOREX_PAIRS[pair];
     const tfConfig = TIMEFRAMES[timeframe];
@@ -598,22 +639,25 @@ export async function getBrokerPrice(
         }
     }
 
-    if (preferredBroker === 'dukascopy' && !Object.keys(CRYPTO).includes(pair)) {
-        const dukascopyData = await fetchDukascopyPrice(pair);
-        if (dukascopyData && dukascopyData.current_price) {
+    // Swissquote for forex/commodities (real-time, no auth)
+    if (preferredBroker === 'swissquote' && !Object.keys(CRYPTO).includes(pair)) {
+        const swissquoteData = await fetchSwissquotePrice(pair, tfConfig.interval);
+        if (swissquoteData && swissquoteData.current_price) {
+            console.log(`[getBrokerPrice] ✅ Swissquote success: ${pair} = $${swissquoteData.current_price}`);
             return {
                 symbol: pair,
                 name: pairConfig.name,
-                ...dukascopyData,
+                ...swissquoteData,
                 is_realtime: true,
                 is_simulated: false,
-                timestampSource: 'dukascopy' as any,
-                freshnessSeconds: 10
+                timestampSource: 'swissquote' as any,
+                freshnessSeconds: 5
             } as MarketData;
         }
+        console.warn(`[getBrokerPrice] ⚠️ Swissquote failed for ${pair}, using simulated`);
     }
 
-    // Fallback to existing getMarketData (Yahoo/Binance)
+    // Fallback to simulated (NO YAHOO!)
     return getMarketData(pair, timeframe);
 }
 
