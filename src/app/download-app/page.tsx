@@ -32,7 +32,7 @@ export default function DownloadAppPage() {
                             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6">
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
-                                        <div className="text-2xl font-bold">v1.0.0</div>
+                                        <div className="text-2xl font-bold">v1.0.2</div>
                                         <div className="text-sm text-white/80">Version</div>
                                     </div>
                                     <div>
@@ -98,7 +98,7 @@ export default function DownloadAppPage() {
                 {/* Download Section */}
                 <div className="max-w-md mx-auto text-center mb-8">
                     <a
-                        href="/downloads/arra7-v1.0.1.apk"
+                        href="/downloads/arra7-v1.0.2.apk"
                         download
                         className="block"
                     >
