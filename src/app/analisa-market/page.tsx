@@ -137,6 +137,7 @@ export default function AnalisaMarketPage() {
     const [selectedCategory, setSelectedCategory] = useState('commodities');
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
     const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
+    const [selectedBroker, setSelectedBroker] = useState<'oanda' | 'dukascopy' | 'yahoo'>('dukascopy');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<string | null>(null);
     const [marketInfo, setMarketInfo] = useState<MarketInfo | null>(null);
@@ -208,7 +209,11 @@ export default function AnalisaMarketPage() {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pair: selectedPair, timeframe: selectedTimeframe }),
+                body: JSON.stringify({
+                    pair: selectedPair,
+                    timeframe: selectedTimeframe,
+                    broker: selectedBroker
+                }),
             });
 
             const data = await response.json();
@@ -348,6 +353,96 @@ export default function AnalisaMarketPage() {
                                         {tf.label}
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Broker Feed Selection */}
+                        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+                            <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+                                <span>🌐</span> Price Source
+                            </h3>
+                            <div className="space-y-2">
+                                {/* OANDA Option */}
+                                <button
+                                    onClick={() => setSelectedBroker('oanda')}
+                                    className={`
+                                        w-full px-4 py-3 rounded-lg text-left transition-all border-2
+                                        ${selectedBroker === 'oanda'
+                                            ? 'bg-green-50 border-green-500 dark:bg-green-900/20'
+                                            : 'bg-[var(--bg-secondary)] border-transparent hover:bg-[var(--bg-tertiary)]'
+                                        }
+                                    `}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-2xl ${selectedBroker === 'oanda' ? '' : 'grayscale opacity-50'}`}>🟢</span>
+                                            <div>
+                                                <div className="font-semibold text-sm text-[var(--text-primary)]">OANDA</div>
+                                                <div className="text-xs text-[var(--text-secondary)]">Real-time Feed</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
+                                            HIGH
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {/* Dukascopy Option */}
+                                <button
+                                    onClick={() => setSelectedBroker('dukascopy')}
+                                    className={`
+                                        w-full px-4 py-3 rounded-lg text-left transition-all border-2
+                                        ${selectedBroker === 'dukascopy'
+                                            ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20'
+                                            : 'bg-[var(--bg-secondary)] border-transparent hover:bg-[var(--bg-tertiary)]'
+                                        }
+                                    `}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-2xl ${selectedBroker === 'dukascopy' ? '' : 'grayscale opacity-50'}`}>🔵</span>
+                                            <div>
+                                                <div className="font-semibold text-sm text-[var(--text-primary)]">Dukascopy</div>
+                                                <div className="text-xs text-[var(--text-secondary)]">Swiss Bank Feed</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                                            HIGH
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {/* Yahoo Option */}
+                                <button
+                                    onClick={() => setSelectedBroker('yahoo')}
+                                    className={`
+                                        w-full px-4 py-3 rounded-lg text-left transition-all border-2
+                                        ${selectedBroker === 'yahoo'
+                                            ? 'bg-gray-50 border-gray-500 dark:bg-gray-900/20'
+                                            : 'bg-[var(--bg-secondary)] border-transparent hover:bg-[var(--bg-tertiary)]'
+                                        }
+                                    `}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-2xl ${selectedBroker === 'yahoo' ? '' : 'grayscale opacity-50'}`}>⚪</span>
+                                            <div>
+                                                <div className="font-semibold text-sm text-[var(--text-primary)]">Yahoo Finance</div>
+                                                <div className="text-xs text-[var(--text-secondary)]">Reference Only</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold">
+                                            REF
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+
+                            {/* Disclaimer */}
+                            <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                <p className="text-xs text-amber-800 dark:text-amber-200">
+                                    💡 <strong>Tip:</strong> Pilih broker yang paling dekat dengan broker MT4/MT5 Anda untuk akurasi lebih baik.
+                                </p>
                             </div>
                         </div>
 
@@ -498,10 +593,10 @@ export default function AnalisaMarketPage() {
                                     <div className="flex justify-between">
                                         <span className="text-[var(--text-secondary)]">Status</span>
                                         <span className={`text-xs px-2 py-0.5 rounded font-semibold ${marketInfo.isSimulated
-                                                ? 'bg-red-100 text-red-700'
-                                                : marketInfo.isRealtime
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-yellow-100 text-yellow-700'
+                                            ? 'bg-red-100 text-red-700'
+                                            : marketInfo.isRealtime
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {marketInfo.isSimulated ? '🔴 SIMULATED' : marketInfo.isRealtime ? '🟢 LIVE' : '🟡 DELAYED'}
                                         </span>

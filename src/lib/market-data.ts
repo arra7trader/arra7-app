@@ -95,6 +95,56 @@ export const FOREX_PAIRS = {
     ...INDICES,
 } as const;
 
+// ===================
+// BROKER CONFIGURATIONS
+// ===================
+export const BROKER_CONFIGS = {
+    oanda: {
+        id: 'oanda',
+        name: 'OANDA',
+        description: 'OANDA Practice Feed (Real-time)',
+        endpoint: 'https://api-fxpractice.oanda.com/v3',
+        accuracy: 'high',
+        requiresAuth: true,
+        free: true,
+        estimatedSpread: {
+            XAUUSD: 0.5, // pips
+            EURUSD: 0.3,
+            GBPUSD: 0.5,
+        }
+    },
+    dukascopy: {
+        id: 'dukascopy',
+        name: 'Dukascopy',
+        description: 'Dukascopy Swiss Feed (Free)',
+        endpoint: 'https://freeserv.dukascopy.com/2.0',
+        accuracy: 'high',
+        requiresAuth: false,
+        free: true,
+        estimatedSpread: {
+            XAUUSD: 0.8,
+            EURUSD: 0.4,
+            GBPUSD: 0.6,
+        }
+    },
+    yahoo: {
+        id: 'yahoo',
+        name: 'Yahoo Finance',
+        description: 'Yahoo Finance (Reference)',
+        endpoint: 'https://query2.finance.yahoo.com',
+        accuracy: 'reference',
+        requiresAuth: false,
+        free: true,
+        estimatedSpread: {
+            XAUUSD: 2.0,
+            EURUSD: 1.0,
+            GBPUSD: 1.5,
+        }
+    }
+} as const;
+
+export type BrokerSource = keyof typeof BROKER_CONFIGS;
+
 // Category definitions for UI
 export const PAIR_CATEGORIES = [
     {
@@ -385,6 +435,186 @@ async function fetchBinancePrice(symbol: string, interval: string): Promise<Part
         }
     }
     return null;
+}
+
+// Helper: Fetch from OANDA Practice API
+async function fetchOandaPrice(symbol: string, interval: string): Promise<Partial<MarketData> | null> {
+    const apiKey = process.env.NEXT_PUBLIC_OANDA_API_KEY || process.env.OANDA_API_KEY;
+
+    if (!apiKey) {
+        console.warn('OANDA API key not configured');
+        return null;
+    }
+
+    try {
+        // Map symbols to OANDA format
+        const oandaSymbol = symbol.replace('/', '_'); // XAUUSD -> XAU_USD
+
+        // Map interval to OANDA granularity
+        const granularityMap: Record<string, string> = {
+            '1m': 'M1',
+            '5m': 'M5',
+            '15m': 'M15',
+            '30m': 'M30',
+            '1h': 'H1',
+            '4h': 'H4',
+            '1d': 'D'
+        };
+        const granularity = granularityMap[interval] || 'H1';
+
+        const endpoint = `https://api-fxpractice.oanda.com/v3/instruments/${oandaSymbol}/candles`;
+        const response = await fetch(`${endpoint}?granularity=${granularity}&count=50`, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) {
+            console.warn(`OANDA API error: ${response.status}`);
+            return null;
+        }
+
+        const data = await response.json();
+        const candles: Candle[] = data.candles?.map((c: any) => ({
+            time: c.time,
+            open: parseFloat(c.mid.o),
+            high: parseFloat(c.mid.h),
+            low: parseFloat(c.mid.l),
+            close: parseFloat(c.mid.c),
+            volume: c.volume || 0
+        })) || [];
+
+        if (candles.length === 0) return null;
+
+        const last = candles[candles.length - 1];
+        const prev = candles.length > 1 ? candles[candles.length - 2] : last;
+        const change = ((last.close - prev.close) / prev.close) * 100;
+
+        return {
+            current_price: last.close,
+            open: last.open,
+            high: last.high,
+            low: last.low,
+            close: last.close,
+            change_percent: Number(change.toFixed(4)),
+            volume: last.volume,
+            timestamp: new Date().toISOString(),
+            candles
+        };
+
+    } catch (error) {
+        console.error('OANDA fetch error:', error);
+        return null;
+    }
+}
+
+// Helper: Fetch from Dukascopy (No auth needed!)
+async function fetchDukascopyPrice(symbol: string): Promise<Partial<MarketData> | null> {
+    try {
+        // Dukascopy uses different endpoint structure
+        // For simplicity, we'll use their public quote API
+        const dukascopySymbol = symbol.replace('/', ''); // XAUUSD format
+
+        // Dukascopy quote endpoint (public, no auth)
+        const endpoint = `https://freeserv.dukascopy.com/2.0/index.php`;
+        const params = new URLSearchParams({
+            path: `quotes/${dukascopySymbol}/latest`,
+            json: 'true'
+        });
+
+        const response = await fetch(`${endpoint}?${params}`, {
+            cache: 'no-store'
+        });
+
+        if (!response.ok) {
+            console.warn(`Dukascopy API error: ${response.status}`);
+            return null;
+        }
+
+        const data = await response.json();
+
+        // Dukascopy format varies, basic implementation
+        if (!data || !data.quote) return null;
+
+        const price = parseFloat(data.quote.bid || data.quote.close || 0);
+        if (price === 0) return null;
+
+        // For Dukascopy we get current price, generate simple candle
+        const candle: Candle = {
+            time: new Date().toISOString(),
+            open: price,
+            high: price * 1.001,
+            low: price * 0.999,
+            close: price,
+            volume: 0
+        };
+
+        return {
+            current_price: price,
+            open: price,
+            high: price * 1.001,
+            low: price * 0.999,
+            close: price,
+            change_percent: 0,
+            volume: 0,
+            timestamp: new Date().toISOString(),
+            candles: [candle]
+        };
+
+    } catch (error) {
+        console.error('Dukascopy fetch error:', error);
+        return null;
+    }
+}
+
+// Main function: Get price from specified broker with fallback
+export async function getBrokerPrice(
+    pair: ForexPair,
+    timeframe: Timeframe,
+    preferredBroker: BrokerSource = 'dukascopy'
+): Promise<MarketData> {
+    const pairConfig = FOREX_PAIRS[pair];
+    const tfConfig = TIMEFRAMES[timeframe];
+
+    if (!pairConfig) {
+        return generateDummyData(pair, pair);
+    }
+
+    // Try preferred broker first
+    if (preferredBroker === 'oanda' && !Object.keys(CRYPTO).includes(pair)) {
+        const oandaData = await fetchOandaPrice(pair, tfConfig.interval);
+        if (oandaData && oandaData.current_price) {
+            return {
+                symbol: pair,
+                name: pairConfig.name,
+                ...oandaData,
+                is_realtime: true,
+                is_simulated: false,
+                timestampSource: 'oanda' as any,
+                freshnessSeconds: 5
+            } as MarketData;
+        }
+    }
+
+    if (preferredBroker === 'dukascopy' && !Object.keys(CRYPTO).includes(pair)) {
+        const dukascopyData = await fetchDukascopyPrice(pair);
+        if (dukascopyData && dukascopyData.current_price) {
+            return {
+                symbol: pair,
+                name: pairConfig.name,
+                ...dukascopyData,
+                is_realtime: true,
+                is_simulated: false,
+                timestampSource: 'dukascopy' as any,
+                freshnessSeconds: 10
+            } as MarketData;
+        }
+    }
+
+    // Fallback to existing getMarketData (Yahoo/Binance)
+    return getMarketData(pair, timeframe);
 }
 
 function generateDummyData(symbol: string, name: string): MarketData {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getMarketData, formatMarketDataForAI, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES } from '@/lib/market-data';
+import { getMarketData, getBrokerPrice, formatMarketDataForAI, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES, BrokerSource } from '@/lib/market-data';
 import { analyzeWithGroq } from '@/lib/groq-ai';
 import { checkQuota, useQuota, getQuotaStatus } from '@/lib/quota';
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
         // Parse request body
         const body = await request.json();
-        const { pair, timeframe } = body as { pair: string; timeframe: string };
+        const { pair, timeframe, broker } = body as { pair: string; timeframe: string; broker?: BrokerSource };
 
         // Validate pair
         if (!pair || !(pair in FOREX_PAIRS)) {
@@ -90,8 +90,10 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Get market data
-        const marketData = await getMarketData(pair as ForexPair, timeframe as Timeframe);
+        // Get market data - use broker-specific function if broker is specified
+        const marketData = broker && broker !== 'yahoo'
+            ? await getBrokerPrice(pair as ForexPair, timeframe as Timeframe, broker)
+            : await getMarketData(pair as ForexPair, timeframe as Timeframe);
 
         // Add freshness context to the formatted data
         const freshnessInfo = marketData.is_simulated

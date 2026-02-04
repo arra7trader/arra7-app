@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getMarketData, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES } from '@/lib/market-data';
+import { getMarketData, getBrokerPrice, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES, BrokerSource, BROKER_CONFIGS } from '@/lib/market-data';
 
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const pair = searchParams.get('pair') || 'XAUUSD';
         const timeframe = searchParams.get('timeframe') || '1h';
+        const broker = searchParams.get('broker') as BrokerSource || 'yahoo';
 
         // Validate
         if (!(pair in FOREX_PAIRS)) {
@@ -22,11 +23,16 @@ export async function GET(request: Request) {
             );
         }
 
-        const marketData = await getMarketData(pair as ForexPair, timeframe as Timeframe);
+        // Use broker-specific function if broker is specified
+        const marketData = broker && broker !== 'yahoo'
+            ? await getBrokerPrice(pair as ForexPair, timeframe as Timeframe, broker)
+            : await getMarketData(pair as ForexPair, timeframe as Timeframe);
 
         return NextResponse.json({
             status: 'success',
             data: marketData,
+            broker: broker || 'yahoo',
+            brokerInfo: BROKER_CONFIGS[broker] || BROKER_CONFIGS.yahoo,
             timestamp: new Date().toISOString(),
         });
 
