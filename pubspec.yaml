@@ -1,0 +1,46 @@
+name: arra7_mobile
+description: "ARRA7 - Premium AI Trading App"
+publish_to: 'none'
+
+version: 2.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI & Assets
+  flutter_svg: ^2.0.9
+  google_fonts: ^6.1.0
+  fl_chart: ^0.69.0
+  
+  # HTTP Client
+  http: ^1.2.0
+  
+  # Local Storage
+  shared_preferences: ^2.2.0
+  
+  # URL Launcher
+  url_launcher: ^6.2.0
+  
+  # State Management
+  provider: ^6.1.0
+
+  # Web View
+  flutter_inappwebview: ^6.0.0
+  permission_handler: ^11.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # We will use string-based SVGs to avoid asset management issues
+  # but we keep the folder structure ready
+  assets:
+    - assets/images/
