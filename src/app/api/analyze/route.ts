@@ -91,9 +91,32 @@ export async function POST(request: NextRequest) {
         }
 
         // Get market data - use broker-specific function if broker is specified
-        const marketData = broker && broker !== 'yahoo'
-            ? await getBrokerPrice(pair as ForexPair, timeframe as Timeframe, broker)
-            : await getMarketData(pair as ForexPair, timeframe as Timeframe);
+        let marketData;
+        try {
+            marketData = broker && broker !== 'yahoo'
+                ? await getBrokerPrice(pair as ForexPair, timeframe as Timeframe, broker)
+                : await getMarketData(pair as ForexPair, timeframe as Timeframe);
+
+            // Double-check: REJECT simulated data
+            if (marketData.is_simulated) {
+                return NextResponse.json(
+                    {
+                        status: 'error',
+                        message: 'Data real-time tidak tersedia saat ini. API Swissquote sedang bermasalah. Silakan coba lagi dalam beberapa menit.'
+                    },
+                    { status: 503 }
+                );
+            }
+        } catch (error: any) {
+            console.error('[Analyze API] Market data fetch error:', error);
+            return NextResponse.json(
+                {
+                    status: 'error',
+                    message: error.message || 'Gagal mengambil data harga real-time. Silakan coba lagi.'
+                },
+                { status: 503 }
+            );
+        }
 
         // Add freshness context to the formatted data
         const freshnessInfo = marketData.is_simulated

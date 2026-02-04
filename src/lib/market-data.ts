@@ -610,7 +610,7 @@ async function fetchSwissquotePrice(symbol: string, interval: string): Promise<P
     }
 }
 
-// Main function: Get price from specified broker with fallback
+// Main function: Get price from specified broker - NO SIMULATED DATA!
 export async function getBrokerPrice(
     pair: ForexPair,
     timeframe: Timeframe,
@@ -620,13 +620,29 @@ export async function getBrokerPrice(
     const tfConfig = TIMEFRAMES[timeframe];
 
     if (!pairConfig) {
-        return generateDummyData(pair, pair);
+        throw new Error(`Invalid trading pair: ${pair}`);
     }
 
-    // Try preferred broker first
-    if (preferredBroker === 'oanda' && !Object.keys(CRYPTO).includes(pair)) {
+    console.log(`[getBrokerPrice] Fetching ${pair} from ${preferredBroker}`);
+
+    // For CRYPTO pairs → use Binance (real-time)
+    if (Object.keys(CRYPTO).includes(pair)) {
+        console.log(`[getBrokerPrice] ${pair} is crypto → using Binance`);
+        const binanceData = await getMarketData(pair, timeframe);
+
+        // Ensure Binance data is real
+        if (binanceData.is_simulated) {
+            throw new Error(`Binance real-time data unavailable for ${pair}`);
+        }
+
+        return binanceData;
+    }
+
+    // For FOREX/COMMODITIES → try OANDA first if selected
+    if (preferredBroker === 'oanda') {
         const oandaData = await fetchOandaPrice(pair, tfConfig.interval);
-        if (oandaData && oandaData.current_price) {
+        if (oandaData && oandaData.current_price && oandaData.current_price > 0) {
+            console.log(`[getBrokerPrice] ✅ OANDA success: ${pair} = $${oandaData.current_price}`);
             return {
                 symbol: pair,
                 name: pairConfig.name,
@@ -637,28 +653,30 @@ export async function getBrokerPrice(
                 freshnessSeconds: 5
             } as MarketData;
         }
+        console.warn(`[getBrokerPrice] ⚠️ OANDA failed for ${pair}, trying Swissquote...`);
     }
 
-    // Swissquote for forex/commodities (real-time, no auth)
-    if (preferredBroker === 'swissquote' && !Object.keys(CRYPTO).includes(pair)) {
-        const swissquoteData = await fetchSwissquotePrice(pair, tfConfig.interval);
-        if (swissquoteData && swissquoteData.current_price) {
-            console.log(`[getBrokerPrice] ✅ Swissquote success: ${pair} = $${swissquoteData.current_price}`);
-            return {
-                symbol: pair,
-                name: pairConfig.name,
-                ...swissquoteData,
-                is_realtime: true,
-                is_simulated: false,
-                timestampSource: 'swissquote' as any,
-                freshnessSeconds: 5
-            } as MarketData;
-        }
-        console.warn(`[getBrokerPrice] ⚠️ Swissquote failed for ${pair}, using simulated`);
+    // For FOREX/COMMODITIES → Swissquote (primary)
+    const swissquoteData = await fetchSwissquotePrice(pair, tfConfig.interval);
+    if (swissquoteData && swissquoteData.current_price && swissquoteData.current_price > 0) {
+        console.log(`[getBrokerPrice] ✅ Swissquote success: ${pair} = $${swissquoteData.current_price}`);
+        return {
+            symbol: pair,
+            name: pairConfig.name,
+            ...swissquoteData,
+            is_realtime: true,
+            is_simulated: false,
+            timestampSource: 'swissquote' as any,
+            freshnessSeconds: 5
+        } as MarketData;
     }
 
-    // Fallback to simulated (NO YAHOO!)
-    return getMarketData(pair, timeframe);
+    // NO FALLBACK TO SIMULATED! Return error instead
+    console.error(`[getBrokerPrice] ❌ All price sources failed for ${pair}`);
+    throw new Error(
+        `Real-time price data unavailable for ${pair}. ` +
+        `Swissquote API may be down. Please try again later.`
+    );
 }
 
 function generateDummyData(symbol: string, name: string): MarketData {
