@@ -3,17 +3,14 @@ import { getBrokerPrice, FOREX_PAIRS } from '@/lib/market-data';
 import { getForexNews } from '@/lib/groq-ai';
 import { tool } from 'ai';
 
-// 1. Price Checker Tool Schema
-// Defined outside to allow type inference usage
-const priceParams = z.object({
-    symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD)'),
-    timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe for the data (default: 1h)'),
-});
-
+// 1. Price Checker Tool
 export const priceTool = tool({
     description: 'Get real-time price for a crypto or forex pair. Use this when user asks for "price", "market", or "chart".',
-    parameters: priceParams,
-    execute: async ({ symbol, timeframe = '1h' }: z.infer<typeof priceParams>) => {
+    parameters: z.object({
+        symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD)'),
+        timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe for the data (default: 1h)'),
+    }),
+    execute: async ({ symbol, timeframe = '1h' }) => {
         try {
             // Normalize symbol
             let pair = symbol.toUpperCase().replace('/', '').replace('-', '');
@@ -56,14 +53,11 @@ export const priceTool = tool({
     },
 });
 
-// 2. News Tool Schema
-const newsParams = z.object({});
-
+// 2. News Tool
 export const newsTool = tool({
     description: 'Get the latest high-impact financial news (Forex/Crypto). Use this for "news", "events", or "calendar".',
-    parameters: newsParams,
-    // Accept empty object as args to satisfy Zod inference
-    execute: async (_args: z.infer<typeof newsParams>) => {
+    parameters: z.object({}),
+    execute: async () => {
         try {
             const { events } = await getForexNews();
             if (events.length === 0) return { message: "No high impact news for today/tomorrow." };
