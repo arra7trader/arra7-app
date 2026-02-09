@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Statement: 123456789 - John Doe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 4px;
+            text-align: right;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .profit {
+            color: green;
+        }
+
+        .loss {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align:center; font-weight:bold; font-size:16px; margin:10px;">Account Statement: 123456789 (USD)
+    </div>
+    <table>
+        <tr align="center">
+            <th>Ticket</th>
+            <th>Open Time</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Item</th>
+            <th>Price</th>
+            <th>S / L</th>
+            <th>T / P</th>
+            <th>Close Time</th>
+            <th>Price</th>
+            <th>Commission</th>
+            <th>Taxes</th>
+            <th>Swap</th>
+            <th>Profit</th>
+        </tr>
+
+        <!-- Scenario 1: Normal Win (London Open) -->
+        <tr>
+            <td>1001</td>
+            <td>2024.01.10 14:05:00</td>
+            <td>buy</td>
+            <td>1.00</td>
+            <td>GBPUSD</td>
+            <td>1.27000</td>
+            <td>1.26800</td>
+            <td>1.27500</td>
+            <td>2024.01.10 16:30:00</td>
+            <td>1.27450</td>
+            <td>-5.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td class="profit">450.00</td>
+        </tr>
+
+        <!-- Scenario 2: Revenge Trading Sequence (XAUUSD) -->
+        <!-- Trade A: Stop Loss Hit -->
+        <tr>
+            <td>1002</td>
+            <td>2024.01.11 09:00:00</td>
+            <td>sell</td>
+            <td>0.50</td>
+            <td>XAUUSD</td>
+            <td>2030.00</td>
+            <td>2035.00</td>
+            <td>2020.00</td>
+            <td>2024.01.11 09:15:00</td>
+            <td>2035.00</td>
+            <td>-3.50</td>
+            <td>0.00</td>
+            <td>-1.20</td>
+            <td class="loss">-250.00</td> <!-- Loss $250 -->
+        </tr>
+
+        <!-- Trade B: Revenge Entry 1 (5 mins later) - Force High Lot -->
+        <tr>
+            <td>1003</td>
+            <td>2024.01.11 09:20:00</td>
+            <td>sell</td>
+            <td>1.00</td>
+            <td>XAUUSD</td>
+            <td>2036.00</td>
+            <td>2040.00</td>
+            <td>2025.00</td>
+            <td>2024.01.11 09:25:00</td>
+            <td>2040.00</td>
+            <td>-7.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td class="loss">-400.00</td> <!-- Loss $400 -->
+        </tr>
+
+        <!-- Trade C: Revenge Entry 2 (Immediately after) - Even Higher Lot -->
+        <tr>
+            <td>1004</td>
+            <td>2024.01.11 09:26:00</td>
+            <td>sell</td>
+            <td>2.00</td>
+            <td>XAUUSD</td>
+            <td>2041.00</td>
+            <td>0.00000</td>
+            <td>0.00000</td>
+            <td>2024.01.11 09:35:00</td>
+            <td>2045.00</td>
+            <td>-14.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td class="loss">-800.00</td> <!-- Loss $800 -->
+        </tr>
+
+        <!-- Scenario 3: Mixed Trading -->
+        <tr>
+            <td>1005</td>
+            <td>2024.01.12 10:00:00</td>
+            <td>buy</td>
+            <td>0.10</td>
+            <td>EURUSD</td>
+            <td>1.09000</td>
+            <td>1.08800</td>
+            <td>1.09500</td>
+            <td>2024.01.12 15:00:00</td>
+            <td>1.09400</td>
+            <td>-0.50</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td class="profit">40.00</td>
+        </tr>
+
+        <tr>
+            <td>1006</td>
+            <td>2024.01.13 20:00:00</td>
+            <td>buy</td>
+            <td>5.00</td>
+            <td>USDJPY</td>
+            <td>145.000</td>
+            <td>144.500</td>
+            <td>146.000</td>
+            <td>2024.01.13 20:05:00</td>
+            <td>144.800</td>
+            <td>-25.00</td>
+            <td>0.00</td>
+            <td>0.00</td>
+            <td class="loss">-1000.00</td> <!-- Big Loss on Overleveraging -->
+        </tr>
+
+        <tr style="font-weight:bold">
+            <td colspan="13" align="right">Total Net Profit:</td>
+            <td class="loss">-1960.00</td>
+        </tr>
+    </table>
+</body>
+
+</html>

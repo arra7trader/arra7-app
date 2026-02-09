@@ -1,0 +1,305 @@
+{
+    "nav": {
+        "home": "Beranda",
+        "pricing": "Harga",
+        "products": "Produk",
+        "indicators": "Indikator",
+        "expertAdvisors": "Expert Advisors",
+        "login": "Masuk dengan Google",
+        "logout": "Keluar",
+        "analisaMarket": "Analisa Market",
+        "analisaSaham": "Analisa Saham",
+        "bookmap": "Bookmap ARRA7",
+        "tradeJournal": "Jurnal Trading",
+        "portfolio": "Portfolio",
+        "socialFeed": "Feed Sosial"
+    },
+    "hero": {
+        "badge": "Neural Engine v7.0 Live",
+        "headline": "Trading dengan Kekuatan",
+        "headlineHighlight": "Neural Network",
+        "headlineEnd": "",
+        "titleSuffix": "Neural Network AI",
+        "subheadline": "AI kami menganalisa jutaan data market setiap detik, mempelajari pola 'Whale', dan memberikan probabilitas kemenangan tertinggi untuk Anda.",
+        "ctaBookmap": "Bookmap ARRA7",
+        "ctaStock": "Analisa Saham",
+        "ctaForex": "Forex AI",
+        "ctaPricing": "Lihat Harga"
+    },
+    "stats": {
+        "activeTraders": "Active Traders",
+        "signalAccuracy": "Akurasi Sinyal"
+    },
+    "trust": {
+        "freeBasic": "Gratis Selamanya untuk BASIC",
+        "noCreditCard": "Tanpa Kartu Kredit",
+        "fastSignup": "Daftar dalam 30 Detik",
+        "telegramSupport": "Support via Telegram"
+    },
+    "howItWorks": {
+        "badge": "Panduan Tutorial",
+        "title": "Cara Menggunakan ARRA7",
+        "desc": "Panduan lengkap menggunakan semua fitur ARRA7",
+        "tabs": {
+            "bookmap": "🔥 Bookmap ARRA7",
+            "forex": "📊 Analisa Forex",
+            "stock": "🇮🇩 Analisa Saham",
+            "doctor": "🩺 AI Doctor",
+            "sentiment": "📡 Sentiment"
+        },
+        "bookmap": {
+            "step1": {
+                "title": "Pilih Aset",
+                "desc": "Pilih BTC/USD atau XAUUSD dari dropdown menu"
+            },
+            "step2": {
+                "title": "Baca Heatmap",
+                "desc": "Hijau = Tekanan Beli, Merah = Tekanan Jual. Makin gelap = Makin kuat"
+            },
+            "step3": {
+                "title": "Whale Alerts",
+                "desc": "AI mendeteksi order institusi besar secara real-time"
+            },
+            "step4": {
+                "title": "Ikuti Sinyal AI",
+                "desc": "Dapatkan rekomendasi BUY/SELL dengan tingkat kepercayaan"
+            }
+        },
+        "forex": {
+            "step1": {
+                "title": "Pilih Pair",
+                "desc": "Pilih pair forex (EURUSD, GBPUSD, XAUUSD, dll.)"
+            },
+            "step2": {
+                "title": "Pilih Timeframe",
+                "desc": "Pilih M1, M5, M15, M30, H1, H4, atau D1"
+            },
+            "step3": {
+                "title": "Klik Analisa",
+                "desc": "AI akan menganalisa market dalam hitungan detik"
+            },
+            "step4": {
+                "title": "Baca Hasil",
+                "desc": "Lihat Entry Zone, TP, SL, dan thesis lengkap"
+            }
+        },
+        "stock": {
+            "step1": {
+                "title": "Pilih Emiten",
+                "desc": "Ketik kode saham (BBCA, TLKM, ASII, dll.)"
+            },
+            "step2": {
+                "title": "Pilih Metode",
+                "desc": "Pilih Technical, Fundamental, atau Combine"
+            },
+            "step3": {
+                "title": "Jalankan Analisa",
+                "desc": "AI memproses data real-time IDX"
+            },
+            "step4": {
+                "title": "Dapatkan Insight",
+                "desc": "Rekomendasi lengkap dengan target harga"
+            }
+        },
+        "doctor": {
+            "step1": {
+                "title": "Upload History",
+                "desc": "Tarik & lepas laporan HTML MT4/MT5 Anda"
+            },
+            "step2": {
+                "title": "Diagnosa AI",
+                "desc": "AI memindai pola, kesalahan, dan kelebihan tersembunyi"
+            },
+            "step3": {
+                "title": "Dapat Resep",
+                "desc": "Terima saran praktis untuk perbaiki kebiasaan buruk"
+            },
+            "step4": {
+                "title": "Tingkatkan Winrate",
+                "desc": "Terapkan perbaikan dan pantau kemajuan Anda"
+            }
+        },
+        "sentiment": {
+            "step1": {
+                "title": "Cek Mood",
+                "desc": "Lihat apakah pasar Risk-On (Greed) atau Risk-Off (Fear)"
+            },
+            "step2": {
+                "title": "Pantau Meteran",
+                "desc": "Monitor sentimen USD dan Gold secara real-time"
+            },
+            "step3": {
+                "title": "Baca Feed",
+                "desc": "AI menyaring 10.000+ berita untuk event berdampak tinggi"
+            },
+            "step4": {
+                "title": "Entry Awal",
+                "desc": "Masuk pasar sebelum harga bergerak karena berita"
+            }
+        },
+        "kanji": {
+            "title": "Fibonacci Kanji",
+            "subtitle": "Fibonacci Kanji Interaktif",
+            "desc": "Tentukan High dan Low untuk melihat geometri pasar tersembunyi.",
+            "start": "Klik untuk Set Swing High (Start)",
+            "end": "Klik untuk Set Swing Low (End)",
+            "reset": "Reset Chart",
+            "levels": "Level Kanji"
+        }
+    },
+    "features": {
+        "badge": "⚡ Institutional Edge",
+        "title": "Senjata Rahasia Smart Money",
+        "subtitle": "Teknologi yang memberikan Anda 'Unfair Advantage' di market.",
+        "items": {
+            "heatmap": {
+                "title": "Whale Radar System",
+                "desc": "Mendeteksi likuiditas tersembunyi & order institusi besar secara real-time. Jangan lagi terjebak manipulasi pasar.",
+                "badge": "ANTI-MANIPULATION"
+            },
+            "stock": {
+                "title": "IDX Quant Engine",
+                "desc": "Scanning 800+ saham Indonesia dalam milidetik. Menemukan saham undervalued dengan valuasi Fair Value otomatis.",
+                "badge": "QUANT ANALYSIS"
+            },
+            "ai": {
+                "title": "Neural Predictive Core",
+                "desc": "Model Deep Learning (LSTM & Transformer) yang 'belajar' dari validasi market setiap hari. Semakin lama, semakin pintar.",
+                "badge": "SELF-LEARNING"
+            },
+            "zones": {
+                "title": "Smart Execution Zones",
+                "desc": "Zona dinamis yang menyesuaikan dengan volatilitas market. Stop Loss & Take Profit yang dihitung secara matematis.",
+                "badge": "RISK GUARD"
+            },
+            "thesis": {
+                "title": "Institutional Grade Logic",
+                "desc": "Setiap sinyal dilengkapi alasan logis: Struktur Pasar, Arus Uang, & Sentimen Berita. Anda akan mengerti MENGAPA harus entry.",
+                "badge": "FULL THESIS"
+            },
+            "updates": {
+                "title": "Ultra-Low Latency Ops",
+                "desc": "Infrastruktur cloud tier-1 yang memproses data tick-by-tick. Kecepatan adalah uang, dan kami memberikannya untuk Anda.",
+                "badge": "12ms LATENCY"
+            }
+        }
+    },
+    "testimonials": {
+        "title": "Apa Kata Mereka?",
+        "desc": "Trader Indonesia yang sudah merasakan manfaat ARRA7",
+        "items": [
+            {
+                "text": "Gila sih ini AI nya. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah!"
+            },
+            {
+                "text": "ARRA7 beda dari yang lain, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede."
+            },
+            {
+                "text": "Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, simple tapi powerful."
+            }
+        ]
+    },
+    "ctaSection": {
+        "promoBadge": "🔥 Promo Tahun Baru — Diskon hingga 50%!",
+        "title": "Siap Meningkatkan Trading Anda?",
+        "desc": "Bergabung dengan 100+ trader Indonesia yang sudah profit dengan analisa AI ARRA7.",
+        "list": {
+            "freeBasic": "Akun BASIC gratis selamanya",
+            "noCreditCard": "Tidak perlu kartu kredit",
+            "cancelAnytime": "Cancel kapan saja"
+        },
+        "btnStart": "Mulai Sekarang — Gratis",
+        "btnPro": "Lihat Paket PRO"
+    },
+    "footer": {
+        "subtitle": "AI-Powered Trading Analysis",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "faq": "FAQ",
+        "copyright": "© 2026 ARRA7. All rights reserved."
+    },
+    "auth": {
+        "loginTitle": "Selamat Datang di ARRA7",
+        "loginSubtitle": "Masuk untuk mengakses alat trading premium",
+        "continueWithGoogle": "Lanjutkan dengan Google",
+        "redirecting": "Mengalihkan..."
+    },
+    "analisaMarket": {
+        "title": "Analisa Market",
+        "subtitle": "Analisis pasar forex real-time didukung AI",
+        "welcome": "Selamat datang kembali"
+    },
+    "bookmap": {
+        "title": "Bookmap ARRA7",
+        "comingSoon": "Fitur Bookmap ARRA7 sedang dalam pengembangan dan akan segera hadir",
+        "notifyMe": "Ingin notifikasi saat Bookmap ARRA7 tersedia?",
+        "mlSettings": "Pengaturan ML",
+        "predictionHorizon": "Horizon Prediksi",
+        "minConfidence": "Kepercayaan Minimum",
+        "refreshInterval": "Interval Refresh",
+        "showOnHeatmap": "Tampilkan di Heatmap",
+        "showPredictionOverlay": "Tampilkan overlay prediksi di heatmap",
+        "resetDefaults": "Reset ke Default"
+    },
+    "aiDoctor": {
+        "title": "Dokter Trading AI",
+        "subtitle": "Pelatih Trading Berbasis AI",
+        "description": "Berhenti buang uang. Upload history MT4/MT5 Anda dan temukan secara tepat <span class='font-semibold text-[var(--text-primary)]'>kenapa Anda loss</span> dan cara memperbaikinya.",
+        "uploadTitle": "Tarik Statement Anda ke Sini",
+        "uploadDesc": "Mendukung laporan .HTML dari MT4/MT5/cTrader",
+        "selectFile": "Pilih File",
+        "criticalFlaw": "Kelemahan Kritis Terdeteksi",
+        "hiddenSuperpower": "Kekuatan Tersembunyi",
+        "prescription": "Resep:",
+        "revengeTrading": "Revenge Trading",
+        "revengeDesc": "Anda memiliki probabilitas loss 85% untuk trade yang dibuka dalam 15 menit setelah kena Stop Loss.",
+        "revengeFix": "Paksa Cooldown 1 Jam setelah SL.",
+        "londonSession": "Sesi London",
+        "londonDesc": "Win Rate Anda 72% antara jam 14:00 - 17:00 (WIB). Anda paling sinkron dengan Pembukaan London.",
+        "londonFix": "Naikkan Lot Size sebesar 20% hanya di jam ini."
+    },
+    "sentiment": {
+        "title": "Pelacak Sentimen",
+        "subtitle": "Analisa AI dari 10.000+ Berita & Sinyal Sosial",
+        "liveStream": "Live Stream Aktif",
+        "marketMood": "MOOD PASAR",
+        "usdSentiment": "SENTIMEN USD",
+        "goldSentiment": "SENTIMEN XAU/USD",
+        "strongBullish": "Sangat Bullish",
+        "bearish": "Bearish",
+        "riskOff": "Risk Off (Hindari Resiko)",
+        "riskOffDesc": "Investor lari ke aset aman. Aset Safe Haven (USD, JPY) lebih disukai.",
+        "drivenBy": "Didorong oleh:",
+        "newsFeed": "Feed Berita AI Langsung",
+        "all": "Semua",
+        "highImpact": "Dampak Tinggi"
+    },
+    "kanji": {
+        "title": "Fibonacci Kanji",
+        "subtitle": "Fibonacci Kanji Interaktif",
+        "desc": "Gambar High dan Low untuk melihat geometri pasar tersembunyi.",
+        "start": "1. Klik Swing High",
+        "end": "2. Klik Swing Low",
+        "reset": "Reset Chart",
+        "levels": "Level Kanji",
+        "instruction": "Cara Pakai: Pilih pair -> Tunggu Chart -> Klik High -> Klik Low."
+    },
+    "stockPicks": {
+        "title": "Pilihan AI Hari Ini",
+        "subtitle": "Saham pilihan Artificial Intelligence dengan",
+        "highAccuracy": "Akurasi Tinggi",
+        "confidence": "Kepercayaan",
+        "entry": "Entry",
+        "target": "Target",
+        "stopLoss": "Stop Loss",
+        "direction": "Arah",
+        "analyze": "Analisa Detail",
+        "premium": "Akses Premium",
+        "accuracy": "Akurasi Tertinggi"
+    },
+    "videoShowcase": {
+        "badge": "Video Peragaan",
+        "title": "Lihat ARRA7 Beraksi",
+        "description": "Tonton bagaimana teknologi AI kami mendeteksi peluang profit di pasar secara real-time."
+    }
+}

@@ -1,0 +1,68 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Arra7Trader
+
+//@version=5
+indicator("Fibonacci Kanji Pro", overlay=true)
+
+// --- INPUTS ---
+grp_settings = "Settings"
+trendInput = input.string("Bearish", "Trend Direction", options=["Bullish", "Bearish"], group=grp_settings)
+swingHigh = input.price(0.00, "Swing High (Start)", group=grp_settings)
+swingLow = input.price(0.00, "Swing Low (End)", group=grp_settings)
+
+// Function to calculate level
+calcLevel(h, l, range, level, trend) =>
+    if trend == "Bearish"
+        h - (range * level)
+    else
+        l + (range * level)
+
+// --- CALCULATION ---
+range = math.abs(swingHigh - swingLow)
+isSetupValid = swingHigh > 0 and swingLow > 0
+
+// Current Trend Bool
+isBearish = trendInput == "Bearish"
+
+// Colors
+c_sl = color.new(#ef5350, 0)
+c_entry = color.new(#26a69a, 0)
+c_reversal = color.new(#fbc02d, 0)
+c_break = color.new(#ff9800, 0)
+c_tp1 = color.new(#2962ff, 0)        // Blue
+c_tp2 = color.new(#ab47bc, 0)        // Purple
+c_tp3 = color.new(#37474f, 0)        // Grey
+
+// Plotting Function
+plotKanji(level, name, col, width) =>
+    price = calcLevel(swingHigh, swingLow, range, level, trendInput)
+    if isSetupValid
+        l = line.new(bar_index, price, bar_index + 10, price, color=col, width=width, style=line.style_solid, extend=extend.right)
+        line.delete(l[1]) // Keep only one line per level to avoid clutter if inputs don't change
+        
+        // Label
+        lab = label.new(bar_index + 10, price, text=name + "\n" + str.tostring(price, format.mintick), color=color.new(col, 90), style=label.style_none, textcolor=col, size=size.small, textalign=text.align_left)
+        label.delete(lab[1])
+
+// --- DRAW LEVELS ---
+
+// 0 & 1 (Anchors)
+plotKanji(0.0, isBearish ? "Swing High (SL)" : "Swing Low (SL)", c_sl, 2)
+plotKanji(1.0, isBearish ? "Swing Low" : "Swing High", c_sl, 2)
+
+// Scalping Entry
+plotKanji(0.559, "Entry (0.559)", c_entry, 1)
+plotKanji(0.619, "Entry (0.619)", c_entry, 1)
+
+// Reversal
+plotKanji(0.786, "Reversal (0.786)", c_reversal, 1)
+plotKanji(0.882, "Reversal (0.882)", c_reversal, 1)
+
+// Breakout
+plotKanji(1.124, "Breakout (1.124)", c_break, 1)
+plotKanji(1.272, "Breakout (1.272)", c_break, 1)
+
+// Targets
+plotKanji(1.618, "GOLDEN RATIO (TP1)", c_tp1, 3)
+plotKanji(2.0, "Confluence (TP2)", c_tp2, 2)
+plotKanji(2.618, "Moon Target (TP3)", c_tp3, 1)

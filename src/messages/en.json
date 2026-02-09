@@ -1,0 +1,296 @@
+{
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "products": "Products",
+    "indicators": "Indicators",
+    "expertAdvisors": "Expert Advisors",
+    "login": "Login with Google",
+    "logout": "Logout",
+    "analisaMarket": "Market Analysis",
+    "analisaSaham": "Stock Analysis",
+    "bookmap": "Bookmap ARRA7",
+    "tradeJournal": "Trade Journal",
+    "portfolio": "Portfolio",
+    "socialFeed": "Social Feed"
+  },
+  "hero": {
+    "badge": "Neural Engine v7.0 Live",
+    "headline": "Trading with the Power of",
+    "headlineHighlight": "Neural Networks",
+    "headlineEnd": "",
+    "titleSuffix": "Neural Networks",
+    "subheadline": "Our AI analyzes millions of market data points per second, learning 'Whale' patterns, and delivering the highest probability of winning for you.",
+    "ctaBookmap": "Bookmap ARRA7",
+    "ctaStock": "Stock Analysis",
+    "ctaForex": "Forex AI",
+    "ctaPricing": "View Pricing"
+  },
+  "stats": {
+    "activeTraders": "Active Traders",
+    "signalAccuracy": "Signal Accuracy"
+  },
+  "trust": {
+    "freeBasic": "Free Forever for BASIC",
+    "noCreditCard": "No Credit Card Required",
+    "fastSignup": "Register in 30 Seconds",
+    "telegramSupport": "Support via Telegram"
+  },
+  "howItWorks": {
+    "badge": "Tutorial Guide",
+    "title": "How to Use ARRA7",
+    "desc": "Complete guide to using all ARRA7 features",
+    "tabs": {
+      "bookmap": "🔥 Bookmap ARRA7",
+      "forex": "📊 Forex Analysis",
+      "stock": "🇮🇩 Stock Analysis",
+      "doctor": "🩺 AI Doctor",
+      "sentiment": "📡 Sentiment"
+    },
+    "bookmap": {
+      "step1": {
+        "title": "Select Asset",
+        "desc": "Choose BTC/USD or XAUUSD from the dropdown menu"
+      },
+      "step2": {
+        "title": "Read Heatmap",
+        "desc": "Green = Buy Pressure, Red = Sell Pressure. Darker = Stronger"
+      },
+      "step3": {
+        "title": "Whale Alerts",
+        "desc": "AI detects large institutional orders in real-time"
+      },
+      "step4": {
+        "title": "Follow AI Signal",
+        "desc": "Get BUY/SELL recommendations with confidence level"
+      }
+    },
+    "forex": {
+      "step1": {
+        "title": "Select Pair",
+        "desc": "Choose forex pair (EURUSD, GBPUSD, XAUUSD, etc.)"
+      },
+      "step2": {
+        "title": "Select Timeframe",
+        "desc": "Choose M1, M5, M15, M30, H1, H4, or D1"
+      },
+      "step3": {
+        "title": "Click Analyze",
+        "desc": "AI will analyze the market in seconds"
+      },
+      "step4": {
+        "title": "Read Results",
+        "desc": "View Entry Zone, TP, SL, and complete thesis"
+      }
+    },
+    "stock": {
+      "step1": {
+        "title": "Select Stock",
+        "desc": "Enter stock code (BBCA, TLKM, ASII, etc.)"
+      },
+      "step2": {
+        "title": "Select Method",
+        "desc": "Choose Technical, Fundamental, or Combined"
+      },
+      "step3": {
+        "title": "Run Analysis",
+        "desc": "AI processes real-time IDX data"
+      },
+      "step4": {
+        "title": "Get Insights",
+        "desc": "Complete recommendations with target price"
+      }
+    },
+    "doctor": {
+      "step1": {
+        "title": "Upload History",
+        "desc": "Drag & drop your MT4/MT5 HTML report"
+      },
+      "step2": {
+        "title": "AI Diagnosis",
+        "desc": "AI scans for patterns, mistakes, and hidden strengths"
+      },
+      "step3": {
+        "title": "Get Prescription",
+        "desc": "Receive actionable advice to fix your bad habits"
+      },
+      "step4": {
+        "title": "Improve Winrate",
+        "desc": "Apply the fix and track your improvement"
+      }
+    },
+    "sentiment": {
+      "step1": {
+        "title": "Check Mood",
+        "desc": "See if the market is Risk-On (Greed) or Risk-Off (Fear)"
+      },
+      "step2": {
+        "title": "Scan Gauges",
+        "desc": "Monitor USD and Gold sentiment meters in real-time"
+      },
+      "step3": {
+        "title": "Read Feed",
+        "desc": "AI filters 10,000+ news sources for high-impact events"
+      },
+      "step4": {
+        "title": "Early Entry",
+        "desc": "Enter trades before the price action reflects the news"
+      }
+    }
+  },
+  "features": {
+    "badge": "⚡ Institutional Edge",
+    "title": "The Smart Money's Secret Weapon",
+    "subtitle": "Technology that gives you an 'Unfair Advantage' in the market.",
+    "items": {
+      "heatmap": {
+        "title": "Whale Radar System",
+        "desc": "Detect hidden liquidity & large institutional orders in real-time. Never get trapped by market manipulation again.",
+        "badge": "ANTI-MANIPULATION"
+      },
+      "stock": {
+        "title": "IDX Quant Engine",
+        "desc": "Scans 800+ Indonesian stocks in milliseconds. Finds undervalued stocks with automatic Fair Value valuation.",
+        "badge": "QUANT ANALYSIS"
+      },
+      "ai": {
+        "title": "Neural Predictive Core",
+        "desc": "Deep Learning models (LSTM & Transformer) that 'learn' from market validation daily. Getting smarter every single day.",
+        "badge": "SELF-LEARNING"
+      },
+      "zones": {
+        "title": "Smart Execution Zones",
+        "desc": "Dynamic zones that adapt to market volatility. Mathematically calculated Stop Loss & Take Profit to minimize risk.",
+        "badge": "RISK GUARD"
+      },
+      "thesis": {
+        "title": "Institutional Grade Logic",
+        "desc": "Every signal comes with logical reasoning: Market Structure, Money Flow, & News Sentiment. Know WHY you are entering.",
+        "badge": "FULL THESIS"
+      },
+      "updates": {
+        "title": "Ultra-Low Latency Ops",
+        "desc": "Tier-1 cloud infrastructure processing tick-by-tick data. Speed is money, and we deliver it to you.",
+        "badge": "12ms LATENCY"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "What They Say",
+    "desc": "Indonesian traders who have benefited from ARRA7",
+    "items": [
+      {
+        "text": "This AI is crazy. The entry points are very accurate, just yesterday verified 200 pips profit on XAUUSD. Totally worth it!"
+      },
+      {
+        "text": "ARRA7 is different. The analysis is very detailed using SMC and Fibo. Trading is much more confident now."
+      },
+      {
+        "text": "Office work makes it hard to monitor charts. With ARRA7 just check AI analysis, simple but powerful."
+      }
+    ]
+  },
+  "ctaSection": {
+    "promoBadge": "🔥 New Year Promo — Up to 50% Off!",
+    "title": "Ready to Upgrade Your Trading?",
+    "desc": "Join 100+ traders who are already profitable with ARRA7 AI analysis.",
+    "list": {
+      "freeBasic": "BASIC account free forever",
+      "noCreditCard": "No credit card needed",
+      "cancelAnytime": "Cancel anytime"
+    },
+    "btnStart": "Start Now — Free",
+    "btnPro": "View PRO Plans"
+  },
+  "footer": {
+    "subtitle": "AI-Powered Trading Analysis",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "faq": "FAQ",
+    "copyright": "© 2026 ARRA7. All rights reserved."
+  },
+  "auth": {
+    "loginTitle": "Welcome to ARRA7",
+    "loginSubtitle": "Sign in to access premium trading tools",
+    "continueWithGoogle": "Continue with Google",
+    "redirecting": "Redirecting..."
+  },
+  "analisaMarket": {
+    "title": "Market Analysis",
+    "subtitle": "Real-time forex market analysis powered by AI",
+    "welcome": "Welcome back"
+  },
+  "bookmap": {
+    "title": "Bookmap ARRA7",
+    "comingSoon": "Bookmap ARRA7 feature is under development and will be available soon",
+    "notifyMe": "Want to be notified when Bookmap ARRA7 is available?",
+    "mlSettings": "ML Settings",
+    "predictionHorizon": "Prediction Horizon",
+    "minConfidence": "Min Confidence",
+    "refreshInterval": "Refresh Interval",
+    "showOnHeatmap": "Show on Heatmap",
+    "showPredictionOverlay": "Show prediction overlay on heatmap",
+    "resetDefaults": "Reset to Defaults"
+  },
+  "aiDoctor": {
+    "title": "AI Trade Doctor",
+    "subtitle": "AI-Powered Coaching",
+    "description": "Stop bleeding money. Upload your MT4/MT5 history and discover exactly <span class='font-semibold text-[var(--text-primary)]'>why you keep losing</span> and how to fix it.",
+    "uploadTitle": "Drop your Statement Here",
+    "uploadDesc": "Supports .HTML report from MT4/MT5/cTrader",
+    "selectFile": "Select File",
+    "criticalFlaw": "Critical Flaw Detected",
+    "hiddenSuperpower": "Hidden Superpower",
+    "prescription": "Prescription:",
+    "revengeTrading": "Revenge Trading",
+    "revengeDesc": "You have a 85% probability of losing trades entered within 15 minutes of a Stop Loss hit.",
+    "revengeFix": "Force 1 Hour Cooldown after SL.",
+    "londonSession": "London Session",
+    "londonDesc": "Your Win Rate is 72% between 2 PM - 5 PM (GMT+7). You are most in-sync with London Open.",
+    "londonFix": "Increase Lot Size by 20% only in this window."
+  },
+  "sentiment": {
+    "title": "Sentiment Sniffer",
+    "subtitle": "AI Analysis of 10,000+ News Sources & Social Signals",
+    "liveStream": "Live Stream Active",
+    "marketMood": "MARKET MOOD",
+    "usdSentiment": "USD SENTIMENT",
+    "goldSentiment": "XAU/USD SENTIMENT",
+    "strongBullish": "Strong Bullish",
+    "bearish": "Bearish",
+    "riskOff": "Risk Off",
+    "riskOffDesc": "Investors are fleeing to safety. Safe haven assets (USD, JPY) favored.",
+    "drivenBy": "Driven by:",
+    "newsFeed": "Live AI News Feed",
+    "all": "All",
+    "highImpact": "High Impact"
+  },
+  "kanji": {
+    "title": "Fibonacci Kanji",
+    "subtitle": "Interactive Fibonacci Kanji",
+    "desc": "Draw your High, Low, and Breakdown (optional) points to reveal hidden market geometry.",
+    "start": "1. Click Swing High",
+    "end": "2. Click Swing Low",
+    "reset": "Reset Chart",
+    "levels": "Kanji Levels",
+    "instruction": "Usage: Select pair -> Chart loads -> Click High -> Click Low."
+  },
+  "stockPicks": {
+    "title": "Today's AI Picks",
+    "subtitle": "AI-selected stocks with highest buying signals today.",
+    "highAccuracy": "High Accuracy",
+    "confidence": "Confidence",
+    "entry": "Entry",
+    "target": "Target",
+    "stopLoss": "Stop Loss",
+    "direction": "Direction",
+    "analyze": "Analyze Detail",
+    "premium": "Premium Access",
+    "accuracy": "Highest Accuracy"
+  },
+  "videoShowcase": {
+    "badge": "Video Showcase",
+    "title": "See ARRA7 in Action",
+    "description": "Watch how our AI technology detects profit opportunities in the market in real-time."
+  }
+}

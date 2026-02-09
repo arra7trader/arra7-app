@@ -1,0 +1,203 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ARRA7 Trading - Liquidity Hunter Strategy
+// Version 1.0
+
+//@version=5
+indicator("ARRA7 Liquidity Hunter", overlay=true, max_lines_count=500, max_boxes_count=200, max_labels_count=100)
+
+// ============================================
+// SETTINGS
+// ============================================
+// PDH/PDL Settings
+showPDHL = input.bool(true, "Show Previous Day High/Low", group="PDH/PDL")
+pdhColor = input.color(color.new(color.red, 30), "PDH Color", group="PDH/PDL")
+pdlColor = input.color(color.new(color.green, 30), "PDL Color", group="PDH/PDL")
+pdhStyle = input.string("Solid", "Line Style", options=["Solid", "Dashed", "Dotted"], group="PDH/PDL")
+
+// Asian Range Settings
+showAsianRange = input.bool(true, "Show Asian Session Range", group="Asian Range")
+asianStartHour = input.int(0, "Asian Start Hour (WIB)", minval=0, maxval=23, group="Asian Range")
+asianEndHour = input.int(8, "Asian End Hour (WIB)", minval=0, maxval=23, group="Asian Range")
+asianHighColor = input.color(color.new(color.orange, 50), "Asian High Color", group="Asian Range")
+asianLowColor = input.color(color.new(color.aqua, 50), "Asian Low Color", group="Asian Range")
+
+// Sweep Detection Settings
+showSweeps = input.bool(true, "Show Liquidity Sweeps", group="Sweep Detection")
+sweepWickPercent = input.float(70, "Min Wick % for Sweep", minval=50, maxval=100, group="Sweep Detection")
+sweepBullColor = input.color(color.lime, "Bullish Sweep (Buy)", group="Sweep Detection")
+sweepBearColor = input.color(color.red, "Bearish Sweep (Sell)", group="Sweep Detection")
+
+// Alerts
+showAlerts = input.bool(true, "Enable Alerts", group="Alerts")
+
+// ============================================
+// FUNCTIONS
+// ============================================
+getWIBHour() =>
+    hour(time, "Asia/Jakarta")
+
+getLineStyle(style) =>
+    switch style
+        "Solid" => line.style_solid
+        "Dashed" => line.style_dashed
+        "Dotted" => line.style_dotted
+
+// ============================================
+// PREVIOUS DAY HIGH/LOW
+// ============================================
+[pdh, pdl] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead=barmerge.lookahead_on)
+
+var line pdhLine = na
+var line pdlLine = na
+var label pdhLabel = na
+var label pdlLabel = na
+
+if showPDHL
+    // Delete old lines
+    line.delete(pdhLine)
+    line.delete(pdlLine)
+    label.delete(pdhLabel)
+    label.delete(pdlLabel)
+    
+    // Draw new lines
+    lineStyle = getLineStyle(pdhStyle)
+    pdhLine := line.new(bar_index - 100, pdh, bar_index + 20, pdh, color=pdhColor, style=lineStyle, width=2)
+    pdlLine := line.new(bar_index - 100, pdl, bar_index + 20, pdl, color=pdlColor, style=lineStyle, width=2)
+    
+    pdhLabel := label.new(bar_index + 5, pdh, "PDH: " + str.tostring(pdh, format.mintick), style=label.style_label_left, color=color.new(color.red, 70), textcolor=color.white, size=size.small)
+    pdlLabel := label.new(bar_index + 5, pdl, "PDL: " + str.tostring(pdl, format.mintick), style=label.style_label_left, color=color.new(color.green, 70), textcolor=color.white, size=size.small)
+
+// ============================================
+// ASIAN SESSION RANGE (WIB Timezone)
+// ============================================
+wibHour = getWIBHour()
+
+isAsianSession = wibHour >= asianStartHour and wibHour < asianEndHour
+isNewAsianSession = isAsianSession and not isAsianSession[1]
+isAsianEnd = not isAsianSession and isAsianSession[1]
+
+var float asianHigh = na
+var float asianLow = na
+var int asianStartBar = na
+
+// Track Asian Range
+if isNewAsianSession
+    asianHigh := high
+    asianLow := low
+    asianStartBar := bar_index
+
+if isAsianSession
+    asianHigh := math.max(asianHigh, high)
+    asianLow := math.min(asianLow, low)
+
+// Draw Asian Range
+var box asianBox = na
+var line asianHighLine = na
+var line asianLowLine = na
+var label asianLabel = na
+
+if showAsianRange
+    if isAsianEnd
+        // Draw box for Asian range
+        box.delete(asianBox)
+        asianBox := box.new(asianStartBar, asianHigh, bar_index, asianLow, border_color=color.gray, bgcolor=color.new(color.gray, 90), border_width=1, border_style=line.style_dashed)
+        
+        // Draw extension lines
+        line.delete(asianHighLine)
+        line.delete(asianLowLine)
+        label.delete(asianLabel)
+        
+        asianHighLine := line.new(bar_index, asianHigh, bar_index + 50, asianHigh, color=asianHighColor, style=line.style_dashed, width=1)
+        asianLowLine := line.new(bar_index, asianLow, bar_index + 50, asianLow, color=asianLowColor, style=line.style_dashed, width=1)
+        asianLabel := label.new(bar_index, asianHigh, "🌏 Asian Range\nH: " + str.tostring(asianHigh, format.mintick) + "\nL: " + str.tostring(asianLow, format.mintick), style=label.style_label_down, color=color.new(color.gray, 50), textcolor=color.white, size=size.small)
+
+// ============================================
+// LIQUIDITY SWEEP DETECTION
+// ============================================
+// Calculate wick percentages
+totalRange = high - low
+upperWick = high - math.max(open, close)
+lowerWick = math.min(open, close) - low
+
+upperWickPercent = totalRange > 0 ? (upperWick / totalRange) * 100 : 0
+lowerWickPercent = totalRange > 0 ? (lowerWick / totalRange) * 100 : 0
+
+// PDH Sweep (bearish - price sweeps high then reverses down)
+// Price went above PDH but closed below with significant upper wick
+pdhSweep = high > pdh and close < pdh and upperWickPercent >= sweepWickPercent
+
+// PDL Sweep (bullish - price sweeps low then reverses up)
+// Price went below PDL but closed above with significant lower wick
+pdlSweep = low < pdl and close > pdl and lowerWickPercent >= sweepWickPercent
+
+// Asian High Sweep
+asianHighSweep = not na(asianHigh) and high > asianHigh and close < asianHigh and upperWickPercent >= sweepWickPercent
+
+// Asian Low Sweep
+asianLowSweep = not na(asianLow) and low < asianLow and close > asianLow and lowerWickPercent >= sweepWickPercent
+
+// Combined Sweeps
+bullishSweep = pdlSweep or asianLowSweep
+bearishSweep = pdhSweep or asianHighSweep
+
+// ============================================
+// DRAW SWEEP SIGNALS
+// ============================================
+if showSweeps
+    if bullishSweep
+        sweepType = pdlSweep ? "PDL" : "Asian Low"
+        label.new(bar_index, low, "🎯 " + sweepType + " SWEEP\n💚 BUY SIGNAL", style=label.style_label_up, color=color.new(sweepBullColor, 20), textcolor=color.white, size=size.small)
+        
+        // Draw sweep arrow
+        line.new(bar_index, low, bar_index, low - (high - low), color=sweepBullColor, width=2, style=line.style_arrow_right)
+    
+    if bearishSweep
+        sweepType = pdhSweep ? "PDH" : "Asian High"
+        label.new(bar_index, high, "🎯 " + sweepType + " SWEEP\n❤️ SELL SIGNAL", style=label.style_label_down, color=color.new(sweepBearColor, 20), textcolor=color.white, size=size.small)
+        
+        // Draw sweep arrow
+        line.new(bar_index, high, bar_index, high + (high - low), color=sweepBearColor, width=2, style=line.style_arrow_right)
+
+// Plot signals for strategy use
+plotshape(bullishSweep, "Bullish Sweep", shape.triangleup, location.belowbar, sweepBullColor, size=size.normal)
+plotshape(bearishSweep, "Bearish Sweep", shape.triangledown, location.abovebar, sweepBearColor, size=size.normal)
+
+// ============================================
+// ALERTS
+// ============================================
+if showAlerts
+    if bullishSweep
+        sweepLevel = pdlSweep ? "PDL (" + str.tostring(pdl, format.mintick) + ")" : "Asian Low (" + str.tostring(asianLow, format.mintick) + ")"
+        alert("💚 ARRA7 Liquidity Hunter BUY Signal!\n" + syminfo.ticker + " swept " + sweepLevel + "\nEntry: " + str.tostring(close, format.mintick), alert.freq_once_per_bar)
+    
+    if bearishSweep
+        sweepLevel = pdhSweep ? "PDH (" + str.tostring(pdh, format.mintick) + ")" : "Asian High (" + str.tostring(asianHigh, format.mintick) + ")"
+        alert("❤️ ARRA7 Liquidity Hunter SELL Signal!\n" + syminfo.ticker + " swept " + sweepLevel + "\nEntry: " + str.tostring(close, format.mintick), alert.freq_once_per_bar)
+
+// ============================================
+// INFO TABLE
+// ============================================
+var table infoTable = table.new(position.top_right, 2, 7, bgcolor=color.new(color.black, 80), border_width=1)
+
+if barstate.islast
+    table.cell(infoTable, 0, 0, "💧 ARRA7 Liquidity Hunter", text_color=color.white, text_size=size.small)
+    table.cell(infoTable, 1, 0, "v1.0", text_color=color.gray, text_size=size.tiny)
+    
+    table.cell(infoTable, 0, 1, "PDH", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 1, str.tostring(pdh, format.mintick), text_color=pdhColor, text_size=size.small)
+    
+    table.cell(infoTable, 0, 2, "PDL", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 2, str.tostring(pdl, format.mintick), text_color=pdlColor, text_size=size.small)
+    
+    table.cell(infoTable, 0, 3, "Asian High", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 3, na(asianHigh) ? "N/A" : str.tostring(asianHigh, format.mintick), text_color=asianHighColor, text_size=size.small)
+    
+    table.cell(infoTable, 0, 4, "Asian Low", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 4, na(asianLow) ? "N/A" : str.tostring(asianLow, format.mintick), text_color=asianLowColor, text_size=size.small)
+    
+    table.cell(infoTable, 0, 5, "Session (WIB)", text_color=color.gray, text_size=size.tiny)
+    sessionText = isAsianSession ? "🌏 Asian" : wibHour >= 14 and wibHour < 17 ? "🇬🇧 London" : wibHour >= 19 or wibHour < 4 ? "🇺🇸 New York" : "📊 Transition"
+    table.cell(infoTable, 1, 5, sessionText, text_color=color.white, text_size=size.small)
+    
+    table.cell(infoTable, 0, 6, "© ARRA7 Trading", text_color=color.gray, text_size=size.tiny)
+    table.cell(infoTable, 1, 6, "arra7-app.vercel.app", text_color=color.aqua, text_size=size.tiny)

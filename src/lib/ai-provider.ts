@@ -1,0 +1,110 @@
+import { createOpenAI } from '@ai-sdk/openai';
+
+import { streamText, generateText, ModelMessage } from 'ai';
+
+// 1. Configure Groq Provider (Multi-Key Support)
+// Accepts comma-separated GROQ_API_KEYS or single GROQ_API_KEY
+const apiKeysEnv = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
+const groqApiKeys = apiKeysEnv.split(',').map(k => k.trim()).filter(k => k.length > 0);
+
+// Auto-detect GROQ_API_KEY_2 ... 10
+for (let i = 2; i <= 10; i++) {
+    const key = process.env[`GROQ_API_KEY_${i}`];
+    if (key && key.trim().length > 0) {
+        groqApiKeys.push(key.trim());
+    }
+}
+
+if (groqApiKeys.length === 0) {
+    console.warn('[AI Provider] ⚠️ NO GROQ API KEYS FOUND! Using empty string fallback.');
+    groqApiKeys.push(''); // Prevents crash, lets createOpenAI handle missing key error
+}
+
+console.log(`[AI Provider] Loaded ${groqApiKeys.length} Groq API Keys for rotation.`);
+
+// Create separate client instances for each key to isolate rate limits
+const groqClients = groqApiKeys.map(apiKey => createOpenAI({
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey,
+}));
+
+// Function to get a random Groq model from the pool (Load Balancer)
+function getPrimaryModel() {
+    const randomIndex = Math.floor(Math.random() * groqClients.length);
+    const selectedClient = groqClients[randomIndex];
+    // console.log(`[AI Provider] Selected Groq Key Index: ${randomIndex} (Total: ${groqClients.length})`);
+    return selectedClient('llama-3.3-70b-versatile');
+}
+
+// Export using Getter for dynamic selection
+export const AI_MODELS = {
+    get groq() { return getPrimaryModel(); },
+};
+
+/**
+ * Streams text with automatic failover: Groq -> Gemini -> Gemini Pro
+ */
+export async function streamTextHybrid(params: {
+    system?: string;
+    messages: ModelMessage[];
+    maxTokens?: number;
+    temperature?: number;
+}) {
+    console.log('[AI Provider] Starting StreamHybrid...');
+    try {
+        console.log('[AI Provider] Trying Primary (Groq)...');
+        // 1. Try Primary (Groq)
+        return await streamText({
+            model: getPrimaryModel(),
+            system: params.system,
+            messages: params.messages,
+            maxOutputTokens: params.maxTokens,
+            temperature: params.temperature,
+        });
+    } catch (error: any) {
+        console.error('[AI Provider] ❌ Groq failed (All keys exhausted or network error):', error.message);
+        throw error;
+    }
+}
+
+// ...
+
+/**
+ * Generates text (non-streaming) with automatic failover.
+ */
+export async function generateTextHybrid(params: {
+    prompt?: string;
+    messages?: ModelMessage[];
+    system?: string;
+    maxTokens?: number;
+    temperature?: number;
+}) {
+    // Construct options dynamically to satisfy Prompt union type
+    const baseOptions: any = {
+        system: params.system,
+        maxOutputTokens: params.maxTokens,
+        temperature: params.temperature,
+    };
+
+    if (params.prompt) {
+        baseOptions.prompt = params.prompt;
+    } else if (params.messages) {
+        baseOptions.messages = params.messages;
+    } else {
+        throw new Error('Either prompt or messages must be provided');
+    }
+
+    console.log('[AI Provider] Starting GenerateHybrid...');
+
+    try {
+        console.log('[AI Provider] Trying Primary (Groq)...');
+        // 1. Try Primary (Groq)
+        return await generateText({
+            model: getPrimaryModel(),
+            ...baseOptions,
+        });
+    } catch (error: any) {
+        console.error('[AI Provider] ❌ Groq failed (All keys exhausted or network error):', error.message);
+        throw error;
+    }
+}
