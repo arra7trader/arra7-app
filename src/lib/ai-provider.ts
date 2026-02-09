@@ -51,20 +51,30 @@ export async function streamTextHybrid(params: {
     temperature?: number;
 }) {
     console.log('[AI Provider] Starting StreamHybrid...');
-    try {
-        console.log('[AI Provider] Trying Primary (Groq)...');
-        // 1. Try Primary (Groq)
-        return await streamText({
-            model: getPrimaryModel(),
-            system: params.system,
-            messages: params.messages,
-            maxOutputTokens: params.maxTokens,
-            temperature: params.temperature,
-        });
-    } catch (error: any) {
-        console.error('[AI Provider] ❌ Groq failed (All keys exhausted or network error):', error.message);
-        throw error;
+
+    let lastError: any = null;
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq...`);
+            // 1. Try Primary (Groq) with rotation
+            return await streamText({
+                model: getPrimaryModel(),
+                system: params.system,
+                messages: params.messages,
+                maxOutputTokens: params.maxTokens,
+                temperature: params.temperature,
+            });
+        } catch (error: any) {
+            console.error(`[AI Provider] ❌ Attempt ${attempt + 1} failed:`, error.message);
+            lastError = error;
+            // Continue to next attempt with a (likely) different key
+        }
     }
+
+    console.error('[AI Provider] ❌ All retry attempts failed.');
+    throw lastError || new Error('All AI attempts failed');
 }
 
 // ...
@@ -96,15 +106,24 @@ export async function generateTextHybrid(params: {
 
     console.log('[AI Provider] Starting GenerateHybrid...');
 
-    try {
-        console.log('[AI Provider] Trying Primary (Groq)...');
-        // 1. Try Primary (Groq)
-        return await generateText({
-            model: getPrimaryModel(),
-            ...baseOptions,
-        });
-    } catch (error: any) {
-        console.error('[AI Provider] ❌ Groq failed (All keys exhausted or network error):', error.message);
-        throw error;
+    let lastError: any = null;
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq...`);
+            // 1. Try Primary (Groq) with rotation
+            return await generateText({
+                model: getPrimaryModel(),
+                ...baseOptions,
+            });
+        } catch (error: any) {
+            console.error(`[AI Provider] ❌ Attempt ${attempt + 1} failed:`, error.message);
+            lastError = error;
+            // Continue to next attempt with a (likely) different key
+        }
     }
+
+    console.error('[AI Provider] ❌ All retry attempts failed.');
+    throw lastError || new Error('All AI attempts failed');
 }

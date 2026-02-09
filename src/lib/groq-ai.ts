@@ -66,12 +66,8 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
 
 // Learning Mode Analysis - Extended educational explanations
 export async function analyzeWithLearningMode(marketDataText: string, mlContext?: MLPredictionContext): Promise<AIAnalysisResult> {
-    if (!GROQ_API_KEY) {
-        return {
-            success: false,
-            error: 'GROQ_API_KEY tidak dikonfigurasi.',
-        };
-    }
+    // Removed manual GROQ_API_KEY check to allow failover in ai-provider
+    // if (!GROQ_API_KEY) { ... }
 
     // Import learning mode prompt
     const { LEARNING_MODE_PROMPT } = await import('./learning-prompt');
