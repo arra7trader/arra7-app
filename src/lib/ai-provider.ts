@@ -38,8 +38,8 @@ function getGroqModel(index?: number) {
         : Math.floor(Math.random() * groqClients.length);
 
     const selectedClient = groqClients[selectedIndex];
-    // Reverting to llama-3.3-70b-versatile as requested
-    return selectedClient('llama-3.3-70b-versatile');
+    // Using Llama 3.1 8B Instant as requested (Speed optimized)
+    return selectedClient('llama-3.1-8b-instant');
 }
 
 // Export using Getter for dynamic selection (Default: Random)
