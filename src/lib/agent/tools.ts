@@ -51,7 +51,7 @@ export const priceTool = tool({
             return { error: error.message || 'Failed to fetch price.' };
         }
     },
-});
+} as any);
 
 // 2. News Tool
 export const newsTool = tool({
@@ -74,4 +74,4 @@ export const newsTool = tool({
             return { error: 'Failed to fetch news.' };
         }
     },
-});
+} as any);
