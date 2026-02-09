@@ -28,17 +28,20 @@ const groqClients = groqApiKeys.map(apiKey => createOpenAI({
     apiKey,
 }));
 
-// Function to get a random Groq model from the pool (Load Balancer)
-function getPrimaryModel() {
-    const randomIndex = Math.floor(Math.random() * groqClients.length);
-    const selectedClient = groqClients[randomIndex];
-    // console.log(`[AI Provider] Selected Groq Key Index: ${randomIndex} (Total: ${groqClients.length})`);
+// Function to get a Groq model with Round Robin support
+function getGroqModel(index?: number) {
+    const selectedIndex = index !== undefined
+        ? index % groqClients.length
+        : Math.floor(Math.random() * groqClients.length);
+
+    const selectedClient = groqClients[selectedIndex];
+    // console.log(`[AI Provider] Selected Groq Key Index: ${selectedIndex} (Total: ${groqClients.length})`);
     return selectedClient('llama-3.3-70b-versatile');
 }
 
-// Export using Getter for dynamic selection
+// Export using Getter for dynamic selection (Default: Random)
 export const AI_MODELS = {
-    get groq() { return getPrimaryModel(); },
+    get groq() { return getGroqModel(); },
 };
 
 /**
@@ -54,13 +57,18 @@ export async function streamTextHybrid(params: {
 
     let lastError: any = null;
     const MAX_RETRIES = 3;
+    // Start with a random key index
+    const startIndex = Math.floor(Math.random() * groqClients.length);
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
-            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq...`);
+            // Round Robin Rotation: (Start + Attempt) % Total
+            const keyIndex = (startIndex + attempt) % groqClients.length;
+            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq Key #${keyIndex + 1}...`);
+
             // 1. Try Primary (Groq) with rotation
             return await streamText({
-                model: getPrimaryModel(),
+                model: getGroqModel(keyIndex),
                 system: params.system,
                 messages: params.messages,
                 maxOutputTokens: params.maxTokens,
@@ -69,7 +77,7 @@ export async function streamTextHybrid(params: {
         } catch (error: any) {
             console.error(`[AI Provider] ❌ Attempt ${attempt + 1} failed:`, error.message);
             lastError = error;
-            // Continue to next attempt with a (likely) different key
+            // Continue to next attempt with a guaranteed different key (if available)
         }
     }
 
@@ -108,19 +116,24 @@ export async function generateTextHybrid(params: {
 
     let lastError: any = null;
     const MAX_RETRIES = 3;
+    // Start with a random key index
+    const startIndex = Math.floor(Math.random() * groqClients.length);
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
-            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq...`);
+            // Round Robin Rotation: (Start + Attempt) % Total
+            const keyIndex = (startIndex + attempt) % groqClients.length;
+            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq Key #${keyIndex + 1}...`);
+
             // 1. Try Primary (Groq) with rotation
             return await generateText({
-                model: getPrimaryModel(),
+                model: getGroqModel(keyIndex),
                 ...baseOptions,
             });
         } catch (error: any) {
             console.error(`[AI Provider] ❌ Attempt ${attempt + 1} failed:`, error.message);
             lastError = error;
-            // Continue to next attempt with a (likely) different key
+            // Continue to next attempt with a guaranteed different key (if available)
         }
     }
 
