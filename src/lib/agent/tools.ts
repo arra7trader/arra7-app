@@ -4,6 +4,7 @@ import { getForexNews } from '@/lib/groq-ai';
 import { tool } from 'ai';
 
 // 1. Price Checker Tool Schema
+// Defined outside to allow type inference usage
 const priceParams = z.object({
     symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD)'),
     timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe for the data (default: 1h)'),
@@ -45,8 +46,12 @@ export const priceTool = tool({
                 price: data.current_price,
                 change: data.change_percent,
                 high: data.high,
-{ { ... }}
-return { error: error.message || 'Failed to fetch price.' };
+                low: data.low,
+                is_realtime: data.is_realtime,
+                source: data.timestampSource
+            };
+        } catch (error: any) {
+            return { error: error.message || 'Failed to fetch price.' };
         }
     },
 });
@@ -57,7 +62,8 @@ const newsParams = z.object({});
 export const newsTool = tool({
     description: 'Get the latest high-impact financial news (Forex/Crypto). Use this for "news", "events", or "calendar".',
     parameters: newsParams,
-    execute: async () => {
+    // Accept empty object as args to satisfy Zod inference
+    execute: async (_args: z.infer<typeof newsParams>) => {
         try {
             const { events } = await getForexNews();
             if (events.length === 0) return { message: "No high impact news for today/tomorrow." };
@@ -67,6 +73,7 @@ export const newsTool = tool({
                     time: e.time,
                     currency: e.country,
                     title: e.title,
+                    impact: e.impact
                 }))
             };
         } catch (error) {
@@ -74,7 +81,3 @@ export const newsTool = tool({
         }
     },
 });
-
-// 3. Technical Analysis Tool (Simulated Logic for Agent)
-// The agent itself can analyze, but this tool could fetch indicators if we had a library.
-// For now, we'll let the Model do the analysis based on Price Tool data.
