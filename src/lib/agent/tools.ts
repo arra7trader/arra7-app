@@ -10,7 +10,7 @@ export const priceTool = tool({
         symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD)'),
         timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe for the data (default: 1h)'),
     }),
-    execute: async ({ symbol, timeframe = '1h' }) => {
+    execute: async ({ symbol, timeframe = '1h' }: { symbol: string, timeframe?: string }) => {
         try {
             // Normalize symbol
             let pair = symbol.toUpperCase().replace('/', '').replace('-', '');
