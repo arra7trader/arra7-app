@@ -1,17 +1,18 @@
 import { z } from 'zod';
-import { getBrokerPrice, FOREX_PAIRS, TIMEFRAMES } from '@/lib/market-data';
+import { getBrokerPrice, FOREX_PAIRS } from '@/lib/market-data';
 import { getForexNews } from '@/lib/groq-ai';
 import { tool } from 'ai';
 
-// 1. Price Checker Tool
-// @ts-ignore - Tool overload mismatch in current env types
+// 1. Price Checker Tool Schema
+const priceParams = z.object({
+    symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD)'),
+    timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe for the data (default: 1h)'),
+});
+
 export const priceTool = tool({
     description: 'Get real-time price for a crypto or forex pair. Use this when user asks for "price", "market", or "chart".',
-    parameters: z.object({
-        symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD)'),
-        timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe for the data (default: 1h)'),
-    }),
-    execute: async ({ symbol, timeframe = '1h' }: { symbol: string, timeframe?: string }) => {
+    parameters: priceParams,
+    execute: async ({ symbol, timeframe = '1h' }: z.infer<typeof priceParams>) => {
         try {
             // Normalize symbol
             let pair = symbol.toUpperCase().replace('/', '').replace('-', '');
@@ -44,21 +45,18 @@ export const priceTool = tool({
                 price: data.current_price,
                 change: data.change_percent,
                 high: data.high,
-                low: data.low,
-                is_realtime: data.is_realtime,
-                source: data.timestampSource
-            };
-        } catch (error: any) {
-            return { error: error.message || 'Failed to fetch price.' };
+{ { ... }}
+return { error: error.message || 'Failed to fetch price.' };
         }
     },
 });
 
-// 2. News Tool
-// @ts-ignore - Tool overload mismatch
+// 2. News Tool Schema
+const newsParams = z.object({});
+
 export const newsTool = tool({
     description: 'Get the latest high-impact financial news (Forex/Crypto). Use this for "news", "events", or "calendar".',
-    parameters: z.object({}),
+    parameters: newsParams,
     execute: async () => {
         try {
             const { events } = await getForexNews();
@@ -69,7 +67,6 @@ export const newsTool = tool({
                     time: e.time,
                     currency: e.country,
                     title: e.title,
-                    impact: e.impact
                 }))
             };
         } catch (error) {
