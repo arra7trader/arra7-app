@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import ToolInvocationRenderer from '@/components/chat/ToolInvocationRenderer';
 
 export default function CompanionPage() {
     return (
@@ -199,6 +200,15 @@ function ChatInterface() {
                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                         {m.content}
                                     </ReactMarkdown>
+
+                                    {/* Tool Invocations (Agent Actions) */}
+                                    {m.toolInvocations && (
+                                        <div className="mt-3 space-y-2">
+                                            {m.toolInvocations.map((toolInvocation: any) => (
+                                                <ToolInvocationRenderer key={toolInvocation.toolCallId} toolInvocation={toolInvocation} />
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

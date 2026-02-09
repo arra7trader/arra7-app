@@ -41,27 +41,30 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Format pesan tidak valid.' }, { status: 400 });
         }
 
-        // Context: Arra7 VVIP System Prompt
-        // Adapted for chat context
-        const systemPrompt = ANALYSIS_PROMPT.replace('{market_data}',
-            `USER CONTEXT: ${userEmail} (${userTier}).
-            TUGAS: Bertindaklah sebagai konsultan trading profesional & personal (AI Companion).
-            GAYA BICARA: Santai tapi sangat berwawasan, gunakan emoji yang relevan, suportif, dan tajam dalam analisa.
-            INSTRUKSI:
-            1. Jika user bertanya market, gunakan pengetahuan umum atau minta data spesifik jika perlu.
-            2. Fokus pada psikologi trading dan manajemen risiko.
-            3. Berikan jawaban yang singkat, padat, dan actionable kecuali diminta menjelaskan detail.
-            4. Jangan berhalusinasi data harga jika tidak diberikan.`);
+        // Context: Arra7 VVIP Agent Prompt
+        const systemPrompt = `IDENTITY: You are ARRA7 VVIP AGENT, a professional trading companion.
+STYLE: Use the "OpenClaw" persona - precise, tool-augmented, and proactive.
+CAPABILITIES:
+- You have access to REAL-TIME market data via 'getPrice'.
+- You have access to Forex News via 'getNews'.
+- ALWAYS use tools when user asks for data. DO NOT hallucinate prices.
+- If user asks "Why", explain using data from tools.
+- Keep answers concise and actionable.
 
-        // Call Hybrid AI Provider
-        const result = await streamTextHybrid({
-            system: systemPrompt,
+USER CONTEXT: ${userEmail} (${userTier}).`;
+
+        // Call Agent Core (Tools Enabled)
+        // Dynamic Import to avoid build issues if new files aren't picked up immediately
+        const { runAgent } = await import('@/lib/agent/core');
+
+        const result = await runAgent({
             messages,
-            temperature: 0.7, // Slightly creative for chat
-            maxTokens: 1000,
+            systemPrompt,
         });
 
-        return result.toTextStreamResponse();
+        // Vercel AI SDK 'toDataStreamResponse' handles tool calls automatically
+        // @ts-ignore - Type definition mismatch for streamText result in this env
+        return result.toDataStreamResponse();
 
     } catch (error: any) {
         console.error('[VVIP Chat] Unhandled Error:', error);
