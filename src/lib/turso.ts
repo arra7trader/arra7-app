@@ -805,8 +805,8 @@ export async function getGlobalStats() {
       SELECT COUNT(*) as total, SUM(is_correct) as correct 
       FROM ml_predictions 
       WHERE verified_at IS NOT NULL 
-      AND confidence_score >= 80
     `);
+
     const totalVerified = (accRes.rows[0]?.total as number) || 0;
     const correctVerified = (accRes.rows[0]?.correct as number) || 0;
 
@@ -821,10 +821,31 @@ export async function getGlobalStats() {
       users: userCount,
       predictions: predCount,
       accuracy: accuracy,
-      volume: '1.2M' // Placeholder for now, hard to calculate real volume without trade data
+      volume: '1.2M' // Placeholder for now
     };
   } catch (error) {
     console.error('Get global stats error:', error);
     return { users: 125, predictions: 5200, accuracy: 95.2, volume: '1.2M' };
+  }
+}
+
+// Get last analysis time for rate limiting
+export async function getLastAnalysisTime(userId: string, type: string = 'forex'): Promise<Date | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+
+  try {
+    const result = await turso.execute({
+      sql: 'SELECT created_at FROM analysis_history WHERE user_id = ? AND type = ? ORDER BY created_at DESC LIMIT 1',
+      args: [userId, type],
+    });
+
+    if (result.rows.length > 0 && result.rows[0].created_at) {
+      return new Date(result.rows[0].created_at as string);
+    }
+    return null;
+  } catch (error) {
+    console.error('Get last analysis time error:', error);
+    return null;
   }
 }

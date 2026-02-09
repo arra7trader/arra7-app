@@ -1,4 +1,4 @@
-import getTursoClient, { getUserMembership, isTursoConfigured, checkUserPromo } from './turso';
+import getTursoClient, { getUserMembership, isTursoConfigured, checkUserPromo, getLastAnalysisTime } from './turso';
 
 // Quota limits per membership level (Forex Analysis)
 export const QUOTA_LIMITS = {
@@ -173,6 +173,28 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
             message: `Pair ${pair} tidak tersedia untuk paket BASIC. Upgrade ke PRO untuk akses semua pairs termasuk Crypto & Indices.`,
             quotaStatus: status,
         };
+    }
+
+    // Check Rate Limit (5 Minutes Cooldown) for PRO and VVIP
+    if (status.membership === 'PRO' || status.membership === 'VVIP') {
+        const lastAnalysis = await getLastAnalysisTime(userId, 'forex');
+        if (lastAnalysis) {
+            const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+            const now = new Date().getTime();
+            const lastTime = lastAnalysis.getTime();
+            const timeDiff = now - lastTime;
+
+            if (timeDiff < COOLDOWN_MS) {
+                const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
+                const minutes = Math.floor(waitTime / 60);
+                const seconds = waitTime % 60;
+                return {
+                    allowed: false,
+                    message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
+                    quotaStatus: status,
+                };
+            }
+        }
     }
 
     // Check timeframe restriction
@@ -358,6 +380,26 @@ export async function checkStockQuota(userId: string): Promise<{
             message: 'Masa trial Basic habis (2 hari). Upgrade ke Pro atau VVIP untuk akses unlimited.',
             quotaStatus: status,
         };
+    }
+
+    // Check Rate Limit (5 Minutes Cooldown)
+    const lastAnalysis = await getLastAnalysisTime(userId, 'stock');
+    if (lastAnalysis) {
+        const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+        const now = new Date().getTime();
+        const lastTime = lastAnalysis.getTime();
+        const timeDiff = now - lastTime;
+
+        if (timeDiff < COOLDOWN_MS) {
+            const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
+            const minutes = Math.floor(waitTime / 60);
+            const seconds = waitTime % 60;
+            return {
+                allowed: false,
+                message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
+                quotaStatus: status,
+            };
+        }
     }
 
     if (!status.canAnalyze) {
