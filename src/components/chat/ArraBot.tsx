@@ -58,13 +58,13 @@ export default function ArraBot() {
                 }
             } else {
                 // Handle specific API errors
-                const errorMsg = data.reply || "Maaf Kak, lagi ada gangguan sistem. Coba refresh ya! 🔄";
+                const errorMsg = data.reply || data.error || "Maaf Kak, lagi ada gangguan sistem. Coba refresh ya! 🔄";
                 setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
             }
 
         } catch (error) {
             console.error('Chat error:', error);
-            setMessages(prev => [...prev, { role: 'assistant', content: "Error koneksi / Jaringan bermasalah. Cek internetnya dulu ya. 📡" }]);
+            setMessages(prev => [...prev, { role: 'assistant', content: "Jaringan bermasalah atau server sibuk. Coba 1 menit lagi ya. 📡" }]);
         } finally {
             setIsTyping(false);
         }

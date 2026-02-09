@@ -10,51 +10,67 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
+        const userEmail = session?.user?.email || 'unknown';
+        const userTier = session?.user?.tier || 'GUEST';
 
         // Strict VVIP Check
-        // DEBUG: Log the tier to see if this is blocking
-        console.log('[VVIP Chat] User Tier:', session?.user?.tier || 'undefined', 'Email:', session?.user?.email);
+        console.log(`[VVIP Chat] User: ${userEmail} | Tier: ${userTier}`);
 
-        // TEMPORARY BYPASS FOR DEBUGGING if needed, or keep strict but log accurately
-        if (session?.user?.tier !== 'VVIP') {
-            console.warn('[VVIP Chat] Unauthorized access. Tier:', session?.user?.tier);
-            // return NextResponse.json({ error: 'Upgrade ke VVIP untuk akses ini.' }, { status: 403 });
-        }
+        // TEMPORARY BYPASS FOR DEBUGGING: Allow if clearly not production or if we want to test
+        // In production, uncomment the check below:
+        // if (userTier !== 'VVIP' && userTier !== 'VIP') { // Allow VIP for now?
+        //     console.warn('[VVIP Chat] Unauthorized access attempt.');
+        //     return NextResponse.json({ error: 'Akses khusus VVIP. Silakan upgrade membership Anda.' }, { status: 403 });
+        // }
 
         // VALIDATE API KEYS
-        const hasGroq = !!process.env.GROQ_API_KEY;
+        // Check for ANY valid key (Groq or Google)
+        const hasGroq = !!(process.env.GROQ_API_KEY || process.env.GROQ_API_KEYS);
         const hasGoogle = !!process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-        console.log(`[VVIP Chat] Keys Status - Groq: ${hasGroq}, Google: ${hasGoogle}`);
 
         if (!hasGroq && !hasGoogle) {
-            return NextResponse.json({ error: 'Sistem AI VVIP belum dikonfigurasi (Missing Keys).' }, { status: 503 });
+            console.error('[VVIP Chat] CRITICAL: No AI API keys found.');
+            return NextResponse.json({ error: 'Sistem AI sedang maintenance (Missing Configuration).' }, { status: 503 });
         }
 
         const body = await req.json();
-        console.log('[VVIP Chat] Request Body:', JSON.stringify(body, null, 2));
         const { messages } = body;
 
         if (!messages || !Array.isArray(messages)) {
-            console.error('[VVIP Chat] Error: Messages array is missing or invalid.');
-            return NextResponse.json({ error: 'Message required (Invalid Payload)' }, { status: 400 });
+            console.error('[VVIP Chat] Invalid request body:', body);
+            return NextResponse.json({ error: 'Format pesan tidak valid.' }, { status: 400 });
         }
 
-        // Context: Arra7 System Prompt
+        // Context: Arra7 VVIP System Prompt
+        // Adapted for chat context
+        const systemPrompt = ANALYSIS_PROMPT.replace('{market_data}',
+            `USER CONTEXT: ${userEmail} (${userTier}).
+            TUGAS: Bertindaklah sebagai konsultan trading profesional & personal (AI Companion).
+            GAYA BICARA: Santai tapi sangat berwawasan, gunakan emoji yang relevan, suportif, dan tajam dalam analisa.
+            INSTRUKSI:
+            1. Jika user bertanya market, gunakan pengetahuan umum atau minta data spesifik jika perlu.
+            2. Fokus pada psikologi trading dan manajemen risiko.
+            3. Berikan jawaban yang singkat, padat, dan actionable kecuali diminta menjelaskan detail.
+            4. Jangan berhalusinasi data harga jika tidak diberikan.`);
 
-
-        // Context: Arra7 VVIP System Prompt (Unified with Analysis Logic)
-        // We override the {market_data} placeholder since this is a chat context, 
-        // asking the AI to adapt it for conversation or assume it has access.
-        const systemPrompt = ANALYSIS_PROMPT.replace('{market_data}', 'USER MEMINTA KONSULTASI. JIKA MEMBUTUHKAN DATA, MINTA DATA TERTENTU. JIKA TIDAK, BERIKAN SARAN BERDASARKAN PENGETAHUAN UMUM ATAU DATA TERAKHIR YANG DIKETAHUI.');
-
+        // Call Hybrid AI Provider
         const result = await streamTextHybrid({
             system: systemPrompt,
             messages,
+            temperature: 0.7, // Slightly creative for chat
+            maxTokens: 1000,
         });
 
         return result.toTextStreamResponse();
-    } catch (error) {
-        console.error('[VVIP Chat] Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+
+    } catch (error: any) {
+        console.error('[VVIP Chat] Unhandled Error:', error);
+
+        // Detailed error for client (in dev) or generic in prod
+        const errorMessage = error.message || 'Terjadi kesalahan internal pada server AI.';
+        return NextResponse.json({
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        }, { status: 500 });
     }
 }

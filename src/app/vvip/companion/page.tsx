@@ -23,15 +23,21 @@ function ChatInterface() {
         // @ts-ignore - api option might be missing from strict types
         api: '/api/chat/vvip',
         onError: (error: any) => {
-            console.error('Chat error:', error);
-            // Try to extract readable error message
+            console.error('Chat error details:', error);
             let msg = 'Gagal terhubung ke AI.';
             try {
-                msg = JSON.parse(error.message).error || error.message;
+                // Combine parsing attempts
+                const errorObj = JSON.parse(error.message);
+                msg = errorObj.error || errorObj.message || msg;
+                if (errorObj.details) console.warn('Backend Error Details:', errorObj.details);
             } catch (e) {
-                msg = error.message || 'Gagal terhubung ke AI.';
+                msg = error.message || msg;
             }
-            alert(`Sistem AI VVIP: ${msg}`);
+
+            // Clean up common Vercel/Next.js error prefixes
+            msg = msg.replace(/^An error occurred in the Server Components render.*/, 'Gangguan koneksi server.');
+
+            alert(`⚠️ Sistem AI: ${msg}`);
         }
     });
 

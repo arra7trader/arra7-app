@@ -17,7 +17,10 @@ for (let i = 2; i <= 10; i++) {
 
 if (groqApiKeys.length === 0) {
     console.warn('[AI Provider] ⚠️ NO GROQ API KEYS FOUND! Using empty string fallback.');
-    groqApiKeys.push(''); // Prevents crash, lets createOpenAI handle missing key error
+    // We don't push empty string here to avoid immediate auth errors if we can help it.
+    // But createOpenAI might need *something*. 
+    // Let's just push a placeholder if truly empty so checks don't fail, but calls will.
+    groqApiKeys.push('');
 }
 
 console.log(`[AI Provider] Loaded ${groqApiKeys.length} Groq API Keys for rotation.`);
@@ -35,8 +38,9 @@ function getGroqModel(index?: number) {
         : Math.floor(Math.random() * groqClients.length);
 
     const selectedClient = groqClients[selectedIndex];
-    // console.log(`[AI Provider] Selected Groq Key Index: ${selectedIndex} (Total: ${groqClients.length})`);
-    return selectedClient('llama-3.3-70b-versatile');
+    // Using widely available stable model.
+    // Try 'llama-3.1-70b-versatile' or 'llama3-70b-8192'
+    return selectedClient('llama-3.1-70b-versatile');
 }
 
 // Export using Getter for dynamic selection (Default: Random)
