@@ -38,9 +38,8 @@ function getGroqModel(index?: number) {
         : Math.floor(Math.random() * groqClients.length);
 
     const selectedClient = groqClients[selectedIndex];
-    // Using widely available stable model.
-    // Try 'llama-3.1-70b-versatile' or 'llama3-70b-8192'
-    return selectedClient('llama-3.1-70b-versatile');
+    // Reverting to llama-3.3-70b-versatile as requested
+    return selectedClient('llama-3.3-70b-versatile');
 }
 
 // Export using Getter for dynamic selection (Default: Random)
