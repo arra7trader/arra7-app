@@ -62,7 +62,7 @@ export interface BiLSTMModelWeights {
         accuracy: number;
         dataPoints: number;
         totalParams: number;
-        trainingTime: number;
+        trainingTime: string | number;
     };
 }
 
