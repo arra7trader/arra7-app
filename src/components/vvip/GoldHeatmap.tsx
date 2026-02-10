@@ -11,6 +11,8 @@ interface ProbabilityZone {
     price: number;
     probability: number;
     bias: 'LONG' | 'SHORT' | 'NEUTRAL';
+    lstmScore: number;
+    ruleScore: number;
 }
 
 interface HeatmapData {
@@ -23,6 +25,12 @@ interface HeatmapData {
     high24h: number;
     low24h: number;
     atr: number;
+    modelInfo?: {
+        type: string;
+        trainedAt: string;
+        accuracy: number;
+        params: number;
+    };
 }
 
 // ═══════════════════════════════════════════════
@@ -134,6 +142,14 @@ export default function GoldHeatmap() {
                             <span>🕒 {secondsAgo}s ago</span>
                             <span className="text-gray-300">·</span>
                             <span>{data.sessionEmoji} {data.session}</span>
+                            {data.modelInfo && (
+                                <>
+                                    <span className="text-gray-300">·</span>
+                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-semibold border border-purple-200">
+                                        🧠 LSTM ({data.modelInfo.params.toLocaleString()} params)
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -261,7 +277,7 @@ export default function GoldHeatmap() {
 
             {/* ═══ DISCLAIMER ═══ */}
             <p className="text-center text-[11px] text-gray-400">
-                *Probabilitas dihitung menggunakan ensemble model (RSI, VWAP, ATR, Momentum). Bukan financial advice.
+                *Probabilitas dihitung menggunakan LSTM Neural Network (6,083 params, trained on 6 months XAUUSD data) + Rule-Based Indicators. Bukan financial advice.
             </p>
         </div>
     );

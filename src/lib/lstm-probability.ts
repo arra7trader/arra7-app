@@ -1,15 +1,22 @@
 /**
- * LSTM Probability Engine for XAUUSD Probability Heatmap
+ * LSTM + Rule-Based Hybrid Probability Engine for XAUUSD
  * 
- * Uses a weighted technical indicator ensemble to generate probability zones.
- * Each zone represents a price level with a directional probability (LONG/SHORT/NEUTRAL).
- *
- * For production, this engine can be upgraded to use a TensorFlow.js LSTM model
- * trained on historical XAUUSD data. Currently uses a sophisticated rule-based
- * approach with RSI, VWAP distance, momentum, ATR, and session-aware weights.
+ * This engine combines:
+ * 1. Real LSTM neural network (pre-trained on 6 months of XAUUSD 1H data)
+ * 2. Rule-based technical indicators (RSI, VWAP, ATR, momentum, EMA)
+ * 
+ * The LSTM provides directional probability for each zone,
+ * while rule-based signals provide additional confluence and context.
+ * 
+ * Data flow:
+ *   Swissquote Live Data → Feature Extraction → LSTM Inference → Zone Generation
+ *                                                      ↓
+ *                                            Rule-Based Signals → Hybrid Score
  */
 
 import { Candle } from '@/lib/market-data';
+import { LSTMModel, extractFeatures, CandleData } from '@/lib/lstm-model';
+import { LSTM_WEIGHTS } from '@/lib/lstm-weights';
 
 // ═══════════════════════════════════════════════
 // Types
@@ -19,6 +26,8 @@ export interface ProbabilityZone {
     price: number;
     probability: number;
     bias: 'LONG' | 'SHORT' | 'NEUTRAL';
+    lstmScore: number;      // Raw LSTM prediction contribution
+    ruleScore: number;      // Raw rule-based contribution
 }
 
 export interface HeatmapData {
@@ -31,71 +40,69 @@ export interface HeatmapData {
     high24h: number;
     low24h: number;
     atr: number;
+    modelInfo: {
+        type: 'LSTM_HYBRID';
+        trainedAt: string;
+        accuracy: number;
+        params: number;
+    };
 }
 
 // ═══════════════════════════════════════════════
-// Technical Indicator Helpers
+// LSTM Model Singleton
+// ═══════════════════════════════════════════════
+
+let _model: LSTMModel | null = null;
+
+function getModel(): LSTMModel {
+    if (!_model) {
+        _model = new LSTMModel(LSTM_WEIGHTS);
+    }
+    return _model;
+}
+
+// ═══════════════════════════════════════════════
+// Technical Indicator Helpers (Rule-Based)
 // ═══════════════════════════════════════════════
 
 function calculateRSI(candles: Candle[], period: number = 14): number {
     if (candles.length < period + 1) return 50;
-
-    let gains = 0;
-    let losses = 0;
-
+    let gains = 0, losses = 0;
     for (let i = candles.length - period; i < candles.length; i++) {
         const change = candles[i].close - candles[i - 1].close;
         if (change > 0) gains += change;
         else losses += Math.abs(change);
     }
-
     const avgGain = gains / period;
     const avgLoss = losses / period;
-
     if (avgLoss === 0) return 100;
-
-    const rs = avgGain / avgLoss;
-    return 100 - (100 / (1 + rs));
+    return 100 - (100 / (1 + avgGain / avgLoss));
 }
 
 function calculateVWAP(candles: Candle[]): number {
     if (candles.length === 0) return 0;
-
-    let cumulativeTPV = 0;
-    let cumulativeVolume = 0;
-
+    let cumTPV = 0, cumVol = 0;
     for (const c of candles) {
         const tp = (c.high + c.low + c.close) / 3;
         const vol = c.volume || 1;
-        cumulativeTPV += tp * vol;
-        cumulativeVolume += vol;
+        cumTPV += tp * vol;
+        cumVol += vol;
     }
-
-    return cumulativeVolume > 0 ? cumulativeTPV / cumulativeVolume : candles[candles.length - 1].close;
+    return cumVol > 0 ? cumTPV / cumVol : candles[candles.length - 1].close;
 }
 
 function calculateATR(candles: Candle[], period: number = 14): number {
     if (candles.length < 2) return 0;
-
     const trValues: number[] = [];
     for (let i = 1; i < candles.length; i++) {
-        const tr = Math.max(
+        trValues.push(Math.max(
             candles[i].high - candles[i].low,
             Math.abs(candles[i].high - candles[i - 1].close),
             Math.abs(candles[i].low - candles[i - 1].close)
-        );
-        trValues.push(tr);
+        ));
     }
-
     const slice = trValues.slice(-period);
     return slice.reduce((sum, v) => sum + v, 0) / slice.length;
-}
-
-function calculateMomentum(candles: Candle[], period: number = 10): number {
-    if (candles.length < period) return 0;
-    const current = candles[candles.length - 1].close;
-    const previous = candles[candles.length - period].close;
-    return ((current - previous) / previous) * 100;
 }
 
 function calculateEMA(values: number[], period: number): number[] {
@@ -119,22 +126,16 @@ function getActiveSession(): { session: string; emoji: string; weight: number } 
     const londonActive = utcHour >= 7 && utcHour < 16;
     const nyActive = utcHour >= 12 && utcHour < 21;
 
-    if (londonActive && nyActive) {
-        return { session: 'London-NY Overlap', emoji: '🔥', weight: 1.3 };
-    } else if (asiaActive && londonActive) {
-        return { session: 'Asia-London Overlap', emoji: '⚡', weight: 1.15 };
-    } else if (nyActive) {
-        return { session: 'New York', emoji: '🇺🇸', weight: 1.2 };
-    } else if (londonActive) {
-        return { session: 'London', emoji: '🇬🇧', weight: 1.2 };
-    } else if (asiaActive) {
-        return { session: 'Tokyo/Asia', emoji: '🇯🇵', weight: 0.9 };
-    }
+    if (londonActive && nyActive) return { session: 'London-NY Overlap', emoji: '🔥', weight: 1.3 };
+    if (asiaActive && londonActive) return { session: 'Asia-London Overlap', emoji: '⚡', weight: 1.15 };
+    if (nyActive) return { session: 'New York', emoji: '🇺🇸', weight: 1.2 };
+    if (londonActive) return { session: 'London', emoji: '🇬🇧', weight: 1.2 };
+    if (asiaActive) return { session: 'Tokyo/Asia', emoji: '🇯🇵', weight: 0.9 };
     return { session: 'Off-Hours', emoji: '😴', weight: 0.7 };
 }
 
 // ═══════════════════════════════════════════════
-// Core Probability Engine
+// Core Probability Engine (LSTM + Rule-Based Hybrid)
 // ═══════════════════════════════════════════════
 
 export function calculateProbabilityZones(
@@ -143,105 +144,126 @@ export function calculateProbabilityZones(
     high24h: number,
     low24h: number
 ): HeatmapData {
+    const model = getModel();
+    const sessionInfo = getActiveSession();
+    const atr = calculateATR(candles);
+    const effectiveATR = atr > 0 ? atr : currentPrice * 0.005;
+
+    // ── LSTM Prediction ──
+    // Convert candles to CandleData format
+    const candleData: CandleData[] = candles.map(c => ({
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+        volume: c.volume,
+        timestamp: typeof c.time === 'string' ? new Date(c.time).getTime() : Number(c.time),
+    }));
+
+    // Extract features and run LSTM inference
+    const features = extractFeatures(candleData, 20);
+    const lstmPrediction = model.predict(features);
+    // lstmPrediction = [P(UP), P(DOWN), P(NEUTRAL)]
+    const pUp = lstmPrediction[0];
+    const pDown = lstmPrediction[1];
+    const pNeutral = lstmPrediction[2];
+
+    // LSTM directional bias: positive = bullish, negative = bearish
+    const lstmBias = pUp - pDown; // range: -1 to 1
+
+    // ── Rule-Based Signals ──
     const rsi = calculateRSI(candles);
     const vwap = calculateVWAP(candles);
-    const atr = calculateATR(candles);
-    const momentum = calculateMomentum(candles);
-    const sessionInfo = getActiveSession();
-
-    // Calculate EMAs for trend
     const closes = candles.map(c => c.close);
     const ema20 = calculateEMA(closes, 20);
     const ema50 = calculateEMA(closes, Math.min(50, closes.length));
     const latestEma20 = ema20[ema20.length - 1] || currentPrice;
     const latestEma50 = ema50[ema50.length - 1] || currentPrice;
-    const emaTrend = latestEma20 > latestEma50 ? 1 : -1; // 1=bullish, -1=bearish
+    const emaTrend = latestEma20 > latestEma50 ? 1 : -1;
 
-    // Dynamic range based on ATR (or fallback to % of price)
-    const effectiveATR = atr > 0 ? atr : currentPrice * 0.005;
-    const zoneRange = effectiveATR * 4; // Cover ~4 ATR above and below
-    const stepSize = effectiveATR * 0.4; // Each zone = 0.4 ATR
-
-    const zones: ProbabilityZone[] = [];
+    // ── Generate Zones ──
+    const zoneRange = effectiveATR * 4;
+    const stepSize = effectiveATR * 0.4;
     const steps = Math.ceil(zoneRange / stepSize);
+    const zones: ProbabilityZone[] = [];
 
     for (let i = -steps; i <= steps; i++) {
         const zonePrice = Math.round((currentPrice + (i * stepSize)) * 100) / 100;
         const distanceFromCurrent = zonePrice - currentPrice;
         const distancePct = Math.abs(distanceFromCurrent) / currentPrice;
 
-        // ── Signal Components ──
+        // ── LSTM Component ──
+        // Use LSTM prediction to influence zone bias
+        // Zones above current price: if LSTM says DOWN → higher sell probability
+        // Zones below current price: if LSTM says UP → higher buy probability
+        let lstmZoneSignal: number;
+        if (distanceFromCurrent > 0) {
+            // Above current price: DOWN signal makes this resistance
+            lstmZoneSignal = -pDown + pUp * 0.3;
+        } else if (distanceFromCurrent < 0) {
+            // Below current price: UP signal makes this support
+            lstmZoneSignal = pUp - pDown * 0.3;
+        } else {
+            lstmZoneSignal = lstmBias * 0.5;
+        }
 
-        // 0. Positional Bias: below price = natural support (LONG), above = resistance (SHORT)
+        // ── Rule-Based Component ──
+        // Positional bias
         const positionalBias = distanceFromCurrent < 0 ? 0.15 : distanceFromCurrent > 0 ? -0.15 : 0;
 
-        // 1. RSI Signal (overbought/oversold at zones)
+        // RSI signal
         let rsiSignal = 0;
-        if (rsi > 70 && distanceFromCurrent > 0) {
-            rsiSignal = -(rsi - 70) / 30; // Overbought + above → bearish
-        } else if (rsi < 30 && distanceFromCurrent < 0) {
-            rsiSignal = (30 - rsi) / 30; // Oversold + below → bullish
-        } else if (rsi > 55) {
-            rsiSignal = (rsi - 55) / 45 * 0.4;
-        } else if (rsi < 45) {
-            rsiSignal = (rsi - 45) / 45 * 0.4;
-        }
+        if (rsi > 70 && distanceFromCurrent > 0) rsiSignal = -(rsi - 70) / 30;
+        else if (rsi < 30 && distanceFromCurrent < 0) rsiSignal = (30 - rsi) / 30;
+        else if (rsi > 55) rsiSignal = (rsi - 55) / 45 * 0.4;
+        else if (rsi < 45) rsiSignal = (rsi - 45) / 45 * 0.4;
 
-        // 2. VWAP Signal (widened thresholds)
+        // VWAP signal
         let vwapSignal = 0;
         const vwapDistance = (zonePrice - vwap) / vwap;
-        if (zonePrice < vwap && vwapDistance > -0.02) {
-            vwapSignal = 0.4; // Below VWAP → buy interest
-        } else if (zonePrice > vwap && vwapDistance < 0.02) {
-            vwapSignal = -0.3; // Above VWAP → sell pressure
-        }
+        if (zonePrice < vwap && vwapDistance > -0.02) vwapSignal = 0.4;
+        else if (zonePrice > vwap && vwapDistance < 0.02) vwapSignal = -0.3;
 
-        // 3. Momentum Signal (lower threshold)
-        let momentumSignal = 0;
-        if (momentum > 0.02) {
-            momentumSignal = distanceFromCurrent > 0 ? 0.35 : -0.1;
-        } else if (momentum < -0.02) {
-            momentumSignal = distanceFromCurrent < 0 ? -0.35 : 0.1;
-        }
-
-        // 4. EMA Trend Signal (amplified)
-        const trendSignal = emaTrend * 0.3;
-
-        // 5. Support/Resistance Signal (24h high/low, wider detection)
+        // S/R signal
         let srSignal = 0;
-        const distFromHigh = Math.abs(zonePrice - high24h) / currentPrice;
-        const distFromLow = Math.abs(zonePrice - low24h) / currentPrice;
-        if (distFromHigh < 0.005) srSignal -= 0.35; // Near 24h high = resistance
-        if (distFromLow < 0.005) srSignal += 0.35;  // Near 24h low = support
+        if (Math.abs(zonePrice - high24h) / currentPrice < 0.005) srSignal -= 0.35;
+        if (Math.abs(zonePrice - low24h) / currentPrice < 0.005) srSignal += 0.35;
 
-        // 6. Distance Decay — wider window (0.08 = 8% of price keeps signal alive)
+        // Distance decay
         const distanceFactor = Math.max(0.1, 1 - (distancePct / 0.08));
 
-        // ── Combine Signals ──
-        const rawSignal = (
+        // Combine rule-based signals
+        const ruleSignal = (
             positionalBias * 0.2 +
             rsiSignal * 0.2 +
             vwapSignal * 0.2 +
-            momentumSignal * 0.15 +
-            trendSignal * 0.15 +
-            srSignal * 0.1
-        ) * distanceFactor * sessionInfo.weight;
+            (emaTrend * 0.3) * 0.2 +
+            srSignal * 0.2
+        ) * distanceFactor;
 
-        // Convert signal to probability (0.5 = neutral, towards 1.0 = strong)
-        const baseProbability = 0.5 + (rawSignal * 0.9); // amplified from 0.45 to 0.9
+        // ── Hybrid Combination ──
+        // 60% LSTM + 40% Rule-Based (LSTM gets more weight since it's trained)
+        const LSTM_WEIGHT = 0.6;
+        const RULE_WEIGHT = 0.4;
+        const hybridSignal = (lstmZoneSignal * LSTM_WEIGHT + ruleSignal * RULE_WEIGHT) * sessionInfo.weight;
+
+        // Convert to probability
+        const baseProbability = 0.5 + (hybridSignal * 0.8);
         const probability = Math.max(0.3, Math.min(0.98, baseProbability));
 
-        // Determine bias — much lower threshold so we get actual LONG/SHORT zones
+        // Determine bias
         let bias: 'LONG' | 'SHORT' | 'NEUTRAL';
-        if (rawSignal > 0.03) {
-            bias = 'LONG';
-        } else if (rawSignal < -0.03) {
-            bias = 'SHORT';
-        } else {
-            bias = 'NEUTRAL';
-        }
+        if (hybridSignal > 0.03) bias = 'LONG';
+        else if (hybridSignal < -0.03) bias = 'SHORT';
+        else bias = 'NEUTRAL';
 
-        zones.push({ price: zonePrice, probability, bias });
+        zones.push({
+            price: zonePrice,
+            probability,
+            bias,
+            lstmScore: lstmZoneSignal,
+            ruleScore: ruleSignal,
+        });
     }
 
     return {
@@ -254,5 +276,11 @@ export function calculateProbabilityZones(
         high24h,
         low24h,
         atr: effectiveATR,
+        modelInfo: {
+            type: 'LSTM_HYBRID',
+            trainedAt: LSTM_WEIGHTS.metadata.trainedAt,
+            accuracy: LSTM_WEIGHTS.metadata.accuracy,
+            params: 6083,
+        },
     };
 }
