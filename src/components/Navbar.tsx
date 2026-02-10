@@ -39,11 +39,11 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-2">
-                    <span>AI Companion</span>
+                    <span>Gold Heatmap</span>
                     <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-yellow-600 text-black rounded uppercase tracking-wider shadow-[0_0_10px_rgba(251,191,36,0.3)]">VVIP</span>
                 </div>
             ),
-            href: '/vvip/companion'
+            href: '/vvip/gold-heatmap'
         },
     ];
 
