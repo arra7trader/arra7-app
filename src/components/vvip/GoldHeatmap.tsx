@@ -29,28 +29,18 @@ interface HeatmapData {
 // Helpers
 // ═══════════════════════════════════════════════
 
-function getBarColor(zone: ProbabilityZone): string {
-    if (zone.bias === 'LONG') return 'rgb(34, 197, 94)';
-    if (zone.bias === 'SHORT') return 'rgb(239, 68, 68)';
-    return 'rgb(156, 163, 175)';
+function getStrengthLabel(probability: number): string {
+    if (probability >= 0.75) return '⚡⚡⚡ VERY STRONG';
+    if (probability >= 0.65) return '⚡⚡ STRONG';
+    if (probability >= 0.55) return '⚡ MODERATE';
+    return 'WEAK';
 }
 
-function getBarBgClass(zone: ProbabilityZone): string {
-    if (zone.bias === 'LONG') return 'bg-green-500';
-    if (zone.bias === 'SHORT') return 'bg-red-500';
-    return 'bg-gray-400';
-}
-
-function getBiasLabel(zone: ProbabilityZone): string {
-    if (zone.bias === 'LONG') return 'BUY';
-    if (zone.bias === 'SHORT') return 'SELL';
-    return '—';
-}
-
-function getBiasTextClass(zone: ProbabilityZone): string {
-    if (zone.bias === 'LONG') return 'text-green-600';
-    if (zone.bias === 'SHORT') return 'text-red-600';
-    return 'text-gray-400';
+function getStrengthColor(probability: number): string {
+    if (probability >= 0.75) return 'text-emerald-600 font-bold';
+    if (probability >= 0.65) return 'text-green-600 font-semibold';
+    if (probability >= 0.55) return 'text-amber-600';
+    return 'text-gray-500';
 }
 
 function formatPct(v: number): string {
@@ -67,6 +57,7 @@ export default function GoldHeatmap() {
     const [error, setError] = useState<string | null>(null);
     const [secondsAgo, setSecondsAgo] = useState(0);
     const [lastFetchTime, setLastFetchTime] = useState<number>(Date.now());
+    const [showNeutral, setShowNeutral] = useState(false);
 
     // Fetch data
     const fetchData = useCallback(async () => {
@@ -118,28 +109,15 @@ export default function GoldHeatmap() {
 
     if (!data) return null;
 
-    // ─── Compute display data ───
-
-    // Sort zones by price descending (top = highest price)
-    const sortedZones = [...data.zones]
-        .filter(z => z.price >= data.currentPrice - data.atr * 3 && z.price <= data.currentPrice + data.atr * 3)
-        .sort((a, b) => b.price - a.price);
-
-    // Key zones
-    const strongestLong = [...data.zones].filter(z => z.bias === 'LONG').sort((a, b) => b.probability - a.probability)[0];
-    const strongestShort = [...data.zones].filter(z => z.bias === 'SHORT').sort((a, b) => b.probability - a.probability)[0];
-
-    // Stats
-    const longCount = data.zones.filter(z => z.bias === 'LONG').length;
-    const shortCount = data.zones.filter(z => z.bias === 'SHORT').length;
-    const neutralCount = data.zones.filter(z => z.bias === 'NEUTRAL').length;
-    const overallBias = longCount > shortCount ? 'BULLISH' : shortCount > longCount ? 'BEARISH' : 'NEUTRAL';
-    const overallBiasColor = overallBias === 'BULLISH' ? 'text-green-600' : overallBias === 'BEARISH' ? 'text-red-600' : 'text-gray-500';
+    // Group zones by bias
+    const buyZones = data.zones.filter(z => z.bias === 'LONG').sort((a, b) => b.probability - a.probability);
+    const sellZones = data.zones.filter(z => z.bias === 'SHORT').sort((a, b) => b.probability - a.probability);
+    const neutralZones = data.zones.filter(z => z.bias === 'NEUTRAL');
 
     return (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
 
-            {/* ═══ TOP: Header Card ═══ */}
+            {/* ═══ HEADER ═══ */}
             <div className="flex flex-wrap items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-[var(--border-light)] shadow-sm">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100">
@@ -156,8 +134,6 @@ export default function GoldHeatmap() {
                             <span>🕒 {secondsAgo}s ago</span>
                             <span className="text-gray-300">·</span>
                             <span>{data.sessionEmoji} {data.session}</span>
-                            <span className="text-gray-300">·</span>
-                            <span>📡 {data.dataSource === 'swissquote' ? 'Swissquote Bank' : 'Yahoo Finance'}</span>
                         </div>
                     </div>
                 </div>
@@ -173,102 +149,187 @@ export default function GoldHeatmap() {
                 </div>
             </div>
 
-            {/* ═══ STAT CARDS ═══ */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatCard
-                    label="Overall Bias"
-                    value={overallBias}
-                    valueClass={overallBiasColor}
-                    icon="🧭"
-                />
-                <StatCard
-                    label="ATR (Volatility)"
-                    value={`$${data.atr.toFixed(2)}`}
-                    valueClass="text-gray-800"
-                    icon="📊"
-                />
-                <StatCard
-                    label="Strongest Buy Zone"
-                    value={strongestLong ? `$${strongestLong.price.toFixed(2)}` : 'N/A'}
-                    sub={strongestLong ? formatPct(strongestLong.probability) : undefined}
-                    valueClass="text-green-600"
-                    icon="🟢"
-                />
-                <StatCard
-                    label="Strongest Sell Zone"
-                    value={strongestShort ? `$${strongestShort.price.toFixed(2)}` : 'N/A'}
-                    sub={strongestShort ? formatPct(strongestShort.probability) : undefined}
-                    valueClass="text-red-600"
-                    icon="🔴"
-                />
-            </div>
-
-            {/* ═══ MAIN: Heatmap Bar Chart ═══ */}
-            <div className="bg-white rounded-2xl border border-[var(--border-light)] shadow-sm overflow-hidden">
-
-                {/* Chart Header */}
-                <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-700">Price Zone Probability</h3>
-                    <div className="flex items-center gap-4 text-[11px] text-gray-400">
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-500 inline-block" /> Buy Zone</span>
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" /> Sell Zone</span>
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-gray-400 inline-block" /> Neutral</span>
+            {/* ═══ HOW TO READ GUIDE ═══ */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
+                <h3 className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <span className="text-xl">📖</span>
+                    Cara Membaca Heatmap
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-white/80 rounded-lg p-4 border border-blue-100">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded bg-green-500 flex items-center justify-center text-white text-xs font-bold">1</div>
+                            <span className="font-semibold text-gray-800">BUY ZONES (Hijau)</span>
+                        </div>
+                        <p className="text-gray-600 leading-relaxed">
+                            Harga dengan <strong className="text-green-600">probabilitas tinggi untuk naik</strong>.
+                            Semakin banyak ⚡, semakin kuat signal buy.
+                            Zone di <strong>bawah current price</strong> = potensi support.
+                        </p>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-4 border border-blue-100">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">2</div>
+                            <span className="font-semibold text-gray-800">SELL ZONES (Merah)</span>
+                        </div>
+                        <p className="text-gray-600 leading-relaxed">
+                            Harga dengan <strong className="text-red-600">probabilitas tinggi untuk turun</strong>.
+                            Semakin banyak ⚡, semakin kuat signal sell.
+                            Zone di <strong>atas current price</strong> = potensi resistance.
+                        </p>
                     </div>
                 </div>
-
-                {/* Table/Bar Chart */}
-                <div className="divide-y divide-gray-50">
-                    {sortedZones.map((zone, i) => {
-                        const isCurrentPrice = Math.abs(zone.price - data.currentPrice) < data.atr * 0.25;
-                        const barWidth = Math.max(4, zone.probability * 100);
-                        const pct = Math.round(zone.probability * 100);
-
-                        return (
-                            <motion.div
-                                key={zone.price}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.02 }}
-                                className={`flex items-center gap-3 px-5 py-2 group hover:bg-gray-50/80 transition-colors ${isCurrentPrice ? 'bg-amber-50/60 border-l-4 border-amber-400' : ''}`}
-                            >
-                                {/* Price Label */}
-                                <div className={`w-[90px] text-right font-mono text-sm shrink-0 ${isCurrentPrice ? 'text-amber-700 font-bold' : 'text-gray-600'}`}>
-                                    {zone.price.toFixed(2)}
-                                    {isCurrentPrice && <span className="ml-1 text-[10px] text-amber-500">◀</span>}
-                                </div>
-
-                                {/* Probability Bar */}
-                                <div className="flex-1 flex items-center gap-2">
-                                    <div className="flex-1 h-5 bg-gray-100 rounded-md overflow-hidden relative">
-                                        <motion.div
-                                            className={`h-full rounded-md ${getBarBgClass(zone)}`}
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${barWidth}%` }}
-                                            transition={{ duration: 0.6, ease: 'easeOut' }}
-                                            style={{ opacity: 0.15 + zone.probability * 0.7 }}
-                                        />
-                                        {/* Percentage text inside bar */}
-                                        <span className={`absolute inset-y-0 flex items-center text-[11px] font-semibold ${barWidth > 30 ? 'left-2 text-white' : 'right-2 text-gray-500'}`}
-                                            style={barWidth > 30 ? { left: '8px' } : { right: '8px' }}>
-                                            {pct}%
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Bias Label */}
-                                <div className={`w-[48px] text-center text-xs font-bold shrink-0 ${getBiasTextClass(zone)}`}>
-                                    {getBiasLabel(zone)}
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+                <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                        <strong>💡 Tips:</strong> Gunakan untuk konfirmasi strategi trading Anda.
+                        Zone dengan ⚡⚡⚡ punya probabilitas 75%+ untuk bergerak sesuai bias.
+                        Perhatikan juga current price (garis kuning) untuk posisi saat ini.
+                    </p>
                 </div>
             </div>
 
-            {/* ═══ BOTTOM: Disclaimer ═══ */}
+            {/* ═══ BUY ZONES (GREEN) ═══ */}
+            <div className="bg-white rounded-2xl border border-green-200 shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 border-b border-green-100">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-base font-bold text-green-800 flex items-center gap-2">
+                            <span className="text-xl">🟢</span>
+                            BUY ZONES — Support Areas
+                        </h3>
+                        <span className="text-xs text-green-600 font-medium bg-green-100 px-3 py-1 rounded-full">
+                            {buyZones.length} zones
+                        </span>
+                    </div>
+                </div>
+                <div className="divide-y divide-green-50">
+                    {buyZones.slice(0, 10).map((zone, i) => (
+                        <ZoneRow key={zone.price} zone={zone} index={i} type="buy" currentPrice={data.currentPrice} />
+                    ))}
+                </div>
+            </div>
+
+            {/* ═══ SELL ZONES (RED) ═══ */}
+            <div className="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 px-5 py-4 border-b border-red-100">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-base font-bold text-red-800 flex items-center gap-2">
+                            <span className="text-xl">🔴</span>
+                            SELL ZONES — Resistance Areas
+                        </h3>
+                        <span className="text-xs text-red-600 font-medium bg-red-100 px-3 py-1 rounded-full">
+                            {sellZones.length} zones
+                        </span>
+                    </div>
+                </div>
+                <div className="divide-y divide-red-50">
+                    {sellZones.slice(0, 10).map((zone, i) => (
+                        <ZoneRow key={zone.price} zone={zone} index={i} type="sell" currentPrice={data.currentPrice} />
+                    ))}
+                </div>
+            </div>
+
+            {/* ═══ NEUTRAL ZONES (Collapsed) ═══ */}
+            {neutralZones.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                    <button
+                        onClick={() => setShowNeutral(!showNeutral)}
+                        className="w-full px-5 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    >
+                        <span className="text-sm font-semibold text-gray-600">
+                            ⚪ Neutral Zones ({neutralZones.length})
+                        </span>
+                        <span className="text-xs text-gray-400">
+                            {showNeutral ? 'Hide ▲' : 'Show ▼'}
+                        </span>
+                    </button>
+                    <AnimatePresence>
+                        {showNeutral && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="border-t border-gray-100 divide-y divide-gray-50"
+                            >
+                                {neutralZones.slice(0, 10).map((zone, i) => (
+                                    <ZoneRow key={zone.price} zone={zone} index={i} type="neutral" currentPrice={data.currentPrice} />
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
+
+            {/* ═══ DISCLAIMER ═══ */}
             <p className="text-center text-[11px] text-gray-400">
-                *Probability zones are generated by ensemble models (RSI, VWAP, ATR, Momentum). This is not financial advice.
+                *Probabilitas dihitung menggunakan ensemble model (RSI, VWAP, ATR, Momentum). Bukan financial advice.
             </p>
+        </div>
+    );
+}
+
+// ═══════════════════════════════════════════════
+// Zone Row Component
+// ═══════════════════════════════════════════════
+
+function ZoneRow({ zone, index, type, currentPrice }: {
+    zone: ProbabilityZone;
+    index: number;
+    type: 'buy' | 'sell' | 'neutral';
+    currentPrice: number;
+}) {
+    const isNearCurrent = Math.abs(zone.price - currentPrice) < currentPrice * 0.002;
+    const strength = getStrengthLabel(zone.probability);
+    const pct = Math.round(zone.probability * 100);
+
+    let bgClass = 'hover:bg-gray-50/50';
+    let priceClass = 'text-gray-700';
+    let actionText = '—';
+    let actionClass = 'text-gray-400';
+
+    if (type === 'buy') {
+        bgClass = index === 0 ? 'bg-green-50/50' : 'hover:bg-green-50/30';
+        priceClass = 'text-green-700 font-semibold';
+        actionText = zone.price < currentPrice ? 'Support' : 'Bounce Target';
+        actionClass = 'text-green-600';
+    } else if (type === 'sell') {
+        bgClass = index === 0 ? 'bg-red-50/50' : 'hover:bg-red-50/30';
+        priceClass = 'text-red-700 font-semibold';
+        actionText = zone.price > currentPrice ? 'Resistance' : 'Retracement';
+        actionClass = 'text-red-600';
+    }
+
+    return (
+        <div className={`flex items-center gap-3 px-5 py-3 transition-colors ${bgClass} ${isNearCurrent ? 'border-l-4 border-amber-400' : ''}`}>
+            {/* Rank */}
+            <div className="w-8 text-center text-xs font-bold text-gray-400">
+                #{index + 1}
+            </div>
+
+            {/* Price */}
+            <div className={`w-[100px] font-mono text-sm ${priceClass} shrink-0`}>
+                ${zone.price.toFixed(2)}
+            </div>
+
+            {/* Probability */}
+            <div className="flex-1 flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-500 w-12">{pct}%</span>
+                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                        className={`h-full rounded-full ${type === 'buy' ? 'bg-green-500' : type === 'sell' ? 'bg-red-500' : 'bg-gray-400'}`}
+                        style={{ width: `${pct}%`, opacity: 0.2 + (zone.probability * 0.6) }}
+                    />
+                </div>
+            </div>
+
+            {/* Strength */}
+            <div className={`text-[11px] ${getStrengthColor(zone.probability)} w-[140px] shrink-0`}>
+                {strength}
+            </div>
+
+            {/* Action */}
+            <div className={`text-xs font-medium w-[100px] text-right shrink-0 ${actionClass}`}>
+                {actionText}
+            </div>
         </div>
     );
 }
