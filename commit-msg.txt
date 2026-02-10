@@ -1,0 +1,9 @@
+feat: AI Companion redesign - OpenClaw-inspired Private Intelligence Terminal with 8 tools
+
+- Expanded agent tools from 2 to 8 (analyzeForex, analyzeStock, mlPrediction, signalHistory, portfolio, marketHours)
+- Redesigned VVIP system prompt with OpenClaw principles (tool-first, proactive chaining, Bahasa Indonesia)
+- Complete UI overhaul: dark glassmorphism, collapsible sidebar, quick actions, welcome screen
+- Custom tool renderers with rich cards for all 8 tools
+- Implemented manual fetch with SSE streaming (bypassing broken useChat API)
+- maxSteps increased to 8 for multi-step reasoning
+- All tests passing, production-ready

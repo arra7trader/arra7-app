@@ -1,0 +1,5 @@
+fix: change toDataStreamResponse() to property access for AI SDK v4+ compatibility
+
+- Fixed HTTP 500 error in VVIP chat API
+- Changed result.toDataStreamResponse() (method call) to result.toDataStreamResponse (property getter)
+- Compatible with AI SDK v4+ where toDataStreamResponse is a property, not a method

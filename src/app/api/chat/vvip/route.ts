@@ -171,9 +171,9 @@ Now, respond to the user's request below.`;
             systemPrompt,
         });
 
-        // FIXED: In AI SDK v4+, toDataStreamResponse is a property getter, not a method
-        // Remove the () to access the property correctly
-        return result.toDataStreamResponse;
+        // FIXED: In AI SDK v4+, use toTextStreamResponse (not toDataStreamResponse)
+        // This is a property getter, not a method
+        return result.toTextStreamResponse;
 
     } catch (error: any) {
         console.error('[VVIP Chat] Unhandled Error:', error);

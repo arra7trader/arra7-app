@@ -1,0 +1,5 @@
+fix: use toTextStreamResponse instead of toDataStreamResponse
+
+- Changed from toDataStreamResponse to toTextStreamResponse based on TypeScript suggestion
+- This is the correct property name in AI SDK v4+
+- Fixes build error: Property toDataStreamResponse does not exist
