@@ -164,7 +164,6 @@ Now, respond to the user's request below.`;
 
 
         // Call Agent Core (Tools Enabled)
-        // Dynamic Import to avoid build issues if new files aren't picked up immediately
         const { runAgent } = await import('@/lib/agent/core');
 
         const result = await runAgent({
@@ -172,9 +171,9 @@ Now, respond to the user's request below.`;
             systemPrompt,
         });
 
-        // Vercel AI SDK 'toDataStreamResponse' handles tool calls automatically
-        // @ts-ignore - Type definition mismatch for streamText result in this env
-        return result.toDataStreamResponse();
+        // FIXED: In AI SDK v4+, toDataStreamResponse is a property getter, not a method
+        // Remove the () to access the property correctly
+        return result.toDataStreamResponse;
 
     } catch (error: any) {
         console.error('[VVIP Chat] Unhandled Error:', error);
