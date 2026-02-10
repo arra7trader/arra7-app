@@ -15,7 +15,7 @@
  */
 
 import { Candle } from '@/lib/market-data';
-import { LSTMModel, extractFeatures, CandleData } from '@/lib/lstm-model';
+import { BiLSTMModel, extractFeatures, CandleData } from '@/lib/lstm-model';
 import { LSTM_WEIGHTS } from '@/lib/lstm-weights';
 
 // ═══════════════════════════════════════════════
@@ -52,11 +52,11 @@ export interface HeatmapData {
 // LSTM Model Singleton
 // ═══════════════════════════════════════════════
 
-let _model: LSTMModel | null = null;
+let _model: BiLSTMModel | null = null;
 
-function getModel(): LSTMModel {
+function getModel(): BiLSTMModel {
     if (!_model) {
-        _model = new LSTMModel(LSTM_WEIGHTS);
+        _model = new BiLSTMModel(LSTM_WEIGHTS);
     }
     return _model;
 }
@@ -161,7 +161,7 @@ export function calculateProbabilityZones(
     }));
 
     // Extract features and run LSTM inference
-    const features = extractFeatures(candleData, 20);
+    const features = extractFeatures(candleData, 60);
     const lstmPrediction = model.predict(features);
     // lstmPrediction = [P(UP), P(DOWN), P(NEUTRAL)]
     const pUp = lstmPrediction[0];
@@ -280,7 +280,7 @@ export function calculateProbabilityZones(
             type: 'LSTM_HYBRID',
             trainedAt: LSTM_WEIGHTS.metadata.trainedAt,
             accuracy: LSTM_WEIGHTS.metadata.accuracy,
-            params: 6083,
+            params: LSTM_WEIGHTS.metadata.totalParams,
         },
     };
 }

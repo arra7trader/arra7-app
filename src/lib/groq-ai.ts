@@ -20,8 +20,13 @@ interface MLPredictionContext {
     isAvailable: boolean;
 }
 
-export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPredictionContext): Promise<AIAnalysisResult> {
-    // Inject ML Context if available
+export interface MarketContext {
+    multiTimeframe?: string;   // Pre-formatted multi-TF analysis text
+    newsEvents?: string;       // High-impact news near current time
+    dxyCorrelation?: string;   // DXY data and correlation assessment
+}
+
+export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPredictionContext, marketContext?: MarketContext): Promise<AIAnalysisResult> {
     // Inject ML Context if available
     let systemInstruction = ANALYSIS_PROMPT;
     if (mlContext && mlContext.isAvailable) {
@@ -33,6 +38,19 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
 - Use this confirmation to validate your technical analysis.
 `;
         systemInstruction = systemInstruction + "\n\n" + mlSection;
+    }
+
+    // Inject Market Context (Multi-TF, News, DXY)
+    if (marketContext) {
+        if (marketContext.multiTimeframe) {
+            systemInstruction += "\n\n" + marketContext.multiTimeframe;
+        }
+        if (marketContext.newsEvents) {
+            systemInstruction += "\n\n" + marketContext.newsEvents;
+        }
+        if (marketContext.dxyCorrelation) {
+            systemInstruction += "\n\n" + marketContext.dxyCorrelation;
+        }
     }
 
     try {
@@ -65,7 +83,7 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
 }
 
 // Learning Mode Analysis - Extended educational explanations
-export async function analyzeWithLearningMode(marketDataText: string, mlContext?: MLPredictionContext): Promise<AIAnalysisResult> {
+export async function analyzeWithLearningMode(marketDataText: string, mlContext?: MLPredictionContext, marketContext?: MarketContext): Promise<AIAnalysisResult> {
     // Removed manual GROQ_API_KEY check to allow failover in ai-provider
     // if (!GROQ_API_KEY) { ... }
 
@@ -81,6 +99,19 @@ export async function analyzeWithLearningMode(marketDataText: string, mlContext?
 - Jelaskan hubungan signal LSTM ini dengan analisa teknikal manual.
 `;
         systemInstruction = systemInstruction + "\n\n" + mlSection;
+    }
+
+    // Inject Market Context (Multi-TF, News, DXY)
+    if (marketContext) {
+        if (marketContext.multiTimeframe) {
+            systemInstruction += "\n\n" + marketContext.multiTimeframe;
+        }
+        if (marketContext.newsEvents) {
+            systemInstruction += "\n\n" + marketContext.newsEvents;
+        }
+        if (marketContext.dxyCorrelation) {
+            systemInstruction += "\n\n" + marketContext.dxyCorrelation;
+        }
     }
 
     try {

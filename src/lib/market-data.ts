@@ -774,3 +774,190 @@ Last Close vs Open: ${data.close > data.open ? 'BULLISH' : 'BEARISH'}
 Price Position: ${data.close > pivot ? 'ABOVE PIVOT (Bullish Bias)' : 'BELOW PIVOT (Bearish Bias)'}
 `.trim();
 }
+
+// ===================
+// TIMEFRAME HIERARCHY (for Multi-Timeframe Analysis)
+// ===================
+const TIMEFRAME_HIERARCHY: Record<string, { higher: string; lower: string }> = {
+    '1m': { higher: '5m', lower: '1m' },
+    '5m': { higher: '15m', lower: '1m' },
+    '15m': { higher: '1h', lower: '5m' },
+    '30m': { higher: '4h', lower: '15m' },
+    '1h': { higher: '4h', lower: '15m' },
+    '4h': { higher: '1d', lower: '1h' },
+    '1d': { higher: '1d', lower: '4h' },
+};
+
+// USD-correlated pairs: DXY UP → pair DOWN (negative correlation)
+const DXY_NEGATIVE_PAIRS = [
+    'EURUSD', 'GBPUSD', 'AUDUSD', 'NZDUSD', 'XAUUSD', 'XAGUSD',
+    'BTCUSD', 'ETHUSD', 'XRPUSD', 'SOLUSD',
+];
+// USD-correlated pairs: DXY UP → pair UP (positive correlation)
+const DXY_POSITIVE_PAIRS = [
+    'USDJPY', 'USDCHF', 'USDCAD',
+];
+
+/**
+ * Fetch multi-timeframe data for richer AI analysis.
+ * Returns formatted text with higher/entry/lower timeframe analysis.
+ * Non-blocking: returns partial data if some fetches fail.
+ */
+export async function getMultiTimeframeData(
+    pair: ForexPair,
+    entryTimeframe: Timeframe
+): Promise<string> {
+    const hierarchy = TIMEFRAME_HIERARCHY[entryTimeframe];
+    if (!hierarchy) return '';
+
+    // Determine which timeframes to fetch (avoid duplicates)
+    const tfSet = new Set([hierarchy.higher, entryTimeframe, hierarchy.lower]);
+    const timeframesToFetch = Array.from(tfSet) as Timeframe[];
+
+    // Fetch all timeframes in parallel with resilience
+    const results = await Promise.allSettled(
+        timeframesToFetch.map(async (tf) => {
+            const data = await getMarketData(pair, tf);
+            return { timeframe: tf, data };
+        })
+    );
+
+    const sections: string[] = [];
+
+    for (const result of results) {
+        if (result.status === 'fulfilled') {
+            const { timeframe: tf, data } = result.value;
+            const label = tf === hierarchy.higher ? '📊 HIGHER TIMEFRAME' :
+                tf === entryTimeframe ? '🎯 ENTRY TIMEFRAME' :
+                    '🔍 LOWER TIMEFRAME';
+            sections.push(formatSingleTFSummary(label, tf, data));
+        }
+    }
+
+    if (sections.length === 0) return '';
+
+    return `\n=== MULTI-TIMEFRAME ANALYSIS ===\n${sections.join('\n')}\n=== END MULTI-TF ===`;
+}
+
+/**
+ * Format a single timeframe's data into a compact summary for AI.
+ */
+function formatSingleTFSummary(label: string, timeframe: string, data: MarketData): string {
+    const candles = data.candles.slice(-5);
+    if (candles.length === 0) return '';
+
+    const decimals = data.symbol.includes('JPY') ? 3 :
+        data.symbol.includes('XAU') || data.symbol.includes('US') || data.symbol.includes('BTC') ? 2 : 4;
+
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
+    const resistance = Math.max(...highs);
+    const support = Math.min(...lows);
+
+    // Determine trend from last 5 candles
+    const first = candles[0];
+    const last = candles[candles.length - 1];
+    const trendDirection = last.close > first.open ? 'BULLISH' : last.close < first.open ? 'BEARISH' : 'NEUTRAL';
+
+    // Count bullish vs bearish candles
+    const bullishCount = candles.filter(c => c.close > c.open).length;
+    const bearishCount = candles.filter(c => c.close < c.open).length;
+
+    const candleText = candles.map((c, i) => {
+        const dir = c.close > c.open ? '🟢' : '🔴';
+        return `  ${dir} O:${c.open.toFixed(decimals)} H:${c.high.toFixed(decimals)} L:${c.low.toFixed(decimals)} C:${c.close.toFixed(decimals)}`;
+    }).join('\n');
+
+    return `\n${label} (${TIMEFRAMES[timeframe as Timeframe]?.label || timeframe})
+Trend: ${trendDirection} (${bullishCount} bullish / ${bearishCount} bearish candles)
+Resistance: ${resistance.toFixed(decimals)} | Support: ${support.toFixed(decimals)}
+Last 5 Candles:
+${candleText}`;
+}
+
+/**
+ * Fetch DXY (US Dollar Index) data and determine correlation with the target pair.
+ * Returns formatted text for AI injection.
+ * Returns empty string for non-USD pairs or on failure.
+ */
+export async function getDXYCorrelation(pair: string): Promise<string> {
+    // Only relevant for USD pairs
+    const isNegative = DXY_NEGATIVE_PAIRS.includes(pair);
+    const isPositive = DXY_POSITIVE_PAIRS.includes(pair);
+
+    if (!isNegative && !isPositive) {
+        return ''; // Cross pair (e.g. EURGBP) — no direct DXY correlation
+    }
+
+    try {
+        // Fetch DXY from Yahoo Finance
+        const timestamp = Date.now();
+        const hosts = ['query2.finance.yahoo.com', 'query1.finance.yahoo.com'];
+        let dxyData: { price: number; change: number; trend: string } | null = null;
+
+        for (const host of hosts) {
+            try {
+                const url = `https://${host}/v8/finance/chart/DX-Y.NYB?interval=1h&range=1d&_=${timestamp}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    },
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(5000),
+                });
+
+                if (!response.ok) continue;
+
+                const data = await response.json();
+                const result = data.chart?.result?.[0];
+                if (!result) continue;
+
+                const quote = result.indicators?.quote?.[0];
+                const timestamps = result.timestamp || [];
+
+                if (timestamps.length < 2) continue;
+
+                const lastIdx = timestamps.length - 1;
+                const prevIdx = Math.max(0, lastIdx - 3); // Compare vs ~3 candles ago
+
+                const currentPrice = quote.close[lastIdx] || result.meta?.regularMarketPrice || 0;
+                const prevPrice = quote.close[prevIdx] || currentPrice;
+                const change = ((currentPrice - prevPrice) / prevPrice) * 100;
+
+                dxyData = {
+                    price: currentPrice,
+                    change: Number(change.toFixed(3)),
+                    trend: change > 0.05 ? 'BULLISH (Strengthening)' :
+                        change < -0.05 ? 'BEARISH (Weakening)' : 'NEUTRAL (Flat)',
+                };
+                break;
+            } catch {
+                continue;
+            }
+        }
+
+        if (!dxyData || dxyData.price === 0) return '';
+
+        const correlationType = isNegative ? 'NEGATIVE (Inverse)' : 'POSITIVE (Direct)';
+        const impact = isNegative
+            ? (dxyData.change > 0.05 ? '⚠️ DXY naik → BEARISH pressure pada ' + pair :
+                dxyData.change < -0.05 ? '✅ DXY turun → BULLISH support untuk ' + pair :
+                    '➡️ DXY flat → Minimal impact')
+            : (dxyData.change > 0.05 ? '✅ DXY naik → BULLISH support untuk ' + pair :
+                dxyData.change < -0.05 ? '⚠️ DXY turun → BEARISH pressure pada ' + pair :
+                    '➡️ DXY flat → Minimal impact');
+
+        return `
+=== DXY CORRELATION ===
+DXY Price: ${dxyData.price.toFixed(3)}
+DXY Trend: ${dxyData.trend}
+DXY Change: ${dxyData.change > 0 ? '+' : ''}${dxyData.change}%
+Correlation with ${pair}: ${correlationType}
+Impact Assessment: ${impact}
+=== END DXY ===`;
+
+    } catch (error) {
+        console.error('[DXY] Failed to fetch DXY correlation:', error);
+        return '';
+    }
+}

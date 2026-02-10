@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getMarketData, getBrokerPrice, formatMarketDataForAI, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES, BrokerSource } from '@/lib/market-data';
-import { analyzeWithGroq } from '@/lib/groq-ai';
+import { getMarketData, getBrokerPrice, formatMarketDataForAI, getMultiTimeframeData, getDXYCorrelation, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES, BrokerSource } from '@/lib/market-data';
+import { analyzeWithGroq, MarketContext } from '@/lib/groq-ai';
 import { checkQuota, useQuota, getQuotaStatus } from '@/lib/quota';
 
 export async function POST(request: NextRequest) {
@@ -201,11 +201,56 @@ export async function POST(request: NextRequest) {
             isAvailable: true // ENABLED for display
         };
 
+        // ========================================
+        // ENHANCED MARKET CONTEXT (Multi-TF + News + DXY)
+        // Fetch all 3 in parallel — non-blocking, graceful degradation
+        // ========================================
+        console.log(`[Analyze] Fetching enhanced market context for ${pair} ${timeframe}...`);
+
+        const [mtfResult, newsResult, dxyResult] = await Promise.allSettled([
+            getMultiTimeframeData(pair as ForexPair, timeframe as Timeframe),
+            (async () => {
+                const { getForexNews } = await import('@/lib/groq-ai');
+                return getForexNews();
+            })(),
+            getDXYCorrelation(pair),
+        ]);
+
+        const marketContext: MarketContext = {};
+
+        // Multi-Timeframe Analysis
+        if (mtfResult.status === 'fulfilled' && mtfResult.value) {
+            marketContext.multiTimeframe = mtfResult.value;
+            console.log(`[Analyze] ✅ Multi-TF data loaded`);
+        } else {
+            console.warn(`[Analyze] ⚠️ Multi-TF data unavailable`);
+        }
+
+        // Economic Calendar / News Events
+        if (newsResult.status === 'fulfilled' && newsResult.value?.events?.length > 0) {
+            const events = newsResult.value.events;
+            const newsText = events.map(e =>
+                `- [${e.impact.toUpperCase()}] ${e.time} | ${e.country} | ${e.title}`
+            ).join('\n');
+            marketContext.newsEvents = `\n=== ECONOMIC CALENDAR (Today/Tomorrow) ===\n${newsText}\n=== END CALENDAR ===`;
+            console.log(`[Analyze] ✅ ${events.length} news events loaded`);
+        } else {
+            console.warn(`[Analyze] ⚠️ News data unavailable`);
+        }
+
+        // DXY Correlation
+        if (dxyResult.status === 'fulfilled' && dxyResult.value) {
+            marketContext.dxyCorrelation = dxyResult.value;
+            console.log(`[Analyze] ✅ DXY correlation loaded`);
+        } else {
+            console.warn(`[Analyze] ⚠️ DXY data unavailable (may be cross pair)`);
+        }
+
         if (learningMode) {
             const { analyzeWithLearningMode } = await import('@/lib/groq-ai');
-            aiResult = await analyzeWithLearningMode(formattedData, mlPrediction);
+            aiResult = await analyzeWithLearningMode(formattedData, mlPrediction, marketContext);
         } else {
-            aiResult = await analyzeWithGroq(formattedData, mlPrediction);
+            aiResult = await analyzeWithGroq(formattedData, mlPrediction, marketContext);
         }
 
         if (!aiResult.success) {
