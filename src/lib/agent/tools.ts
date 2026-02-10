@@ -10,7 +10,7 @@ import { tool } from 'ai';
 // ═══════════════════════════════════════════════════════
 export const priceTool = tool({
     description: 'Get real-time price for a crypto, forex, commodity, or index. Use when user asks for "price", "harga", "market", or "chart".',
-    parameters: z.object({
+    inputSchema: z.object({
         symbol: z.string().describe('The symbol to check (e.g., BTCUSD, XAUUSD, EURUSD, BBRI.JK)'),
         timeframe: z.enum(['1m', '5m', '15m', '1h', '4h', '1d']).optional().describe('Timeframe (default: 1h)'),
     }),
@@ -47,14 +47,14 @@ export const priceTool = tool({
             return { error: error.message || 'Failed to fetch price.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 2. NEWS TOOL
 // ═══════════════════════════════════════════════════════
 export const newsTool = tool({
     description: 'Get high-impact financial news for today/tomorrow (Forex Factory). Use for "news", "berita", "events", "calendar", "jadwal".',
-    parameters: z.object({}),
+    inputSchema: z.object({}),
     execute: async () => {
         try {
             const { events } = await getForexNews();
@@ -71,14 +71,14 @@ export const newsTool = tool({
             return { error: 'Failed to fetch news.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 3. FOREX AI ANALYSIS TOOL (Deep Analysis)
 // ═══════════════════════════════════════════════════════
 export const analyzeForexTool = tool({
     description: 'Run deep AI analysis on a forex/crypto/commodity pair. Returns comprehensive analysis with BUY/SELL signals, entry, SL, TP. Use when user asks to "analisa", "analyze", "signal", or "setup".',
-    parameters: z.object({
+    inputSchema: z.object({
         symbol: z.string().describe('Symbol to analyze (e.g., XAUUSD, EURUSD, BTCUSD)'),
         timeframe: z.enum(['15m', '1h', '4h', '1d']).optional().describe('Timeframe (default: 1h)'),
     }),
@@ -120,14 +120,14 @@ export const analyzeForexTool = tool({
             return { error: error.message || 'Analysis failed.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 4. STOCK ANALYSIS TOOL
 // ═══════════════════════════════════════════════════════
 export const analyzeStockTool = tool({
     description: 'Run AI analysis on Indonesian (IDX) or US stocks. LONG-ONLY (no short selling). Use when user mentions "saham", "stock", "BBRI", "TLKM", "AAPL", etc.',
-    parameters: z.object({
+    inputSchema: z.object({
         symbol: z.string().describe('Stock ticker (e.g., BBRI.JK, TLKM.JK, AAPL, GOOGL)'),
         market: z.enum(['IDX', 'US']).optional().describe('Market (default: IDX for .JK suffix, US otherwise)'),
     }),
@@ -165,14 +165,14 @@ Price data will be fetched from Yahoo Finance via symbol: ${ticker}`;
             return { error: error.message || 'Stock analysis failed.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 5. ML PREDICTION TOOL (SmartPredictor)
 // ═══════════════════════════════════════════════════════
 export const mlPredictionTool = tool({
     description: 'Get ML-based prediction using SmartPredictor (order flow signals, momentum, VWAP). Returns direction (UP/DOWN/NEUTRAL), confidence %, and trade setup. Use for "prediksi", "prediction", "ML", "AI prediction".',
-    parameters: z.object({
+    inputSchema: z.object({
         symbol: z.string().describe('Symbol (e.g., XAUUSD, BTCUSD, EURUSD)'),
     }),
     execute: async ({ symbol }: { symbol: string }) => {
@@ -230,14 +230,14 @@ export const mlPredictionTool = tool({
             return { error: error.message || 'ML Prediction failed.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 6. SIGNAL HISTORY TOOL
 // ═══════════════════════════════════════════════════════
 export const signalHistoryTool = tool({
     description: 'Get historical signal performance summary. Use when user asks about "riwayat signal", "signal history", "performa", "track record", "win rate".',
-    parameters: z.object({
+    inputSchema: z.object({
         period: z.enum(['today', '7d', '30d', 'all']).optional().describe('Period to check (default: 7d)'),
     }),
     execute: async ({ period = '7d' }: { period?: string }) => {
@@ -253,14 +253,14 @@ export const signalHistoryTool = tool({
             return { error: error.message || 'Failed to fetch signal history.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 7. PORTFOLIO TOOL
 // ═══════════════════════════════════════════════════════
 export const portfolioTool = tool({
     description: 'Get user portfolio summary with open positions and P&L. Use when user asks "portfolio saya", "posisi saya", "my positions", "P&L".',
-    parameters: z.object({
+    inputSchema: z.object({
         userId: z.string().optional().describe('User ID (auto-filled from session)'),
     }),
     execute: async ({ userId = 'default' }: { userId?: string }) => {
@@ -293,14 +293,14 @@ export const portfolioTool = tool({
             return { error: error.message || 'Failed to fetch portfolio.' };
         }
     },
-} as any);
+});
 
 // ═══════════════════════════════════════════════════════
 // 8. MARKET HOURS TOOL
 // ═══════════════════════════════════════════════════════
 export const marketHoursTool = tool({
     description: 'Check if market is currently open for a symbol + active trading session info (Asia/London/NY). Use for "jam market", "market hours", "buka tutup", "sesi trading".',
-    parameters: z.object({
+    inputSchema: z.object({
         symbol: z.string().optional().describe('Symbol to check (default: XAUUSD)'),
     }),
     execute: async ({ symbol = 'XAUUSD' }: { symbol?: string }) => {
@@ -363,4 +363,4 @@ export const marketHoursTool = tool({
             return { error: error.message || 'Failed to check market hours.' };
         }
     },
-} as any);
+});
