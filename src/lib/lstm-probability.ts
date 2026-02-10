@@ -172,68 +172,70 @@ export function calculateProbabilityZones(
 
         // ── Signal Components ──
 
+        // 0. Positional Bias: below price = natural support (LONG), above = resistance (SHORT)
+        const positionalBias = distanceFromCurrent < 0 ? 0.15 : distanceFromCurrent > 0 ? -0.15 : 0;
+
         // 1. RSI Signal (overbought/oversold at zones)
         let rsiSignal = 0;
         if (rsi > 70 && distanceFromCurrent > 0) {
-            // Overbought + above current → bearish for upper zones
-            rsiSignal = -(rsi - 70) / 30;
+            rsiSignal = -(rsi - 70) / 30; // Overbought + above → bearish
         } else if (rsi < 30 && distanceFromCurrent < 0) {
-            // Oversold + below current → bullish for lower zones
-            rsiSignal = (30 - rsi) / 30;
-        } else if (rsi > 50) {
-            rsiSignal = (rsi - 50) / 50 * 0.3;
-        } else {
-            rsiSignal = (rsi - 50) / 50 * 0.3;
+            rsiSignal = (30 - rsi) / 30; // Oversold + below → bullish
+        } else if (rsi > 55) {
+            rsiSignal = (rsi - 55) / 45 * 0.4;
+        } else if (rsi < 45) {
+            rsiSignal = (rsi - 45) / 45 * 0.4;
         }
 
-        // 2. VWAP Signal
+        // 2. VWAP Signal (widened thresholds)
         let vwapSignal = 0;
         const vwapDistance = (zonePrice - vwap) / vwap;
-        if (zonePrice < vwap && vwapDistance > -0.01) {
-            vwapSignal = 0.3; // Near and below VWAP → attractive for longs
-        } else if (zonePrice > vwap && vwapDistance < 0.01) {
-            vwapSignal = -0.2; // Near and above VWAP → resistance
+        if (zonePrice < vwap && vwapDistance > -0.02) {
+            vwapSignal = 0.4; // Below VWAP → buy interest
+        } else if (zonePrice > vwap && vwapDistance < 0.02) {
+            vwapSignal = -0.3; // Above VWAP → sell pressure
         }
 
-        // 3. Momentum Signal
+        // 3. Momentum Signal (lower threshold)
         let momentumSignal = 0;
-        if (momentum > 0.1) {
-            momentumSignal = distanceFromCurrent > 0 ? 0.3 : -0.1;
-        } else if (momentum < -0.1) {
-            momentumSignal = distanceFromCurrent < 0 ? -0.3 : 0.1;
+        if (momentum > 0.02) {
+            momentumSignal = distanceFromCurrent > 0 ? 0.35 : -0.1;
+        } else if (momentum < -0.02) {
+            momentumSignal = distanceFromCurrent < 0 ? -0.35 : 0.1;
         }
 
-        // 4. EMA Trend Signal
-        const trendSignal = emaTrend * 0.2;
+        // 4. EMA Trend Signal (amplified)
+        const trendSignal = emaTrend * 0.3;
 
-        // 5. Support/Resistance Signal (24h high/low)
+        // 5. Support/Resistance Signal (24h high/low, wider detection)
         let srSignal = 0;
         const distFromHigh = Math.abs(zonePrice - high24h) / currentPrice;
         const distFromLow = Math.abs(zonePrice - low24h) / currentPrice;
-        if (distFromHigh < 0.002) srSignal -= 0.25; // Near 24h high = resistance
-        if (distFromLow < 0.002) srSignal += 0.25;  // Near 24h low = support
+        if (distFromHigh < 0.005) srSignal -= 0.35; // Near 24h high = resistance
+        if (distFromLow < 0.005) srSignal += 0.35;  // Near 24h low = support
 
-        // 6. Distance Decay (closer to current price = stronger signal)
-        const distanceFactor = Math.max(0, 1 - (distancePct / 0.02));
+        // 6. Distance Decay — wider window (0.08 = 8% of price keeps signal alive)
+        const distanceFactor = Math.max(0.1, 1 - (distancePct / 0.08));
 
         // ── Combine Signals ──
         const rawSignal = (
-            rsiSignal * 0.25 +
+            positionalBias * 0.2 +
+            rsiSignal * 0.2 +
             vwapSignal * 0.2 +
-            momentumSignal * 0.2 +
-            trendSignal * 0.2 +
-            srSignal * 0.15
+            momentumSignal * 0.15 +
+            trendSignal * 0.15 +
+            srSignal * 0.1
         ) * distanceFactor * sessionInfo.weight;
 
         // Convert signal to probability (0.5 = neutral, towards 1.0 = strong)
-        const baseProbability = 0.5 + (rawSignal * 0.45);
+        const baseProbability = 0.5 + (rawSignal * 0.9); // amplified from 0.45 to 0.9
         const probability = Math.max(0.3, Math.min(0.98, baseProbability));
 
-        // Determine bias
+        // Determine bias — much lower threshold so we get actual LONG/SHORT zones
         let bias: 'LONG' | 'SHORT' | 'NEUTRAL';
-        if (rawSignal > 0.15) {
+        if (rawSignal > 0.03) {
             bias = 'LONG';
-        } else if (rawSignal < -0.15) {
+        } else if (rawSignal < -0.03) {
             bias = 'SHORT';
         } else {
             bias = 'NEUTRAL';
