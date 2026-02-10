@@ -206,10 +206,9 @@ function formatAnalysisToHtml(text: string): string {
     // 3. SIGNAL BOX (The Main Event)
     // Uses dynamic classes based on signalColor (green/red)
     // 3. SIGNAL BOX (The Main Event)
-    // Robust Regex: Matches "🚀 [BUY] [INSTANT]" or "🚀 BUY INSTANT" or "🚀 : BUY" etc.
-    // Handles optional brackets [], optional colons :, optional asterisks **
+    // Robust Regex: Matches "🚀 ... BUY ... INSTANT" in any order/format
     html = html.replace(
-        /🚀\s*(?:\:|\*+)?\s*\[?\s*(BUY|SELL|WAIT)\s*\]?\s*(?:\*+)?\s*(?:\[?\s*(INSTANT|LIMIT|STOP)\s*\]?)?/gi,
+        /🚀\s*(?:[:*\[\]\s]*)(BUY|SELL|WAIT)(?:[:*\[\]\s-]*)(INSTANT|LIMIT|STOP)?/gi,
         (match, action, orderType) => {
             const type = orderType || 'EXECUTION'; // Fallback if undefined
             let signalClass = 'neutral';
