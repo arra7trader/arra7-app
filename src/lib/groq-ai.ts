@@ -205,45 +205,73 @@ function formatAnalysisToHtml(text: string): string {
 
     // 3. SIGNAL BOX (The Main Event)
     // Uses dynamic classes based on signalColor (green/red)
+    // 3. SIGNAL BOX (The Main Event)
+    // Robust Regex: Matches "🚀 [BUY] [INSTANT]" or "🚀 BUY INSTANT" or "🚀 : BUY" etc.
+    // Handles optional brackets [], optional colons :, optional asterisks **
     html = html.replace(
-        /🚀\s*\[?(BUY|SELL|WAIT)\]?\s*\[?(INSTANT|LIMIT|STOP)?\]?/gi,
-        `<div class="relative overflow-hidden rounded-xl bg-gray-800/50 border border-${signalColor}-500/30 p-4 mb-4 shadow-lg group">
-            <div class="absolute inset-0 bg-${signalColor}-500/5 opacity-0 group-hover:opacity-10 transition-opacity"></div>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 rounded-full bg-${signalColor}-500/10 border border-${signalColor}-500/20 shadow-inner shadow-${signalColor}-500/20">
-                        ${signalIconSvg}
+        /🚀\s*(?:\:|\*+)?\s*\[?\s*(BUY|SELL|WAIT)\s*\]?\s*(?:\*+)?\s*(?:\[?\s*(INSTANT|LIMIT|STOP)\s*\]?)?/gi,
+        (match, action, orderType) => {
+            const type = orderType || 'EXECUTION'; // Fallback if undefined
+            let signalClass = 'neutral';
+            let signalColor = 'gray';
+
+            if (action.toUpperCase() === 'BUY') {
+                signalClass = 'buy';
+                signalColor = 'green';
+            } else if (action.toUpperCase() === 'SELL') {
+                signalClass = 'sell';
+                signalColor = 'red';
+            }
+
+            // Re-define icon based on captured action logic if needed, or use generic
+            let icon = '<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>';
+            if (signalColor === 'green') icon = '<svg class="w-8 h-8 text-green-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>';
+            if (signalColor === 'red') icon = '<svg class="w-8 h-8 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>';
+
+            return `<div class="relative overflow-hidden rounded-xl bg-gray-800/50 border border-${signalColor}-500/30 p-6 mb-4 shadow-lg group">
+                <div class="absolute inset-0 bg-${signalColor}-500/5 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-5">
+                        <div class="p-4 rounded-full bg-${signalColor}-500/10 border border-${signalColor}-500/20 shadow-inner shadow-${signalColor}-500/20">
+                            ${icon}
+                        </div>
+                        <div>
+                            <div class="text-4xl font-black text-${signalColor}-400 tracking-tighter leading-none filter drop-shadow-lg">${action.toUpperCase()}</div>
+                            <div class="text-xs font-mono text-${signalColor}-300/70 uppercase tracking-widest mt-1">${type} ORDER</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-3xl font-black text-${signalColor}-400 tracking-tight leading-none">$1</div>
-                        <div class="text-xs font-mono text-${signalColor}-300/70 uppercase tracking-wider mt-1">$2 ORDER</div>
+                     <div class="hidden sm:block">
+                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-${signalColor}-500/20 text-${signalColor}-400 border border-${signalColor}-500/30 shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+                            ACTIVE SIGNAL
+                         </span>
                     </div>
                 </div>
-                <div class="hidden sm:block">
-                     <span class="px-3 py-1 rounded-full text-xs font-medium bg-${signalColor}-500/10 text-${signalColor}-400 border border-${signalColor}-500/20 animate-pulse">
-                        ACTIVE SIGNAL
-                     </span>
-                </div>
-            </div>
-         </div>`
+             </div>`;
+        }
     );
 
     // 4. ENTRY ZONE
+    // Make it POP! Gradient background + White text
     html = html.replace(
-        /📍\s*ENTRY\s*:\s*(.*?)(?:\n|$)/,
+        /📍\s*ENTRY\s*(?:\:|\*+)?\s*(.*?)(?:\n|$)/i,
         `<div class="grid grid-cols-1 gap-4 mb-4">
-            <div class="bg-gray-800/30 rounded-lg p-3 border border-gray-700/50">
-                <div class="text-xs text-gray-500 mb-1 uppercase tracking-wider">Entry Zone</div>
-                <div class="text-lg font-mono font-semibold text-white">$1</div>
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 border border-blue-500/30 p-4 shadow-lg">
+                 <div class="absolute top-0 right-0 p-2 opacity-10">
+                    <svg class="w-16 h-16 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 3.8L18.4 17H5.6L12 5.8z"/></svg> 
+                 </div>
+                <div class="relative z-10">
+                    <div class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">🎯 Entry Zone</div>
+                    <div class="text-2xl font-mono font-black text-white tracking-tight">$1</div>
+                </div>
             </div>`
     );
 
-    // 5. ENTRY LOGIC (Close the grid div opened above)
+    // 5. ENTRY LOGIC
     html = html.replace(
-        /💡\s*Entry Logic:\s*(.*?)(?:\n|$)/,
-        `<div class="bg-gray-800/30 rounded-lg p-3 border border-gray-700/50">
-            <div class="text-xs text-gray-500 mb-1 uppercase tracking-wider">Logic</div>
-            <div class="text-sm text-gray-300 leading-relaxed">$1</div>
+        /💡\s*Entry Logic\s*(?:\:|\*+)?\s*(.*?)(?:\n|$)/i,
+        `<div class="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50">
+            <div class="text-xs text-gray-500 mb-2 uppercase tracking-wider font-bold">Logic & Reasoning</div>
+            <div class="text-sm text-gray-300 leading-relaxed italic border-l-2 border-gray-600 pl-3">$1</div>
         </div>
         </div>` // Closing grid
     );
