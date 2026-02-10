@@ -27,37 +27,36 @@ export interface MarketContext {
 }
 
 export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPredictionContext, marketContext?: MarketContext): Promise<AIAnalysisResult> {
-    // Inject ML Context if available
-    let systemInstruction = ANALYSIS_PROMPT;
+    const systemInstruction = ANALYSIS_PROMPT;
+
+    // Build Context String
+    let additionalContext = "";
+
+    // 1. ML Context
     if (mlContext && mlContext.isAvailable) {
-        const mlSection = `
+        additionalContext += `
 🤖 **MACHINE LEARNING (LSTM) SIGNAL:**
 - **DIRECTION:** ${mlContext.direction}
 - **WINRATE:** ${mlContext.winrate}%
 - **CONFIDENCE:** ${(mlContext.confidence * 100).toFixed(1)}%
 - Use this confirmation to validate your technical analysis.
 `;
-        systemInstruction = systemInstruction + "\n\n" + mlSection;
     }
 
-    // Inject Market Context (Multi-TF, News, DXY)
+    // 2. Market Context (Multi-TF, News, DXY)
     if (marketContext) {
-        if (marketContext.multiTimeframe) {
-            systemInstruction += "\n\n" + marketContext.multiTimeframe;
-        }
-        if (marketContext.newsEvents) {
-            systemInstruction += "\n\n" + marketContext.newsEvents;
-        }
-        if (marketContext.dxyCorrelation) {
-            systemInstruction += "\n\n" + marketContext.dxyCorrelation;
-        }
+        if (marketContext.multiTimeframe) additionalContext += "\n\n" + marketContext.multiTimeframe;
+        if (marketContext.newsEvents) additionalContext += "\n\n" + marketContext.newsEvents;
+        if (marketContext.dxyCorrelation) additionalContext += "\n\n" + marketContext.dxyCorrelation;
     }
+
+    const userContent = `DATA MARKET LIVE:\n${marketDataText}\n\nADDITIONAL CONTEXT & DATA LAYERS:${additionalContext}`;
 
     try {
         const { text } = await generateTextHybrid({
-            system: systemInstruction, // Pass as proper SYSTEM Prompt for Groq
+            system: systemInstruction,
             messages: [
-                { role: 'user', content: `DATA MARKET LIVE:\n${marketDataText}` }
+                { role: 'user', content: userContent }
             ],
             temperature: 0.3,
             maxTokens: 4000,
@@ -84,40 +83,36 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
 
 // Learning Mode Analysis - Extended educational explanations
 export async function analyzeWithLearningMode(marketDataText: string, mlContext?: MLPredictionContext, marketContext?: MarketContext): Promise<AIAnalysisResult> {
-    // Removed manual GROQ_API_KEY check to allow failover in ai-provider
-    // if (!GROQ_API_KEY) { ... }
-
-    // Import learning mode prompt
     const { LEARNING_MODE_PROMPT } = await import('./learning-prompt');
-    let systemInstruction = LEARNING_MODE_PROMPT;
+    const systemInstruction = LEARNING_MODE_PROMPT;
+
+    // Build Context String
+    let additionalContext = "";
+
+    // 1. ML Context
     if (mlContext && mlContext.isAvailable) {
-        const mlSection = `
+        additionalContext += `
 🤖 **MACHINE LEARNING (LSTM) SIGNAL:**
 - **DIRECTION:** ${mlContext.direction}
 - **WINRATE:** ${mlContext.winrate}%
 - **CONFIDENCE:** ${(mlContext.confidence * 100).toFixed(1)}%
 - Jelaskan hubungan signal LSTM ini dengan analisa teknikal manual.
 `;
-        systemInstruction = systemInstruction + "\n\n" + mlSection;
     }
 
-    // Inject Market Context (Multi-TF, News, DXY)
+    // 2. Market Context
     if (marketContext) {
-        if (marketContext.multiTimeframe) {
-            systemInstruction += "\n\n" + marketContext.multiTimeframe;
-        }
-        if (marketContext.newsEvents) {
-            systemInstruction += "\n\n" + marketContext.newsEvents;
-        }
-        if (marketContext.dxyCorrelation) {
-            systemInstruction += "\n\n" + marketContext.dxyCorrelation;
-        }
+        if (marketContext.multiTimeframe) additionalContext += "\n\n" + marketContext.multiTimeframe;
+        if (marketContext.newsEvents) additionalContext += "\n\n" + marketContext.newsEvents;
+        if (marketContext.dxyCorrelation) additionalContext += "\n\n" + marketContext.dxyCorrelation;
     }
+
+    const userContent = `DATA MARKET LIVE:\n${marketDataText}\n\nADDITIONAL CONTEXT & DATA LAYERS:${additionalContext}`;
 
     try {
         const { text } = await generateTextHybrid({
             system: systemInstruction,
-            messages: [{ role: 'user', content: `DATA MARKET LIVE:\n${marketDataText}` }],
+            messages: [{ role: 'user', content: userContent }],
             temperature: 0.3,
             maxTokens: 6000,
         });
