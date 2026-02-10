@@ -1,0 +1,6 @@
+fix: call toTextStreamResponse() as function for proper Response return
+
+- Fixed TypeScript error about incompatible return types
+- Changed from property access to function call: toTextStreamResponse()
+- Returns proper Response object expected by Next.js route handlers
+- Build test passed successfully
