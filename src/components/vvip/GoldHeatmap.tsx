@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ═══════════════════════════════════════════════
@@ -38,21 +38,19 @@ interface HeatmapData {
 // ═══════════════════════════════════════════════
 
 function getStrengthLabel(probability: number): string {
-    if (probability >= 0.75) return '⚡⚡⚡ VERY STRONG';
+    if (probability >= 0.85) return '🔥 WHALE INTEREST'; // Renamed for VVIP
+    if (probability >= 0.75) return '⚡⚡⚡ INST. STRONG';
     if (probability >= 0.65) return '⚡⚡ STRONG';
     if (probability >= 0.55) return '⚡ MODERATE';
     return 'WEAK';
 }
 
 function getStrengthColor(probability: number): string {
+    if (probability >= 0.85) return 'text-purple-600 font-black animate-pulse'; // Special VVIP color
     if (probability >= 0.75) return 'text-emerald-600 font-bold';
     if (probability >= 0.65) return 'text-green-600 font-semibold';
     if (probability >= 0.55) return 'text-amber-600';
     return 'text-gray-500';
-}
-
-function formatPct(v: number): string {
-    return `${Math.round(v * 100)}%`;
 }
 
 // ═══════════════════════════════════════════════
@@ -66,6 +64,8 @@ export default function GoldHeatmap() {
     const [secondsAgo, setSecondsAgo] = useState(0);
     const [lastFetchTime, setLastFetchTime] = useState<number>(Date.now());
     const [showNeutral, setShowNeutral] = useState(false);
+    const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+    const lastAlertTimeRef = useRef<number>(0);
 
     // Fetch data
     const fetchData = useCallback(async () => {
@@ -95,6 +95,30 @@ export default function GoldHeatmap() {
         return () => clearInterval(tick);
     }, [lastFetchTime]);
 
+    // ─── 3. VOICE ALERTS (REAL) ───
+    useEffect(() => {
+        if (!data || !isVoiceEnabled) return;
+
+        // Check if price is near a STRONG zone (> 80%)
+        const strongZones = data.zones.filter(z => z.probability > 0.8);
+        const buffer = data.currentPrice * 0.0005; // Tight buffer for alert
+
+        for (const zone of strongZones) {
+            if (Math.abs(zone.price - data.currentPrice) < buffer) {
+                const now = Date.now();
+                // Alert once every 60 seconds per zone encounter
+                if (now - lastAlertTimeRef.current > 60000) {
+                    const type = zone.bias === 'LONG' ? 'Demand' : 'Supply';
+                    const msg = new SpeechSynthesisUtterance(`Alert. Institutional ${type} Zone detected at ${Math.round(zone.price)}.`);
+                    msg.rate = 1.1; // Slightly faster, robotic
+                    msg.pitch = 1.0;
+                    window.speechSynthesis.speak(msg);
+                    lastAlertTimeRef.current = now;
+                }
+            }
+        }
+    }, [data, isVoiceEnabled]);
+
     // ─── Loading ───
     if (isLoading && !data) {
         return (
@@ -122,141 +146,129 @@ export default function GoldHeatmap() {
     const sellZones = data.zones.filter(z => z.bias === 'SHORT').sort((a, b) => b.probability - a.probability);
     const neutralZones = data.zones.filter(z => z.bias === 'NEUTRAL');
 
+    // ─── 4. SMART MONEY BIAS CALC (REAL) ───
+    const totalBuyProb = buyZones.reduce((acc, z) => acc + z.probability, 0);
+    const totalSellProb = sellZones.reduce((acc, z) => acc + z.probability, 0);
+    const totalProb = totalBuyProb + totalSellProb || 1;
+    const buyPct = (totalBuyProb / totalProb) * 100;
+    const sellPct = (totalSellProb / totalProb) * 100;
+    const bias = buyPct > 55 ? 'NET LONG' : sellPct > 55 ? 'NET SHORT' : 'NEUTRAL';
+
     return (
         <div className="flex flex-col gap-6">
 
-            {/* ═══ HEADER ═══ */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-[var(--border-light)] shadow-sm">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100">
-                        <span className="text-2xl">🏆</span>
-                    </div>
+            {/* ═══ 1. WHALE RADAR (REAL ANIMATION) ═══ */}
+            <div className="relative bg-black rounded-3xl overflow-hidden p-6 text-white shadow-2xl border border-gray-800">
+                {/* Radar Background */}
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-green-500/30 rounded-full" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-green-500/30 rounded-full" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[100px] border border-green-500/30 rounded-full" />
+                    {/* Rotating Scanner Line */}
+                    <motion.div
+                        className="absolute top-1/2 left-1/2 w-[250px] h-[250px] origin-top-left bg-gradient-to-br from-green-500/20 to-transparent"
+                        style={{ x: '-0%', y: '-0%' }} // Pivot at center
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    />
+                </div>
+
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            XAU/USD Probability Heatmap
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-100 text-green-700 rounded-full border border-green-200 animate-pulse">
-                                LIVE
+                        <div className="flex items-center gap-3 mb-1">
+                            <span className="flex h-3 w-3 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                             </span>
-                        </h2>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-0.5">
-                            <span>🕒 {secondsAgo}s ago</span>
-                            <span className="text-gray-300">·</span>
-                            <span>{data.sessionEmoji} {data.session}</span>
-                            {data.modelInfo && (
-                                <>
-                                    <span className="text-gray-300">·</span>
-                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-semibold border border-purple-200">
-                                        🧠 LSTM ({data.modelInfo.params.toLocaleString()} params)
-                                    </span>
-                                </>
-                            )}
+                            <h2 className="text-sm font-mono text-green-400 tracking-widest uppercase">Whale Radar Active</h2>
                         </div>
+                        <h1 className="text-4xl font-black tracking-tighter">
+                            ${data.currentPrice.toFixed(2)}
+                        </h1>
+                        <p className="text-xs text-gray-400 mt-2 font-mono">
+                            LIQUIDITY SCAN: {secondsAgo}s AGO • SESSION: {data.session.toUpperCase()}
+                        </p>
                     </div>
-                </div>
-                <div className="text-right">
-                    <div className="text-3xl font-bold font-mono tracking-tight text-amber-600">
-                        ${data.currentPrice.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-gray-400 mt-0.5">
-                        <span className="text-red-500">L {data.low24h.toFixed(2)}</span>
-                        <span className="mx-1.5 text-gray-300">|</span>
-                        <span className="text-green-500">H {data.high24h.toFixed(2)}</span>
+
+                    {/* Sentiment Gauge */}
+                    <div className="flex items-center gap-6 bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm">
+                        <div className="text-center">
+                            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Smart Money Bias</div>
+                            <div className={`text-xl font-black ${bias === 'NET LONG' ? 'text-green-400' : bias === 'NET SHORT' ? 'text-red-400' : 'text-gray-200'}`}>
+                                {bias}
+                            </div>
+                        </div>
+                        <div className="h-10 w-px bg-white/10" />
+                        <div className="flex flex-col gap-1 w-32">
+                            <div className="flex justify-between text-[10px] font-mono">
+                                <span className="text-green-400">B: {Math.round(buyPct)}%</span>
+                                <span className="text-red-400">S: {Math.round(sellPct)}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden flex">
+                                <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${buyPct}%` }} />
+                                <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${sellPct}%` }} />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* ═══ HOW TO READ GUIDE ═══ */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
-                <h3 className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">
-                    <span className="text-xl">📖</span>
-                    Cara Membaca Heatmap
+            {/* ═══ CONTROLS ═══ */}
+            <div className="flex items-center justify-between px-2">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span className="text-xl">📊</span> Institutional Volume Depth
                 </h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white/80 rounded-lg p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded bg-green-500 flex items-center justify-center text-white text-xs font-bold">1</div>
-                            <span className="font-semibold text-gray-800">BUY ZONES (Hijau)</span>
-                        </div>
-                        <p className="text-gray-600 leading-relaxed">
-                            Harga dengan <strong className="text-green-600">probabilitas tinggi untuk naik</strong>.
-                            Semakin banyak ⚡, semakin kuat signal buy.
-                            Zone di <strong>bawah current price</strong> = potensi support.
-                        </p>
-                    </div>
-                    <div className="bg-white/80 rounded-lg p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">2</div>
-                            <span className="font-semibold text-gray-800">SELL ZONES (Merah)</span>
-                        </div>
-                        <p className="text-gray-600 leading-relaxed">
-                            Harga dengan <strong className="text-red-600">probabilitas tinggi untuk turun</strong>.
-                            Semakin banyak ⚡, semakin kuat signal sell.
-                            Zone di <strong>atas current price</strong> = potensi resistance.
-                        </p>
-                    </div>
-                </div>
-                <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                        <strong>💡 Tips:</strong> Gunakan untuk konfirmasi strategi trading Anda.
-                        Zone dengan ⚡⚡⚡ punya probabilitas 75%+ untuk bergerak sesuai bias.
-                        Perhatikan juga current price (garis kuning) untuk posisi saat ini.
-                    </p>
-                </div>
+                <button
+                    onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isVoiceEnabled ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-500/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                >
+                    {isVoiceEnabled ? '🎙️ VOICE ALERT: ON' : '🔇 VOICE ALERT: OFF'}
+                </button>
             </div>
 
-            {/* ═══ BUY ZONES (GREEN) ═══ */}
-            <div className="bg-white rounded-2xl border border-green-200 shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 border-b border-green-100">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-base font-bold text-green-800 flex items-center gap-2">
-                            <span className="text-xl">🟢</span>
-                            BUY ZONES — Support Areas
-                        </h3>
-                        <span className="text-xs text-green-600 font-medium bg-green-100 px-3 py-1 rounded-full">
-                            {buyZones.length} zones
-                        </span>
-                    </div>
-                </div>
-                <div className="divide-y divide-green-50">
-                    {buyZones.slice(0, 10).map((zone, i) => (
-                        <ZoneRow key={zone.price} zone={zone} index={i} type="buy" currentPrice={data.currentPrice} />
-                    ))}
-                </div>
-            </div>
 
-            {/* ═══ SELL ZONES (RED) ═══ */}
-            <div className="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-red-50 to-rose-50 px-5 py-4 border-b border-red-100">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-base font-bold text-red-800 flex items-center gap-2">
-                            <span className="text-xl">🔴</span>
-                            SELL ZONES — Resistance Areas
-                        </h3>
-                        <span className="text-xs text-red-600 font-medium bg-red-100 px-3 py-1 rounded-full">
-                            {sellZones.length} zones
+            {/* ═══ 2. INSTITUTIONAL ZONES (ORDER BOOK STYLE) ═══ */}
+            <div className="grid md:grid-cols-2 gap-6">
+                {/* DEMAND / BUY SIDE */}
+                <div className="bg-white rounded-2xl border border-green-100 shadow-lg shadow-green-900/5 overflow-hidden">
+                    <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Demand Zones (Bids)</span>
+                        <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                            Total: {buyZones.length}
                         </span>
                     </div>
+                    <div className="divide-y divide-gray-50">
+                        {buyZones.slice(0, 8).map((zone, i) => (
+                            <OrderBookRow key={zone.price} zone={zone} type="buy" currentPrice={data.currentPrice} />
+                        ))}
+                    </div>
                 </div>
-                <div className="divide-y divide-red-50">
-                    {sellZones.slice(0, 10).map((zone, i) => (
-                        <ZoneRow key={zone.price} zone={zone} index={i} type="sell" currentPrice={data.currentPrice} />
-                    ))}
+
+                {/* SUPPLY / SELL SIDE */}
+                <div className="bg-white rounded-2xl border border-red-100 shadow-lg shadow-red-900/5 overflow-hidden">
+                    <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Supply Zones (Asks)</span>
+                        <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">
+                            Total: {sellZones.length}
+                        </span>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                        {sellZones.slice(0, 8).map((zone, i) => (
+                            <OrderBookRow key={zone.price} zone={zone} type="sell" currentPrice={data.currentPrice} />
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* ═══ NEUTRAL ZONES (Collapsed) ═══ */}
             {neutralZones.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="border-t border-gray-200 pt-4">
                     <button
                         onClick={() => setShowNeutral(!showNeutral)}
-                        className="w-full px-5 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        className="text-xs font-medium text-gray-400 hover:text-gray-600 flex items-center gap-1 mx-auto"
                     >
-                        <span className="text-sm font-semibold text-gray-600">
-                            ⚪ Neutral Zones ({neutralZones.length})
-                        </span>
-                        <span className="text-xs text-gray-400">
-                            {showNeutral ? 'Hide ▲' : 'Show ▼'}
-                        </span>
+                        {showNeutral ? 'Hide Neutral Zones' : `Show ${neutralZones.length} Neutral Zones`}
                     </button>
                     <AnimatePresence>
                         {showNeutral && (
@@ -264,113 +276,66 @@ export default function GoldHeatmap() {
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="border-t border-gray-100 divide-y divide-gray-50"
+                                className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"
                             >
-                                {neutralZones.slice(0, 10).map((zone, i) => (
-                                    <ZoneRow key={zone.price} zone={zone} index={i} type="neutral" currentPrice={data.currentPrice} />
+                                {neutralZones.slice(0, 6).map((zone) => (
+                                    <div key={zone.price} className="bg-gray-50 rounded p-2 flex justify-between text-xs text-gray-500">
+                                        <span>${zone.price.toFixed(2)}</span>
+                                        <span>{Math.round(zone.probability * 100)}%</span>
+                                    </div>
                                 ))}
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             )}
-
-            {/* ═══ DISCLAIMER ═══ */}
-            <p className="text-center text-[11px] text-gray-400">
-                *Probabilitas dihitung menggunakan LSTM Neural Network (6,083 params, trained on 6 months XAUUSD data) + Rule-Based Indicators. Bukan financial advice.
-            </p>
         </div>
     );
 }
 
 // ═══════════════════════════════════════════════
-// Zone Row Component
+// Order Book Row (New VVIP Visual)
 // ═══════════════════════════════════════════════
 
-function ZoneRow({ zone, index, type, currentPrice }: {
+function OrderBookRow({ zone, type, currentPrice }: {
     zone: ProbabilityZone;
-    index: number;
-    type: 'buy' | 'sell' | 'neutral';
+    type: 'buy' | 'sell';
     currentPrice: number;
 }) {
-    const isNearCurrent = Math.abs(zone.price - currentPrice) < currentPrice * 0.002;
-    const strength = getStrengthLabel(zone.probability);
+    const isNear = Math.abs(zone.price - currentPrice) < currentPrice * 0.001;
     const pct = Math.round(zone.probability * 100);
-
-    let bgClass = 'hover:bg-gray-50/50';
-    let priceClass = 'text-gray-700';
-    let actionText = '—';
-    let actionClass = 'text-gray-400';
-
-    if (type === 'buy') {
-        bgClass = index === 0 ? 'bg-green-50/50' : 'hover:bg-green-50/30';
-        priceClass = 'text-green-700 font-semibold';
-        actionText = zone.price < currentPrice ? 'Support' : 'Bounce Target';
-        actionClass = 'text-green-600';
-    } else if (type === 'sell') {
-        bgClass = index === 0 ? 'bg-red-50/50' : 'hover:bg-red-50/30';
-        priceClass = 'text-red-700 font-semibold';
-        actionText = zone.price > currentPrice ? 'Resistance' : 'Retracement';
-        actionClass = 'text-red-600';
-    }
+    const isWhale = zone.probability >= 0.8;
 
     return (
-        <div className={`flex items-center gap-3 px-5 py-3 transition-colors ${bgClass} ${isNearCurrent ? 'border-l-4 border-amber-400' : ''}`}>
-            {/* Rank */}
-            <div className="w-8 text-center text-xs font-bold text-gray-400">
-                #{index + 1}
-            </div>
+        <div className={`relative px-4 py-2.5 flex items-center justify-between group ${isNear ? 'bg-amber-50' : 'hover:bg-gray-50'}`}>
+            {/* Volume Bar Background */}
+            <div
+                className={`absolute inset-y-0 ${type === 'buy' ? 'left-0 bg-green-100' : 'right-0 bg-red-100'} transition-all duration-1000 ease-out`}
+                style={{
+                    width: `${pct * 0.8}%`, // Max 80% width
+                    opacity: 0.3
+                }}
+            />
 
             {/* Price */}
-            <div className={`w-[100px] font-mono text-sm ${priceClass} shrink-0`}>
-                ${zone.price.toFixed(2)}
+            <div className="relative z-10 flex items-center gap-3">
+                <span className={`font-mono font-bold text-sm ${type === 'buy' ? 'text-green-700' : 'text-red-700'}`}>
+                    {zone.price.toFixed(2)}
+                </span>
+                {isWhale && (
+                    <span className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-600 rounded border border-purple-200 animate-pulse">
+                        Whale
+                    </span>
+                )}
             </div>
 
-            {/* Probability */}
-            <div className="flex-1 flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-500 w-12">{pct}%</span>
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                        className={`h-full rounded-full ${type === 'buy' ? 'bg-green-500' : type === 'sell' ? 'bg-red-500' : 'bg-gray-400'}`}
-                        style={{ width: `${pct}%`, opacity: 0.2 + (zone.probability * 0.6) }}
-                    />
+            {/* Interest/Vol */}
+            <div className="relative z-10 flex items-center gap-2">
+                <div className="text-right">
+                    <div className="text-xs font-bold text-gray-600">{pct}% Interest</div>
+                    <div className="text-[10px] text-gray-400">{isNear ? '⚠️ APPROACHING' : 'Pending'}</div>
                 </div>
             </div>
-
-            {/* Strength */}
-            <div className={`text-[11px] ${getStrengthColor(zone.probability)} w-[140px] shrink-0`}>
-                {strength}
-            </div>
-
-            {/* Action */}
-            <div className={`text-xs font-medium w-[100px] text-right shrink-0 ${actionClass}`}>
-                {actionText}
-            </div>
-        </div>
-    );
-}
-
-// ═══════════════════════════════════════════════
-// Sub-Components
-// ═══════════════════════════════════════════════
-
-function StatCard({ label, value, sub, valueClass, icon }: {
-    label: string;
-    value: string;
-    sub?: string;
-    valueClass: string;
-    icon: string;
-}) {
-    return (
-        <div className="bg-white rounded-xl border border-[var(--border-light)] p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">{icon}</span>
-                <span className="text-xs text-gray-500 font-medium">{label}</span>
-            </div>
-            <div className={`text-lg font-bold font-mono ${valueClass}`}>
-                {value}
-            </div>
-            {sub && <span className="text-xs text-gray-400">{sub} probability</span>}
         </div>
     );
 }
