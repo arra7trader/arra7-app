@@ -20,10 +20,13 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const action = searchParams.get('action');
+        const date = searchParams.get('date'); // YYYY-MM-DD
 
         if (action === 'generate') {
-            const report = await generateDailyReport();
-            const summary = await getPerformanceSummary('today');
+            const report = await generateDailyReport(date || undefined);
+
+            const summaryPeriod = date ? 'custom' : 'today';
+            const summary = await getPerformanceSummary(summaryPeriod, date || undefined);
 
             return NextResponse.json({
                 status: 'success',

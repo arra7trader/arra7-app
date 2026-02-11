@@ -17,6 +17,12 @@ export default function AdminReportPage() {
     const [sending, setSending] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [channelId, setChannelId] = useState('');
+    // Default to today in local time
+    const [selectedDate, setSelectedDate] = useState<string>(() => {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - offset).toISOString().split('T')[0];
+    });
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -32,7 +38,7 @@ export default function AdminReportPage() {
         setLoading(true);
         setMessage(null);
         try {
-            const res = await fetch('/api/admin/report?action=generate');
+            const res = await fetch(`/api/admin/report?action=generate&date=${selectedDate}`);
             const data = await res.json();
             if (data.status === 'success') {
                 setReport(data.data.report);
@@ -165,6 +171,19 @@ export default function AdminReportPage() {
                     className="bg-white rounded-xl p-6 border border-[var(--border-light)] mb-6"
                 >
                     <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 1: Generate Report</h2>
+
+                    <div className="mb-4">
+                        <label className="block text-sm text-[var(--text-secondary)] mb-2">
+                            Select Date
+                        </label>
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--text-primary)]"
+                        />
+                    </div>
+
                     <button
                         onClick={generateReport}
                         disabled={loading}

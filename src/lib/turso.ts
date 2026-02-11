@@ -323,26 +323,42 @@ export async function upsertUser(user: {
   }
 }
 
-export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null }> {
+export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null; expiresAt: Date | null }> {
   const turso = getTursoClient();
-  if (!turso) return { membership: 'BASIC', createdAt: null };
+  if (!turso) return { membership: 'BASIC', createdAt: null, expiresAt: null };
 
   try {
     const result = await turso.execute({
-      sql: 'SELECT membership, created_at FROM users WHERE id = ?',
+      sql: 'SELECT membership, created_at, membership_expires FROM users WHERE id = ?',
       args: [userId],
     });
 
     if (result.rows.length > 0) {
-      return {
-        membership: (result.rows[0].membership as string) || 'BASIC',
-        createdAt: result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null
-      };
+      let membership = (result.rows[0].membership as string) || 'BASIC';
+      const createdAt = result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null;
+      const expiresAt = result.rows[0].membership_expires ? new Date(result.rows[0].membership_expires as string) : null;
+
+      // Check for expiration
+      if (expiresAt && membership !== 'BASIC' && membership !== 'ADMIN') {
+        const now = new Date();
+        if (expiresAt < now) {
+          console.log(`[MEMBERSHIP] User ${userId} membership ${membership} expired at ${expiresAt.toISOString()}. Downgrading to BASIC.`);
+
+          // Auto-downgrade in DB
+          await turso.execute({
+            sql: "UPDATE users SET membership = 'BASIC' WHERE id = ?",
+            args: [userId]
+          });
+          membership = 'BASIC';
+        }
+      }
+
+      return { membership, createdAt, expiresAt };
     }
-    return { membership: 'BASIC', createdAt: null };
+    return { membership: 'BASIC', createdAt: null, expiresAt: null };
   } catch (error) {
     console.error('Get membership error:', error);
-    return { membership: 'BASIC', createdAt: null };
+    return { membership: 'BASIC', createdAt: null, expiresAt: null };
   }
 }
 

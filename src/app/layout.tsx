@@ -8,6 +8,7 @@ import TelegramWidget from "@/components/TelegramWidget";
 import ArraBot from "@/components/chat/ArraBot";
 import LocationTracker from "@/components/LocationTracker";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import SubscriptionChecker from "@/components/SubscriptionChecker";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -116,6 +117,7 @@ export default async function RootLayout({
             <Navbar />
             <LocationTracker />
             <ServiceWorkerRegistration />
+            <SubscriptionChecker />
             <main className="relative">
               {children}
             </main>

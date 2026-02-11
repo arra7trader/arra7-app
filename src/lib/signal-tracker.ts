@@ -265,19 +265,22 @@ export async function forceSaveSignal(
     });
 }
 
-// Get performance summary for a specific period
-export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'all' = 'all') {
+// Get performance summary for a specific period or custom date range
+export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'all' | 'custom' = 'all', customDate?: string) {
     const turso = getTursoClient();
     if (!turso) return null;
 
     try {
         let dateFilter = '';
         if (period === 'today') {
-            dateFilter = "AND DATE(created_at) = DATE('now')";
+            dateFilter = "AND DATE(created_at) = DATE('now', 'localtime')";
         } else if (period === '7d') {
-            dateFilter = "AND created_at >= datetime('now', '-7 days')";
+            dateFilter = "AND created_at >= datetime('now', '-7 days', 'localtime')";
         } else if (period === '30d') {
-            dateFilter = "AND created_at >= datetime('now', '-30 days')";
+            dateFilter = "AND created_at >= datetime('now', '-30 days', 'localtime')";
+        } else if (period === 'custom' && customDate) {
+            // Handle specific date (YYYY-MM-DD)
+            dateFilter = `AND DATE(created_at, 'localtime') = '${customDate}'`;
         }
 
         const result = await turso.execute({
@@ -311,34 +314,48 @@ export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'al
     }
 }
 
-// Generate daily report text for Telegram
-export async function generateDailyReport(): Promise<string> {
-    const today = await getPerformanceSummary('today');
+// Generate daily report text for Telegram (supports custom date)
+export async function generateDailyReport(targetDate?: string): Promise<string> {
+    const isCustom = !!targetDate;
+    const period = isCustom ? 'custom' : 'today';
+
+    const dailyStats = await getPerformanceSummary(period, targetDate);
     const overall = await getPerformanceSummary('all');
 
-    if (!today || !overall) {
+    if (!dailyStats || !overall) {
         return '❌ Gagal generate report';
     }
 
-    const date = new Date().toLocaleDateString('id-ID', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+    // Format date header
+    let dateStr = '';
+    if (targetDate) {
+        dateStr = new Date(targetDate).toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    } else {
+        dateStr = new Date().toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    }
 
     const report = `
 📊 *ARRA7 AI PERFORMANCE REPORT*
-📅 ${date}
+📅 ${dateStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-📈 *HARI INI*
-• Total Signal: ${today.total}
-• ✅ TP Hit: ${today.tpHit}
-• ❌ SL Hit: ${today.slHit}
-• ⏳ Pending: ${today.pending}
-• 🎯 Win Rate: ${today.winRate}%
+📈 *${isCustom ? 'PERFORMANCE ' + targetDate : 'HARI INI'}*
+• Total Signal: ${dailyStats.total}
+• ✅ TP Hit: ${dailyStats.tpHit}
+• ❌ SL Hit: ${dailyStats.slHit}
+• ⏳ Pending: ${dailyStats.pending}
+• 🎯 Win Rate: ${dailyStats.winRate}%
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 

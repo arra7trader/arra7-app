@@ -58,8 +58,23 @@ export const authOptions: NextAuthOptions = {
                 if (process.env.TURSO_DATABASE_URL) {
                     try {
                         const { getUserMembership } = await import('./turso');
-                        const { membership } = await getUserMembership(token.sub);
+                        const { membership, expiresAt } = await getUserMembership(token.sub);
                         session.user.tier = (membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
+
+                        // Pass expiration data to client
+                        if (expiresAt) {
+                            session.user.membershipExpires = expiresAt.toISOString();
+
+                            // Calculate days until expiry
+                            const now = new Date();
+                            const msLeft = expiresAt.getTime() - now.getTime();
+                            const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+                            session.user.daysUntilExpiry = daysLeft;
+
+                            // isExpired flag (though getUserMembership already downgrades, 
+                            // this helps UI show specific messages)
+                            session.user.isExpired = daysLeft <= 0 && membership === 'BASIC';
+                        }
                     } catch (e) {
                         console.error('Error fetching membership in session:', e);
                         session.user.tier = token.tier || 'BASIC';
