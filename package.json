@@ -7,8 +7,7 @@
     "build": "next build",
     "train": "node scripts/train-lstm.mjs",
     "start": "next start",
-    "lint": "eslint",
-    "bot:telegram": "tsx src/bot/telegram.ts"
+    "lint": "eslint"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.22",
@@ -32,7 +31,6 @@
     "next": "16.1.1",
     "next-auth": "^4.24.13",
     "next-intl": "^4.6.1",
-    "node-telegram-bot-api": "^0.67.0",
     "pino": "^10.3.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -48,7 +46,6 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/node": "^20",
-    "@types/node-telegram-bot-api": "^0.64.13",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
