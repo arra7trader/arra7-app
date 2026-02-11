@@ -156,10 +156,24 @@ async function handlePrice(chatId: number, pair?: string) {
     }
 }
 
-// Log Errors
+// Log Errors with more detail
 bot.on('polling_error', (error) => {
-    console.log(error.code);
+    // Ignore harmless "ETELEGRAM: 409 Conflict" errors (happens when multiple instances run)
+    if (error.code === 'ETELEGRAM' && error.message.includes('409 Conflict')) return;
+
+    console.error(`[Polling Error] Code: ${error.code}, Msg: ${error.message}`);
 });
+
+// --- KEEP-ALIVE MECHANISM ---
+// Pings the Hugging Face URL to prevent sleep (Best effort for free tier)
+const APP_URL = 'https://arratujuhkreasi-arra7-vip-bot.hf.space';
+setInterval(() => {
+    http.get(APP_URL, (res) => {
+        console.log(`[Keep-Alive] Ping sent. Status: ${res.statusCode}`);
+    }).on('error', (err) => {
+        console.error(`[Keep-Alive] Ping failed: ${err.message}`);
+    });
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // --- HEALTH CHECK SERVER (For Hugging Face / Render) ---
 const PORT = process.env.PORT || 7860;
