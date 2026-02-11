@@ -259,13 +259,13 @@ export default function AnalisaMarketPage() {
                     const message = data.message || 'Analysis failed';
                     setError(message);
 
-                    // Check for Quota Limit
-                    if (
-                        response.status === 403 &&
-                        (message.includes('Quota') || message.includes('Limit') || message.includes('habis'))
-                    ) {
+                    // Check for Quota or Feature Limits (Status 403)
+                    if (response.status === 403) {
                         openPopup();
-                        setError("Daily Limit Reached"); // Override message for clean UI
+                        // If it's a specific quota message, we can override to be cleaner
+                        if (message.includes('Quota') || message.includes('Limit') || message.includes('habis')) {
+                            setError("Daily Limit Reached");
+                        }
                     }
                 }
 
@@ -617,32 +617,70 @@ export default function AnalisaMarketPage() {
                                         exit={{ opacity: 0 }}
                                         className="flex flex-col items-center justify-center h-full py-10 px-4"
                                     >
-                                        {error.includes("Daily Limit") || error.includes("Quota") ? (
-                                            <div className="bg-gradient-to-br from-red-50 to-white border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-xl text-center">
-                                                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 animate-bounce-slow">
-                                                    <span className="text-3xl">🔒</span>
+                                        {/* Trigger Premium UI for Limits, Quota, or Locks/Upgrades */}
+                                        {error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") ? (
+                                            <>
+                                                {/* BLURRED MOCKUP BACKGROUND */}
+                                                <div className="absolute inset-0 filter blur-md opacity-50 select-none pointer-events-none bg-white p-6 overflow-hidden">
+                                                    <div className="h-8 w-3/4 bg-gray-200 rounded mb-4"></div>
+                                                    <div className="flex gap-2 mb-6">
+                                                        <div className="h-6 w-20 bg-blue-100 rounded-full"></div>
+                                                        <div className="h-6 w-16 bg-gray-100 rounded-full"></div>
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <div className="h-4 w-full bg-gray-100 rounded"></div>
+                                                        <div className="h-4 w-5/6 bg-gray-100 rounded"></div>
+                                                        <div className="h-4 w-full bg-gray-100 rounded"></div>
+                                                        <div className="h-32 w-full bg-gray-50 rounded my-4 border border-gray-100"></div>
+                                                        <div className="h-4 w-4/5 bg-gray-100 rounded"></div>
+                                                        <div className="h-4 w-full bg-gray-100 rounded"></div>
+                                                    </div>
                                                 </div>
-                                                <h3 className="text-xl font-bold text-gray-900 mb-2">Daily Quota Reached</h3>
-                                                <p className="text-gray-600 mb-6">
-                                                    Anda telah mencapai batas analisa harian untuk akun Basic.
-                                                    Upgrade ke PRO untuk akses unlimited dan fitur AI canggih.
-                                                </p>
 
-                                                <div className="space-y-3">
-                                                    <button
-                                                        onClick={() => router.push('/pricing')}
-                                                        className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all transform hover:scale-102"
-                                                    >
-                                                        Upgrade to PRO - Rp 99k
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setError(null)}
-                                                        className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-                                                    >
-                                                        Kembali
-                                                    </button>
+                                                {/* PREMIUM OVERLAY CARD */}
+                                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-white/60 backdrop-blur-sm">
+                                                    <div className="bg-gradient-to-br from-white to-red-50 border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
+                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
+                                                            <span className="text-4xl filter drop-shadow-lg">🔒</span>
+                                                        </div>
+
+                                                        {/* Dynamic Title & Message */}
+                                                        {error.includes("Timeframe") ? (
+                                                            <>
+                                                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Timeframe Locked</h3>
+                                                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                                                    Timeframe ini khusus untuk member PRO/VVIP.
+                                                                    <br />Upgrade sekarang untuk akses ke semua timeframe.
+                                                                </p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Daily Quota Reached</h3>
+                                                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                                                    Anda telah mencapai batas <span className="font-semibold text-red-500">1x Analisa Harian</span>.
+                                                                    <br />Upgrade ke PRO untuk membuka akses unlimited dan sinyal AI akurasi tinggi.
+                                                                </p>
+                                                            </>
+                                                        )}
+
+                                                        <div className="space-y-4">
+                                                            <button
+                                                                onClick={() => router.push('/pricing')}
+                                                                className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 group"
+                                                            >
+                                                                <span>Buka Akses Premium</span>
+                                                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setError(null)}
+                                                                className="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                                                            >
+                                                                Kembali
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </>
                                         ) : (
                                             <>
                                                 <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
@@ -711,12 +749,12 @@ export default function AnalisaMarketPage() {
                                 )}
                             </AnimatePresence>
                         </div>
-                    </motion.div>
-                </div>
-            </div>
+                    </motion.div >
+                </div >
+            </div >
 
             {/* Analysis Result Styles - Light Theme */}
-            <style jsx global>{`
+            < style jsx global > {`
                 .analysis-result-light .analysis-container {
                     color: #1d1d1f;
                 }
@@ -862,7 +900,7 @@ export default function AnalisaMarketPage() {
                     line-height: 1.6;
                     font-size: 0.9rem;
                 }
-            `}</style>
-        </div>
+            `}</style >
+        </div >
     );
 }
