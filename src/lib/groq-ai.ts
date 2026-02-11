@@ -275,47 +275,76 @@ function formatAnalysisToHtml(text: string): string {
         </div>` // Closing grid
     );
 
-    // 6. STOPLOSS Title
+    // 6. STOPLOSS - Beautiful Card Design
     html = html.replace(
-        /🛡️\s*STOPLOSS/,
-        `<div class="flex items-center gap-2 mt-6 mb-2">
-            ${iconMap.risk}
-            <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Risk Management (SL)</span>
-         </div>`
+        /🛡️\s*STOP LOSS STRATEGY[\s\S]*?❌\s*SL:\s*([\\d.]+)([\s\S]*?)(?=🎯\s*TAKE PROFIT|━━━)/i,
+        (match, slPrice, details) => {
+            return `<div class="mt-6 mb-4">
+                <div class="flex items-center gap-2 mb-3">
+                    ${iconMap.risk}
+                    <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Stop Loss Strategy</span>
+                </div>
+                <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-red-950/40 to-gray-900 border border-red-500/30 p-4 shadow-lg">
+                    <div class="absolute top-0 right-0 p-2 opacity-10">
+                        <svg class="w-16 h-16 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">🛡️ Stop Loss</div>
+                        <div class="text-3xl font-mono font-black text-red-500 tracking-tight mb-2">${slPrice}</div>
+                        <div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-red-500/30 pl-3">
+                            ${details.replace(/🧠|📐|📏|✅|🎯/g, '').trim().replace(/\n\s+/g, '<br>')}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
     );
 
-    // 7. STOPLOSS Value
+    // 8. TAKE PROFIT - Beautiful Card Design per TP
     html = html.replace(
-        /❌\s*([\d.]+)\s*\(?(.*?)\)?(?:\n|$)/g,
-        `<div class="bg-red-500/5 border border-red-500/10 rounded-lg p-3 flex justify-between items-center mb-4 hover:bg-red-500/10 transition-colors">
-            <div>
-                <span class="text-2xl font-mono font-bold text-red-500">$1</span>
-            </div>
-            <div class="text-right">
-                <div class="text-xs text-red-400/70 font-mono">$2</div>
-            </div>
-         </div>`
-    );
+        /🎯\s*TAKE PROFIT TARGETS[\s\S]*?(?=💡\s*\*\*TP Strategy|━━━)/i,
+        (match) => {
+            let output = `<div class="mt-6 mb-4">
+                <div class="flex items-center gap-2 mb-3">
+                    ${iconMap.target}
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Take Profit Targets</span>
+                </div>
+                <div class="grid grid-cols-1 gap-3">`;
 
-    // 8. TARGET PROFIT Title
-    html = html.replace(
-        /🎯\s*TARGET PROFIT/,
-        `<div class="flex items-center gap-2 mt-6 mb-2">
-            ${iconMap.target}
-            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Profit Targets (TP)</span>
-         </div>`
-    );
+            // Extract TP1, TP2, TP3
+            const tpRegex = /✅\s*TP(\d):\s*([\d.]+)\s*\((.*?)\)\s*(?:🧠|Method:)\s*(.*?)\s*(?:📊|Logic:)\s*(.*?)(?=✅|💡|$)/g;
+            let tpMatch;
 
-    // 9. TARGET PROFIT Values (Grid Layout)
-    html = html.replace(
-        /✅\s*(?:TP\d?:?\s*)?([\d.]+)\s*\(?(.*?)\)? - (.*?)(?:\n|$)/g,
-        `<div class="relative group bg-gray-800/30 border border-gray-700/50 rounded-lg p-3 hover:border-emerald-500/30 transition-all">
-            <div class="flex justify-between items-start mb-1">
-                <span class="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">$3</span>
-                <span class="text-[10px] text-gray-500 font-mono">$2</span>
-            </div>
-            <div class="text-xl font-mono font-bold text-white group-hover:text-emerald-400 transition-colors">$1</div>
-         </div>`
+            while ((tpMatch = tpRegex.exec(match)) !== null) {
+                const [, tpNum, price, stats, method, logic] = tpMatch;
+                const label = tpNum === '1' ? 'Conservative' : tpNum === '2' ? 'Standard' : 'Aggressive';
+
+                output += `
+                    <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-500/30 p-4 shadow-lg hover:border-emerald-400/50 transition-all group">
+                        <div class="absolute top-0 right-0 p-2 opacity-5">
+                            <svg class="w-16 h-16 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="text-xs font-bold text-emerald-400 uppercase tracking-widest">✅ TP${tpNum} - ${label}</div>
+                                    <div class="text-3xl font-mono font-black text-emerald-500 tracking-tight">${price}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-emerald-300/70 font-mono">${stats.trim()}</div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-emerald-500/30 pl-3 mt-2">
+                                <div><span class="text-emerald-400 font-semibold">Method:</span> ${method.trim()}</div>
+                                <div><span class="text-emerald-400 font-semibold">Logic:</span> ${logic.trim()}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            output += `</div></div>`;
+            return output;
+        }
     );
     // Wrap TPs in a grid container. Regex matching all TPs is tricky, so we inject the wrapper before/after via predictable markers? 
     // Instead, let's assume the TPs appear sequentially. 
