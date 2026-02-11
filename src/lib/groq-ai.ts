@@ -399,10 +399,9 @@ function formatAnalysisToHtml(text: string): string {
         }
     );
 
-    // 10. META INFO (Pair, TF)
-    // We already moved Action Call to top. Where is Meta now? In Prompy it is after targets.
+    // 10. META INFO (Pair, TF, Confidence)
     html = html.replace(
-        /💠\s*(.*?)\s*\|\s*⏳\s*(.*?)\s*\|\s*🎯\s*\[CONFIDENCE: (.*?)%\](?:\n|$)/,
+        /💠\s*([A-Z0-9/.]+)\s*\|\s*⏳\s*([A-Z0-9]+)\s*\|\s*🎯\s*(?:CONFIDENCE:\s*)?(\d+)%/i,
         `<div class="grid grid-cols-3 gap-2 mt-6 py-4 border-y border-gray-700/50">
             <div class="text-center">
                 <div class="text-[10px] text-gray-500 uppercase">Pair</div>

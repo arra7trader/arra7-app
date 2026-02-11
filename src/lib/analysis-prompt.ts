@@ -187,8 +187,7 @@ FORMAT OUTPUT (PROFESSIONAL GRADE):
 
 🔥 *ACTION CALL*
 🚀 **[BUY/SELL] [ORDER TYPE: INSTANT/LIMIT/STOP]**
-Contoh: "BUY INSTANT" atau "SELL LIMIT" atau "BUY STOP"
-**WAJIB TULIS ORDER TYPE (INSTANT/LIMIT/STOP) DENGAN JELAS!**
+(CRITICAL: Wajib tulis order type dengan jelas - contoh: "BUY INSTANT", "SELL LIMIT", "BUY STOP")
 
 📍 ENTRY: [Harga Spesifik atau Range]
 💡 Entry Logic: [Jelaskan singkat alasan]
