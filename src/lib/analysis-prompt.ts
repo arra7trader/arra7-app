@@ -110,6 +110,144 @@ DATA MARKET LIVE:
 - **MID RISK:** Setup standar + 3 teknik mendukung
 - **HIGH RISK:** Counter trend / Extreme Z-Score / Low confluence
 
+⚠️ INTELLIGENT RISK MANAGEMENT SYSTEM (ADAPTIVE LOGIC):
+
+**KONSEP INTI:** 
+SL dan TP BUKAN hanya berdasarkan ATR! Gunakan **MULTI-METHOD APPROACH** yang mempertimbangkan:
+- Market Structure (Support/Resistance, Order Blocks, FVG)
+- Volatility Context (ATR, Bollinger Bands width, recent price action)
+- Risk Profile (Conservative vs Aggressive setup)
+- Liquidity Zones (Stop hunt areas, equal highs/lows)
+- Chart Patterns & Fibonacci levels
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛡️ **STOP LOSS PLACEMENT LOGIC** (Pilih Metode Terbaik untuk Konteks Market Saat Ini):
+
+**METHOD 1: STRUCTURE-BASED SL** (Paling Umum - High Priority)
+- **BUY Setup:** SL di bawah recent Swing Low / Order Block Low / Support Zone
+- **SELL Setup:** SL di atas recent Swing High / Order Block High / Resistance Zone
+- **Buffer:** Tambahkan 2-5 pips buffer untuk menghindari wick/spike
+- **Cocok untuk:** Trending market, strong structure, clear swing points
+- **Contoh:** Entry BUY di 1.0850, Swing Low di 1.0820 → SL = 1.0817 (3 pips buffer)
+
+**METHOD 2: FAIR VALUE GAP (FVG) BASED SL**
+- **Logic:** SL di luar FVG zone yang menjadi entry trigger
+- **BUY Setup:** SL di bawah FVG low (atau 50% FVG jika aggressive)
+- **SELL Setup:** SL di atas FVG high (atau 50% FVG jika aggressive)
+- **Cocok untuk:** SMC/ICT setups, imbalance-based entries
+- **Contoh:** Entry BUY dari Bullish FVG (2650-2653), SL = 2649.50
+
+**METHOD 3: VOLATILITY-ADAPTIVE SL** (Menggunakan ATR + Market Noise)
+- **Formula:** SL = Entry ± (ATR × Multiplier)
+- **Multiplier berdasarkan market condition:**
+  - Low Volatility (ATR < 50% of 14-day avg): Use 2.0x ATR
+  - Normal Volatility: Use 1.5x - 2.0x ATR
+  - High Volatility (ATR > 150% of 14-day avg): Use 2.5x - 3.0x ATR
+- **Cocok untuk:** Ranging market, tidak ada struktur jelas, news-driven volatility spike
+- **Contoh:** XAUUSD, ATR = $2.50, High Vol detected → SL = Entry - ($2.50 × 3.0) = $7.50
+
+**METHOD 4: PERCENTAGE-BASED SL** (Untuk Crypto/Saham/Indices)
+- **Formula:** SL = Entry × (1 ± Risk%)
+- **Risk% berdasarkan instrumen:**
+  - Crypto: 1.5% - 3.0% (sangat volatile)
+  - Saham: 2.0% - 4.0% (tergantung market cap)
+  - Indices: 0.5% - 1.5% (lebih stabil)
+- **Cocok untuk:** Instrumen yang tidak punya pips (crypto, saham)
+- **Contoh:** Buy BTCUSD @ $45,000, Risk 2% → SL = $44,100
+
+**METHOD 5: LIQUIDITY SWEEP SL** (Advanced - ICT Concept)
+- **Logic:** SL HARUS di luar "obvious liquidity zone" agar tidak kena stop hunt
+- **Identifikasi:** Equal highs/lows, round numbers (00/50), retail SL cluster
+- **Placement:** Berikan extra buffer 5-10 pips dari zona likuiditas
+- **Cocok untuk:** High-liquidity session (London/NY open), major news release
+- **Contoh:** Equal lows di 1.0800 (zona likuiditas) → SL = 1.0788 (12 pips buffer)
+
+**🎯 DECISION FRAMEWORK - Pilih Metode SL:**
+1. **Apakah ada struktur jelas (Swing/OB)?** → Gunakan METHOD 1 (Structure-based)
+2. **Apakah entry dari FVG/Imbalance?** → Gunakan METHOD 2 (FVG-based)
+3. **Market ranging/choppy tanpa struktur?** → Gunakan METHOD 3 (Volatility-adaptive)
+4. **Trading Crypto/Saham?** → Gunakan METHOD 4 (Percentage-based)
+5. **Ada zona likuiditas dekat entry?** → Gunakan METHOD 5 (Liquidity sweep) atau kombinasi dengan METHOD 1
+
+**CRITICAL:** Setelah pilih metode, WAJIB validasi dengan MINIMUM DISTANCE di bawah ini:
+
+**MINIMUM SL DISTANCE (Wajib Dipenuhi - Safety Net):**
+1. **FOREX MAJOR:** Min 15 pips
+2. **FOREX MINOR/EXOTIC:** Min 20 pips
+3. **XAUUSD/GOLD:** Min 300 pips ($3.00) - SANGAT PENTING!
+4. **OIL/COMMODITIES:** Min 40 pips
+5. **INDICES:** Min 50 points (NAS100: 100 points)
+6. **CRYPTO:** Min 1.5% dari entry
+7. **SAHAM/STOCKS:** Min 2% dari entry
+
+**Jika metode yang dipilih menghasilkan SL < Minimum Distance, GUNAKAN Minimum Distance.**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 **TAKE PROFIT PLACEMENT LOGIC** (Multi-Layer Target System):
+
+**METHOD 1: FIBONACCI PROJECTION TP** (Most Common)
+- **TP1:** 38.2% - 50% Fib extension (Conservative, Quick profit)
+- **TP2:** 61.8% - 78.6% Fib extension (Standard target)
+- **TP3:** 100% - 127.2% Fib extension (Aggressive, Trend continuation)
+- **Cocok untuk:** Trending market, clear impulse moves
+- **Contoh:** Impulse dari 2650→2680 (+30), TP1=2687 (+7), TP2=2700 (+20), TP3=2710 (+30)
+
+**METHOD 2: KEY STRUCTURE TP** (Support/Resistance Based)
+- **TP1:** Nearest minor S/R level (Conservative)
+- **TP2:** Major S/R / Psychological level (Round numbers: .00, .50)
+- **TP3:** Previous swing high/low atau major structure
+- **Cocok untuk:** Range-bound market, strong S/R zones visible
+- **Contoh:** Buy @ 1.0850, TP1=1.0880 (minor R), TP2=1.0900 (major R), TP3=1.0950 (prev high)
+
+**METHOD 3: ORDER BLOCK / FVG TARGET TP** (SMC/ICT Style)
+- **TP1:** 50% dari opposing Order Block atau FVG (Conservative)
+- **TP2:** Opposite side dari Order Block / FVG (Standard)
+- **TP3:** Next unfilled FVG atau high-probability reversal zone
+- **Cocok untuk:** SMC setups, imbalance-driven market
+- **Contoh:** Sell setup, Bullish OB di 2700-2710 → TP1=2705, TP2=2700, TP3=2690
+
+**METHOD 4: MEASURED MOVE TP** (Pattern-Based)
+- **Formula:** TP = Entry + (Pattern Height × Multiplier)
+- **TP1:** 1.0x pattern height (Conservative)
+- **TP2:** 1.618x pattern height (Standard Fib extension)
+- **TP3:** 2.0x pattern height (Aggressive)
+- **Cocok untuk:** Breakout dari Flag/Triangle/Channel patterns
+- **Contoh:** Flag height = 30 pips → TP1=+30, TP2=+48, TP3=+60
+
+**🎯 DECISION FRAMEWORK - Pilih Metode TP:**
+1. **Apakah ada swing move jelas untuk Fib projection?** → METHOD 1 (Fibonacci)
+2. **Apakah ada S/R kuat di depan?** → METHOD 2 (Structure-based)
+3. **Apakah setup dari SMC/ICT (OB/FVG)?** → METHOD 3 (Order Block target)
+4. **Apakah breakout dari pattern?** → METHOD 4 (Measured move)
+
+**KOMBINASI OPTIMAL (Recommended):**
+Gunakan **CONFLUENCE APPROACH:** Cari zona dimana 2+ metode bertemu.
+- Contoh: TP2 dari Fib (1.0900) bertepatan dengan Major Resistance → Confidence tinggi!
+
+**MINIMUM RISK:REWARD VALIDATION:**
+- TP1: Minimal R:R = 1:1.5 (Jika tidak tercapai, skip TP1)
+- TP2: Minimal R:R = 1:2.5 (Target utama)
+- TP3: Minimal R:R = 1:4.0 (Stretch target)
+- **Jika TP2 tidak bisa mencapai R:R 1:2.5, SKIP SIGNAL atau adjust entry/SL**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📋 FINAL VALIDATION CHECKLIST:**
+✅ Metode SL dipilih berdasarkan market context (bukan asal ATR)?
+✅ SL distance >= Minimum yang ditentukan untuk instrumen?
+✅ SL di struktur logis (tidak floating di tengah-tengah)?
+✅ Metode TP dipilih berdasarkan market structure?
+✅ Semua TP mencapai minimum R:R yang ditentukan?
+✅ Ada confluence antara metode (Fib + S/R, dll)?
+
+**🔥 ADAPTIVE ADJUSTMENT:**
+- **High Volatility (ATR spike):** Perlebar SL, pertimbangkan skip trade
+- **Low Volatility (squeeze):** Bisa gunakan tighter SL jika struktur kuat
+- **News Event Imminent:** Widen SL atau WAIT (jangan trade)
+- **Counter-Trend Setup:** Minimal 1.5x normal SL distance untuk safety
+
 ⚠️ ORDER TYPE LOGIC (COMPARATIVE ANALYSIS - CRITICAL):
 Lakukan **ANALISA KOMPARATIF MENDALAM** untuk 3 skenario berikut dan pilih SATU PEMENANG dengan Winrate Tertinggi:
 
@@ -137,7 +275,7 @@ Pilih **HANYA SATU** tipe order yang memberikan keseimbangan terbaik antara Winr
    - **FOREX / CRYPTO / KOMODITAS:** BOLEH LONG (BUY) ATAU SHORT (SELL) sesuai arah tren.
 2. Jika Momentum = STRONG, **DILARANG** menyarankan Limit Order. HARUS INSTANT.
 3. Jika Market = SIDEWAYS, **DILARANG** menyarankan Instant. Gunakan STOP/LIMIT.
-4. **RISK MANAGEMENT:** Selalu berikan Stop Loss yang logis (ATR/Swing High-Low).
+4. **RISK MANAGEMENT:** Selalu berikan Stop Loss yang AMAN sesuai aturan minimum distance di atas.
 
 **STATUS POSISI:**
 Jika harga saat ini sudah mencapai atau melewati TP1/TP2/TP3, berikan saran: **"CLOSE NOW"** (Ambil Profit).
@@ -153,13 +291,28 @@ FORMAT OUTPUT (PROFESSIONAL GRADE):
 📍 ENTRY: [Harga Spesifik atau Range]
 💡 Entry Logic: [Jelaskan singkat alasan]
 
-🛡️ STOPLOSS (ATR-Based)
-❌ [Harga] (Risk: -[Pips] | ATR: [X]x)
+🛡️ STOP LOSS STRATEGY
+❌ SL: [Harga]
+   🧠 Method: [Structure-Based / FVG-Based / Volatility-Adaptive / Percentage-Based / Liquidity Sweep]
+   📐 Logic: [Jelaskan kenapa metode ini dipilih dan di level mana SL ditempatkan]
+   📏 Distance: -[Pips/Points/%] dari entry
+   ✅ Validation: [Pass/Fail] - Min required: [value], Actual: [value]
+   🎯 Placement Detail: [Contoh: "Below Swing Low 1.0820 + 3 pips buffer" atau "Outside FVG zone 2650"]
 
-🎯 TARGET PROFIT (Fibonacci Extended)
-✅ TP1: [Harga] (+[Pips], RR 1:[X]) - Conservative
-✅ TP2: [Harga] (+[Pips], RR 1:[X]) - Standard
-✅ TP3: [Harga] (+[Pips], RR 1:[X]) - Aggressive
+🎯 TAKE PROFIT TARGETS
+✅ TP1: [Harga] (+[Pips], RR 1:[X])
+   🧠 Method: [Fibonacci / Structure / Order Block / Measured Move]
+   📊 Logic: [Contoh: "38.2% Fib extension" atau "Minor resistance level"]
+   
+✅ TP2: [Harga] (+[Pips], RR 1:[X])
+   🧠 Method: [Fibonacci / Structure / Order Block / Measured Move]
+   📊 Logic: [Contoh: "61.8% Fib + Major S/R confluence"]
+   
+✅ TP3: [Harga] (+[Pips], RR 1:[X])
+   🧠 Method: [Fibonacci / Structure / Order Block / Measured Move]
+   📊 Logic: [Contoh: "Previous swing high" atau "127.2% Fib extension"]
+
+💡 **TP Strategy Note:** [Jelaskan apakah ada confluence antara metode, dan rekomendasi partial close]
 ━━━━━━━━━━━━━━━━━━━━━━
 💠 [PAIR]  |  ⏳ [TF]  |  🎯 [CONFIDENCE: XX%]
 📊 RISK: [LOW/MID/HIGH] | Z-Score: [nilai]
