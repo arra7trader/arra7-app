@@ -303,9 +303,9 @@ function formatAnalysisToHtml(text: string): string {
         }
     );
 
-    // 8. TAKE PROFIT - Beautiful Card Design per TP
+    // 8. TAKE PROFIT - Beautiful Card Design per TP (robust parser)
     html = html.replace(
-        /🎯\s*TAKE PROFIT TARGETS[\s\S]*?(?=💡\s*\*\*TP Strategy|━━━)/i,
+        /🎯\s*TAKE PROFIT TARGETS[\s\S]*?(?=💡\s*(?:TP|\*\*TP)|━━━|💠|$)/i,
         (match) => {
             let output = `<div class="mt-6 mb-4">
                 <div class="flex items-center gap-2 mb-3">
@@ -314,52 +314,52 @@ function formatAnalysisToHtml(text: string): string {
                 </div>
                 <div class="grid grid-cols-1 gap-3">`;
 
-            // Extract TP1, TP2, TP3 - more flexible pattern
-            const tpRegex = /✅\s*TP(\d):\s*([0-9.]+)\s*\((.*?)\)[\s\S]*?(?:🧠|Method:)\s*(.*?)[\s\S]*?(?:📊|Logic:)\s*(.*?)(?=\s*✅\s*TP|💡|━━━|$)/gi;
-            let tpMatch;
+            // Split by TP markers and process each
+            const chunks = match.split(/(?=✅\s*TP[123])/i).filter(c => /✅\s*TP[123]/i.test(c));
 
-            while ((tpMatch = tpRegex.exec(match)) !== null) {
-                const [, tpNum, price, stats, method, logic] = tpMatch;
-                const label = tpNum === '1' ? 'Conservative' : tpNum === '2' ? 'Standard' : 'Aggressive';
+            chunks.forEach((chunk, idx) => {
+                const numMatch = chunk.match(/TP([123])/i);
+                const priceMatch = chunk.match(/([0-9]+\.?[0-9]+)/);
+                const statsMatch = chunk.match(/\(([^)]+)\)/);
+                const methodMatch = chunk.match(/Method:\s*(.+)/i);
+                const logicMatch = chunk.match(/Logic:\s*(.+)/i);
 
-                // Clean up method and logic from emojis and extra whitespace
-                const cleanMethod = method.replace(/[◆🧠📊🔴📐📏✅🎯]/g, '').trim();
-                const cleanLogic = logic.replace(/[◆🧠📊🔴📐📏✅🎯]/g, '').trim();
+                if (numMatch && priceMatch) {
+                    const tpNum = numMatch[1];
+                    const price = priceMatch[1];
+                    const stats = statsMatch ? statsMatch[1] : '';
+                    const method = methodMatch ? methodMatch[1].replace(/[◆🧠📊🔴✅🎯]/g, '').trim() : '';
+                    const logic = logicMatch ? logicMatch[1].replace(/[◆🧠📊🔴✅🎯]/g, '').trim() : '';
+                    const label = tpNum === '1' ? 'Conservative' : tpNum === '2' ? 'Standard' : 'Aggressive';
 
-                output += `
-                    <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-500/30 p-4 shadow-lg hover:border-emerald-400/50 transition-all group">
-                        <div class="absolute top-0 right-0 p-2 opacity-5">
-                            <svg class="w-16 h-16 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
-                        </div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <div class="text-xs font-bold text-emerald-400 uppercase tracking-widest">✅ TP${tpNum} - ${label}</div>
-                                    <div class="text-3xl font-mono font-black text-emerald-500 tracking-tight">${price}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-emerald-300/70 font-mono">${stats.trim()}</div>
-                                </div>
+                    output += `
+                        <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-500/30 p-4 shadow-lg hover:border-emerald-400/50 transition-all group">
+                            <div class="absolute top-0 right-0 p-2 opacity-5">
+                                <svg class="w-16 h-16 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
                             </div>
-                            ${cleanMethod || cleanLogic ? `<div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-emerald-500/30 pl-3 mt-2">
-                                ${cleanMethod ? `<div><span class="text-emerald-400 font-semibold">Method:</span> ${cleanMethod}</div>` : ''}
-                                ${cleanLogic ? `<div><span class="text-emerald-400 font-semibold">Logic:</span> ${cleanLogic}</div>` : ''}
-                            </div>` : ''}
-                        </div>
-                    </div>`;
-            }
+                            <div class="relative z-10">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div class="text-xs font-bold text-emerald-400 uppercase tracking-widest">✅ TP${tpNum} - ${label}</div>
+                                        <div class="text-3xl font-mono font-black text-emerald-500 tracking-tight">${price}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-emerald-300/70 font-mono">${stats}</div>
+                                    </div>
+                                </div>
+                                ${method || logic ? `<div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-emerald-500/30 pl-3 mt-2">
+                                    ${method ? `<div><span class="text-emerald-400 font-semibold">Method:</span> ${method}</div>` : ''}
+                                    ${logic ? `<div><span class="text-emerald-400 font-semibold">Logic:</span> ${logic}</div>` : ''}
+                                </div>` : ''}
+                            </div>
+                        </div>`;
+                }
+            });
 
             output += `</div></div>`;
             return output;
         }
     );
-    // Wrap TPs in a grid container. Regex matching all TPs is tricky, so we inject the wrapper before/after via predictable markers? 
-    // Instead, let's assume the TPs appear sequentially. 
-    // We can wrap the whole TP block during final composition if needed, but styling them as block elements with margin is safer for simple regex replacer.
-    // *Self-correction*: The previous regex replaced EACH line. To make a grid, we need a parent wrapper.
-    // Since this is line-by-line replacement, we'll style them as "margin-bottom-2" blocks. 
-    // Or, we can use a clever trick: Replace the "TARGET PROFIT" title closer with an opening <div class="grid gap-2"> and close it before the next section.
-    // Let's stick to independent stylized rows for safety, but make them look like cards.
 
     // 10.5 STATUS / POSITION MANAGEMENT (New)
     // Matches: "ACTION: HOLD" or "SARAN: CLOSE NOW" etc.
@@ -399,9 +399,28 @@ function formatAnalysisToHtml(text: string): string {
         }
     );
 
-    // 10. META INFO (Pair, TF, Confidence)
+    // 10. META INFO (Pair, TF, Confidence) - flexible pattern
     html = html.replace(
-        /💠\s*([A-Z0-9/.]+)\s*\|\s*⏳\s*([A-Z0-9]+)\s*\|\s*🎯\s*(?:CONFIDENCE:\s*)?(\d+)%/i,
+        /💠\s*([A-Za-z0-9/.]+)\s*\|\s*⏳\s*([A-Za-z0-9]+)\s*\|\s*🎯\s*(?:CONFIDENCE:?\s*)?([0-9.]+)%/i,
+        `<div class="grid grid-cols-3 gap-2 mt-6 py-4 border-y border-gray-700/50">
+            <div class="text-center">
+                <div class="text-[10px] text-gray-500 uppercase">Pair</div>
+                <div class="font-bold text-blue-400">$1</div>
+            </div>
+            <div class="text-center border-l border-gray-700/50">
+                <div class="text-[10px] text-gray-500 uppercase">Timeframe</div>
+                <div class="font-bold text-white">$2</div>
+            </div>
+            <div class="text-center border-l border-gray-700/50">
+                <div class="text-[10px] text-gray-500 uppercase">Confidence</div>
+                <div class="font-bold text-purple-400">$3%</div>
+            </div>
+         </div>`
+    );
+
+    // 10b. Fallback: Also match without % or with brackets
+    html = html.replace(
+        /[◆💠]\s*\[?([A-Za-z0-9/.]+)\]?\s*\|\s*[⏳🕐]\s*\[?([A-Za-z0-9]+)\]?\s*\|\s*[🎯]\s*\[?(?:CONFIDENCE:?\s*)?([0-9.]+)%?\]?/i,
         `<div class="grid grid-cols-3 gap-2 mt-6 py-4 border-y border-gray-700/50">
             <div class="text-center">
                 <div class="text-[10px] text-gray-500 uppercase">Pair</div>
@@ -518,10 +537,17 @@ function formatAnalysisToHtml(text: string): string {
          </div>`
     );
 
-    // Cleanup
+    // Cleanup - Remove leaked instruction text from AI output
+    html = html.replace(/\(CRITICAL:.*?\)/gi, '');
+    html = html.replace(/Contoh:.*?(?=\n|<|$)/gi, '');
+    html = html.replace(/\*\*WAJIB.*?\*\*/gi, '');
+    html = html.replace(/\(tulis.*?\)/gi, '');
+    html = html.replace(/\(pilih.*?\)/gi, '');
+    html = html.replace(/\(jelaskan.*?\)/gi, '');
+
+    // General cleanup
     html = html.replace(/━+/g, '');
     html = html.replace(/\n\s*\n/g, ''); // Remove empty double lines
-    // Preserve some breaks if needed, or rely on div spacing.
     html = html.replace(/\n/g, '');
 
     // Final Container Wrap

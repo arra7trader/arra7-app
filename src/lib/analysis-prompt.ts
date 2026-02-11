@@ -180,44 +180,42 @@ Jika harga saat ini sudah mencapai atau melewati TP1/TP2/TP3, berikan saran: **"
 Jika harga masih di antara Entry dan TP, berikan saran: **"HOLD"** (Biarkan profit berjalan).
 Jika harga di bawah Stop Loss, berikan saran: **"CUT LOSS"**.
 
-FORMAT OUTPUT (PROFESSIONAL GRADE):
+FORMAT OUTPUT (WAJIB IKUTI PERSIS):
 🔮 *ARRA QUANTUM STRATEGIC v2.0*
 ━━━━━━━━━━━━━━━━━━━━━━
-⚡ *EXECUTION STRATEGY:* [MOMENTUM INSTANT / RETRACEMENT LIMIT / BREAKOUT STOP]
+⚡ *EXECUTION STRATEGY:* [pilih SATU: MOMENTUM INSTANT atau RETRACEMENT LIMIT atau BREAKOUT STOP]
 
 🔥 *ACTION CALL*
-🚀 **[BUY/SELL] [ORDER TYPE: INSTANT/LIMIT/STOP]**
-(CRITICAL: Wajib tulis order type dengan jelas - contoh: "BUY INSTANT", "SELL LIMIT", "BUY STOP")
+🚀 [tulis contoh: SELL INSTANT atau BUY LIMIT atau SELL STOP]
 
-📍 ENTRY: [Harga Spesifik atau Range]
-💡 Entry Logic: [Jelaskan singkat alasan]
+📍 ENTRY: [tulis harga spesifik, contoh: 5053.73 atau range 5050.00 - 5055.00]
+💡 Entry Logic: [jelaskan alasan entry]
 
 🛡️ STOP LOSS STRATEGY
-❌ SL: [Harga]
-   🧠 Method: [Structure-Based / FVG-Based / Volatility-Adaptive / Percentage-Based / Liquidity Sweep]
-   📐 Logic: [Jelaskan kenapa metode ini dipilih dan di level mana SL ditempatkan]
-   📏 Distance: -[Pips/Points/%] dari entry
-   ✅ Validation: [Pass/Fail] - Min required: [value], Actual: [value]
-   🎯 Placement Detail: [Contoh: "Below Swing Low 1.0820 + 3 pips buffer" atau "Outside FVG zone 2650"]
+❌ SL: [tulis harga SL, contoh: 5060.40]
+Method: [pilih: Structure-Based / FVG-Based / Volatility-Adaptive]
+Logic: [jelaskan alasan SL ditempatkan di level ini]
+Distance: [tulis jarak dari entry, contoh: 6.73 pips]
+Validation: [Pass/Fail - Min required: X pips, Actual: Y pips]
 
 🎯 TAKE PROFIT TARGETS
-✅ TP1: [Harga] (+[Pips], RR 1:[X])
-   🧠 Method: [Fibonacci / Structure / Order Block / Measured Move]
-   📊 Logic: [Contoh: "38.2% Fib extension" atau "Minor resistance level"]
-   
-✅ TP2: [Harga] (+[Pips], RR 1:[X])
-   🧠 Method: [Fibonacci / Structure / Order Block / Measured Move]
-   📊 Logic: [Contoh: "61.8% Fib + Major S/R confluence"]
-   
-✅ TP3: [Harga] (+[Pips], RR 1:[X])
-   🧠 Method: [Fibonacci / Structure / Order Block / Measured Move]
-   📊 Logic: [Contoh: "Previous swing high" atau "127.2% Fib extension"]
+✅ TP1: [harga] ([pips] pips, RR 1:[X])
+Method: [pilih metode]
+Logic: [jelaskan]
 
-💡 **TP Strategy Note:** [Jelaskan apakah ada confluence antara metode, dan rekomendasi partial close]
+✅ TP2: [harga] ([pips] pips, RR 1:[X])
+Method: [pilih metode]
+Logic: [jelaskan]
+
+✅ TP3: [harga] ([pips] pips, RR 1:[X])
+Method: [pilih metode]
+Logic: [jelaskan]
+
+💡 TP Note: [jelaskan confluence dan rekomendasi partial close]
 ━━━━━━━━━━━━━━━━━━━━━━
-💠 [PAIR]  |  ⏳ [TF]  |  🎯 [CONFIDENCE: XX%]
-📊 RISK: [LOW/MID/HIGH] | Z-Score: [nilai]
-🧬 Teknik: [List semua teknik yang confluent, pisahkan dengan koma]
+💠 [tulis nama pair, contoh: XAUUSD] | ⏳ [tulis timeframe, contoh: 15M] | 🎯 [tulis confidence, contoh: 85%]
+📊 RISK: [LOW/MID/HIGH] | Z-Score: [tulis nilai]
+🧬 Teknik: [list teknik yang confluent]
 ━━━━━━━━━━━━━━━━━━━━━━
 📈 *STATISTICAL EDGE*
 • Win Probability: [XX%]
