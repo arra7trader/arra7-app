@@ -1,21 +1,8 @@
 {
-    "builds": [
-        {
-            "src": "ml-backend/api/**/*.py",
-            "use": "@vercel/python",
-            "config": {
-                "runtime": "python3.9"
-            }
-        },
-        {
-            "src": "package.json",
-            "use": "@vercel/next"
-        }
-    ],
     "rewrites": [
         {
             "source": "/api/ml/:path*",
-            "destination": "/ml-backend/api/index.py"
+            "destination": "/api/ml-placeholder/:path*"
         }
     ]
 }
