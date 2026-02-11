@@ -1,6 +1,8 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
+
 const PIVOT_DATA = [
     { label: 'R3', price: '2045.20', type: 'res' },
     { label: 'R2', price: '2038.50', type: 'res' },
