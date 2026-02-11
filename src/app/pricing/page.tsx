@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
@@ -85,6 +85,19 @@ export default function PricingPage() {
     const { data: session } = useSession();
     const t = useTranslations('nav');
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const [stats, setStats] = useState({ users: 100, predictions: 5000, accuracy: 95.8 });
+
+    useEffect(() => {
+        // Fetch real stats
+        fetch('/api/public/stats')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.users) {
+                    setStats(data);
+                }
+            })
+            .catch(err => console.error('Failed to fetch stats', err));
+    }, []);
 
     const handleSubscribe = async (planId: string) => {
         if (!session) {
@@ -129,12 +142,12 @@ export default function PricingPage() {
                         </h1>
                         <p className="body-lg max-w-2xl mx-auto text-[var(--text-secondary)]">
                             Platform trading dengan teknologi AI Neural Ensemble yang terverifikasi 90%+ akurasi.
-                            Bergabung dengan 500+ trader Indonesia yang sudah profit!
+                            Bergabung dengan {stats.users}+ trader Indonesia yang sudah profit!
                         </p>
 
                         {/* Trust Badges */}
                         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-                            {['✓ Garansi 7 Hari', '✓ Enkripsi Bank Level', '✓ Support 24/7'].map((badge, i) => (
+                            {['✓ Enkripsi Bank Level', '✓ Support 24/7'].map((badge, i) => (
                                 <span key={i} className="px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-sm">
                                     {badge}
                                 </span>
