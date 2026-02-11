@@ -1,8 +1,11 @@
 {
     "builds": [
         {
-            "src": "ml-backend/api/main.py",
-            "use": "@vercel/python"
+            "src": "ml-backend/api/**/*.py",
+            "use": "@vercel/python",
+            "config": {
+                "runtime": "python3.9"
+            }
         },
         {
             "src": "package.json",
@@ -12,7 +15,7 @@
     "rewrites": [
         {
             "source": "/api/ml/:path*",
-            "destination": "/ml-backend/api/main.py"
+            "destination": "/ml-backend/api/index.py"
         }
     ]
 }
