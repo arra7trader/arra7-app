@@ -19,12 +19,47 @@ async function getCurrentPrice(symbol: string, type: 'forex' | 'stock'): Promise
                 yfSymbol += '.JK';
             }
         } else if (type === 'forex') {
-            // Remove slash if present (e.g., EUR/USD -> EURUSD=X)
-            yfSymbol = yfSymbol.replace('/', '') + '=X';
+            // Special mappings for Indices and Commodities (Match market-data.ts)
+            const specialMappings: { [key: string]: string } = {
+                // Indices (Futures for 24/5 coverage)
+                'US30': 'YM=F',
+                'DJI': 'YM=F',
+                'US500': 'ES=F',
+                'SPX': 'ES=F',
+                'NAS100': 'NQ=F',
+                'USTEC': 'NQ=F',
+                'NDX': 'NQ=F',
+                'GER30': 'FDAX', // DAX Futures
+                'DE40': 'FDAX',
+                'DAX': 'FDAX',
+                'UK100': '^FTSE', // FTSE 100 often standard
+                'JP225': 'NKD=F', // Nikkei 225 Futures
 
-            // Handle Gold
-            if (yfSymbol.includes('XAUUSD')) {
-                yfSymbol = 'GC=F'; // Gold Futures or use XAUUSD=X
+                // Commodities
+                'XAUUSD': 'GC=F', // Gold Futures
+                'XAGUSD': 'SI=F', // Silver Futures
+                'XTIUSD': 'CL=F', // WTI Crude
+                'XBRUSD': 'BZ=F', // Brent Crude
+
+                // Crypto
+                'BTCUSD': 'BTC-USD',
+                'ETHUSD': 'ETH-USD',
+                'BNBUSD': 'BNB-USD',
+                'XRPUSD': 'XRP-USD',
+                'ADAUSD': 'ADA-USD',
+                'DOGEUSD': 'DOGE-USD',
+                'SOLUSD': 'SOL-USD',
+                'MATICUSD': 'MATIC-USD',
+                'DOTUSD': 'DOT-USD',
+                'LTCUSD': 'LTC-USD',
+            };
+
+            if (specialMappings[yfSymbol]) {
+                yfSymbol = specialMappings[yfSymbol];
+            } else {
+                // Remove slash if present (e.g., EUR/USD -> EURUSD=X)
+                // Use =X for forex pairs
+                yfSymbol = yfSymbol.replace('/', '') + '=X';
             }
         }
 

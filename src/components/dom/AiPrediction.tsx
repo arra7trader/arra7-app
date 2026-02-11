@@ -82,7 +82,15 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
                     </div>
                 );
             }
-            return <div className="text-xs text-red-500">Service unavailable</div>;
+            if (error.includes("Failed to fetch") || error.includes("NetworkError")) {
+                return (
+                    <div className="text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100">
+                        <div className="font-semibold mb-1">Backend Offline</div>
+                        Run <code>ml-backend/run_server.bat</code>
+                    </div>
+                );
+            }
+            return <div className="text-xs text-red-500">Service Error: {error}</div>;
         }
 
         if (!prediction) return <div className="text-sm text-gray-400">No prediction data</div>;

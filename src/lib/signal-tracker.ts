@@ -55,8 +55,17 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
         // Determine direction - check multiple patterns
         let direction: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
 
-        // Check for explicit recommendations
-        if (lowerAnalysis.includes('rekomendasi: buy') ||
+        // Check for explicit recommendations (New Format v2.0)
+        // Look for 🚀 followed by direction
+        const actionMatch = analysis.match(/🚀\s*(?:\[.*\]\s*)?(BUY|SELL|LONG|SHORT|BELI|JUAL)/i);
+        if (actionMatch) {
+            const action = actionMatch[1].toUpperCase();
+            if (['BUY', 'LONG', 'BELI'].includes(action)) direction = 'BUY';
+            if (['SELL', 'SHORT', 'JUAL'].includes(action)) direction = 'SELL';
+        }
+
+        // Fallback: Check for explicit recommendations (Old Format)
+        else if (lowerAnalysis.includes('rekomendasi: buy') ||
             lowerAnalysis.includes('rekomendasi buy') ||
             lowerAnalysis.includes('recommendation: buy') ||
             lowerAnalysis.includes('aksi: buy') ||
@@ -70,15 +79,17 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
             direction = 'SELL';
         }
         // Check for general bullish/bearish sentiment
-        else if (lowerAnalysis.includes('buy') || lowerAnalysis.includes('bullish') || lowerAnalysis.includes('long') || lowerAnalysis.includes('beli')) {
+        else if (lowerAnalysis.includes('bullish')) {
             direction = 'BUY';
-        } else if (lowerAnalysis.includes('sell') || lowerAnalysis.includes('bearish') || lowerAnalysis.includes('short') || lowerAnalysis.includes('jual')) {
+        } else if (lowerAnalysis.includes('bearish')) {
             direction = 'SELL';
         }
 
         // Extract prices using multiple regex patterns
+        // Updated for v2.0 format which uses emojis
         const pricePatterns = {
             entry: [
+                /[📍\W]*ENTRY[:\s]*(?:zone[:\s]*)?(?:price[:\s]*)?[\$]?([\d,\.]+)/i,
                 /entry[:\s]*(?:zone[:\s]*)?(?:price[:\s]*)?[\$]?([\d,\.]+)/i,
                 /masuk[:\s]*(?:di[:\s]*)?[\$]?([\d,\.]+)/i,
                 /harga\s*entry[:\s]*[\$]?([\d,\.]+)/i,
@@ -88,25 +99,29 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
                 /sell\s*at[:\s]*[\$]?([\d,\.]+)/i,
             ],
             stopLoss: [
+                /[❌🛡️\W]*SL[:\s]*[\$]?([\d,\.]+)/i,
                 /(?:stop\s*loss|sl)[:\s]*[\$]?([\d,\.]+)/i,
                 /stoploss[:\s]*[\$]?([\d,\.]+)/i,
                 /sl\s*[:=]\s*[\$]?([\d,\.]+)/i,
                 /stop[:\s]*[\$]?([\d,\.]+)/i,
             ],
             takeProfit1: [
+                /[✅🎯\W]*TP1?[:\s]*[\$]?([\d,\.]+)/i,
                 /(?:take\s*profit\s*1?|tp\s*1?)[:\s]*[\$]?([\d,\.]+)/i,
                 /takeprofit[:\s]*[\$]?([\d,\.]+)/i,
                 /tp[:\s]*[\$]?([\d,\.]+)/i,
                 /target\s*1?[:\s]*[\$]?([\d,\.]+)/i,
-                /target\s*profit[:\s]*[\$]?([\d,\.]+)/i,
             ],
             takeProfit2: [
+                /[✅🎯\W]*TP2[:\s]*[\$]?([\d,\.]+)/i,
                 /(?:take\s*profit\s*2|tp\s*2)[:\s]*[\$]?([\d,\.]+)/i,
                 /target\s*2[:\s]*[\$]?([\d,\.]+)/i,
             ],
             confidence: [
-                /(?:confidence|score|tingkat\s*keyakinan)[:\s]*([\d]+)/i,
+                /confidence[:\s]*([\d]+)%?/i,
+                /keyakinan[:\s]*([\d]+)%?/i,
                 /(\d+)\s*%?\s*(?:confidence|yakin)/i,
+                /🎯\s*(\d+)%?/i, // Matches 🎯 85%
             ],
         };
 
