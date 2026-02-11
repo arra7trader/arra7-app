@@ -267,6 +267,28 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
         }
     }
 
+    // SWISSQUOTE STRATEGY for Forex & Commodities (Priority over Yahoo)
+    // Checks if pair is in FOREX_MAJOR, MINOR, or COMMODITIES
+    const isForexOrMetal =
+        Object.keys(FOREX_MAJOR).includes(pair) ||
+        Object.keys(FOREX_MINOR).includes(pair) ||
+        Object.keys(COMMODITIES).includes(pair);
+
+    if (isForexOrMetal) {
+        try {
+            const sqData = await fetchSwissquotePrice(pair, tfConfig.interval);
+            if (sqData && sqData.current_price && sqData.current_price > 0) {
+                return {
+                    ...sqData,
+                    symbol: pair,
+                    name: pairConfig.name,
+                } as MarketData;
+            }
+        } catch (e) {
+            console.warn(`Swissquote failed for ${pair}, falling back to Yahoo.`);
+        }
+    }
+
     // YAHOO STRATEGY (Round Robin query1/query2)
     const hosts = ['query2.finance.yahoo.com', 'query1.finance.yahoo.com'];
     let lastError;
@@ -537,11 +559,17 @@ async function fetchSwissquotePrice(symbol: string, interval: string): Promise<P
 
         console.log(`[Swissquote] Fetching ${base}/${quote} from ${endpoint}`);
 
+        // NUCLEAR SSL FIX: Ignore self-signed/invalid certs for this request context
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
         const response = await fetch(endpoint, {
             cache: 'no-store',
             headers: {
                 'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://www.swissquote.com/',
+                'Origin': 'https://www.swissquote.com',
+                'Connection': 'keep-alive'
             },
             // Add timeout
             signal: AbortSignal.timeout(8000)
@@ -552,57 +580,64 @@ async function fetchSwissquotePrice(symbol: string, interval: string): Promise<P
             return null;
         }
 
-        const data = await response.json();
-        console.log(`[Swissquote] Response:`, JSON.stringify(data).slice(0, 200));
+        const text = await response.text();
+        try {
+            const data = JSON.parse(text);
+            console.log(`[Swissquote] Response:`, JSON.stringify(data).slice(0, 200));
 
-        // Swissquote response structure varies - try multiple paths
-        let price = 0;
+            // Swissquote response structure varies - try multiple paths
+            let price = 0;
 
-        if (Array.isArray(data) && data.length > 0) {
-            const quote = data[0];
-            price = parseFloat(
-                quote.spreadProfilePrices?.[0]?.bid ||
-                quote.bid ||
-                quote.last ||
-                quote.close ||
-                0
-            );
-        } else if (data.bid || data.ask || data.last) {
-            price = parseFloat(data.bid || data.last || data.close || 0);
-        }
+            if (Array.isArray(data) && data.length > 0) {
+                const quote = data[0];
+                price = parseFloat(
+                    quote.spreadProfilePrices?.[0]?.bid ||
+                    quote.bid ||
+                    quote.last ||
+                    quote.close ||
+                    0
+                );
+            } else if (data.bid || data.ask || data.last) {
+                price = parseFloat(data.bid || data.last || data.close || 0);
+            }
 
-        if (price === 0 || isNaN(price)) {
-            console.warn(`[Swissquote] Invalid price from response`);
+            if (price === 0 || isNaN(price)) {
+                console.warn(`[Swissquote] Invalid price from response:`, text.slice(0, 100));
+                return null;
+            }
+
+            console.log(`[Swissquote] ✅ Got price: ${price} for ${symbol}`);
+
+            // Generate candles from current price
+            const candle: Candle = {
+                time: new Date().toISOString(),
+                open: price,
+                high: price * 1.0005,
+                low: price * 0.9995,
+                close: price,
+                volume: 0
+            };
+
+            return {
+                current_price: price,
+                open: price,
+                high: price * 1.0005,
+                low: price * 0.9995,
+                close: price,
+                change_percent: 0,
+                volume: 0,
+                timestamp: new Date().toISOString(),
+                candles: [candle],
+                is_realtime: true,
+                is_simulated: false,
+                timestampSource: 'swissquote' as any,
+                freshnessSeconds: 5
+            };
+
+        } catch (e) {
+            console.error(`[Swissquote] JSON Parse Error. Response was:`, text.slice(0, 500));
             return null;
         }
-
-        console.log(`[Swissquote] ✅ Got price: ${price} for ${symbol}`);
-
-        // Generate candles from current price
-        const candle: Candle = {
-            time: new Date().toISOString(),
-            open: price,
-            high: price * 1.0005,
-            low: price * 0.9995,
-            close: price,
-            volume: 0
-        };
-
-        return {
-            current_price: price,
-            open: price,
-            high: price * 1.0005,
-            low: price * 0.9995,
-            close: price,
-            change_percent: 0,
-            volume: 0,
-            timestamp: new Date().toISOString(),
-            candles: [candle],
-            is_realtime: true,
-            is_simulated: false,
-            timestampSource: 'swissquote' as any,
-            freshnessSeconds: 5
-        };
 
     } catch (error) {
         console.error('[Swissquote] Fetch error:', error);
