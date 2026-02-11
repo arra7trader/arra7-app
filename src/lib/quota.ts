@@ -31,11 +31,9 @@ export const ALLOWED_PAIR_CATEGORIES = {
     VVIP: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
 } as const;
 
-// Specific pairs allowed for BASIC (Forex + Gold)
+// Specific pairs allowed for BASIC (Gold ONLY)
 export const BASIC_ALLOWED_PAIRS = [
-    // Forex Major
-    'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD',
-    // Gold
+    // Gold Only
     'XAUUSD',
 ];
 
@@ -173,7 +171,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     if (pair && status.membership === 'BASIC' && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
         return {
             allowed: false,
-            message: `Pair ${pair} tidak tersedia untuk paket BASIC. Upgrade ke PRO untuk akses semua pairs termasuk Crypto & Indices.`,
+            message: `Pair ${pair} tidak tersedia untuk paket BASIC. Basic hanya bisa analisa XAUUSD. Upgrade ke PRO untuk akses semua pairs.`,
             quotaStatus: status,
         };
     }

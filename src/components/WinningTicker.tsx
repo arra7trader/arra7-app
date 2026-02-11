@@ -16,7 +16,7 @@ const MOCK_WINS = [
 
 export default function WinningTicker() {
     return (
-        <div className="w-full bg-gradient-to-r from-blue-900/40 via-purple-900/40 to-blue-900/40 border-y border-white/5 backdrop-blur-sm overflow-hidden py-2">
+        <div className="fixed top-14 left-0 right-0 z-40 w-full bg-gradient-to-r from-blue-900/40 via-purple-900/40 to-blue-900/40 border-y border-white/5 backdrop-blur-sm overflow-hidden py-2 shadow-lg">
             <div className="flex whitespace-nowrap">
                 <motion.div
                     className="flex gap-12 px-4"
