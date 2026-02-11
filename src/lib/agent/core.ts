@@ -3,8 +3,8 @@ import { AI_MODELS } from '@/lib/ai-provider';
 import {
     priceTool,
     newsTool,
-    analyzeForexTool,
-    analyzeStockTool,
+    createAnalyzeForexTool,
+    createAnalyzeStockTool,
     mlPredictionTool,
     signalHistoryTool,
     portfolioTool,
@@ -14,6 +14,7 @@ import {
 export interface AgentRequest {
     messages: any[];
     systemPrompt?: string;
+    userId: string;
 }
 
 /**
@@ -21,14 +22,15 @@ export interface AgentRequest {
  * Uses the Vercel AI SDK 'tool' calling capabilities with 8 tools.
  * Supports multi-step reasoning (maxSteps: 8) for chaining tools.
  */
-export async function runAgent({ messages, systemPrompt }: AgentRequest) {
+export async function runAgent({ messages, systemPrompt, userId }: AgentRequest) {
 
+    // Define all 8 available tools
     // Define all 8 available tools
     const tools = {
         getPrice: priceTool,
         getNews: newsTool,
-        analyzeForex: analyzeForexTool,
-        analyzeStock: analyzeStockTool,
+        analyzeForex: createAnalyzeForexTool(userId),
+        analyzeStock: createAnalyzeStockTool(userId),
         getMLPrediction: mlPredictionTool,
         getSignalHistory: signalHistoryTool,
         getPortfolio: portfolioTool,

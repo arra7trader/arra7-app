@@ -75,52 +75,54 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
     if (!turso) return getDefaultQuota();
 
     try {
-        const { membership, createdAt } = await getUserMembership(userId); // Assuming getUserMembership returns createdAt now
+        const { membership } = await getUserMembership(userId);
         let dailyLimit = QUOTA_LIMITS[membership as Membership] || QUOTA_LIMITS.BASIC;
         let allowedTimeframes = ALLOWED_TIMEFRAMES[membership as Membership] || ALLOWED_TIMEFRAMES.BASIC;
-        let isTrialExpired = false;
 
-        // Check Trial Expiry for BASIC (2 Days)
+        // CRO STRATEGY: 
+        // BASIC users now get 1x DAILY quota (instead of 1x Lifetime) to build habit.
+        // We still check for "Trial" but maybe we just use it for highlighting, not blocking access entirely
+        // unless we want to enforce a hard 2-day trial. 
+        // For now, let's KEEP the 2-day trial check if we really want to push them to upgrade fast, 
+        // OR disable it to allow long-term free tier engagement (Freemium model).
+        // Decision: DISABLE strict trial expiry for now to allow daily use. 
+        // If client wants strict 2-day trial back, uncomment the logic below.
+
+        const isTrialExpired = false;
+
+        /* 
+        // OLD LOGIC: Strict 2-Day Trial
         if (membership === 'BASIC' && createdAt) {
             const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
             const now = new Date().getTime();
-            const createdTime = new Date(createdAt).getTime(); // Ensure Date object
+            const createdTime = new Date(createdAt).getTime();
 
             if (now - createdTime > twoDaysInMs) {
                 isTrialExpired = true;
-                dailyLimit = 0; // Force limit to 0
+                dailyLimit = 0; 
             }
         }
+        */
 
         // Check if user has active promo
         const promoStatus = await checkUserPromo(userId);
         if (promoStatus.hasPromo) {
-            // Override with promo limits (10/day, all timeframes, all pairs)
             dailyLimit = Math.max(dailyLimit, PROMO_QUOTA_LIMIT);
-            allowedTimeframes = ALLOWED_TIMEFRAMES.VVIP; // All timeframes during promo
-            isTrialExpired = false; // Promo overrides trial expiry
+            allowedTimeframes = ALLOWED_TIMEFRAMES.VVIP;
             console.log(`[PROMO] User ${userId} has active promo until ${promoStatus.expiresAt}`);
         }
 
         const today = getTodayDate();
 
-        // Get usage for today (Unified Logic for all plans)
+        // Get usage for today (Unified Logic for ALL plans now, including BASIC)
         let used = 0;
-        if (membership === 'BASIC' && !promoStatus.hasPromo) {
-            // Lifetime limit for BASIC
-            const result = await turso.execute({
-                sql: 'SELECT SUM(count) as total FROM quota_usage WHERE user_id = ?',
-                args: [userId],
-            });
-            used = result.rows[0]?.total ? (result.rows[0].total as number) : 0;
-        } else {
-            // Daily limit for others or if promo active
-            const result = await turso.execute({
-                sql: 'SELECT count FROM quota_usage WHERE user_id = ? AND date = ?',
-                args: [userId, today],
-            });
-            used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
-        }
+
+        // BASIC is now DAILY limit, so we query by date just like PRO/VVIP
+        const result = await turso.execute({
+            sql: 'SELECT count FROM quota_usage WHERE user_id = ? AND date = ?',
+            args: [userId, today],
+        });
+        used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
 
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
@@ -129,7 +131,7 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
             dailyLimit,
             used,
             remaining,
-            canAnalyze: remaining > 0 && !isTrialExpired,
+            canAnalyze: remaining > 0,
             allowedTimeframes,
             isTrialExpired,
         };
@@ -301,11 +303,14 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
     if (!turso) return getDefaultStockQuota();
 
     try {
-        const { membership, createdAt } = await getUserMembership(userId);
+        const { membership } = await getUserMembership(userId);
         let dailyLimit = STOCK_QUOTA_LIMITS[membership as Membership] || STOCK_QUOTA_LIMITS.BASIC;
-        let isTrialExpired = false;
 
-        // Check Trial Expiry for BASIC (2 Days)
+        // CRO STRATEGY: Disable strict trial expiry for Stock analysis too
+        const isTrialExpired = false;
+
+        /*
+        // OLD LOGIC: Strict 2-Day Trial
         if (membership === 'BASIC' && createdAt) {
             const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
             const now = new Date().getTime();
@@ -316,35 +321,28 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
                 dailyLimit = 0; // Force limit to 0
             }
         }
+        */
 
         // Check if user has active promo
         const promoStatus = await checkUserPromo(userId);
         if (promoStatus.hasPromo) {
             // Override with promo limits (10/day for stock too)
             dailyLimit = Math.max(dailyLimit, PROMO_QUOTA_LIMIT);
-            isTrialExpired = false;
             console.log(`[PROMO] User ${userId} has active stock promo until ${promoStatus.expiresAt}`);
         }
 
         const today = getTodayDate();
 
-        // Get today's stock analysis usage
+        // Get today's stock analysis usage (Unified Logic)
         let used = 0;
-        if (membership === 'BASIC' && !promoStatus.hasPromo) {
-            // Lifetime limit for BASIC
-            const result = await turso.execute({
-                sql: 'SELECT SUM(count) as total FROM stock_quota_usage WHERE user_id = ?',
-                args: [userId],
-            });
-            used = result.rows[0]?.total ? (result.rows[0].total as number) : 0;
-        } else {
-            // Daily limit for others
-            const result = await turso.execute({
-                sql: 'SELECT count FROM stock_quota_usage WHERE user_id = ? AND date = ?',
-                args: [userId, today],
-            });
-            used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
-        }
+
+        // BASIC is now DAILY limit for stocks too
+        const result = await turso.execute({
+            sql: 'SELECT count FROM stock_quota_usage WHERE user_id = ? AND date = ?',
+            args: [userId, today],
+        });
+        used = result.rows.length > 0 ? (result.rows[0].count as number) : 0;
+
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
         return {
@@ -352,7 +350,7 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
             dailyLimit,
             used,
             remaining,
-            canAnalyze: remaining > 0 && !isTrialExpired,
+            canAnalyze: remaining > 0,
             isTrialExpired,
         };
     } catch (error) {

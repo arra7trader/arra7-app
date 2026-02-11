@@ -9,6 +9,8 @@ import ArraBot from "@/components/chat/ArraBot";
 import LocationTracker from "@/components/LocationTracker";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import SubscriptionChecker from "@/components/SubscriptionChecker";
+import WinningTicker from "@/components/WinningTicker";
+import LowBalancePopup from "@/components/LowBalancePopup";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -118,6 +120,8 @@ export default async function RootLayout({
             <LocationTracker />
             <ServiceWorkerRegistration />
             <SubscriptionChecker />
+            <WinningTicker />
+            <LowBalancePopup />
             <main className="relative">
               {children}
             </main>

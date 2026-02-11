@@ -165,10 +165,12 @@ Now, respond to the user's request below.`;
 
         // Call Agent Core (Tools Enabled)
         const { runAgent } = await import('@/lib/agent/core');
+        const userId = session?.user?.id || 'guest';
 
         const result = await runAgent({
             messages,
             systemPrompt,
+            userId,
         });
 
         // FIXED: In AI SDK v4+, toTextStreamResponse is a FUNCTION (not property)
