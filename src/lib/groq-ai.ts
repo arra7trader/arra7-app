@@ -59,7 +59,7 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
                 { role: 'user', content: userContent }
             ],
             temperature: 0.3,
-            maxTokens: 4000,
+            maxTokens: 3000,  // Reduced from 4000 for TPM safety margin
         });
 
         if (!text) {
@@ -114,7 +114,7 @@ export async function analyzeWithLearningMode(marketDataText: string, mlContext?
             system: systemInstruction,
             messages: [{ role: 'user', content: userContent }],
             temperature: 0.3,
-            maxTokens: 6000,
+            maxTokens: 3500,  // Reduced from 6000 to prevent TPM limit (6000 TPM max)
         });
 
         if (!text) {
