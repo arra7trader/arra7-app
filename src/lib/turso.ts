@@ -323,19 +323,28 @@ export async function upsertUser(user: {
   }
 }
 
+const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+
 export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null; expiresAt: Date | null }> {
   const turso = getTursoClient();
   if (!turso) return { membership: 'BASIC', createdAt: null, expiresAt: null };
 
   try {
     const result = await turso.execute({
-      sql: 'SELECT membership, created_at, membership_expires FROM users WHERE id = ?',
+      sql: 'SELECT email, membership, created_at, membership_expires FROM users WHERE id = ?',
       args: [userId],
     });
 
     if (result.rows.length > 0) {
+      const email = (result.rows[0].email as string) || '';
       let membership = (result.rows[0].membership as string) || 'BASIC';
       const createdAt = result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null;
+
+      // ADMIN OVERRIDE: Always VVIP, never expires
+      if (ADMIN_EMAILS.includes(email)) {
+        return { membership: 'VVIP', createdAt, expiresAt: null };
+      }
+
       const expiresAt = result.rows[0].membership_expires ? new Date(result.rows[0].membership_expires as string) : null;
 
       // Check for expiration
