@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
-import { AiPrediction } from '../../components/dom/AiPrediction';
+// import { AiPrediction } from '../../components/dom/AiPrediction';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
@@ -455,10 +455,11 @@ export default function AnalisaMarketPage() {
                             </div>
                         )}
 
-                        {/* AI Prediction Widget */}
+                        {/* AI Prediction Widget (Hidden temporarily)
                         <div className="mb-4">
                             <AiPrediction symbol={selectedPair} />
                         </div>
+                        */}
 
                         {/* Analyze Button */}
                         <motion.button
