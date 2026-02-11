@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
+import { LSTMPrediction } from '@/components/dom/LSTMPrediction';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
@@ -143,6 +144,7 @@ export default function AnalisaMarketPage() {
     const [error, setError] = useState<string | null>(null);
     const [newsHtml, setNewsHtml] = useState<string>('');
     const [quotaStatus, setQuotaStatus] = useState<QuotaStatus | null>(null);
+    const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -155,6 +157,28 @@ export default function AnalisaMarketPage() {
         fetchQuota();
         trackLocation();
     }, []);
+
+    // Countdown Timer
+    useEffect(() => {
+        if (cooldownSeconds > 0) {
+            const timer = setInterval(() => {
+                setCooldownSeconds((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [cooldownSeconds]);
+
+    const formatCooldown = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}m ${s}s`;
+    };
 
     const trackLocation = async () => {
         try {
@@ -226,7 +250,18 @@ export default function AnalisaMarketPage() {
                     fetchQuota();
                 }
             } else {
-                setError(data.message || 'Analysis failed');
+                if (data.waitTimeSeconds) {
+                    setCooldownSeconds(data.waitTimeSeconds);
+                    // Don't show error text if we have a countdown, or show a friendly one
+                    // setError(null); 
+                    // Actually, let's just clear the error if it's purely a cooldown to avoid clutter,
+                    // or keep it but the button will handle the visual feedback.
+                    // Let's set error to null so the big red box doesn't appear, as the button will show the timer.
+                    setError(null);
+                } else {
+                    setError(data.message || 'Analysis failed');
+                }
+
                 if (data.quotaStatus) {
                     setQuotaStatus(data.quotaStatus);
                 }
@@ -420,15 +455,20 @@ export default function AnalisaMarketPage() {
                             </div>
                         )}
 
+                        {/* LSTM Prediction Widget */}
+                        <div className="mb-4">
+                            <LSTMPrediction symbol={selectedPair} />
+                        </div>
+
                         {/* Analyze Button */}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleAnalyze}
-                            disabled={isAnalyzing}
+                            disabled={isAnalyzing || cooldownSeconds > 0}
                             className={`
                                 w-full py-4 rounded-xl font-semibold text-lg transition-all
-                                ${isAnalyzing
+                                ${isAnalyzing || cooldownSeconds > 0
                                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     : 'btn-primary'
                                 }
@@ -438,6 +478,11 @@ export default function AnalisaMarketPage() {
                                 <span className="flex items-center justify-center gap-3">
                                     <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                                     Analyzing...
+                                </span>
+                            ) : cooldownSeconds > 0 ? (
+                                <span className="flex items-center justify-center gap-2 text-gray-500">
+                                    <ClockIcon size="md" />
+                                    Cooldown: {formatCooldown(cooldownSeconds)}
                                 </span>
                             ) : (
                                 <span className="flex items-center justify-center gap-2">

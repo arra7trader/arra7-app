@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
                         status: 'error',
                         message: quotaCheck.message,
                         quotaStatus: serializedQuota,
+                        waitTimeSeconds: quotaCheck.waitTimeSeconds,
                     },
                     { status: 403 }
                 );

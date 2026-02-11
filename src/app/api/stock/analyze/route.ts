@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
                     status: 'error',
                     message: quotaCheck.message,
                     quotaStatus: quotaCheck.quotaStatus,
+                    waitTimeSeconds: quotaCheck.waitTimeSeconds,
                 },
                 { status: 403 }
             );

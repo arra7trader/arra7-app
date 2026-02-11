@@ -41,6 +41,7 @@ export default function AnalisaSahamPage() {
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [quota, setQuota] = useState<QuotaStatus | null>(null);
+    const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
 
     const fetchQuota = async () => {
         try {
@@ -59,6 +60,28 @@ export default function AnalisaSahamPage() {
             fetchQuota();
         }
     }, [session]);
+
+    // Countdown Timer
+    useEffect(() => {
+        if (cooldownSeconds > 0) {
+            const timer = setInterval(() => {
+                setCooldownSeconds((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [cooldownSeconds]);
+
+    const formatCooldown = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}m ${s}s`;
+    };
 
     // Handle event from AIStockPicks
     useEffect(() => {
@@ -130,7 +153,12 @@ export default function AnalisaSahamPage() {
                 setAnalysis(data.analysis);
                 fetchQuota();
             } else {
-                setError(data.message || 'Gagal menganalisa saham');
+                if (data.waitTimeSeconds) {
+                    setCooldownSeconds(data.waitTimeSeconds);
+                    setError(null);
+                } else {
+                    setError(data.message || 'Gagal menganalisa saham');
+                }
             }
         } catch (err) {
             setError('Gagal menganalisa saham. Coba lagi.');
@@ -339,14 +367,22 @@ export default function AnalisaSahamPage() {
                             {/* Analyze Button */}
                             <button
                                 onClick={analyzeStock}
-                                disabled={analyzing}
-                                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-xl disabled:opacity-50 hover:shadow-lg hover:shadow-green-500/25 transition-all flex items-center justify-center gap-2"
+                                disabled={analyzing || cooldownSeconds > 0}
+                                className={`w-full py-4 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ${analyzing || cooldownSeconds > 0
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/25'
+                                    }`}
                             >
                                 {analyzing ? (
                                     <>
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                                         AI Sedang Menganalisa...
                                     </>
+                                ) : cooldownSeconds > 0 ? (
+                                    <span className="flex items-center justify-center gap-2 text-gray-500">
+                                        <div className="w-5 h-5 flex items-center justify-center">⏳</div>
+                                        Cooldown: {formatCooldown(cooldownSeconds)}
+                                    </span>
                                 ) : (
                                     <>
                                         <CpuChipIcon size="md" /> Analisa dengan AI

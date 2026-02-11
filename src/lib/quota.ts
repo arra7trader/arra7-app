@@ -144,6 +144,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     allowed: boolean;
     message?: string;
     quotaStatus: QuotaStatus;
+    waitTimeSeconds?: number;
 }> {
     if (!isTursoConfigured()) {
         return {
@@ -192,6 +193,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
                     allowed: false,
                     message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
                     quotaStatus: status,
+                    waitTimeSeconds: waitTime,
                 };
             }
         }
@@ -364,6 +366,7 @@ export async function checkStockQuota(userId: string): Promise<{
     allowed: boolean;
     message?: string;
     quotaStatus: StockQuotaStatus;
+    waitTimeSeconds?: number;
 }> {
     if (!isTursoConfigured()) {
         return {
@@ -398,6 +401,7 @@ export async function checkStockQuota(userId: string): Promise<{
                 allowed: false,
                 message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
                 quotaStatus: status,
+                waitTimeSeconds: waitTime,
             };
         }
     }
