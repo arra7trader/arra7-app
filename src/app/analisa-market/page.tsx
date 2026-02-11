@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { useLowBalancePopup } from '@/components/LowBalancePopup';
 import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
-// import { AiPrediction } from '../../components/dom/AiPrediction';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
@@ -135,6 +135,8 @@ export default function AnalisaMarketPage() {
     const t = useTranslations('analisaMarket');
     const router = useRouter();
 
+    const { openPopup } = useLowBalancePopup();
+
     const [selectedCategory, setSelectedCategory] = useState('commodities');
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
     const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
@@ -252,14 +254,19 @@ export default function AnalisaMarketPage() {
             } else {
                 if (data.waitTimeSeconds) {
                     setCooldownSeconds(data.waitTimeSeconds);
-                    // Don't show error text if we have a countdown, or show a friendly one
-                    // setError(null); 
-                    // Actually, let's just clear the error if it's purely a cooldown to avoid clutter,
-                    // or keep it but the button will handle the visual feedback.
-                    // Let's set error to null so the big red box doesn't appear, as the button will show the timer.
                     setError(null);
                 } else {
-                    setError(data.message || 'Analysis failed');
+                    const message = data.message || 'Analysis failed';
+                    setError(message);
+
+                    // Check for Quota Limit
+                    if (
+                        response.status === 403 &&
+                        (message.includes('Quota') || message.includes('Limit') || message.includes('habis'))
+                    ) {
+                        openPopup();
+                        setError("Daily Limit Reached"); // Override message for clean UI
+                    }
                 }
 
                 if (data.quotaStatus) {
@@ -605,21 +612,51 @@ export default function AnalisaMarketPage() {
                                 {error ? (
                                     <motion.div
                                         key="error"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="flex flex-col items-center justify-center h-full py-20"
+                                        className="flex flex-col items-center justify-center h-full py-10 px-4"
                                     >
-                                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                                            <span className="text-2xl">❌</span>
-                                        </div>
-                                        <p className="text-red-600 text-center">{error}</p>
-                                        <button
-                                            onClick={() => setError(null)}
-                                            className="mt-4 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-sm hover:bg-[var(--bg-tertiary)] transition-colors"
-                                        >
-                                            Dismiss
-                                        </button>
+                                        {error.includes("Daily Limit") || error.includes("Quota") ? (
+                                            <div className="bg-gradient-to-br from-red-50 to-white border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-xl text-center">
+                                                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 animate-bounce-slow">
+                                                    <span className="text-3xl">🔒</span>
+                                                </div>
+                                                <h3 className="text-xl font-bold text-gray-900 mb-2">Daily Quota Reached</h3>
+                                                <p className="text-gray-600 mb-6">
+                                                    Anda telah mencapai batas analisa harian untuk akun Basic.
+                                                    Upgrade ke PRO untuk akses unlimited dan fitur AI canggih.
+                                                </p>
+
+                                                <div className="space-y-3">
+                                                    <button
+                                                        onClick={() => router.push('/pricing')}
+                                                        className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all transform hover:scale-102"
+                                                    >
+                                                        Upgrade to PRO - Rp 99k
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setError(null)}
+                                                        className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                                                    >
+                                                        Kembali
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                                                    <span className="text-2xl">❌</span>
+                                                </div>
+                                                <p className="text-red-600 text-center mb-4">{error}</p>
+                                                <button
+                                                    onClick={() => setError(null)}
+                                                    className="px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-sm hover:bg-[var(--bg-tertiary)] transition-colors"
+                                                >
+                                                    Dismiss
+                                                </button>
+                                            </>
+                                        )}
                                     </motion.div>
                                 ) : isAnalyzing ? (
                                     <motion.div

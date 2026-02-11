@@ -212,7 +212,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     if (!status.canAnalyze) {
         return {
             allowed: false,
-            message: `Quota Trial Basic Anda sudah habis (1x Lifetime). Upgrade ke Pro atau VVIP untuk akses unlimited.`,
+            message: `Quota Harian Basic Anda sudah habis (1x per Hari). Upgrade ke Pro atau VVIP untuk akses unlimited.`,
             quotaStatus: status,
         };
     }
