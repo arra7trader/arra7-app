@@ -112,6 +112,8 @@ class LSTMPredictor:
         
         self.classes = ['DOWN', 'NEUTRAL', 'UP']
     
+        }
+    
     def predict(self, sequence: np.ndarray) -> dict:
         """
         Make prediction on a single sequence
@@ -127,20 +129,40 @@ class LSTMPredictor:
             sequence = np.expand_dims(sequence, axis=0)
         
         # Predict
-        probs = self.model.predict(sequence, verbose=0)[0]
+        raw_pred = self.model.predict(sequence, verbose=0)[0]
+        
+        # Check if Regression (1 output) or Classification (>1 output)
+        if len(raw_pred.shape) == 0 or raw_pred.shape[0] == 1:
+            # Regression
+            val = float(raw_pred) if len(raw_pred.shape) == 0 else float(raw_pred[0])
+            return {
+                'type': 'regression',
+                'predicted_value': val,
+                'direction': 'UP' if val > 0 else 'DOWN', # Placeholder logic, refine later
+                'direction_code': 0,
+                'confidence': 1.0, # Regression engines usually don't give confidence unless probabilistic
+                'probabilities': {},
+                'winrate': 0.0
+            }
+
+        # Classification (existing logic)
+        probs = raw_pred
         
         # Get class
         pred_class = np.argmax(probs)
         confidence = float(probs[pred_class])
         
         return {
+            'type': 'classification',
             'direction': self.classes[pred_class],
             'direction_code': int(pred_class - 1),  # -1, 0, 1
             'confidence': confidence,
             'probabilities': {
-                'UP': float(probs[2])
+                'UP': float(probs[2]) if len(probs) > 2 else 0.0,
+                'DOWN': float(probs[0]) if len(probs) > 0 else 0.0,
+                'NEUTRAL': float(probs[1]) if len(probs) > 1 else 0.0
             },
-            'winrate': round(confidence * 100, 2)  # Requested: display confidence as winrate
+            'winrate': round(confidence * 100, 2)
         }
     
     def predict_batch(self, sequences: np.ndarray) -> list:

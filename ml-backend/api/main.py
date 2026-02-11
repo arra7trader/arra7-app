@@ -20,14 +20,20 @@ from models.conv1d_model import Conv1DPredictor
 from models.ensemble import EnsemblePredictor, DynamicEnsemble
 from data.processors.feature_engineering import FeatureEngineer
 
+
+from api.lstm_router import router as lstm_router
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="DOM ML Prediction API",
     description="Real-time order book prediction using ensemble ML models",
-    version="1.0.0"
+    version="1.1.0"
 )
+
+# Include LSTM Router
+app.include_router(lstm_router, tags=["LSTM Custom"])
 
 # CORS
 app.add_middleware(

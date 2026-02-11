@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
-import { LSTMPrediction } from '../../components/dom/LSTMPrediction';
+import { AiPrediction } from '../../components/dom/AiPrediction';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
@@ -455,9 +455,9 @@ export default function AnalisaMarketPage() {
                             </div>
                         )}
 
-                        {/* LSTM Prediction Widget */}
+                        {/* AI Prediction Widget */}
                         <div className="mb-4">
-                            <LSTMPrediction symbol={selectedPair} />
+                            <AiPrediction symbol={selectedPair} />
                         </div>
 
                         {/* Analyze Button */}
