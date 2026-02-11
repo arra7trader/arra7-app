@@ -5,6 +5,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 const MODEL = 'llama-3.1-8b-instant';
 
 import { ANALYSIS_PROMPT } from './analysis-prompt';
+import { NLP_CLASSIFIER_PROMPT, CHAT_PERSONA_PROMPT } from './nlp-prompt';
 
 export interface AIAnalysisResult {
     success: boolean;
@@ -133,6 +134,50 @@ export async function analyzeWithLearningMode(marketDataText: string, mlContext?
             success: false,
             error: error.message || 'API Error',
         };
+    }
+}
+
+// --- NLP & CHAT FUNCTIONS ---
+
+export interface NLPIntent {
+    intent: 'ANALYSIS' | 'PRICE' | 'CHAT';
+    pair?: string;
+    timeframe?: string;
+    reply?: string; // For CHAT intent, pre-generated reply
+}
+
+export async function interpretUserMessage(message: string): Promise<NLPIntent> {
+    try {
+        const { text } = await generateTextHybrid({
+            system: NLP_CLASSIFIER_PROMPT,
+            messages: [{ role: 'user', content: message }],
+            temperature: 0.1, // Low temp for strict classification
+            maxTokens: 100,
+        });
+
+        // Try to parse JSON
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(cleanText);
+        return result;
+
+    } catch (error) {
+        console.error('NLP Error:', error);
+        // Fallback
+        return { intent: 'CHAT', reply: 'Maaf bos, saya kurang paham. Coba ketik "Analisa Gold" atau "Cek Harga BTC".' };
+    }
+}
+
+export async function chatWithAI(message: string): Promise<string> {
+    try {
+        const { text } = await generateTextHybrid({
+            system: CHAT_PERSONA_PROMPT,
+            messages: [{ role: 'user', content: message }],
+            temperature: 0.7, // Higher temp for creative chat
+            maxTokens: 150,
+        });
+        return text;
+    } catch (error) {
+        return "Sistem sedang sibuk bos. Coba lagi nanti.";
     }
 }
 
