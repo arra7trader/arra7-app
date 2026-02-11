@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
-import { LSTMPrediction } from '@/components/dom/LSTMPrediction';
+import { LSTMPrediction } from '../../components/dom/LSTMPrediction';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
