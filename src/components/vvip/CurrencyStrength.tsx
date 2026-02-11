@@ -20,20 +20,36 @@ export default function CurrencyStrength() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate Logic: In a real app, this would calculate from pairs (e.g. EURUSD, GBPUSD)
-        // For now, we simulate "live" movement
-        const updateStrengths = () => {
-            const newStrengths: Record<string, number> = {};
-            CURRENCIES.forEach(c => {
-                // Random strength 1-10
-                newStrengths[c.code] = Math.floor(Math.random() * 9) + 1;
-            });
-            setStrengths(newStrengths);
-            setLoading(false);
+        const fetchStrength = async () => {
+            try {
+                const res = await fetch('/api/vvip/analytics');
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
+
+                // Scale strength for visualization (0-2 range -> 0-10 range roughly)
+                // Real percentage changes are small (e.g. 0.5%), so we scale them up
+                const scaled: Record<string, number> = {};
+                if (data.strength) {
+                    Object.entries(data.strength).forEach(([code, val]) => {
+                        // @ts-ignore
+                        const numVal = typeof val === 'number' ? val : 0;
+                        // Map -1% to 1% range to 0-10 score. 0% = 5 score.
+                        // val is percent change. e.g. 0.25
+                        let score = 5 + (numVal * 5);
+                        score = Math.max(1, Math.min(10, score));
+                        scaled[code] = score;
+                    });
+                    setStrengths(scaled);
+                }
+            } catch (err) {
+                console.error('Failed to fetch strength:', err);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        updateStrengths();
-        const interval = setInterval(updateStrengths, 5000); // Update every 5s
+        fetchStrength();
+        const interval = setInterval(fetchStrength, 10000); // 10s refresh
         return () => clearInterval(interval);
     }, []);
 

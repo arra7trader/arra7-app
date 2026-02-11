@@ -9,19 +9,23 @@ export default function SentimentGauge() {
     const [sentiment, setSentiment] = useState('Neutral');
 
     useEffect(() => {
-        // Simulate Sentiment Fluctuation
-        const interval = setInterval(() => {
-            const newScore = Math.floor(Math.random() * (80 - 20 + 1) + 20); // Random 20-80
-            setScore(newScore);
+        const fetchSentiment = async () => {
+            try {
+                const res = await fetch('/api/vvip/analytics');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.sentiment) {
+                        setScore(data.sentiment.score);
+                        setSentiment(data.sentiment.label);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
 
-            if (newScore <= 25) setSentiment('Extreme Fear');
-            else if (newScore <= 45) setSentiment('Fear');
-            else if (newScore <= 55) setSentiment('Neutral');
-            else if (newScore <= 75) setSentiment('Greed');
-            else setSentiment('Extreme Greed');
-
-        }, 8000);
-
+        fetchSentiment();
+        const interval = setInterval(fetchSentiment, 10000);
         return () => clearInterval(interval);
     }, []);
 
