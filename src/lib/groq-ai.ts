@@ -277,8 +277,11 @@ function formatAnalysisToHtml(text: string): string {
 
     // 6. STOPLOSS - Beautiful Card Design
     html = html.replace(
-        /🛡️\s*STOP LOSS STRATEGY[\s\S]*?❌\s*SL:\s*([\\d.]+)([\s\S]*?)(?=🎯\s*TAKE PROFIT|━━━)/i,
-        (match, slPrice, details) => {
+        /🛡️\s*STOP LOSS STRATEGY[\s\S]*?❌\s*(?:SL:?\s*)?([0-9.]+)[\s\S]*?(?=🎯\s*TAKE PROFIT|━━━|$)/i,
+        (match, slPrice) => {
+            // Extract details from the match
+            const details = match.replace(/🛡️\s*STOP LOSS STRATEGY/i, '').replace(/❌\s*(?:SL:?\s*)?[0-9.]+/, '').trim();
+
             return `<div class="mt-6 mb-4">
                 <div class="flex items-center gap-2 mb-3">
                     ${iconMap.risk}
@@ -292,7 +295,7 @@ function formatAnalysisToHtml(text: string): string {
                         <div class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">🛡️ Stop Loss</div>
                         <div class="text-3xl font-mono font-black text-red-500 tracking-tight mb-2">${slPrice}</div>
                         <div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-red-500/30 pl-3">
-                            ${details.replace(/🧠|📐|📏|✅|🎯/g, '').trim().replace(/\n\s+/g, '<br>')}
+                            ${details.replace(/🔴|🧠|📐|📏|✅|🎯|◆/g, '').replace(/Method:|Logic:|Distance:|Validation:|Placement Detail:/gi, '<br><strong>$&</strong>').trim()}
                         </div>
                     </div>
                 </div>
@@ -311,13 +314,17 @@ function formatAnalysisToHtml(text: string): string {
                 </div>
                 <div class="grid grid-cols-1 gap-3">`;
 
-            // Extract TP1, TP2, TP3
-            const tpRegex = /✅\s*TP(\d):\s*([\d.]+)\s*\((.*?)\)\s*(?:🧠|Method:)\s*(.*?)\s*(?:📊|Logic:)\s*(.*?)(?=✅|💡|$)/g;
+            // Extract TP1, TP2, TP3 - more flexible pattern
+            const tpRegex = /✅\s*TP(\d):\s*([0-9.]+)\s*\((.*?)\)[\s\S]*?(?:🧠|Method:)\s*(.*?)[\s\S]*?(?:📊|Logic:)\s*(.*?)(?=\s*✅\s*TP|💡|━━━|$)/gi;
             let tpMatch;
 
             while ((tpMatch = tpRegex.exec(match)) !== null) {
                 const [, tpNum, price, stats, method, logic] = tpMatch;
                 const label = tpNum === '1' ? 'Conservative' : tpNum === '2' ? 'Standard' : 'Aggressive';
+
+                // Clean up method and logic from emojis and extra whitespace
+                const cleanMethod = method.replace(/[◆🧠📊🔴📐📏✅🎯]/g, '').trim();
+                const cleanLogic = logic.replace(/[◆🧠📊🔴📐📏✅🎯]/g, '').trim();
 
                 output += `
                     <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-500/30 p-4 shadow-lg hover:border-emerald-400/50 transition-all group">
@@ -334,10 +341,10 @@ function formatAnalysisToHtml(text: string): string {
                                     <div class="text-xs text-emerald-300/70 font-mono">${stats.trim()}</div>
                                 </div>
                             </div>
-                            <div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-emerald-500/30 pl-3 mt-2">
-                                <div><span class="text-emerald-400 font-semibold">Method:</span> ${method.trim()}</div>
-                                <div><span class="text-emerald-400 font-semibold">Logic:</span> ${logic.trim()}</div>
-                            </div>
+                            ${cleanMethod || cleanLogic ? `<div class="text-xs text-gray-300 leading-relaxed space-y-1 border-l-2 border-emerald-500/30 pl-3 mt-2">
+                                ${cleanMethod ? `<div><span class="text-emerald-400 font-semibold">Method:</span> ${cleanMethod}</div>` : ''}
+                                ${cleanLogic ? `<div><span class="text-emerald-400 font-semibold">Logic:</span> ${cleanLogic}</div>` : ''}
+                            </div>` : ''}
                         </div>
                     </div>`;
             }
