@@ -15,7 +15,12 @@ function getTelegramConfig() {
     return { botToken, channelId };
 }
 
-export async function sendTelegramMessage(message: string, parseMode: 'HTML' | 'Markdown' = 'HTML'): Promise<{
+// Updated signature to support direct DMs
+export async function sendTelegramMessage(
+    message: string,
+    parseMode: 'HTML' | 'Markdown' = 'HTML',
+    destChatId?: string
+): Promise<{
     success: boolean;
     error?: string;
     messageId?: number;
@@ -26,6 +31,9 @@ export async function sendTelegramMessage(message: string, parseMode: 'HTML' | '
         return { success: false, error: 'Telegram not configured' };
     }
 
+    // Use provided destChatId or fall back to env channelId
+    const targetChatId = destChatId || config.channelId;
+
     try {
         const response = await fetch(`${TELEGRAM_API_BASE}${config.botToken}/sendMessage`, {
             method: 'POST',
@@ -33,17 +41,17 @@ export async function sendTelegramMessage(message: string, parseMode: 'HTML' | '
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                chat_id: config.channelId,
+                chat_id: targetChatId,
                 text: message,
                 parse_mode: parseMode,
-                disable_web_page_preview: false,
+                disable_web_page_preview: true,
             }),
         });
 
         const data = await response.json();
 
         if (data.ok) {
-            console.log('[TELEGRAM] Message sent successfully, ID:', data.result.message_id);
+            console.log(`[TELEGRAM] Message sent to ${targetChatId}, ID:`, data.result.message_id);
             return { success: true, messageId: data.result.message_id };
         } else {
             console.error('[TELEGRAM] Failed to send message:', data.description);

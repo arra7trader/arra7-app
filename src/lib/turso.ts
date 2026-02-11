@@ -252,6 +252,20 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // TELEGRAM USERS (VVIP BOT)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        chat_id TEXT NOT NULL UNIQUE,
+        username TEXT,
+        first_name TEXT,
+        last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
@@ -871,6 +885,61 @@ export async function getLastAnalysisTime(userId: string, type: string = 'forex'
     return null;
   } catch (error) {
     console.error('Get last analysis time error:', error);
+    return null;
+  }
+}
+
+// ===== TELEGRAM USER FUNCTIONS =====
+
+export async function linkTelegramUser(userId: string, telegramData: {
+  chatId: string;
+  username?: string;
+  firstName?: string;
+}): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await turso.execute({
+      sql: `INSERT INTO telegram_users (user_id, chat_id, username, first_name)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(chat_id) DO UPDATE SET
+            user_id = excluded.user_id,
+            username = excluded.username,
+            first_name = excluded.first_name,
+            last_active_at = CURRENT_TIMESTAMP`,
+      args: [userId, telegramData.chatId, telegramData.username || null, telegramData.firstName || null]
+    });
+    return true;
+  } catch (error) {
+    console.error('Link Telegram user error:', error);
+    return false;
+  }
+}
+
+export async function getTelegramUser(chatId: string): Promise<{ userId: string; email: string; membership: string } | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+
+  try {
+    const result = await turso.execute({
+      sql: `SELECT u.id, u.email, u.membership 
+            FROM telegram_users tu
+            JOIN users u ON tu.user_id = u.id
+            WHERE tu.chat_id = ?`,
+      args: [chatId]
+    });
+
+    if (result.rows.length > 0) {
+      return {
+        userId: result.rows[0].id as string,
+        email: result.rows[0].email as string,
+        membership: result.rows[0].membership as string
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Get Telegram user error:', error);
     return null;
   }
 }

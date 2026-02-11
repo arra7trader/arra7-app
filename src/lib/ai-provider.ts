@@ -2,37 +2,42 @@ import { createOpenAI } from '@ai-sdk/openai';
 
 import { streamText, generateText, ModelMessage } from 'ai';
 
-// 1. Configure Groq Provider (Multi-Key Support)
-// Accepts comma-separated GROQ_API_KEYS or single GROQ_API_KEY
-const apiKeysEnv = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
-const groqApiKeys = apiKeysEnv.split(',').map(k => k.trim()).filter(k => k.length > 0);
+// 1. Configure Groq Provider (Multi-Key Support) - LAZY LOADED
+let groqClients: ReturnType<typeof createOpenAI>[] = [];
 
-// Auto-detect GROQ_API_KEY_2 ... 10
-for (let i = 2; i <= 10; i++) {
-    const key = process.env[`GROQ_API_KEY_${i}`];
-    if (key && key.trim().length > 0) {
-        groqApiKeys.push(key.trim());
+function ensureGroqInitialized() {
+    if (groqClients.length > 0) return;
+
+    // Load Keys
+    const apiKeysEnv = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
+    const groqApiKeys = apiKeysEnv.split(',').map(k => k.trim()).filter(k => k.length > 0);
+
+    // Auto-detect GROQ_API_KEY_2 ... 10
+    for (let i = 2; i <= 10; i++) {
+        const key = process.env[`GROQ_API_KEY_${i}`];
+        if (key && key.trim().length > 0) {
+            groqApiKeys.push(key.trim());
+        }
     }
+
+    if (groqApiKeys.length === 0) {
+        console.warn('[AI Provider] ⚠️ NO GROQ API KEYS FOUND! Using empty string fallback.');
+        groqApiKeys.push('');
+    }
+
+    console.log(`[AI Provider] Loaded ${groqApiKeys.length} Groq API Keys for rotation.`);
+
+    // Create clients
+    groqClients = groqApiKeys.map(apiKey => createOpenAI({
+        baseURL: 'https://api.groq.com/openai/v1',
+        apiKey,
+    }));
 }
-
-if (groqApiKeys.length === 0) {
-    console.warn('[AI Provider] ⚠️ NO GROQ API KEYS FOUND! Using empty string fallback.');
-    // We don't push empty string here to avoid immediate auth errors if we can help it.
-    // But createOpenAI might need *something*. 
-    // Let's just push a placeholder if truly empty so checks don't fail, but calls will.
-    groqApiKeys.push('');
-}
-
-console.log(`[AI Provider] Loaded ${groqApiKeys.length} Groq API Keys for rotation.`);
-
-// Create separate client instances for each key to isolate rate limits
-const groqClients = groqApiKeys.map(apiKey => createOpenAI({
-    baseURL: 'https://api.groq.com/openai/v1',
-    apiKey,
-}));
 
 // Function to get a Groq model with Round Robin support
 function getGroqModel(index?: number) {
+    ensureGroqInitialized(); // Lazy Init
+
     const selectedIndex = index !== undefined
         ? index % groqClients.length
         : Math.floor(Math.random() * groqClients.length);
@@ -60,6 +65,9 @@ export async function streamTextHybrid(params: {
 
     let lastError: any = null;
     const MAX_RETRIES = 3;
+
+    // Ensure clients are initialized before accessing length
+    ensureGroqInitialized();
     // Start with a random key index
     const startIndex = Math.floor(Math.random() * groqClients.length);
 
@@ -119,6 +127,9 @@ export async function generateTextHybrid(params: {
 
     let lastError: any = null;
     const MAX_RETRIES = 3;
+
+    // Ensure clients are initialized before accessing length
+    ensureGroqInitialized();
     // Start with a random key index
     const startIndex = Math.floor(Math.random() * groqClients.length);
 
