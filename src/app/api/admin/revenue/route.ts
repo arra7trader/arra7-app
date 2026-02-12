@@ -30,8 +30,7 @@ export async function GET(request: NextRequest) {
         const usersResult = await turso.execute(`
             SELECT 
                 membership,
-                COUNT(*) as count,
-                updated_at
+                COUNT(*) as count
             FROM users 
             WHERE membership IN ('PRO', 'VVIP')
             GROUP BY membership
@@ -58,11 +57,11 @@ export async function GET(request: NextRequest) {
 
         // Get users upgraded this month
         const monthlyResult = await turso.execute({
-            sql: `SELECT id, name, email, membership, updated_at 
+            sql: `SELECT id, name, email, membership, created_at 
                   FROM users 
                   WHERE membership IN ('PRO', 'VVIP') 
-                  AND updated_at >= ?
-                  ORDER BY updated_at DESC`,
+                  AND created_at >= ?
+                  ORDER BY created_at DESC`,
             args: [startOfMonth.toISOString()]
         });
 
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
             const amount = PRICES[row.membership as string] || 0;
             monthlyRevenue += amount;
 
-            const updatedAt = new Date(row.updated_at as string);
+            const updatedAt = new Date(row.created_at as string); // Fallback to created_at
             if (updatedAt >= startOfWeek) weeklyRevenue += amount;
             if (updatedAt >= startOfDay) todayRevenue += amount;
 
@@ -85,7 +84,7 @@ export async function GET(request: NextRequest) {
                 userEmail: row.email,
                 membership: row.membership,
                 amount: amount,
-                date: row.updated_at
+                date: row.created_at // Fallback
             });
         }
 
@@ -101,7 +100,7 @@ export async function GET(request: NextRequest) {
                 sql: `SELECT membership, COUNT(*) as count 
                       FROM users 
                       WHERE membership IN ('PRO', 'VVIP') 
-                      AND updated_at >= ? AND updated_at <= ?
+                      AND created_at >= ? AND created_at <= ?
                       GROUP BY membership`,
                 args: [monthDate.toISOString(), monthEnd.toISOString()]
             });

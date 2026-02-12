@@ -19,7 +19,8 @@ export function isAdmin(email: string | null | undefined): boolean {
 // GET all users
 export async function GET(request: NextRequest) {
     try {
-        console.log('[ADMIN] Starting GET users request...');
+        console.log('[ADMIN] Starting GET users request... [VERSION: V2-FIX-LOADED]');
+
 
         const session = await getServerSession(authOptions);
         console.log('[ADMIN] Session:', session?.user?.email || 'No session');
@@ -237,9 +238,9 @@ export async function POST(request: NextRequest) {
             }
 
             await turso.execute({
-                sql: `INSERT INTO users (id, email, name, membership, membership_expires, created_at, updated_at)
-                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                args: [newId, email, name || '', membership || 'BASIC', expiresAt, now, now]
+                sql: `INSERT INTO users (id, email, name, membership, membership_expires, created_at)
+                      VALUES (?, ?, ?, ?, ?, ?)`,
+                args: [newId, email, name || '', membership || 'BASIC', expiresAt, now]
             });
 
             await logActivity(newId, 'REGISTER_ADMIN', { message: 'User created by admin', admin: session.user.email });
