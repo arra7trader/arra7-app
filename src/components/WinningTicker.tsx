@@ -20,7 +20,7 @@ const ACTIONS_SIGNAL = ['Running', 'Breakout', 'Entry', 'Potential', 'Setup', 'S
 const NAMES = [
     'Aditya', 'Agus', 'Ahmed', 'Aji', 'Aldi', 'Ali', 'Andi', 'Andy', 'Angga', 'Anisa', 'Anton', 'Arief', 'Aris', 'Arya', 'Asep', 'Bagus', 'Bambang', 'Bayu', 'Bimo', 'Bobby', 'Budi', 'Candra', 'Christian', 'Citra', 'Dadang', 'Dani', 'Dedi', 'Denny', 'Dewi', 'Dhany', 'Dian', 'Dimas', 'Dina', 'Dodi', 'Doni', 'Dwi', 'Eka', 'Eko', 'Erwin', 'Fajar', 'Farhan', 'Ferry', 'Fitri', 'Galih', 'Gilang', 'Gita', 'Gunawan', 'Hadi', 'Hana', 'Harry', 'Hendra', 'Heri', 'Herman', 'Ibrahim', 'Imam', 'Indah', 'Indra', 'Irfan', 'Ivan', 'Joko', 'Kartika', 'Kevin', 'Kiki', 'Krisna', 'Kurniawan', 'Lestari', 'Lina', 'Lukman', 'Made', 'Mahendra', 'Mawar', 'Maya', 'Mega', 'Michael', 'Miko', 'Muhammad', 'Nanda', 'Nia', 'Niko', 'Nina', 'Nugraha', 'Nur', 'Oscar', 'Panji', 'Pratama', 'Putra', 'Putri', 'Rahmat', 'Randy', 'Ratna', 'Rian', 'Rina', 'Rio', 'Rizky', 'Robby', 'Rudi', 'Ryan', 'Santoso', 'Sari', 'Satria', 'Setiawan', 'Sigit', 'Siti', 'Slamet', 'Sri', 'Surya', 'Taufik', 'Tia', 'Tommy', 'Tono', 'Tri', 'Umar', 'Vina', 'Wahyu', 'Wawan', 'Wibowo', 'Widya', 'Wijaya', 'William', 'Winda', 'Wisnu', 'Yanti', 'Yoga', 'Yudi', 'Yulia', 'Yusuf', 'Zain', 'Zaki'
 ];
-const DOMAINS = ['gmail.com', 'yahoo.com', 'hotmail.com', 'icloud.com', 'outlook.com', 'protonmail.com'];
+const DOMAINS = ['gmail.com'];
 
 // Helper to generate random item
 const generateRandomWin = (): TickerItem => {
@@ -40,7 +40,7 @@ const generateRandomWin = (): TickerItem => {
 
     if (type === 'profit' || type === 'loss') {
         const name = NAMES[Math.floor(Math.random() * NAMES.length)];
-        const domain = DOMAINS[Math.floor(Math.random() * DOMAINS.length)];
+        const domain = 'gmail.com';
         // Generate random internal part of email
         const internal = Math.random().toString(36).substr(2, Math.floor(Math.random() * 3) + 2);
         const user = `${name}.${internal}***@${domain}`; // Using @domain makes it look more real even if masked
