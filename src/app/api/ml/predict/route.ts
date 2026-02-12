@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPredictor, updatePriceHistory } from '@/lib/smart-predictor';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // ML Backend URL (configurable)
 const ML_BACKEND_URL = process.env.ML_BACKEND_URL || 'http://localhost:8001';
@@ -9,6 +11,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { symbol, horizon = 10, orderbook_data } = body;
 
+        // ... (validation)
         if (!symbol || !orderbook_data) {
             return NextResponse.json(
                 { error: 'symbol and orderbook_data required' },
@@ -16,9 +19,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // AUTO-LOGGING (Fire & Forget style if possible, but await for safety)
+        const session = await getServerSession(authOptions);
+
+        let predictionResult = null;
+
         // 1. Try to get prediction from ML backend (Python/TensorFlow)
         try {
             const mlResponse = await fetch(`${ML_BACKEND_URL}/predict`, {
+                // ... (args)
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -62,34 +71,53 @@ export async function POST(request: NextRequest) {
                     mlData.confidence
                 );
 
-                return NextResponse.json({
+                predictionResult = {
                     ...mlData,
                     tradeSetup,
                     source: 'ml-backend'
-                });
+                };
             }
         } catch (mlError) {
             // ML backend unavailable, proceed to smart predictor
         }
 
-        // 2. Use Smart Predictor (Embedded Vercel Engine)
-        // This is much more sophisticated than simple heuristics
-        const predictor = getPredictor(symbol, horizon);
-        const result = predictor.predict(orderbook_data);
+        if (!predictionResult) {
+            // 2. Use Smart Predictor (Embedded Vercel Engine)
+            const predictor = getPredictor(symbol, horizon);
+            const result = predictor.predict(orderbook_data);
 
-        return NextResponse.json({
-            symbol: symbol.toUpperCase(),
-            horizon,
-            direction: result.direction,
-            direction_code: result.direction_code,
-            confidence: result.confidence,
-            model_used: result.model_used,
-            inference_time_ms: 5, // Fast execution
-            probabilities: result.probabilities,
-            signals: result.signals, // Return detailed signal breakdown
-            source: 'smart-predictor-v1',
-            timestamp: new Date().toISOString()
-        });
+            predictionResult = {
+                symbol: symbol.toUpperCase(),
+                horizon,
+                direction: result.direction,
+                direction_code: result.direction_code,
+                confidence: result.confidence,
+                model_used: result.model_used,
+                inference_time_ms: 5, // Fast execution
+                probabilities: result.probabilities,
+                signals: result.signals, // Return detailed signal breakdown
+                source: 'smart-predictor-v1',
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        // Log Activity if user is authenticated
+        if (session?.user?.id) {
+            try {
+                const { logActivity } = await import('@/lib/turso');
+                await logActivity(session.user.id, 'ANALYSIS_PREDICT', {
+                    symbol: symbol.toUpperCase(),
+                    horizon,
+                    direction: predictionResult.direction,
+                    confidence: predictionResult.confidence,
+                    model: predictionResult.source
+                });
+            } catch (e) {
+                console.error('Failed to log analysis activity:', e);
+            }
+        }
+
+        return NextResponse.json(predictionResult);
 
     } catch (error) {
         console.error('ML Predict Error:', error);

@@ -91,11 +91,24 @@ export async function POST(request: NextRequest) {
 
         const reply = text || "Waduh, aku lagi bingung nih Kak. Coba tanya lagi ya? 🤔";
 
+        // LOG ACTIVITY
+        // We defer this slightly to not block response if possible, or just await it effectively
+        // Since we are in a serverless function, we MUST await it or use waitUntil (if available)
+        // For safety, we await.
+        if (session?.user?.id) {
+            const { logActivity } = await import('@/lib/turso');
+            await logActivity(session.user.id, 'ANALYSIS_CHAT', {
+                message: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+                model: 'hybrid-groq'
+            });
+        }
+
         return NextResponse.json({ reply });
 
     } catch (error: any) {
         console.error('Chatbot Error:', error);
 
+        // ... (error handling remains same)
         // Provide more specific feedback if possible (e.g., API Quota)
         let errorMessage = "Sorry Kak, ada gangguan teknis dikit. Coba refresh atau tanya lagi nanti ya! 🛠️";
         if (error.message?.includes('401') || error.message?.includes('403')) {
