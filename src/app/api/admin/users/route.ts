@@ -101,14 +101,30 @@ export async function GET(request: NextRequest) {
 
         // Safely map users with fallbacks for missing columns
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const users = result.rows.map((row: any) => {
+        const users = [];
+        const expiredUserIds: string[] = [];
+        const now = new Date();
+
+        for (const row of result.rows) {
             const forexUsage = forexUsageMap[row.id as string] || 0;
             const stockUsage = stockUsageMap[row.id as string] || 0;
-            return {
+
+            let membership = (row.membership as string) || 'BASIC';
+            const membershipExpires = row.membership_expires ? new Date(row.membership_expires as string) : null;
+
+            // Check for expiration
+            // Ignore admins (they usually have no expiry, but just in case)
+            if (membership !== 'BASIC' && membership !== 'ADMIN' && membershipExpires && membershipExpires < now) {
+                console.log(`[ADMIN] User ${row.email} expired at ${membershipExpires.toISOString()}. Marking for downgrade.`);
+                membership = 'BASIC';
+                expiredUserIds.push(row.id as string);
+            }
+
+            users.push({
                 id: row.id || '',
                 email: row.email || '',
                 name: row.name || '',
-                membership: row.membership || 'BASIC',
+                membership: membership,
                 membershipExpires: row.membership_expires || null,
                 createdAt: row.created_at || null,
                 updatedAt: row.updated_at || null,
@@ -121,8 +137,29 @@ export async function GET(request: NextRequest) {
                 lastLoginCity: row.last_login_city || null,
                 lastLoginAt: row.last_login_at || null,
                 downloadedApk: row.downloaded_apk === 1,
-            };
-        });
+            });
+        }
+
+        // Auto-downgrade expired users in background (await to ensure consistency)
+        if (expiredUserIds.length > 0) {
+            try {
+                // SQLite doesn't support array parameters easily in IN clause with standard binding
+                // We'll construct the query manually carefully or loop
+                // For safety and simplicity with small batches, loop is fine, or one query with mapped placeholders
+                const placeholders = expiredUserIds.map(() => '?').join(',');
+                await turso.execute({
+                    sql: `UPDATE users SET membership = 'BASIC' WHERE id IN (${placeholders})`,
+                    args: expiredUserIds
+                });
+                console.log(`[ADMIN] Auto-downgraded ${expiredUserIds.length} expired users.`);
+
+                // Optional: Log activity for bulk downgrade? 
+                // Might be too noisy if 100 people expire. Let's skip valid activity log for now to keep it clean, 
+                // or log a single system event if we had a system user. 
+            } catch (downgradeError) {
+                console.error('[ADMIN] Failed to auto-downgrade users:', downgradeError);
+            }
+        }
 
         console.log('[ADMIN] Returning', users.length, 'users');
 
