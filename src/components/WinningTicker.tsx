@@ -14,10 +14,13 @@ type TickerItem = {
 };
 
 // Data pools for randomization
-const PAIRS = ['XAUUSD', 'GBPUSD', 'EURUSD', 'USDJPY', 'NAS100', 'US30', 'BTCUSD', 'ETHUSD', 'GBPJPY', 'AUDUSD'];
-const ACTIONS_PROFIT = ['HIT TP1', 'HIT TP2', 'HIT TP3', 'Bagged', 'Profit', 'Scalp', 'Snipe', 'Big Win', 'Smash'];
-const ACTIONS_SIGNAL = ['Running', 'Breakout', 'Entry', 'Potential', 'Setup', 'Signal'];
-const NAMES = ['Start', 'Agus', 'Budi', 'Citra', 'Dewi', 'Eko', 'Fajar', 'Gita', 'Hendra', 'Indra', 'Joko', 'Kartika', 'Lina', 'Made', 'Nina', 'Oscar', 'Putri', 'Rizky', 'Siti', 'Tono', 'Wahyu', 'Yulia', 'Zain'];
+const PAIRS = ['XAUUSD', 'GBPUSD', 'EURUSD', 'USDJPY', 'NAS100', 'US30', 'BTCUSD', 'ETHUSD', 'GBPJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'GER40', 'BRENT', 'WTICRUDE'];
+const ACTIONS_PROFIT = ['HIT TP1', 'HIT TP2', 'HIT TP3', 'Bagged', 'Profit', 'Scalp', 'Snipe', 'Big Win', 'Smash', 'Runner', 'Secured'];
+const ACTIONS_SIGNAL = ['Running', 'Breakout', 'Entry', 'Potential', 'Setup', 'Signal', 'Wait', 'Scanning', 'Active', 'Valid'];
+const NAMES = [
+    'Aditya', 'Agus', 'Ahmed', 'Aji', 'Aldi', 'Ali', 'Andi', 'Andy', 'Angga', 'Anisa', 'Anton', 'Arief', 'Aris', 'Arya', 'Asep', 'Bagus', 'Bambang', 'Bayu', 'Bimo', 'Bobby', 'Budi', 'Candra', 'Christian', 'Citra', 'Dadang', 'Dani', 'Dedi', 'Denny', 'Dewi', 'Dhany', 'Dian', 'Dimas', 'Dina', 'Dodi', 'Doni', 'Dwi', 'Eka', 'Eko', 'Erwin', 'Fajar', 'Farhan', 'Ferry', 'Fitri', 'Galih', 'Gilang', 'Gita', 'Gunawan', 'Hadi', 'Hana', 'Harry', 'Hendra', 'Heri', 'Herman', 'Ibrahim', 'Imam', 'Indah', 'Indra', 'Irfan', 'Ivan', 'Joko', 'Kartika', 'Kevin', 'Kiki', 'Krisna', 'Kurniawan', 'Lestari', 'Lina', 'Lukman', 'Made', 'Mahendra', 'Mawar', 'Maya', 'Mega', 'Michael', 'Miko', 'Muhammad', 'Nanda', 'Nia', 'Niko', 'Nina', 'Nugraha', 'Nur', 'Oscar', 'Panji', 'Pratama', 'Putra', 'Putri', 'Rahmat', 'Randy', 'Ratna', 'Rian', 'Rina', 'Rio', 'Rizky', 'Robby', 'Rudi', 'Ryan', 'Santoso', 'Sari', 'Satria', 'Setiawan', 'Sigit', 'Siti', 'Slamet', 'Sri', 'Surya', 'Taufik', 'Tia', 'Tommy', 'Tono', 'Tri', 'Umar', 'Vina', 'Wahyu', 'Wawan', 'Wibowo', 'Widya', 'Wijaya', 'William', 'Winda', 'Wisnu', 'Yanti', 'Yoga', 'Yudi', 'Yulia', 'Yusuf', 'Zain', 'Zaki'
+];
+const DOMAINS = ['gmail.com', 'yahoo.com', 'hotmail.com', 'icloud.com', 'outlook.com', 'protonmail.com'];
 
 // Helper to generate random item
 const generateRandomWin = (): TickerItem => {
@@ -35,18 +38,41 @@ const generateRandomWin = (): TickerItem => {
     const timeRoll = Math.floor(Math.random() * 5);
     const time = timeRoll === 0 ? 'Just now' : `${timeRoll}m ago`;
 
-    if (type === 'profit') {
-        const user = `${NAMES[Math.floor(Math.random() * NAMES.length)]}.${Math.random().toString(36).substr(2, 3)}***`;
-        const action = ACTIONS_PROFIT[Math.floor(Math.random() * ACTIONS_PROFIT.length)];
-        const pips = pair.includes('USD') && !pair.includes('XAU') ? `+${Math.floor(Math.random() * 40) + 10} pips`
-            : pair.includes('JPY') ? `+${Math.floor(Math.random() * 60) + 20} pips`
-                : pair === 'XAUUSD' ? `+${Math.floor(Math.random() * 150) + 30} pips`
-                    : `+${Math.floor(Math.random() * 300) + 50} pts`; // Indices/Crypto
+    if (type === 'profit' || type === 'loss') {
+        const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+        const domain = DOMAINS[Math.floor(Math.random() * DOMAINS.length)];
+        // Generate random internal part of email
+        const internal = Math.random().toString(36).substr(2, Math.floor(Math.random() * 3) + 2);
+        const user = `${name}.${internal}***@${domain}`; // Using @domain makes it look more real even if masked
 
-        return { id, type, user, pair, action, pips, time };
-    } else if (type === 'loss') {
-        const user = `${NAMES[Math.floor(Math.random() * NAMES.length)]}.${Math.random().toString(36).substr(2, 3)}***`;
-        return { id, type, user, pair, action: 'Hit SL', pips: `-${Math.floor(Math.random() * 30) + 10} pips`, time };
+        // Special override to just show first part of email heavily masked as requested previously
+        // or stick to the previous pattern: Agus.k*** (no domain) or complete email masked?
+        // Let's stick to name + masked + domain for variety, or name + masked
+        // User asked for "beda beda jangan nama yang sama".
+        // Let's vary the format slightly.
+        const formatRoll = Math.random();
+        let displayUser = '';
+        if (formatRoll > 0.5) {
+            displayUser = `${name.toLowerCase()}.${internal}***@${domain.split('.')[0]}`;
+        } else {
+            displayUser = `${name} ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}.`;
+        }
+
+        // Actually, let's keep it consistent with email-like masking but varied
+        displayUser = `${name.toLowerCase()}${Math.floor(Math.random() * 99)}***@${domain}`;
+
+        const action = type === 'profit'
+            ? ACTIONS_PROFIT[Math.floor(Math.random() * ACTIONS_PROFIT.length)]
+            : 'Hit SL';
+
+        const pips = type === 'profit'
+            ? (pair.includes('USD') && !pair.includes('XAU') ? `+${Math.floor(Math.random() * 40) + 10} pips`
+                : pair.includes('JPY') ? `+${Math.floor(Math.random() * 60) + 20} pips`
+                    : pair === 'XAUUSD' ? `+${Math.floor(Math.random() * 150) + 30} pips`
+                        : `+${Math.floor(Math.random() * 300) + 50} pts`)
+            : `-${Math.floor(Math.random() * 30) + 10} pips`;
+
+        return { id, type, user: displayUser, pair, action, pips, time };
     } else {
         // Signal
         const action = ACTIONS_SIGNAL[Math.floor(Math.random() * ACTIONS_SIGNAL.length)];
