@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import getTursoClient from '@/lib/turso';
+import getTursoClient, { logActivity } from '@/lib/turso';
+import { randomUUID } from 'crypto';
 
 // Admin emails - add your admin email here
 const ADMIN_EMAILS = [
@@ -144,11 +145,9 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST - Update user membership
+// POST - Create or Update user
 export async function POST(request: NextRequest) {
     try {
-        console.log('[ADMIN] POST - Starting membership update...');
-
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.email || !isAdmin(session.user.email)) {
@@ -159,22 +158,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { userId, membership, durationDays } = body;
-        console.log('[ADMIN] POST - Updating user:', { userId, membership, durationDays });
-
-        if (!userId || !membership) {
-            return NextResponse.json(
-                { status: 'error', message: 'Missing userId or membership' },
-                { status: 400 }
-            );
-        }
-
-        if (!['BASIC', 'PRO', 'VVIP'].includes(membership)) {
-            return NextResponse.json(
-                { status: 'error', message: 'Invalid membership level' },
-                { status: 400 }
-            );
-        }
+        const { action, userId, email, name, membership, durationDays } = body;
 
         const turso = getTursoClient();
         if (!turso) {
@@ -184,46 +168,114 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Ensure database has all columns
+        // Database Init
         const { initDatabase } = await import('@/lib/turso');
         await initDatabase();
 
-        // Calculate expiry date
-        const days = durationDays || 30;
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + days);
+        // Handle Actions
+        if (action === 'create') {
+            if (!email) {
+                return NextResponse.json({ status: 'error', message: 'Email is required' }, { status: 400 });
+            }
 
-        console.log('[ADMIN] POST - Executing UPDATE query...');
-
-        // Update membership - use simpler query that works with minimal columns
-        await turso.execute({
-            sql: `UPDATE users SET membership = ? WHERE id = ?`,
-            args: [membership, userId],
-        });
-
-        // Try to update expires date separately (may fail if column doesn't exist)
-        try {
-            await turso.execute({
-                sql: `UPDATE users SET membership_expires = ? WHERE id = ?`,
-                args: [expiresAt.toISOString(), userId],
+            // Check if email exists
+            const existing = await turso.execute({
+                sql: 'SELECT id FROM users WHERE email = ?',
+                args: [email]
             });
-            console.log('[ADMIN] POST - Updated membership_expires');
-        } catch (expError) {
-            console.log('[ADMIN] POST - Could not update membership_expires (column may not exist)');
+
+            if (existing.rows.length > 0) {
+                return NextResponse.json({ status: 'error', message: 'Email already exists' }, { status: 400 });
+            }
+
+            const newId = crypto.randomUUID();
+            const now = new Date().toISOString();
+
+            // Calculate membership expiry if provided
+            let expiresAt = null;
+            if (membership && membership !== 'BASIC') {
+                const d = new Date();
+                d.setDate(d.getDate() + (durationDays || 30));
+                expiresAt = d.toISOString();
+            }
+
+            await turso.execute({
+                sql: `INSERT INTO users (id, email, name, membership, membership_expires, created_at, updated_at)
+                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                args: [newId, email, name || '', membership || 'BASIC', expiresAt, now, now]
+            });
+
+            await logActivity(newId, 'REGISTER_ADMIN', { message: 'User created by admin', admin: session.user.email });
+
+            return NextResponse.json({ status: 'success', message: 'User created successfully', userId: newId });
+
+        } else if (action === 'update' || (userId && membership)) {
+            // Update logic (merges existing membership update logic)
+            const targetId = userId || body.id; // Handle both
+            if (!targetId) {
+                return NextResponse.json({ status: 'error', message: 'User ID is required for update' }, { status: 400 });
+            }
+
+            // Build dynamic update query
+            const updates: string[] = [];
+            const args: any[] = [];
+
+            if (email) {
+                updates.push('email = ?');
+                args.push(email);
+            }
+            if (name !== undefined) {
+                updates.push('name = ?');
+                args.push(name);
+            }
+            if (membership) {
+                updates.push('membership = ?');
+                args.push(membership);
+
+                // If updating membership, also update expiry if it wasn't there or if we want to extend
+                // BUT, if it's a simple profile edit, we might not want to reset expiry unless specified.
+                // The legacy logic set expiry when membership changed.
+                // Let's assume if 'membership' is passed, we check if we need to update expiry.
+                if (membership !== 'BASIC' && durationDays) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + durationDays);
+                    updates.push('membership_expires = ?');
+                    args.push(d.toISOString());
+                } else if (membership === 'BASIC') {
+                    updates.push('membership_expires = ?');
+                    args.push(null);
+                }
+            }
+
+            updates.push('updated_at = ?');
+            args.push(new Date().toISOString());
+
+            if (updates.length === 0) {
+                return NextResponse.json({ status: 'success', message: 'No changes detected' });
+            }
+
+            args.push(targetId);
+
+            await turso.execute({
+                sql: `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+                args: args
+            });
+
+            await logActivity(targetId, 'UPDATE_ADMIN', {
+                message: 'User updated by admin',
+                admin: session.user.email,
+                updates: updates.map(u => u.split(' =')[0])
+            });
+
+            return NextResponse.json({ status: 'success', message: 'User updated successfully' });
+        } else {
+            return NextResponse.json({ status: 'error', message: 'Invalid action' }, { status: 400 });
         }
 
-        console.log('[ADMIN] POST - Update successful!');
-
-        return NextResponse.json({
-            status: 'success',
-            message: `User upgraded to ${membership} for ${days} days`,
-            expiresAt: expiresAt.toISOString(),
-        });
-
-    } catch (error) {
-        console.error('Admin update error:', error);
+    } catch (error: any) {
+        console.error('Admin POST error:', error);
         return NextResponse.json(
-            { status: 'error', message: 'Internal server error' },
+            { status: 'error', message: error.message || 'Internal server error' },
             { status: 500 }
         );
     }

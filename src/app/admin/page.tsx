@@ -6,24 +6,12 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ChartIcon, GlobeIcon, CurrencyIcon, BellIcon, TrendUpIcon, LightbulbIcon } from '@/components/PremiumIcons';
-
-interface User {
-    id: string;
-    email: string;
-    name: string;
-    membership: string;
-    membershipExpires: string | null;
-    createdAt: string;
-    todayUsage: number;
-    forexUsage: number;
-    stockUsage: number;
-    // Geo-location
-    lastLoginIp: string | null;
-    lastLoginCountry: string | null;
-    lastLoginCity: string | null;
-    lastLoginAt: string | null;
-    downloadedApk: boolean;
-}
+import AdminStats from '@/components/admin/AdminStats';
+import TelegramMarketing from '@/components/admin/TelegramMarketing';
+import UserTable, { User } from '@/components/admin/UserTable';
+import UserDetailModal from '@/components/admin/UserDetailModal';
+import UserFormModal from '@/components/admin/UserFormModal';
+import BroadcastModal from '@/components/admin/BroadcastModal';
 
 interface UpgradeNotification {
     userName: string;
@@ -44,9 +32,119 @@ export default function AdminDashboard() {
     const [notification, setNotification] = useState<UpgradeNotification | null>(null);
     const [copied, setCopied] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isUserFormOpen, setIsUserFormOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+
+    // Bulk Selection
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
     // Telegram Marketing
     const [telegramConfigured, setTelegramConfigured] = useState(false);
+    // ... (rest of state)
+
+    // ... (useEffect and other functions)
+
+    const handleSendBroadcast = async (data: { title: string; message: string; target: string; channels: string[] }) => {
+        // ... (existing)
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Are you sure you want to delete ${selectedUserIds.length} users? This action cannot be undone.`)) return;
+
+        try {
+            const res = await fetch('/api/admin/users/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'delete',
+                    userIds: selectedUserIds
+                })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                setMessage({ type: 'success', text: data.message });
+                fetchUsers();
+                setSelectedUserIds([]);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (e: any) {
+            console.error('Bulk delete error:', e);
+            setMessage({ type: 'error', text: e.message || 'Failed to delete users' });
+        }
+    };
+
+    const handleBulkUpgrade = async () => {
+        const membership = prompt('Enter membership level (PRO/VVIP/BASIC):', 'PRO');
+        if (!membership || !['PRO', 'VVIP', 'BASIC'].includes(membership.toUpperCase())) return;
+
+        try {
+            const res = await fetch('/api/admin/users/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'upgrade',
+                    userIds: selectedUserIds,
+                    data: { membership: membership.toUpperCase(), duration: 30 }
+                })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                setMessage({ type: 'success', text: data.message });
+                fetchUsers();
+                setSelectedUserIds([]);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (e: any) {
+            console.error('Bulk upgrade error:', e);
+            setMessage({ type: 'error', text: e.message || 'Failed to upgrade users' });
+        }
+    };
+
+    const handleAddUser = () => {
+        setEditingUser(null);
+        setIsUserFormOpen(true);
+    };
+
+    const handleEditUser = (user: User) => {
+        setEditingUser(user);
+        setIsUserFormOpen(true);
+    };
+
+    const handleSaveUser = async (userData: Partial<User> & { password?: string }) => {
+        try {
+            const url = '/api/admin/users';
+            const method = 'POST';
+            const body = {
+                action: userData.id ? 'update' : 'create',
+                ...userData
+            };
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                setMessage({ type: 'success', text: data.message });
+                fetchUsers();
+                setIsUserFormOpen(false);
+            } else {
+                throw new Error(data.message || 'Failed to save user');
+            }
+        } catch (error: any) {
+            console.error('Save user error:', error);
+            throw error; // Re-throw for modal to handle
+        }
+    };
     const [sendingTelegram, setSendingTelegram] = useState(false);
     const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
     const [autoPostEnabled, setAutoPostEnabled] = useState(false);
@@ -122,6 +220,36 @@ export default function AdminDashboard() {
         }
     };
 
+    const downloadCSV = () => {
+        const headers = ['ID', 'Name', 'Email', 'Membership', 'Expires', 'Created At', 'Last Login', 'IP', 'Country', 'City', 'Usage Total'];
+        const csvContent = [
+            headers.join(','),
+            ...users.map(u => [
+                u.id,
+                `"${u.name || ''}"`,
+                u.email,
+                u.membership,
+                u.membershipExpires || '',
+                u.createdAt || '',
+                u.lastLoginAt || '',
+                u.lastLoginIp || '',
+                u.lastLoginCountry || '',
+                u.lastLoginCity || '',
+                u.todayUsage
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'users_export.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const fetchUsers = async () => {
         try {
             const response = await fetch('/api/admin/users');
@@ -131,12 +259,10 @@ export default function AdminDashboard() {
             if (data.status === 'success') {
                 setUsers(data.users);
             } else {
-                // Show error message from API
                 setMessage({
                     type: 'error',
                     text: data.message || 'Failed to fetch users'
                 });
-                console.error('API Error:', data);
             }
         } catch (error) {
             console.error('Fetch users error:', error);
@@ -146,7 +272,12 @@ export default function AdminDashboard() {
         }
     };
 
-    const updateMembership = async (userId: string, membership: string, userName: string, userEmail: string, days: number = 30) => {
+    const handleUpdateMembership = async (user: User, membership: string) => {
+        const userId = user.id;
+        const userName = user.name;
+        const userEmail = user.email;
+        const days = 30; // Default
+
         setUpdating(userId);
         setMessage(null);
 
@@ -240,6 +371,7 @@ Tim ARRA7`;
         <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle, #0071e3 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
+
             {/* Notification Modal */}
             <AnimatePresence>
                 {notification && (
@@ -250,6 +382,7 @@ Tim ARRA7`;
                         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                         onClick={() => setNotification(null)}
                     >
+                        {/* ... upgrade notification ... */}
                         <motion.div
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
@@ -311,6 +444,30 @@ Tim ARRA7`;
                 )}
             </AnimatePresence>
 
+            <UserDetailModal
+                user={selectedUser}
+                onClose={() => setSelectedUser(null)}
+                onEdit={() => {
+                    if (selectedUser) {
+                        handleEditUser(selectedUser);
+                        setSelectedUser(null);
+                    }
+                }}
+            />
+
+            <UserFormModal
+                isOpen={isUserFormOpen}
+                onClose={() => setIsUserFormOpen(false)}
+                onSave={handleSaveUser}
+                user={editingUser}
+            />
+
+            <BroadcastModal
+                isOpen={isBroadcastOpen}
+                onClose={() => setIsBroadcastOpen(false)}
+                onSend={handleSendBroadcast}
+            />
+
             <div className="relative max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
@@ -319,6 +476,24 @@ Tim ARRA7`;
                         <p className="text-[var(--text-secondary)]">Kelola users dan membership</p>
                     </div>
                     <div className="flex gap-2 flex-wrap">
+                        <button
+                            onClick={() => setIsBroadcastOpen(true)}
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-1 shadow-lg shadow-purple-500/20"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                            </svg>
+                            Broadcast
+                        </button>
+                        <button
+                            onClick={handleAddUser}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-1 shadow-lg shadow-blue-500/20"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add User
+                        </button>
                         <Link href="/admin/crm">
                             <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/25 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
                                 <ChartIcon size="sm" /> CRM
@@ -396,164 +571,20 @@ Tim ARRA7`;
                     </motion.div>
                 )}
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
-                        <p className="text-sm text-[var(--text-muted)]">Total Users</p>
-                        <p className="text-2xl font-bold text-[var(--text-primary)]">{stats.total}</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
-                        <p className="text-sm text-[var(--text-muted)]">Basic</p>
-                        <p className="text-2xl font-bold text-slate-500">{stats.basic}</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
-                        <p className="text-sm text-[var(--text-muted)]">Pro</p>
-                        <p className="text-2xl font-bold text-blue-600">{stats.pro}</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
-                        <p className="text-sm text-[var(--text-muted)]">VVIP</p>
-                        <p className="text-2xl font-bold text-amber-600">{stats.vvip}</p>
-                    </div>
-                </div>
+                <AdminStats stats={stats} />
 
-                {/* Telegram Marketing Section */}
-                <div className="mb-8 bg-white rounded-2xl border border-[var(--border-light)] p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <span className="text-2xl">📢</span>
-                            <div>
-                                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Telegram Marketing</h3>
-                                <p className="text-sm text-[var(--text-secondary)]">
-                                    2 templates • Auto-post setiap 5 jam
-                                    {telegramConfigured ? (
-                                        <span className="ml-2 text-green-400">● Connected</span>
-                                    ) : (
-                                        <span className="ml-2 text-red-400">● Not configured</span>
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {autoPostEnabled ? (
-                                <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
-                                    ✅ Auto-posting Active
-                                </span>
-                            ) : (
-                                <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-medium">
-                                    ⏸️ Auto-posting Paused
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                <TelegramMarketing
+                    telegramConfigured={telegramConfigured}
+                    autoPostEnabled={autoPostEnabled}
+                    sendingTelegram={sendingTelegram}
+                    telegramMessage={telegramMessage}
+                    onToggleAutoPost={toggleAutoPost}
+                    onSendPromo={sendTelegramPromo}
+                />
 
-                    {telegramMessage && (
-                        <div className={`mb-4 p-3 rounded-lg ${telegramMessage.includes('✅') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                            {telegramMessage}
-                        </div>
-                    )}
-
-                    {/* Start/Stop Auto-Post Toggle */}
-                    <div className="mb-6 p-4 bg-[var(--bg-secondary)] rounded-xl flex items-center justify-between">
-                        <div>
-                            <p className="font-medium text-[var(--text-primary)]">Auto-Posting Control</p>
-                            <p className="text-sm text-[var(--text-secondary)]">Toggle auto-posting setiap 5 jam</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => toggleAutoPost('start')}
-                                disabled={sendingTelegram || !telegramConfigured || autoPostEnabled}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${autoPostEnabled
-                                    ? 'bg-green-500/20 text-green-400 cursor-default'
-                                    : 'bg-green-500 hover:bg-green-600 text-white'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            >
-                                ▶️ Start
-                            </button>
-                            <button
-                                onClick={() => toggleAutoPost('stop')}
-                                disabled={sendingTelegram || !telegramConfigured || !autoPostEnabled}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${!autoPostEnabled
-                                    ? 'bg-red-500/20 text-red-400 cursor-default'
-                                    : 'bg-red-500 hover:bg-red-600 text-white'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            >
-                                ⏹️ Stop
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* 2 Marketing Templates */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <button
-                            onClick={() => sendTelegramPromo('arra7')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-2 p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-3xl">🔮</span>
-                            <span className="font-medium">ARRA7</span>
-                            <span className="text-xs text-purple-500">AI Trading Analysis</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('saham')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="flex flex-col items-center gap-2 p-4 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl text-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-3xl">📈</span>
-                            <span className="font-medium">Saham Indonesia</span>
-                            <span className="text-xs text-green-500">Analisa IDX AI</span>
-                        </button>
-
-                        <button
-                            onClick={() => sendTelegramPromo('bookmap_ai')}
-                            disabled={sendingTelegram || !telegramConfigured}
-                            className="col-span-2 flex flex-col items-center gap-2 p-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            <span className="text-3xl">🚀</span>
-                            <span className="font-medium">Bookmap X AI</span>
-                            <span className="text-xs text-amber-600">Promo Heatmap & AI (Short & Cool)</span>
-                        </button>
-                    </div>
-
-                    {/* Content Series Section */}
-                    <div className="mt-8 pt-6 border-t border-[var(--border-light)]">
-                        <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
-                            📢 Content Series (Part 1-4)
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[
-                                { id: 'series_part1', label: 'Part 1: Teaser', icon: '⚠️', color: 'bg-slate-50 border-slate-200 text-slate-700' },
-                                { id: 'series_part2', label: 'Part 2: Solution', icon: '💡', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-                                { id: 'series_part3', label: 'Part 3: Proof', icon: '🔥', color: 'bg-amber-50 border-amber-200 text-amber-700' },
-                                { id: 'series_part4', label: 'Part 4: Offer', icon: '💎', color: 'bg-green-50 border-green-200 text-green-700' },
-                            ].map((series) => (
-                                <button
-                                    key={series.id}
-                                    onClick={() => sendTelegramPromo(series.id)}
-                                    disabled={sendingTelegram || !telegramConfigured}
-                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed ${series.color}`}
-                                >
-                                    <span className="text-2xl">{series.icon}</span>
-                                    <span className="text-sm font-bold">{series.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <p className="mt-4 text-xs text-[var(--text-muted)] text-center">
-                        {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post bergantian setiap 5 jam'}
-                    </p>
-
-                    {!telegramConfigured && (
-                        <p className="mt-2 text-sm text-red-400 text-center">
-                            ⚠️ Tambahkan TELEGRAM_BOT_TOKEN dan TELEGRAM_CHANNEL_ID di Vercel Environment Variables
-                        </p>
-                    )}
-                </div>
-
-                {/* Search */}
-                <div className="mb-6">
-                    <div className="relative max-w-md">
+                {/* Search & Export */}
+                <div className="mb-6 flex gap-4">
+                    <div className="relative flex-1">
                         <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -575,141 +606,63 @@ Tim ARRA7`;
                             </button>
                         )}
                     </div>
-                    {searchQuery && (
-                        <p className="mt-2 text-sm text-[var(--text-muted)]">
-                            Ditemukan {filteredUsers.length} dari {users.length} users
-                        </p>
-                    )}
+                    <button
+                        onClick={downloadCSV}
+                        className="px-6 py-3 bg-white border border-[var(--border-light)] hover:bg-[var(--bg-secondary)] rounded-xl font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all shadow-sm"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export CSV
+                    </button>
                 </div>
+                {searchQuery && (
+                    <p className="mt-2 text-sm text-[var(--text-muted)]">
+                        Ditemukan {filteredUsers.length} dari {users.length} users
+                    </p>
+                )}
 
-                {/* Users Table */}
-                <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-[var(--bg-secondary)]">
-                                <tr>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">User</th>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Lokasi Login</th>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Tanggal Daftar</th>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Membership</th>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Expires</th>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Usage Today</th>
-                                    <th className="text-left p-4 text-sm text-[var(--text-muted)]">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredUsers.map((user) => (
-                                    <tr key={user.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
-                                        <td className="p-4">
-                                            <div>
-                                                <p className="font-medium text-[var(--text-primary)] flex items-center gap-2">
-                                                    {user.name || 'No Name'}
-                                                    {user.downloadedApk && (
-                                                        <span title="User sudah download APK">🤖</span>
-                                                    )}
-                                                </p>
-                                                <p className="text-sm text-[var(--text-secondary)]">{user.email}</p>
-                                            </div>
-                                        </td>
-                                        <td className="p-4 text-sm">
-                                            {user.lastLoginCity || user.lastLoginCountry ? (
-                                                <div className="flex flex-col">
-                                                    <span className="text-[var(--text-primary)]">
-                                                        📍 {user.lastLoginCity}{user.lastLoginCity && user.lastLoginCountry ? ', ' : ''}{user.lastLoginCountry}
-                                                    </span>
-                                                    {user.lastLoginAt && (
-                                                        <span className="text-xs text-[var(--text-muted)]">
-                                                            {new Date(user.lastLoginAt).toLocaleDateString('id-ID', {
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit'
-                                                            })}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-[var(--text-muted)]">-</span>
-                                            )}
-                                        </td>
-                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
-                                            {user.createdAt
-                                                ? new Date(user.createdAt).toLocaleDateString('id-ID', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })
-                                                : '-'
-                                            }
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${user.membership === 'VVIP' ? 'bg-amber-500/20 text-amber-400' :
-                                                user.membership === 'PRO' ? 'bg-blue-500/20 text-blue-400' :
-                                                    'bg-slate-500/20 text-slate-400'
-                                                }`}>
-                                                {user.membership}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
-                                            {user.membershipExpires
-                                                ? new Date(user.membershipExpires).toLocaleDateString('id-ID')
-                                                : '-'
-                                            }
-                                        </td>
-                                        <td className="p-4 text-sm">
-                                            <div className="flex flex-col">
-                                                <span className="text-[var(--text-primary)]">{user.todayUsage}x total</span>
-                                                <span className="text-xs text-[var(--text-muted)]">
-                                                    Forex: {user.forexUsage || 0} | Saham: {user.stockUsage || 0}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex gap-2">
-                                                {user.membership !== 'PRO' && (
-                                                    <button
-                                                        onClick={() => updateMembership(user.id, 'PRO', user.name, user.email)}
-                                                        disabled={updating === user.id}
-                                                        className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-xs disabled:opacity-50"
-                                                    >
-                                                        {updating === user.id ? '...' : '→ PRO'}
-                                                    </button>
-                                                )}
-                                                {user.membership !== 'VVIP' && (
-                                                    <button
-                                                        onClick={() => updateMembership(user.id, 'VVIP', user.name, user.email)}
-                                                        disabled={updating === user.id}
-                                                        className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded text-xs disabled:opacity-50"
-                                                    >
-                                                        {updating === user.id ? '...' : '→ VVIP'}
-                                                    </button>
-                                                )}
-                                                {user.membership !== 'BASIC' && (
-                                                    <button
-                                                        onClick={() => updateMembership(user.id, 'BASIC', user.name, user.email)}
-                                                        disabled={updating === user.id}
-                                                        className="px-3 py-1 bg-slate-500/20 hover:bg-slate-500/30 text-slate-400 rounded text-xs disabled:opacity-50"
-                                                    >
-                                                        {updating === user.id ? '...' : '→ BASIC'}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {users.length === 0 && (
-                        <div className="p-8 text-center text-[var(--text-muted)]">
-                            Belum ada users terdaftar
+                {selectedUserIds.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-medium">
+                                {selectedUserIds.length} Selected
+                            </div>
+                            <button
+                                onClick={() => setSelectedUserIds([])}
+                                className="text-gray-500 hover:text-gray-700 text-sm underline"
+                            >
+                                Clear
+                            </button>
                         </div>
-                    )}
-                </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleBulkUpgrade}
+                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Upgrade Selected
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <UserTable
+                    users={filteredUsers}
+                    loading={loading}
+                    onUpdateMembership={handleUpdateMembership}
+                    updating={updating}
+                    onUserClick={setSelectedUser}
+                    selectedIds={selectedUserIds}
+                    onSelectionChange={setSelectedUserIds}
+                />
             </div>
         </div >
     );
 }
+

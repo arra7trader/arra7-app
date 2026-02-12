@@ -266,6 +266,33 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // ACTIVITY LOGS (Admin Tracking)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS activity_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        action TEXT NOT NULL, -- 'LOGIN', 'REGISTER', 'UPGRADE', 'ANALYSIS_FOREX', 'ANALYSIS_STOCK'
+        details TEXT, -- JSON or text details
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // BROADCASTS (In-App & Telegram)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS broadcasts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        target TEXT DEFAULT 'ALL', -- 'ALL', 'VVIP', 'PRO', 'BASIC'
+        channels TEXT, -- JSON array ['IN_APP', 'TELEGRAM']
+        sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        author TEXT
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
@@ -800,6 +827,37 @@ export async function getMLAccuracyStats(
   } catch (error) {
     console.error('Get ML accuracy stats error:', error);
     return defaultStats;
+  }
+}
+
+// ===== ACTIVITY LOGGING =====
+
+export async function logActivity(
+  userId: string,
+  action: string,
+  details?: any,
+  ip?: string,
+  userAgent?: string
+): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await turso.execute({
+      sql: `INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [
+        userId,
+        action,
+        details ? JSON.stringify(details) : null,
+        ip || null,
+        userAgent || null
+      ]
+    });
+    return true;
+  } catch (error) {
+    console.error('Log activity error:', error);
+    return false;
   }
 }
 
