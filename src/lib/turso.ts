@@ -1075,7 +1075,7 @@ export async function saveMarketingCampaign(campaign: MarketingCampaign): Promis
       ? `UPDATE marketing_campaigns SET name=?, type=?, trigger_rule=?, message_template=?, channels=?, status=? WHERE id=?`
       : `INSERT INTO marketing_campaigns (name, type, trigger_rule, message_template, channels, status) VALUES (?, ?, ?, ?, ?, ?)`;
 
-    const args = [
+    const args: (string | number | null)[] = [
       campaign.name,
       campaign.type,
       JSON.stringify(campaign.trigger_rule),
