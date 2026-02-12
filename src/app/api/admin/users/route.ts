@@ -285,8 +285,8 @@ export async function POST(request: NextRequest) {
                 }
             }
 
-            // updates.push('updated_at = ?');
-            // args.push(new Date().toISOString());
+            updates.push('updated_at = ?');
+            args.push(new Date().toISOString());
 
             if (updates.length === 0) {
                 return NextResponse.json({ status: 'success', message: 'No changes detected' });
