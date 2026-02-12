@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 type TickerItem = {
+    id: string; // Unique ID for key
     type: 'signal' | 'profit' | 'loss';
     pair?: string;
     user?: string;
@@ -12,30 +13,69 @@ type TickerItem = {
     time: string;
 };
 
-const MOCK_WINS: TickerItem[] = [
-    { type: 'signal', pair: 'XAUUSD', action: 'HIT TP1', pips: '+40 pips', time: '2m ago' },
-    { type: 'profit', user: 'ekasap*****@gmail.com', pair: 'XAUUSD', action: 'TP Hit', pips: '+35 pips', time: '3m ago' },
-    { type: 'profit', user: 'dian.w*****@gmail.com', pair: 'GBPUSD', action: 'Bagged', pips: '+22 pips', time: '5m ago' },
-    { type: 'signal', pair: 'GBPJPY', action: 'HIT TP2', pips: '+65 pips', time: '7m ago' },
-    { type: 'profit', user: 'hendra*****@yahoo.com', pair: 'XAUUSD', action: 'Profit', pips: '+110 pips', time: '8m ago' },
-    { type: 'loss', pair: 'EURUSD', action: 'HIT SL', pips: '-15 pips', time: '9m ago' },
-    { type: 'profit', user: 'siti.nur*****@gmail.com', pair: 'NAS100', action: 'TP2', pips: '+45 pts', time: '10m ago' },
-    { type: 'signal', pair: 'BTCUSD', action: 'Running', pips: '+120 pips', time: '12m ago' },
-    { type: 'profit', user: 'bagus.p*****@gmail.com', pair: 'XAUUSD', action: 'Profit', pips: '+85 pips', time: '14m ago' },
-    { type: 'profit', user: 'wahyu*****@gmail.com', pair: 'USDJPY', action: 'Scalp', pips: '+18 pips', time: '15m ago' },
-    { type: 'signal', pair: 'NAS100', action: 'HIT TP1', pips: '+30 pts', time: '18m ago' },
-    { type: 'profit', user: 'agus.t*****@gmail.com', pair: 'BTCUSD', action: 'Big Win', pips: '+2500 pts', time: '20m ago' },
-    { type: 'profit', user: 'rlni.s*****@gmail.com', pair: 'EURUSD', action: 'TP1', pips: '+25 pips', time: '22m ago' },
-    { type: 'loss', user: 'joko.w*****@gmail.com', pair: 'XAUUSD', action: 'Cut Loss', pips: '-12 pips', time: '24m ago' },
-    { type: 'profit', user: 'putri.a*****@gmail.com', pair: 'GBPJPY', action: 'TP Hit', pips: '+60 pips', time: '25m ago' },
-    { type: 'signal', pair: 'XAUUSD', action: 'Breakout', pips: 'Potential', time: '28m ago' },
-    { type: 'profit', user: 'fajar*****@gmail.com', pair: 'XAUUSD', action: 'Profit', pips: '+35 pips', time: '30m ago' },
-    { type: 'profit', user: 'bambang*****@yahoo.com', pair: 'US30', action: 'TP', pips: '+150 pts', time: '32m ago' },
-    { type: 'signal', pair: 'DJI30', action: 'HIT TP3', pips: '+200 pts', time: '35m ago' },
-    { type: 'profit', user: 'citra.m*****@gmail.com', pair: 'XAUUSD', action: 'Scalping', pips: '+90 pips', time: '40m ago' },
-];
+// Data pools for randomization
+const PAIRS = ['XAUUSD', 'GBPUSD', 'EURUSD', 'USDJPY', 'NAS100', 'US30', 'BTCUSD', 'ETHUSD', 'GBPJPY', 'AUDUSD'];
+const ACTIONS_PROFIT = ['HIT TP1', 'HIT TP2', 'HIT TP3', 'Bagged', 'Profit', 'Scalp', 'Snipe', 'Big Win', 'Smash'];
+const ACTIONS_SIGNAL = ['Running', 'Breakout', 'Entry', 'Potential', 'Setup', 'Signal'];
+const NAMES = ['Start', 'Agus', 'Budi', 'Citra', 'Dewi', 'Eko', 'Fajar', 'Gita', 'Hendra', 'Indra', 'Joko', 'Kartika', 'Lina', 'Made', 'Nina', 'Oscar', 'Putri', 'Rizky', 'Siti', 'Tono', 'Wahyu', 'Yulia', 'Zain'];
+
+// Helper to generate random item
+const generateRandomWin = (): TickerItem => {
+    const typeRoll = Math.random();
+    let type: 'signal' | 'profit' | 'loss' = 'profit';
+
+    // 70% Profit, 20% Signal, 10% Loss (Marketing mode)
+    if (typeRoll > 0.9) type = 'loss';
+    else if (typeRoll > 0.7) type = 'signal';
+
+    const pair = PAIRS[Math.floor(Math.random() * PAIRS.length)];
+    const id = Math.random().toString(36).substr(2, 9);
+
+    // Time: "Just now", "1m ago", etc.
+    const timeRoll = Math.floor(Math.random() * 5);
+    const time = timeRoll === 0 ? 'Just now' : `${timeRoll}m ago`;
+
+    if (type === 'profit') {
+        const user = `${NAMES[Math.floor(Math.random() * NAMES.length)]}.${Math.random().toString(36).substr(2, 3)}***`;
+        const action = ACTIONS_PROFIT[Math.floor(Math.random() * ACTIONS_PROFIT.length)];
+        const pips = pair.includes('USD') && !pair.includes('XAU') ? `+${Math.floor(Math.random() * 40) + 10} pips`
+            : pair.includes('JPY') ? `+${Math.floor(Math.random() * 60) + 20} pips`
+                : pair === 'XAUUSD' ? `+${Math.floor(Math.random() * 150) + 30} pips`
+                    : `+${Math.floor(Math.random() * 300) + 50} pts`; // Indices/Crypto
+
+        return { id, type, user, pair, action, pips, time };
+    } else if (type === 'loss') {
+        const user = `${NAMES[Math.floor(Math.random() * NAMES.length)]}.${Math.random().toString(36).substr(2, 3)}***`;
+        return { id, type, user, pair, action: 'Hit SL', pips: `-${Math.floor(Math.random() * 30) + 10} pips`, time };
+    } else {
+        // Signal
+        const action = ACTIONS_SIGNAL[Math.floor(Math.random() * ACTIONS_SIGNAL.length)];
+        return { id, type, pair, action, pips: 'Active', time };
+    }
+};
 
 export default function WinningTicker() {
+    const [wins, setWins] = useState<TickerItem[]>([]);
+
+    // Initialize with some data
+    useEffect(() => {
+        const initial = Array.from({ length: 20 }).map(generateRandomWin);
+        setWins(initial);
+    }, []);
+
+    // Add new win periodically
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setWins(prev => {
+                const newWin = generateRandomWin();
+                // Keep list at 20 items, add to start, remove from end
+                return [newWin, ...prev.slice(0, 19)];
+            });
+        }, 3000); // Update every 3 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="fixed top-14 left-0 right-0 z-40 w-full bg-gradient-to-r from-blue-900/40 via-purple-900/40 to-blue-900/40 border-y border-white/5 backdrop-blur-sm overflow-hidden py-2 shadow-lg">
             <div className="flex whitespace-nowrap">
@@ -44,16 +84,17 @@ export default function WinningTicker() {
                     animate={{ x: [0, -1000] }}
                     transition={{
                         repeat: Infinity,
-                        duration: 40, // Slower for readability
+                        duration: 60, // Slower for readability
                         ease: "linear",
                     }}
                 >
-                    {[...MOCK_WINS, ...MOCK_WINS, ...MOCK_WINS].map((win, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
+                    {/* Duplicate list for infinite scroll illusion */}
+                    {[...wins, ...wins].map((win, i) => (
+                        <div key={`${win.id}-${i}`} className="flex items-center gap-2 text-sm">
                             {/* BADGE TYPE */}
                             {win.type === 'signal' && (
                                 <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${win.action.includes('SL') ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                                    {win.action.includes('SL') ? 'STOP LOSS' : 'SIGNAL'}
+                                    SIGNAL
                                 </span>
                             )}
                             {win.type === 'profit' && (
