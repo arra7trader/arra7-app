@@ -349,8 +349,11 @@ export async function initDatabase(): Promise<boolean> {
       try {
         await turso.execute(migration.sql);
         console.log(`Added ${migration.column} column`);
-      } catch {
-        // Column likely already exists, ignore error
+      } catch (e: any) {
+        // Column likely already exists, ignore error only if it's "duplicate column name"
+        if (!e.message?.includes('duplicate column name')) {
+          console.error(`[MIGRATION] Failed to add column ${migration.column}:`, e);
+        }
       }
     }
 
