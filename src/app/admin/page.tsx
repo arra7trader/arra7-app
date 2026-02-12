@@ -12,6 +12,7 @@ import UserTable, { User } from '@/components/admin/UserTable';
 import UserDetailModal from '@/components/admin/UserDetailModal';
 import UserFormModal from '@/components/admin/UserFormModal';
 import BroadcastModal from '@/components/admin/BroadcastModal';
+import MarketingBot from '@/components/admin/MarketingBot';
 
 interface UpgradeNotification {
     userName: string;
@@ -42,6 +43,10 @@ export default function AdminDashboard() {
 
     // Telegram Marketing
     const [telegramConfigured, setTelegramConfigured] = useState(false);
+
+    // Tabs
+    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing'>('users');
+
     // ... (rest of state)
 
     // ... (useEffect and other functions)
@@ -573,94 +578,127 @@ Tim ARRA7`;
 
                 <AdminStats stats={stats} />
 
-                <TelegramMarketing
-                    telegramConfigured={telegramConfigured}
-                    autoPostEnabled={autoPostEnabled}
-                    sendingTelegram={sendingTelegram}
-                    telegramMessage={telegramMessage}
-                    onToggleAutoPost={toggleAutoPost}
-                    onSendPromo={sendTelegramPromo}
-                />
-
-                {/* Search & Export */}
-                <div className="mb-6 flex gap-4">
-                    <div className="relative flex-1">
-                        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Cari email atau nama..."
-                            className="w-full pl-12 pr-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500 transition-colors"
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
+                {/* Tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-6 border-b border-gray-200">
                     <button
-                        onClick={downloadCSV}
-                        className="px-6 py-3 bg-white border border-[var(--border-light)] hover:bg-[var(--bg-secondary)] rounded-xl font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all shadow-sm"
+                        onClick={() => setActiveTab('users')}
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'users' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
                     >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Export CSV
+                        👥 User Management
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('broadcast')}
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'broadcast' ? 'bg-white border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        📢 Forecast & Broadcast
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('marketing')}
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'marketing' ? 'bg-white border-b-2 border-pink-600 text-pink-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        🤖 Marketing Bot
                     </button>
                 </div>
-                {searchQuery && (
-                    <p className="mt-2 text-sm text-[var(--text-muted)]">
-                        Ditemukan {filteredUsers.length} dari {users.length} users
-                    </p>
+
+                {activeTab === 'marketing' && <MarketingBot />}
+
+                {activeTab === 'broadcast' && (
+                    <TelegramMarketing
+                        telegramConfigured={telegramConfigured}
+                        autoPostEnabled={autoPostEnabled}
+                        sendingTelegram={sendingTelegram}
+                        telegramMessage={telegramMessage}
+                        onToggleAutoPost={toggleAutoPost}
+                        onSendPromo={sendTelegramPromo}
+                    />
                 )}
 
-                {selectedUserIds.length > 0 && (
-                    <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-medium">
-                                {selectedUserIds.length} Selected
+                {activeTab === 'users' && (
+                    <>
+                        {/* Search & Export */}
+                        <div className="mb-6 flex gap-4">
+                            <div className="relative flex-1">
+                                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Cari email atau nama..."
+                                    className="w-full pl-12 pr-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500 transition-colors"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
                             <button
-                                onClick={() => setSelectedUserIds([])}
-                                className="text-gray-500 hover:text-gray-700 text-sm underline"
+                                onClick={downloadCSV}
+                                className="px-6 py-3 bg-white border border-[var(--border-light)] hover:bg-[var(--bg-secondary)] rounded-xl font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all shadow-sm"
                             >
-                                Clear
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Export CSV
                             </button>
                         </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handleBulkUpgrade}
-                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Upgrade Selected
-                            </button>
-                            <button
-                                onClick={handleBulkDelete}
-                                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Delete Selected
-                            </button>
-                        </div>
-                    </div>
-                )}
+                        {searchQuery && (
+                            <p className="mt-2 text-sm text-[var(--text-muted)]">
+                                Ditemukan {filteredUsers.length} dari {users.length} users
+                            </p>
+                        )}
 
-                <UserTable
-                    users={filteredUsers}
-                    loading={loading}
-                    onUpdateMembership={handleUpdateMembership}
-                    updating={updating}
-                    onUserClick={setSelectedUser}
-                    selectedIds={selectedUserIds}
-                    onSelectionChange={setSelectedUserIds}
-                />
+                        {selectedUserIds.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-medium">
+                                        {selectedUserIds.length} Selected
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedUserIds([])}
+                                        className="text-gray-500 hover:text-gray-700 text-sm underline"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleBulkUpgrade}
+                                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        Upgrade Selected
+                                    </button>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        Delete Selected
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <UserTable
+                            users={filteredUsers}
+                            loading={loading}
+                            onUpdateMembership={handleUpdateMembership}
+                            updating={updating}
+                            onUserClick={setSelectedUser}
+                            selectedIds={selectedUserIds}
+                            onSelectionChange={setSelectedUserIds}
+                        />
+                    </>
+                )}
             </div>
         </div >
     );

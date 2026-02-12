@@ -293,6 +293,33 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // MARKETING BOT CAMPAIGNS
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS marketing_campaigns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL, -- 'INACTIVITY', 'USAGE_LIMIT', 'NEW_USER'
+        trigger_rule TEXT NOT NULL, -- JSON { daysInactive: 3, usageThreshold: 5 }
+        message_template TEXT NOT NULL, -- "Hi {name}, come back!"
+        channels TEXT, -- JSON ['TELEGRAM', 'EMAIL']
+        status TEXT DEFAULT 'ACTIVE', -- 'ACTIVE', 'PAUSED'
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // MARKETING LOGS (To prevent spam)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS marketing_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        campaign_id INTEGER,
+        user_id TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campaign_id) REFERENCES marketing_campaigns(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
@@ -1001,4 +1028,97 @@ export async function getTelegramUser(chatId: string): Promise<{ userId: string;
     console.error('Get Telegram user error:', error);
     return null;
   }
+}
+
+// ===== MARKETING BOT HELPERS =====
+
+export interface MarketingCampaign {
+  id?: number;
+  name: string;
+  type: 'INACTIVITY' | 'USAGE_LIMIT' | 'NEW_USER' | 'CUSTOM';
+  trigger_rule: any; // JSON
+  message_template: string;
+  channels: string[]; // JSON
+  status: 'ACTIVE' | 'PAUSED';
+  created_at?: string;
+}
+
+export async function getMarketingCampaigns(): Promise<MarketingCampaign[]> {
+  const turso = getTursoClient();
+  if (!turso) return [];
+  try {
+    const result = await turso.execute('SELECT * FROM marketing_campaigns ORDER BY created_at DESC');
+    return result.rows.map(row => ({
+      id: row.id as number,
+      name: row.name as string,
+      type: row.type as any,
+      trigger_rule: JSON.parse(row.trigger_rule as string),
+      message_template: row.message_template as string,
+      channels: JSON.parse(row.channels as string),
+      status: row.status as any,
+      created_at: row.created_at as string
+    }));
+  } catch (e) {
+    console.error('Get marketing campaigns error:', e);
+    return [];
+  }
+}
+
+export async function saveMarketingCampaign(campaign: MarketingCampaign): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+  try {
+    const sql = campaign.id
+      ? `UPDATE marketing_campaigns SET name=?, type=?, trigger_rule=?, message_template=?, channels=?, status=? WHERE id=?`
+      : `INSERT INTO marketing_campaigns (name, type, trigger_rule, message_template, channels, status) VALUES (?, ?, ?, ?, ?, ?)`;
+
+    const args = [
+      campaign.name,
+      campaign.type,
+      JSON.stringify(campaign.trigger_rule),
+      campaign.message_template,
+      JSON.stringify(campaign.channels),
+      campaign.status || 'ACTIVE'
+    ];
+
+    if (campaign.id) args.push(campaign.id);
+
+    await turso.execute({ sql, args });
+    return true;
+  } catch (e) {
+    console.error('Save marketing campaign error:', e);
+    return false;
+  }
+}
+
+export async function deleteMarketingCampaign(id: number): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+  try {
+    await turso.execute({ sql: 'DELETE FROM marketing_campaigns WHERE id = ?', args: [id] });
+    return true;
+  } catch (e) { console.error('Delete campaign error:', e); return false; }
+}
+
+export async function logMarketingSent(campaignId: number, userId: string, channel: string): Promise<void> {
+  const turso = getTursoClient();
+  if (!turso) return;
+  try {
+    await turso.execute({
+      sql: 'INSERT INTO marketing_logs (campaign_id, user_id, channel) VALUES (?, ?, ?)',
+      args: [campaignId as any, userId, channel]
+    });
+  } catch (e) { console.error('Log marketing sent error:', e); }
+}
+
+export async function hasReceivedMarketing(campaignId: number, userId: string): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+  try {
+    const res = await turso.execute({
+      sql: 'SELECT id FROM marketing_logs WHERE campaign_id = ? AND user_id = ?',
+      args: [campaignId as any, userId]
+    });
+    return res.rows.length > 0;
+  } catch (e) { return false; }
 }

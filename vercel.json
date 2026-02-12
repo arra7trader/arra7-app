@@ -1,4 +1,10 @@
 {
+    "crons": [
+        {
+            "path": "/api/cron/marketing-bot",
+            "schedule": "0 * * * *"
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/ml/:path*",
