@@ -45,6 +45,15 @@ export default function Navbar() {
             ),
             href: '/vvip/assistant'
         },
+        {
+            label: (
+                <div className="flex items-center gap-2">
+                    <span>Trading Bot</span>
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/30">NEW</span>
+                </div>
+            ),
+            href: '/bot'
+        },
     ];
 
     const searchParams = useSearchParams();

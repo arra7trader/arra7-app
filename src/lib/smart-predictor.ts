@@ -578,6 +578,81 @@ export class SmartPredictor {
             NEUTRAL: Math.round((neutral / total) * 100) / 100
         };
     }
+
+    /**
+     * Execute Trade (Queue for Bridge)
+     */
+    private async executeTrade(tradeSetup: TradeSetup) {
+        // This runs on Vercel Serverless (Edge/Node)
+        try {
+            // we need to dynamically import because turso might not be available in all edge contexts
+            // but here we assume Node runtime for simplicity or use API call
+            const { default: getTursoClient } = await import('./turso');
+            const turso = getTursoClient();
+
+            if (!turso) return;
+
+            // 1. Find Active Accounts for this User/Symbol that are RUNNING
+            // For MVP, we just find ALL accounts that have this symbol allowed and are ACTIVE
+            // In reality, we need to know WHO IS ASKING for prediction, but SmartPredictor is currently generic.
+            // FIX: SmartPredictor is usually called within a User Context (API route).
+            // But if it's a background job, we don't have user context.
+
+            // For now, let's assume we only queue if we explicitly pass a user/account context?
+            // Or we check ALL active auto-traders.
+            // Let's implement a "Broadcast" mode: Check all active bots for this symbol.
+
+            const activeBots = await turso.execute({
+                sql: `
+                    SELECT a.id as account_id, s.risk_percent, s.fixed_lot 
+                    FROM auto_trade_settings s
+                    JOIN trading_accounts a ON s.account_id = a.id
+                    WHERE s.is_active = 1 
+                    AND s.pairs_allowed LIKE ?
+                `,
+                args: [`%${this.symbol}%`]
+            });
+
+            for (const bot of activeBots.rows) {
+                // Calculate Lot Size based on Risk (Simple implementation)
+                let lotSize = bot.fixed_lot as number;
+
+                // Insert into Trade Logs as QUEUED
+                await turso.execute({
+                    sql: `
+                        INSERT INTO trade_logs (account_id, symbol, action, lot_size, sl, tp, open_price, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'QUEUED')
+                    `,
+                    args: [
+                        bot.account_id,
+                        this.symbol,
+                        tradeSetup.action === 'LONG' ? 'BUY' : 'SELL',
+                        lotSize,
+                        tradeSetup.sl,
+                        tradeSetup.tp,
+                        tradeSetup.entry
+                    ]
+                });
+
+                console.log(`[AutoTrade] Queued ${tradeSetup.action} on ${this.symbol} for Account ${bot.account_id}`);
+            }
+
+        } catch (error) {
+            console.error('[AutoTrade] Execution Failed:', error);
+        }
+    }
+
+    public async predictAndAutoTrade(orderBook: OrderBookData): Promise<PredictionResult> {
+        const result = this.predict(orderBook);
+
+        // If Trade Setup is HIGH QUALITY, trigger Auto Trade
+        if (result.tradeSetup && result.tradeSetup.quality === 'HIGH') {
+            // Fire and forget execution
+            this.executeTrade(result.tradeSetup).catch(e => console.error(e));
+        }
+
+        return result;
+    }
 }
 
 // Export singleton predictors
@@ -594,3 +669,4 @@ export function getPredictor(symbol: string, horizon: number = 10): SmartPredict
     }
     return predictor;
 }
+

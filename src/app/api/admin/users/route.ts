@@ -254,6 +254,8 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ status: 'error', message: 'User ID is required for update' }, { status: 400 });
             }
 
+            const { duration } = body; // Get duration string if passed
+
             // Build dynamic update query
             const updates: string[] = [];
             const args: any[] = [];
@@ -271,14 +273,28 @@ export async function POST(request: NextRequest) {
                 args.push(membership);
 
                 // If updating membership, also update expiry if it wasn't there or if we want to extend
-                // BUT, if it's a simple profile edit, we might not want to reset expiry unless specified.
-                // The legacy logic set expiry when membership changed.
-                // Let's assume if 'membership' is passed, we check if we need to update expiry.
                 if (membership !== 'BASIC' && durationDays) {
                     const d = new Date();
                     d.setDate(d.getDate() + durationDays);
                     updates.push('membership_expires = ?');
                     args.push(d.toISOString());
+
+                    // Increment promo slot usage if duration is provided
+                    if (duration) {
+                        try {
+                            await turso.execute({
+                                sql: `INSERT INTO promo_slots (membership, duration, used_count, max_count)
+                                      VALUES (?, ?, 1, 15)
+                                      ON CONFLICT(membership, duration) 
+                                      DO UPDATE SET used_count = used_count + 1, updated_at = CURRENT_TIMESTAMP`,
+                                args: [membership, duration],
+                            });
+                            console.log(`[ADMIN] Incremented promo slot for ${membership} ${duration}`);
+                        } catch (slotError) {
+                            console.error('[ADMIN] Failed to update promo slot:', slotError);
+                            // Don't fail the whole request, just log it
+                        }
+                    }
                 } else if (membership === 'BASIC') {
                     updates.push('membership_expires = ?');
                     args.push(null);

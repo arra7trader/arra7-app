@@ -320,6 +320,76 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // CLOUD TRADING BOT: Trading Accounts (MetaApi/Exness/FBS)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS trading_accounts (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        name TEXT NOT NULL,         -- "My Exness Real"
+        broker TEXT NOT NULL,       -- "Exness", "FBS"
+        login TEXT NOT NULL,        -- MT4/5 Login ID
+        server TEXT NOT NULL,       -- "Exness-Real12"
+        platform TEXT DEFAULT 'MT5',-- "MT4", "MT5"
+        api_key TEXT,               -- Encrypted MetaApi Token or Bridge Key
+        account_id TEXT,            -- MetaApi Account ID
+        connection_status TEXT DEFAULT 'DISCONNECTED', -- 'CONNECTED', 'DISCONNECTED', 'ERROR'
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // CLOUD TRADING BOT: Auto-Trade Settings per Account
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS auto_trade_settings (
+        account_id TEXT PRIMARY KEY,
+        is_active INTEGER DEFAULT 0, -- Master Switch
+        risk_percent REAL DEFAULT 1.0, -- Risk per trade (1%)
+        fixed_lot REAL DEFAULT 0.01,   -- If risk_percent is 0
+        max_open_trades INTEGER DEFAULT 3,
+        pairs_allowed TEXT,            -- JSON ["XAUUSD", "EURUSD"]
+        strategies_allowed TEXT,       -- JSON ["SCALPING", "SWING"] (from AI types)
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (account_id) REFERENCES trading_accounts(id) ON DELETE CASCADE
+      )
+    `);
+
+    // CLOUD TRADING BOT: Trade Logs (Execution History)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS trade_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id TEXT NOT NULL,
+        signal_id INTEGER,          -- Link to ai_signals or prediction_id
+        symbol TEXT NOT NULL,
+        action TEXT NOT NULL,       -- "BUY", "SELL"
+        lot_size REAL NOT NULL,
+        open_price REAL,
+        sl REAL,
+        tp REAL,
+        mt_ticket TEXT,             -- Broker Ticket ID
+        status TEXT DEFAULT 'PENDING', -- 'FILLED', 'FAILED', 'CLOSED'
+        close_price REAL,
+        profit REAL,
+        error_message TEXT,
+        executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        closed_at DATETIME,
+        FOREIGN KEY (account_id) REFERENCES trading_accounts(id)
+      )
+    `);
+
+    // PROMO SLOTS: Track promotional slot usage for multi-duration pricing
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS promo_slots (
+        membership TEXT NOT NULL,     -- 'PRO' or 'VVIP'
+        duration TEXT NOT NULL,       -- '3months', '6months', '1year'
+        used_count INTEGER DEFAULT 0,
+        max_count INTEGER DEFAULT 15,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (membership, duration)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [

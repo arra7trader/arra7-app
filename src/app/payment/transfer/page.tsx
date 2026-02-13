@@ -6,28 +6,51 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-const NEW_YEAR_PROMO_END = new Date('2026-01-01T23:59:59+07:00');
+// Pricing Data
+const PRICING_OPTIONS: Record<string, Record<string, { durationLabel: string; price: number; priceDisplay: string; originalPrice: string | null; period: string }>> = {
+    PRO: {
+        '1month': { durationLabel: '1 Bulan', price: 99000, priceDisplay: 'Rp 99.000', originalPrice: 'Rp 149.000', period: '/bulan' },
+        '3months': { durationLabel: '3 Bulan', price: 290000, priceDisplay: 'Rp 290.000', originalPrice: 'Rp 447.000', period: '/3 bulan' },
+        '6months': { durationLabel: '6 Bulan', price: 590000, priceDisplay: 'Rp 590.000', originalPrice: 'Rp 894.000', period: '/6 bulan' },
+        '1year': { durationLabel: '1 Tahun', price: 1000000, priceDisplay: 'Rp 1.000.000', originalPrice: 'Rp 1.788.000', period: '/tahun' },
+    },
+    VVIP: {
+        '1month': { durationLabel: '1 Bulan', price: 249000, priceDisplay: 'Rp 249.000', originalPrice: 'Rp 399.000', period: '/bulan' },
+        '3months': { durationLabel: '3 Bulan', price: 740000, priceDisplay: 'Rp 740.000', originalPrice: 'Rp 1.197.000', period: '/3 bulan' },
+        '6months': { durationLabel: '6 Bulan', price: 1490000, priceDisplay: 'Rp 1.490.000', originalPrice: 'Rp 2.394.000', period: '/6 bulan' },
+        '1year': { durationLabel: '1 Tahun', price: 2800000, priceDisplay: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', period: '/tahun' },
+    },
+};
 
 function TransferContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
     const planId = searchParams.get('plan');
-
-    const isPromoActive = useMemo(() => new Date() < NEW_YEAR_PROMO_END, []);
+    const duration = searchParams.get('duration') || '1month';
 
     const plan = useMemo(() => {
-        if (planId === 'PRO') return { name: 'Pro', price: 99000, priceDisplay: 'Rp 99.000', originalPrice: 'Rp 149.000', promoActive: true, period: '/bulan' };
-        if (planId === 'VVIP') return { name: 'VVIP', price: 249000, priceDisplay: 'Rp 249.000', originalPrice: 'Rp 399.000', promoActive: true, period: '/bulan' };
-        return null;
-    }, [planId, isPromoActive]);
+        if (!planId || !PRICING_OPTIONS[planId] || !PRICING_OPTIONS[planId][duration]) return null;
 
-    useEffect(() => { if (status === 'unauthenticated') router.push('/login?callbackUrl=/payment/transfer?plan=' + planId); }, [status, router, planId]);
+        const details = PRICING_OPTIONS[planId][duration];
+        return {
+            id: planId,
+            name: planId === 'PRO' ? 'Pro' : 'VVIP',
+            ...details
+        };
+    }, [planId, duration]);
+
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push(`/login?callbackUrl=/payment/transfer?plan=${planId}&duration=${duration}`);
+        }
+    }, [status, router, planId, duration]);
 
     if (status === 'loading') return (<div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]"><div className="w-10 h-10 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" /></div>);
     if (!planId || !plan) return (<div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]"><div className="text-center"><h1 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Paket tidak ditemukan</h1><Link href="/pricing" className="text-[var(--accent-blue)] hover:underline">Kembali ke Pricing</Link></div></div>);
 
-    const telegramLink = `https://t.me/arra7trader?text=${encodeURIComponent(`Halo Admin ARRA7!\n\nSaya sudah melakukan pembayaran via QRIS untuk paket ${plan.name}:\n\n📧 Email: ${session?.user?.email}\n👤 Nama: ${session?.user?.name}\n📦 Paket: ${plan.name}\n💰 Nominal: ${plan.priceDisplay}\n\nMohonRequest diproses. Berikut bukti pembayarannya: (Lampirkan Screenshot)`)}`;
+    const telegramText = `Halo Admin ARRA7!\n\nSaya sudah melakukan pembayaran via QRIS untuk paket *${plan.name} ${plan.durationLabel}*:\n\n📧 Email: ${session?.user?.email}\n👤 Nama: ${session?.user?.name}\n📦 Paket: ${plan.name} (${plan.durationLabel})\n💰 Nominal: ${plan.priceDisplay}\n\nMohon diproses. Berikut bukti pembayarannya: (Lampirkan Screenshot)`;
+    const telegramLink = `https://t.me/arra7trader?text=${encodeURIComponent(telegramText)}`;
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
@@ -36,12 +59,17 @@ function TransferContent() {
                     <div className="text-center mb-6">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center"><span className="text-3xl">📱</span></div>
                         <h1 className="text-2xl font-bold mb-2 text-[var(--text-primary)]">Pembayaran QRIS</h1>
-                        <p className="text-[var(--text-secondary)]">Upgrade ke paket <span className="text-[var(--text-primary)] font-semibold">{plan.name}</span></p>
+                        <p className="text-[var(--text-secondary)]">Upgrade ke paket <span className="text-[var(--text-primary)] font-semibold">{plan.name} ({plan.durationLabel})</span></p>
                     </div>
 
                     <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6 text-center">
                         <p className="text-sm text-[var(--text-muted)] mb-1">Total Pembayaran</p>
-                        {plan.promoActive && plan.originalPrice && (<div className="flex items-center justify-center gap-2 mb-1"><span className="text-lg text-[var(--text-muted)] line-through">{plan.originalPrice}</span><span className="px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold">🎉 PROMO</span></div>)}
+                        {plan.originalPrice && (
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <span className="text-lg text-[var(--text-muted)] line-through">{plan.originalPrice}</span>
+                                <span className="px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold">🎉 PROMO</span>
+                            </div>
+                        )}
                         <p className="text-3xl font-bold gradient-text">{plan.priceDisplay}</p>
                         <p className="text-sm text-[var(--text-muted)]">{plan.period}</p>
                     </div>

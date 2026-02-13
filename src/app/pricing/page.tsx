@@ -7,15 +7,27 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { CheckIcon, XIcon, ChevronDownIcon, ArrowRightIcon, SparklesIcon, FireIcon, StarSolidIcon, CpuChipIcon } from '@/components/PremiumIcons';
 
+// Duration options for PRO and VVIP
+const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string; savingsText?: string; promoSlots?: number }>> = {
+    PRO: [
+        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 99K', originalPrice: 'Rp 149K' },
+        { duration: '3months', days: 90, label: '3 Bulan', price: 'Rp 290K', originalPrice: 'Rp 447K', savingsText: 'Hemat Rp 157K', promoSlots: 15 },
+        { duration: '6months', days: 180, label: '6 Bulan', price: 'Rp 590K', originalPrice: 'Rp 894K', savingsText: 'Hemat Rp 304K', promoSlots: 15 },
+        { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 1,000K', originalPrice: 'Rp 1,788K', savingsText: 'Hemat Rp 788K', promoSlots: 15 },
+    ],
+    VVIP: [
+        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 249K', originalPrice: 'Rp 399K' },
+        { duration: '3months', days: 90, label: '3 Bulan', price: 'Rp 740K', originalPrice: 'Rp 1,197K', savingsText: 'Hemat Rp 457K', promoSlots: 15 },
+        { duration: '6months', days: 180, label: '6 Bulan', price: 'Rp 1,490K', originalPrice: 'Rp 2,394K', savingsText: 'Hemat Rp 904K', promoSlots: 15 },
+        { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 2,800K', originalPrice: 'Rp 4,788K', savingsText: 'Hemat Rp 1,988K', promoSlots: 15 },
+    ],
+};
+
 const PRICING_PLANS = [
     {
         id: 'BASIC',
         name: 'Basic',
-        price: 'FREE',
-        originalPrice: null,
-        period: '',
         description: 'Untuk trader pemula yang ingin mencoba platform',
-        badge: null,
         icon: '🆓',
         gradient: 'from-slate-500 to-gray-600',
         bgGradient: 'from-slate-50 to-gray-100',
@@ -32,11 +44,7 @@ const PRICING_PLANS = [
     {
         id: 'PRO',
         name: 'Pro',
-        price: 'Rp 99K',
-        originalPrice: 'Rp 149K',
-        period: '/bulan',
         description: 'Untuk trader aktif yang serius profit',
-        badge: 'Sisa 12 Slot',
         icon: '⚡',
         gradient: 'from-blue-600 to-cyan-500',
         bgGradient: 'from-blue-600 to-indigo-700',
@@ -57,11 +65,7 @@ const PRICING_PLANS = [
     {
         id: 'VVIP',
         name: 'VVIP',
-        price: 'Rp 249K',
-        originalPrice: 'Rp 399K',
-        period: '/bulan',
         description: 'Untuk trader profesional & institusi',
-        badge: 'Sisa 8 Slot',
         icon: '👑',
         gradient: 'from-amber-500 to-orange-600',
         bgGradient: 'from-amber-500 to-orange-600',
@@ -87,6 +91,15 @@ export default function PricingPage() {
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
     const [stats, setStats] = useState({ users: 100, predictions: 5000, accuracy: 95.8 });
 
+    // Duration selector state
+    const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
+        PRO: '3months',
+        VVIP: '3months',
+    });
+
+    // Promo slots state
+    const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
+
     useEffect(() => {
         // Fetch real stats
         fetch('/api/public/stats')
@@ -97,6 +110,16 @@ export default function PricingPage() {
                 }
             })
             .catch(err => console.error('Failed to fetch stats', err));
+
+        // Fetch promo slots
+        fetch('/api/pricing/slots')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    setPromoSlots(data.slots);
+                }
+            })
+            .catch(err => console.error('Failed to fetch promo slots', err));
     }, []);
 
     const handleSubscribe = async (planId: string) => {
@@ -110,7 +133,46 @@ export default function PricingPage() {
             return;
         }
 
-        window.location.href = `/payment/transfer?plan=${planId}`;
+        // Get selected duration for this plan
+        const duration = selectedDuration[planId] || '1month';
+        const durationOption = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
+        const days = durationOption?.days || 30;
+
+        window.location.href = `/payment/transfer?plan=${planId}&duration=${duration}&days=${days}`;
+    };
+
+    // Get current pricing info for a plan based on selected duration
+    const getPlanPricing = (planId: string) => {
+        if (planId === 'BASIC') {
+            return { price: 'FREE', originalPrice: null, period: '', badge: null };
+        }
+
+        const duration = selectedDuration[planId] || '1month';
+        const option = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
+
+        if (!option) {
+            return { price: 'Rp 99K', originalPrice: 'Rp 149K', period: '/bulan', badge: null };
+        }
+
+        let badge = null;
+        if (option.promoSlots && promoSlots) {
+            const slotInfo = promoSlots[planId]?.[duration];
+            if (slotInfo) {
+                if (slotInfo.remaining > 0) {
+                    badge = `Promo: Sisa ${slotInfo.remaining}/${slotInfo.max} Slot`;
+                } else {
+                    badge = 'SOLD OUT';
+                }
+            }
+        }
+
+        return {
+            price: option.price,
+            originalPrice: option.originalPrice,
+            period: option.duration === '1month' ? '/bulan' : '',
+            badge,
+            savingsText: option.savingsText,
+        };
     };
 
     return (
@@ -222,25 +284,87 @@ export default function PricingPage() {
                                         </div>
                                     </div>
 
-                                    {/* Price */}
-                                    <div className="mb-6 pb-6 border-b border-white/20">
-                                        {plan.originalPrice && (
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className={`text-lg line-through ${plan.popular || plan.id === 'VVIP' ? 'text-white/50' : 'text-[var(--text-muted)]'}`}>
-                                                    {plan.originalPrice}
-                                                </span>
-                                                <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold shadow-lg shadow-green-500/30">
-                                                    HEMAT 50%
-                                                </span>
+                                    {/* Duration Selector - Only for PRO and VVIP */}
+                                    {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
+                                        <div className="mb-4">
+                                            <div className="flex gap-2 flex-wrap">
+                                                {DURATION_OPTIONS[plan.id].map((option) => {
+                                                    const isSelected = selectedDuration[plan.id] === option.duration;
+                                                    const slotInfo = promoSlots?.[plan.id]?.[option.duration];
+                                                    // Ensure boolean type
+                                                    const isSoldOut = !!(option.promoSlots && slotInfo && slotInfo.remaining <= 0);
+
+                                                    return (
+                                                        <button
+                                                            key={option.duration}
+                                                            onClick={() => setSelectedDuration({ ...selectedDuration, [plan.id]: option.duration })}
+                                                            disabled={isSoldOut}
+                                                            className={`
+                                                                px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+                                                                ${isSelected
+                                                                    ? plan.popular || plan.id === 'VVIP'
+                                                                        ? 'bg-white text-blue-600 ring-2 ring-white/50'
+                                                                        : 'bg-blue-600 text-white ring-2 ring-blue-200'
+                                                                    : plan.popular || plan.id === 'VVIP'
+                                                                        ? 'bg-white/20 text-white hover:bg-white/30'
+                                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                                }
+                                                                ${isSoldOut ? 'opacity-50 cursor-not-allowed' : ''}
+                                                            `}
+                                                        >
+                                                            {option.label}
+                                                            {isSoldOut && ' 🔴'}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
-                                        )}
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-5xl font-black">{plan.price}</span>
-                                            <span className={plan.popular || plan.id === 'VVIP' ? 'text-white/70' : 'text-[var(--text-secondary)]'}>
-                                                {plan.period}
-                                            </span>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* Price Display */}
+                                    {(() => {
+                                        const pricing = getPlanPricing(plan.id);
+                                        return (
+                                            <div className="mb-6 pb-6 border-b border-white/20">
+                                                {/* Promo Badge */}
+                                                {pricing.badge && (
+                                                    <div className="mb-2">
+                                                        <span className={`
+                                                            inline-block px-3 py-1 rounded-full text-xs font-bold
+                                                            ${pricing.badge.includes('SOLD OUT')
+                                                                ? 'bg-red-500 text-white'
+                                                                : 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/30'
+                                                            }
+                                                        `}>
+                                                            {pricing.badge}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Original Price + Savings */}
+                                                {pricing.originalPrice && (
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className={`text-lg line-through ${plan.popular || plan.id === 'VVIP' ? 'text-white/50' : 'text-[var(--text-muted)]'}`}>
+                                                            {pricing.originalPrice}
+                                                        </span>
+                                                        {pricing.savingsText && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
+                                                                {pricing.savingsText}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Current Price */}
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-5xl font-black">{pricing.price}</span>
+                                                    <span className={plan.popular || plan.id === 'VVIP' ? 'text-white/70' : 'text-[var(--text-secondary)]'}>
+                                                        {pricing.period}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Features */}
                                     <ul className="space-y-3 mb-8">

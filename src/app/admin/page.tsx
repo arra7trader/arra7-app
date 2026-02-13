@@ -13,6 +13,7 @@ import UserDetailModal from '@/components/admin/UserDetailModal';
 import UserFormModal from '@/components/admin/UserFormModal';
 import BroadcastModal from '@/components/admin/BroadcastModal';
 import MarketingBot from '@/components/admin/MarketingBot';
+import UpgradeDurationModal, { DurationOption } from '@/components/admin/UpgradeDurationModal';
 
 interface UpgradeNotification {
     userName: string;
@@ -37,6 +38,11 @@ export default function AdminDashboard() {
     const [isUserFormOpen, setIsUserFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+
+    // Upgrade Duration Modal
+    const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
+    const [upgradeTargetUser, setUpgradeTargetUser] = useState<User | null>(null);
+    const [upgradeTargetMembership, setUpgradeTargetMembership] = useState<'PRO' | 'VVIP'>('PRO');
 
     // Bulk Selection
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -278,11 +284,23 @@ export default function AdminDashboard() {
     };
 
     const handleUpdateMembership = async (user: User, membership: string) => {
-        const userId = user.id;
-        const userName = user.name;
-        const userEmail = user.email;
-        const days = 30; // Default
+        // Open duration modal instead of directly upgrading
+        setUpgradeTargetUser(user);
+        setUpgradeTargetMembership(membership as 'PRO' | 'VVIP');
+        setIsDurationModalOpen(true);
+    };
 
+    const handleDurationSelect = async (option: DurationOption) => {
+        if (!upgradeTargetUser) return;
+
+        const userId = upgradeTargetUser.id;
+        const userName = upgradeTargetUser.name;
+        const userEmail = upgradeTargetUser.email;
+        const days = option.days;
+        const durationId = option.duration; // e.g. '3months'
+        const membership = upgradeTargetMembership;
+
+        setIsDurationModalOpen(false);
         setUpdating(userId);
         setMessage(null);
 
@@ -290,13 +308,13 @@ export default function AdminDashboard() {
             const response = await fetch('/api/admin/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, membership, durationDays: days }),
+                body: JSON.stringify({ userId, membership, durationDays: days, duration: durationId }),
             });
 
             const data = await response.json();
 
             if (data.status === 'success') {
-                setMessage({ type: 'success', text: data.message });
+                setMessage({ type: 'success', text: `✅ ${userName} berhasil di-upgrade ke ${membership} untuk ${option.label}` });
                 fetchUsers();
 
                 // Show notification modal
@@ -315,6 +333,7 @@ export default function AdminDashboard() {
             setMessage({ type: 'error', text: 'Failed to update' });
         } finally {
             setUpdating(null);
+            setUpgradeTargetUser(null);
         }
     };
 
@@ -700,7 +719,17 @@ Tim ARRA7`;
                     </>
                 )}
             </div>
+
+            {/* Upgrade Duration Modal */}
+            <UpgradeDurationModal
+                isOpen={isDurationModalOpen}
+                membership={upgradeTargetMembership}
+                onSelect={handleDurationSelect}
+                onClose={() => {
+                    setIsDurationModalOpen(false);
+                    setUpgradeTargetUser(null);
+                }}
+            />
         </div >
     );
 }
-
