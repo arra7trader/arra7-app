@@ -284,7 +284,35 @@ export default function AdminDashboard() {
     };
 
     const handleUpdateMembership = async (user: User, membership: string) => {
-        // Open duration modal instead of directly upgrading
+        // If downgrading to BASIC, skip modal and update directly
+        if (membership === 'BASIC') {
+            setUpdating(user.id);
+            setMessage(null);
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, membership: 'BASIC' }),
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    setMessage({ type: 'success', text: `✅ ${user.name} berhasil di-downgrade ke BASIC` });
+                    fetchUsers();
+                } else {
+                    setMessage({ type: 'error', text: data.message });
+                }
+            } catch (error) {
+                setMessage({ type: 'error', text: 'Failed to downgrade user' });
+            } finally {
+                setUpdating(null);
+            }
+            return;
+        }
+
+        // For PRO/VVIP, open duration modal
         setUpgradeTargetUser(user);
         setUpgradeTargetMembership(membership as 'PRO' | 'VVIP');
         setIsDurationModalOpen(true);

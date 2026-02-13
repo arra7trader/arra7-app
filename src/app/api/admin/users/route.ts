@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
                 // For safety and simplicity with small batches, loop is fine, or one query with mapped placeholders
                 const placeholders = expiredUserIds.map(() => '?').join(',');
                 await turso.execute({
-                    sql: `UPDATE users SET membership = 'BASIC' WHERE id IN (${placeholders})`,
+                    sql: `UPDATE users SET membership = 'BASIC', membership_expires = NULL WHERE id IN (${placeholders})`,
                     args: expiredUserIds
                 });
                 console.log(`[ADMIN] Auto-downgraded ${expiredUserIds.length} expired users.`);
