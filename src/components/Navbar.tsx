@@ -39,15 +39,6 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-2">
-                    <span>VVIP Assistant</span>
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-yellow-600 text-black rounded uppercase tracking-wider shadow-[0_0_10px_rgba(251,191,36,0.3)]">VVIP</span>
-                </div>
-            ),
-            href: '/vvip/assistant'
-        },
-        {
-            label: (
-                <div className="flex items-center gap-2">
                     <span>Trading Bot</span>
                     <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/30">NEW</span>
                 </div>
