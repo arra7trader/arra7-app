@@ -390,6 +390,117 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // ===== COPY TRADE SYSTEM TABLES =====
+
+    // SIGNAL PROVIDERS: Master traders who share their trading signals
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS signal_providers (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        bio TEXT,
+        subscription_fee INTEGER DEFAULT 0,  -- Monthly fee in IDR (0 = free)
+        profit_sharing_percent INTEGER DEFAULT 0,  -- 0-30%
+        is_active INTEGER DEFAULT 0,  -- 0 = pending approval, 1 = active
+        is_approved INTEGER DEFAULT 0,  -- Admin approval status
+        total_followers INTEGER DEFAULT 0,
+        total_earnings INTEGER DEFAULT 0,  -- Total earnings in IDR
+        broker_name TEXT,  -- e.g., 'Exness', 'FBS'
+        broker_account_id TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // COPY RELATIONSHIPS: Follower-Provider connections
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS copy_relationships (
+        id TEXT PRIMARY KEY,
+        follower_user_id TEXT NOT NULL,
+        provider_id TEXT NOT NULL,
+        allocated_capital REAL DEFAULT 0,  -- USD
+        risk_multiplier REAL DEFAULT 1.0,  -- 0.1 - 2.0
+        max_drawdown_percent INTEGER DEFAULT 20,  -- 5-50%
+        status TEXT DEFAULT 'active',  -- active/paused/stopped
+        started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        ended_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (follower_user_id) REFERENCES users(id),
+        FOREIGN KEY (provider_id) REFERENCES signal_providers(id)
+      )
+    `);
+
+    // PROVIDER STATISTICS: Performance metrics for each provider
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS provider_statistics (
+        id TEXT PRIMARY KEY,
+        provider_id TEXT NOT NULL UNIQUE,
+        total_trades INTEGER DEFAULT 0,
+        winning_trades INTEGER DEFAULT 0,
+        losing_trades INTEGER DEFAULT 0,
+        win_rate REAL DEFAULT 0,  -- Percentage
+        total_profit_usd REAL DEFAULT 0,
+        total_loss_usd REAL DEFAULT 0,
+        net_profit_usd REAL DEFAULT 0,
+        max_drawdown REAL DEFAULT 0,  -- Percentage
+        sharpe_ratio REAL DEFAULT 0,
+        avg_trade_duration_hours REAL DEFAULT 0,
+        best_pair TEXT,
+        avg_profit_per_trade REAL DEFAULT 0,
+        avg_loss_per_trade REAL DEFAULT 0,
+        last_trade_at DATETIME,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (provider_id) REFERENCES signal_providers(id)
+      )
+    `);
+
+    // COPIED POSITIONS: Individual trades copied from master to follower
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS copied_positions (
+        id TEXT PRIMARY KEY,
+        copy_relationship_id TEXT NOT NULL,
+        master_position_id TEXT,  -- From broker API
+        follower_position_id TEXT,  -- From broker API
+        symbol TEXT NOT NULL,  -- e.g., 'EURUSD', 'GBPJPY'
+        position_type TEXT NOT NULL,  -- 'BUY' or 'SELL'
+        lot_size REAL NOT NULL,
+        entry_price REAL,
+        exit_price REAL,
+        stop_loss REAL,
+        take_profit REAL,
+        profit_loss REAL DEFAULT 0,  -- USD
+        commission REAL DEFAULT 0,  -- USD
+        swap REAL DEFAULT 0,  -- USD
+        status TEXT DEFAULT 'open',  -- open/closed/failed
+        opened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        closed_at DATETIME,
+        error_message TEXT,
+        FOREIGN KEY (copy_relationship_id) REFERENCES copy_relationships(id)
+      )
+    `);
+
+    // EARNINGS LOG: Track provider earnings from followers
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS earnings_log (
+        id TEXT PRIMARY KEY,
+        provider_id TEXT NOT NULL,
+        follower_user_id TEXT NOT NULL,
+        amount_idr INTEGER NOT NULL,
+        amount_usd REAL,
+        type TEXT NOT NULL,  -- 'subscription' or 'profit_share'
+        period TEXT,  -- e.g., '2026-02' for subscription month
+        related_position_id TEXT,  -- For profit_share, reference to copied_positions
+        status TEXT DEFAULT 'pending',  -- pending/completed/failed
+        paid_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (provider_id) REFERENCES signal_providers(id),
+        FOREIGN KEY (follower_user_id) REFERENCES users(id),
+        FOREIGN KEY (related_position_id) REFERENCES copied_positions(id)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
