@@ -49,14 +49,14 @@ export default function ProviderDashboardPage() {
     if (!provider) return null;
 
     return (
-        <main className="min-h-screen bg-[#000000] text-white">
+        <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
             <Navbar />
 
-            <div className="pt-32 pb-20 container-wide">
+            <div className="pt-32 pb-20 container mx-auto px-4">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Provider Dashboard</h1>
-                        <p className="text-gray-400">Manage your copy trading profile and earnings</p>
+                        <h1 className="text-3xl font-bold mb-2 text-[var(--text-primary)]">Provider Dashboard</h1>
+                        <p className="text-[var(--text-secondary)]">Manage your copy trading profile and earnings</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium border ${provider.is_active ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
@@ -68,25 +68,25 @@ export default function ProviderDashboardPage() {
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
-                        <div className="text-gray-400 text-sm mb-2">Total Followers</div>
-                        <div className="text-3xl font-bold text-white">{provider.total_followers}</div>
+                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
+                        <div className="text-[var(--text-secondary)] text-sm mb-2">Total Followers</div>
+                        <div className="text-3xl font-bold text-[var(--text-primary)]">{provider.total_followers}</div>
                     </div>
-                    <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
-                        <div className="text-gray-400 text-sm mb-2">Total Earnings</div>
+                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
+                        <div className="text-[var(--text-secondary)] text-sm mb-2">Total Earnings</div>
                         <div className="text-3xl font-bold text-[var(--accent-blue)]">
                             {format.number(provider.total_earnings || 0, { style: 'currency', currency: 'IDR' })}
                         </div>
                     </div>
-                    <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
-                        <div className="text-gray-400 text-sm mb-2">Win Rate</div>
-                        <div className="text-3xl font-bold text-green-400">
+                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
+                        <div className="text-[var(--text-secondary)] text-sm mb-2">Win Rate</div>
+                        <div className="text-3xl font-bold text-green-500">
                             {(provider.win_rate || 0).toFixed(1)}%
                         </div>
                     </div>
-                    <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
-                        <div className="text-gray-400 text-sm mb-2">Total Profit (USD)</div>
-                        <div className="text-3xl font-bold text-white">
+                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
+                        <div className="text-[var(--text-secondary)] text-sm mb-2">Total Profit (USD)</div>
+                        <div className="text-3xl font-bold text-[var(--text-primary)]">
                             ${(provider.total_profit_usd || 0).toFixed(2)}
                         </div>
                     </div>
@@ -96,44 +96,44 @@ export default function ProviderDashboardPage() {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Profile Settings */}
-                        <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
-                            <h3 className="text-lg font-semibold mb-4 text-white">Profile Settings</h3>
+                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
+                            <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">Profile Settings</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Display Name</label>
+                                    <label className="block text-sm text-[var(--text-secondary)] mb-1">Display Name</label>
                                     <input
                                         type="text"
                                         value={provider.display_name}
                                         readOnly
-                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white opacity-60 cursor-not-allowed"
+                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Bio</label>
+                                    <label className="block text-sm text-[var(--text-secondary)] mb-1">Bio</label>
                                     <textarea
                                         value={provider.bio || ''}
                                         readOnly
                                         rows={3}
-                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white opacity-60 cursor-not-allowed"
+                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
                                     />
                                 </div>
                                 <div className="flex gap-4">
                                     <div className="w-1/2">
-                                        <label className="block text-sm text-gray-400 mb-1">Subscription Fee</label>
+                                        <label className="block text-sm text-[var(--text-secondary)] mb-1">Subscription Fee</label>
                                         <input
                                             type="text"
                                             value={format.number(provider.subscription_fee, { style: 'currency', currency: 'IDR' })}
                                             readOnly
-                                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white opacity-60 cursor-not-allowed"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
                                         />
                                     </div>
                                     <div className="w-1/2">
-                                        <label className="block text-sm text-gray-400 mb-1">Profit Share</label>
+                                        <label className="block text-sm text-[var(--text-secondary)] mb-1">Profit Share</label>
                                         <input
                                             type="text"
                                             value={provider.profit_sharing_percent + '%'}
                                             readOnly
-                                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white opacity-60 cursor-not-allowed"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -145,15 +145,15 @@ export default function ProviderDashboardPage() {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         {/* Broker Info */}
-                        <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
-                            <h3 className="text-lg font-semibold mb-4 text-white">Broker Connection</h3>
-                            <div className="flex items-center justify-between py-3 border-b border-white/5">
-                                <span className="text-gray-400">Broker</span>
-                                <span className="text-white">{provider.broker_name || 'Exness'}</span>
+                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
+                            <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">Broker Connection</h3>
+                            <div className="flex items-center justify-between py-3 border-b border-[var(--border-light)]">
+                                <span className="text-[var(--text-secondary)]">Broker</span>
+                                <span className="text-[var(--text-primary)]">{provider.broker_name || 'Exness'}</span>
                             </div>
-                            <div className="flex items-center justify-between py-3 border-b border-white/5">
-                                <span className="text-gray-400">Account ID</span>
-                                <span className="text-white">{provider.broker_account_id}</span>
+                            <div className="flex items-center justify-between py-3 border-b border-[var(--border-light)]">
+                                <span className="text-[var(--text-secondary)]">Account ID</span>
+                                <span className="text-[var(--text-primary)]">{provider.broker_account_id}</span>
                             </div>
                             <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm text-center">
                                 ● Connected
