@@ -34,7 +34,7 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 bg-black/20 backdrop-blur-sm"
                     />
 
                     {/* Modal Content */}
@@ -42,19 +42,19 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-md bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 shadow-2xl z-50 max-h-[90vh] overflow-y-auto"
+                        className="relative w-full max-w-md bg-white border border-[var(--border-light)] rounded-2xl p-6 shadow-2xl z-50 max-h-[90vh] overflow-y-auto"
                     >
-                        <h2 className="text-xl font-bold text-white mb-2">
+                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">
                             Copy {provider?.display_name}
                         </h2>
-                        <p className="text-sm text-gray-400 mb-6">
+                        <p className="text-sm text-[var(--text-secondary)] mb-6">
                             Configure your copy trading settings. You can stop copying at any time.
                         </p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Allocation */}
                             <div>
-                                <label className="flex justify-between text-sm text-gray-300 mb-2">
+                                <label className="flex justify-between text-sm text-[var(--text-secondary)] mb-2">
                                     <span>Allocated Capital (USD)</span>
                                     <span className="text-[var(--accent-blue)] font-medium">${allocation}</span>
                                 </label>
@@ -65,9 +65,9 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
                                     step="10"
                                     value={allocation}
                                     onChange={(e) => setAllocation(Number(e.target.value))}
-                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]"
+                                    className="w-full h-2 bg-[var(--bg-secondary)] rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]"
                                 />
-                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1">
                                     <span>$10</span>
                                     <span>$5,000</span>
                                 </div>
@@ -75,9 +75,9 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
 
                             {/* Risk Multiplier */}
                             <div>
-                                <label className="flex justify-between text-sm text-gray-300 mb-2">
+                                <label className="flex justify-between text-sm text-[var(--text-secondary)] mb-2">
                                     <span>Risk Multiplier</span>
-                                    <span className={`font-medium ${riskMultiplier > 1 ? 'text-red-400' : 'text-green-400'}`}>
+                                    <span className={`font-medium ${riskMultiplier > 1 ? 'text-red-500' : 'text-green-500'}`}>
                                         {riskMultiplier}x
                                     </span>
                                 </label>
@@ -88,9 +88,9 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
                                     step="0.1"
                                     value={riskMultiplier}
                                     onChange={(e) => setRiskMultiplier(Number(e.target.value))}
-                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]"
+                                    className="w-full h-2 bg-[var(--bg-secondary)] rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]"
                                 />
-                                <p className="text-xs text-gray-500 mt-2">
+                                <p className="text-xs text-[var(--text-muted)] mt-2">
                                     0.5x = Lower risk (half lot sizes)<br />
                                     2.0x = Higher risk (double lot sizes)
                                 </p>
@@ -98,9 +98,9 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
 
                             {/* Max Drawdown Protection */}
                             <div>
-                                <label className="flex justify-between text-sm text-gray-300 mb-2">
+                                <label className="flex justify-between text-sm text-[var(--text-secondary)] mb-2">
                                     <span>Max Drawdown Stop</span>
-                                    <span className="text-red-400 font-medium">{maxDrawdown}%</span>
+                                    <span className="text-red-500 font-medium">{maxDrawdown}%</span>
                                 </label>
                                 <input
                                     type="range"
@@ -109,26 +109,26 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
                                     step="1"
                                     value={maxDrawdown}
                                     onChange={(e) => setMaxDrawdown(Number(e.target.value))}
-                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-red-500"
+                                    className="w-full h-2 bg-[var(--bg-secondary)] rounded-lg appearance-none cursor-pointer accent-red-500"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-[var(--text-muted)] mt-1">
                                     Automatically stop copying if equity drops by this percentage.
                                 </p>
                             </div>
 
                             {/* Fee Summary */}
-                            <div className="p-4 bg-black/20 rounded-xl border border-white/5 space-y-2">
+                            <div className="p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-light)] space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">Subscription Fee</span>
-                                    <span className="text-white">
+                                    <span className="text-[var(--text-secondary)]">Subscription Fee</span>
+                                    <span className="text-[var(--text-primary)] font-medium">
                                         {provider?.subscription_fee > 0
                                             ? format.number(provider.subscription_fee, { style: 'currency', currency: 'IDR' }) + '/mo'
                                             : 'Free'}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">Profit Share</span>
-                                    <span className="text-white">{provider?.profit_sharing_percent}%</span>
+                                    <span className="text-[var(--text-secondary)]">Profit Share</span>
+                                    <span className="text-[var(--text-primary)] font-medium">{provider?.profit_sharing_percent}%</span>
                                 </div>
                             </div>
 
@@ -136,7 +136,7 @@ export default function FollowModal({ isOpen, onClose, provider, onConfirm }: Fo
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+                                    className="flex-1 py-3 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--border-light)] text-[var(--text-primary)] font-medium transition-colors"
                                 >
                                     Cancel
                                 </button>

@@ -79,7 +79,7 @@ export default function ProviderDetailPage() {
     if (!provider) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Provider not found</div>;
 
     return (
-        <main className="min-h-screen bg-[#000000] text-white">
+        <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
             <Navbar />
 
             {notification && (
@@ -93,23 +93,23 @@ export default function ProviderDetailPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
                     <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px]">
-                            <div className="w-full h-full rounded-full bg-[#1c1c1e] flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] shadow-lg">
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                                 {provider.user_image ? (
                                     <img src={provider.user_image} alt={provider.display_name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-3xl font-bold text-white">{provider.display_name.charAt(0)}</span>
+                                    <span className="text-3xl font-bold text-[var(--accent-blue)]">{provider.display_name.charAt(0)}</span>
                                 )}
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white mb-2">{provider.display_name}</h1>
-                            <div className="flex items-center gap-4 text-sm text-gray-400">
+                            <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">{provider.display_name}</h1>
+                            <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">
                                 <span>{provider.broker_name || 'Multi-Broker'}</span>
-                                <span className="w-1 h-1 rounded-full bg-gray-600"></span>
+                                <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]"></span>
                                 <span>{provider.total_followers} Copiers</span>
-                                <span className="w-1 h-1 rounded-full bg-gray-600"></span>
-                                <span className="text-green-400">{((provider.win_rate || 0)).toFixed(1)}% Win Rate</span>
+                                <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]"></span>
+                                <span className="text-green-600 font-medium">{((provider.win_rate || 0)).toFixed(1)}% Win Rate</span>
                             </div>
                         </div>
                     </div>
@@ -127,18 +127,18 @@ export default function ProviderDetailPage() {
                     {/* Left Column: Chart & Bio */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Equity Chart */}
-                        <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
+                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
                             <h3 className="text-lg font-semibold mb-6">Performance Growth</h3>
                             <EquityChart data={[]} />
                         </div>
 
                         {/* Recent Trades */}
-                        <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
+                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
                             <h3 className="text-lg font-semibold mb-4">Recent Trades</h3>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="text-gray-500 border-b border-white/5">
+                                        <tr className="text-[var(--text-secondary)] border-b border-[var(--border-light)]">
                                             <th className="text-left py-3 px-4 font-medium">Symbol</th>
                                             <th className="text-left py-3 px-4 font-medium">Type</th>
                                             <th className="text-right py-3 px-4 font-medium">Entry</th>
@@ -148,7 +148,7 @@ export default function ProviderDetailPage() {
                                     <tbody>
                                         {recentTrades.length > 0 ? (
                                             recentTrades.map((trade: any) => (
-                                                <tr key={trade.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                                                <tr key={trade.id} className="border-b border-[var(--border-light)] last:border-0 hover:bg-[var(--bg-secondary)] transition-colors">
                                                     <td className="py-3 px-4 font-medium">{trade.symbol}</td>
                                                     <td className={`py-3 px-4 ${trade.position_type === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
                                                         {trade.position_type}
@@ -175,32 +175,32 @@ export default function ProviderDetailPage() {
                     {/* Right Column: Stats & Bio */}
                     <div className="space-y-6">
                         {/* Key Stats */}
-                        <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
+                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
                             <h3 className="text-lg font-semibold mb-4">Statistics</h3>
                             <div className="space-y-4">
-                                <div className="flex justify-between py-2 border-b border-white/5">
-                                    <span className="text-gray-400">Total Profit</span>
-                                    <span className="text-white font-medium">${(provider.total_profit_usd || 0).toFixed(2)}</span>
+                                <div className="flex justify-between py-2 border-b border-[var(--border-light)]">
+                                    <span className="text-[var(--text-secondary)]">Total Profit</span>
+                                    <span className="text-[var(--text-primary)] font-medium">${(provider.total_profit_usd || 0).toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between py-2 border-b border-white/5">
-                                    <span className="text-gray-400">Max Drawdown</span>
-                                    <span className="text-red-400 font-medium">{(provider.max_drawdown || 0).toFixed(1)}%</span>
+                                <div className="flex justify-between py-2 border-b border-[var(--border-light)]">
+                                    <span className="text-[var(--text-secondary)]">Max Drawdown</span>
+                                    <span className="text-red-500 font-medium">{(provider.max_drawdown || 0).toFixed(1)}%</span>
                                 </div>
-                                <div className="flex justify-between py-2 border-b border-white/5">
-                                    <span className="text-gray-400">Total Trades</span>
-                                    <span className="text-white font-medium">{provider.total_trades || 0}</span>
+                                <div className="flex justify-between py-2 border-b border-[var(--border-light)]">
+                                    <span className="text-[var(--text-secondary)]">Total Trades</span>
+                                    <span className="text-[var(--text-primary)] font-medium">{provider.total_trades || 0}</span>
                                 </div>
-                                <div className="flex justify-between py-2 border-b border-white/5">
-                                    <span className="text-gray-400">Sharpe Ratio</span>
-                                    <span className="text-white font-medium">{(provider.sharpe_ratio || 0).toFixed(2)}</span>
+                                <div className="flex justify-between py-2 border-b border-[var(--border-light)]">
+                                    <span className="text-[var(--text-secondary)]">Sharpe Ratio</span>
+                                    <span className="text-[var(--text-primary)] font-medium">{(provider.sharpe_ratio || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Bio */}
-                        <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-white/5">
+                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
                             <h3 className="text-lg font-semibold mb-2">Strategy Description</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed">
+                            <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
                                 {provider.bio || 'No description provided.'}
                             </p>
                         </div>

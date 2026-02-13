@@ -12,7 +12,7 @@ export default function EquityChart({ data, color = '#2962FF' }: { data: any[], 
         const chart = createChart(chartContainerRef.current, {
             layout: {
                 background: { type: ColorType.Solid, color: 'transparent' },
-                textColor: '#d1d5db',
+                textColor: '#1D1D1F',
             },
             grid: {
                 vertLines: { color: 'rgba(42, 46, 57, 0)' },
