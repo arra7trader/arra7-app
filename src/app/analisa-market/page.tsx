@@ -146,7 +146,7 @@ export default function AnalisaMarketPage() {
     const [error, setError] = useState<string | null>(null);
     const [newsHtml, setNewsHtml] = useState<string>('');
     const [quotaStatus, setQuotaStatus] = useState<QuotaStatus | null>(null);
-    const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
+    const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null); // Store end timestamp
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -160,26 +160,49 @@ export default function AnalisaMarketPage() {
         trackLocation();
     }, []);
 
-    // Countdown Timer
+    // Timestamp-based Countdown Timer (works even when tab is inactive)
     useEffect(() => {
-        if (cooldownSeconds > 0) {
-            const timer = setInterval(() => {
-                setCooldownSeconds((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-            return () => clearInterval(timer);
-        }
-    }, [cooldownSeconds]);
+        if (!cooldownEndTime) return;
+
+        const updateCountdown = () => {
+            const now = Date.now();
+            const remaining = Math.max(0, Math.ceil((cooldownEndTime - now) / 1000));
+
+            if (remaining === 0) {
+                setCooldownEndTime(null);
+            }
+        };
+
+        // Update immediately
+        updateCountdown();
+
+        // Update every second
+        const timer = setInterval(updateCountdown, 1000);
+        return () => clearInterval(timer);
+    }, [cooldownEndTime]);
+
+    // Calculate current cooldown seconds for display
+    const cooldownSeconds = cooldownEndTime
+        ? Math.max(0, Math.ceil((cooldownEndTime - Date.now()) / 1000))
+        : 0;
 
     const formatCooldown = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m}m ${s}s`;
+        if (seconds >= 86400) {
+            // For 1 day or more, show days + hours
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            return `${days}d ${hours}h`;
+        } else if (seconds >= 3600) {
+            // For 1 hour or more, show hours + minutes
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        } else {
+            // Less than 1 hour, show minutes + seconds
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}m ${s}s`;
+        }
     };
 
     const trackLocation = async () => {
@@ -253,7 +276,8 @@ export default function AnalisaMarketPage() {
                 }
             } else {
                 if (data.waitTimeSeconds) {
-                    setCooldownSeconds(data.waitTimeSeconds);
+                    // Set cooldown end time based on server's wait time
+                    setCooldownEndTime(Date.now() + (data.waitTimeSeconds * 1000));
                     setError(null);
                 } else {
                     const message = data.message || 'Analysis failed';

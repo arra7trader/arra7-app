@@ -10,6 +10,13 @@ export const QUOTA_LIMITS = {
 // PROMO quota (for APK download promotion)
 export const PROMO_QUOTA_LIMIT = 10; // 10 analyses per day during promo
 
+// Cooldown duration for each membership tier (in milliseconds)
+export const COOLDOWN_DURATION = {
+    BASIC: 24 * 60 * 60 * 1000,  // 24 hours (1 day) - matches daily quota limit
+    PRO: 5 * 60 * 1000,          // 5 minutes - standard rate limit
+    VVIP: 5 * 60 * 1000,         // 5 minutes - same as PRO
+} as const;
+
 // Stock Analysis Quota limits (same as Forex)
 export const STOCK_QUOTA_LIMITS = {
     BASIC: 1, // 1x Trial Lifetime
@@ -176,26 +183,25 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
         };
     }
 
-    // Check Rate Limit (5 Minutes Cooldown) for PRO and VVIP
-    if (status.membership === 'PRO' || status.membership === 'VVIP') {
-        const lastAnalysis = await getLastAnalysisTime(userId, 'forex');
-        if (lastAnalysis) {
-            const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
-            const now = new Date().getTime();
-            const lastTime = lastAnalysis.getTime();
-            const timeDiff = now - lastTime;
+    // Check Rate Limit (Cooldown applies to ALL membership tiers)
+    const lastAnalysis = await getLastAnalysisTime(userId, 'forex');
+    if (lastAnalysis) {
+        // Get cooldown duration based on membership tier
+        const COOLDOWN_MS = COOLDOWN_DURATION[status.membership as Membership] || COOLDOWN_DURATION.BASIC;
+        const now = new Date().getTime();
+        const lastTime = lastAnalysis.getTime();
+        const timeDiff = now - lastTime;
 
-            if (timeDiff < COOLDOWN_MS) {
-                const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
-                const minutes = Math.floor(waitTime / 60);
-                const seconds = waitTime % 60;
-                return {
-                    allowed: false,
-                    message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
-                    quotaStatus: status,
-                    waitTimeSeconds: waitTime,
-                };
-            }
+        if (timeDiff < COOLDOWN_MS) {
+            const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
+            const minutes = Math.floor(waitTime / 60);
+            const seconds = waitTime % 60;
+            return {
+                allowed: false,
+                message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
+                quotaStatus: status,
+                waitTimeSeconds: waitTime,
+            };
         }
     }
 
@@ -381,10 +387,12 @@ export async function checkStockQuota(userId: string): Promise<{
         };
     }
 
-    // Check Rate Limit (5 Minutes Cooldown)
+    // Check Rate Limit (Cooldown applies to ALL membership tiers)
+    const { membership } = await getUserMembership(userId);
     const lastAnalysis = await getLastAnalysisTime(userId, 'stock');
     if (lastAnalysis) {
-        const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+        // Get cooldown duration based on membership tier
+        const COOLDOWN_MS = COOLDOWN_DURATION[membership as Membership] || COOLDOWN_DURATION.BASIC;
         const now = new Date().getTime();
         const lastTime = lastAnalysis.getTime();
         const timeDiff = now - lastTime;
