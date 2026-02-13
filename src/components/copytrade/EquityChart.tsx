@@ -30,7 +30,7 @@ export default function EquityChart({ data, color = '#2962FF' }: { data: any[], 
             handleScale: false,
         });
 
-        const areaSeries = chart.addAreaSeries({
+        const areaSeries = (chart as any).addAreaSeries({
             lineColor: color,
             topColor: color,
             bottomColor: 'rgba(41, 98, 255, 0)',
