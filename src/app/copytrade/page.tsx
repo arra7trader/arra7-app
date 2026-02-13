@@ -40,7 +40,7 @@ export default function CopyTradePage() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[var(--accent-blue)] selection:text-white">
             <Navbar />
 
-            <div className="pt-32 pb-20 container-wide">
+            <div className="pt-48 pb-20 container mx-auto px-4">
                 {/* Hero Section */}
                 <div className="text-center mb-16 relative">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[var(--accent-blue)]/10 blur-[100px] rounded-full pointer-events-none" />
