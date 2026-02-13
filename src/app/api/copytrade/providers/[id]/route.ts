@@ -4,14 +4,15 @@ import getTursoClient from '@/lib/turso';
 // GET /api/copytrade/providers/[id] - Get provider details with statistics
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const turso = getTursoClient();
         if (!turso) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
         }
-        const providerId = params.id;
+        const { id } = await params;
+        const providerId = id;
 
         // Get provider with statistics
         const result = await turso.execute({
