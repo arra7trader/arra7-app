@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import ProviderCard from '@/components/copytrade/ProviderCard';
 
@@ -71,8 +72,8 @@ export default function CopyTradePage() {
                                 key={tab.id}
                                 onClick={() => setFilter(tab.id)}
                                 className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${filter === tab.id
-                                        ? 'bg-[var(--accent-blue)] text-white shadow-lg shadow-blue-500/20'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    ? 'bg-[var(--accent-blue)] text-white shadow-lg shadow-blue-500/20'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
                                 {tab.label}
