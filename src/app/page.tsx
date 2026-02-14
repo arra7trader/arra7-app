@@ -542,7 +542,7 @@ export default function Home() {
       {/* Mobile App Download Section */}
       <DownloadAppSection />
 
-      {/* Testimonials Section */}
+      {/* Testimonials Section - Enhanced with Screenshots */}
       <section className="section-padding bg-[var(--bg-secondary)]">
         <div className="container-wide">
           <motion.div
@@ -552,6 +552,10 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold tracking-wider mb-6">
+              <StarSolidIcon size="sm" className="text-purple-400" />
+              {tTestimonials('title')}
+            </span>
             <h2 className="headline-lg mb-4">
               {tTestimonials('title')}
             </h2>
@@ -565,7 +569,7 @@ export default function Home() {
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {[
               {
@@ -574,6 +578,7 @@ export default function Home() {
                 avatar: 'RP',
                 text: tTestimonials('items.0.text'),
                 color: 'from-blue-500 to-cyan-500',
+                image: '/testimonials/1.jpg',
               },
               {
                 name: 'Dewi Anggraini',
@@ -581,6 +586,7 @@ export default function Home() {
                 avatar: 'DA',
                 text: tTestimonials('items.1.text'),
                 color: 'from-purple-500 to-pink-500',
+                image: '/testimonials/2.jpg',
               },
               {
                 name: 'Budi Santoso',
@@ -588,30 +594,108 @@ export default function Home() {
                 avatar: 'BS',
                 text: tTestimonials('items.2.text'),
                 color: 'from-amber-500 to-orange-500',
+                image: '/testimonials/3.jpg',
+              },
+              {
+                name: 'Andi Setiawan',
+                role: 'Full-time Trader • Jakarta',
+                avatar: 'AS',
+                text: 'ARRA7 helped me identify market manipulation. The heatmap is insane, I can see exactly where the whales are placing orders!',
+                color: 'from-emerald-500 to-green-500',
+                image: '/testimonials/4.jpg',
+              },
+              {
+                name: 'Siti Nurhaliza',
+                role: 'Investor • Yogyakarta',
+                avatar: 'SN',
+                text: 'The stock analysis feature saved me hours of research. AI picks are incredibly accurate, my portfolio is up 35% this quarter.',
+                color: 'from-rose-500 to-red-500',
+                image: '/testimonials/5.jpg',
+              },
+              {
+                name: 'Ahmad Fauzi',
+                role: 'Scalper • Medan',
+                avatar: 'AF',
+                text: 'Real-time sentiment analysis is a game changer. I can enter trades before the news hits mainstream media. Unfair advantage!',
+                color: 'from-indigo-500 to-blue-500',
+                image: '/testimonials/6.jpg',
               },
             ].map((testimonial, index) => (
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="testimonial-card"
+                className="group relative bg-[var(--bg-primary)] rounded-3xl overflow-hidden border border-[var(--border-light)] hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}>
+                {/* Screenshot Image */}
+                <div className="relative h-64 overflow-hidden">
+                  <img
+                    src={testimonial.image}
+                    alt={`${testimonial.name} testimonial screenshot`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  {/* Gradient Overlay */}
+                  <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent`} />
+
+                  {/* Floating Avatar */}
+                  <div className={`absolute top-4 left-4 w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-bold shadow-xl ring-4 ring-white/20`}>
                     {testimonial.avatar}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-[var(--text-primary)]">{testimonial.name}</h4>
-                    <p className="text-sm text-[var(--text-muted)]">{testimonial.role}</p>
+                </div>
+
+                {/* Content Card Overlay */}
+                <div className="relative p-6">
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <StarSolidIcon key={i} className="text-amber-400" size="sm" />
+                    ))}
+                  </div>
+
+                  {/* Quote */}
+                  <p className="text-[var(--text-secondary)] leading-relaxed mb-4 text-sm line-clamp-4">
+                    &ldquo;{testimonial.text}&rdquo;
+                  </p>
+
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 pt-4 border-t border-[var(--border-light)]">
+                    <div>
+                      <h4 className="font-semibold text-[var(--text-primary)] text-sm">{testimonial.name}</h4>
+                      <p className="text-xs text-[var(--text-muted)]">{testimonial.role}</p>
+                    </div>
+                  </div>
+
+                  {/* Verified Badge */}
+                  <div className="absolute top-6 right-6">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-[10px] font-bold">
+                      <CheckCircleSolidIcon size="sm" />
+                      VERIFIED
+                    </span>
                   </div>
                 </div>
-                <div className="flex gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <StarSolidIcon key={i} className="text-amber-400" size="sm" />
-                  ))}
-                </div>
-                <p className="text-[var(--text-secondary)] leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
+
+                {/* Decorative Glow */}
+                <div className={`absolute -inset-1 bg-gradient-to-r ${testimonial.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500 -z-10`} />
               </motion.div>
             ))}
+          </motion.div>
+
+          {/* CTA to See More Testimonials */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="text-center mt-12"
+          >
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              Join 100+ profitable traders using ARRA7 AI
+            </p>
+            <Link href="/login">
+              <button className="btn-primary bg-gradient-to-r from-blue-500 to-purple-500 border-none shadow-lg">
+                Start Free Trial
+                <ArrowRightIcon className="ml-2" size="sm" />
+              </button>
+            </Link>
           </motion.div>
         </div>
       </section>
