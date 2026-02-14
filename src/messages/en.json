@@ -14,6 +14,13 @@
     "portfolio": "Portfolio",
     "socialFeed": "Social Feed"
   },
+  "maintenance": {
+    "title": "Under Maintenance",
+    "message": "is currently under maintenance.",
+    "info": "We're working hard to improve this feature. Please check back soon!",
+    "button": "Got it",
+    "badge": "MAINTENANCE"
+  },
   "hero": {
     "badge": "Neural Engine v7.0 Live",
     "headline": "Trading with the Power of",

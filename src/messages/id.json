@@ -14,6 +14,13 @@
         "portfolio": "Portfolio",
         "socialFeed": "Feed Sosial"
     },
+    "maintenance": {
+        "title": "Sedang Maintenance",
+        "message": "sedang dalam perbaikan.",
+        "info": "Kami sedang bekerja keras untuk meningkatkan fitur ini. Silakan cek kembali nanti!",
+        "button": "Mengerti",
+        "badge": "MAINTENANCE"
+    },
     "hero": {
         "badge": "Neural Engine v7.0 Live",
         "headline": "Trading dengan Kekuatan",
