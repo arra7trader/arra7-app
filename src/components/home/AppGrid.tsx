@@ -33,7 +33,6 @@ export default function AppGrid() {
             icon: <FireIcon className="w-8 h-8 text-amber-500" />,
             href: '/dom-arra',
             color: 'bg-amber-50 group-hover:bg-amber-100',
-            isMaintenance: true, // ← ALL ITEMS IN MAINTENANCE
         },
         {
             id: 'forex',
@@ -41,7 +40,6 @@ export default function AppGrid() {
             icon: <PresentationChartLineIcon className="w-8 h-8 text-blue-500" />,
             href: '/analisa-market',
             color: 'bg-blue-50 group-hover:bg-blue-100',
-            isMaintenance: true,
         },
         {
             id: 'stock',
@@ -49,7 +47,6 @@ export default function AppGrid() {
             icon: <ChartBarIcon className="w-8 h-8 text-green-500" />,
             href: '/analisa-saham',
             color: 'bg-green-50 group-hover:bg-green-100',
-            isMaintenance: true,
         },
         {
             id: 'doctor',
@@ -58,7 +55,6 @@ export default function AppGrid() {
             icon: <HeartIcon className="w-8 h-8 text-rose-500" />,
             href: '/ai-trade-doctor',
             color: 'bg-rose-50 group-hover:bg-rose-100',
-            isMaintenance: true,
         },
         {
             id: 'sentiment',
@@ -67,7 +63,6 @@ export default function AppGrid() {
             icon: <NewspaperIcon className="w-8 h-8 text-purple-500" />,
             href: '/sentiment-sniffer',
             color: 'bg-purple-50 group-hover:bg-purple-100',
-            isMaintenance: true,
         },
         {
             id: 'kanji',
@@ -75,8 +70,7 @@ export default function AppGrid() {
             icon: <CurrencyYenIcon className="w-8 h-8 text-red-600" />,
             href: '/fibonacci-kanji',
             color: 'bg-red-50 group-hover:bg-red-100',
-            isMaintenance: true,
-            isNew: false, // Remove NEW badge when in maintenance
+            isNew: true,
         },
         {
             id: 'journal',
@@ -84,7 +78,6 @@ export default function AppGrid() {
             icon: <BookOpenIcon className="w-8 h-8 text-cyan-500" />,
             href: '/journal',
             color: 'bg-cyan-50 group-hover:bg-cyan-100',
-            isMaintenance: true,
         },
         {
             id: 'portfolio',
@@ -92,7 +85,6 @@ export default function AppGrid() {
             icon: <BriefcaseIcon className="w-8 h-8 text-indigo-500" />,
             href: '/portfolio',
             color: 'bg-indigo-50 group-hover:bg-indigo-100',
-            isMaintenance: true,
         },
         {
             id: 'social',
@@ -100,7 +92,6 @@ export default function AppGrid() {
             icon: <UserGroupIcon className="w-8 h-8 text-teal-500" />,
             href: '/social',
             color: 'bg-teal-50 group-hover:bg-teal-100',
-            isMaintenance: true,
         },
     ];
 
@@ -117,65 +108,31 @@ export default function AppGrid() {
                 className="w-full max-w-4xl mx-auto mt-10"
             >
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 p-6 bg-white/50 dark:bg-black/20 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
-                    {apps.map((app, index) => {
-                        if (app.isMaintenance) {
-                            return (
-                                <button
-                                    key={app.id}
-                                    onClick={() => handleMaintenanceClick(app.label)}
-                                    className="group cursor-not-allowed"
-                                >
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 relative opacity-60 grayscale"
-                                    >
-                                        <div className={`w-16 h-16 rounded-2xl ${app.color} flex items-center justify-center mb-3 shadow-md relative`}>
-                                            {app.icon}
-                                            {/* Wrench overlay */}
-                                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
-                                                <WrenchScrewdriverIcon className="w-4 h-4 text-white" />
-                                            </div>
-                                        </div>
-                                        <span className="text-sm font-semibold text-[var(--text-primary)] text-center line-clamp-1">
-                                            {app.label}
-                                        </span>
-                                        {/* Maintenance Badge */}
-                                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
-                                            {tMaintenance('badge')}
-                                        </span>
-                                    </motion.div>
-                                </button>
-                            );
-                        }
-
-                        // Normal app (not in maintenance)
-                        return (
-                            <Link key={app.id} href={app.href} className="group">
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 relative"
-                                >
-                                    <div className={`w-16 h-16 rounded-2xl ${app.color} flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-all`}>
-                                        {app.icon}
-                                    </div>
-                                    <span className="text-sm font-semibold text-[var(--text-primary)] text-center line-clamp-1">
-                                        {app.label}
+                    {apps.map((app, index) => (
+                        <Link key={app.id} href={app.href} className="group">
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 relative"
+                            >
+                                <div className={`w-16 h-16 rounded-2xl ${app.color} flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-all`}>
+                                    {app.icon}
+                                </div>
+                                <span className="text-sm font-semibold text-[var(--text-primary)] text-center line-clamp-1">
+                                    {app.label}
+                                </span>
+                                {app.isNew && (
+                                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                                        NEW
                                     </span>
-                                    {app.isNew && (
-                                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
-                                            NEW
-                                        </span>
-                                    )}
-                                </motion.div>
-                            </Link>
-                        );
-                    })}
+                                )}
+                            </motion.div>
+                        </Link>
+                    ))}
                 </div>
             </motion.div>
 
-            {/* Maintenance Modal */}
+            {/* Maintenance Modal (kept for future use) */}
             <MaintenanceModal
                 isOpen={maintenanceModal.isOpen}
                 onClose={() => setMaintenanceModal({ isOpen: false, featureName: '' })}
