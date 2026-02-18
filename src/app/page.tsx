@@ -293,10 +293,6 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center section-padding pt-32 overflow-hidden">
-        {/* Daily Performance Section (Absolute Top) */}
-        <div className="absolute top-20 left-0 right-0 z-20">
-          <DailyPerformanceSection />
-        </div>
 
         {/* Neural Network Background */}
         <NeuralBackground />
@@ -370,6 +366,11 @@ export default function Home() {
 
           {/* App Grid Launcher - Replaces CTA Buttons */}
           <AppGrid />
+
+          {/* Daily Performance Section - Placed below menu buttons */}
+          <div className="mt-12 mb-8 relative z-20">
+            <DailyPerformanceSection />
+          </div>
 
           {/* Video Showcase - Moved here for better visibility */}
           <motion.div

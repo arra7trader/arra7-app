@@ -7,7 +7,8 @@ interface PerformanceData {
     today: {
         accuracy: string;
         total: number;
-        avgConfidence: string;
+        totalPips?: string;
+        avgConfidence?: string;
     };
     lastHour: {
         total: number;
@@ -60,29 +61,27 @@ export default function DailyPerformanceSection() {
     if (loading) return null;
 
     return (
-        <section className="w-full bg-slate-950 border-y border-slate-800 relative overflow-hidden">
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none"></div>
+        <section className="w-full bg-gradient-to-b from-white/50 to-white backdrop-blur-sm border-b border-[var(--border-light)] relative overflow-hidden">
 
-            <div className="container-wide py-4 md:py-6">
+            <div className="container-wide py-4">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
 
                     {/* Header & Live Status */}
-                    <div className="flex items-center gap-4 min-w-[280px]">
+                    <div className="flex items-center gap-4 min-w-[250px]">
                         <div className="relative">
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-ping absolute inset-0"></div>
-                            <div className="w-3 h-3 bg-green-500 rounded-full relative z-10"></div>
+                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping absolute inset-0"></div>
+                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full relative z-10"></div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-slate-400 tracking-wider">LAPORAN HARIAN</h3>
-                            <div className="text-xl font-black text-white leading-none">
-                                PERFORMANCE <span className="text-blue-500">LIVE</span>
+                            <h3 className="text-xs font-bold text-[var(--text-secondary)] tracking-wider">LIVE MARKET</h3>
+                            <div className="text-lg font-black text-[var(--text-primary)] leading-none">
+                                DAILY REPORT
                             </div>
                         </div>
-                        <div className="hidden sm:block h-8 w-px bg-slate-800 mx-2"></div>
-                        <div className="hidden sm:block font-mono text-slate-500 text-sm">
+                        <div className="hidden sm:block h-8 w-px bg-[var(--border-light)] mx-2"></div>
+                        <div className="hidden sm:block font-mono text-[var(--text-secondary)] text-sm">
                             {currentTime} <br />
-                            <span className="text-xs text-slate-600">WIB (UTC+7)</span>
+                            <span className="text-[10px] text-[var(--text-muted)]">WIB (UTC+7)</span>
                         </div>
                     </div>
 
@@ -90,55 +89,50 @@ export default function DailyPerformanceSection() {
                     <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4">
 
                         {/* Accuracy Card */}
-                        <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden group hover:border-blue-500/50 transition-colors">
-                            <div className="absolute top-0 right-0 p-1 opacity-20">
-                                <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Akurasi Hari Ini</span>
-                            <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center relative shadow-sm hover:shadow-md transition-all">
+                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Win Rate</span>
+                            <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">
                                 {data?.today.accuracy}%
                             </div>
-                            <span className="text-[10px] text-green-500 flex items-center gap-1">
-                                <span className="animate-pulse">●</span> High Confidence
+                            <span className="text-[10px] text-green-600 font-medium">
+                                Real-time
                             </span>
                         </div>
 
                         {/* Signals Today */}
-                        <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center group hover:border-purple-500/50 transition-colors">
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Sinyal Hari Ini</span>
-                            <div className="text-2xl md:text-3xl font-bold text-white">
+                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
+                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Total Sinyal</span>
+                            <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">
                                 {data?.today.total}
                             </div>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[10px] text-[var(--text-muted)]">
                                 +{data?.lastHour.total} Jam Terakhir
                             </span>
                         </div>
 
-                        {/* Avg Confidence */}
-                        <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center group hover:border-amber-500/50 transition-colors">
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Confidence AI</span>
-                            <div className="text-2xl md:text-3xl font-bold text-amber-400">
-                                {data?.today.avgConfidence}%
+                        {/* Total Pips (Replaces Confidence) */}
+                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
+                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Total Pips</span>
+                            <div className="text-xl md:text-2xl font-bold text-blue-600">
+                                {data?.today.totalPips || '0'}
                             </div>
-                            <span className="text-[10px] text-slate-500">
-                                Neural Engine v7
+                            <span className="text-[10px] text-[var(--text-muted)]">
+                                Hari Ini
                             </span>
                         </div>
 
                         {/* System Status */}
-                        <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center group hover:border-green-500/50 transition-colors">
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Status Sistem</span>
-                            <div className="text-lg font-bold text-green-400 flex items-center gap-2">
-                                ONLINE
-                                <span className="flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
+                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Server Status</span>
+                            <div className="text-sm font-bold text-green-600 flex items-center gap-2">
+                                CONNECTED
+                                <span className="flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-green-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-600"></span>
                                 </span>
                             </div>
-                            <span className="text-[10px] text-slate-500 font-mono">
-                                T+{secondTicker}d aktif
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
+                                {secondTicker}s latency
                             </span>
                         </div>
                     </div>
