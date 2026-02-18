@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
 import { ArrowRightIcon, ChartIcon, CpuChipIcon, SparklesIcon, StarSolidIcon, RocketIcon, TrophyIcon, BellIcon, CrosshairIcon, CurrencyIcon, CheckCircleSolidIcon, FireIcon, ScaleIcon, SignalIcon, UsersIcon, GlobeIcon } from '@/components/PremiumIcons';
 import DownloadAppSection from '@/components/home/DownloadAppSection';
+import DailyPerformanceSection from '@/components/home/DailyPerformanceSection';
 import AppGrid from '@/components/home/AppGrid';
 import NeuralBackground from '@/components/home/NeuralBackground';
 import VideoShowcase from '@/components/home/VideoShowcase';
@@ -292,6 +293,11 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center section-padding pt-32 overflow-hidden">
+        {/* Daily Performance Section (Absolute Top) */}
+        <div className="absolute top-20 left-0 right-0 z-20">
+          <DailyPerformanceSection />
+        </div>
+
         {/* Neural Network Background */}
         <NeuralBackground />
 
