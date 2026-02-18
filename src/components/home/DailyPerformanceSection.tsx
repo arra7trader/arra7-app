@@ -74,7 +74,7 @@ export default function DailyPerformanceSection() {
                             <div className="w-3 h-3 bg-green-500 rounded-full relative z-10"></div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-slate-400 tracking-wider">DAILY REPORTS</h3>
+                            <h3 className="text-sm font-bold text-slate-400 tracking-wider">LAPORAN HARIAN</h3>
                             <div className="text-xl font-black text-white leading-none">
                                 PERFORMANCE <span className="text-blue-500">LIVE</span>
                             </div>
@@ -82,7 +82,7 @@ export default function DailyPerformanceSection() {
                         <div className="hidden sm:block h-8 w-px bg-slate-800 mx-2"></div>
                         <div className="hidden sm:block font-mono text-slate-500 text-sm">
                             {currentTime} <br />
-                            <span className="text-xs text-slate-600">UTC+7</span>
+                            <span className="text-xs text-slate-600">WIB (UTC+7)</span>
                         </div>
                     </div>
 
@@ -96,7 +96,7 @@ export default function DailyPerformanceSection() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Accuracy Today</span>
+                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Akurasi Hari Ini</span>
                             <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                                 {data?.today.accuracy}%
                             </div>
@@ -107,18 +107,18 @@ export default function DailyPerformanceSection() {
 
                         {/* Signals Today */}
                         <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center group hover:border-purple-500/50 transition-colors">
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Signals Today</span>
+                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Sinyal Hari Ini</span>
                             <div className="text-2xl md:text-3xl font-bold text-white">
                                 {data?.today.total}
                             </div>
                             <span className="text-[10px] text-slate-500">
-                                +{data?.lastHour.total} Last Hour
+                                +{data?.lastHour.total} Jam Terakhir
                             </span>
                         </div>
 
                         {/* Avg Confidence */}
                         <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center group hover:border-amber-500/50 transition-colors">
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">AI Confidence</span>
+                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Confidence AI</span>
                             <div className="text-2xl md:text-3xl font-bold text-amber-400">
                                 {data?.today.avgConfidence}%
                             </div>
@@ -129,7 +129,7 @@ export default function DailyPerformanceSection() {
 
                         {/* System Status */}
                         <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800 flex flex-col items-center justify-center group hover:border-green-500/50 transition-colors">
-                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">System Status</span>
+                            <span className="text-xs text-slate-400 uppercase tracking-wider mb-1">Status Sistem</span>
                             <div className="text-lg font-bold text-green-400 flex items-center gap-2">
                                 ONLINE
                                 <span className="flex h-2 w-2">
@@ -138,7 +138,7 @@ export default function DailyPerformanceSection() {
                                 </span>
                             </div>
                             <span className="text-[10px] text-slate-500 font-mono">
-                                T+{secondTicker}s uptime
+                                T+{secondTicker}d aktif
                             </span>
                         </div>
                     </div>
@@ -165,7 +165,7 @@ export default function DailyPerformanceSection() {
                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${item.action === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                                         {item.action}
                                     </span>
-                                    <span className="text-slate-400">Target hit at {item.target}</span>
+                                    <span className="text-slate-400">Target hit di {item.target}</span>
                                     <span className="text-slate-600 text-xs pl-2 border-l border-slate-800">
                                         {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
