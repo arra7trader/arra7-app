@@ -7,6 +7,9 @@ interface PerformanceData {
     today: {
         accuracy: string;
         total: number;
+        tpHit: number;
+        slHit: number;
+        pending: number;
         totalPips?: string;
         avgConfidence?: string;
     };
@@ -99,18 +102,7 @@ export default function DailyPerformanceSection() {
                             </span>
                         </div>
 
-                        {/* Signals Today */}
-                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Total Sinyal</span>
-                            <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">
-                                {data?.today.total}
-                            </div>
-                            <span className="text-[10px] text-[var(--text-muted)]">
-                                +{data?.lastHour.total} Jam Terakhir
-                            </span>
-                        </div>
-
-                        {/* Total Pips (Replaces Confidence) */}
+                        {/* Total Pips Card */}
                         <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
                             <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Total Pips</span>
                             <div className="text-xl md:text-2xl font-bold text-blue-600">
@@ -121,19 +113,30 @@ export default function DailyPerformanceSection() {
                             </span>
                         </div>
 
-                        {/* System Status */}
-                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Server Status</span>
-                            <div className="text-sm font-bold text-green-600 flex items-center gap-2">
-                                CONNECTED
-                                <span className="flex h-1.5 w-1.5">
-                                    <span className="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-green-500 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-600"></span>
-                                </span>
+                        {/* Daily Stats Breakdown */}
+                        <div className="col-span-2 bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col justify-center shadow-sm hover:shadow-md transition-all">
+                            <div className="flex justify-between items-center mb-2 px-1">
+                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider font-bold">Daily Report</span>
+                                <span className="text-[10px] text-[var(--text-muted)]">{new Date().toLocaleDateString('id-ID')}</span>
                             </div>
-                            <span className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
-                                {secondTicker}s latency
-                            </span>
+                            <div className="grid grid-cols-4 gap-2">
+                                <div className="flex flex-col items-center p-1 bg-slate-50 rounded border border-[var(--border-light)]">
+                                    <span className="text-[10px] text-[var(--text-muted)] mb-0.5">Total</span>
+                                    <span className="font-bold text-sm text-[var(--text-primary)]">{data?.today.total}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-1 bg-green-50 rounded border border-green-100">
+                                    <span className="text-[10px] text-green-600 mb-0.5">TP</span>
+                                    <span className="font-bold text-sm text-green-700">{data?.today.tpHit}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-1 bg-red-50 rounded border border-red-100">
+                                    <span className="text-[10px] text-red-600 mb-0.5">SL</span>
+                                    <span className="font-bold text-sm text-red-700">{data?.today.slHit}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-1 bg-amber-50 rounded border border-amber-100">
+                                    <span className="text-[10px] text-amber-600 mb-0.5">Pending</span>
+                                    <span className="font-bold text-sm text-amber-700">{data?.today.pending}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
