@@ -119,6 +119,10 @@ function getMockStats() {
         today: {
             accuracy: "98.5",
             total: 156,
+            tpHit: 138,
+            slHit: 6,
+            pending: 12,
+            totalPips: "+2450",
             avgConfidence: "94.2",
         },
         lastHour: {

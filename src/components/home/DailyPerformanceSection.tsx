@@ -121,20 +121,20 @@ export default function DailyPerformanceSection() {
                             </div>
                             <div className="grid grid-cols-4 gap-2">
                                 <div className="flex flex-col items-center p-1 bg-slate-50 rounded border border-[var(--border-light)]">
-                                    <span className="text-[10px] text-[var(--text-muted)] mb-0.5">Total</span>
-                                    <span className="font-bold text-sm text-[var(--text-primary)]">{data?.today.total}</span>
+                                    <span className="text-[10px] text-[var(--text-secondary)] mb-0.5">Total</span>
+                                    <span className="font-bold text-sm text-[var(--text-primary)]">{data?.today.total || '-'}</span>
                                 </div>
                                 <div className="flex flex-col items-center p-1 bg-green-50 rounded border border-green-100">
                                     <span className="text-[10px] text-green-600 mb-0.5">TP</span>
-                                    <span className="font-bold text-sm text-green-700">{data?.today.tpHit}</span>
+                                    <span className="font-bold text-sm text-green-700">{data?.today.tpHit || '0'}</span>
                                 </div>
                                 <div className="flex flex-col items-center p-1 bg-red-50 rounded border border-red-100">
                                     <span className="text-[10px] text-red-600 mb-0.5">SL</span>
-                                    <span className="font-bold text-sm text-red-700">{data?.today.slHit}</span>
+                                    <span className="font-bold text-sm text-red-700">{data?.today.slHit || '0'}</span>
                                 </div>
                                 <div className="flex flex-col items-center p-1 bg-amber-50 rounded border border-amber-100">
                                     <span className="text-[10px] text-amber-600 mb-0.5">Pending</span>
-                                    <span className="font-bold text-sm text-amber-700">{data?.today.pending}</span>
+                                    <span className="font-bold text-sm text-amber-700">{data?.today.pending || '0'}</span>
                                 </div>
                             </div>
                         </div>
