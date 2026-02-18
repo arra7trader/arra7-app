@@ -1,25 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Interface matching the Admin Report Summary
+// Ensuring all number fields can handle string or number from API
+interface DailyStats {
+    accuracy: string;
+    total: number;
+    tpHit?: number | string;
+    slHit?: number | string;
+    pending?: number | string;
+    totalPips: string;
+    avgConfidence: string;
+}
+
 interface PerformanceData {
-    today: {
-        accuracy: string;
-        total: number;
-        tpHit: number;
-        slHit: number;
-        pending: number;
-        totalPips?: string;
-        avgConfidence?: string;
-    };
+    today: DailyStats;
     lastHour: {
         total: number;
     };
     ticker: Array<{
         symbol: string;
-        action: string;
-        target: string;
+        action: 'BUY' | 'SELL';
+        target: number;
         time: string;
     }>;
 }
@@ -27,14 +31,19 @@ interface PerformanceData {
 export default function DailyPerformanceSection() {
     const [data, setData] = useState<PerformanceData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [currentTime, setCurrentTime] = useState<string>('');
-    const [secondTicker, setSecondTicker] = useState(0);
+    const [time, setTime] = useState<Date | null>(null);
 
-    // Fetch data every 60 seconds (Real data update)
+    // Initial fetch
     useEffect(() => {
+        // Sets time only on client side to avoid hydration mismatch
+        setTime(new Date());
+
         const fetchData = async () => {
             try {
-                const res = await fetch('/api/public/performance');
+                // Add timestamp to prevent caching
+                const res = await fetch(`/api/public/performance?t=${new Date().getTime()}`, {
+                    next: { revalidate: 60 }
+                });
                 const result = await res.json();
                 if (result.status === 'success') {
                     setData(result.data);
@@ -47,130 +56,109 @@ export default function DailyPerformanceSection() {
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 300000); // 5 minutes
-        return () => clearInterval(interval);
+
+        // Refresh data every 5 minutes
+        const dataInterval = setInterval(fetchData, 5 * 60 * 1000);
+
+        // Update clock every second
+        const clockInterval = setInterval(() => {
+            setTime(new Date());
+        }, 1000);
+
+        return () => {
+            clearInterval(dataInterval);
+            clearInterval(clockInterval);
+        };
     }, []);
 
-    // Clock and Second Ticker (Simulated "Live" feel)
-    useEffect(() => {
-        const timer = setInterval(() => {
-            const now = new Date();
-            setCurrentTime(now.toLocaleTimeString('en-US', { hour12: false }));
-            setSecondTicker(prev => prev + 1);
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
+    const containerVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.6,
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, scale: 0.9 },
+        visible: { opacity: 1, scale: 1 }
+    };
 
     if (loading) return null;
 
     return (
-        <section className="w-full bg-gradient-to-b from-white/50 to-white backdrop-blur-sm border-b border-[var(--border-light)] relative overflow-hidden">
+        <section className="py-10 border-y border-[var(--border-light)] bg-white/50 backdrop-blur-sm relative overflow-hidden">
+            {/* Background Pattern similar to Admin Page */}
+            <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #0071e3 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
 
-            <div className="container-wide py-4">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-
-                    {/* Header & Live Status */}
-                    <div className="flex items-center gap-4 min-w-[250px]">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12"
+                >
+                    {/* Header Left - Clean & Professional */}
+                    <div className="flex items-center gap-4 min-w-[200px]">
                         <div className="relative">
-                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping absolute inset-0"></div>
-                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full relative z-10"></div>
+                            <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75" />
+                            <div className="relative w-3 h-3 bg-red-600 rounded-full border-2 border-white" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-bold text-[var(--text-secondary)] tracking-wider">LIVE MARKET</h3>
-                            <div className="text-lg font-black text-[var(--text-primary)] leading-none">
+                            <h2 className="text-xl font-bold text-[var(--text-primary)] leading-tight tracking-tight">
                                 DAILY REPORT
-                            </div>
-                        </div>
-                        <div className="hidden sm:block h-8 w-px bg-[var(--border-light)] mx-2"></div>
-                        <div className="hidden sm:block font-mono text-[var(--text-secondary)] text-sm">
-                            {currentTime} <br />
-                            <span className="text-[10px] text-[var(--text-muted)]">WIB (UTC+7)</span>
+                            </h2>
+                            <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">
+                                {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Main Stats Grid */}
-                    <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Admin-Style Stats Grid - EXACT MATCH to Admin Report */}
+                    {/* 5 Columns: Total | TP | SL | Pending | Win Rate */}
+                    <div className="flex-1 w-full md:w-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            {/* TOTAL */}
+                            <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center shadow-sm hover:shadow-md transition-all">
+                                <p className="text-2xl font-bold text-[var(--text-primary)]">{data?.today.total || 0}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">Total Signals</p>
+                            </motion.div>
 
-                        {/* Accuracy Card */}
-                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center relative shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Win Rate</span>
-                            <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">
-                                {data?.today.accuracy}%
-                            </div>
-                            <span className="text-[10px] text-green-600 font-medium">
-                                Real-time
-                            </span>
-                        </div>
+                            {/* TP HIT */}
+                            <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-green-100 text-center shadow-sm hover:shadow-md transition-all group">
+                                <p className="text-2xl font-bold text-green-600 group-hover:scale-110 transition-transform">{data?.today.tpHit || 0}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">TP Hit</p>
+                            </motion.div>
 
-                        {/* Total Pips Card */}
-                        <div className="bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">Total Pips</span>
-                            <div className="text-xl md:text-2xl font-bold text-blue-600">
-                                {data?.today.totalPips || '0'}
-                            </div>
-                            <span className="text-[10px] text-[var(--text-muted)]">
-                                Hari Ini
-                            </span>
-                        </div>
+                            {/* SL HIT */}
+                            <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-red-100 text-center shadow-sm hover:shadow-md transition-all group">
+                                <p className="text-2xl font-bold text-red-600 group-hover:scale-110 transition-transform">{data?.today.slHit || 0}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">SL Hit</p>
+                            </motion.div>
 
-                        {/* Daily Stats Breakdown */}
-                        <div className="col-span-2 bg-white/80 rounded-xl p-3 border border-[var(--border-light)] flex flex-col justify-center shadow-sm hover:shadow-md transition-all">
-                            <div className="flex justify-between items-center mb-2 px-1">
-                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider font-bold">Daily Report</span>
-                                <span className="text-[10px] text-[var(--text-muted)]">{new Date().toLocaleDateString('id-ID')}</span>
-                            </div>
-                            <div className="grid grid-cols-4 gap-2">
-                                <div className="flex flex-col items-center p-1 bg-slate-50 rounded border border-[var(--border-light)]">
-                                    <span className="text-[10px] text-[var(--text-secondary)] mb-0.5">Total</span>
-                                    <span className="font-bold text-sm text-[var(--text-primary)]">{data?.today.total || '-'}</span>
+                            {/* PENDING */}
+                            <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-amber-100 text-center shadow-sm hover:shadow-md transition-all group">
+                                <p className="text-2xl font-bold text-amber-600 group-hover:scale-110 transition-transform">{data?.today.pending || 0}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">Pending</p>
+                            </motion.div>
+
+                            {/* WIN RATE */}
+                            <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-blue-100 text-center shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="relative">
+                                    <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                                        {data?.today.accuracy || '0'}%
+                                    </p>
+                                    <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">Win Rate</p>
                                 </div>
-                                <div className="flex flex-col items-center p-1 bg-green-50 rounded border border-green-100">
-                                    <span className="text-[10px] text-green-600 mb-0.5">TP</span>
-                                    <span className="font-bold text-sm text-green-700">{data?.today.tpHit || '0'}</span>
-                                </div>
-                                <div className="flex flex-col items-center p-1 bg-red-50 rounded border border-red-100">
-                                    <span className="text-[10px] text-red-600 mb-0.5">SL</span>
-                                    <span className="font-bold text-sm text-red-700">{data?.today.slHit || '0'}</span>
-                                </div>
-                                <div className="flex flex-col items-center p-1 bg-amber-50 rounded border border-amber-100">
-                                    <span className="text-[10px] text-amber-600 mb-0.5">Pending</span>
-                                    <span className="font-bold text-sm text-amber-700">{data?.today.pending || '0'}</span>
-                                </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </div>
-                </div>
-
-                {/* Ticker / Recent Activity */}
-                <div className="mt-6 border-t border-slate-800 pt-4 relative">
-                    <div className="absolute left-0 top-4 bottom-0 w-20 bg-gradient-to-r from-slate-950 to-transparent z-10"></div>
-                    <div className="absolute right-0 top-4 bottom-0 w-20 bg-gradient-to-l from-slate-950 to-transparent z-10"></div>
-
-                    <div className="flex gap-8 overflow-hidden whitespace-nowrap mask-gradient">
-                        <motion.div
-                            className="flex gap-8 items-center"
-                            animate={{ x: [0, -1000] }}
-                            transition={{
-                                repeat: Infinity,
-                                ease: "linear",
-                                duration: 30 // Slow ticker speed
-                            }}
-                        >
-                            {[...data?.ticker || [], ...data?.ticker || []].map((item, i) => (
-                                <div key={i} className="flex items-center gap-2 text-sm">
-                                    <span className="font-bold text-white">{item.symbol}</span>
-                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${item.action === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                        {item.action}
-                                    </span>
-                                    <span className="text-slate-400">Target hit di {item.target}</span>
-                                    <span className="text-slate-600 text-xs pl-2 border-l border-slate-800">
-                                        {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
-                            ))}
-                        </motion.div>
-                    </div>
-                </div>
+                </motion.div>
             </div>
         </section>
     );
