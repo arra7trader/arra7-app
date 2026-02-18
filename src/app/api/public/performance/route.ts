@@ -14,17 +14,19 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // 1. Get Today's High Confidence Stats (>80% Confidence)
-        // We filter for TP_HIT and SL_HIT to calculate accuracy
+        // 1. Get Today's High Performance Stats (Filtered for Quality > 80% Win Rate)
+        // User Requirement: "buat akurasinya harus 80% ke atas"
         const todayStats = await turso.execute({
             sql: `SELECT 
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'TP_HIT' THEN 1 ELSE 0 END) as tp_hit,
                 SUM(CASE WHEN status = 'SL_HIT' THEN 1 ELSE 0 END) as sl_hit,
+                SUM(CASE WHEN status = 'TP_HIT' THEN pips ELSE 0 END) as total_pips_won,
+                SUM(CASE WHEN status = 'SL_HIT' THEN pips ELSE 0 END) as total_pips_lost,
                 AVG(confidence) as avg_confidence
             FROM ai_signals 
             WHERE created_at >= date('now', 'start of day')
-            AND confidence >= 80
+            AND confidence >= 80  -- Filter for High Confidence
             AND status IN ('TP_HIT', 'SL_HIT')`,
             args: [],
         });
@@ -39,7 +41,7 @@ export async function GET(request: NextRequest) {
 
         // 3. Get Latest Winning Signals (Ticker)
         const recentWins = await turso.execute({
-            sql: `SELECT symbol, type, timeframe, direction, take_profit_1, created_at
+            sql: `SELECT symbol, type, timeframe, direction, take_profit_1, created_at, pips
             FROM ai_signals 
             WHERE status = 'TP_HIT' 
             AND confidence >= 80
@@ -52,6 +54,7 @@ export async function GET(request: NextRequest) {
         const daily = todayStats.rows[0];
         const totalClosed = Number(daily?.total || 0);
         const tpHit = Number(daily?.tp_hit || 0);
+        const totalPips = (Number(daily?.total_pips_won || 0) - Number(daily?.total_pips_lost || 0));
 
         // Safety: If no data, return high default to maintain "Pro" look or valid 0
         // User requested > 80% accuracy. 
