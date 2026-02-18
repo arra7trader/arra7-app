@@ -44,7 +44,7 @@ export default function DailyPerformanceSection() {
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 60000); // 1 minute
+        const interval = setInterval(fetchData, 300000); // 5 minutes
         return () => clearInterval(interval);
     }, []);
 
