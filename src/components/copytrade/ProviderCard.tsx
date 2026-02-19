@@ -1,118 +1,135 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useFormatter } from 'next-intl';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import FollowSettingsModal from './FollowSettingsModal';
 
 interface ProviderCardProps {
     provider: any;
-    onFollow?: (providerId: string) => void;
 }
 
-export default function ProviderCard({ provider, onFollow }: ProviderCardProps) {
-    const format = useFormatter();
+export default function ProviderCard({ provider }: ProviderCardProps) {
+    const { data: session } = useSession();
+    const router = useRouter();
+    const [showModal, setShowModal] = useState(false);
 
-    const winRate = provider.win_rate || 0;
-    const totalProfit = provider.total_profit_usd || 0;
-    const maxDrawdown = provider.max_drawdown || 0;
-    const followers = provider.total_followers || 0;
+    const winRate = Number(provider.win_rate ?? 0);
+    const netProfit = Number(provider.net_profit_usd ?? 0);
+    const maxDrawdown = Number(provider.max_drawdown ?? 0);
+    const totalTrades = Number(provider.total_trades ?? 0);
+    const followers = Number(provider.total_followers ?? 0);
 
-    // Determine risk level based on drawdown
-    let riskLevel = 'Low';
-    let riskColor = 'text-green-500';
-    if (maxDrawdown > 15) { riskLevel = 'Medium'; riskColor = 'text-yellow-500'; }
-    if (maxDrawdown > 30) { riskLevel = 'High'; riskColor = 'text-red-500'; }
+    let riskLabel = 'Rendah';
+    let riskBg = 'bg-green-100 text-green-700 border-green-200';
+    if (maxDrawdown > 15) { riskLabel = 'Sedang'; riskBg = 'bg-yellow-100 text-yellow-700 border-yellow-200'; }
+    if (maxDrawdown > 30) { riskLabel = 'Tinggi'; riskBg = 'bg-red-100 text-red-700 border-red-200'; }
+
+    const handleCopy = () => {
+        if (!session) { router.push('/login'); return; }
+        setShowModal(true);
+    };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -5 }}
-            className="group relative bg-white rounded-2xl p-5 border border-[var(--border-light)] hover:border-[var(--accent-blue)] shadow-sm hover:shadow-md transition-all duration-300"
-        >
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                        <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                            {provider.user_image ? (
-                                <img src={provider.user_image} alt={provider.display_name} className="w-full h-full object-cover" />
-                            ) : (
-                                <span className="text-lg font-bold text-[var(--accent-blue)]">
-                                    {provider.display_name.charAt(0)}
-                                </span>
-                            )}
+        <>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(0,113,227,0.12)' }}
+                transition={{ duration: 0.3 }}
+                className="group relative bg-white rounded-2xl p-5 border border-gray-100 hover:border-blue-200 transition-all duration-300 flex flex-col"
+            >
+                {/* Top: Avatar + Name + Risk */}
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+                            {provider.display_name?.charAt(0) ?? 'P'}
+                        </div>
+                        <div>
+                            <Link href={`/copytrade/provider/${provider.id}`}>
+                                <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm leading-tight">{provider.display_name}</h3>
+                            </Link>
+                            <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                                <span>{provider.broker_name || 'Multi-Broker'}</span>
+                                <span>·</span>
+                                <span>{followers} copier</span>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-blue)] transition-colors">
-                            {provider.display_name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                            <span>{provider.broker_name || 'Multi-Broker'}</span>
-                            <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]"></span>
-                            <span>{followers} Copiers</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className={`px-2 py-1 rounded-lg bg-[var(--bg-secondary)] text-xs font-medium border border-[var(--border-light)] ${riskColor}`}>
-                    {riskLevel} Risk
-                </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-2 mb-4 p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)]">
-                <div className="text-center">
-                    <div className="text-xs text-[var(--text-secondary)] mb-1">Return</div>
-                    <div className="text-sm font-bold text-green-500">
-                        +{((totalProfit / 1000) * 100).toFixed(1)}%
-                    </div>
-                </div>
-                <div className="text-center border-x border-[var(--border-medium)]">
-                    <div className="text-xs text-[var(--text-secondary)] mb-1">Win Rate</div>
-                    <div className="text-sm font-bold text-[var(--text-primary)]">
-                        {winRate.toFixed(1)}%
-                    </div>
-                </div>
-                <div className="text-center">
-                    <div className="text-xs text-[var(--text-secondary)] mb-1">Max DD</div>
-                    <div className="text-sm font-bold text-red-500">
-                        {maxDrawdown.toFixed(1)}%
-                    </div>
-                </div>
-            </div>
-
-            {/* Fee Info */}
-            <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] mb-5">
-                <div>
-                    Subscription: <span className="text-[var(--text-primary)] font-medium">
-                        {provider.subscription_fee > 0
-                            ? format.number(provider.subscription_fee, { style: 'currency', currency: 'IDR' })
-                            : 'Free'}
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${riskBg}`}>
+                        {riskLabel}
                     </span>
                 </div>
-                <div>
-                    Profit Share: <span className="text-[var(--text-primary)] font-medium">{provider.profit_sharing_percent}%</span>
-                </div>
-            </div>
 
-            {/* Action Button */}
-            <Link
-                href={`/copytrade/provider/${provider.id}`}
-                className="block w-full"
-            >
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-2.5 rounded-xl bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] 
-                             hover:bg-[var(--accent-blue)] hover:text-white font-medium text-sm transition-all
-                             border border-[var(--accent-blue)]/20 hover:border-transparent"
-                >
-                    View Strategy
-                </motion.button>
-            </Link>
-        </motion.div>
+                {/* Bio */}
+                {provider.bio && (
+                    <p className="text-xs text-gray-500 mb-4 line-clamp-2 leading-relaxed">{provider.bio}</p>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-1 mb-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <div className="text-center">
+                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wider">Win Rate</div>
+                        <div className="text-sm font-bold text-gray-900">{winRate.toFixed(1)}%</div>
+                    </div>
+                    <div className="text-center border-x border-gray-200">
+                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wider">Net Profit</div>
+                        <div className={`text-sm font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {netProfit >= 0 ? '+' : ''}${netProfit.toFixed(0)}
+                        </div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wider">Max DD</div>
+                        <div className="text-sm font-bold text-gray-700">{maxDrawdown.toFixed(1)}%</div>
+                    </div>
+                </div>
+
+                {/* Trades + Fee */}
+                <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                    <span>{totalTrades} trades</span>
+                    <span className="font-medium text-gray-600">
+                        {provider.subscription_fee > 0
+                            ? `Rp ${Number(provider.subscription_fee).toLocaleString('id-ID')}/bln`
+                            : '✓ Gratis'}
+                    </span>
+                </div>
+
+                {/* Win Rate Bar */}
+                <div className="mb-4">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                            style={{ width: `${Math.min(winRate, 100)}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 mt-auto">
+                    <Link href={`/copytrade/provider/${provider.id}`} className="flex-1">
+                        <button className="w-full py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 text-sm font-medium transition-all">
+                            Detail
+                        </button>
+                    </Link>
+                    <button
+                        onClick={handleCopy}
+                        className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all shadow-sm hover:shadow-blue-500/30 hover:shadow-md"
+                    >
+                        Copy Now
+                    </button>
+                </div>
+            </motion.div>
+
+            {showModal && (
+                <FollowSettingsModal
+                    provider={provider}
+                    onClose={() => setShowModal(false)}
+                />
+            )}
+        </>
     );
 }
