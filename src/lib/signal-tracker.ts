@@ -271,16 +271,21 @@ export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'al
     if (!turso) return null;
 
     try {
+        // FIX: Use UTC+7 (WIB) offset explicitly instead of 'localtime' which uses server timezone (UTC)
+        // This ensures signals from 00:00-06:59 WIB are correctly grouped under the local date.
         let dateFilter = '';
+        const queryArgs: any[] = [];
         if (period === 'today') {
-            dateFilter = "AND DATE(created_at) = DATE('now', 'localtime')";
+            // Apply +7 hours offset so the date comparison is in WIB timezone
+            dateFilter = "AND DATE(created_at, '+7 hours') = DATE('now', '+7 hours')";
         } else if (period === '7d') {
-            dateFilter = "AND created_at >= datetime('now', '-7 days', 'localtime')";
+            dateFilter = "AND created_at >= datetime('now', '-7 days')";
         } else if (period === '30d') {
-            dateFilter = "AND created_at >= datetime('now', '-30 days', 'localtime')";
+            dateFilter = "AND created_at >= datetime('now', '-30 days')";
         } else if (period === 'custom' && customDate) {
-            // Handle specific date (YYYY-MM-DD)
-            dateFilter = `AND DATE(created_at, 'localtime') = '${customDate}'`;
+            // FIX: Use parameterized query to avoid SQL injection, and use +7 offset for WIB
+            dateFilter = "AND DATE(created_at, '+7 hours') = ?";
+            queryArgs.push(customDate);
         }
 
         const result = await turso.execute({
@@ -292,7 +297,7 @@ export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'al
                 SUM(CASE WHEN status = 'TP_HIT' THEN pips ELSE 0 END) as total_pips_won,
                 SUM(CASE WHEN status = 'SL_HIT' THEN pips ELSE 0 END) as total_pips_lost
             FROM ai_signals WHERE 1=1 ${dateFilter}`,
-            args: [],
+            args: queryArgs,
         });
 
         const stats = result.rows[0];
@@ -388,21 +393,23 @@ export async function generateDailyReport(targetDate?: string): Promise<string> 
     }
 
     // Format date header
+    // FIX: Avoid `new Date('YYYY-MM-DD')` as it parses as UTC midnight which can give
+    // the wrong calendar date in WIB (UTC+7). Use manual parsing instead.
     let dateStr = '';
+    const formatOptions: Intl.DateTimeFormatOptions = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Jakarta', // Explicit WIB timezone
+    };
     if (targetDate) {
-        dateStr = new Date(targetDate).toLocaleDateString('id-ID', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
+        // Parse YYYY-MM-DD as noon WIB to avoid any date shift issues
+        const [y, m, d] = targetDate.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d, 12, 0, 0); // noon local
+        dateStr = dateObj.toLocaleDateString('id-ID', formatOptions);
     } else {
-        dateStr = new Date().toLocaleDateString('id-ID', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
+        dateStr = new Date().toLocaleDateString('id-ID', formatOptions);
     }
 
     const report = `
