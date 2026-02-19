@@ -291,8 +291,8 @@ export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'al
                 SUM(CASE WHEN status = 'TP_HIT' THEN 1 ELSE 0 END) as tp_hit,
                 SUM(CASE WHEN status = 'SL_HIT' THEN 1 ELSE 0 END) as sl_hit,
                 SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN status = 'TP_HIT' THEN pips ELSE 0 END) as total_pips_won,
-                SUM(CASE WHEN status = 'SL_HIT' THEN pips ELSE 0 END) as total_pips_lost
+                SUM(CASE WHEN status = 'TP_HIT' THEN pips_result ELSE 0 END) as total_pips_won,
+                SUM(CASE WHEN status = 'SL_HIT' THEN pips_result ELSE 0 END) as total_pips_lost
             FROM ai_signals WHERE 1=1 ${dateFilter}`,
             args: queryArgs,
         });
@@ -372,7 +372,11 @@ export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'al
             totalPips: totalPips > 0 ? `+${totalPips}` : `${totalPips}`
         };
     } catch (error) {
-        console.error('Get performance summary error:', error);
+        console.error('[SignalTracker] getPerformanceSummary error:', error);
+        // Surface the actual error for debugging
+        if (error instanceof Error) {
+            console.error('[SignalTracker] SQL Error detail:', error.message);
+        }
         return null;
     }
 }
@@ -385,25 +389,24 @@ export async function generateDailyReport(targetDate?: string): Promise<string> 
     const dailyStats = await getPerformanceSummary(period, targetDate);
     const overall = await getPerformanceSummary('all');
 
-    if (!dailyStats || !overall) {
-        return '❌ Gagal generate report';
-    }
+    // Graceful fallback: if stats can't be fetched, use zeroes
+    const zeroStats = { total: 0, tpHit: 0, slHit: 0, pending: 0, winRate: '0', totalPips: '0' };
+    const ds = dailyStats ?? zeroStats;
+    const ov = overall ?? zeroStats;
 
     // Format date header
-    // FIX: Avoid `new Date('YYYY-MM-DD')` as it parses as UTC midnight which can give
-    // the wrong calendar date in WIB (UTC+7). Use manual parsing instead.
     let dateStr = '';
     const formatOptions: Intl.DateTimeFormatOptions = {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-        timeZone: 'Asia/Jakarta', // Explicit WIB timezone
+        timeZone: 'Asia/Jakarta',
     };
     if (targetDate) {
-        // Parse YYYY-MM-DD as noon WIB to avoid any date shift issues
-        const [y, m, d] = targetDate.split('-').map(Number);
-        const dateObj = new Date(y, m - 1, d, 12, 0, 0); // noon local
+        // Parse YYYY-MM-DD safely without UTC midnight shift
+        const [yr, mo, dy] = targetDate.split('-').map(Number);
+        const dateObj = new Date(yr, mo - 1, dy, 12, 0, 0);
         dateStr = dateObj.toLocaleDateString('id-ID', formatOptions);
     } else {
         dateStr = new Date().toLocaleDateString('id-ID', formatOptions);
@@ -416,20 +419,20 @@ export async function generateDailyReport(targetDate?: string): Promise<string> 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 📈 *${isCustom ? 'PERFORMANCE ' + targetDate : 'HARI INI'}*
-• Total Signal: ${dailyStats.total}
-• ✅ TP Hit: ${dailyStats.tpHit}
-• ❌ SL Hit: ${dailyStats.slHit}
-• ⏳ Pending: ${dailyStats.pending}
-• 🎯 Win Rate: ${dailyStats.winRate}%
+• Total Signal: ${ds.total}
+• ✅ TP Hit: ${ds.tpHit}
+• ❌ SL Hit: ${ds.slHit}
+• ⏳ Pending: ${ds.pending}
+• 🎯 Win Rate: ${ds.winRate}%
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 📊 *OVERALL PERFORMANCE*
-• Total Signal: ${overall.total}
-• ✅ TP Hit: ${overall.tpHit}
-• ❌ SL Hit: ${overall.slHit}
-• ⏳ Pending: ${overall.pending}
-• 🎯 Win Rate: ${overall.winRate}%
+• Total Signal: ${ov.total}
+• ✅ TP Hit: ${ov.tpHit}
+• ❌ SL Hit: ${ov.slHit}
+• ⏳ Pending: ${ov.pending}
+• 🎯 Win Rate: ${ov.winRate}%
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
