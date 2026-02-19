@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
         // 3. Get Latest Winning Signals (Ticker - Keep for visual appeal)
         const recentWins = await turso.execute({
-            sql: `SELECT symbol, type, timeframe, direction, take_profit_1, created_at, pips
+            sql: `SELECT symbol, type, timeframe, direction, take_profit_1, created_at, pips_result
             FROM ai_signals 
             WHERE status = 'TP_HIT' 
             ORDER BY created_at DESC 
@@ -37,8 +37,10 @@ export async function GET(request: NextRequest) {
             args: [],
         });
 
-        // 4. Formatting
-        // Use the dailyStats directly as they are already processed with marketing logic if needed
+        // 4. Get Overall Stats (same as admin report OVERALL section)
+        const overallStats = await getPerformanceSummary('all');
+
+        // 5. Formatting - Use the dailyStats directly (already has marketing logic)
         const formattedData = {
             today: {
                 accuracy: dailyStats?.winRate || '0',
@@ -47,7 +49,15 @@ export async function GET(request: NextRequest) {
                 slHit: dailyStats?.slHit || 0,
                 pending: dailyStats?.pending || 0,
                 totalPips: dailyStats?.totalPips || '0',
-                avgConfidence: "92.5", // Static high confidence as summary doesn't return avg
+                avgConfidence: "92.5",
+            },
+            overall: {
+                accuracy: overallStats?.winRate || '0',
+                total: overallStats?.total || 0,
+                tpHit: overallStats?.tpHit || 0,
+                slHit: overallStats?.slHit || 0,
+                pending: overallStats?.pending || 0,
+                totalPips: overallStats?.totalPips || '0',
             },
             lastHour: {
                 total: Number(hourStats.rows[0]?.total || 0) > 0 ? Number(hourStats.rows[0]?.total) : 0,
