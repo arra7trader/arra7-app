@@ -5,8 +5,9 @@ import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useSession } from 'next-auth/react';
+
 import FollowSettingsModal from '@/components/copytrade/FollowSettingsModal';
-import EquityChart from '@/components/copytrade/EquityChart';
+import ProviderAnalytics from '@/components/copytrade/ProviderAnalytics';
 import Link from 'next/link';
 
 export default function ProviderDetailPage() {
@@ -16,6 +17,7 @@ export default function ProviderDetailPage() {
 
     const [provider, setProvider] = useState<any>(null);
     const [recentTrades, setRecentTrades] = useState<any[]>([]);
+    const [dailyStats, setDailyStats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
 
@@ -30,6 +32,7 @@ export default function ProviderDetailPage() {
             if (data.provider) {
                 setProvider(data.provider);
                 setRecentTrades(data.recentTrades || []);
+                setDailyStats(data.dailyStats || []);
             }
         } catch (error) {
             console.error('Failed to fetch details:', error);
@@ -129,36 +132,15 @@ export default function ProviderDetailPage() {
                     </div>
                 </motion.div>
 
-                {/* Stats Row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    {[
-                        { label: 'Net Profit', value: `${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}`, color: netProfit >= 0 ? 'text-green-600' : 'text-red-500' },
-                        { label: 'Win Rate', value: `${winRate.toFixed(1)}%`, color: 'text-blue-600' },
-                        { label: 'Max Drawdown', value: `${maxDD.toFixed(1)}%`, color: 'text-orange-500' },
-                        { label: 'Total Trades', value: String(totalTrades), color: 'text-gray-900' },
-                    ].map((stat, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm text-center"
-                        >
-                            <div className={`text-2xl font-bold ${stat.color} mb-1`}>{stat.value}</div>
-                            <div className="text-xs text-gray-400 uppercase tracking-wider">{stat.label}</div>
-                        </motion.div>
-                    ))}
+                {/* Analytics Section */}
+                <div className="mb-8">
+                    <ProviderAnalytics stats={provider} dailyStats={dailyStats} />
                 </div>
 
                 {/* Main Content */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left: Chart + Recent Trades */}
+                    {/* Left: Recent Trades */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Equity Chart */}
-                        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                            <h3 className="text-base font-bold text-gray-900 mb-4">📈 Pertumbuhan Equity</h3>
-                            <EquityChart data={[]} />
-                        </div>
 
                         {/* Win/Loss Distribution */}
                         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">

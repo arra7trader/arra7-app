@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient from '@/lib/turso';
+import { updateProviderStats } from '@/lib/analysis/provider-metrics';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,33 +83,8 @@ export async function PATCH(
 
             if (providerResult.rows.length > 0) {
                 const providerId = providerResult.rows[0].provider_id as string;
-                const isWin = status === 'tp_hit';
-
-                // Recalculate stats from all closed signals
-                const statsResult = await turso.execute({
-                    sql: `SELECT 
-                            COUNT(*) as total,
-                            SUM(CASE WHEN status = 'tp_hit' THEN 1 ELSE 0 END) as wins,
-                            SUM(CASE WHEN status = 'sl_hit' THEN 1 ELSE 0 END) as losses
-                          FROM provider_signals 
-                          WHERE provider_id = ? AND status IN ('tp_hit', 'sl_hit')`,
-                    args: [providerId]
-                });
-
-                if (statsResult.rows.length > 0) {
-                    const total = statsResult.rows[0].total as number;
-                    const wins = statsResult.rows[0].wins as number;
-                    const losses = statsResult.rows[0].losses as number;
-                    const winRate = total > 0 ? (wins / total) * 100 : 0;
-
-                    await turso.execute({
-                        sql: `UPDATE provider_statistics 
-                              SET total_trades = ?, winning_trades = ?, losing_trades = ?,
-                                  win_rate = ?, last_trade_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                              WHERE provider_id = ?`,
-                        args: [total, wins, losses, winRate, providerId]
-                    });
-                }
+                // Run full stats recalculation
+                await updateProviderStats(providerId);
             }
         }
 

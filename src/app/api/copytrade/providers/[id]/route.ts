@@ -15,14 +15,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
         // Get provider with statistics
         const providerResult = await turso.execute({
-            sql: `SELECT sp.*, ps.total_trades, ps.winning_trades, ps.losing_trades,
-                         ps.win_rate, ps.total_profit_usd, ps.total_loss_usd, ps.net_profit_usd,
-                         ps.max_drawdown, ps.sharpe_ratio, ps.avg_trade_duration_hours,
-                         ps.best_pair, ps.avg_profit_per_trade, ps.avg_loss_per_trade,
-                         ps.last_trade_at, u.name as user_name, u.image as user_image
+            sql: `SELECT sp.*, 
+                         u.name as user_name, u.image as user_image,
+                         u.stats_win_rate, u.stats_profit_factor, u.stats_max_drawdown,
+                         u.stats_total_pips, u.stats_active_since, u.stats_risk_score
                   FROM signal_providers sp
-                  LEFT JOIN provider_statistics ps ON sp.id = ps.provider_id
-                  LEFT JOIN users u ON sp.user_id = u.id
+                  JOIN users u ON sp.user_id = u.id
                   WHERE sp.id = ?`,
             args: [id]
         });
@@ -45,9 +43,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             args: [id]
         });
 
+        // Get Daily Stats history
+        const dailyStatsResult = await turso.execute({
+            sql: `SELECT date, daily_pips, daily_profit_usd, balance_snapshot 
+                  FROM provider_daily_stats 
+                  WHERE provider_id = ? 
+                  ORDER BY date ASC`,
+            args: [provider.user_id]
+        });
+
         return NextResponse.json({
             provider,
-            recentTrades: tradesResult.rows
+            recentTrades: tradesResult.rows,
+            dailyStats: dailyStatsResult.rows
         });
 
     } catch (error) {

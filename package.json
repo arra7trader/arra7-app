@@ -38,6 +38,7 @@
     "react-dropzone": "^14.3.5",
     "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
+    "recharts": "^3.7.0",
     "remark-gfm": "^4.0.1",
     "resend": "^6.9.2",
     "web-push": "^3.6.7",
