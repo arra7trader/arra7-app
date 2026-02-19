@@ -1,232 +1,265 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import { useSession } from 'next-auth/react';
-import { useFormatter } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import SignalCard from '@/components/copytrade/SignalCard';
+import ProviderDashboard from '@/components/copytrade/ProviderDashboard';
+
+type Tab = 'portfolio' | 'signals' | 'provider';
 
 export default function FollowerDashboardPage() {
-    const { data: session } = useSession();
-    const format = useFormatter();
+    const { data: session, status } = useSession();
     const router = useRouter();
+    const [activeTab, setActiveTab] = useState<Tab>('portfolio');
     const [loading, setLoading] = useState(true);
     const [relationships, setRelationships] = useState<any[]>([]);
+    const [signals, setSignals] = useState<any[]>([]);
+    const [signalsLoading, setSignalsLoading] = useState(false);
     const [totalEquity, setTotalEquity] = useState(0);
     const [totalPnL, setTotalPnL] = useState(0);
+    const [isProvider, setIsProvider] = useState(false);
 
     useEffect(() => {
-        if (session) {
+        if (status === 'unauthenticated') router.push('/login?redirect=/copytrade/dashboard');
+        if (status === 'authenticated') {
             fetchRelationships();
+            checkIfProvider();
         }
-    }, [session]);
+    }, [status]);
+
+    useEffect(() => {
+        if (activeTab === 'signals') fetchSignals();
+    }, [activeTab]);
 
     const fetchRelationships = async () => {
         try {
             const res = await fetch('/api/copytrade/relationships');
             const data = await res.json();
-
             if (data.relationships) {
                 setRelationships(data.relationships);
-
-                // Calculate totals
-                const equity = data.relationships.reduce((acc: number, r: any) => acc + r.allocated_capital + (r.total_profit_loss || 0), 0);
-                const pnl = data.relationships.reduce((acc: number, r: any) => acc + (r.total_profit_loss || 0), 0);
-
-                setTotalEquity(equity);
-                setTotalPnL(pnl);
+                setTotalEquity(data.relationships.reduce((a: number, r: any) => a + r.allocated_capital + (r.total_profit_loss || 0), 0));
+                setTotalPnL(data.relationships.reduce((a: number, r: any) => a + (r.total_profit_loss || 0), 0));
             }
-        } catch (error) {
-            console.error('Failed to fetch relationships:', error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    };
+
+    const checkIfProvider = async () => {
+        try {
+            const res = await fetch('/api/copytrade/providers?own=true');
+            const data = await res.json();
+            setIsProvider(!!(data.provider?.is_active));
+        } catch (e) { }
+    };
+
+    const fetchSignals = async () => {
+        setSignalsLoading(true);
+        try {
+            const res = await fetch('/api/copytrade/signals?mode=follower');
+            const data = await res.json();
+            setSignals(data.signals || []);
+        } catch (e) { console.error(e); }
+        finally { setSignalsLoading(false); }
     };
 
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
-            const res = await fetch('/api/copytrade/relationships', {
+            await fetch('/api/copytrade/relationships', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ relationshipId: id, status: newStatus })
             });
-
-            if (res.ok) {
-                // Optimistic update
-                setRelationships(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
-
-                // If stopped, maybe refresh to clear potential cache issues or just let it be
-                if (newStatus === 'stopped') {
-                    // Optionally show a notification
-                }
-            }
-        } catch (error) {
-            console.error('Failed to update status:', error);
-        }
+            setRelationships(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+        } catch (e) { console.error(e); }
     };
 
-    if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
+    if (status === 'loading' || loading) return (
+        <main className="min-h-screen bg-[var(--bg-primary)]">
+            <Navbar />
+            <div className="pt-32 container mx-auto px-4 max-w-4xl">
+                <div className="space-y-4">
+                    {[1, 2, 3].map(i => <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />)}
+                </div>
+            </div>
+        </main>
+    );
 
     return (
-        <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+        <main className="min-h-screen bg-gray-50 text-gray-900">
             <Navbar />
 
-            <div className="pt-32 pb-20 container mx-auto px-4">
-                <div className="flex items-center justify-between mb-8">
+            <div className="pt-28 pb-20 container mx-auto px-4 max-w-4xl">
+                {/* Page Header */}
+                <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">My Portfolio</h1>
-                        <p className="text-gray-400">Manage your active copy trading investments</p>
+                        <h1 className="text-2xl font-black text-gray-900">Copy Trade Dashboard</h1>
+                        <p className="text-sm text-gray-500">Kelola copy trading & sinyal kamu</p>
                     </div>
                     <Link href="/copytrade">
-                        <button className="px-5 py-2 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--border-light)] text-[var(--text-primary)] font-medium transition-colors border border-[var(--border-light)]">
-                            + Find Trader
+                        <button className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+                            + Cari Provider
                         </button>
                     </Link>
                 </div>
 
-                {/* Portfolio Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm relative overflow-hidden group">
-                        <div className="z-10 relative">
-                            <div className="text-[var(--text-secondary)] text-sm mb-2">Total Equity</div>
-                            <div className="text-3xl font-bold text-[var(--text-primary)]">
-                                {format.number(totalEquity, { style: 'currency', currency: 'USD' })}
-                            </div>
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                    {[
+                        { label: 'Total Equity', value: `$${totalEquity.toFixed(2)}`, accent: 'text-blue-600' },
+                        { label: 'Total P/L', value: `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`, accent: totalPnL >= 0 ? 'text-green-600' : 'text-red-500' },
+                        { label: 'Provider Aktif', value: relationships.filter(r => r.status === 'active').length, accent: 'text-purple-600' },
+                    ].map(({ label, value, accent }) => (
+                        <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+                            <div className={`text-2xl font-black ${accent}`}>{value}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">{label}</div>
                         </div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full group-hover:bg-blue-500/20 transition-all" />
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm relative overflow-hidden group">
-                        <div className="z-10 relative">
-                            <div className="text-[var(--text-secondary)] text-sm mb-2">Total Profit/Loss</div>
-                            <div className={`text-3xl font-bold ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {totalPnL >= 0 ? '+' : ''}{format.number(totalPnL, { style: 'currency', currency: 'USD' })}
-                            </div>
-                        </div>
-                        <div className={`absolute top-0 right-0 w-32 h-32 blur-[50px] rounded-full transition-all ${totalPnL >= 0 ? 'bg-green-500/10 group-hover:bg-green-500/20' : 'bg-red-500/10 group-hover:bg-red-500/20'}`} />
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm relative overflow-hidden group">
-                        <div className="z-10 relative">
-                            <div className="text-[var(--text-secondary)] text-sm mb-2">Active Traders</div>
-                            <div className="text-3xl font-bold text-[var(--accent-blue)]">
-                                {relationships.filter((r: any) => r.status === 'active').length}
-                            </div>
-                        </div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full group-hover:bg-purple-500/20 transition-all" />
-                    </div>
+                    ))}
                 </div>
 
-                {/* Relationships List */}
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-[var(--text-primary)]">
-                    Active Subscriptions
-                    <span className="bg-[var(--bg-secondary)] text-xs px-2 py-0.5 rounded-full text-[var(--text-secondary)] border border-[var(--border-light)]">{relationships.length}</span>
-                </h2>
+                {/* Tabs */}
+                <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mb-5 w-fit">
+                    {([
+                        { id: 'portfolio', label: '💼 Portfolio' },
+                        { id: 'signals', label: '📡 Feed Sinyal' },
+                        ...(isProvider ? [{ id: 'provider', label: '📊 Provider' }] : []),
+                    ] as { id: Tab; label: string }[]).map(tab => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
 
-                {relationships.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-[var(--border-light)] shadow-sm">
-                        <div className="w-16 h-16 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-[var(--text-primary)] mb-2">No Active Traders</h3>
-                        <p className="text-[var(--text-secondary)] mb-6 max-w-sm mx-auto">You haven't started copying anyone yet. Browse the marketplace to find top traders.</p>
-                        <Link href="/copytrade">
-                            <button className="px-6 py-2.5 rounded-xl bg-[var(--accent-blue)] hover:bg-blue-600 text-white font-bold transition-all shadow-lg shadow-blue-500/20">
-                                Browse Marketplace
-                            </button>
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {relationships.map((rel: any) => (
-                            <motion.div
-                                key={rel.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white p-6 rounded-2xl border border-[var(--border-light)] hover:border-[var(--accent-blue)] transition-all shadow-sm"
-                            >
-                                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4 flex-1 w-full md:w-auto">
-                                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-bold text-xl overflow-hidden text-[var(--accent-blue)]">
-                                                {rel.display_name?.charAt(0)}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <Link href={`/copytrade/provider/${rel.provider_id}`} className="hover:text-[var(--accent-blue)] transition-colors flex items-center gap-2">
-                                                <h3 className="font-bold text-lg text-[var(--text-primary)]">{rel.display_name}</h3>
-                                                <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                </svg>
-                                            </Link>
-                                            <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)] mt-1">
-                                                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${rel.status === 'active' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                                    rel.status === 'paused' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                                        'bg-red-500/10 text-red-500 border border-red-500/20'
-                                                    }`}>
-                                                    {rel.status}
-                                                </span>
-                                                <span>Started: {new Date(rel.created_at).toLocaleDateString()}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between w-full md:w-auto gap-8 md:gap-16 bg-[var(--bg-secondary)] rounded-xl px-6 py-3 md:bg-transparent md:px-0 md:py-0">
-                                        <div className="text-center">
-                                            <div className="text-xs text-[var(--text-secondary)] mb-1">Allocated</div>
-                                            <div className="font-bold text-[var(--text-primary)] text-lg">${rel.allocated_capital}</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-xs text-[var(--text-secondary)] mb-1">Profit/Loss</div>
-                                            <div className={`font-bold text-lg ${rel.total_profit_loss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                {rel.total_profit_loss >= 0 ? '+' : ''}${rel.total_profit_loss}
-                                            </div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-xs text-[var(--text-secondary)] mb-1">Risk</div>
-                                            <div className="font-bold text-[var(--text-primary)] text-lg">{rel.risk_multiplier}x</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 w-full md:w-auto">
-                                        {rel.status === 'active' ? (
-                                            <button
-                                                onClick={() => handleUpdateStatus(rel.id, 'paused')}
-                                                className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 text-sm font-medium transition-colors border border-yellow-500/20"
-                                            >
-                                                Pause
-                                            </button>
-                                        ) : rel.status === 'paused' ? (
-                                            <button
-                                                onClick={() => handleUpdateStatus(rel.id, 'active')}
-                                                className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-green-500/10 hover:bg-green-500/20 text-green-500 text-sm font-medium transition-colors border border-green-500/20"
-                                            >
-                                                Resume
-                                            </button>
-                                        ) : (
-                                            <div className="flex-1 md:flex-none px-4 py-2.5 text-center text-gray-500 text-sm italic">Stopped</div>
-                                        )}
-
-                                        {rel.status !== 'stopped' && (
-                                            <button
-                                                onClick={() => {
-                                                    if (window.confirm('Are you sure you want to stop copying? This will close all open positions.')) {
-                                                        handleUpdateStatus(rel.id, 'stopped');
-                                                    }
-                                                }}
-                                                className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-medium transition-colors border border-red-500/20"
-                                            >
-                                                Stop
-                                            </button>
-                                        )}
-                                    </div>
+                {/* Tab content */}
+                <AnimatePresence mode="wait">
+                    {/* PORTFOLIO TAB */}
+                    {activeTab === 'portfolio' && (
+                        <motion.div key="portfolio" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                            <h2 className="text-base font-bold text-gray-700 mb-3">
+                                Subscription Aktif <span className="text-xs font-normal text-gray-400 ml-1">({relationships.length})</span>
+                            </h2>
+                            {relationships.length === 0 ? (
+                                <div className="text-center py-16 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
+                                    <div className="text-4xl mb-3">📭</div>
+                                    <h3 className="text-base font-bold text-gray-700 mb-1">Belum copy siapapun</h3>
+                                    <p className="text-sm text-gray-400 mb-5">Browse marketplace untuk menemukan provider terbaik</p>
+                                    <Link href="/copytrade">
+                                        <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-colors">
+                                            Browse Marketplace →
+                                        </button>
+                                    </Link>
                                 </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
+                            ) : (
+                                <div className="space-y-3">
+                                    {relationships.map((rel: any) => (
+                                        <motion.div key={rel.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-base shrink-0">
+                                                    {rel.display_name?.charAt(0)}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <Link href={`/copytrade/provider/${rel.provider_id}`} className="font-bold text-gray-900 hover:text-blue-600 transition-colors text-sm">
+                                                        {rel.display_name}
+                                                    </Link>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${rel.status === 'active' ? 'bg-green-50 text-green-600' : rel.status === 'paused' ? 'bg-yellow-50 text-yellow-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                            {rel.status.toUpperCase()}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">Sejak {new Date(rel.created_at).toLocaleDateString('id-ID')}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className={`text-base font-black ${(rel.total_profit_loss || 0) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                                        {(rel.total_profit_loss || 0) >= 0 ? '+' : ''}${(rel.total_profit_loss || 0).toFixed(2)}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">${rel.allocated_capital} kapital</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {rel.status === 'active' && (
+                                                    <button onClick={() => handleUpdateStatus(rel.id, 'paused')}
+                                                        className="flex-1 py-2 rounded-xl bg-yellow-50 text-yellow-700 text-xs font-bold border border-yellow-100 hover:bg-yellow-100 transition-colors">
+                                                        ⏸ Pause
+                                                    </button>
+                                                )}
+                                                {rel.status === 'paused' && (
+                                                    <button onClick={() => handleUpdateStatus(rel.id, 'active')}
+                                                        className="flex-1 py-2 rounded-xl bg-green-50 text-green-700 text-xs font-bold border border-green-100 hover:bg-green-100 transition-colors">
+                                                        ▶ Resume
+                                                    </button>
+                                                )}
+                                                {rel.status !== 'stopped' && (
+                                                    <button onClick={() => { if (confirm('Stop copy trading dengan provider ini?')) handleUpdateStatus(rel.id, 'stopped'); }}
+                                                        className="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
+                                                        ⏹ Stop
+                                                    </button>
+                                                )}
+                                                {rel.status === 'stopped' && (
+                                                    <div className="flex-1 py-2 text-center text-gray-400 text-xs">Copy dihentikan</div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* SIGNALS FEED TAB */}
+                    {activeTab === 'signals' && (
+                        <motion.div key="signals" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                            <div className="flex items-center justify-between mb-3">
+                                <h2 className="text-base font-bold text-gray-700">Feed Sinyal Terbaru</h2>
+                                <button onClick={fetchSignals} className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                                    <svg className={`w-3.5 h-3.5 ${signalsLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            {signalsLoading ? (
+                                <div className="space-y-3">
+                                    {[1, 2].map(i => <div key={i} className="h-36 bg-gray-100 rounded-2xl animate-pulse" />)}
+                                </div>
+                            ) : signals.length === 0 ? (
+                                <div className="text-center py-16 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
+                                    <div className="text-4xl mb-3">📡</div>
+                                    <h3 className="text-base font-bold text-gray-700 mb-1">Belum ada sinyal</h3>
+                                    <p className="text-sm text-gray-400">
+                                        {relationships.length === 0
+                                            ? 'Ikuti provider dulu untuk melihat sinyal mereka di sini'
+                                            : 'Provider yang kamu ikuti belum posting sinyal'}
+                                    </p>
+                                    {relationships.length === 0 && (
+                                        <Link href="/copytrade">
+                                            <button className="mt-4 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
+                                                Cari Provider →
+                                            </button>
+                                        </Link>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {signals.map((signal: any) => (
+                                        <SignalCard key={signal.id} signal={signal} isProvider={false} />
+                                    ))}
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* PROVIDER TAB */}
+                    {activeTab === 'provider' && isProvider && (
+                        <motion.div key="provider" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                            <ProviderDashboard />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </main>
     );

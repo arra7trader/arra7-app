@@ -501,6 +501,28 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // PROVIDER SIGNALS: Trading signals posted by providers to their followers
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS provider_signals (
+        id TEXT PRIMARY KEY,
+        provider_id TEXT NOT NULL,
+        pair TEXT NOT NULL,
+        action TEXT NOT NULL,
+        entry_price REAL,
+        stop_loss REAL,
+        take_profit REAL,
+        lot_size REAL DEFAULT 0.1,
+        timeframe TEXT DEFAULT '1H',
+        commentary TEXT,
+        status TEXT DEFAULT 'active',
+        result_pips REAL,
+        notified_at DATETIME,
+        closed_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (provider_id) REFERENCES signal_providers(id)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
