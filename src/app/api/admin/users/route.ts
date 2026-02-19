@@ -138,6 +138,8 @@ export async function GET(request: NextRequest) {
                 lastLoginCity: row.last_login_city || null,
                 lastLoginAt: row.last_login_at || null,
                 downloadedApk: row.downloaded_apk === 1,
+                copytradeAccess: row.copytrade_access || null,
+                copytradeExpires: row.copytrade_expires || null,
             });
         }
 

@@ -366,6 +366,43 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleUpdateCopyTrade = async (user: User, access: 'FOLLOWER' | 'PROVIDER' | null) => {
+        const actionText = access === 'PROVIDER' ? 'Provider' : access === 'FOLLOWER' ? 'Follower' : 'Revoke';
+        if (!confirm(`Are you sure you want to set Copy Trade access to ${actionText} for ${user.name}?`)) return;
+
+        setUpdating(user.id);
+        setMessage(null);
+
+        try {
+            const res = await fetch('/api/admin/users/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'copytrade_update',
+                    userIds: [user.id],
+                    data: {
+                        access: access || 'REVOKE',
+                        duration: 30 // Default 30 days for manual activation? Or ask? For now default 30 days.
+                    }
+                })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                setMessage({ type: 'success', text: `✅ Copy Trade access updated for ${user.name}` });
+                fetchUsers();
+            } else {
+                setMessage({ type: 'error', text: data.message });
+            }
+        } catch (error) {
+            console.error('Update CT error:', error);
+            setMessage({ type: 'error', text: 'Failed to update Copy Trade access' });
+        } finally {
+            setUpdating(null);
+        }
+    };
+
+
     const getNotificationMessage = () => {
         if (!notification) return '';
         return `✅ Akun Anda sudah diupgrade ke ${notification.membership}! 🎉
@@ -753,6 +790,7 @@ Tim ARRA7`;
                             onUserClick={setSelectedUser}
                             selectedIds={selectedUserIds}
                             onSelectionChange={setSelectedUserIds}
+                            onUpdateCopyTrade={handleUpdateCopyTrade}
                         />
                     </>
                 )}
