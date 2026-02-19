@@ -271,20 +271,17 @@ export async function getPerformanceSummary(period: 'today' | '7d' | '30d' | 'al
     if (!turso) return null;
 
     try {
-        // FIX: Use UTC+7 (WIB) offset explicitly instead of 'localtime' which uses server timezone (UTC)
-        // This ensures signals from 00:00-06:59 WIB are correctly grouped under the local date.
         let dateFilter = '';
         const queryArgs: any[] = [];
         if (period === 'today') {
-            // Apply +7 hours offset so the date comparison is in WIB timezone
-            dateFilter = "AND DATE(created_at, '+7 hours') = DATE('now', '+7 hours')";
+            dateFilter = "AND DATE(created_at) = DATE('now', 'localtime')";
         } else if (period === '7d') {
-            dateFilter = "AND created_at >= datetime('now', '-7 days')";
+            dateFilter = "AND created_at >= datetime('now', '-7 days', 'localtime')";
         } else if (period === '30d') {
-            dateFilter = "AND created_at >= datetime('now', '-30 days')";
+            dateFilter = "AND created_at >= datetime('now', '-30 days', 'localtime')";
         } else if (period === 'custom' && customDate) {
-            // FIX: Use parameterized query to avoid SQL injection, and use +7 offset for WIB
-            dateFilter = "AND DATE(created_at, '+7 hours') = ?";
+            // Use parameterized query (safe from SQL injection)
+            dateFilter = "AND DATE(created_at, 'localtime') = ?";
             queryArgs.push(customDate);
         }
 
