@@ -14,6 +14,7 @@ import UserFormModal from '@/components/admin/UserFormModal';
 import BroadcastModal from '@/components/admin/BroadcastModal';
 import MarketingBot from '@/components/admin/MarketingBot';
 import UpgradeDurationModal, { DurationOption } from '@/components/admin/UpgradeDurationModal';
+import ProviderApproval from '@/components/admin/ProviderApproval';
 
 interface UpgradeNotification {
     userName: string;
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
     const [telegramConfigured, setTelegramConfigured] = useState(false);
 
     // Tabs
-    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing' | 'copytrade'>('users');
 
     // ... (rest of state)
 
@@ -648,9 +649,18 @@ Tim ARRA7`;
                     >
                         🤖 Marketing Bot
                     </button>
+                    <button
+                        onClick={() => setActiveTab('copytrade')}
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'copytrade' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        📡 Copy Trade
+                    </button>
                 </div>
 
                 {activeTab === 'marketing' && <MarketingBot />}
+
+                {activeTab === 'copytrade' && <ProviderApproval />}
 
                 {activeTab === 'broadcast' && (
                     <TelegramMarketing
