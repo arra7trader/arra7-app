@@ -5,7 +5,7 @@ interface Signal {
     id: string;
     action: 'BUY' | 'SELL';
     status: 'CLOSED';
-    pips_gained?: number;
+    result_pips?: number;
 
     closed_at?: string;
     created_at: string;
@@ -14,11 +14,16 @@ interface Signal {
 export async function updateProviderStats(providerId: string) {
     const turso = await getTursoClient();
 
+    if (!turso) {
+        console.error('Turso client not configured');
+        return;
+    }
+
     try {
         // 1. Fetch all CLOSED signals for this provider
         const result = await turso.execute({
             sql: `
-                SELECT id, action, status, result_pips, profit_loss, closed_at, created_at 
+                SELECT id, action, status, result_pips, closed_at, created_at 
                 FROM provider_signals 
                 WHERE provider_id = ? AND status IN ('tp_hit', 'sl_hit', 'manually_closed') 
                 ORDER BY closed_at ASC

@@ -104,7 +104,7 @@ export default function ProviderAnalytics({ stats, dailyStats }: ProviderAnalyti
                                 />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(val: number) => [`$${val.toFixed(2)}`, 'Profit']}
+                                    formatter={(val: any) => [`$${Number(val).toFixed(2)}`, 'Profit']}
                                     labelStyle={{ color: '#64748B', marginBottom: '4px' }}
                                 />
                                 <Area
@@ -137,8 +137,8 @@ export default function ProviderAnalytics({ stats, dailyStats }: ProviderAnalyti
                             <div
                                 key={score}
                                 className={`w-2 h-8 rounded-full ${(stats.stats_risk_score || 1) >= score
-                                        ? score > 7 ? 'bg-red-500' : score > 4 ? 'bg-yellow-500' : 'bg-green-500'
-                                        : 'bg-gray-100'
+                                    ? score > 7 ? 'bg-red-500' : score > 4 ? 'bg-yellow-500' : 'bg-green-500'
+                                    : 'bg-gray-100'
                                     }`}
                             />
                         ))}

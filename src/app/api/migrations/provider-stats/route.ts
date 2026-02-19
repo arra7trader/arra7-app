@@ -6,6 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     const turso = await getTursoClient();
+
+    if (!turso) {
+        return NextResponse.json({ status: 'error', message: 'Turso client not configured' }, { status: 500 });
+    }
+
     try {
         // Add stats columns to users table
         const alterQueries = [
