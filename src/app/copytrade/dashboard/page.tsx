@@ -18,6 +18,7 @@ export default function FollowerDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [relationships, setRelationships] = useState<any[]>([]);
     const [signals, setSignals] = useState<any[]>([]);
+    const [isLocked, setIsLocked] = useState(false);
     const [signalsLoading, setSignalsLoading] = useState(false);
     const [totalEquity, setTotalEquity] = useState(0);
     const [totalPnL, setTotalPnL] = useState(0);
@@ -60,8 +61,14 @@ export default function FollowerDashboardPage() {
         setSignalsLoading(true);
         try {
             const res = await fetch('/api/copytrade/signals?mode=follower');
-            const data = await res.json();
-            setSignals(data.signals || []);
+            if (res.status === 403) {
+                setIsLocked(true);
+                setSignals([]);
+            } else {
+                setIsLocked(false);
+                const data = await res.json();
+                setSignals(data.signals || []);
+            }
         } catch (e) { console.error(e); }
         finally { setSignalsLoading(false); }
     };
@@ -213,42 +220,61 @@ export default function FollowerDashboardPage() {
                     {/* SIGNALS FEED TAB */}
                     {activeTab === 'signals' && (
                         <motion.div key="signals" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                            <div className="flex items-center justify-between mb-3">
-                                <h2 className="text-base font-bold text-gray-700">Feed Sinyal Terbaru</h2>
-                                <button onClick={fetchSignals} className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                                    <svg className={`w-3.5 h-3.5 ${signalsLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                    Refresh
-                                </button>
-                            </div>
-                            {signalsLoading ? (
-                                <div className="space-y-3">
-                                    {[1, 2].map(i => <div key={i} className="h-36 bg-gray-100 rounded-2xl animate-pulse" />)}
-                                </div>
-                            ) : signals.length === 0 ? (
-                                <div className="text-center py-16 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
-                                    <div className="text-4xl mb-3">📡</div>
-                                    <h3 className="text-base font-bold text-gray-700 mb-1">Belum ada sinyal</h3>
-                                    <p className="text-sm text-gray-400">
-                                        {relationships.length === 0
-                                            ? 'Ikuti provider dulu untuk melihat sinyal mereka di sini'
-                                            : 'Provider yang kamu ikuti belum posting sinyal'}
+                            {isLocked ? (
+                                <div className="text-center py-16 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <span className="text-3xl">🔒</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Akses Terkunci</h3>
+                                    <p className="text-gray-500 max-w-sm mx-auto mb-6">
+                                        Anda perlu berlangganan <b>CT Follower</b> untuk melihat sinyal dari provider.
                                     </p>
-                                    {relationships.length === 0 && (
-                                        <Link href="/copytrade">
-                                            <button className="mt-4 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
-                                                Cari Provider →
-                                            </button>
-                                        </Link>
-                                    )}
+                                    <Link href="/pricing#copytrade">
+                                        <button className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all">
+                                            Buka Akses (Rp 49k/bln)
+                                        </button>
+                                    </Link>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
-                                    {signals.map((signal: any) => (
-                                        <SignalCard key={signal.id} signal={signal} isProvider={false} />
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h2 className="text-base font-bold text-gray-700">Feed Sinyal Terbaru</h2>
+                                        <button onClick={fetchSignals} className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                                            <svg className={`w-3.5 h-3.5 ${signalsLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            Refresh
+                                        </button>
+                                    </div>
+                                    {signalsLoading ? (
+                                        <div className="space-y-3">
+                                            {[1, 2].map(i => <div key={i} className="h-36 bg-gray-100 rounded-2xl animate-pulse" />)}
+                                        </div>
+                                    ) : signals.length === 0 ? (
+                                        <div className="text-center py-16 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
+                                            <div className="text-4xl mb-3">📡</div>
+                                            <h3 className="text-base font-bold text-gray-700 mb-1">Belum ada sinyal</h3>
+                                            <p className="text-sm text-gray-400">
+                                                {relationships.length === 0
+                                                    ? 'Ikuti provider dulu untuk melihat sinyal mereka di sini'
+                                                    : 'Provider yang kamu ikuti belum posting sinyal'}
+                                            </p>
+                                            {relationships.length === 0 && (
+                                                <Link href="/copytrade">
+                                                    <button className="mt-4 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
+                                                        Cari Provider →
+                                                    </button>
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {signals.map((signal: any) => (
+                                                <SignalCard key={signal.id} signal={signal} isProvider={false} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </motion.div>
                     )}
