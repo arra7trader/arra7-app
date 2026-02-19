@@ -546,6 +546,9 @@ export async function initDatabase(): Promise<boolean> {
       // APK Tracking
       { column: 'downloaded_apk', sql: `ALTER TABLE users ADD COLUMN downloaded_apk INTEGER DEFAULT 0` },
       { column: 'apk_downloaded_at', sql: `ALTER TABLE users ADD COLUMN apk_downloaded_at DATETIME` },
+      // Copy Trade standalone subscription
+      { column: 'copytrade_access', sql: `ALTER TABLE users ADD COLUMN copytrade_access TEXT DEFAULT NULL` },
+      { column: 'copytrade_expires', sql: `ALTER TABLE users ADD COLUMN copytrade_expires DATETIME DEFAULT NULL` },
     ];
 
     for (const migration of migrations) {
@@ -564,6 +567,38 @@ export async function initDatabase(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Database init error:', error);
+    return false;
+  }
+}
+
+// ============================================
+// COPY TRADE SUBSCRIPTION
+// ============================================
+export async function updateUserCopytradeAccess(
+  userId: string,
+  tier: string,   // 'CT_FOLLOWER' | 'CT_PROVIDER'
+  days: number
+): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+    const expiresStr = expiresAt.toISOString();
+
+    // Map planId to the access level stored in DB
+    const accessLevel = tier === 'CT_PROVIDER' ? 'PROVIDER' : 'FOLLOWER';
+
+    await turso.execute({
+      sql: `UPDATE users SET copytrade_access = ?, copytrade_expires = ? WHERE id = ?`,
+      args: [accessLevel, expiresStr, userId],
+    });
+
+    console.log(`[CT] User ${userId} granted ${accessLevel} access until ${expiresStr}`);
+    return true;
+  } catch (error) {
+    console.error('[CT] updateUserCopytradeAccess error:', error);
     return false;
   }
 }

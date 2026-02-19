@@ -538,7 +538,141 @@ export default function PricingPage() {
                 </div>
             </section>
 
+            {/* ===== COPY TRADE SECTION ===== */}
+            <section id="copytrade" className="section-padding bg-gradient-to-b from-teal-50/50 to-emerald-50/30">
+                <div className="container-apple">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-12"
+                    >
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-100 text-teal-700 text-sm font-semibold mb-4">
+                            📡 Copy Trade Marketplace
+                        </div>
+                        <h2 className="heading-lg text-[var(--text-primary)] mb-3">Sinyal Trading Premium — Terpisah dari Membership</h2>
+                        <p className="body-md max-w-xl mx-auto">
+                            Ikuti sinyal dari trader terbaik. Tidak perlu PRO atau VVIP — ini sistem tersendiri.
+                        </p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                        {/* CT FOLLOWER */}
+                        {[
+                            {
+                                id: 'CT_FOLLOWER',
+                                icon: '👥',
+                                name: 'CT Follower',
+                                tagline: 'Ikuti sinyal trader terbaik',
+                                color: 'from-teal-500 to-cyan-600',
+                                lightColor: 'from-teal-50 to-cyan-50',
+                                borderColor: 'border-teal-200',
+                                textColor: 'text-teal-600',
+                                features: [
+                                    '✅ Lihat sinyal real-time (Entry, SL, TP)',
+                                    '✅ Feed sinyal dari semua provider yang di-follow',
+                                    '✅ Notifikasi sinyal baru via Telegram',
+                                    '✅ Histori & statistik provider',
+                                    '✅ Bisa follow unlimited provider',
+                                ],
+                                prices: { '1month': 'Rp 49K', '3months': 'Rp 130K', '6months': 'Rp 249K', '1year': 'Rp 449K' },
+                                savings: { '3months': 'Hemat Rp 17K', '6months': 'Hemat Rp 45K', '1year': 'Hemat Rp 139K' },
+                            },
+                            {
+                                id: 'CT_PROVIDER',
+                                icon: '📡',
+                                name: 'CT Provider',
+                                tagline: 'Jual sinyal ke ratusan follower',
+                                color: 'from-purple-500 to-indigo-600',
+                                lightColor: 'from-purple-50 to-indigo-50',
+                                borderColor: 'border-purple-200',
+                                textColor: 'text-purple-600',
+                                features: [
+                                    '✅ Posting sinyal ke semua follower',
+                                    '✅ Auto-broadcast ke Telegram channel',
+                                    '✅ Halaman profil provider publik',
+                                    '✅ Track win rate & statistik otomatis',
+                                    '✅ Bangun reputasi & follower base',
+                                    '✅ Bisa set subscription fee sendiri (soon)',
+                                ],
+                                prices: { '1month': 'Rp 99K', '3months': 'Rp 270K', '6months': 'Rp 499K', '1year': 'Rp 899K' },
+                                savings: { '3months': 'Hemat Rp 27K', '6months': 'Hemat Rp 95K', '1year': 'Hemat Rp 289K' },
+                            },
+                        ].map((plan, idx) => {
+                            const durOpts = ['1month', '3months', '6months', '1year'] as const;
+                            const durLabels = { '1month': '1 Bulan', '3months': '3 Bulan', '6months': '6 Bulan', '1year': '1 Tahun' };
+                            const dur = (selectedDuration[plan.id] || '1month') as keyof typeof plan.prices;
+
+                            return (
+                                <motion.div
+                                    key={plan.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className={`bg-gradient-to-br ${plan.lightColor} border ${plan.borderColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all`}
+                                >
+                                    {/* Header */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center text-white text-2xl shadow-sm`}>
+                                            {plan.icon}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-gray-900 text-lg">{plan.name}</h3>
+                                            <p className={`text-xs font-medium ${plan.textColor}`}>{plan.tagline}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Duration selector */}
+                                    <div className="flex gap-1 p-1 bg-white/70 rounded-xl mb-4">
+                                        {durOpts.map(d => (
+                                            <button key={d}
+                                                onClick={() => setSelectedDuration(prev => ({ ...prev, [plan.id]: d }))}
+                                                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${dur === d ? `bg-gradient-to-r ${plan.color} text-white shadow-sm` : 'text-gray-500 hover:text-gray-700'}`}>
+                                                {durLabels[d]}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Price */}
+                                    <div className="mb-4">
+                                        <span className={`text-3xl font-black ${plan.textColor}`}>{plan.prices[dur]}</span>
+                                        <span className="text-gray-400 text-sm ml-1">{dur === '1month' ? '/bulan' : `/${durLabels[dur].toLowerCase()}`}</span>
+                                        {plan.savings[dur as keyof typeof plan.savings] && (
+                                            <div className="inline-flex items-center bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full ml-2">
+                                                🎉 {plan.savings[dur as keyof typeof plan.savings]}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Features */}
+                                    <ul className="space-y-2 mb-5">
+                                        {plan.features.map((f, i) => (
+                                            <li key={i} className="text-sm text-gray-700">{f}</li>
+                                        ))}
+                                    </ul>
+
+                                    {/* CTA */}
+                                    <button
+                                        onClick={() => handleSubscribe(plan.id)}
+                                        disabled={isProcessing === plan.id}
+                                        className={`w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r ${plan.color} hover:opacity-90 transition-all shadow-sm hover:shadow-md text-sm`}
+                                    >
+                                        {isProcessing === plan.id ? '🔄 Memproses...' : `Mulai ${plan.name} →`}
+                                    </button>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+
+                    <p className="text-center text-xs text-gray-400 mt-6">
+                        Pembayaran via QRIS / Transfer Bank. Konfirmasi manual via Telegram untuk aktivasi.
+                    </p>
+                </div>
+            </section>
+
             {/* Bottom CTA */}
+
             <section className="section-padding">
                 <div className="container-apple text-center">
                     <motion.div

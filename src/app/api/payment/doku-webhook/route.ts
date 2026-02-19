@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateUserMembership } from '@/lib/turso';
+import { updateUserMembership, updateUserCopytradeAccess } from '@/lib/turso';
 import { DOKU_PLANS } from '@/lib/doku';
 
 // DOKU webhook notification handler
@@ -26,23 +26,30 @@ export async function POST(request: NextRequest) {
             latestTransactionStatus === 'PAID';
 
         if (isSuccess && userId && productCode) {
-            // Verify amount matches plan
-            const plan = DOKU_PLANS[productCode as keyof typeof DOKU_PLANS];
-
-            if (plan) {
-                const paidAmount = parseFloat(amount?.value || '0');
-
-                if (paidAmount >= plan.price) {
-                    // Update user membership
-                    const updated = await updateUserMembership(userId, productCode);
-
-                    if (updated) {
-                        console.log(`✅ User ${userId} upgraded to ${productCode} via DOKU`);
-                    } else {
-                        console.error(`❌ Failed to update membership for user ${userId}`);
-                    }
+            // Copy Trade standalone subscription
+            if (productCode.startsWith('CT_')) {
+                const days = productCode.includes('3M') ? 90 : productCode.includes('6M') ? 180 : productCode.includes('1Y') ? 365 : 30;
+                const updated = await updateUserCopytradeAccess(userId, productCode, days);
+                if (updated) {
+                    console.log(`✅ [CT] User ${userId} granted ${productCode} via DOKU`);
                 } else {
-                    console.error(`❌ Amount mismatch: paid ${paidAmount}, expected ${plan.price}`);
+                    console.error(`❌ [CT] Failed to grant ${productCode} to user ${userId}`);
+                }
+            } else {
+                // Verify amount matches plan
+                const plan = DOKU_PLANS[productCode as keyof typeof DOKU_PLANS];
+                if (plan) {
+                    const paidAmount = parseFloat(amount?.value || '0');
+                    if (paidAmount >= plan.price) {
+                        const updated = await updateUserMembership(userId, productCode);
+                        if (updated) {
+                            console.log(`✅ User ${userId} upgraded to ${productCode} via DOKU`);
+                        } else {
+                            console.error(`❌ Failed to update membership for user ${userId}`);
+                        }
+                    } else {
+                        console.error(`❌ Amount mismatch: paid ${paidAmount}, expected ${plan.price}`);
+                    }
                 }
             }
         } else {

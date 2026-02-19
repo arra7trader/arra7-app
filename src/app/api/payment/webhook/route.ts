@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyNotificationSignature, PRICING_PLANS } from '@/lib/midtrans';
-import { updateUserMembership } from '@/lib/turso';
+import { updateUserMembership, updateUserCopytradeAccess } from '@/lib/turso';
 
 // Midtrans notification webhook
 export async function POST(request: NextRequest) {
@@ -50,16 +50,25 @@ export async function POST(request: NextRequest) {
             transaction_status === 'settlement';
 
         if (isSuccess && userId && planId) {
-            // Update user membership
-            const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
-
-            if (plan) {
-                const updated = await updateUserMembership(userId, planId);
-
+            // Copy Trade standalone subscription
+            if (planId.startsWith('CT_')) {
+                const days = planId.includes('3M') ? 90 : planId.includes('6M') ? 180 : planId.includes('1Y') ? 365 : 30;
+                const updated = await updateUserCopytradeAccess(userId, planId, days);
                 if (updated) {
-                    console.log(`User ${userId} upgraded to ${planId}`);
+                    console.log(`[CT] User ${userId} granted ${planId} access`);
                 } else {
-                    console.error(`Failed to update membership for user ${userId}`);
+                    console.error(`[CT] Failed to grant ${planId} to user ${userId}`);
+                }
+            } else {
+                // Update user membership (existing logic)
+                const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
+                if (plan) {
+                    const updated = await updateUserMembership(userId, planId);
+                    if (updated) {
+                        console.log(`User ${userId} upgraded to ${planId}`);
+                    } else {
+                        console.error(`Failed to update membership for user ${userId}`);
+                    }
                 }
             }
         } else if (transaction_status === 'pending') {

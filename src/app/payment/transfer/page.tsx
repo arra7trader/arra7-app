@@ -20,6 +20,18 @@ const PRICING_OPTIONS: Record<string, Record<string, { durationLabel: string; pr
         '6months': { durationLabel: '6 Bulan', price: 1490000, priceDisplay: 'Rp 1.490.000', originalPrice: 'Rp 2.394.000', period: '/6 bulan' },
         '1year': { durationLabel: '1 Tahun', price: 2800000, priceDisplay: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', period: '/tahun' },
     },
+    CT_FOLLOWER: {
+        '1month': { durationLabel: '1 Bulan', price: 49000, priceDisplay: 'Rp 49.000', originalPrice: null, period: '/bulan' },
+        '3months': { durationLabel: '3 Bulan', price: 130000, priceDisplay: 'Rp 130.000', originalPrice: 'Rp 147.000', period: '/3 bulan' },
+        '6months': { durationLabel: '6 Bulan', price: 249000, priceDisplay: 'Rp 249.000', originalPrice: 'Rp 294.000', period: '/6 bulan' },
+        '1year': { durationLabel: '1 Tahun', price: 449000, priceDisplay: 'Rp 449.000', originalPrice: 'Rp 588.000', period: '/tahun' },
+    },
+    CT_PROVIDER: {
+        '1month': { durationLabel: '1 Bulan', price: 99000, priceDisplay: 'Rp 99.000', originalPrice: null, period: '/bulan' },
+        '3months': { durationLabel: '3 Bulan', price: 270000, priceDisplay: 'Rp 270.000', originalPrice: 'Rp 297.000', period: '/3 bulan' },
+        '6months': { durationLabel: '6 Bulan', price: 499000, priceDisplay: 'Rp 499.000', originalPrice: 'Rp 594.000', period: '/6 bulan' },
+        '1year': { durationLabel: '1 Tahun', price: 899000, priceDisplay: 'Rp 899.000', originalPrice: 'Rp 1.188.000', period: '/tahun' },
+    },
 };
 
 function TransferContent() {
@@ -33,9 +45,10 @@ function TransferContent() {
         if (!planId || !PRICING_OPTIONS[planId] || !PRICING_OPTIONS[planId][duration]) return null;
 
         const details = PRICING_OPTIONS[planId][duration];
+        const nameMap: Record<string, string> = { PRO: 'Pro', VVIP: 'VVIP', CT_FOLLOWER: 'CT Follower', CT_PROVIDER: 'CT Provider' };
         return {
             id: planId,
-            name: planId === 'PRO' ? 'Pro' : 'VVIP',
+            name: nameMap[planId] || planId,
             ...details
         };
     }, [planId, duration]);
