@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { getTursoClient } from '@/lib/turso';
+import getTursoClient from '@/lib/turso';
 
 export const dynamic = 'force-dynamic';
 
