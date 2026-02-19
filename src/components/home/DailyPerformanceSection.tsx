@@ -110,7 +110,7 @@ export default function DailyPerformanceSection() {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-[var(--text-primary)] leading-tight tracking-tight">
-                                DAILY REPORT
+                                LAPORAN HARIAN
                             </h2>
                             <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">
                                 {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -125,7 +125,7 @@ export default function DailyPerformanceSection() {
                             {/* TOTAL */}
                             <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center shadow-sm hover:shadow-md transition-all">
                                 <p className="text-2xl font-bold text-[var(--text-primary)]">{data?.today.total || 0}</p>
-                                <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">Total Signals</p>
+                                <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">Total Sinyal</p>
                             </motion.div>
 
                             {/* TP HIT */}
