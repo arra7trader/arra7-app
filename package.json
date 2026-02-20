@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "deploy-trigger": "echo 'Deploy Triggered'",
     "build": "next build",
     "train": "node scripts/train-lstm.mjs",
     "start": "next start",
