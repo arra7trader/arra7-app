@@ -15,9 +15,10 @@ export async function GET(request: NextRequest) {
         const session = await getServerSession(authOptions);
         const { searchParams } = new URL(request.url);
         const myProfile = searchParams.get('myProfile');
+        const own = searchParams.get('own');
 
         // If requesting own profile
-        if (myProfile === 'true') {
+        if (myProfile === 'true' || own === 'true') {
             if (!session?.user?.email) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
