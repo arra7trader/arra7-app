@@ -172,8 +172,8 @@ _DYOR. Money Management Recommended._
                             sql: `INSERT INTO provider_signals (
                                     id, provider_id, pair, action, 
                                     entry_price, stop_loss, take_profit, 
-                                    commentary, status, timeframe, lot_size
-                                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', '10m', 0.01)`,
+                                    commentary, status, timeframe, lot_size, price_koin
+                                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', '10m', 0.01, 10)`,
                             args: [
                                 signalId,
                                 'provider_ai_genesis', // Fixed ID for AI

@@ -131,7 +131,6 @@ export default function UserTable({
                                 { label: 'Lokasi Login', key: 'lastLoginCity' },
                                 { label: 'Tanggal Daftar', key: 'createdAt' },
                                 { label: 'Membership', key: 'membership' },
-                                { label: 'Status CT', key: 'copytradeAccess' },
                                 { label: 'Expires', key: 'membershipExpires' },
                                 { label: 'Usage Today', key: 'todayUsage' },
                             ].map((head) => (
@@ -215,42 +214,7 @@ export default function UserTable({
                                         {user.membership}
                                     </span>
                                 </td>
-                                <td className="p-4">
-                                    {user.copytradeAccess ? (
-                                        <div className="flex flex-col gap-1">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold ${user.copytradeAccess === 'PROVIDER' ? 'bg-purple-100 text-purple-700' : 'bg-teal-100 text-teal-700'
-                                                }`}>
-                                                {user.copytradeAccess}
-                                            </span>
-                                            {user.copytradeExpires && (
-                                                <span className="text-[10px] text-gray-500">
-                                                    Exp: {new Date(user.copytradeExpires).toLocaleDateString('id-ID')}
-                                                </span>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <span className="text-gray-400 text-xs">-</span>
-                                    )}
-                                    {onUpdateCopyTrade && (
-                                        <div className="flex gap-1 mt-1">
-                                            {user.copytradeAccess !== 'FOLLOWER' && (
-                                                <button onClick={(e) => { e.stopPropagation(); onUpdateCopyTrade(user, 'FOLLOWER'); }} disabled={!!updating} className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-200 hover:bg-teal-100">
-                                                    +Foll
-                                                </button>
-                                            )}
-                                            {user.copytradeAccess !== 'PROVIDER' && (
-                                                <button onClick={(e) => { e.stopPropagation(); onUpdateCopyTrade(user, 'PROVIDER'); }} disabled={!!updating} className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-200 hover:bg-purple-100">
-                                                    +Prov
-                                                </button>
-                                            )}
-                                            {user.copytradeAccess && (
-                                                <button onClick={(e) => { e.stopPropagation(); onUpdateCopyTrade(user, null); }} disabled={!!updating} className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-200 hover:bg-red-100">
-                                                    Stop
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </td>
+
                                 <td className="p-4 text-sm text-[var(--text-secondary)]">
                                     {user.membershipExpires
                                         ? new Date(user.membershipExpires).toLocaleDateString('id-ID')
