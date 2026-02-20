@@ -373,53 +373,6 @@ export default function PricingPage() {
                 </p>
             </section>
 
-            {/* AI Copytrade Premium Light Section */}
-            <section className="px-4 max-w-5xl mx-auto mb-32">
-                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden flex flex-col md:flex-row items-center">
-                    <div className="w-full md:w-1/2 p-10 md:p-14 bg-emerald-50/50 h-full flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-100">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider w-max mb-6">
-                            <SparklesIcon size="xs" /> Add-On Eksklusif
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
-                            Copytrade <span className="text-emerald-600">AI Genesis</span>
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed max-w-md mb-8">
-                            Dapatkan profit autopilot konsisten 100%. Biarkan AI Genesis mengeksekusi perdagangan secara otomatis ke akun MT4 / MT5 Anda di Exness atau FBS.
-                        </p>
-                        <ul className="space-y-3 mb-8">
-                            {[
-                                'Eksekusi instan dalam milidetik',
-                                'Fokus XAUUSD Win Rate >80%',
-                                'Notifikasi hasil di Telegram',
-                            ].map((item, i) => (
-                                <li key={i} className="flex items-center gap-3 text-slate-700 font-medium text-sm">
-                                    <CheckIcon className="text-emerald-500" size="sm" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="w-full md:w-1/2 p-10 md:p-14 text-center bg-white flex flex-col justify-center items-center">
-                        <div className="mb-2 text-slate-500 font-bold uppercase tracking-widest text-sm">Trial Perdana</div>
-                        <div className="flex items-baseline justify-center gap-1 mb-6">
-                            <span className="text-5xl lg:text-6xl font-black text-slate-900">Rp 49.000</span>
-                            <span className="text-slate-500 font-medium">/ bln</span>
-                        </div>
-                        <p className="text-emerald-600 text-sm font-semibold mb-8 border border-emerald-200 bg-emerald-50 px-4 py-2 rounded-lg">
-                            Slot Terbatas untuk 100 User Pertama!
-                        </p>
-                        <button
-                            onClick={() => handleSubscribe('CT_FOLLOWER')}
-                            disabled={isProcessing === 'CT_FOLLOWER'}
-                            className="w-full py-4 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
-                        >
-                            {isProcessing === 'CT_FOLLOWER' ? 'Memproses...' : 'Berlangganan Copytrade'}
-                        </button>
-                    </div>
-                </div>
-            </section>
-
             {/* Bottom Section */}
             <section className="px-4 text-center max-w-2xl mx-auto">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Masih Butuh Waktu?</h2>
