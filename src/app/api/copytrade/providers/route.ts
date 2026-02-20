@@ -80,19 +80,11 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { displayName, bio, subscriptionFee, profitSharingPercent, brokerName, brokerAccountId } = body;
+        const { displayName, bio, brokerName, brokerAccountId } = body;
 
         // Validate inputs
         if (!displayName || displayName.trim().length < 3) {
             return NextResponse.json({ error: 'Display name must be at least 3 characters' }, { status: 400 });
-        }
-
-        if (subscriptionFee < 0 || subscriptionFee > 10000000) {
-            return NextResponse.json({ error: 'Invalid subscription fee' }, { status: 400 });
-        }
-
-        if (profitSharingPercent < 0 || profitSharingPercent > 30) {
-            return NextResponse.json({ error: 'Profit sharing must be between 0-30%' }, { status: 400 });
         }
 
         // Get user ID
@@ -132,8 +124,8 @@ export async function POST(request: NextRequest) {
             sql: `INSERT INTO signal_providers 
                   (id, user_id, display_name, bio, subscription_fee, profit_sharing_percent, 
                    broker_name, broker_account_id, is_active, is_approved)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
-            args: [providerId, userId, displayName, bio || '', subscriptionFee, profitSharingPercent,
+                  VALUES (?, ?, ?, ?, 0, 0, ?, ?, 0, 0)`,
+            args: [providerId, userId, displayName, bio || '',
                 brokerName || '', brokerAccountId || '']
         });
 

@@ -56,7 +56,7 @@ export default function ProviderCard({ provider }: ProviderCardProps) {
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
                                 <span>{provider.broker_name || 'Multi-Broker'}</span>
                                 <span>·</span>
-                                <span>{followers} copier</span>
+                                <span>{followers} pengikut</span>
                             </div>
                         </div>
                     </div>
@@ -91,10 +91,8 @@ export default function ProviderCard({ provider }: ProviderCardProps) {
                 {/* Trades + Fee */}
                 <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
                     <span>{totalTrades} trades</span>
-                    <span className="font-medium text-gray-600">
-                        {provider.subscription_fee > 0
-                            ? `Rp ${Number(provider.subscription_fee).toLocaleString('id-ID')}/bln`
-                            : '✓ Gratis'}
+                    <span className="font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                        Pay-Per-Signal
                     </span>
                 </div>
 
@@ -119,7 +117,7 @@ export default function ProviderCard({ provider }: ProviderCardProps) {
                         onClick={handleCopy}
                         className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all shadow-sm hover:shadow-blue-500/30 hover:shadow-md"
                     >
-                        Copy Now
+                        Ikuti Master
                     </button>
                 </div>
             </motion.div>

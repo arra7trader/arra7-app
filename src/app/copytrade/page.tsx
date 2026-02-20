@@ -50,13 +50,13 @@ export default function CopyTradeHub() {
                         className="flex-1"
                     >
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 border border-blue-100">
-                            <SparklesIcon size="xs" /> ARRA7 Social Trading
+                            <SparklesIcon size="xs" /> ARRA7 Premium Signals
                         </div>
                         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 leading-tight">
-                            Copy Trade <span className="text-blue-600">Hub</span>
+                            Signal <span className="text-blue-600">Marketplace</span>
                         </h1>
                         <p className="text-slate-600 text-lg mb-8 max-w-xl leading-relaxed">
-                            Temukan trader profesional untuk disalin secara otomatis, atau jadilah penyedia sinyal dan dapatkan penghasilan tambahan dari follower Anda.
+                            Temukan sinyal trading berakurasi tinggi dari para profesional. Ikuti Master favorit Anda secara gratis dan akses sinyal premium hanya saat Anda membutuhkannya dengan Koin ARRA.
                         </p>
 
                         <div className="flex flex-wrap gap-4">
@@ -71,7 +71,7 @@ export default function CopyTradeHub() {
                                 <>
                                     <Link href="/copytrade/dashboard">
                                         <button className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-md shadow-blue-600/20 flex items-center gap-2">
-                                            Masuk Dashboard Saya <ArrowRightIcon size="sm" />
+                                            Masuk Signal Feed <ArrowRightIcon size="sm" />
                                         </button>
                                     </Link>
                                     <Link href="/copytrade/become-provider">
@@ -84,59 +84,33 @@ export default function CopyTradeHub() {
                         </div>
                     </motion.div>
 
-                    {/* --- AI GENESIS PREMIUM CARD --- */}
+                    {/* --- HOW IT WORKS (CARA KERJA) --- */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="w-full md:w-[400px] bg-gradient-to-br from-emerald-50 to-teal-100/50 rounded-3xl p-8 border border-emerald-100 shadow-xl shadow-emerald-900/5 relative overflow-hidden"
+                        className="w-full md:w-[400px] bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50"
                     >
-                        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-xl">
-                            Official ARRA7
-                        </div>
+                        <h3 className="text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2">
+                            <span>💡</span> Cara Kerja
+                        </h3>
 
-                        <div className="flex items-center gap-3 mb-6 mt-2">
-                            <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-2xl shadow-md">
-                                🚀
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900">AI Genesis</h3>
-                                <div className="text-emerald-600 text-sm font-bold flex items-center gap-1">
-                                    <SparklesIcon size="xs" /> Automated Trading
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-baseline gap-2 mb-6">
-                            <span className="text-4xl font-black text-emerald-600">+1,240</span>
-                            <span className="text-slate-500 font-medium">Pips / 30 Hari</span>
-                        </div>
-
-                        <ul className="space-y-3 text-sm text-slate-700 mb-8 font-medium">
-                            <li className="flex items-center gap-3">
-                                <CheckIcon size="xs" className="text-emerald-500" /> Eksekusi instan 24/5
-                            </li>
-                            <li className="flex items-center gap-3">
-                                <CheckIcon size="xs" className="text-emerald-500" /> Stop Loss protection dinamis
-                            </li>
-                            <li className="flex items-center gap-3">
-                                <CheckIcon size="xs" className="text-emerald-500" /> Compound Growth Logic
-                            </li>
+                        <ul className="space-y-6 relative before:content-[''] before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                            {[
+                                { step: 1, title: 'Pilih Master', desc: 'Cari trader dengan akurasi dan profit konsisten di bawah.' },
+                                { step: 2, title: 'Ikuti (Gratis)', desc: 'Klik Follow untuk mendapatkan notifikasi instan saat Master posting.' },
+                                { step: 3, title: 'Buka Sinyal Pilihan', desc: 'Buka gembok sinyal yang Anda sukai menggunakan Koin ARRA.' },
+                                { step: 4, title: 'Eksekusi & Profit', desc: 'Salin Entry, SL, dan TP ke MT4/MT5 Anda dan nikmati hasilnya!' }
+                            ].map((item, idx) => (
+                                <li key={idx} className="relative pl-10">
+                                    <div className="absolute left-0 top-0 w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center border-4 border-white shadow-sm">
+                                        {item.step}
+                                    </div>
+                                    <h4 className="font-bold text-slate-900 text-sm mb-1">{item.title}</h4>
+                                    <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
+                                </li>
+                            ))}
                         </ul>
-
-                        {isActive ? (
-                            <Link href="/copytrade/dashboard">
-                                <button className="w-full py-3 bg-white text-emerald-700 border border-emerald-200 rounded-xl font-bold transition hover:bg-emerald-50 shadow-sm flex items-center justify-center gap-2">
-                                    <span className="text-emerald-500">✅</span> Langganan Aktif
-                                </button>
-                            </Link>
-                        ) : (
-                            <Link href="/pricing#copytrade">
-                                <button className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition shadow-lg shadow-emerald-600/20">
-                                    Langganan Sekarang - Rp 49k
-                                </button>
-                            </Link>
-                        )}
                     </motion.div>
                 </div>
 
@@ -145,8 +119,8 @@ export default function CopyTradeHub() {
                 {/* --- MARKETPLACE SECTION --- */}
                 <div className="mb-8 flex items-end justify-between">
                     <div>
-                        <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">Marketplace Provider</h2>
-                        <p className="text-slate-500">Pilih trader profesional dengan performa terbaik untuk disalin.</p>
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">Master Traders</h2>
+                        <p className="text-slate-500">Pilih ahli strategi dengan performa terbaik dan dapatkan sinyal premium mereka.</p>
                     </div>
                 </div>
 

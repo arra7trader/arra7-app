@@ -24,18 +24,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Provider ID is required' }, { status: 400 });
         }
 
-        if (allocatedCapital <= 0 || allocatedCapital > 100000) {
-            return NextResponse.json({ error: 'Allocated capital must be between $1 - $100,000' }, { status: 400 });
-        }
-
-        if (riskMultiplier < 0.1 || riskMultiplier > 2.0) {
-            return NextResponse.json({ error: 'Risk multiplier must be between 0.1 - 2.0' }, { status: 400 });
-        }
-
-        if (maxDrawdownPercent < 5 || maxDrawdownPercent > 50) {
-            return NextResponse.json({ error: 'Max drawdown must be between 5% - 50%' }, { status: 400 });
-        }
-
         // Get user
         const userResult = await turso.execute({
             sql: 'SELECT id, membership FROM users WHERE email = ?',

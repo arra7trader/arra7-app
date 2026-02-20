@@ -32,24 +32,12 @@ export async function GET(request: NextRequest) {
         const user = userResult.rows[0];
         const userId = user.id as string;
 
-        // Check Follower/Viewer access logic (VVIP, Pro, active subscription, or old CT token)
-        const isVvipOrPro = user.membership === 'VVIP' || user.membership === 'PRO';
-        const hasActiveSubscription = user.subscription_status === 'active';
-        const ctAccess = user.copytrade_access as string | null;
-        const ctExpires = user.copytrade_expires as string | null;
-        const hasLegacyCt = ctAccess && ctExpires && new Date(ctExpires) > new Date();
-
-        const canViewSignals = mode === 'provider' || isVvipOrPro || hasActiveSubscription || hasLegacyCt;
-
-        if (!canViewSignals) {
-            return NextResponse.json({
-                error: 'no_ct_access',
-                message: 'Silakan berlangganan Copytrade atau paket PRO/VVIP untuk akses.',
-                upgradeUrl: '/pricing'
-            }, { status: 403 });
-        }
-
-
+        // Get purchased signals for this user
+        const purchasesRes = await turso.execute({
+            sql: 'SELECT signal_id FROM signal_purchases WHERE user_id = ?',
+            args: [userId]
+        });
+        const purchasedSignalIds = new Set(purchasesRes.rows.map(r => r.signal_id));
         if (mode === 'provider') {
             // Get this user's provider profile
             const providerResult = await turso.execute({
@@ -65,7 +53,9 @@ export async function GET(request: NextRequest) {
                 sql: `SELECT * FROM provider_signals WHERE provider_id = ? ORDER BY created_at DESC LIMIT 50`,
                 args: [providerId]
             });
-            return NextResponse.json({ signals: signals.rows });
+            // provider always sees their own signals unlocked
+            const formattedSignals = signals.rows.map(s => ({ ...s, is_unlocked: true }));
+            return NextResponse.json({ signals: formattedSignals });
         }
 
         // Follower mode: get signals from all active followed providers
@@ -82,7 +72,17 @@ export async function GET(request: NextRequest) {
             args: [userId]
         });
 
-        return NextResponse.json({ signals: signals.rows });
+        // Map is_unlocked logic
+        const formattedSignals = signals.rows.map(s => {
+            const price = Number(s.price_koin || 0);
+            const isUnlocked = price === 0 || purchasedSignalIds.has(s.id);
+            return {
+                ...s,
+                is_unlocked: isUnlocked
+            };
+        });
+
+        return NextResponse.json({ signals: formattedSignals });
 
     } catch (error) {
         console.error('[SIGNALS] GET error:', error);
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
         // Parse body
         const body = await request.json();
-        const { pair, action, entryPrice, stopLoss, takeProfit, lotSize, timeframe, commentary } = body;
+        const { pair, action, entryPrice, stopLoss, takeProfit, lotSize, timeframe, commentary, priceKoin } = body;
 
         if (!pair || !action || !['BUY', 'SELL'].includes(action)) {
             return NextResponse.json({ error: 'pair and action (BUY/SELL) are required' }, { status: 400 });
@@ -132,9 +132,9 @@ export async function POST(request: NextRequest) {
 
         await turso.execute({
             sql: `INSERT INTO provider_signals 
-                  (id, provider_id, pair, action, entry_price, stop_loss, take_profit, lot_size, timeframe, commentary)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [signalId, providerId, pair.toUpperCase(), action, entryPrice ?? null, stopLoss ?? null, takeProfit ?? null, lotSize ?? 0.1, timeframe ?? '1H', commentary ?? null]
+                  (id, provider_id, pair, action, entry_price, stop_loss, take_profit, lot_size, timeframe, commentary, price_koin)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [signalId, providerId, pair.toUpperCase(), action, entryPrice ?? null, stopLoss ?? null, takeProfit ?? null, lotSize ?? 0.1, timeframe ?? '1H', commentary ?? null, priceKoin || 0]
         });
 
         // Calculate RR ratio for Telegram message

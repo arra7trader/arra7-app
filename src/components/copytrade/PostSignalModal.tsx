@@ -20,6 +20,7 @@ export default function PostSignalModal({ onClose, onSuccess }: PostSignalModalP
     const [lotSize, setLotSize] = useState('0.1');
     const [timeframe, setTimeframe] = useState('1H');
     const [commentary, setCommentary] = useState('');
+    const [priceKoin, setPriceKoin] = useState('10');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -53,6 +54,7 @@ export default function PostSignalModal({ onClose, onSuccess }: PostSignalModalP
                     lotSize: parseFloat(lotSize),
                     timeframe,
                     commentary: commentary.trim() || null,
+                    priceKoin: priceKoin ? parseInt(priceKoin) : 0,
                 })
             });
             const data = await res.json();
@@ -138,11 +140,18 @@ export default function PostSignalModal({ onClose, onSuccess }: PostSignalModalP
                         )}
                     </AnimatePresence>
 
-                    {/* Lot + Timeframe */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Lot + Timeframe + Koin */}
+                    <div className="grid grid-cols-3 gap-3">
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Lot Size</label>
                             <input type="number" step="0.01" min="0.01" value={lotSize} onChange={e => setLotSize(e.target.value)} className={inputCls} />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Harga Koin</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold">🪙</span>
+                                <input type="number" min="0" step="1" value={priceKoin} onChange={e => setPriceKoin(e.target.value)} className={`${inputCls} pl-8 border-amber-200 focus:border-amber-400`} />
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Timeframe</label>
@@ -163,6 +172,7 @@ export default function PostSignalModal({ onClose, onSuccess }: PostSignalModalP
                         <textarea value={commentary} onChange={e => setCommentary(e.target.value)} rows={3}
                             placeholder="Contoh: Price rejection dari supply zone H4, confluence dengan FVG H1..."
                             className={`${inputCls} resize-none`} />
+                        <p className="text-[10px] text-gray-400 mt-1">Hanya follower yang membayar Koin yang bisa membaca ulasan dan melihat target TP/SL mu.</p>
                     </div>
 
                     {/* Error */}

@@ -20,8 +20,6 @@ export default function BecomeProviderPage() {
     const [formData, setFormData] = useState({
         displayName: '',
         bio: '',
-        subscriptionFee: 0,
-        profitSharingPercent: 20,
         brokerName: 'Exness',
         brokerAccountId: ''
     });
@@ -186,15 +184,15 @@ export default function BecomeProviderPage() {
                             Daftar Jadi <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Signal Provider</span>
                         </h1>
                         <p className="text-gray-500 max-w-md mx-auto">
-                            Bagikan keahlian trading dan earn passive income dari subscription & profit sharing follower kamu.
+                            Bagikan sinyal trading terbaikmu dan dapatkan <strong className="text-amber-500">Koin ARRA</strong> setiap kali ada follower yang membuka sinyalmu!
                         </p>
                     </div>
 
                     {/* Benefits */}
                     <div className="grid grid-cols-3 gap-3 mb-8">
                         {[
-                            { icon: '💰', label: 'Subscription Fee', sub: 'Per follower per bulan' },
-                            { icon: '📈', label: 'Profit Sharing', sub: 'Komisi dari profit' },
+                            { icon: '🪙', label: 'Dapat Koin', sub: 'Per sinyal yg dibuka' },
+                            { icon: '💸', label: 'Tarik Tunai', sub: 'Cairkan koin ke Rupiah' },
                             { icon: '🏆', label: 'Reputasi', sub: 'Bangun track record' },
                         ].map((b, i) => (
                             <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 text-center text-sm">
@@ -270,30 +268,16 @@ export default function BecomeProviderPage() {
                                 </div>
                             </div>
 
-                            {/* Monetization */}
+                            {/* Monetization Info */}
                             <div>
-                                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">💸 Monetisasi</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm text-gray-600 mb-1.5 font-medium">Subscription Fee (IDR/bln)</label>
-                                        <input
-                                            type="number" min={0} step={10000}
-                                            value={formData.subscriptionFee}
-                                            onChange={(e) => setFormData({ ...formData, subscriptionFee: Number(e.target.value) })}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-1">0 = Gratis untuk follower</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm text-gray-600 mb-1.5 font-medium">Profit Sharing (%)</label>
-                                        <input
-                                            type="number" min={0} max={30}
-                                            value={formData.profitSharingPercent}
-                                            onChange={(e) => setFormData({ ...formData, profitSharingPercent: Number(e.target.value) })}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-1">Maksimal 30% dari profit copier</p>
-                                    </div>
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">💸 Ekosistem Koin</h3>
+                                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-800">
+                                    <p className="mb-2"><strong>Platform ini menggunakan Pay-Per-Signal!</strong></p>
+                                    <ul className="list-disc pl-4 space-y-1 text-xs">
+                                        <li>Kamu bisa mengatur harga (Koin) setiap kali mau posting sinyal baru.</li>
+                                        <li>Follower membayar Koin untuk melihat Entry, TP, & SL.</li>
+                                        <li>Koin akan otomatis masuk ke dompetmu (potongan platform 30%).</li>
+                                    </ul>
                                 </div>
                             </div>
 

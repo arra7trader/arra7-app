@@ -43,6 +43,7 @@ export async function initDatabase(): Promise<boolean> {
         image TEXT,
         membership TEXT DEFAULT 'BASIC',
         membership_expires DATETIME,
+        koin_balance INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -514,12 +515,42 @@ export async function initDatabase(): Promise<boolean> {
         lot_size REAL DEFAULT 0.1,
         timeframe TEXT DEFAULT '1H',
         commentary TEXT,
+        price_koin INTEGER DEFAULT 0,  -- Cost to unlock this signal (0 = free)
         status TEXT DEFAULT 'active',
         result_pips REAL,
         notified_at DATETIME,
         closed_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (provider_id) REFERENCES signal_providers(id)
+      )
+    `);
+
+    // KOIN TRANSACTIONS: Top-up, purchases, and withdrawals
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS trx_coins (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        amount INTEGER NOT NULL,  -- Positive for top-up/income, negative for purchase/withdrawal
+        type TEXT NOT NULL,       -- 'TOPUP', 'PURCHASE', 'WITHDRAW', 'SIGNAL_SALES', 'PLATFORM_FEE'
+        description TEXT,
+        reference_id TEXT,        -- E.g. signal_id or withdrawal_id
+        status TEXT DEFAULT 'COMPLETED', -- 'PENDING', 'COMPLETED', 'FAILED'
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // SIGNAL PURCHASES: Track which users unlocked which signals
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS signal_purchases (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        signal_id TEXT NOT NULL,
+        price_paid INTEGER NOT NULL,
+        purchased_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (signal_id) REFERENCES provider_signals(id),
+        UNIQUE(user_id, signal_id)
       )
     `);
 
@@ -553,6 +584,9 @@ export async function initDatabase(): Promise<boolean> {
       { column: 'subscription_status', sql: `ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'free'` },
       { column: 'subscription_end_date', sql: `ALTER TABLE users ADD COLUMN subscription_end_date DATETIME` },
       { column: 'telegram_chat_id', sql: `ALTER TABLE users ADD COLUMN telegram_chat_id TEXT` },
+      // Koin Balance Pay-Per-Signal
+      { column: 'koin_balance', sql: `ALTER TABLE users ADD COLUMN koin_balance INTEGER DEFAULT 0` },
+      { column: 'price_koin', sql: `ALTER TABLE provider_signals ADD COLUMN price_koin INTEGER DEFAULT 0` },
     ];
 
     for (const migration of migrations) {

@@ -5,15 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
 interface FollowSettingsModalProps {
-    provider: { id: string; display_name: string; subscription_fee: number; profit_sharing_percent: number };
+    provider: { id: string; display_name: string; subscription_fee: number; profit_sharing_percent: number; broker_name?: string };
     onClose: () => void;
 }
 
 export default function FollowSettingsModal({ provider, onClose }: FollowSettingsModalProps) {
     const router = useRouter();
-    const [allocatedCapital, setAllocatedCapital] = useState(100);
-    const [riskMultiplier, setRiskMultiplier] = useState(1.0);
-    const [maxDrawdown, setMaxDrawdown] = useState(20);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -27,9 +24,9 @@ export default function FollowSettingsModal({ provider, onClose }: FollowSetting
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     providerId: provider.id,
-                    allocatedCapital,
-                    riskMultiplier,
-                    maxDrawdownPercent: maxDrawdown,
+                    allocatedCapital: 0,
+                    riskMultiplier: 1,
+                    maxDrawdownPercent: 0,
                 }),
             });
             const data = await res.json();
@@ -57,99 +54,59 @@ export default function FollowSettingsModal({ provider, onClose }: FollowSetting
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.95, opacity: 0 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative"
+                    className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                 >
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600" />
+
                     {/* Header */}
-                    <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 rounded-full p-1.5 hover:bg-gray-100">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
 
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold text-gray-900">Copy <span className="text-blue-600">{provider.display_name}</span></h2>
-                        <p className="text-sm text-gray-500 mt-1">Atur preferensi copy trading kamu</p>
+                    <div className="mb-6 text-center">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/30 mx-auto mb-4 border-4 border-white">
+                            {provider.display_name?.charAt(0) ?? 'P'}
+                        </div>
+                        <h2 className="text-xl font-black text-gray-900 mb-1">{provider.display_name}</h2>
+                        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Official Master Trader</span>
                     </div>
 
                     {success ? (
-                        <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center py-8">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center py-6">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
                                 <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <p className="font-semibold text-gray-900">Berhasil! Mengalihkan ke dashboard...</p>
+                            <p className="font-bold text-gray-900 text-lg">Berhasil Mengikuti!</p>
+                            <p className="text-sm text-gray-500 mt-1">Mengalihkan ke Signal Feed...</p>
                         </motion.div>
                     ) : (
-                        <div className="space-y-5">
-                            {/* Allocated Capital */}
-                            <div>
-                                <label className="flex justify-between text-sm font-medium text-gray-700 mb-2">
-                                    <span>Modal Dialokasikan</span>
-                                    <span className="text-blue-600 font-bold">${allocatedCapital}</span>
-                                </label>
-                                <input
-                                    type="range" min={10} max={10000} step={10}
-                                    value={allocatedCapital}
-                                    onChange={(e) => setAllocatedCapital(Number(e.target.value))}
-                                    className="w-full accent-blue-600"
-                                />
-                                <div className="flex justify-between text-xs text-gray-400 mt-1"><span>$10</span><span>$10,000</span></div>
-                            </div>
-
-                            {/* Risk Multiplier */}
-                            <div>
-                                <label className="flex justify-between text-sm font-medium text-gray-700 mb-2">
-                                    <span>Risk Multiplier</span>
-                                    <span className={`font-bold ${riskMultiplier > 1.5 ? 'text-red-500' : riskMultiplier > 1 ? 'text-yellow-500' : 'text-green-600'}`}>{riskMultiplier}x</span>
-                                </label>
-                                <input
-                                    type="range" min={0.1} max={2.0} step={0.1}
-                                    value={riskMultiplier}
-                                    onChange={(e) => setRiskMultiplier(Number(e.target.value))}
-                                    className="w-full accent-blue-600"
-                                />
-                                <div className="flex justify-between text-xs text-gray-400 mt-1"><span>0.1x (Lebih Aman)</span><span>2x (Agresif)</span></div>
-                            </div>
-
-                            {/* Max Drawdown */}
-                            <div>
-                                <label className="flex justify-between text-sm font-medium text-gray-700 mb-2">
-                                    <span>Stop Loss Otomatis</span>
-                                    <span className="text-orange-500 font-bold">{maxDrawdown}%</span>
-                                </label>
-                                <input
-                                    type="range" min={5} max={50} step={5}
-                                    value={maxDrawdown}
-                                    onChange={(e) => setMaxDrawdown(Number(e.target.value))}
-                                    className="w-full accent-blue-600"
-                                />
-                                <div className="flex justify-between text-xs text-gray-400 mt-1"><span>5% (Konservatif)</span><span>50% (Agresif)</span></div>
-                            </div>
-
-                            {/* Fee Info */}
-                            <div className="p-3 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-700 space-y-1">
-                                <div className="flex justify-between">
-                                    <span>Biaya Langganan:</span>
-                                    <span className="font-bold">{provider.subscription_fee > 0 ? `Rp ${provider.subscription_fee.toLocaleString()}/bln` : 'Gratis'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Profit Sharing:</span>
-                                    <span className="font-bold">{provider.profit_sharing_percent}%</span>
+                        <div className="space-y-6">
+                            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-center">
+                                <h3 className="font-bold text-slate-800 text-sm mb-2">Ingin mengikuti Master ini?</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                                    Anda akan menerima Notifikasi Telegram Gratis setiap kali {provider.display_name} merilis sinyal trading baru. Anda bebas memilih sinyal mana yang ingin dibeli menggunakan Koin.
+                                </p>
+                                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
+                                    🪙 Pay-Per-Signal
                                 </div>
                             </div>
 
                             {error && (
-                                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">{error}</div>
+                                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm font-medium text-red-600 text-center">{error}</div>
                             )}
 
                             <button
                                 onClick={handleFollow}
                                 disabled={loading}
-                                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-60 flex justify-center items-center gap-2"
                             >
-                                {loading ? 'Memproses...' : `Mulai Copy ${provider.display_name}`}
+                                {loading && <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>}
+                                {loading ? 'Memproses...' : `Ya, Ikuti ${provider.display_name}`}
                             </button>
                         </div>
                     )}
