@@ -1,9 +1,5 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { getTursoClient } from '@/lib/turso';
-
-import { NextRequest, NextResponse } from 'next/server';
-import { getTursoClient } from '@/lib/turso';
+import getTursoClient from '@/lib/turso';
 
 export async function GET(request: NextRequest) {
     return handleSetup(request);
