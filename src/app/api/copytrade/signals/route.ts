@@ -23,22 +23,29 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const mode = searchParams.get('mode') || 'follower'; // 'follower' | 'provider'
 
-        // Get user ID + copytrade_access in one query
+        // Get user profile including membership and subscriptions
         const userResult = await turso.execute({
-            sql: 'SELECT id, copytrade_access, copytrade_expires FROM users WHERE email = ?',
+            sql: 'SELECT id, membership, subscription_status, copytrade_access, copytrade_expires FROM users WHERE email = ?',
             args: [session.user.email]
         });
         if (userResult.rows.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        const userId = userResult.rows[0].id as string;
-        const ctAccess = userResult.rows[0].copytrade_access as string | null;
-        const ctExpires = userResult.rows[0].copytrade_expires as string | null;
-        const ctActive = ctAccess && ctExpires && new Date(ctExpires) > new Date();
+        const user = userResult.rows[0];
+        const userId = user.id as string;
 
-        if (!ctActive) {
+        // Check Follower/Viewer access logic (VVIP, Pro, active subscription, or old CT token)
+        const isVvipOrPro = user.membership === 'VVIP' || user.membership === 'PRO';
+        const hasActiveSubscription = user.subscription_status === 'active';
+        const ctAccess = user.copytrade_access as string | null;
+        const ctExpires = user.copytrade_expires as string | null;
+        const hasLegacyCt = ctAccess && ctExpires && new Date(ctExpires) > new Date();
+
+        const canViewSignals = mode === 'provider' || isVvipOrPro || hasActiveSubscription || hasLegacyCt;
+
+        if (!canViewSignals) {
             return NextResponse.json({
                 error: 'no_ct_access',
-                message: 'Berlangganan Copy Trade untuk akses sinyal.',
-                upgradeUrl: '/pricing#copytrade'
+                message: 'Silakan berlangganan Copytrade atau paket PRO/VVIP untuk akses.',
+                upgradeUrl: '/pricing'
             }, { status: 403 });
         }
 
@@ -94,25 +101,13 @@ export async function POST(request: NextRequest) {
         const turso = getTursoClient();
         if (!turso) return NextResponse.json({ error: 'DB error' }, { status: 500 });
 
-        // Get user & copytrade access
+        // Get user ID
         const userResult = await turso.execute({
-            sql: 'SELECT id, copytrade_access, copytrade_expires FROM users WHERE email = ?',
+            sql: 'SELECT id FROM users WHERE email = ?',
             args: [session.user.email]
         });
         if (userResult.rows.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
         const userId = userResult.rows[0].id as string;
-
-        // Verify CT_PROVIDER subscription
-        const ctAccess = userResult.rows[0].copytrade_access as string | null;
-        const ctExpires = userResult.rows[0].copytrade_expires as string | null;
-        const hasProviderAccess = ctAccess === 'PROVIDER' && ctExpires && new Date(ctExpires) > new Date();
-        if (!hasProviderAccess) {
-            return NextResponse.json({
-                error: 'no_ct_provider_access',
-                message: 'Berlangganan CT Provider untuk memposting sinyal.',
-                upgradeUrl: '/pricing#copytrade'
-            }, { status: 403 });
-        }
 
         const providerResult = await turso.execute({
             sql: 'SELECT id, display_name FROM signal_providers WHERE user_id = ? AND is_active = 1 AND is_approved = 1',
