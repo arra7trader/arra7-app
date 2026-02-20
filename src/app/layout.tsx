@@ -11,6 +11,7 @@ import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import SubscriptionChecker from "@/components/SubscriptionChecker";
 import WinningTicker from "@/components/WinningTicker";
 import LowBalancePopup from "@/components/LowBalancePopup";
+import AIEngineTrigger from "@/components/AIEngineTrigger";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -127,6 +128,7 @@ export default async function RootLayout({
             </main>
             <TelegramWidget />
             <ArraBot />
+            <AIEngineTrigger />
           </NextIntlClientProvider>
         </AuthProvider>
       </body>

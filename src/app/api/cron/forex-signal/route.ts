@@ -6,11 +6,9 @@ export const maxDuration = 60; // Allow 1 minute timeout for cron
 
 export async function GET(request: NextRequest) {
     try {
-        // Authenticate Cron Job (Vercel CRON_SECRET)
-        const authHeader = request.headers.get('authorization');
-        if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        // Authenticate Cron Job (Vercel CRON_SECRET) - REMOVED for Client Trigger Mode
+        // We now rely on user traffic to trigger this endpoint transparently.
+        // It has internal duplicate-signal checks to prevent spam.
 
         // 1. Fetch Real-Time Data (XAUUSD)
         // Try getMarketData to allow Yahoo fallback if Swissquote/OANDA fails
