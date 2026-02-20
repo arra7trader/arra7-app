@@ -338,8 +338,12 @@ export default function FollowerDashboardPage() {
                                                     <span className="font-bold text-sm">{trade.symbol}</span>
                                                     <span className="text-gray-400 text-xs text-semibold">({trade.lot_size} Lot)</span>
                                                 </div>
-                                                <div className="text-xs text-gray-500">
-                                                    Provider: <span className="font-semibold text-gray-700">{trade.provider_name}</span> &bull; Entry: {trade.entry_price}
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    Provider: <span className="font-semibold text-gray-700">{trade.provider_name}</span>
+                                                    <span className="mx-2">&bull;</span>
+                                                    Entry: <span className="font-semibold text-gray-700">{trade.entry_price}</span>
+                                                    <span className="mx-2">&bull;</span>
+                                                    Waktu: {trade.opened_at ? new Date(trade.opened_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-'}
                                                 </div>
                                             </div>
                                             <div className="text-right">
@@ -387,6 +391,7 @@ export default function FollowerDashboardPage() {
                                                 <th className="px-4 py-3 font-semibold text-gray-500">Tipe</th>
                                                 <th className="px-4 py-3 font-semibold text-gray-500">Provider</th>
                                                 <th className="px-4 py-3 font-semibold text-gray-500 text-right">Profit/Loss</th>
+                                                <th className="px-4 py-3 font-semibold text-gray-500">Waktu Open</th>
                                                 <th className="px-4 py-3 font-semibold text-gray-500">Waktu Close</th>
                                             </tr>
                                         </thead>
@@ -402,6 +407,9 @@ export default function FollowerDashboardPage() {
                                                     <td className="px-4 py-3 text-gray-600 border-x border-gray-50">{trade.provider_name}</td>
                                                     <td className={`px-4 py-3 font-bold text-right ${(trade.profit_loss || 0) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                                                         {(trade.profit_loss || 0) >= 0 ? '+' : ''}${(trade.profit_loss || 0).toFixed(2)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-500 text-xs">
+                                                        {trade.opened_at ? new Date(trade.opened_at).toLocaleString('id-ID') : '-'}
                                                     </td>
                                                     <td className="px-4 py-3 text-gray-400 text-xs">
                                                         {trade.closed_at ? new Date(trade.closed_at).toLocaleString('id-ID') : '-'}
