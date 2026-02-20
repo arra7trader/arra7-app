@@ -840,14 +840,14 @@ export class SmartPredictor {
             if (avgVol > 0) volatility = avgVol;
         }
 
-        // Multipliers for Gold (XAUUSD) - TUNED V2
-        // Increased SL to give breathing room (3.5x vol), TP (5x vol)
+        // Multipliers for Gold (XAUUSD) - TUNED V3 (User Request: Min SL 70 pips)
         const slMult = 3.5;
         const tpMult = 5.0;
 
-        // Min SL = 25 pips (2.5 points), Min TP = 40 pips (4.0 points)
-        const risk = Math.max(volatility * slMult, 2.5);
-        const reward = Math.max(volatility * tpMult, 4.0);
+        // Min SL = 70 pips (7.0 points)
+        // Min TP = 100 pips (10.0 points) to maintain > 1:1.4 ratio
+        const risk = Math.max(volatility * slMult, 7.0);
+        const reward = Math.max(volatility * tpMult, 10.0);
 
         let tp, sl;
         if (direction === 'UP') {

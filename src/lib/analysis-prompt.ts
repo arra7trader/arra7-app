@@ -134,7 +134,7 @@ SL dan TP BUKAN hanya berdasarkan ATR! Gunakan **MULTI-METHOD APPROACH** yang me
 **MINIMUM SL DISTANCE (Wajib Dipenuhi - Safety Net):**
 1. **FOREX MAJOR:** Min 15 pips
 2. **FOREX MINOR/EXOTIC:** Min 20 pips
-3. **XAUUSD/GOLD:** Min 300 pips ($3.00) - SANGAT PENTING!
+3. **XAUUSD/GOLD:** Min 70 pips / 7 Points ($7.00) - SANGAT PENTING!
 4. **OIL/COMMODITIES:** Min 40 pips
 5. **INDICES:** Min 50 points (NAS100: 100 points)
 6. **CRYPTO:** Min 1.5% dari entry
