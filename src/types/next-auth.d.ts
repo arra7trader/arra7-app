@@ -12,6 +12,11 @@ declare module "next-auth" {
             membershipExpires?: string
             daysUntilExpiry?: number
             isExpired?: boolean
+
+            // Subscription Fields
+            subscriptionStatus?: 'free' | 'active' | 'expired'
+            subscriptionEndDate?: string | null
+            telegramChatId?: string | null
         } & DefaultSession["user"]
     }
 }

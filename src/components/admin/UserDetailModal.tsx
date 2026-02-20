@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User } from './UserTable';
+import SubscriptionManager from './SubscriptionManager';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Log {
@@ -78,6 +79,19 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                     )}
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Subscription Manager */}
+                        <div className="bg-slate-900/5 p-4 rounded-xl border border-slate-200">
+                            <SubscriptionManager
+                                userId={user.id}
+                                initialStatus={user.subscriptionStatus || 'free'}
+                                initialTelegramId={user.telegramChatId || ''}
+                                onUpdate={() => {
+                                    // Ideally refresh user data here
+                                    if (onEdit) onEdit(); // Trigger refresh if parent supports it
+                                }}
+                            />
                         </div>
 
                         {/* Recent Activity Grid */}
@@ -193,7 +207,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                         </div>
                     </div>
                 </motion.div>
-            </div>
-        </AnimatePresence>
+            </div >
+        </AnimatePresence >
     );
 }

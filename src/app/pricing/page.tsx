@@ -538,136 +538,132 @@ export default function PricingPage() {
                 </div>
             </section>
 
-            {/* ===== COPY TRADE SECTION ===== */}
-            <section id="copytrade" className="section-padding bg-gradient-to-b from-teal-50/50 to-emerald-50/30">
-                <div className="container-apple">
+            {/* ===== EXCLUSIVE AI COPYTRADE SECTION ===== */}
+            <section id="copytrade" className="section-padding bg-gradient-to-b from-teal-900 to-slate-900 text-white relative overflow-hidden">
+                {/* Background FX */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-4xl bg-teal-500/10 blur-[100px] rounded-full" />
+                    <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[80px] rounded-full" />
+                </div>
+
+                <div className="container-apple relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         className="text-center mb-12"
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-100 text-teal-700 text-sm font-semibold mb-4">
-                            📡 Copy Trade Marketplace
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-sm font-semibold mb-4">
+                            <SparklesIcon size="xs" />
+                            Exclusive Invitation
                         </div>
-                        <h2 className="heading-lg text-[var(--text-primary)] mb-3">Sinyal Trading Premium — Terpisah dari Membership</h2>
-                        <p className="body-md max-w-xl mx-auto">
-                            Ikuti sinyal dari trader terbaik. Tidak perlu PRO atau VVIP — ini sistem tersendiri.
+                        <h2 className="heading-lg text-white mb-4">
+                            <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">AI Genesis</span> Copy Trade
+                        </h2>
+                        <p className="body-md text-slate-300 max-w-2xl mx-auto">
+                            Dapatkan profit konsisten dengan menyalin otomatis posisi trading dari AI Genesis.
+                            Sistem trading XAUUSD dengan akurasi tinggi dan manajemen risiko ketat.
                         </p>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                        {/* CT FOLLOWER */}
-                        {[
-                            {
-                                id: 'CT_FOLLOWER',
-                                icon: '👥',
-                                name: 'CT Follower',
-                                tagline: 'Ikuti sinyal trader terbaik',
-                                color: 'from-teal-500 to-cyan-600',
-                                lightColor: 'from-teal-50 to-cyan-50',
-                                borderColor: 'border-teal-200',
-                                textColor: 'text-teal-600',
-                                features: [
-                                    '✅ Lihat sinyal real-time (Entry, SL, TP)',
-                                    '✅ Feed sinyal dari semua provider yang di-follow',
-                                    '✅ Notifikasi sinyal baru via Telegram',
-                                    '✅ Histori & statistik provider',
-                                    '✅ Bisa follow unlimited provider',
-                                ],
-                                prices: { '1month': 'Rp 49K', '3months': 'Rp 130K', '6months': 'Rp 249K', '1year': 'Rp 449K' },
-                                savings: { '3months': 'Hemat Rp 17K', '6months': 'Hemat Rp 45K', '1year': 'Hemat Rp 139K' },
-                            },
-                            {
-                                id: 'CT_PROVIDER',
-                                icon: '📡',
-                                name: 'CT Provider',
-                                tagline: 'Jual sinyal ke ratusan follower',
-                                color: 'from-purple-500 to-indigo-600',
-                                lightColor: 'from-purple-50 to-indigo-50',
-                                borderColor: 'border-purple-200',
-                                textColor: 'text-purple-600',
-                                features: [
-                                    '✅ Posting sinyal ke semua follower',
-                                    '✅ Auto-broadcast ke Telegram channel',
-                                    '✅ Halaman profil provider publik',
-                                    '✅ Track win rate & statistik otomatis',
-                                    '✅ Bangun reputasi & follower base',
-                                    '✅ Bisa set subscription fee sendiri (soon)',
-                                ],
-                                prices: { '1month': 'Rp 99K', '3months': 'Rp 270K', '6months': 'Rp 499K', '1year': 'Rp 899K' },
-                                savings: { '3months': 'Hemat Rp 27K', '6months': 'Hemat Rp 95K', '1year': 'Hemat Rp 289K' },
-                            },
-                        ].map((plan, idx) => {
-                            const durOpts = ['1month', '3months', '6months', '1year'] as const;
-                            const durLabels = { '1month': '1 Bulan', '3months': '3 Bulan', '6months': '6 Bulan', '1year': '1 Tahun' };
-                            const dur = (selectedDuration[plan.id] || '1month') as keyof typeof plan.prices;
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+                        {/* Features Column */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="space-y-8"
+                        >
+                            <div className="flex gap-4 items-start">
+                                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0 border border-teal-500/20">
+                                    <span className="text-2xl">🤖</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-2">100% Fully Automated</h3>
+                                    <p className="text-slate-400 leading-relaxed">
+                                        Tidak perlu analisa chart. Posisi entry, SL, dan TP dieksekusi otomatis di akun Anda dalam hitungan milidetik.
+                                    </p>
+                                </div>
+                            </div>
 
-                            return (
-                                <motion.div
-                                    key={plan.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className={`bg-gradient-to-br ${plan.lightColor} border ${plan.borderColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all`}
+                            <div className="flex gap-4 items-start">
+                                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0 border border-teal-500/20">
+                                    <span className="text-2xl">📱</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-2">Telegram Integration</h3>
+                                    <p className="text-slate-400 leading-relaxed">
+                                        Terima notifikasi real-time setiap kali AI membuka atau menutup posisi langsung ke Telegram pribadi Anda.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 items-start">
+                                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0 border border-teal-500/20">
+                                    <span className="text-2xl">🛡️</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-2">Risk Management</h3>
+                                    <p className="text-slate-400 leading-relaxed">
+                                        Max drawdown rendah dengan SL ketat (Min 70 pips Gold). Target Win Rate &gt; 80% untuk pertumbuhan equity yang stabil.
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Pricing Card */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="relative"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl blur-md opacity-50" />
+                            <div className="relative bg-[#0f172a] border border-teal-500/30 rounded-3xl p-8 overflow-hidden">
+                                <div className="absolute top-0 right-0 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
+                                    LIMITED SLOTS
+                                </div>
+
+                                <div className="text-center mb-8">
+                                    <div className="text-slate-400 text-sm font-medium mb-2">BERLANGGANAN SEKARANG</div>
+                                    <div className="flex items-baseline justify-center gap-1">
+                                        <span className="text-5xl font-black text-white">Rp 49K</span>
+                                        <span className="text-slate-400">/bulan</span>
+                                    </div>
+                                    <p className="text-emerald-400 text-sm font-bold mt-2">
+                                        Harga Spesial Early Access
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4 mb-8">
+                                    {[
+                                        'Akses ke AI Genesis Provider',
+                                        'Auto-Copy ke MT4/MT5 (via Exness/FBS)',
+                                        'Real-time Telegram Alerts',
+                                        'Prioritas Support',
+                                        'Bebas Cancel Kapan Saja'
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex items-center gap-3 text-sm text-slate-300">
+                                            <CheckIcon className="text-teal-400" size="xs" />
+                                            {item}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => handleSubscribe('CT_FOLLOWER')}
+                                    disabled={isProcessing === 'CT_FOLLOWER'}
+                                    className="w-full py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-teal-500/25 transition-all mb-4"
                                 >
-                                    {/* Header */}
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center text-white text-2xl shadow-sm`}>
-                                            {plan.icon}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-black text-gray-900 text-lg">{plan.name}</h3>
-                                            <p className={`text-xs font-medium ${plan.textColor}`}>{plan.tagline}</p>
-                                        </div>
-                                    </div>
+                                    {isProcessing === 'CT_FOLLOWER' ? 'Memproses...' : 'Join AI Genesis'}
+                                </button>
 
-                                    {/* Duration selector */}
-                                    <div className="flex gap-1 p-1 bg-white/70 rounded-xl mb-4">
-                                        {durOpts.map(d => (
-                                            <button key={d}
-                                                onClick={() => setSelectedDuration(prev => ({ ...prev, [plan.id]: d }))}
-                                                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${dur === d ? `bg-gradient-to-r ${plan.color} text-white shadow-sm` : 'text-gray-500 hover:text-gray-700'}`}>
-                                                {durLabels[d]}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {/* Price */}
-                                    <div className="mb-4">
-                                        <span className={`text-3xl font-black ${plan.textColor}`}>{plan.prices[dur]}</span>
-                                        <span className="text-gray-400 text-sm ml-1">{dur === '1month' ? '/bulan' : `/${durLabels[dur].toLowerCase()}`}</span>
-                                        {plan.savings[dur as keyof typeof plan.savings] && (
-                                            <div className="inline-flex items-center bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full ml-2">
-                                                🎉 {plan.savings[dur as keyof typeof plan.savings]}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Features */}
-                                    <ul className="space-y-2 mb-5">
-                                        {plan.features.map((f, i) => (
-                                            <li key={i} className="text-sm text-gray-700">{f}</li>
-                                        ))}
-                                    </ul>
-
-                                    {/* CTA */}
-                                    <button
-                                        onClick={() => handleSubscribe(plan.id)}
-                                        disabled={isProcessing === plan.id}
-                                        className={`w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r ${plan.color} hover:opacity-90 transition-all shadow-sm hover:shadow-md text-sm`}
-                                    >
-                                        {isProcessing === plan.id ? '🔄 Memproses...' : `Mulai ${plan.name} →`}
-                                    </button>
-                                </motion.div>
-                            );
-                        })}
+                                <p className="text-center text-xs text-slate-500">
+                                    Aktivasi manual oleh Admin setelah pembayaran dikonfirmasi.
+                                </p>
+                            </div>
+                        </motion.div>
                     </div>
-
-                    <p className="text-center text-xs text-gray-400 mt-6">
-                        Pembayaran via QRIS / Transfer Bank. Konfirmasi manual via Telegram untuk aktivasi.
-                    </p>
                 </div>
             </section>
 

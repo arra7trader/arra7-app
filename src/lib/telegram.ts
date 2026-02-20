@@ -285,3 +285,32 @@ export function isTelegramConfigured(): boolean {
     return !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHANNEL_ID);
 }
 
+export async function broadcastSignalToSubscribers(message: string): Promise<{ sent: number; failed: number }> {
+    try {
+        const { getActiveSubscribers } = await import('./turso');
+        const subscribers = await getActiveSubscribers();
+
+        console.log(`[BROADCAST] Found ${subscribers.length} active subscribers.`);
+
+        let sent = 0;
+        let failed = 0;
+
+        // Process in chunks to avoid rate limits if list is huge (simple loop for now)
+        for (const chatId of subscribers) {
+            const result = await sendTelegramMessage(message, 'HTML', chatId);
+            if (result.success) {
+                sent++;
+            } else {
+                failed++;
+                console.error(`[BROADCAST] Failed to send to ${chatId}: ${result.error}`);
+            }
+        }
+
+        console.log(`[BROADCAST] Completed. Sent: ${sent}, Failed: ${failed}`);
+        return { sent, failed };
+    } catch (error) {
+        console.error('[BROADCAST] Critical error:', error);
+        return { sent: 0, failed: 0 };
+    }
+}
+

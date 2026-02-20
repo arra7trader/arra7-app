@@ -549,6 +549,10 @@ export async function initDatabase(): Promise<boolean> {
       // Copy Trade standalone subscription
       { column: 'copytrade_access', sql: `ALTER TABLE users ADD COLUMN copytrade_access TEXT DEFAULT NULL` },
       { column: 'copytrade_expires', sql: `ALTER TABLE users ADD COLUMN copytrade_expires DATETIME DEFAULT NULL` },
+      // Exclusive Copytrade Subscription
+      { column: 'subscription_status', sql: `ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'free'` },
+      { column: 'subscription_end_date', sql: `ALTER TABLE users ADD COLUMN subscription_end_date DATETIME` },
+      { column: 'telegram_chat_id', sql: `ALTER TABLE users ADD COLUMN telegram_chat_id TEXT` },
     ];
 
     for (const migration of migrations) {
@@ -1362,4 +1366,101 @@ export async function hasReceivedMarketing(campaignId: number, userId: string): 
     });
     return res.rows.length > 0;
   } catch (e) { return false; }
+}
+
+// ============================================
+// EXCLUSIVE SUBSCRIPTION MANAGEMENT
+// ============================================
+
+export interface UserSubscription {
+  status: 'free' | 'active' | 'expired';
+  endDate: string | null;
+  telegramChatId: string | null;
+}
+
+export async function updateUserSubscription(
+  userId: string,
+  status: 'free' | 'active' | 'expired',
+  telegramChatId?: string,
+  daysToAdd?: number
+): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    let endDateStr = null;
+
+    // If activating, calculate end date
+    if (status === 'active' && daysToAdd) {
+      const date = new Date();
+      date.setDate(date.getDate() + daysToAdd);
+      endDateStr = date.toISOString();
+    }
+
+    // Dynamic query construction based on provided args
+    let sql = `UPDATE users SET subscription_status = ?`;
+    const args: any[] = [status];
+
+    if (endDateStr !== null) {
+      sql += `, subscription_end_date = ?`;
+      args.push(endDateStr);
+    }
+
+    if (telegramChatId !== undefined) {
+      sql += `, telegram_chat_id = ?`;
+      args.push(telegramChatId);
+    }
+
+    sql += ` WHERE id = ?`;
+    args.push(userId);
+
+    await turso.execute({ sql, args });
+    console.log(`[SUBSCRIPTION] Updated user ${userId}: status=${status}, telegram=${telegramChatId}`);
+    return true;
+  } catch (error) {
+    console.error('[SUBSCRIPTION] Update error:', error);
+    return false;
+  }
+}
+
+export async function getUserSubscription(userId: string): Promise<UserSubscription> {
+  const turso = getTursoClient();
+  if (!turso) return { status: 'free', endDate: null, telegramChatId: null };
+
+  try {
+    const result = await turso.execute({
+      sql: 'SELECT subscription_status, subscription_end_date, telegram_chat_id FROM users WHERE id = ?',
+      args: [userId]
+    });
+
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      return {
+        status: (row.subscription_status as any) || 'free',
+        endDate: (row.subscription_end_date as string) || null,
+        telegramChatId: (row.telegram_chat_id as string) || null
+      };
+    }
+    return { status: 'free', endDate: null, telegramChatId: null };
+  } catch (error) {
+    console.error('[SUBSCRIPTION] Get error:', error);
+    return { status: 'free', endDate: null, telegramChatId: null };
+  }
+}
+
+export async function getActiveSubscribers(): Promise<string[]> {
+  const turso = getTursoClient();
+  if (!turso) return [];
+
+  try {
+    const result = await turso.execute({
+      sql: "SELECT telegram_chat_id FROM users WHERE subscription_status = 'active' AND telegram_chat_id IS NOT NULL AND telegram_chat_id != ''",
+      args: []
+    });
+
+    return result.rows.map(row => row.telegram_chat_id as string);
+  } catch (error) {
+    console.error('[SUBSCRIPTION] Get subscribers error:', error);
+    return [];
+  }
 }

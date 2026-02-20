@@ -21,6 +21,10 @@ export interface User {
     downloadedApk: boolean;
     copytradeAccess?: string | null;
     copytradeExpires?: string | null;
+    // Subscription fields
+    subscriptionStatus?: 'free' | 'active' | 'expired';
+    subscriptionEndDate?: string | null;
+    telegramChatId?: string | null;
 }
 
 interface UserTableProps {

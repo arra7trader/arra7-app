@@ -57,8 +57,9 @@ export const authOptions: NextAuthOptions = {
                 // This allows instant access updates without re-login
                 if (process.env.TURSO_DATABASE_URL) {
                     try {
-                        const { getUserMembership } = await import('./turso');
+                        const { getUserMembership, getUserSubscription } = await import('./turso');
                         const { membership, expiresAt } = await getUserMembership(token.sub);
+                        const subscription = await getUserSubscription(token.sub);
                         session.user.tier = (membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
 
                         // Pass expiration data to client
@@ -74,6 +75,13 @@ export const authOptions: NextAuthOptions = {
                             // isExpired flag (though getUserMembership already downgrades, 
                             // this helps UI show specific messages)
                             session.user.isExpired = daysLeft <= 0 && membership === 'BASIC';
+                        }
+
+                        // Populate Subscription Data
+                        if (subscription) {
+                            session.user.subscriptionStatus = subscription.status;
+                            session.user.subscriptionEndDate = subscription.endDate;
+                            session.user.telegramChatId = subscription.telegramChatId;
                         }
                     } catch (e) {
                         console.error('Error fetching membership in session:', e);
