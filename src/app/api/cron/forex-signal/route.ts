@@ -40,6 +40,63 @@ export async function GET(request: NextRequest) {
             volume: c.volume
         }));
 
+        // 1.5. MANAGE ACTIVE SIGNALS (Check TP/SL)
+        try {
+            const { default: getTursoClient } = await import('@/lib/turso');
+            const turso = getTursoClient();
+            if (turso) {
+                const activeSignals = await turso.execute({
+                    sql: `SELECT * FROM provider_signals 
+                          WHERE provider_id = 'provider_ai_genesis' AND status = 'active'`,
+                    args: []
+                });
+
+                for (const signal of activeSignals.rows) {
+                    const entry = signal.entry_price as number;
+                    const sl = signal.stop_loss as number;
+                    const tp = signal.take_profit as number;
+                    const action = signal.action as string; // 'LONG' or 'SHORT'
+                    let outcome: 'WIN' | 'LOSS' | 'OPEN' = 'OPEN';
+                    let pips = 0;
+
+                    if (action === 'LONG') {
+                        if (currentPrice >= tp) { outcome = 'WIN'; pips = (tp - entry) * 10; } // TP Hit
+                        else if (currentPrice <= sl) { outcome = 'LOSS'; pips = (sl - entry) * 10; } // SL Hit
+                    } else if (action === 'SHORT') {
+                        if (currentPrice <= tp) { outcome = 'WIN'; pips = (entry - tp) * 10; } // TP Hit
+                        else if (currentPrice >= sl) { outcome = 'LOSS'; pips = (entry - sl) * 10; } // SL Hit
+                    }
+
+                    if (outcome !== 'OPEN') {
+                        // Close Signal
+                        await turso.execute({
+                            sql: `UPDATE provider_signals 
+                                  SET status = 'closed', result_pips = ?, closed_at = datetime('now') 
+                                  WHERE id = ?`,
+                            args: [pips, signal.id]
+                        });
+
+                        // Update Provider Stats
+                        const isWin = outcome === 'WIN';
+                        const profitUsd = pips * 1; // Approx $1 per pip for 0.1 lot on XAUUSD (simplified)
+
+                        await turso.execute({
+                            sql: `UPDATE provider_statistics 
+                                  SET total_trades = total_trades + 1,
+                                      winning_trades = winning_trades + ?,
+                                      losing_trades = losing_trades + ?,
+                                      net_profit_usd = net_profit_usd + ?
+                                  WHERE provider_id = 'provider_ai_genesis'`,
+                            args: [isWin ? 1 : 0, isWin ? 0 : 1, profitUsd]
+                        });
+                        console.log(`[ForexSignal] Closed Signal ${signal.id} (${outcome}: ${pips.toFixed(1)} pips)`);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('[ForexSignal] Error managing active signals:', err);
+        }
+
         // 2. Generate Prediction
         const predictor = getPredictor('XAUUSD', 10);
         const prediction = predictor.predictForex(currentPrice, priceHistory);
@@ -111,6 +168,32 @@ _DYOR. Money Management Recommended._
                             Math.floor(prediction.confidence * 100)
                         ]
                     });
+
+                    // 5b. Log to PROVIDER_SIGNALS (for Copy Trade System)
+                    // AI GENESIS PROVIDER ID: 'provider_ai_genesis'
+                    try {
+                        const signalId = `sig_ai_${Date.now()}`;
+                        await turso.execute({
+                            sql: `INSERT INTO provider_signals (
+                                    id, provider_id, pair, action, 
+                                    entry_price, stop_loss, take_profit, 
+                                    commentary, status, timeframe
+                                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', '10m')`,
+                            args: [
+                                signalId,
+                                'provider_ai_genesis', // Fixed ID for AI
+                                'XAUUSD',
+                                setup.action, // LONG/SHORT
+                                setup.entry,
+                                setup.sl,
+                                setup.tp,
+                                `AI Confidence: ${(prediction.confidence * 100).toFixed(0)}%`,
+                            ]
+                        });
+                        console.log('[ForexSignal] Linked to AI Genesis Provider');
+                    } catch (err) {
+                        console.error('[ForexSignal] Failed to link provider signal:', err);
+                    }
                 }
 
                 return NextResponse.json({
