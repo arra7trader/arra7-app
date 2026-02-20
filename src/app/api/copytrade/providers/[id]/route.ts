@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import getTursoClient from '@/lib/turso';
 
@@ -31,14 +32,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
         const provider = providerResult.rows[0];
 
-        // Get recent closed trades for this provider
+        // Get recent closed signals for this provider (Provider's own history)
         const tradesResult = await turso.execute({
-            sql: `SELECT cp.symbol, cp.position_type, cp.entry_price, cp.exit_price,
-                         cp.lot_size, cp.profit_loss, cp.status, cp.opened_at, cp.closed_at
-                  FROM copied_positions cp
-                  INNER JOIN copy_relationships cr ON cp.copy_relationship_id = cr.id
-                  WHERE cr.provider_id = ? AND cp.status = 'closed'
-                  ORDER BY cp.closed_at DESC
+            sql: `SELECT id, pair as symbol, action as position_type, entry_price, 
+                         result_pips, closed_at, status,
+                         (result_pips * 10) as profit_loss -- Estimated Profit
+                  FROM provider_signals 
+                  WHERE provider_id = ? AND status IN ('tp_hit', 'sl_hit', 'manually_closed')
+                  ORDER BY closed_at DESC
                   LIMIT 20`,
             args: [id]
         });
