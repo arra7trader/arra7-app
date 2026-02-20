@@ -195,180 +195,150 @@ export default function PricingPage() {
             </header>
 
             {/* Pricing Section */}
-            <section className="px-4 max-w-7xl mx-auto mb-32">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
-                    {PRICING_PLANS.map((plan, index) => {
-                        const pricing = getPlanPricing(plan.id);
+            <section className="px-4 max-w-5xl mx-auto mb-32 flex flex-col gap-12">
+                {PRICING_PLANS.map((plan, index) => {
+                    const pricing = getPlanPricing(plan.id);
+                    const isReversed = index % 2 !== 0; // Reverse middle card
 
-                        // Theme utilities mapping
-                        let cardStyle = 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xl';
-                        let headerBg = 'bg-slate-50 border-b border-slate-200';
-                        let ctaStyle = 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200';
-                        let checkStyle = 'bg-emerald-100 text-emerald-700';
+                    // Theme styles
+                    let leftBg = 'bg-slate-50/50';
+                    let titleColor = 'text-slate-900';
+                    let ctaStyle = 'bg-slate-800 hover:bg-slate-900 text-white';
+                    let checkStyle = 'bg-slate-200 text-slate-700';
 
-                        if (plan.theme === 'blue') {
-                            cardStyle = 'bg-white border-blue-200 shadow-xl shadow-blue-900/5 ring-1 ring-blue-100 md:-translate-y-4';
-                            headerBg = 'bg-blue-50/50 border-b border-blue-100';
-                            ctaStyle = 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20';
-                            checkStyle = 'bg-blue-100 text-blue-600';
-                        } else if (plan.theme === 'amber') {
-                            cardStyle = 'bg-white border-amber-200 hover:border-amber-300 hover:shadow-xl shadow-amber-900/5';
-                            headerBg = 'bg-amber-50/50 border-b border-amber-100';
-                            ctaStyle = 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20';
-                            checkStyle = 'bg-amber-100 text-amber-700';
-                        }
+                    if (plan.theme === 'blue') {
+                        leftBg = 'bg-blue-50/50';
+                        titleColor = 'text-blue-700';
+                        ctaStyle = 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20';
+                        checkStyle = 'bg-blue-100 text-blue-600';
+                    } else if (plan.theme === 'amber') {
+                        leftBg = 'bg-amber-50/50';
+                        titleColor = 'text-amber-600';
+                        ctaStyle = 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20';
+                        checkStyle = 'bg-amber-100 text-amber-600';
+                    }
 
-                        return (
-                            <motion.div
-                                key={plan.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.15, duration: 0.5 }}
-                                className={`relative flex flex-col rounded-3xl border transition-all duration-300 ${cardStyle}`}
-                            >
-                                {plan.popular && (
-                                    <div className="absolute -top-4 inset-x-0 flex justify-center">
-                                        <div className="bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 uppercase tracking-wider">
+                    return (
+                        <motion.div
+                            key={plan.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.15, duration: 0.5 }}
+                            className={`bg-white rounded-[2.5rem] border ${plan.id === 'PRO' ? 'border-blue-200 ring-2 ring-blue-100 shadow-2xl shadow-blue-900/10' : 'border-slate-200 shadow-xl'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
+                        >
+                            {/* Left Pane (Details & Features) */}
+                            <div className={`w-full md:w-3/5 p-8 md:p-14 ${leftBg} h-full flex flex-col justify-center border-b md:border-b-0 ${isReversed ? 'md:border-l' : 'md:border-r'} border-slate-100`}>
+                                <div className="flex flex-wrap items-center gap-4 mb-4">
+                                    <span className="text-4xl">{plan.icon}</span>
+                                    <h2 className={`text-3xl md:text-4xl font-extrabold ${titleColor}`}>
+                                        {plan.name}
+                                    </h2>
+                                    {plan.popular && (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-wider ml-auto md:ml-4">
                                             <StarSolidIcon size="xs" /> Paling Laris
+                                        </div>
+                                    )}
+                                </div>
+
+                                <p className="text-slate-600 leading-relaxed mb-8 max-w-lg">
+                                    {plan.description}
+                                </p>
+
+                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                    {plan.features.map((feature, i) => (
+                                        <li key={i} className={`flex items-start gap-3 text-sm leading-snug ${feature.included ? 'text-slate-700' : 'text-slate-400 opacity-60'}`}>
+                                            {feature.included ? (
+                                                <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${checkStyle}`}>
+                                                    <CheckIcon size="xs" />
+                                                </span>
+                                            ) : (
+                                                <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-slate-100">
+                                                    <XIcon size="xs" />
+                                                </span>
+                                            )}
+                                            <span className={`mt-0.5 ${feature.highlight ? 'font-semibold text-slate-900' : ''}`}>
+                                                {feature.text}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* Right Pane (Pricing & CTA) */}
+                            <div className="w-full md:w-2/5 p-8 md:p-14 text-center bg-white flex flex-col justify-center items-center">
+                                {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
+                                    <div className="mb-8 w-full">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Durasi</label>
+                                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
+                                            {DURATION_OPTIONS[plan.id].map((option) => {
+                                                const isSelected = selectedDuration[plan.id] === option.duration;
+                                                const slotInfo = promoSlots?.[plan.id]?.[option.duration];
+                                                const isSoldOut = !!(option.promoSlots && slotInfo && slotInfo.remaining <= 0);
+
+                                                return (
+                                                    <button
+                                                        key={option.duration}
+                                                        onClick={() => setSelectedDuration({ ...selectedDuration, [plan.id]: option.duration })}
+                                                        disabled={isSoldOut}
+                                                        className={`flex-1 py-1.5 px-1 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors ${isSelected ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'} ${isSoldOut ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                                    >
+                                                        {option.label}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Card Header */}
-                                <div className={`p-8 md:p-10 rounded-t-3xl ${headerBg}`}>
-                                    <div className="flex items-center gap-4 mb-3">
-                                        <span className="text-4xl">{plan.icon}</span>
-                                        <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
-                                    </div>
-                                    <p className="text-slate-600 text-sm leading-relaxed min-h-[40px]">
-                                        {plan.description}
-                                    </p>
-                                </div>
+                                <div className="flex flex-col items-center justify-center mb-8">
+                                    {pricing.badge && (
+                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${pricing.badge.includes('HABIS') ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                                            {pricing.badge}
+                                        </span>
+                                    )}
 
-                                {/* Card Body */}
-                                <div className="p-8 md:p-10 flex-grow flex flex-col bg-white rounded-b-3xl">
-                                    {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
-                                        <div className="mb-8">
-                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Durasi</label>
-                                            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
-                                                {DURATION_OPTIONS[plan.id].map((option) => {
-                                                    const isSelected = selectedDuration[plan.id] === option.duration;
-                                                    const slotInfo = promoSlots?.[plan.id]?.[option.duration];
-                                                    const isSoldOut = !!(option.promoSlots && slotInfo && slotInfo.remaining <= 0);
-
-                                                    return (
-                                                        <button
-                                                            key={option.duration}
-                                                            onClick={() => setSelectedDuration({ ...selectedDuration, [plan.id]: option.duration })}
-                                                            disabled={isSoldOut}
-                                                            className={`
-                                                                flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors
-                                                                ${isSelected
-                                                                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
-                                                                    : 'text-slate-500 hover:text-slate-700'
-                                                                }
-                                                                ${isSoldOut ? 'opacity-40 cursor-not-allowed' : ''}
-                                                            `}
-                                                        >
-                                                            {option.label}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
+                                    {pricing.originalPrice && (
+                                        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+                                            <span className="text-slate-400 line-through decoration-slate-300 font-medium">{pricing.originalPrice}</span>
+                                            {pricing.savingsText && (
+                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                                                    {pricing.savingsText}
+                                                </span>
+                                            )}
                                         </div>
                                     )}
 
-                                    {/* Pricing Display */}
-                                    <div className="mb-8 pb-8 border-b border-slate-100">
-                                        {pricing.badge && (
-                                            <div className="mb-3">
-                                                <span className={`
-                                                    inline-block px-3 py-1 rounded-full text-xs font-bold
-                                                    ${pricing.badge.includes('HABIS')
-                                                        ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                                                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                                    }
-                                                `}>
-                                                    {pricing.badge}
-                                                </span>
-                                            </div>
+                                    <div className="flex items-baseline justify-center gap-1">
+                                        <span className={`text-4xl xl:text-5xl font-black tracking-tight ${plan.id === 'BASIC' ? 'text-slate-700' : 'text-slate-900'}`}>{pricing.price}</span>
+                                        {pricing.period && (
+                                            <span className="text-slate-500 font-medium whitespace-nowrap">{pricing.period}</span>
                                         )}
-
-                                        {pricing.originalPrice && (
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-slate-400 line-through decoration-slate-300 font-medium">{pricing.originalPrice}</span>
-                                                {pricing.savingsText && (
-                                                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                                                        {pricing.savingsText}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-baseline gap-2">
-                                            <span className={`text-4xl lg:text-5xl font-extrabold tracking-tight ${plan.id === 'BASIC' ? 'text-slate-700' : 'text-slate-900'}`}>
-                                                {pricing.price}
-                                            </span>
-                                            {pricing.period && (
-                                                <span className="text-slate-500 font-medium">{pricing.period}</span>
-                                            )}
-                                        </div>
                                     </div>
-
-                                    {/* Features List */}
-                                    <div className="flex-grow">
-                                        <ul className="space-y-4 mb-8">
-                                            {plan.features.map((feature, i) => (
-                                                <li key={i} className="flex items-start gap-3">
-                                                    {feature.included ? (
-                                                        <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${checkStyle}`}>
-                                                            <CheckIcon size="xs" />
-                                                        </span>
-                                                    ) : (
-                                                        <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 bg-slate-100 text-slate-400">
-                                                            <XIcon size="xs" />
-                                                        </span>
-                                                    )}
-                                                    <span className={`
-                                                        text-sm leading-relaxed
-                                                        ${feature.highlight ? 'font-semibold text-slate-900' : feature.included ? 'text-slate-700' : 'text-slate-400'}
-                                                    `}>
-                                                        {feature.text}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    {/* Button CTA */}
-                                    <button
-                                        onClick={() => handleSubscribe(plan.id)}
-                                        disabled={isProcessing === plan.id}
-                                        className={`
-                                            w-full py-3.5 rounded-xl font-bold text-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2
-                                            ${ctaStyle}
-                                            ${isProcessing === plan.id ? 'opacity-70 cursor-wait' : ''}
-                                        `}
-                                    >
-                                        {isProcessing === plan.id ? (
-                                            <>
-                                                <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                                                Memproses...
-                                            </>
-                                        ) : (
-                                            <>
-                                                {plan.cta}
-                                                <span className="ml-1 text-xl">→</span>
-                                            </>
-                                        )}
-                                    </button>
                                 </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
 
-                <p className="text-center text-slate-500 text-sm mt-8">
+                                <button
+                                    onClick={() => handleSubscribe(plan.id)}
+                                    disabled={isProcessing === plan.id}
+                                    className={`w-full py-4 rounded-xl font-bold text-lg transition-transform active:scale-95 flex items-center justify-center gap-2 ${ctaStyle} ${isProcessing === plan.id ? 'opacity-70 cursor-wait' : ''}`}
+                                >
+                                    {isProcessing === plan.id ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                                            Memproses...
+                                        </>
+                                    ) : (
+                                        <>
+                                            {plan.cta}
+                                            <span className="ml-1 text-xl">→</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    );
+                })}
+
+                <p className="text-center text-slate-500 text-sm mt-4">
                     * Pembayaran menggunakan QRIS otomatis. Mendukung semua e-wallet dan mobile banking.
                 </p>
             </section>
