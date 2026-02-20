@@ -79,9 +79,10 @@ export async function GET(request: NextRequest) {
                                   SET total_trades = total_trades + 1,
                                       winning_trades = winning_trades + ?,
                                       losing_trades = losing_trades + ?,
-                                      net_profit_usd = net_profit_usd + ?
+                                      net_profit_usd = net_profit_usd + ?,
+                                      win_rate = ROUND(CAST(winning_trades + ? AS REAL) / (total_trades + 1) * 100, 2)
                                   WHERE provider_id = 'provider_ai_genesis'`,
-                            args: [isWin ? 1 : 0, isWin ? 0 : 1, profitUsd]
+                            args: [isWin ? 1 : 0, isWin ? 0 : 1, profitUsd, isWin ? 1 : 0]
                         });
                         console.log(`[ForexSignal] Closed Signal ${signal.id} (${outcome}: ${pips.toFixed(1)} pips)`);
                     }
