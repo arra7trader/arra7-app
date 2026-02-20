@@ -7,7 +7,6 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { CheckIcon, XIcon, ChevronDownIcon, ArrowRightIcon, SparklesIcon, FireIcon, StarSolidIcon, CpuChipIcon } from '@/components/PremiumIcons';
 
-// Duration options for PRO and VVIP
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string; savingsText?: string; promoSlots?: number }>> = {
     PRO: [
         { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 99K', originalPrice: 'Rp 149K' },
@@ -29,8 +28,8 @@ const PRICING_PLANS = [
         name: 'Basic',
         description: 'Untuk trader pemula yang ingin mencoba platform',
         icon: '🆓',
-        gradient: 'from-slate-500 to-gray-600',
-        bgGradient: 'from-slate-50 to-gray-100',
+        gradient: 'from-slate-800 to-slate-900',
+        bgGradient: 'from-slate-800 to-slate-900',
         features: [
             { text: '1x Analisa per Hari', included: true, highlight: true },
             { text: 'Hanya Pair XAUUSD', included: true, highlight: true },
@@ -46,8 +45,8 @@ const PRICING_PLANS = [
         name: 'Pro',
         description: 'Untuk trader aktif yang serius profit',
         icon: '⚡',
-        gradient: 'from-blue-600 to-cyan-500',
-        bgGradient: 'from-blue-600 to-indigo-700',
+        gradient: 'from-blue-500 to-indigo-600',
+        bgGradient: 'from-[#0d142b] to-[#161c38]',
         features: [
             { text: '25x Analisa Forex per hari', included: true, highlight: false },
             { text: '25x Analisa Saham IDX per hari', included: true, highlight: false },
@@ -67,8 +66,8 @@ const PRICING_PLANS = [
         name: 'VVIP',
         description: 'Untuk trader profesional & institusi',
         icon: '👑',
-        gradient: 'from-amber-500 to-orange-600',
-        bgGradient: 'from-amber-500 to-orange-600',
+        gradient: 'from-orange-400 to-rose-600',
+        bgGradient: 'from-[#2e1511] to-[#1f0f0c]',
         features: [
             { text: 'UNLIMITED Analisa Forex', included: true, highlight: false },
             { text: 'UNLIMITED Analisa Saham IDX', included: true, highlight: false },
@@ -91,17 +90,14 @@ export default function PricingPage() {
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
     const [stats, setStats] = useState({ users: 100, predictions: 5000, accuracy: 95.8 });
 
-    // Duration selector state
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
         PRO: '3months',
         VVIP: '3months',
     });
 
-    // Promo slots state
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
 
     useEffect(() => {
-        // Fetch real stats
         fetch('/api/public/stats')
             .then(res => res.json())
             .then(data => {
@@ -111,7 +107,6 @@ export default function PricingPage() {
             })
             .catch(err => console.error('Failed to fetch stats', err));
 
-        // Fetch promo slots
         fetch('/api/pricing/slots')
             .then(res => res.json())
             .then(data => {
@@ -133,7 +128,6 @@ export default function PricingPage() {
             return;
         }
 
-        // Get selected duration for this plan
         const duration = selectedDuration[planId] || '1month';
         const durationOption = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
         const days = durationOption?.days || 30;
@@ -141,7 +135,6 @@ export default function PricingPage() {
         window.location.href = `/payment/transfer?plan=${planId}&duration=${duration}&days=${days}`;
     };
 
-    // Get current pricing info for a plan based on selected duration
     const getPlanPricing = (planId: string) => {
         if (planId === 'BASIC') {
             return { price: 'FREE', originalPrice: null, period: '', badge: null };
@@ -169,129 +162,109 @@ export default function PricingPage() {
         return {
             price: option.price,
             originalPrice: option.originalPrice,
-            period: option.duration === '1month' ? '/bulan' : '',
+            period: option.duration === '1month' ? '/bln' : '',
             badge,
             savingsText: option.savingsText,
         };
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-[var(--bg-primary)] via-[var(--bg-primary)] to-slate-100 pt-20">
-            {/* Header with Enhanced Design */}
-            <section className="section-padding text-center relative overflow-hidden">
-                {/* Background Decorations */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-20 left-1/4 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl" />
-                    <div className="absolute top-40 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl" />
-                    <div className="absolute -bottom-20 left-1/2 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl" />
-                </div>
+        <div className="min-h-screen bg-[#070b14] text-white pt-24 pb-12 selection:bg-blue-500/30 overflow-hidden relative font-sans">
+            {/* Ambient Background Glows */}
+            <div className="fixed inset-0 pointer-events-none z-0 mix-blend-screen">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[150px] rounded-full" />
+                <div className="absolute top-[40%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[150px] rounded-full" />
+                <div className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-emerald-600/10 blur-[150px] rounded-full" />
+            </div>
 
-                <div className="container-apple relative z-10">
+            <div className="relative z-10">
+                {/* Hero Section */}
+                <section className="text-center px-4 mb-20">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
+                        className="max-w-4xl mx-auto"
                     >
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 text-purple-700 text-sm font-medium mb-6">
-                            <SparklesIcon size="sm" />
-                            Promo Spesial - Diskon Hingga 60% (Terbatas 30 Orang)
-                        </span>
-                        <h1 className="headline-lg mb-4">
-                            Investasi Trading dengan{' '}
-                            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-amber-600 bg-clip-text text-transparent">
-                                AI Terbaik
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 shadow-[0_0_15px_rgba(251,191,36,0.2)]"
+                        >
+                            <SparklesIcon size="sm" className="text-amber-400" />
+                            <span className="text-sm font-semibold bg-gradient-to-r from-amber-200 to-yellow-400 bg-clip-text text-transparent">Promo Spesial - Diskon Hingga 60%</span>
+                        </motion.div>
+                        <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-tight">
+                            Investasi Cerdas dengan <br className="hidden md:block" />
+                            <span className="bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                                AI Trading Terbaik
                             </span>
                         </h1>
-                        <p className="body-lg max-w-2xl mx-auto text-[var(--text-secondary)]">
-                            Platform trading dengan teknologi AI Neural Ensemble yang terverifikasi 90%+ akurasi.
-                            Bergabung dengan {stats.users}+ trader Indonesia yang sudah profit!
+                        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                            Eksekusi market dengan akurasi tinggi menggunakan <strong className="text-indigo-400">Neural Ensemble AI</strong>.
+                            Bergabung dengan <span className="text-white font-bold">{stats.users}+</span> trader pro lainnya.
                         </p>
-
-                        {/* Trust Badges */}
-                        <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-                            {['✓ Enkripsi Bank Level', '✓ Support 24/7'].map((badge, i) => (
-                                <span key={i} className="px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-sm">
-                                    {badge}
-                                </span>
-                            ))}
-                        </div>
                     </motion.div>
-                </div>
-            </section>
+                </section>
 
-            {/* Premium Pricing Cards */}
-            <section className="section-padding pt-8">
-                <div className="container-wide">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
-                        {PRICING_PLANS.map((plan, index) => (
-                            <motion.div
-                                key={plan.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + index * 0.1 }}
-                                className={`
-                                    relative rounded-3xl overflow-hidden
-                                    ${plan.popular
-                                        ? 'ring-4 ring-blue-500/30 shadow-2xl shadow-blue-500/20 scale-105 z-10'
-                                        : 'shadow-xl'
-                                    }
-                                `}
-                            >
-                                {/* Card Background */}
-                                <div className={`
-                                    absolute inset-0
-                                    ${plan.popular
-                                        ? `bg-gradient-to-br ${plan.bgGradient}`
-                                        : plan.id === 'VVIP'
-                                            ? `bg-gradient-to-br ${plan.bgGradient}`
-                                            : 'bg-white'
-                                    }
-                                `} />
+                {/* Pricing Cards */}
+                <section className="px-4 mb-24">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-10">
+                            {PRICING_PLANS.map((plan, index) => (
+                                <motion.div
+                                    key={plan.id}
+                                    initial={{ opacity: 0, y: 40 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
+                                    className={`
+                                        relative group rounded-[2rem] p-px overflow-hidden 
+                                        ${plan.popular ? 'z-20 md:-mt-8 md:mb-8' : 'z-10'}
+                                    `}
+                                >
+                                    {/* Animated Border Gradient */}
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} ${plan.popular ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'} transition-opacity duration-500 rounded-[2rem]`} />
 
-                                {/* Popular Badge */}
-                                {plan.popular && (
-                                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-400 to-orange-500 py-2 text-center">
-                                        <span className="text-white text-sm font-bold flex items-center justify-center gap-1">
-                                            <StarSolidIcon size="sm" />
-                                            PALING POPULER - BEST VALUE
-                                            <StarSolidIcon size="sm" />
-                                        </span>
-                                    </div>
-                                )}
+                                    {/* Glassmorphic Inner Card */}
+                                    <div className={`
+                                        relative h-full rounded-[calc(2rem-1px)] p-8 md:p-10 flex flex-col
+                                        backdrop-blur-xl bg-gradient-to-b ${plan.bgGradient} ${plan.popular ? 'shadow-[0_0_40px_rgba(79,70,229,0.3)]' : 'shadow-2xl shadow-black/50'}
+                                    `}>
 
-                                {/* VVIP Badge */}
-                                {plan.id === 'VVIP' && (
-                                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 py-2 text-center">
-                                        <span className="text-white text-sm font-bold flex items-center justify-center gap-1">
-                                            👑 PREMIUM EXCLUSIVE 👑
-                                        </span>
-                                    </div>
-                                )}
+                                        {plan.popular && (
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-b-xl shadow-lg border-b border-x border-white/20">
+                                                <span className="text-xs font-bold text-white tracking-widest uppercase flex items-center gap-1">
+                                                    <StarSolidIcon size="xs" /> MOST POPULAR
+                                                </span>
+                                            </div>
+                                        )}
 
-                                {/* Card Content */}
-                                <div className={`
-                                    relative p-8 
-                                    ${plan.popular || plan.id === 'VVIP' ? 'pt-14 text-white' : 'text-[var(--text-primary)]'}
-                                `}>
-                                    {/* Plan Header */}
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <span className="text-4xl">{plan.icon}</span>
-                                        <div>
-                                            <h3 className="text-2xl font-bold">{plan.name}</h3>
-                                            <p className={`text-sm ${plan.popular || plan.id === 'VVIP' ? 'text-white/80' : 'text-[var(--text-secondary)]'}`}>
-                                                {plan.description}
-                                            </p>
+                                        {plan.id === 'VVIP' && (
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-b-xl shadow-lg border-b border-x border-white/20">
+                                                <span className="text-xs font-bold text-white tracking-widest uppercase flex items-center gap-1">
+                                                    👑 EXCLUSIVE
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-4 mb-2">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl bg-white/10 shadow-inner border border-white/5`}>
+                                                    {plan.icon}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-3xl font-bold text-white">{plan.name}</h3>
+                                                </div>
+                                            </div>
+                                            <p className="text-slate-400 text-sm mb-6 h-10">{plan.description}</p>
                                         </div>
-                                    </div>
 
-                                    {/* Duration Selector - Only for PRO and VVIP */}
-                                    {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
-                                        <div className="mb-4">
-                                            <div className="flex gap-2 flex-wrap">
+                                        {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
+                                            <div className="mb-8 p-1.5 bg-black/40 rounded-xl flex gap-1 border border-white/10 backdrop-blur-md">
                                                 {DURATION_OPTIONS[plan.id].map((option) => {
                                                     const isSelected = selectedDuration[plan.id] === option.duration;
                                                     const slotInfo = promoSlots?.[plan.id]?.[option.duration];
-                                                    // Ensure boolean type
                                                     const isSoldOut = !!(option.promoSlots && slotInfo && slotInfo.remaining <= 0);
 
                                                     return (
@@ -300,392 +273,290 @@ export default function PricingPage() {
                                                             onClick={() => setSelectedDuration({ ...selectedDuration, [plan.id]: option.duration })}
                                                             disabled={isSoldOut}
                                                             className={`
-                                                                px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+                                                                flex-1 py-2 rounded-lg text-xs font-bold transition-all
                                                                 ${isSelected
-                                                                    ? plan.popular || plan.id === 'VVIP'
-                                                                        ? 'bg-white text-blue-600 ring-2 ring-white/50'
-                                                                        : 'bg-blue-600 text-white ring-2 ring-blue-200'
-                                                                    : plan.popular || plan.id === 'VVIP'
-                                                                        ? 'bg-white/20 text-white hover:bg-white/30'
-                                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                                    ? 'bg-white/15 text-white shadow-lg border border-white/20'
+                                                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                                                                 }
-                                                                ${isSoldOut ? 'opacity-50 cursor-not-allowed' : ''}
+                                                                ${isSoldOut ? 'opacity-30 cursor-not-allowed' : ''}
                                                             `}
                                                         >
                                                             {option.label}
-                                                            {isSoldOut && ' 🔴'}
                                                         </button>
                                                     );
                                                 })}
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    {/* Price Display */}
-                                    {(() => {
-                                        const pricing = getPlanPricing(plan.id);
-                                        return (
-                                            <div className="mb-6 pb-6 border-b border-white/20">
-                                                {/* Promo Badge */}
-                                                {pricing.badge && (
-                                                    <div className="mb-2">
-                                                        <span className={`
-                                                            inline-block px-3 py-1 rounded-full text-xs font-bold
-                                                            ${pricing.badge.includes('SOLD OUT')
-                                                                ? 'bg-red-500 text-white'
-                                                                : 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/30'
-                                                            }
-                                                        `}>
-                                                            {pricing.badge}
-                                                        </span>
+                                        {(() => {
+                                            const pricing = getPlanPricing(plan.id);
+                                            return (
+                                                <div className="mb-8 flex-shrink-0">
+                                                    {pricing.badge && (
+                                                        <div className="mb-3">
+                                                            <span className={`
+                                                                inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider
+                                                                ${pricing.badge.includes('SOLD OUT')
+                                                                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                                                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                                                }
+                                                            `}>
+                                                                {pricing.badge}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-col gap-1">
+                                                        {pricing.originalPrice && (
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-lg line-through text-slate-500 decoration-slate-500/50">
+                                                                    {pricing.originalPrice}
+                                                                </span>
+                                                                {pricing.savingsText && (
+                                                                    <span className="text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                                                                        {pricing.savingsText}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-baseline gap-2">
+                                                            <span className="text-5xl font-black text-white tracking-tight">{pricing.price}</span>
+                                                            <span className="text-slate-400 font-medium">{pricing.period}</span>
+                                                        </div>
                                                     </div>
-                                                )}
+                                                </div>
+                                            );
+                                        })()}
 
-                                                {/* Original Price + Savings */}
-                                                {pricing.originalPrice && (
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className={`text-lg line-through ${plan.popular || plan.id === 'VVIP' ? 'text-white/50' : 'text-[var(--text-muted)]'}`}>
-                                                            {pricing.originalPrice}
-                                                        </span>
-                                                        {pricing.savingsText && (
-                                                            <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
-                                                                {pricing.savingsText}
+                                        <div className="flex-grow">
+                                            <ul className="space-y-4">
+                                                {plan.features.map((feature, i) => (
+                                                    <li key={i} className="flex items-start gap-3">
+                                                        {feature.included ? (
+                                                            <span className={`
+                                                                flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5
+                                                                ${feature.highlight
+                                                                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_10px_rgba(251,191,36,0.3)]'
+                                                                    : 'bg-white/10 text-emerald-400'
+                                                                }
+                                                            `}>
+                                                                <CheckIcon size="xs" />
+                                                            </span>
+                                                        ) : (
+                                                            <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 bg-black/20 text-slate-600">
+                                                                <XIcon size="xs" />
                                                             </span>
                                                         )}
-                                                    </div>
-                                                )}
+                                                        <span className={`
+                                                            text-sm leading-relaxed
+                                                            ${feature.highlight ? 'text-white font-medium' : feature.included ? 'text-slate-300' : 'text-slate-600'}
+                                                        `}>
+                                                            {feature.text}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
 
-                                                {/* Current Price */}
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-5xl font-black">{pricing.price}</span>
-                                                    <span className={plan.popular || plan.id === 'VVIP' ? 'text-white/70' : 'text-[var(--text-secondary)]'}>
-                                                        {pricing.period}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-
-                                    {/* Features */}
-                                    <ul className="space-y-3 mb-8">
-                                        {plan.features.map((feature, i) => (
-                                            <li key={i} className="flex items-start gap-3">
-                                                {feature.included ? (
-                                                    <span className={`
-                                                        flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5
-                                                        ${feature.highlight
-                                                            ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30'
-                                                            : plan.popular || plan.id === 'VVIP'
-                                                                ? 'bg-white/20'
-                                                                : 'bg-green-100'
-                                                        }
-                                                    `}>
-                                                        <CheckIcon className={feature.highlight ? 'text-white' : plan.popular || plan.id === 'VVIP' ? 'text-white' : 'text-green-600'} size="xs" />
-                                                    </span>
+                                        <div className="mt-10 pt-8 border-t border-white/10">
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => handleSubscribe(plan.id)}
+                                                disabled={isProcessing === plan.id}
+                                                className={`
+                                                    w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2
+                                                    ${plan.popular
+                                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)]'
+                                                        : plan.id === 'VVIP'
+                                                            ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
+                                                            : 'bg-white/10 text-white hover:bg-white/20 border border-white/10'
+                                                    }
+                                                    ${isProcessing === plan.id ? 'opacity-50 cursor-not-allowed' : ''}
+                                                `}
+                                            >
+                                                {isProcessing === plan.id ? (
+                                                    <>
+                                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        Memproses...
+                                                    </>
                                                 ) : (
-                                                    <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${plan.popular || plan.id === 'VVIP' ? 'bg-white/10' : 'bg-gray-100'}`}>
-                                                        <XIcon className={plan.popular || plan.id === 'VVIP' ? 'text-white/40' : 'text-gray-400'} size="xs" />
-                                                    </span>
+                                                    <>
+                                                        {plan.cta}
+                                                        <ArrowRightIcon size="sm" />
+                                                    </>
                                                 )}
-                                                <span className={`
-                                                    text-sm leading-relaxed
-                                                    ${feature.highlight ? 'font-semibold' : ''}
-                                                    ${!feature.included ? (plan.popular || plan.id === 'VVIP' ? 'text-white/40' : 'text-[var(--text-muted)]') : ''}
-                                                `}>
-                                                    {feature.text}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    {/* CTA Button */}
-                                    <motion.button
-                                        whileHover={{ scale: 1.03, y: -2 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleSubscribe(plan.id)}
-                                        disabled={isProcessing === plan.id}
-                                        className={`
-                                            w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-lg
-                                            ${plan.popular
-                                                ? 'bg-white text-blue-600 hover:bg-gray-50 shadow-white/30'
-                                                : plan.id === 'VVIP'
-                                                    ? 'bg-white text-amber-600 hover:bg-gray-50 shadow-white/30'
-                                                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/30'
-                                            }
-                                            ${isProcessing === plan.id ? 'opacity-50 cursor-not-allowed' : ''}
-                                        `}
-                                    >
-                                        {isProcessing === plan.id ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                                <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                                                Memproses...
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center justify-center gap-2">
-                                                {plan.cta}
-                                                <ArrowRightIcon size="sm" />
-                                            </span>
-                                        )}
-                                    </motion.button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    {/* Comparison Note */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                        className="text-center mt-12"
-                    >
-                        <p className="text-[var(--text-muted)] text-sm">
-                            * Semua paket termasuk akses ke Economic Calendar dan Support via Telegram
-                        </p>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* AI Technology Section */}
-            <section className="section-padding">
-                <div className="container-apple">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 rounded-3xl p-8 md:p-12 text-white text-center relative overflow-hidden"
-                    >
-                        {/* Decorative Elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-
-                        <div className="relative z-10">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
-                                <CpuChipIcon size="sm" />
-                                <span className="text-sm font-medium">Powered by Neural Ensemble AI</span>
-                            </div>
-                            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                                Teknologi AI dengan Akurasi 90%+
-                            </h2>
-                            <p className="text-white/80 max-w-2xl mx-auto mb-8">
-                                Model LSTM + GRU + Transformer kami dilatih dengan data market 5 tahun.
-                                Verifikasi akurasi secara real-time dengan Accuracy Tracker di dashboard.
-                            </p>
-                            <div className="flex flex-wrap items-center justify-center gap-4">
-                                {['LSTM Neural Network', 'GRU Predictor', 'Transformer Attention', 'Ensemble Voting'].map((tech, i) => (
-                                    <span key={i} className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm">
-                                        {tech}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* FAQ Section */}
-            <section className="section-padding bg-[var(--bg-secondary)]">
-                <div className="container-apple">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12"
-                    >
-                        <h2 className="headline-md mb-4">Pertanyaan Umum</h2>
-                        <p className="body-md">Temukan jawaban atas pertanyaan yang sering diajukan</p>
-                    </motion.div>
-
-                    <div className="space-y-4 max-w-2xl mx-auto">
-                        {[
-                            {
-                                question: 'Metode pembayaran apa yang tersedia?',
-                                answer: 'Kami menggunakan metode pembayaran QRIS yang dapat di-scan melalui semua aplikasi e-wallet (GoPay, OVO, Dana, ShopeePay) dan mobile banking.',
-                            },
-                            {
-                                question: 'Apa itu Bookmap ARRA7?',
-                                answer: 'Bookmap ARRA7 adalah fitur order flow visualization yang menampilkan pergerakan whale (order institusi besar) secara real-time. Data yang sama dengan yang digunakan hedge fund profesional.',
-                            },
-                            {
-                                question: 'Bagaimana cara kerja AI Neural Ensemble?',
-                                answer: 'AI kami menggunakan 3 model deep learning (LSTM, GRU, Transformer) yang voting secara ensemble untuk menghasilkan prediksi dengan akurasi 90%+. Akurasi dapat dilacak secara live di dashboard.',
-                            },
-                            {
-                                question: 'Bisakah upgrade atau downgrade paket?',
-                                answer: 'Ya! Anda bisa upgrade kapan saja. Sisa waktu paket lama akan di-prorate ke paket baru.',
-                            },
-                        ].map((faq, index) => (
-                            <motion.details
-                                key={index}
-                                initial={{ opacity: 0, y: 10 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: index * 0.1 }}
-                                className="group bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden shadow-sm"
-                            >
-                                <summary className="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-[var(--bg-secondary)] transition-colors">
-                                    <span className="font-semibold">{faq.question}</span>
-                                    <span className="ml-4 flex-shrink-0 w-8 h-8 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center group-open:rotate-180 transition-transform duration-300">
-                                        <ChevronDownIcon className="text-[var(--text-secondary)]" size="sm" />
-                                    </span>
-                                </summary>
-                                <div className="px-5 pb-5 pt-0">
-                                    <p className="text-[var(--text-secondary)] leading-relaxed">{faq.answer}</p>
-                                </div>
-                            </motion.details>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ===== EXCLUSIVE AI COPYTRADE SECTION ===== */}
-            <section id="copytrade" className="section-padding bg-gradient-to-b from-teal-900 to-slate-900 text-white relative overflow-hidden">
-                {/* Background FX */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-4xl bg-teal-500/10 blur-[100px] rounded-full" />
-                    <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[80px] rounded-full" />
-                </div>
-
-                <div className="container-apple relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12"
-                    >
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-sm font-semibold mb-4">
-                            <SparklesIcon size="xs" />
-                            Exclusive Invitation
-                        </div>
-                        <h2 className="heading-lg text-white mb-4">
-                            <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">AI Genesis</span> Copy Trade
-                        </h2>
-                        <p className="body-md text-slate-300 max-w-2xl mx-auto">
-                            Dapatkan profit konsisten dengan menyalin otomatis posisi trading dari AI Genesis.
-                            Sistem trading XAUUSD dengan akurasi tinggi dan manajemen risiko ketat.
-                        </p>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
-                        {/* Features Column */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -30 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            className="space-y-8"
-                        >
-                            <div className="flex gap-4 items-start">
-                                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0 border border-teal-500/20">
-                                    <span className="text-2xl">🤖</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">100% Fully Automated</h3>
-                                    <p className="text-slate-400 leading-relaxed">
-                                        Tidak perlu analisa chart. Posisi entry, SL, dan TP dieksekusi otomatis di akun Anda dalam hitungan milidetik.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4 items-start">
-                                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0 border border-teal-500/20">
-                                    <span className="text-2xl">📱</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Telegram Integration</h3>
-                                    <p className="text-slate-400 leading-relaxed">
-                                        Terima notifikasi real-time setiap kali AI membuka atau menutup posisi langsung ke Telegram pribadi Anda.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4 items-start">
-                                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0 border border-teal-500/20">
-                                    <span className="text-2xl">🛡️</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Risk Management</h3>
-                                    <p className="text-slate-400 leading-relaxed">
-                                        Max drawdown rendah dengan SL ketat (Min 70 pips Gold). Target Win Rate &gt; 80% untuk pertumbuhan equity yang stabil.
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        {/* Pricing Card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 30 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            className="relative"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl blur-md opacity-50" />
-                            <div className="relative bg-[#0f172a] border border-teal-500/30 rounded-3xl p-8 overflow-hidden">
-                                <div className="absolute top-0 right-0 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
-                                    LIMITED SLOTS
-                                </div>
-
-                                <div className="text-center mb-8">
-                                    <div className="text-slate-400 text-sm font-medium mb-2">BERLANGGANAN SEKARANG</div>
-                                    <div className="flex items-baseline justify-center gap-1">
-                                        <span className="text-5xl font-black text-white">Rp 49K</span>
-                                        <span className="text-slate-400">/bulan</span>
+                                            </motion.button>
+                                        </div>
                                     </div>
-                                    <p className="text-emerald-400 text-sm font-bold mt-2">
-                                        Harga Spesial Early Access
-                                    </p>
-                                </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                        <p className="text-center text-slate-500 text-sm mt-12">* Semua paket termasuk akses ke Economic Calendar dan Support via Telegram</p>
+                    </div>
+                </section>
 
-                                <div className="space-y-4 mb-8">
-                                    {[
-                                        'Akses ke AI Genesis Provider',
-                                        'Auto-Copy ke MT4/MT5 (via Exness/FBS)',
-                                        'Real-time Telegram Alerts',
-                                        'Prioritas Support',
-                                        'Bebas Cancel Kapan Saja'
-                                    ].map((item, i) => (
-                                        <div key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                                            <CheckIcon className="text-teal-400" size="xs" />
-                                            {item}
+                {/* AI Technology Section */}
+                <section className="px-4 mb-24">
+                    <div className="max-w-6xl mx-auto">
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="relative rounded-[2.5rem] p-1 overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 opacity-50" />
+                            <div className="relative bg-[#0d1326] rounded-[2.4rem] p-10 md:p-16 text-center shadow-2xl overflow-hidden">
+                                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+
+                                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 mb-8 backdrop-blur-md">
+                                    <CpuChipIcon size="sm" />
+                                    <span className="text-sm font-bold tracking-wide">NN ARCHITECTURE</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-black mb-6 text-white leading-tight">
+                                    Teknologi AI dengan <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Akurasi 90%+</span>
+                                </h2>
+                                <p className="text-lg text-slate-400 max-w-3xl mx-auto mb-12">
+                                    Sistem kami menggunakan hybrid neural networks (LSTM + GRU + Transformer) yang dilatih menggunakan data pasar selama 5 tahun untuk mengidentifikasi pola probabilitas tinggi.
+                                </p>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                                    {['LSTM Engine', 'GRU Memory', 'Transformer', 'Ensemble Logic'].map((tech, i) => (
+                                        <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+                                            <div className="text-blue-400 font-bold mb-1">Module 0{i + 1}</div>
+                                            <div className="text-slate-300 text-sm">{tech}</div>
                                         </div>
                                     ))}
                                 </div>
-
-                                <button
-                                    onClick={() => handleSubscribe('CT_FOLLOWER')}
-                                    disabled={isProcessing === 'CT_FOLLOWER'}
-                                    className="w-full py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-teal-500/25 transition-all mb-4"
-                                >
-                                    {isProcessing === 'CT_FOLLOWER' ? 'Memproses...' : 'Join AI Genesis'}
-                                </button>
-
-                                <p className="text-center text-xs text-slate-500">
-                                    Aktivasi manual oleh Admin setelah pembayaran dikonfirmasi.
-                                </p>
                             </div>
                         </motion.div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Bottom CTA */}
+                {/* AI Copytrade Section */}
+                <section id="copytrade" className="px-4 mb-24">
+                    <div className="max-w-6xl mx-auto">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            className="relative rounded-[3rem] bg-gradient-to-br from-[#064e3b] to-[#020617] border border-emerald-900/50 p-8 md:p-16 overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-[url('/bg-grid.svg')] opacity-10 mix-blend-overlay" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-full bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-            <section className="section-padding">
-                <div className="container-apple text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <p className="body-md mb-6">Masih ragu? Coba gratis dulu!</p>
-                        <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
-                            <button className="btn-primary bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-lg shadow-blue-500/30">
-                                Coba {t('analisaMarket')} Gratis
-                                <ArrowRightIcon className="ml-2" size="sm" />
-                            </button>
-                        </Link>
-                    </motion.div>
-                </div>
-            </section>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
+                                <div>
+                                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-6 tracking-widest uppercase">
+                                        <SparklesIcon size="xs" /> Eksklusif
+                                    </div>
+                                    <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">AI Genesis</span> Copytrade
+                                    </h2>
+                                    <p className="text-lg text-emerald-100/70 mb-10 leading-relaxed">
+                                        Profit autopilot 100%. Sinkronisasikan akun MT4/MT5 Anda dengan sinyal eksekusi langsung dari *Deep Learning Agent* kami (Fokus XAUUSD).
+                                    </p>
+
+                                    <div className="space-y-6">
+                                        {[
+                                            { t: 'Eksekusi Otomatis Milidetik', i: '⚡' },
+                                            { t: 'Target Winrate >80% & Max DD Rendah', i: '🛡️' },
+                                            { t: 'Notifikasi Langsung via Telegram', i: '📱' },
+                                        ].map((f, i) => (
+                                            <div key={i} className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                                                    {f.i}
+                                                </div>
+                                                <span className="text-emerald-50 font-medium">{f.t}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl blur-xl opacity-20" />
+                                    <div className="relative bg-[#022c22]/80 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-8 md:p-10 shadow-2xl">
+                                        <div className="absolute -top-4 -right-4 bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 font-black text-xs px-4 py-2 rounded-xl shadow-lg transform rotate-3">
+                                            EARLY ACCESS
+                                        </div>
+
+                                        <div className="text-center mb-10">
+                                            <div className="text-emerald-400/80 text-sm font-bold tracking-widest uppercase mb-3">Harga Spesial</div>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className="text-6xl font-black text-white">Rp 49K</span>
+                                                <span className="text-emerald-400/60 font-medium">/bln</span>
+                                            </div>
+                                        </div>
+
+                                        <ul className="space-y-4 mb-10">
+                                            {['Akses Master AI Genesis', 'Auto-Copy Exness / FBS', 'Bebas Cancel Kapan Saja'].map((item, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-emerald-100/90 text-sm">
+                                                    <CheckIcon className="text-emerald-400" size="sm" /> {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        <button
+                                            onClick={() => handleSubscribe('CT_FOLLOWER')}
+                                            disabled={isProcessing === 'CT_FOLLOWER'}
+                                            className="w-full py-4 rounded-xl font-bold text-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all"
+                                        >
+                                            {isProcessing === 'CT_FOLLOWER' ? 'Memproses...' : 'Gabung Copytrade Sekarang'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* FAQ Section */}
+                <section className="px-4 mb-24">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Pertanyaan Umum</h2>
+                            <p className="text-slate-400">Informasi detail seputar layanan premium ARRA7</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                { q: 'Metode pembayaran apa yang tersedia?', a: 'Kami menggunakan QRIS otomatis. Mendukung semua e-wallet (GoPay, OVO, DANA) & Mobile Banking.' },
+                                { q: 'Apa itu fitur Bookmap ARRA7?', a: 'Visualisasi order flow sekelas institusi untuk mendeteksi pergerakan whale (institusi besar) di market.' },
+                                { q: 'Bisa upgrade paket di tengah jalan?', a: 'Tentu. Sisa masa aktif paket sebelumnya akan diakumulasikan otomatis ke paket baru.' }
+                            ].map((faq, index) => (
+                                <motion.details
+                                    key={index}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm"
+                                >
+                                    <summary className="flex items-center justify-between p-6 cursor-pointer list-none hover:bg-white/5 transition-colors">
+                                        <span className="font-semibold text-white">{faq.q}</span>
+                                        <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-open:rotate-180 transition-transform duration-300 shrink-0">
+                                            <ChevronDownIcon size="sm" className="text-slate-300" />
+                                        </span>
+                                    </summary>
+                                    <div className="px-6 pb-6 pt-0 text-slate-400 leading-relaxed">
+                                        {faq.a}
+                                    </div>
+                                </motion.details>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Bottom CTA */}
+                <section className="px-4 mb-20 text-center">
+                    <p className="text-slate-400 mb-6">Masih ragu? Anda selalu bisa mencoba versi gratis kami.</p>
+                    <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
+                        <button className="px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold transition-all shadow-lg">
+                            Coba {t('analisaMarket')} Gratis
+                        </button>
+                    </Link>
+                </section>
+            </div>
         </div>
     );
 }
