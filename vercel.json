@@ -1,5 +1,10 @@
 {
-    "crons": [],
+    "crons": [
+        {
+            "path": "/api/cron/forex-signal",
+            "schedule": "*/5 * * * *"
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/ml/:path*",

@@ -13,19 +13,14 @@ export async function GET(request: NextRequest) {
         }
 
         // 1. Fetch Real-Time Data (XAUUSD)
-        // Try Swissquote first (primary), then OANDA
+        // Try getMarketData to allow Yahoo fallback if Swissquote/OANDA fails
         let marketData;
         try {
-            marketData = await getBrokerPrice('XAUUSD', '5m', 'swissquote');
+            const { getMarketData } = await import('@/lib/market-data');
+            marketData = await getMarketData('XAUUSD', '5m');
         } catch (e) {
-            console.warn('[ForexSignal] Swissquote failed, trying OANDA/Yahoo...');
-            try {
-                marketData = await getBrokerPrice('XAUUSD', '5m', 'oanda');
-            } catch (e2) {
-                // Final fallback if configured
-                console.error('[ForexSignal] All feeds failed');
-                return NextResponse.json({ error: 'Market data unavailable' }, { status: 503 });
-            }
+            console.error('[ForexSignal] All feeds failed', e);
+            return NextResponse.json({ error: 'Market data unavailable' }, { status: 503 });
         }
 
         if (!marketData || marketData.is_simulated) {
