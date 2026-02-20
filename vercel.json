@@ -3,6 +3,10 @@
         {
             "path": "/api/cron/marketing-bot",
             "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron/forex-signal",
+            "schedule": "*/5 * * * *"
         }
     ],
     "rewrites": [

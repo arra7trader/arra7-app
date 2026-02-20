@@ -653,6 +653,226 @@ export class SmartPredictor {
 
         return result;
     }
+
+    /**
+     * Generate prediction from Forex Data (MarketData / OHLC)
+     * Optimized for XAUUSD and Major Pairs
+     */
+    public predictForex(currentPrice: number, history: PriceHistory[]): PredictionResult {
+        const signals: SignalResult[] = [];
+
+        // Update local cache if needed
+        if (history.length > 0) {
+            priceHistoryCache.set(this.symbol, history);
+        } else {
+            history = priceHistoryCache.get(this.symbol) || [];
+            updatePriceHistory(this.symbol, currentPrice);
+        }
+
+        // Need at least small history for basic indicators
+        if (history.length < 5) {
+            return {
+                direction: 'NEUTRAL',
+                direction_code: 0,
+                confidence: 0,
+                signals: [],
+                model_used: 'smart-predictor-forex-v1',
+                probabilities: { UP: 0, DOWN: 0, NEUTRAL: 1 }
+            };
+        }
+
+        // === Signal 1: Price Action & Momentum ===
+        const { momentum, roc } = calculateMomentum(history);
+        signals.push({
+            name: 'Price Momentum',
+            value: roc,
+            signal: momentum as -1 | 0 | 1,
+            weight: 0.25
+        });
+
+        // === Signal 2: Volatility Breakout ===
+        const volatility = calculateVolatility(history);
+        // XAUUSD specific: High volatility often indicates a move start
+        let volSignal: -1 | 0 | 1 = 0;
+        if (volatility > 25) { // High volatility threshold for XAU
+            volSignal = momentum as -1 | 0 | 1;
+        }
+        signals.push({
+            name: 'Volatility Factor',
+            value: volatility,
+            signal: volSignal,
+            weight: 0.20
+        });
+
+        // === Signal 3: VWAP Reversion vs Trend ===
+        const vwapDev = calculateVwapDeviation(history, currentPrice);
+        let vwapSignal: -1 | 0 | 1 = 0;
+        // Forex tends to mean revert on extremes, but trend otherwise
+        if (vwapDev > 100) vwapSignal = -1; // Overbought
+        else if (vwapDev < -100) vwapSignal = 1; // Oversold
+        else if (vwapDev > 10 && momentum === 1) vwapSignal = 1; // Trend Up
+        else if (vwapDev < -10 && momentum === -1) vwapSignal = -1; // Trend Down
+
+        signals.push({
+            name: 'VWAP Structure',
+            value: vwapDev,
+            signal: vwapSignal,
+            weight: 0.30
+        });
+
+        // === Signal 4: Recent Support/Resistance (Simple) ===
+        // Check if we are near recent high/low
+        const recentHigh = Math.max(...history.slice(-20).map(h => h.price));
+        const recentLow = Math.min(...history.slice(-20).map(h => h.price));
+        const range = recentHigh - recentLow;
+        let rangeSignal: -1 | 0 | 1 = 0;
+
+        if (range > 0) {
+            const pos = (currentPrice - recentLow) / range; // 0 to 1
+            if (pos > 0.9 && momentum === 1) rangeSignal = 1; // Breakout High
+            else if (pos < 0.1 && momentum === -1) rangeSignal = -1; // Breakout Low
+            else if (pos > 0.9) rangeSignal = -1; // Resistance Rejection (if no momentum)
+            else if (pos < 0.1) rangeSignal = 1; // Support Bounce (if no momentum)
+        }
+
+        signals.push({
+            name: 'Range Position',
+            value: (currentPrice - recentLow) / (range || 1),
+            signal: rangeSignal,
+            weight: 0.25
+        });
+
+
+        // === Signal 5: EMA Trend Filter (New) ===
+        // If Price > EMA(50), biased UP.
+        let trendSignal: -1 | 0 | 1 = 0;
+        if (history.length >= 50) {
+            const period = 50;
+            const k = 2 / (period + 1);
+            let ema = history[0].price;
+            for (let i = 1; i < history.length; i++) {
+                ema = (history[i].price * k) + (ema * (1 - k));
+            }
+
+            // Log logic: Strong bias if price matches trend
+            if (currentPrice > ema) trendSignal = 1;
+            else if (currentPrice < ema) trendSignal = -1;
+        }
+
+        signals.push({
+            name: 'Trend (EMA50)',
+            value: 0,
+            signal: trendSignal,
+            weight: 0.20 // Significant weight to respect trend
+        });
+
+        // === Aggregate ===
+        let weightedSum = 0;
+        let totalWeight = 0;
+        for (const s of signals) {
+            weightedSum += s.signal * s.weight;
+            totalWeight += s.weight;
+        }
+
+        // ... (rest of aggregation) ...
+
+        const aggregateScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
+        // Determine direction
+        let direction: 'UP' | 'DOWN' | 'NEUTRAL';
+        let direction_code: -1 | 0 | 1;
+
+        if (aggregateScore > 0.20) { // Slightly lower threshold because EMA might dampen score
+            direction = 'UP';
+            direction_code = 1;
+        } else if (aggregateScore < -0.20) {
+            direction = 'DOWN';
+            direction_code = -1;
+        } else {
+            direction = 'NEUTRAL';
+            direction_code = 0;
+        }
+
+        // Calculate confidence
+        const baseConfidence = Math.abs(aggregateScore);
+        const confidence = Math.min(0.55 + baseConfidence * 0.45, 0.95);
+
+        // Probabilities
+        const probabilities = this.calculateProbabilities(aggregateScore, confidence);
+
+        const result: PredictionResult = {
+            direction,
+            direction_code,
+            confidence: Math.round(confidence * 100) / 100,
+            signals,
+            model_used: 'smart-predictor-forex-v2', // Updated version
+            probabilities,
+            tradeSetup: {
+                action: 'WAIT',
+                entry: 0, tp: 0, sl: 0, riskRewardRatio: 0, quality: 'LOW'
+            }
+        };
+
+        // Generate Trade Setup (Forex Specific)
+        if (direction !== 'NEUTRAL') {
+            result.tradeSetup = this.calculateForexTradeSetup(currentPrice, direction, confidence, history);
+        }
+
+        return result;
+    }
+
+    public calculateForexTradeSetup(
+        currentPrice: number,
+        direction: 'UP' | 'DOWN',
+        confidence: number,
+        history: PriceHistory[]
+    ): TradeSetup {
+        // Volatility based TP/SL
+        // Use average candle size or volatility function
+        let volatility = 2.0; // Default points (approx 20 pips for Gold)
+
+        if (history.length > 5) {
+            const volValues = history.slice(-5).map((h, i, arr) => {
+                if (i === 0) return 0;
+                return Math.abs(h.price - arr[i - 1].price);
+            }).slice(1);
+            const avgVol = volValues.reduce((a, b) => a + b, 0) / volValues.length;
+            if (avgVol > 0) volatility = avgVol;
+        }
+
+        // Multipliers for Gold (XAUUSD) - TUNED V2
+        // Increased SL to give breathing room (3.5x vol), TP (5x vol)
+        const slMult = 3.5;
+        const tpMult = 5.0;
+
+        // Min SL = 25 pips (2.5 points), Min TP = 40 pips (4.0 points)
+        const risk = Math.max(volatility * slMult, 2.5);
+        const reward = Math.max(volatility * tpMult, 4.0);
+
+        let tp, sl;
+        if (direction === 'UP') {
+            tp = currentPrice + reward;
+            sl = currentPrice - risk;
+        } else {
+            tp = currentPrice - reward;
+            sl = currentPrice + risk;
+        }
+
+        const rr = reward / risk;
+
+        let quality: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
+        if (confidence > 0.8) quality = 'HIGH';
+        else if (confidence > 0.65) quality = 'MEDIUM';
+
+        return {
+            action: direction === 'UP' ? 'LONG' : 'SHORT',
+            entry: currentPrice,
+            tp: Number(tp.toFixed(2)),
+            sl: Number(sl.toFixed(2)),
+            riskRewardRatio: Number(rr.toFixed(2)),
+            quality
+        };
+    }
 }
 
 // Export singleton predictors
