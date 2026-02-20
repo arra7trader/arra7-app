@@ -55,14 +55,15 @@ export async function GET(request: NextRequest) {
                     const entry = signal.entry_price as number;
                     const sl = signal.stop_loss as number;
                     const tp = signal.take_profit as number;
-                    const action = signal.action as string; // 'LONG' or 'SHORT'
+                    const action = signal.action as string; // 'BUY' or 'SELL'
                     let outcome: 'WIN' | 'LOSS' | 'OPEN' = 'OPEN';
                     let pips = 0;
 
-                    if (action === 'LONG') {
+                    // Support both legacy 'LONG'/'SHORT' and new 'BUY'/'SELL' formats
+                    if (action === 'BUY' || action === 'LONG') {
                         if (currentPrice >= tp) { outcome = 'WIN'; pips = (tp - entry) * 10; } // TP Hit
                         else if (currentPrice <= sl) { outcome = 'LOSS'; pips = (sl - entry) * 10; } // SL Hit
-                    } else if (action === 'SHORT') {
+                    } else if (action === 'SELL' || action === 'SHORT') {
                         if (currentPrice <= tp) { outcome = 'WIN'; pips = (entry - tp) * 10; } // TP Hit
                         else if (currentPrice >= sl) { outcome = 'LOSS'; pips = (entry - sl) * 10; } // SL Hit
                     }
@@ -183,7 +184,7 @@ _DYOR. Money Management Recommended._
                                 signalId,
                                 'provider_ai_genesis', // Fixed ID for AI
                                 'XAUUSD',
-                                setup.action, // LONG/SHORT
+                                setup.action === 'LONG' ? 'BUY' : 'SELL', // Map for Copytrade UI
                                 setup.entry,
                                 setup.sl,
                                 setup.tp,
