@@ -19,6 +19,20 @@ export async function updateProviderStats(providerId: string) {
         return;
     }
 
+    // Get user_id for this provider
+    const provResult = await turso.execute({
+        sql: 'SELECT user_id FROM signal_providers WHERE id = ?',
+        args: [providerId]
+    });
+
+    if (provResult.rows.length === 0) {
+        console.error(`Provider ${providerId} not found`);
+        return;
+    }
+
+    const userId = provResult.rows[0].user_id as string;
+
+
     try {
         // 1. Fetch all CLOSED signals for this provider
         const result = await turso.execute({
@@ -34,10 +48,15 @@ export async function updateProviderStats(providerId: string) {
         const signals = result.rows as unknown as Signal[];
 
         if (signals.length === 0) {
-            // Reset stats if no closed signals
+            // Reset stats if no closed signals (update User stats)
             await turso.execute({
                 sql: `UPDATE users SET stats_win_rate=0, stats_profit_factor=0, stats_max_drawdown=0, stats_total_pips=0, stats_risk_score=1 WHERE id = ?`,
-                args: [providerId]
+                args: [userId]
+            });
+            // Clear daily stats
+            await turso.execute({
+                sql: 'DELETE FROM provider_daily_stats WHERE provider_id = ?',
+                args: [userId]
             });
             return;
         }
@@ -106,7 +125,7 @@ export async function updateProviderStats(providerId: string) {
         if (totalTrades < 10) riskScore = 1; // Newbie is low risk? Or Unknown? Keep 1.
         if (riskScore > 10) riskScore = 10;
 
-        // 3. Update User Stats
+        // 3. Update User Stats (using userId)
         await turso.execute({
             sql: `
                 UPDATE users SET 
@@ -125,17 +144,15 @@ export async function updateProviderStats(providerId: string) {
                 totalPips,
                 riskScore,
                 signals[0]?.created_at || new Date().toISOString(), // First trade date
-                providerId
+                userId
             ]
         });
 
         // 4. Update Daily Stats (Snapshot)
-        // Clear old daily stats for simplicity or upsert? 
-        // For efficiency, maybe just insert new ones? 
-        // Let's replace/re-evaluate for now to ensure consistency.
+        // Ensure we use userId for provider_daily_stats (FOREIGN KEY REFERENCES users(id))
         await turso.execute({
             sql: 'DELETE FROM provider_daily_stats WHERE provider_id = ?',
-            args: [providerId]
+            args: [userId]
         });
 
         let runningBalance = 0;
@@ -148,11 +165,11 @@ export async function updateProviderStats(providerId: string) {
 
             await turso.execute({
                 sql: `INSERT INTO provider_daily_stats (provider_id, date, daily_pips, daily_profit_usd, balance_snapshot) VALUES (?, ?, ?, ?, ?)`,
-                args: [providerId, date, stats.pips, stats.profit, runningBalance]
+                args: [userId, date, stats.pips, stats.profit, runningBalance]
             });
         }
 
-        console.log(`Updated stats for provider ${providerId}: WR=${winRate}%, PF=${profitFactor}, DD=${maxDrawdown}`);
+        console.log(`Updated stats for provider ${providerId} (User ${userId}): WR=${winRate}%, PF=${profitFactor}, DD=${maxDrawdown}`);
 
     } catch (e) {
         console.error('Failed to update provider stats:', e);
