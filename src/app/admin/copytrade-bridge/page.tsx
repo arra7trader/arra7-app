@@ -81,7 +81,7 @@ export default function AdminCopytradeBridge() {
     if (loading) return <div className="flex justify-center items-center my-20"><ArrowPathIcon className="w-8 h-8 animate-spin text-indigo-500" /></div>;
 
     return (
-        <div className="max-w-6xl mx-auto p-4 md:p-8 pt-24 pb-24">
+        <div className="max-w-6xl mx-auto p-4 md:p-8 pt-32 md:pt-36 pb-24">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin: Copytrade Bridge</h1>
             <p className="text-gray-500 dark:text-gray-400 mb-8">Kelola sinyal, saldo kredit, dan monitoring EA users. Database: <span className="text-indigo-500 font-medium">Supabase</span></p>
 
