@@ -614,6 +614,11 @@ Tim ARRA7`;
                                 <TrendUpIcon size="sm" /> Performance
                             </button>
                         </Link>
+                        <Link href="/admin/copytrade-bridge">
+                            <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                📡 CT Bridge
+                            </button>
+                        </Link>
                         <button
                             onClick={async () => {
                                 const btn = document.getElementById('verify-btn');
