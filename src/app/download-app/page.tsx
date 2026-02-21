@@ -8,7 +8,7 @@ export default function DownloadAppPage() {
     const [maintenanceModal, setMaintenanceModal] = useState({ isOpen: false, featureName: '' });
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-apple section-padding">
                 {/* Header */}
                 <div className="text-center mb-12">

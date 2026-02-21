@@ -317,7 +317,7 @@ export default function AnalisaMarketPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-wide section-padding pt-8">
                 {/* Header */}
                 <motion.div

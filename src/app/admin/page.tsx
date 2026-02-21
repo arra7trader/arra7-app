@@ -458,7 +458,7 @@ Tim ARRA7`;
     };
 
     return (
-        <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+        <div className="relative min-h-screen pt-36 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle, #0071e3 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
 

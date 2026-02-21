@@ -59,7 +59,7 @@ export default function TradingAccountsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36 pb-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>

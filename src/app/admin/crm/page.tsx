@@ -110,7 +110,7 @@ export default function CRMDashboard() {
     if (!isAdmin) return null;
 
     return (
-        <div className="relative min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+        <div className="relative min-h-screen pt-36 pb-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
             <div className="relative max-w-7xl mx-auto">
                 {/* Header */}
                 <motion.div

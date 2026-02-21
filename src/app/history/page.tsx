@@ -64,7 +64,7 @@ export default function HistoryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-wide section-padding pt-8">
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">

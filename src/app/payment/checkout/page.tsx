@@ -53,7 +53,7 @@ function PaymentCheckoutContent() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-apple section-padding pt-8 max-w-lg mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

@@ -218,7 +218,7 @@ export default function FibonacciKanjiPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36 pb-12">
             <div className="container-fluid mx-auto px-4 max-w-[1900px]">
                 <PremiumGuard
                     title={t('title')}

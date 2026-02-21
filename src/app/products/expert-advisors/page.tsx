@@ -48,7 +48,7 @@ const expertAdvisors = [
 
 export default function ExpertAdvisorsPage() {
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             {/* Hero */}
             <section className="section-padding text-center">
                 <div className="container-apple">

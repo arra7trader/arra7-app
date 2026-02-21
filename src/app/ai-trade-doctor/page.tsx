@@ -128,7 +128,7 @@ export default function AITradeDoctorPage() {
     });
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-24 pb-12">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36 pb-12">
             <div className="container-apple">
                 <PremiumGuard
                     title={t('title')}

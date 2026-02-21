@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             {/* Header */}
             <section className="section-padding text-center">
                 <div className="container-apple">

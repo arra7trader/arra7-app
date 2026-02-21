@@ -66,7 +66,7 @@ function TransferContent() {
     const telegramLink = `https://t.me/arra7trader?text=${encodeURIComponent(telegramText)}`;
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-apple section-padding pt-8 max-w-lg mx-auto">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-6 border border-[var(--border-light)] shadow-lg">
                     <div className="text-center mb-6">

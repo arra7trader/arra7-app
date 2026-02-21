@@ -255,7 +255,7 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
 // Coming Soon Component (for non-admin users)
 function ComingSoonView() {
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-apple section-padding">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -370,7 +370,7 @@ function BlockedView({ reason }: { reason: string }) {
     const isExpired = reason === 'TRIAL_EXPIRED';
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20 flex items-center justify-center">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36 flex items-center justify-center">
             <div className="container-apple section-padding">
                 <div className="max-w-2xl mx-auto text-center">
                     <motion.div
@@ -765,7 +765,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
 
     // Admin View - Full DOM
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20 pb-12">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36 pb-12">
             {/* Floating Alert Toasts - Disabled by user request */}
             {/* <AlertToastContainer alerts={alerts} onDismiss={dismissAlert} /> */}
 

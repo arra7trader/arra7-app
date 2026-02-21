@@ -173,7 +173,7 @@ export default function PricingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafbfc] text-slate-900 pt-24 pb-20 font-sans selection:bg-blue-100">
+        <div className="min-h-screen bg-[#fafbfc] text-slate-900 pt-36 pb-20 font-sans selection:bg-blue-100">
             {/* Header / Hero */}
             <header className="text-center px-4 max-w-4xl mx-auto mb-16 md:mb-24">
                 <motion.div

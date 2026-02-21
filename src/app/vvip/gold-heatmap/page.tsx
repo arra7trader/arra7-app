@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function GoldHeatmapPage() {
     return (
-        <div className="min-h-screen bg-gray-50 pt-20 pb-12">
+        <div className="min-h-screen bg-gray-50 pt-36 pb-12">
             <div className="container-wide">
                 <div className="max-w-5xl mx-auto space-y-8">
 

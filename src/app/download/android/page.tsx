@@ -21,7 +21,7 @@ export default function DownloadAndroidPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] pt-20">
+        <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             {/* Header */}
             <section className="section-padding text-center pb-0">
                 <div className="container-apple">
