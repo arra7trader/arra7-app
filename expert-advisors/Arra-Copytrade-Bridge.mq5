@@ -231,7 +231,6 @@ void ReportExecution(string status, double profit)
 {
    string url     = ApiBaseUrl + "/api/copytrade-bridge/trade/log";
    string payload = "{\"licenseKey\":\"" + LicenseKey + "\",\"status\":\"" + status + "\",\"profit\":" + DoubleToString(profit, 2) + "}";
-   string response;
    
    char postData[];
    StringToCharArray(payload, postData, 0, StringLen(payload), CP_UTF8);
