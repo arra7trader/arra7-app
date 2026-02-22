@@ -1,343 +1,309 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import {
-    DocumentDuplicateIcon, ArrowPathIcon, CheckCircleIcon,
-    XCircleIcon, CurrencyDollarIcon, CogIcon, ClockIcon,
-    ArrowTrendingUpIcon, ArrowTrendingDownIcon,
-} from '@heroicons/react/24/outline';
-
-const CT_PLANS = [
-    { id: 'CT_50', credits: 50, priceLabel: 'Rp 50.000', badge: '' },
-    { id: 'CT_100', credits: 100, priceLabel: 'Rp 90.000', badge: 'Hemat 10%' },
-    { id: 'CT_200', credits: 200, priceLabel: 'Rp 160.000', badge: 'Hemat 20%' },
-];
+import CopytradeModuleNav from '@/components/copytrade/CopytradeModuleNav';
 
 interface Signal {
-    id: string; pair: string; type: string; entry_price: number;
-    tp: number; sl: number; created_at: string;
-}
-interface TradeLog {
-    id: string; status: string; profit: number; timestamp: string;
+    id: string;
+    pair: string;
+    type: string;
+    entry_price: number;
+    tp: number;
+    sl: number;
+    created_at: string;
 }
 
-function CopytradeBridgeContent() {
+interface TradeLog {
+    id: string;
+    status: string;
+    profit: number;
+    timestamp: string;
+}
+
+interface Plan {
+    id: string;
+    credits: number;
+    priceLabel: string;
+}
+
+const plans: Plan[] = [
+    { id: 'CT_50', credits: 50, priceLabel: 'Rp 50.000' },
+    { id: 'CT_100', credits: 100, priceLabel: 'Rp 90.000' },
+    { id: 'CT_200', credits: 200, priceLabel: 'Rp 160.000' },
+];
+
+export default function CopytradeBridgePage() {
     const { data: session, status } = useSession();
+
+    const [loading, setLoading] = useState(true);
+    const [working, setWorking] = useState(false);
+    const [message, setMessage] = useState('');
+
     const [licenseKey, setLicenseKey] = useState<string | null>(null);
     const [balance, setBalance] = useState(0);
     const [isConnected, setIsConnected] = useState(false);
     const [lastActive, setLastActive] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [generating, setGenerating] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState<typeof CT_PLANS[0] | null>(null);
-    const [activeTab, setActiveTab] = useState<'signals' | 'trades'>('signals');
+    const [selectedPlan, setSelectedPlan] = useState<Plan>(plans[0]);
     const [signals, setSignals] = useState<Signal[]>([]);
-    const [tradeLogs, setTradeLogs] = useState<TradeLog[]>([]);
-    const [historyLoading, setHistoryLoading] = useState(false);
+    const [logs, setLogs] = useState<TradeLog[]>([]);
 
     useEffect(() => {
-        if (status === 'authenticated') {
-            fetchUserInfo();
-            fetchHistory();
-        }
+        if (status === 'authenticated') void refresh();
     }, [status]);
 
-    const fetchUserInfo = async () => {
+    const refresh = async () => {
+        setLoading(true);
         try {
-            const res = await fetch('/api/copytrade-bridge/user/info');
-            const data = await res.json();
-            if (data.success) {
-                setLicenseKey(data.licenseKey);
-                setBalance(data.balance || 0);
-                setIsConnected(data.isConnected);
-                setLastActive(data.lastActive);
-            }
-        } finally { setLoading(false); }
-    };
-
-    const fetchHistory = async () => {
-        setHistoryLoading(true);
-        try {
-            const [sigRes, logRes] = await Promise.all([
+            const [infoRes, signalRes, logRes] = await Promise.all([
+                fetch('/api/copytrade-bridge/user/info'),
                 fetch('/api/copytrade-bridge/signals?limit=20'),
                 fetch('/api/copytrade-bridge/trade/history?limit=30'),
             ]);
-            const [sigData, logData] = await Promise.all([sigRes.json(), logRes.json()]);
-            if (sigData.success) setSignals(sigData.signals);
-            if (logData.success) setTradeLogs(logData.logs);
-        } finally { setHistoryLoading(false); }
+            const infoData = await infoRes.json();
+            const signalData = await signalRes.json();
+            const logData = await logRes.json();
+
+            if (infoData.success) {
+                setLicenseKey(infoData.licenseKey || null);
+                setBalance(Number(infoData.balance || 0));
+                setIsConnected(Boolean(infoData.isConnected));
+                setLastActive(infoData.lastActive || null);
+            }
+            if (signalData.success) {
+                setSignals((signalData.signals || []) as Signal[]);
+            }
+            if (logData.success) {
+                setLogs((logData.logs || []) as TradeLog[]);
+            }
+        } catch (error) {
+            console.error('[Bridge] refresh failed', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const generateKey = async () => {
-        setGenerating(true);
+        setWorking(true);
+        setMessage('');
         try {
-            const res = await fetch('/api/copytrade-bridge/user/generate-key', { method: 'POST' });
-            const data = await res.json();
-            if (data.success) setLicenseKey(data.licenseKey);
-        } finally { setGenerating(false); }
+            const response = await fetch('/api/copytrade-bridge/user/generate-key', { method: 'POST' });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Gagal generate key');
+            setLicenseKey(data.licenseKey);
+            setMessage('License key berhasil dibuat.');
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Gagal generate key');
+        } finally {
+            setWorking(false);
+        }
     };
 
-    const copyToClipboard = () => {
+    const copyLicense = async () => {
         if (!licenseKey) return;
-        navigator.clipboard.writeText(licenseKey);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        await navigator.clipboard.writeText(licenseKey);
+        setMessage('License key tersalin ke clipboard.');
     };
 
-    const confirmViaTelegram = (plan: typeof CT_PLANS[0]) => {
-        const msg = `Halo Admin ARRA7! 👋\n\nSaya ingin Top-Up Kredit Copytrade Bridge:\n\n📧 Email: ${session?.user?.email || '-'}\n💰 Paket: ${plan.credits} Kredit\n🏷️ Nominal: ${plan.priceLabel}\n\nMohon diproses penambahan kreditnya. Terima kasih! 🙏`;
-        window.open(`https://t.me/arra7trader?text=${encodeURIComponent(msg)}`, '_blank');
+    const confirmTopup = () => {
+        const text = [
+            'Halo Admin ARRA7, saya ingin topup kredit bridge.',
+            `Email: ${session?.user?.email || '-'}`,
+            `Paket: ${selectedPlan.credits} kredit`,
+            `Nominal: ${selectedPlan.priceLabel}`,
+            'Bukti transfer sudah siap, mohon diproses.',
+        ].join('\n');
+        window.open(`https://t.me/arra7trader?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    const signalTypeColor = (type: string) => {
-        if (type.includes('BUY')) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    };
+    if (loading || status === 'loading') {
+        return (
+            <section className="min-h-screen bg-[var(--bg-primary)]">
+                <CopytradeModuleNav />
+            </section>
+        );
+    }
 
-    if (loading) return (
-        <div className="flex justify-center items-center min-h-screen">
-            <ArrowPathIcon className="w-8 h-8 animate-spin text-indigo-500" />
-        </div>
-    );
+    if (!session?.user?.email) {
+        return (
+            <section className="min-h-screen bg-[var(--bg-primary)]">
+                <CopytradeModuleNav />
+                <div className="mx-auto max-w-3xl px-4 pb-12 pt-8">
+                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-8 text-center">
+                        <h1 className="text-2xl font-black text-[var(--text-primary)]">Bridge Console membutuhkan login</h1>
+                        <p className="mt-2 text-sm text-[var(--text-secondary)]">Login untuk mengelola license key dan sinkronisasi EA.</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8 pt-32 md:pt-36 pb-24">
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">📡 AI Copytrade Bridge</h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Hubungkan MT4/MT5 Anda dengan sinyal AI secara otomatis.</p>
-            </div>
+        <section className="min-h-screen bg-[var(--bg-primary)]">
+            <CopytradeModuleNav />
 
-            {/* Top Cards Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="mx-auto max-w-7xl px-4 pb-12 pt-8">
+                <div className="rounded-3xl border border-[var(--border-light)] bg-white p-6">
+                    <h1 className="text-3xl font-black text-[var(--text-primary)]">Copytrade Bridge Console</h1>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        Pusat kendali integrasi EA MT4/MT5: license key, kredit, signal queue, dan trade logs.
+                    </p>
+                </div>
 
-                {/* Config Card */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-5">
-                    <div className="flex items-center gap-3">
-                        <CogIcon className="w-6 h-6 text-indigo-500" />
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Konfigurasi</h2>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">License Key</label>
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5 md:col-span-2">
+                        <h2 className="text-sm font-bold text-[var(--text-primary)]">License & Connection</h2>
                         {licenseKey ? (
-                            <div className="flex items-center gap-2">
-                                <input readOnly value={licenseKey}
-                                    className="flex-1 p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 font-mono text-xs" />
-                                <button onClick={copyToClipboard}
-                                    className="p-2.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 hover:bg-indigo-100 transition rounded-lg">
-                                    <DocumentDuplicateIcon className="w-4 h-4" />
+                            <div className="mt-3 grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                                <input
+                                    readOnly
+                                    value={licenseKey}
+                                    className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm font-mono"
+                                />
+                                <button onClick={copyLicense} className="rounded-xl bg-[var(--bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)]">
+                                    Copy
+                                </button>
+                                <button onClick={generateKey} disabled={working} className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                                    Regenerate
                                 </button>
                             </div>
                         ) : (
-                            <button onClick={generateKey} disabled={generating}
-                                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition flex justify-center items-center gap-2 disabled:bg-indigo-400">
-                                {generating ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : '🔑 Generate License Key'}
+                            <button onClick={generateKey} disabled={working} className="mt-3 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                                Generate License Key
                             </button>
                         )}
-                        {copied && <p className="text-xs text-green-500 mt-1.5 font-medium">✅ Tersalin!</p>}
-                        {licenseKey && (
-                            <button onClick={generateKey} disabled={generating}
-                                className="mt-2 text-xs text-gray-400 hover:text-gray-600 transition">
-                                {generating ? 'Generating...' : '↻ Generate ulang'}
-                            </button>
-                        )}
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Status Koneksi EA</p>
-                        <div className="flex items-center gap-2">
-                            {isConnected
-                                ? <><CheckCircleIcon className="w-5 h-5 text-green-500" /><span className="text-sm text-green-600 font-medium">Online</span></>
-                                : <><XCircleIcon className="w-5 h-5 text-gray-400" /><span className="text-sm text-gray-500">Offline / Belum terhubung</span></>
-                            }
-                        </div>
-                        {lastActive && <p className="text-xs text-gray-400 mt-1.5">Terakhir aktif: {new Date(lastActive).toLocaleString('id-ID')}</p>}
-                    </div>
-                </div>
 
-                {/* Balance Card */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <CurrencyDollarIcon className="w-6 h-6 text-green-500" />
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Saldo Kredit</h2>
+                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                            <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
+                                <p className="text-xs text-[var(--text-muted)]">EA Connection</p>
+                                <p className={`mt-1 text-sm font-bold ${isConnected ? 'text-green-600' : 'text-amber-600'}`}>
+                                    {isConnected ? 'Connected' : 'Offline'}
+                                </p>
+                            </div>
+                            <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
+                                <p className="text-xs text-[var(--text-muted)]">Last Active</p>
+                                <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+                                    {lastActive ? new Date(lastActive).toLocaleString('id-ID') : '-'}
+                                </p>
+                            </div>
                         </div>
-                        <button onClick={fetchUserInfo} className="p-1.5 text-gray-400 hover:text-gray-600 transition">
-                            <ArrowPathIcon className="w-4 h-4" />
+                    </div>
+
+                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                        <h2 className="text-sm font-bold text-[var(--text-primary)]">Credit Balance</h2>
+                        <p className="mt-2 text-4xl font-black text-green-600">{balance}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">1 kredit = 1 trade execution</p>
+                        <button onClick={refresh} className="mt-3 rounded-xl bg-[var(--bg-secondary)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)]">
+                            Refresh balance
                         </button>
                     </div>
-                    <div className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-900/50 mb-4">
-                        <span className="text-5xl font-bold text-green-600 dark:text-green-400">{balance}</span>
-                        <span className="text-xs text-gray-400 font-semibold tracking-widest uppercase mt-2">Kredit Tersisa</span>
-                    </div>
-                    <p className="text-xs text-gray-400 text-center mb-4">1 Kredit = 1 order tereksekusi</p>
-                    <button onClick={() => setSelectedPlan(selectedPlan ? null : CT_PLANS[0])}
-                        className="w-full py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 text-white rounded-xl text-sm font-medium transition shadow-md shadow-green-500/20">
-                        {selectedPlan ? '✕ Tutup Top-up' : '💳 Top-up Kredit'}
-                    </button>
                 </div>
-            </div>
 
-            {/* Top-up section */}
-            {selectedPlan !== null && (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">💳 Top-up via QRIS</h3>
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                        <div className="flex-shrink-0 mx-auto md:mx-0">
-                            <div className="border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-3 bg-white">
-                                <img src="/qris-payment.jpg" alt="QRIS Copytrade Bridge ARRA7" className="w-52 h-52 object-contain rounded-xl" />
-                            </div>
-                            <p className="text-xs text-center font-semibold text-gray-600 dark:text-gray-400 mt-2">ARRA7 FULLSTACK DEVELOPER</p>
-                            <p className="text-xs text-center text-gray-400 font-mono">NMID: ID1025468752486</p>
+                <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">Topup Credit</h3>
+                        <div className="mt-3 grid gap-2">
+                            {plans.map((plan) => (
+                                <button
+                                    key={plan.id}
+                                    onClick={() => setSelectedPlan(plan)}
+                                    className={`rounded-xl border px-3 py-2 text-left text-sm ${selectedPlan.id === plan.id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-[var(--border-light)] bg-[var(--bg-secondary)] text-[var(--text-primary)]'}`}
+                                >
+                                    {plan.credits} kredit - {plan.priceLabel}
+                                </button>
+                            ))}
                         </div>
-                        <div className="flex-1 space-y-4">
-                            <div className="grid grid-cols-3 gap-3">
-                                {CT_PLANS.map(plan => (
-                                    <div key={plan.id} onClick={() => setSelectedPlan(plan)}
-                                        className={`relative border-2 rounded-xl p-3 cursor-pointer transition ${selectedPlan?.id === plan.id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-indigo-300'}`}>
-                                        {plan.badge && <span className="absolute -top-2 right-2 bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">{plan.badge}</span>}
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{plan.credits}</p>
-                                        <p className="text-[10px] text-gray-400">Kredit</p>
-                                        <p className="text-xs font-semibold text-indigo-600 mt-1">{plan.priceLabel}</p>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
-                                <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-2">Cara bayar:</p>
-                                <ol className="text-xs text-blue-600 dark:text-blue-400 list-decimal list-inside space-y-1">
-                                    <li>Scan QRIS · GoPay / OVO / Dana / BCA</li>
-                                    <li>Masukkan nominal: <b>{selectedPlan?.priceLabel}</b></li>
-                                    <li>Screenshot bukti pembayaran</li>
-                                    <li>Klik konfirmasi → kirim ke Admin</li>
-                                </ol>
-                            </div>
-                            <button onClick={() => selectedPlan && confirmViaTelegram(selectedPlan)}
-                                className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/20">
-                                📨 Konfirmasi {selectedPlan?.credits} Kredit via Telegram
-                            </button>
-                        </div>
+                        <button onClick={confirmTopup} className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                            Konfirmasi Topup via Telegram
+                        </button>
                     </div>
-                </div>
-            )}
 
-            {/* Signal History & Trade Logs Tabs */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
-                <div className="flex border-b border-gray-100 dark:border-gray-700">
-                    <button onClick={() => setActiveTab('signals')}
-                        className={`flex-1 py-3.5 text-sm font-semibold transition ${activeTab === 'signals' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/10' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
-                        📡 Riwayat Sinyal ({signals.length})
-                    </button>
-                    <button onClick={() => setActiveTab('trades')}
-                        className={`flex-1 py-3.5 text-sm font-semibold transition ${activeTab === 'trades' ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50 dark:bg-green-900/10' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
-                        📒 Trade Log Saya ({tradeLogs.length})
-                    </button>
-                    <button onClick={fetchHistory} className="px-4 text-gray-400 hover:text-gray-600 transition">
-                        <ArrowPathIcon className={`w-4 h-4 ${historyLoading ? 'animate-spin' : ''}`} />
-                    </button>
-                </div>
-
-                {/* Signals Tab */}
-                {activeTab === 'signals' && (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white lg:col-span-2">
+                        <div className="border-b border-[var(--border-light)] bg-[var(--bg-secondary)] px-4 py-3">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)]">Latest Bridge Signals</h3>
+                        </div>
                         {signals.length === 0 ? (
-                            <div className="py-16 text-center text-gray-400">
-                                <ClockIcon className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                                <p className="text-sm">Belum ada sinyal. Admin akan broadcast sinyal segera.</p>
-                            </div>
+                            <div className="p-6 text-sm text-[var(--text-secondary)]">Belum ada signal bridge.</div>
                         ) : (
+                            <div className="max-h-[320px] overflow-y-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-[var(--border-light)]">
+                                            {['Pair', 'Type', 'Entry', 'TP', 'SL', 'Created'].map((item) => (
+                                                <th key={item} className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                                                    {item}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {signals.map((signal) => (
+                                            <tr key={signal.id} className="border-b border-[var(--border-light)] last:border-0">
+                                                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{signal.pair}</td>
+                                                <td className="px-4 py-3">{signal.type}</td>
+                                                <td className="px-4 py-3">{signal.entry_price}</td>
+                                                <td className="px-4 py-3 text-green-600">{signal.tp}</td>
+                                                <td className="px-4 py-3 text-red-600">{signal.sl}</td>
+                                                <td className="px-4 py-3 text-xs text-[var(--text-secondary)]">
+                                                    {new Date(signal.created_at).toLocaleString('id-ID')}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white">
+                    <div className="border-b border-[var(--border-light)] bg-[var(--bg-secondary)] px-4 py-3">
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">My EA Trade Logs</h3>
+                    </div>
+                    {logs.length === 0 ? (
+                        <div className="p-6 text-sm text-[var(--text-secondary)]">Belum ada trade log dari EA Anda.</div>
+                    ) : (
+                        <div className="max-h-[300px] overflow-y-auto">
                             <table className="w-full text-sm">
-                                <thead className="bg-gray-50 dark:bg-gray-900/50">
-                                    <tr>
-                                        {['Pair', 'Type', 'Entry', 'TP', 'SL', 'Waktu'].map(h => (
-                                            <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
+                                <thead>
+                                    <tr className="border-b border-[var(--border-light)]">
+                                        {['Status', 'Profit', 'Timestamp'].map((item) => (
+                                            <th key={item} className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                                                {item}
+                                            </th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-                                    {signals.map(sig => (
-                                        <tr key={sig.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
-                                            <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{sig.pair}</td>
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${signalTypeColor(sig.type)}`}>
-                                                    {sig.type.includes('BUY') ? <ArrowTrendingUpIcon className="w-3 h-3" /> : <ArrowTrendingDownIcon className="w-3 h-3" />}
-                                                    {sig.type}
-                                                </span>
+                                <tbody>
+                                    {logs.map((log) => (
+                                        <tr key={log.id} className="border-b border-[var(--border-light)] last:border-0">
+                                            <td className="px-4 py-3">{log.status}</td>
+                                            <td className={`px-4 py-3 font-semibold ${Number(log.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {Number(log.profit || 0) >= 0 ? '+' : ''}
+                                                {Number(log.profit || 0).toFixed(2)}
                                             </td>
-                                            <td className="py-3 px-4 font-mono text-gray-700 dark:text-gray-300">{sig.entry_price}</td>
-                                            <td className="py-3 px-4 font-mono text-green-600">{sig.tp}</td>
-                                            <td className="py-3 px-4 font-mono text-red-500">{sig.sl}</td>
-                                            <td className="py-3 px-4 text-gray-400 text-xs">{new Date(sig.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                                            <td className="px-4 py-3 text-xs text-[var(--text-secondary)]">{new Date(log.timestamp).toLocaleString('id-ID')}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        )}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
 
-                {/* Trade Logs Tab */}
-                {activeTab === 'trades' && (
-                    <div className="overflow-x-auto">
-                        {tradeLogs.length === 0 ? (
-                            <div className="py-16 text-center text-gray-400">
-                                <ClockIcon className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                                <p className="text-sm">Belum ada trade yang tereksekusi oleh EA kamu.</p>
-                            </div>
-                        ) : (
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50 dark:bg-gray-900/50">
-                                    <tr>
-                                        {['Status', 'Profit/Loss', 'Waktu'].map(h => (
-                                            <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-                                    {tradeLogs.map(log => (
-                                        <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${log.status === 'SUCCESS' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                                    {log.status === 'SUCCESS' ? <CheckCircleIcon className="w-3.5 h-3.5" /> : <XCircleIcon className="w-3.5 h-3.5" />}
-                                                    {log.status}
-                                                </span>
-                                            </td>
-                                            <td className={`py-3 px-4 font-mono font-semibold ${(log.profit || 0) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                                {(log.profit || 0) >= 0 ? '+' : ''}{(log.profit || 0).toFixed(2)}
-                                            </td>
-                                            <td className="py-3 px-4 text-gray-400 text-xs">{new Date(log.timestamp).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                )}
-            </div>
+                <div className="mt-6 rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">Setup EA (Quick SOP)</h3>
+                    <ol className="mt-3 list-decimal space-y-1 pl-4 text-sm text-[var(--text-secondary)]">
+                        <li>Generate license key dari panel di atas.</li>
+                        <li>Pasang EA bridge di folder <code>MQL5/Experts</code>.</li>
+                        <li>Aktifkan WebRequest URL ARRA7 di MT4/MT5 options.</li>
+                        <li>Isi license key di parameter EA dan jalankan.</li>
+                        <li>Pantau status koneksi dan trade log secara berkala.</li>
+                    </ol>
+                </div>
 
-            {/* Guide */}
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-800">
-                <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-300 mb-2">📘 Panduan Singkat</h3>
-                <ol className="list-decimal list-inside text-sm text-indigo-700 dark:text-indigo-400 space-y-1.5">
-                    <li>Generate <b>License Key</b> di panel konfigurasi di atas.</li>
-                    <li>Download <code className="bg-indigo-100 dark:bg-indigo-800/50 px-1 rounded text-xs">Arra-Copytrade-Bridge.mq5</code> dan pasang di <code className="bg-indigo-100 dark:bg-indigo-800/50 px-1 rounded text-xs">MQL5/Experts/</code> di MetaTrader 5.</li>
-                    <li>Di MT5: <b>Tools → Options → Expert Advisors</b> → Allow WebRequest untuk URL ARRA7.</li>
-                    <li>Attach EA di chart, masukkan License Key, atur Lot Size & Max Drawdown.</li>
-                    <li>Top-up kredit via QRIS → konfirmasi ke Admin → Admin tambahkan kredit.</li>
-                </ol>
+                {message && <p className="mt-4 text-sm text-[var(--text-secondary)]">{message}</p>}
             </div>
-        </div>
-    );
-}
-
-export default function CopytradeBridgeDashboard() {
-    return (
-        <Suspense fallback={
-            <div className="flex justify-center items-center min-h-screen">
-                <ArrowPathIcon className="w-8 h-8 animate-spin text-indigo-500" />
-            </div>
-        }>
-            <CopytradeBridgeContent />
-        </Suspense>
+        </section>
     );
 }

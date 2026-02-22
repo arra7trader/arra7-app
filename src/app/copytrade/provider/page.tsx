@@ -1,167 +1,220 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useFormatter } from 'next-intl';
 
-export default function ProviderDashboardPage() {
-    const { data: session } = useSession();
-    const router = useRouter();
-    const format = useFormatter();
+interface ProviderProfile {
+    id: string;
+    display_name: string;
+    bio?: string | null;
+    is_active: number;
+    is_approved: number;
+    total_followers?: number | null;
+    win_rate?: number | null;
+    total_profit_usd?: number | null;
+    subscription_fee?: number | null;
+    profit_sharing_percent?: number | null;
+}
+
+export default function ProviderStudioPage() {
+    const { data: session, status } = useSession();
+    const [profile, setProfile] = useState<ProviderProfile | null>(null);
     const [loading, setLoading] = useState(true);
-    const [provider, setProvider] = useState<any>(null);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
+
+    const [bio, setBio] = useState('');
+    const [subscriptionFee, setSubscriptionFee] = useState('0');
+    const [profitShare, setProfitShare] = useState('0');
 
     useEffect(() => {
-        if (session) {
-            fetchProviderProfile();
-        }
-    }, [session]);
+        if (status !== 'authenticated') return;
+        void fetchProfile();
+    }, [status]);
 
-    const fetchProviderProfile = async () => {
+    const fetchProfile = async () => {
+        setLoading(true);
         try {
-            const res = await fetch('/api/copytrade/providers?myProfile=true');
-            const data = await res.json();
-
-            if (data.error === 'User not found') {
-                // Not registered yet
-                router.push('/copytrade/become-provider');
-                return;
-            }
-
-            if (data.provider) {
-                setProvider(data.provider);
-            } else {
-                // Registered but no profile found? Redirect to register
-                router.push('/copytrade/become-provider');
+            const response = await fetch('/api/copytrade/providers?myProfile=true');
+            const data = await response.json();
+            const provider = (data.provider || null) as ProviderProfile | null;
+            setProfile(provider);
+            if (provider) {
+                setBio(provider.bio || '');
+                setSubscriptionFee(String(Number(provider.subscription_fee || 0)));
+                setProfitShare(String(Number(provider.profit_sharing_percent || 0)));
             }
         } catch (error) {
-            console.error('Failed to fetch profile:', error);
+            console.error('[ProviderStudio] fetch failed', error);
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
+    const saveProfile = async () => {
+        if (!profile) return;
+        setSaving(true);
+        setMessage('');
+        try {
+            const response = await fetch(`/api/copytrade/providers/${profile.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bio,
+                    subscriptionFee: Number(subscriptionFee || '0'),
+                    profitSharingPercent: Number(profitShare || '0'),
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Gagal menyimpan profil');
+            }
+            setMessage('Profil provider berhasil disimpan.');
+            await fetchProfile();
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Gagal menyimpan profil');
+        } finally {
+            setSaving(false);
+        }
+    };
 
-    if (!provider) return null;
+    if (status === 'loading' || loading) {
+        return <section className="min-h-screen bg-[var(--bg-primary)] px-4 pb-12 pt-8" />;
+    }
+
+    if (!session?.user?.email) {
+        return (
+            <section className="min-h-screen bg-[var(--bg-primary)] px-4 pb-12 pt-8">
+                <div className="mx-auto max-w-2xl rounded-2xl border border-[var(--border-light)] bg-white p-8 text-center">
+                    <h1 className="text-2xl font-black text-[var(--text-primary)]">Provider Studio membutuhkan login</h1>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">Login dulu untuk mengelola profil provider dan signal Anda.</p>
+                </div>
+            </section>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <section className="min-h-screen bg-[var(--bg-primary)] px-4 pb-12 pt-8">
+                <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-[var(--border-light)] bg-white p-8 text-center">
+                    <h1 className="text-2xl font-black text-[var(--text-primary)]">Akun Anda belum terdaftar sebagai provider</h1>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        Daftar provider untuk membuka fitur post signal, follower analytics, dan monetisasi pay-per-signal.
+                    </p>
+                    <Link href="/copytrade/become-provider" className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                        Daftar Sekarang
+                    </Link>
+                </div>
+            </section>
+        );
+    }
+
+    const providerStatus = profile.is_active
+        ? 'Active'
+        : profile.is_approved === -1
+            ? 'Rejected'
+            : 'Pending Approval';
 
     return (
-        <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
-            <Navbar />
-
-            <div className="pt-32 pb-20 container mx-auto px-4">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold mb-2 text-[var(--text-primary)]">Provider Dashboard</h1>
-                        <p className="text-[var(--text-secondary)]">Manage your copy trading profile and earnings</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${provider.is_active ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-                            }`}>
-                            {provider.is_active ? 'Active' : 'Pending Approval'}
-                        </span>
-                    </div>
+        <section className="min-h-screen bg-[var(--bg-primary)] px-4 pb-12 pt-8">
+            <div className="mx-auto max-w-6xl">
+                <div className="grid gap-4 md:grid-cols-4">
+                    {[
+                        { label: 'Provider Status', value: providerStatus },
+                        { label: 'Followers', value: Number(profile.total_followers || 0).toString() },
+                        { label: 'Win Rate', value: `${Number(profile.win_rate || 0).toFixed(1)}%` },
+                        { label: 'Total Profit', value: `$${Number(profile.total_profit_usd || 0).toFixed(2)}` },
+                    ].map((item) => (
+                        <div key={item.label} className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                            <p className="text-xs text-[var(--text-muted)]">{item.label}</p>
+                            <p className="mt-1 text-lg font-black text-[var(--text-primary)]">{item.value}</p>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                        <div className="text-[var(--text-secondary)] text-sm mb-2">Total Followers</div>
-                        <div className="text-3xl font-bold text-[var(--text-primary)]">{provider.total_followers}</div>
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                        <div className="text-[var(--text-secondary)] text-sm mb-2">Total Earnings</div>
-                        <div className="text-3xl font-bold text-[var(--accent-blue)]">
-                            {format.number(provider.total_earnings || 0, { style: 'currency', currency: 'IDR' })}
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                        <div className="text-[var(--text-secondary)] text-sm mb-2">Win Rate</div>
-                        <div className="text-3xl font-bold text-green-500">
-                            {(provider.win_rate || 0).toFixed(1)}%
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                        <div className="text-[var(--text-secondary)] text-sm mb-2">Total Profit (USD)</div>
-                        <div className="text-3xl font-bold text-[var(--text-primary)]">
-                            ${(provider.total_profit_usd || 0).toFixed(2)}
-                        </div>
-                    </div>
-                </div>
+                <div className="mt-6 grid gap-6 lg:grid-cols-3">
+                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5 lg:col-span-2">
+                        <h2 className="text-lg font-bold text-[var(--text-primary)]">Provider Profile</h2>
+                        <p className="text-xs text-[var(--text-secondary)]">
+                            Display name ditetapkan saat registrasi. Data di bawah bisa disesuaikan untuk strategi monetisasi.
+                        </p>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Profile Settings */}
-                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                            <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">Profile Settings</h3>
-                            <div className="space-y-4">
+                        <div className="mt-4 space-y-3">
+                            <div>
+                                <label className="mb-1 block text-xs font-semibold text-[var(--text-muted)]">Display Name</label>
+                                <input
+                                    value={profile.display_name}
+                                    readOnly
+                                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-semibold text-[var(--text-muted)]">Bio / Strategy</label>
+                                <textarea
+                                    value={bio}
+                                    onChange={(event) => setBio(event.target.value)}
+                                    rows={4}
+                                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-2">
                                 <div>
-                                    <label className="block text-sm text-[var(--text-secondary)] mb-1">Display Name</label>
+                                    <label className="mb-1 block text-xs font-semibold text-[var(--text-muted)]">Subscription Fee (IDR / month)</label>
                                     <input
-                                        type="text"
-                                        value={provider.display_name}
-                                        readOnly
-                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
+                                        value={subscriptionFee}
+                                        onChange={(event) => setSubscriptionFee(event.target.value)}
+                                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[var(--text-secondary)] mb-1">Bio</label>
-                                    <textarea
-                                        value={provider.bio || ''}
-                                        readOnly
-                                        rows={3}
-                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
+                                    <label className="mb-1 block text-xs font-semibold text-[var(--text-muted)]">Profit Share (%)</label>
+                                    <input
+                                        value={profitShare}
+                                        onChange={(event) => setProfitShare(event.target.value)}
+                                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm"
                                     />
                                 </div>
-                                <div className="flex gap-4">
-                                    <div className="w-1/2">
-                                        <label className="block text-sm text-[var(--text-secondary)] mb-1">Subscription Fee</label>
-                                        <input
-                                            type="text"
-                                            value={format.number(provider.subscription_fee, { style: 'currency', currency: 'IDR' })}
-                                            readOnly
-                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
-                                        />
-                                    </div>
-                                    <div className="w-1/2">
-                                        <label className="block text-sm text-[var(--text-secondary)] mb-1">Profit Share</label>
-                                        <input
-                                            type="text"
-                                            value={provider.profit_sharing_percent + '%'}
-                                            readOnly
-                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg px-4 py-2 text-[var(--text-primary)] opacity-60 cursor-not-allowed"
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-xs text-gray-500 italic">Contact support to change profile details.</p>
                             </div>
                         </div>
+
+                        {message && <p className="mt-3 text-xs text-[var(--text-secondary)]">{message}</p>}
+                        <button
+                            onClick={saveProfile}
+                            disabled={saving}
+                            className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {saving ? 'Saving...' : 'Save Provider Profile'}
+                        </button>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Broker Info */}
-                        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
-                            <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">Broker Connection</h3>
-                            <div className="flex items-center justify-between py-3 border-b border-[var(--border-light)]">
-                                <span className="text-[var(--text-secondary)]">Broker</span>
-                                <span className="text-[var(--text-primary)]">{provider.broker_name || 'Exness'}</span>
+                    <div className="space-y-4">
+                        <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)]">Quick Actions</h3>
+                            <div className="mt-3 grid gap-2">
+                                <Link href="/copytrade/dashboard" className="rounded-xl bg-[var(--bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)]">
+                                    Open Provider Workspace
+                                </Link>
+                                <Link href="/copytrade/provider" className="rounded-xl bg-[var(--bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)]">
+                                    Refresh Provider Data
+                                </Link>
+                                <Link href="/copytrade/system" className="rounded-xl bg-[var(--bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)]">
+                                    Operational Guide
+                                </Link>
                             </div>
-                            <div className="flex items-center justify-between py-3 border-b border-[var(--border-light)]">
-                                <span className="text-[var(--text-secondary)]">Account ID</span>
-                                <span className="text-[var(--text-primary)]">{provider.broker_account_id}</span>
-                            </div>
-                            <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm text-center">
-                                ● Connected
-                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)]">Operational Notes</h3>
+                            <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-[var(--text-secondary)]">
+                                <li>Signal hanya bisa diposting saat status provider aktif.</li>
+                                <li>Gunakan price koin = 0 untuk signal gratis (lead magnet).</li>
+                                <li>Review performa harian untuk menjaga win rate.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </section>
     );
 }

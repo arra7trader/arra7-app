@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com', 'admin@arra.com'];
+const ADMIN_EMAILS = new Set(['apmexplore@gmail.com', 'admin@arra.com']);
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
-        const session = await getServerSession();
-        if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+        const session = await getServerSession(authOptions);
+        const email = session?.user?.email?.toLowerCase() || '';
+        if (!ADMIN_EMAILS.has(email)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -31,7 +33,7 @@ export async function GET(req: Request) {
             activeUsers: activeUsersRes.count ?? 0,
             totalSignals: totalSignalsRes.count ?? 0,
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error('[Admin CT Stats] Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

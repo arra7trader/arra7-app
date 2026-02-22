@@ -1,238 +1,333 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowPathIcon, CheckCircleIcon, PlusIcon, MinusIcon, SignalIcon, UsersIcon, ChartBarIcon, ClockIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
+import { useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import CopytradeModuleNav from '@/components/copytrade/CopytradeModuleNav';
 
-interface CTUser { id: string; email: string; name: string | null; license_key: string; copytrade_balance: number; }
-interface Stats { totalUsers: number; activeUsers: number; totalSignals: number; }
-interface Signal { id: string; pair: string; type: string; entry_price: number; tp: number; sl: number; created_at: string; }
+type AdminTab = 'providers' | 'users' | 'signals';
 
-export default function AdminCopytradeBridge() {
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [users, setUsers] = useState<CTUser[]>([]);
-    const [signals, setSignals] = useState<Signal[]>([]);
+interface ProviderRow {
+    id: string;
+    display_name: string;
+    user_email?: string;
+    user_membership?: string;
+    broker_name?: string;
+    is_active: number;
+    is_approved: number;
+    total_followers?: number;
+    created_at: string;
+}
+
+interface BridgeUserRow {
+    id: string;
+    email: string;
+    name?: string | null;
+    license_key?: string | null;
+    copytrade_balance: number;
+}
+
+interface BridgeSignalRow {
+    id: string;
+    pair: string;
+    type: string;
+    entry_price: number;
+    tp: number;
+    sl: number;
+    created_at: string;
+}
+
+interface Stats {
+    totalUsers: number;
+    activeUsers: number;
+    totalSignals: number;
+}
+
+const adminEmails = new Set(['apmexplore@gmail.com', 'admin@arra.com']);
+
+export default function AdminCopytradeBridgePage() {
+    const { data: session, status } = useSession();
+    const [tab, setTab] = useState<AdminTab>('providers');
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'users' | 'signals'>('users');
-    const [signalForm, setSignalForm] = useState({ pair: 'XAUUSD', type: 'BUY', entry_price: '', tp: '', sl: '' });
-    const [signalStatus, setSignalStatus] = useState<string | null>(null);
-    const [adjusting, setAdjusting] = useState<string | null>(null);
-    // Custom amount input per user
-    const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
 
-    useEffect(() => { fetchAll(); }, []);
+    const [stats, setStats] = useState<Stats>({ totalUsers: 0, activeUsers: 0, totalSignals: 0 });
+    const [providers, setProviders] = useState<ProviderRow[]>([]);
+    const [users, setUsers] = useState<BridgeUserRow[]>([]);
+    const [signals, setSignals] = useState<BridgeSignalRow[]>([]);
 
-    const fetchAll = async () => {
+    const [signalForm, setSignalForm] = useState({
+        pair: 'XAUUSD',
+        type: 'BUY',
+        entry_price: '',
+        tp: '',
+        sl: '',
+    });
+
+    const [adjustments, setAdjustments] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (status === 'authenticated') void refresh();
+    }, [status]);
+
+    const refresh = async () => {
         setLoading(true);
         try {
-            const [statsRes, usersRes, sigRes] = await Promise.all([
+            const [providerRes, statsRes, usersRes, signalsRes] = await Promise.all([
+                fetch('/api/admin/copytrade?filter=all'),
                 fetch('/api/admin/copytrade-bridge/stats'),
                 fetch('/api/admin/copytrade-bridge/users'),
-                fetch('/api/copytrade-bridge/signals?limit=30'),
+                fetch('/api/copytrade-bridge/signals?limit=40'),
             ]);
-            const [statsData, usersData, sigData] = await Promise.all([
-                statsRes.json(), usersRes.json(), sigRes.json()
-            ]);
-            if (statsData.success) setStats(statsData);
-            if (usersData.success) setUsers(usersData.users || []);
-            if (sigData.success) setSignals(sigData.signals || []);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+
+            const providerData = await providerRes.json();
+            const statsData = await statsRes.json();
+            const usersData = await usersRes.json();
+            const signalsData = await signalsRes.json();
+
+            setProviders((providerData.providers || []) as ProviderRow[]);
+            if (statsData.success) {
+                setStats({
+                    totalUsers: Number(statsData.totalUsers || 0),
+                    activeUsers: Number(statsData.activeUsers || 0),
+                    totalSignals: Number(statsData.totalSignals || 0),
+                });
+            }
+            setUsers((usersData.users || []) as BridgeUserRow[]);
+            setSignals((signalsData.signals || []) as BridgeSignalRow[]);
+        } catch (error) {
+            console.error('[AdminCopytradeBridge] refresh failed', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const broadcastSignal = async () => {
-        if (!signalForm.entry_price || !signalForm.tp || !signalForm.sl) {
-            setSignalStatus('❌ Lengkapi semua field'); return;
-        }
-        setSignalStatus('Mengirim...');
+    const providerGroups = useMemo(() => ({
+        pending: providers.filter((row) => row.is_approved === 0 && row.is_active === 0),
+        active: providers.filter((row) => row.is_approved === 1 && row.is_active === 1),
+        rejected: providers.filter((row) => row.is_approved === -1),
+    }), [providers]);
+
+    const moderateProvider = async (providerId: string, action: 'approve' | 'reject' | 'deactivate') => {
+        setSaving(true);
+        setMessage('');
         try {
-            const res = await fetch('/api/copytrade-bridge/signal', {
-                method: 'POST',
+            const response = await fetch('/api/admin/copytrade', {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    pair: signalForm.pair, type: signalForm.type,
-                    entry_price: parseFloat(signalForm.entry_price),
-                    tp: parseFloat(signalForm.tp), sl: parseFloat(signalForm.sl),
-                }),
+                body: JSON.stringify({ providerId, action }),
             });
-            const data = await res.json();
-            if (data.success) {
-                setSignalStatus('✅ Sinyal berhasil dikirim! ID: ' + data.signalId?.slice(0, 8));
-                setSignalForm({ pair: 'XAUUSD', type: 'BUY', entry_price: '', tp: '', sl: '' });
-                fetchAll();
-            } else setSignalStatus('❌ ' + (data.error || 'Gagal mengirim sinyal'));
-        } catch (e) { setSignalStatus('❌ Terjadi error'); }
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Gagal update provider');
+            setMessage(data.message || 'Provider updated');
+            await refresh();
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Gagal update provider');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const adjustBalance = async (userId: string, amount: number) => {
-        setAdjusting(userId);
+        setSaving(true);
+        setMessage('');
         try {
-            const res = await fetch('/api/admin/copytrade-bridge/users', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+            const response = await fetch('/api/admin/copytrade-bridge/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, amount }),
             });
-            const data = await res.json();
-            if (data.success) setUsers(prev => prev.map(u => u.id === userId ? { ...u, copytrade_balance: data.newBalance } : u));
-        } finally { setAdjusting(null); }
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Gagal ubah saldo');
+            setUsers((current) => current.map((row) => (row.id === userId ? { ...row, copytrade_balance: Number(data.newBalance || 0) } : row)));
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Gagal ubah saldo');
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const typeColor = (type: string) =>
-        type.includes('BUY') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+    const broadcastSignal = async () => {
+        setSaving(true);
+        setMessage('');
+        try {
+            const response = await fetch('/api/copytrade-bridge/signal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pair: signalForm.pair.toUpperCase().trim(),
+                    type: signalForm.type,
+                    entry_price: Number(signalForm.entry_price),
+                    tp: Number(signalForm.tp),
+                    sl: Number(signalForm.sl),
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Gagal broadcast signal');
+            setMessage('Signal bridge berhasil dikirim.');
+            setSignalForm({ pair: 'XAUUSD', type: 'BUY', entry_price: '', tp: '', sl: '' });
+            await refresh();
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Gagal broadcast signal');
+        } finally {
+            setSaving(false);
+        }
+    };
 
-    if (loading) return <div className="flex justify-center items-center my-20"><ArrowPathIcon className="w-8 h-8 animate-spin text-indigo-500" /></div>;
+    if (status === 'loading' || loading) {
+        return (
+            <section className="min-h-screen bg-[var(--bg-primary)]">
+                <CopytradeModuleNav />
+            </section>
+        );
+    }
+
+    const email = session?.user?.email?.toLowerCase() || '';
+    if (!adminEmails.has(email)) {
+        return (
+            <section className="min-h-screen bg-[var(--bg-primary)]">
+                <CopytradeModuleNav />
+                <div className="mx-auto max-w-3xl px-4 pb-12 pt-8">
+                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-8 text-center">
+                        <h1 className="text-2xl font-black text-[var(--text-primary)]">Unauthorized</h1>
+                        <p className="mt-2 text-sm text-[var(--text-secondary)]">Halaman admin hanya untuk email yang terdaftar.</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
-        <div className="max-w-6xl mx-auto p-4 md:p-8 pt-32 md:pt-36 pb-24">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin: Copytrade Bridge</h1>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">Kelola sinyal, saldo kredit, dan monitoring EA users. Database: <span className="text-indigo-500 font-medium">Supabase</span></p>
-
-            {/* Stats */}
-            {stats && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <section className="min-h-screen bg-[var(--bg-primary)]">
+            <CopytradeModuleNav />
+            <div className="mx-auto max-w-7xl px-4 pb-12 pt-8">
+                <div className="grid gap-4 md:grid-cols-3">
                     {[
-                        { label: 'Total Users Terdaftar', value: stats.totalUsers, icon: <UsersIcon className="w-10 h-10 p-2 text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl" /> },
-                        { label: 'EA Aktif (15 menit terakhir)', value: stats.activeUsers, icon: <CheckCircleIcon className="w-10 h-10 p-2 text-green-500 bg-green-50 dark:bg-green-900/30 rounded-xl" /> },
-                        { label: 'Total Sinyal Dikirim', value: stats.totalSignals, icon: <SignalIcon className="w-10 h-10 p-2 text-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl" /> },
-                    ].map(s => (
-                        <div key={s.label} className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 flex items-center gap-4 shadow-sm">
-                            {s.icon}
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{s.value}</p>
-                                <p className="text-sm text-gray-500">{s.label}</p>
-                            </div>
+                        { label: 'Bridge Users', value: stats.totalUsers },
+                        { label: 'Active EA (15m)', value: stats.activeUsers },
+                        { label: 'Signals Broadcasted', value: stats.totalSignals },
+                    ].map((item) => (
+                        <div key={item.label} className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                            <p className="text-xs text-[var(--text-muted)]">{item.label}</p>
+                            <p className="mt-1 text-3xl font-black text-[var(--text-primary)]">{item.value.toLocaleString('id-ID')}</p>
                         </div>
                     ))}
                 </div>
-            )}
 
-            {/* Signal Broadcaster */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <SignalIcon className="w-5 h-5 text-indigo-500" /> Signal Broadcaster
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
-                    <div className="col-span-1">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Pair</label>
-                        <input value={signalForm.pair} onChange={e => setSignalForm({ ...signalForm, pair: e.target.value })}
-                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-sm" placeholder="XAUUSD" />
-                    </div>
-                    <div className="col-span-1">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Type</label>
-                        <select value={signalForm.type} onChange={e => setSignalForm({ ...signalForm, type: e.target.value })}
-                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-sm">
-                            {['BUY', 'SELL', 'BUY LIMIT', 'SELL LIMIT', 'BUY STOP', 'SELL STOP'].map(t => <option key={t}>{t}</option>)}
-                        </select>
-                    </div>
-                    {['entry_price', 'tp', 'sl'].map(field => (
-                        <div key={field} className="col-span-1">
-                            <label className="block text-xs font-medium text-gray-500 mb-1 capitalize">{field.replace('_', ' ')}</label>
-                            <input type="number" step="any" value={signalForm[field as keyof typeof signalForm]}
-                                onChange={e => setSignalForm({ ...signalForm, [field]: e.target.value })}
-                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-sm" placeholder="0.00" />
-                        </div>
+                <div className="mt-6 flex flex-wrap gap-2 rounded-2xl border border-[var(--border-light)] bg-white p-2">
+                    {[
+                        { id: 'providers', label: `Provider Review (${providerGroups.pending.length} pending)` },
+                        { id: 'users', label: `Bridge Users (${users.length})` },
+                        { id: 'signals', label: `Bridge Signals (${signals.length})` },
+                    ].map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => setTab(item.id as AdminTab)}
+                            className={`rounded-xl px-4 py-2 text-sm font-semibold ${tab === item.id ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
+                        >
+                            {item.label}
+                        </button>
                     ))}
-                </div>
-                <button onClick={broadcastSignal} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition">
-                    🚀 Broadcast Sinyal ke Semua EA
-                </button>
-                {signalStatus && <p className="mt-3 text-sm">{signalStatus}</p>}
-            </div>
-
-            {/* Tabs: User Management / Signal Log */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div className="flex border-b border-gray-100 dark:border-gray-700">
-                    <button onClick={() => setActiveTab('users')}
-                        className={`flex-1 py-3.5 text-sm font-semibold transition ${activeTab === 'users' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/10' : 'text-gray-500 hover:text-gray-700'}`}>
-                        👥 Kelola Saldo User ({users.length})
-                    </button>
-                    <button onClick={() => setActiveTab('signals')}
-                        className={`flex-1 py-3.5 text-sm font-semibold transition ${activeTab === 'signals' ? 'text-yellow-600 border-b-2 border-yellow-600 bg-yellow-50/50 dark:bg-yellow-900/10' : 'text-gray-500 hover:text-gray-700'}`}>
-                        📡 Log Sinyal ({signals.length})
-                    </button>
-                    <button onClick={fetchAll} className="px-4 text-gray-400 hover:text-gray-600 transition border-l border-gray-100 dark:border-gray-700">
-                        <ArrowPathIcon className="w-4 h-4" />
+                    <button onClick={refresh} className="ml-auto rounded-xl bg-[var(--bg-secondary)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)]">
+                        Refresh
                     </button>
                 </div>
 
-                {/* Users Tab */}
-                {activeTab === 'users' && (
-                    <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                        {users.length === 0 && (
-                            <div className="py-16 text-center text-gray-400">
-                                <UsersIcon className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                                <p className="text-sm">Belum ada user yang memiliki license key.</p>
-                            </div>
-                        )}
-                        {users.map(user => (
-                            <div key={user.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.email}</p>
-                                    <p className="text-xs text-gray-400 font-mono truncate">{user.license_key}</p>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    {/* Custom amount input */}
-                                    <input
-                                        type="number"
-                                        value={customAmounts[user.id] || ''}
-                                        onChange={e => setCustomAmounts(p => ({ ...p, [user.id]: e.target.value }))}
-                                        className="w-16 p-1.5 text-xs text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg"
-                                        placeholder="jml"
-                                    />
-                                    <button onClick={() => adjustBalance(user.id, -(parseInt(customAmounts[user.id] || '10') || 10))}
-                                        disabled={adjusting === user.id}
-                                        className="p-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg hover:bg-red-200 transition disabled:opacity-50">
-                                        <MinusIcon className="w-4 h-4" />
-                                    </button>
-                                    <span className="text-sm font-bold text-gray-900 dark:text-white w-10 text-center">{user.copytrade_balance}</span>
-                                    <button onClick={() => adjustBalance(user.id, parseInt(customAmounts[user.id] || '10') || 10)}
-                                        disabled={adjusting === user.id}
-                                        className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg hover:bg-green-200 transition disabled:opacity-50">
-                                        <PlusIcon className="w-4 h-4" />
-                                    </button>
+                {tab === 'providers' && (
+                    <div className="mt-6 space-y-4">
+                        {providers.length === 0 && <div className="rounded-2xl border border-[var(--border-light)] bg-white p-6 text-sm text-[var(--text-secondary)]">Tidak ada provider.</div>}
+                        {providers.map((provider) => (
+                            <div key={provider.id} className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <p className="font-bold text-[var(--text-primary)]">{provider.display_name}</p>
+                                        <p className="text-xs text-[var(--text-secondary)]">
+                                            {provider.user_email} | {provider.user_membership || '-'} | {provider.broker_name || '-'} | Followers {provider.total_followers || 0}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button onClick={() => moderateProvider(provider.id, 'approve')} disabled={saving} className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white">Approve</button>
+                                        <button onClick={() => moderateProvider(provider.id, 'reject')} disabled={saving} className="rounded-lg bg-red-600 px-3 py-1 text-xs font-semibold text-white">Reject</button>
+                                        <button onClick={() => moderateProvider(provider.id, 'deactivate')} disabled={saving} className="rounded-lg bg-amber-500 px-3 py-1 text-xs font-semibold text-white">Deactivate</button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Signals Log Tab */}
-                {activeTab === 'signals' && (
-                    <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                        {signals.length === 0 ? (
-                            <div className="py-16 text-center text-gray-400">
-                                <ClockIcon className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                                <p className="text-sm">Belum ada sinyal yang dikirim.</p>
+                {tab === 'users' && (
+                    <div className="mt-6 space-y-3">
+                        {users.map((user) => {
+                            const amount = Number(adjustments[user.id] || '10');
+                            return (
+                                <div key={user.id} className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div>
+                                            <p className="font-semibold text-[var(--text-primary)]">{user.email}</p>
+                                            <p className="text-xs text-[var(--text-secondary)] font-mono">{user.license_key || '-'}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                value={adjustments[user.id] || '10'}
+                                                onChange={(event) => setAdjustments((current) => ({ ...current, [user.id]: event.target.value }))}
+                                                className="w-20 rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-2 py-1 text-sm"
+                                            />
+                                            <button onClick={() => adjustBalance(user.id, -Math.abs(amount))} disabled={saving} className="rounded-lg bg-red-600 px-3 py-1 text-xs font-semibold text-white">-</button>
+                                            <span className="w-12 text-center text-sm font-bold text-[var(--text-primary)]">{user.copytrade_balance}</span>
+                                            <button onClick={() => adjustBalance(user.id, Math.abs(amount))} disabled={saving} className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {tab === 'signals' && (
+                    <div className="mt-6 space-y-4">
+                        <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)]">Broadcast Bridge Signal</h3>
+                            <div className="mt-3 grid gap-2 md:grid-cols-5">
+                                <input value={signalForm.pair} onChange={(e) => setSignalForm({ ...signalForm, pair: e.target.value })} placeholder="Pair" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
+                                <input value={signalForm.type} onChange={(e) => setSignalForm({ ...signalForm, type: e.target.value })} placeholder="Type" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
+                                <input value={signalForm.entry_price} onChange={(e) => setSignalForm({ ...signalForm, entry_price: e.target.value })} placeholder="Entry" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
+                                <input value={signalForm.tp} onChange={(e) => setSignalForm({ ...signalForm, tp: e.target.value })} placeholder="TP" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
+                                <input value={signalForm.sl} onChange={(e) => setSignalForm({ ...signalForm, sl: e.target.value })} placeholder="SL" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
                             </div>
-                        ) : (
+                            <button onClick={broadcastSignal} disabled={saving} className="mt-3 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                                Broadcast Signal
+                            </button>
+                        </div>
+
+                        <div className="overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white">
                             <table className="w-full text-sm">
-                                <thead className="bg-gray-50 dark:bg-gray-900/50 sticky top-0">
+                                <thead className="border-b border-[var(--border-light)] bg-[var(--bg-secondary)]">
                                     <tr>
-                                        {['Pair', 'Type', 'Entry', 'TP', 'SL', 'Waktu'].map(h => (
-                                            <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
+                                        {['Pair', 'Type', 'Entry', 'TP', 'SL', 'Created'].map((item) => (
+                                            <th key={item} className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{item}</th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-                                    {signals.map(sig => (
-                                        <tr key={sig.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
-                                            <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{sig.pair}</td>
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor(sig.type)}`}>
-                                                    {sig.type.includes('BUY') ? <ArrowTrendingUpIcon className="w-3 h-3" /> : <ArrowTrendingDownIcon className="w-3 h-3" />}
-                                                    {sig.type}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4 font-mono text-gray-700 dark:text-gray-300">{sig.entry_price}</td>
-                                            <td className="py-3 px-4 font-mono text-green-600">{sig.tp}</td>
-                                            <td className="py-3 px-4 font-mono text-red-500">{sig.sl}</td>
-                                            <td className="py-3 px-4 text-gray-400 text-xs">{new Date(sig.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                                <tbody>
+                                    {signals.map((signal) => (
+                                        <tr key={signal.id} className="border-b border-[var(--border-light)] last:border-0">
+                                            <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{signal.pair}</td>
+                                            <td className="px-4 py-3">{signal.type}</td>
+                                            <td className="px-4 py-3">{signal.entry_price}</td>
+                                            <td className="px-4 py-3 text-green-600">{signal.tp}</td>
+                                            <td className="px-4 py-3 text-red-600">{signal.sl}</td>
+                                            <td className="px-4 py-3 text-xs text-[var(--text-secondary)]">{new Date(signal.created_at).toLocaleString('id-ID')}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        )}
+                        </div>
                     </div>
                 )}
+
+                {message && <p className="mt-4 text-sm text-[var(--text-secondary)]">{message}</p>}
             </div>
-        </div>
+        </section>
     );
 }
