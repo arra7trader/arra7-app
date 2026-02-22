@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import CopytradeModuleNav from '@/components/copytrade/CopytradeModuleNav';
+import { COPYTRADE_CREDITS_PER_SIGNAL } from '@/lib/copytrade-credit';
 
 interface Signal {
     id: string;
@@ -349,7 +350,9 @@ export default function CopytradeBridgePage() {
                     <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
                         <h2 className="text-sm font-bold text-[var(--text-primary)]">Credit Balance</h2>
                         <p className="mt-2 text-4xl font-black text-green-600">{balance}</p>
-                        <p className="text-xs text-[var(--text-secondary)]">1 kredit = 1 trade execution</p>
+                        <p className="text-xs text-[var(--text-secondary)]">
+                            {COPYTRADE_CREDITS_PER_SIGNAL} kredit = 1 trade execution
+                        </p>
                         <button onClick={refresh} className="mt-3 rounded-xl bg-[var(--bg-secondary)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)]">
                             Refresh balance
                         </button>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
 import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
+import { COPYTRADE_CREDITS_PER_SIGNAL } from '@/lib/copytrade-credit';
 
 const SIGNAL_WINDOW_MS = 5 * 60 * 1000;
 
@@ -62,7 +63,7 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
 
         const realBalance = Number(user.copytrade_balance || 0);
         const unlimited = isUnlimitedCopytradeEmail(user.email);
-        const isSubscribed = unlimited || realBalance > 0;
+        const isSubscribed = unlimited || realBalance >= COPYTRADE_CREDITS_PER_SIGNAL;
         const signalSince = new Date(Date.now() - SIGNAL_WINDOW_MS).toISOString();
 
         const { data: signals, error: signalsError } = await copytradeSupabase
@@ -81,6 +82,7 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
             securityMode: signedRequest ? 'signed' : 'legacy-get',
             balance: unlimited ? UNLIMITED_COPYTRADE_BALANCE : realBalance,
             unlimited,
+            requiredCredits: COPYTRADE_CREDITS_PER_SIGNAL,
             isSubscribed,
             signals: isSubscribed ? (signals || []) : [],
         });

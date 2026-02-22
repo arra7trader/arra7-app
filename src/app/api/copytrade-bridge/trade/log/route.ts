@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
 import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
+import { COPYTRADE_CREDITS_PER_SIGNAL } from '@/lib/copytrade-credit';
 
 const EXECUTED_STATUSES = new Set(['SUCCESS', 'EXECUTED']);
 const ALLOWED_STATUSES = new Set(['SUCCESS', 'EXECUTED', 'FAILED', 'REJECTED', 'SKIPPED']);
@@ -67,8 +68,11 @@ export async function POST(request: NextRequest) {
         const balanceBefore = Number(user.copytrade_balance || 0);
         const unlimited = isUnlimitedCopytradeEmail(user.email);
 
-        if (shouldDebitCredit && !unlimited && balanceBefore <= 0) {
-            return NextResponse.json({ error: 'Insufficient bridge credits' }, { status: 402 });
+        if (shouldDebitCredit && !unlimited && balanceBefore < COPYTRADE_CREDITS_PER_SIGNAL) {
+            return NextResponse.json(
+                { error: `Insufficient bridge credits (need ${COPYTRADE_CREDITS_PER_SIGNAL})` },
+                { status: 402 },
+            );
         }
 
         let { data: insertedLog, error: logError } = await copytradeSupabase
@@ -106,7 +110,7 @@ export async function POST(request: NextRequest) {
 
         let balanceAfter = balanceBefore;
         if (shouldDebitCredit && !unlimited) {
-            balanceAfter = Math.max(0, balanceBefore - 1);
+            balanceAfter = Math.max(0, balanceBefore - COPYTRADE_CREDITS_PER_SIGNAL);
             const { error: balanceError } = await copytradeSupabase
                 .from('ct_users')
                 .update({ copytrade_balance: balanceAfter })
@@ -123,7 +127,7 @@ export async function POST(request: NextRequest) {
                     order_id: insertedLog.id,
                     entry_type: 'trade_execution',
                     direction: 'debit',
-                    amount: 1,
+                    amount: COPYTRADE_CREDITS_PER_SIGNAL,
                     amount_idr: null,
                     balance_before: balanceBefore,
                     balance_after: balanceAfter,
