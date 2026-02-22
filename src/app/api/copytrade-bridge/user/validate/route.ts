@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
+import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
 
 const SIGNAL_WINDOW_MS = 5 * 60 * 1000;
 
@@ -51,7 +52,7 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
     try {
         const { data: user, error: userError } = await copytradeSupabase
             .from('ct_users')
-            .select('id, copytrade_balance')
+            .select('id, email, copytrade_balance')
             .eq('license_key', licenseKey)
             .single();
 
@@ -59,7 +60,9 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
             return NextResponse.json({ error: 'Invalid license key' }, { status: 401 });
         }
 
-        const isSubscribed = Number(user.copytrade_balance || 0) > 0;
+        const realBalance = Number(user.copytrade_balance || 0);
+        const unlimited = isUnlimitedCopytradeEmail(user.email);
+        const isSubscribed = unlimited || realBalance > 0;
         const signalSince = new Date(Date.now() - SIGNAL_WINDOW_MS).toISOString();
 
         const { data: signals, error: signalsError } = await copytradeSupabase
@@ -76,7 +79,8 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
         return NextResponse.json({
             success: true,
             securityMode: signedRequest ? 'signed' : 'legacy-get',
-            balance: Number(user.copytrade_balance || 0),
+            balance: unlimited ? UNLIMITED_COPYTRADE_BALANCE : realBalance,
+            unlimited,
             isSubscribed,
             signals: isSubscribed ? (signals || []) : [],
         });

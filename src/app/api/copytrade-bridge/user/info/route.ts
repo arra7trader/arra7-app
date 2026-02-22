@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
+import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
 
 export async function GET() {
     try {
@@ -51,11 +52,13 @@ export async function GET() {
 
         const isConnected = recentLog && recentLog.length > 0;
         const lastActive = recentLog && recentLog.length > 0 ? recentLog[0].timestamp : null;
+        const unlimited = isUnlimitedCopytradeEmail(email);
 
         return NextResponse.json({
             success: true,
             licenseKey: ctUser.license_key,
-            balance: ctUser.copytrade_balance || 0,
+            balance: unlimited ? UNLIMITED_COPYTRADE_BALANCE : (ctUser.copytrade_balance || 0),
+            unlimited,
             isConnected,
             lastActive,
         });

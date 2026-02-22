@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
+import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
 
 const EXECUTED_STATUSES = new Set(['SUCCESS', 'EXECUTED']);
 const ALLOWED_STATUSES = new Set(['SUCCESS', 'EXECUTED', 'FAILED', 'REJECTED', 'SKIPPED']);
@@ -64,8 +65,9 @@ export async function POST(request: NextRequest) {
 
         const shouldDebitCredit = EXECUTED_STATUSES.has(status);
         const balanceBefore = Number(user.copytrade_balance || 0);
+        const unlimited = isUnlimitedCopytradeEmail(user.email);
 
-        if (shouldDebitCredit && balanceBefore <= 0) {
+        if (shouldDebitCredit && !unlimited && balanceBefore <= 0) {
             return NextResponse.json({ error: 'Insufficient bridge credits' }, { status: 402 });
         }
 
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
         }
 
         let balanceAfter = balanceBefore;
-        if (shouldDebitCredit) {
+        if (shouldDebitCredit && !unlimited) {
             balanceAfter = Math.max(0, balanceBefore - 1);
             const { error: balanceError } = await copytradeSupabase
                 .from('ct_users')
@@ -137,7 +139,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             tradeLogId: insertedLog.id,
-            balance: balanceAfter,
+            balance: unlimited ? UNLIMITED_COPYTRADE_BALANCE : balanceAfter,
+            unlimited,
         });
     } catch (error) {
         console.error('[CT TradeLog] Unexpected error:', error);
