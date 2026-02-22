@@ -61,7 +61,7 @@ export default function CopytradeModuleNav() {
     const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
     return (
-        <div className="sticky top-[68px] z-30 border-y border-[var(--border-light)] bg-white/95 backdrop-blur">
+        <div className="sticky top-[88px] z-30 mt-[88px] border-y border-[var(--border-light)] bg-white/95 backdrop-blur">
             <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-3">
                 {visibleItems.map((item) => {
                     const isActive = item.match(pathname);
