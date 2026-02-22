@@ -19,6 +19,8 @@ CT_QRIS_IMAGE_URL=/qris-payment.jpg
 CT_QRIS_MERCHANT_NAME=ARRA7 FULLSTACK DEVELOPER
 CT_QRIS_NMID=ID1025468752486
 QRIS_ID_WEBHOOK_SECRET=YOUR_QRIS_WEBHOOK_SECRET (optional)
+CT_TOPUP_TELEGRAM_CHAT_ID=@arra7trader (optional, default @arra7trader)
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN (required untuk notif telegram)
 
 CT_BRIDGE_EA_SECRET=YOUR_STRONG_HMAC_SECRET
 ```
@@ -27,6 +29,7 @@ Catatan:
 - `COPYTRADE_SUPABASE_SERVICE_ROLE_KEY` sangat direkomendasikan untuk API server-side.
 - Jika `QRIS_ID_WEBHOOK_SECRET` kosong, webhook tetap diterima (kurang aman).
 - Untuk akun QRIS non-API (gratis), gunakan flow manual verification: user submit bukti bayar, admin approve/reject.
+- Notifikasi bukti topup ke Telegram butuh `TELEGRAM_BOT_TOKEN`, tujuan chat bisa diatur lewat `CT_TOPUP_TELEGRAM_CHAT_ID`.
 
 ## 3. Setup Webhook QRIS
 Set callback webhook di provider QRIS (`qris.id`) ke:
