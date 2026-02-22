@@ -39,6 +39,10 @@ export default function AdminDashboard() {
     const [isUserFormOpen, setIsUserFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+    const [topupTargetUser, setTopupTargetUser] = useState<User | null>(null);
+    const [topupAmount, setTopupAmount] = useState('100');
+    const [topupReason, setTopupReason] = useState('Top up manual dari Admin User Management');
+    const [topupSubmitting, setTopupSubmitting] = useState(false);
 
     // Upgrade Duration Modal
     const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
@@ -403,6 +407,68 @@ export default function AdminDashboard() {
     };
 
 
+    const openTopupModal = (user: User) => {
+        setTopupTargetUser(user);
+        setTopupAmount('100');
+        setTopupReason(`Top up manual oleh admin untuk ${user.email}`);
+    };
+
+    const closeTopupModal = () => {
+        if (topupSubmitting) return;
+        setTopupTargetUser(null);
+    };
+
+    const handleSubmitTopup = async () => {
+        if (!topupTargetUser) return;
+
+        const amount = Number(topupAmount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+            setMessage({ type: 'error', text: 'Nominal credit topup harus lebih besar dari 0.' });
+            return;
+        }
+
+        const reason = topupReason.trim();
+        if (reason.length < 3) {
+            setMessage({ type: 'error', text: 'Reason topup minimal 3 karakter.' });
+            return;
+        }
+
+        setTopupSubmitting(true);
+        setMessage(null);
+
+        try {
+            const response = await fetch('/api/admin/copytrade-bridge/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sourceUserId: topupTargetUser.id,
+                    email: topupTargetUser.email,
+                    name: topupTargetUser.name || '',
+                    amount: Math.round(amount),
+                    reason,
+                }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Gagal topup balance copytrade');
+            }
+
+            setMessage({
+                type: 'success',
+                text: `Topup copytrade ${topupTargetUser.email} +${Math.round(amount)} credit berhasil. Balance sekarang: ${Number(data.newBalance || 0)}.`,
+            });
+            setTopupTargetUser(null);
+        } catch (error) {
+            setMessage({
+                type: 'error',
+                text: error instanceof Error ? error.message : 'Gagal topup balance copytrade',
+            });
+        } finally {
+            setTopupSubmitting(false);
+        }
+    };
+
     const getNotificationMessage = () => {
         if (!notification) return '';
         return `✅ Akun Anda sudah diupgrade ke ${notification.membership}! 🎉
@@ -527,6 +593,73 @@ Tim ARRA7`;
                                     className="px-6 py-3 rounded-xl border border-[var(--border-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                     Tutup
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+                {topupTargetUser && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={closeTopupModal}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.96, y: 16 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.96, y: 16 }}
+                            className="w-full max-w-lg rounded-2xl border border-[var(--border-light)] bg-white p-6 shadow-xl"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <h3 className="text-lg font-bold text-[var(--text-primary)]">Topup Copytrade Balance</h3>
+                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                                User: <span className="font-semibold text-[var(--text-primary)]">{topupTargetUser.email}</span>
+                            </p>
+
+                            <div className="mt-4 space-y-3">
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                                        Credit Topup
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        step={1}
+                                        value={topupAmount}
+                                        onChange={(event) => setTopupAmount(event.target.value)}
+                                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                                        Reason (Audit)
+                                    </label>
+                                    <textarea
+                                        value={topupReason}
+                                        onChange={(event) => setTopupReason(event.target.value)}
+                                        rows={3}
+                                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                                        placeholder="Contoh: Topup manual setelah verifikasi pembayaran QRIS"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-5 flex items-center justify-end gap-2">
+                                <button
+                                    onClick={closeTopupModal}
+                                    disabled={topupSubmitting}
+                                    className="rounded-xl border border-[var(--border-light)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-60"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleSubmitTopup}
+                                    disabled={topupSubmitting}
+                                    className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                                >
+                                    {topupSubmitting ? 'Memproses...' : 'Topup Sekarang'}
                                 </button>
                             </div>
                         </motion.div>
@@ -794,6 +927,7 @@ Tim ARRA7`;
                             selectedIds={selectedUserIds}
                             onSelectionChange={setSelectedUserIds}
                             onUpdateCopyTrade={handleUpdateCopyTrade}
+                            onOpenCopytradeTopup={openTopupModal}
                         />
                     </>
                 )}

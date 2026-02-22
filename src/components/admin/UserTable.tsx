@@ -32,6 +32,7 @@ interface UserTableProps {
     loading: boolean;
     onUpdateMembership: (user: User, membership: string) => void;
     onUpdateCopyTrade?: (user: User, access: 'FOLLOWER' | 'PROVIDER' | null) => void;
+    onOpenCopytradeTopup?: (user: User) => void;
     updating: string | null;
     onUserClick?: (user: User) => void;
     selectedIds?: string[];
@@ -46,7 +47,8 @@ export default function UserTable({
     onUserClick,
     selectedIds = [],
     onSelectionChange,
-    onUpdateCopyTrade
+    onUpdateCopyTrade,
+    onOpenCopytradeTopup
 }: UserTableProps) {
     const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'asc' | 'desc' } | null>(null);
 
@@ -230,7 +232,7 @@ export default function UserTable({
                                     </div>
                                 </td>
                                 <td className="p-4">
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -239,6 +241,15 @@ export default function UserTable({
                                             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs transition-colors"
                                         >
                                             View/Edit
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onOpenCopytradeTopup?.(user);
+                                            }}
+                                            className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 rounded text-xs transition-colors"
+                                        >
+                                            + CT Topup
                                         </button>
                                         {user.membership !== 'PRO' && (
                                             <button

@@ -38,34 +38,106 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { userId, amount, reason } = body;
+        const userId = typeof body?.userId === 'string' ? body.userId.trim() : '';
+        const sourceUserId = typeof body?.sourceUserId === 'string' ? body.sourceUserId.trim() : '';
+        const targetEmail = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+        const targetName = typeof body?.name === 'string' ? body.name.trim() : '';
+        const amount = Number(body?.amount);
+        const reason = String(body?.reason || '').trim();
 
-        if (!userId || typeof amount !== 'number' || !Number.isFinite(amount) || amount === 0) {
-            return NextResponse.json({ error: 'userId dan amount number (non-zero) wajib diisi' }, { status: 400 });
+        if (!userId && !targetEmail) {
+            return NextResponse.json({ error: 'userId atau email wajib diisi' }, { status: 400 });
         }
-        if (!reason || String(reason).trim().length < 3) {
+        if (!Number.isFinite(amount) || amount === 0) {
+            return NextResponse.json({ error: 'amount number (non-zero) wajib diisi' }, { status: 400 });
+        }
+        if (reason.length < 3) {
             return NextResponse.json({ error: 'reason wajib diisi (minimal 3 karakter)' }, { status: 400 });
         }
 
-        // Get current balance first
-        const { data: user } = await copytradeSupabase
-            .from('ct_users')
-            .select('email, copytrade_balance')
-            .eq('id', userId)
-            .single();
+        let bridgeUser:
+            | { id: string; email: string | null; copytrade_balance: number | null }
+            | null = null;
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        if (userId) {
+            const { data, error } = await copytradeSupabase
+                .from('ct_users')
+                .select('id, email, copytrade_balance')
+                .eq('id', userId)
+                .maybeSingle();
+
+            if (error) {
+                return NextResponse.json({ error: error.message }, { status: 500 });
+            }
+            bridgeUser = data;
         }
 
-        const balanceBefore = Number(user.copytrade_balance || 0);
+        if (!bridgeUser && targetEmail) {
+            const { data, error } = await copytradeSupabase
+                .from('ct_users')
+                .select('id, email, copytrade_balance')
+                .eq('email', targetEmail)
+                .maybeSingle();
+
+            if (error) {
+                return NextResponse.json({ error: error.message }, { status: 500 });
+            }
+            bridgeUser = data;
+        }
+
+        if (!bridgeUser) {
+            if (!targetEmail) {
+                return NextResponse.json(
+                    { error: 'Bridge user belum ada. Sertakan email agar auto-create user copytrade.' },
+                    { status: 404 },
+                );
+            }
+
+            const insertPayload: { id?: string; email: string; name: string } = {
+                email: targetEmail,
+                name: targetName || targetEmail.split('@')[0] || '',
+            };
+            const preferredId = sourceUserId || userId;
+            if (preferredId) {
+                insertPayload.id = preferredId;
+            }
+
+            const { data: insertedUser, error: insertError } = await copytradeSupabase
+                .from('ct_users')
+                .insert(insertPayload)
+                .select('id, email, copytrade_balance')
+                .single();
+
+            if (insertError) {
+                // Guard for race condition (other request inserted same email first)
+                const { data: fallbackUser, error: fallbackError } = await copytradeSupabase
+                    .from('ct_users')
+                    .select('id, email, copytrade_balance')
+                    .eq('email', targetEmail)
+                    .maybeSingle();
+
+                if (fallbackError || !fallbackUser) {
+                    return NextResponse.json({ error: insertError.message }, { status: 500 });
+                }
+
+                bridgeUser = fallbackUser;
+            } else {
+                bridgeUser = insertedUser;
+            }
+        }
+
+        if (!bridgeUser) {
+            return NextResponse.json({ error: 'Bridge user tidak ditemukan' }, { status: 404 });
+        }
+
+        const balanceBefore = Number(bridgeUser.copytrade_balance || 0);
         const change = Number(amount);
         const newBalance = Math.max(0, balanceBefore + change);
 
         const { error } = await copytradeSupabase
             .from('ct_users')
             .update({ copytrade_balance: newBalance })
-            .eq('id', userId);
+            .eq('id', bridgeUser.id);
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 500 });
@@ -74,7 +146,7 @@ export async function POST(req: Request) {
         const { error: ledgerError } = await copytradeSupabase
             .from('ct_ledger')
             .insert({
-                user_id: userId,
+                user_id: bridgeUser.id,
                 order_id: null,
                 entry_type: 'admin_adjustment',
                 direction: change > 0 ? 'credit' : 'debit',
@@ -83,14 +155,14 @@ export async function POST(req: Request) {
                 balance_before: balanceBefore,
                 balance_after: newBalance,
                 actor_email: email,
-                note: `${String(reason).trim()} (target: ${user.email || '-'})`,
+                note: `${reason} (target: ${bridgeUser.email || targetEmail || '-'})`,
             });
 
         if (ledgerError && ledgerError.code !== '42P01') {
             return NextResponse.json({ error: ledgerError.message }, { status: 500 });
         }
 
-        return NextResponse.json({ success: true, newBalance });
+        return NextResponse.json({ success: true, bridgeUserId: bridgeUser.id, newBalance });
     } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
