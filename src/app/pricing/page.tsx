@@ -3,14 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon } from '@/components/PremiumIcons';
-
-// Helper to construct exact IDR strings
-const priceStr = (amount: number) => {
-    return `Rp ${amount.toLocaleString('id-ID')}`;
-};
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string; savingsText?: string; promoSlots?: number }>> = {
     PRO: [
@@ -89,9 +84,8 @@ const PRICING_PLANS = [
 
 export default function PricingPage() {
     const { data: session } = useSession();
-    const t = useTranslations('nav');
+    const router = useRouter();
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
-    const [stats, setStats] = useState({ users: 100, predictions: 5000, accuracy: 95.8 });
 
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
         PRO: '3months',
@@ -101,15 +95,6 @@ export default function PricingPage() {
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
 
     useEffect(() => {
-        fetch('/api/public/stats')
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.users) {
-                    setStats(data);
-                }
-            })
-            .catch(err => console.error('Failed to fetch stats', err));
-
         fetch('/api/pricing/slots')
             .then(res => res.json())
             .then(data => {
@@ -127,7 +112,7 @@ export default function PricingPage() {
         }
 
         if (planId === 'BASIC') {
-            window.location.href = '/analisa-market';
+            router.push('/analisa-market');
             return;
         }
 
@@ -136,7 +121,7 @@ export default function PricingPage() {
         const durationOption = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
         const days = durationOption?.days || 30;
 
-        window.location.href = `/payment/transfer?plan=${planId}&duration=${duration}&days=${days}`;
+        router.push(`/payment/transfer?plan=${planId}&duration=${duration}&days=${days}`);
     };
 
     const getPlanPricing = (planId: string) => {
@@ -339,7 +324,7 @@ export default function PricingPage() {
                 })}
 
                 <p className="text-center text-slate-500 text-sm mt-4">
-                    * Pembayaran menggunakan QRIS otomatis. Mendukung semua e-wallet dan mobile banking.
+                    * Pembayaran menggunakan QRIS via qris.id. Mendukung semua e-wallet dan mobile banking yang support QRIS.
                 </p>
             </section>
 

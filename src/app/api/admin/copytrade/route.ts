@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient from '@/lib/turso';
-
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+        if (!isAdminEmail(session?.user?.email)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
@@ -53,7 +52,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+        if (!isAdminEmail(session?.user?.email)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 

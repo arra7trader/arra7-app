@@ -2,14 +2,13 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
-
-const ADMIN_EMAILS = new Set(['apmexplore@gmail.com', 'admin@arra.com']);
+import { isAdminEmail } from '@/lib/admin-access';
 
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         const email = session?.user?.email?.toLowerCase() || '';
-        if (!ADMIN_EMAILS.has(email)) {
+        if (!isAdminEmail(email)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

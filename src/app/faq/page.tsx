@@ -26,7 +26,7 @@ const FAQ_DATA = [
         category: 'Pembayaran',
         questions: [
             { q: 'Bagaimana cara upgrade?', a: 'Pilih paket di halaman Pricing, transfer, konfirmasi via Telegram @arra7trader.' },
-            { q: 'Metode pembayaran apa yang tersedia?', a: 'Transfer Bank BCA, QRIS, dan E-Wallet.' },
+            { q: 'Metode pembayaran apa yang tersedia?', a: 'Pembayaran hanya melalui QRIS (qris.id), bisa dibayar dari semua e-wallet dan mobile banking yang mendukung QRIS.' },
             { q: 'Berapa lama durasi membership?', a: 'Semua paket berbayar berlaku 30 hari sejak aktivasi.' },
         ]
     },

@@ -42,7 +42,9 @@ export default function CopytradeSystemGuidePage() {
                         <ol className="mt-3 list-decimal space-y-1 pl-4 text-sm text-[var(--text-secondary)]">
                             <li>Masuk ke <code>/copytrade-bridge</code> lalu generate license key.</li>
                             <li>Pasang EA bridge di MT4/MT5 dan isi license key.</li>
-                            <li>Lakukan topup kredit (1 kredit = 1 eksekusi).</li>
+                            <li>Buat order topup kredit via QRIS (qris.id), lalu lakukan pembayaran.</li>
+                            <li>Kirim bukti pembayaran (ref transaksi/catatan/link bukti) dari panel topup.</li>
+                            <li>Tunggu verifikasi admin hingga status order menjadi <code>credited</code>.</li>
                             <li>EA membaca endpoint validasi signal secara periodik.</li>
                             <li>Trade log dikirim balik agar balance dan status sinkron.</li>
                         </ol>
@@ -54,7 +56,9 @@ export default function CopytradeSystemGuidePage() {
                             <li>Buka <code>/admin/copytrade-bridge</code>.</li>
                             <li>Review provider registrations (approve/reject/deactivate).</li>
                             <li>Broadcast signal bridge untuk EA users.</li>
-                            <li>Kelola saldo kredit user bridge.</li>
+                            <li>Review topup QRIS status <code>paid</code> lalu approve/reject.</li>
+                            <li>Setiap approve topup akan otomatis mengkredit saldo + menulis ledger audit.</li>
+                            <li>Kelola saldo kredit user bridge (manual adjustment wajib reason).</li>
                             <li>Pantau metric aktif user, signal volume, dan konsistensi logs.</li>
                         </ol>
                     </article>
@@ -68,6 +72,7 @@ export default function CopytradeSystemGuidePage() {
                         <p><code>/api/copytrade/signals</code> - follower/provider signal feed.</p>
                         <p><code>/api/copytrade/purchase-signal</code> - unlock premium signal.</p>
                         <p><code>/api/copytrade-bridge/user/*</code> - key + bridge identity.</p>
+                        <p><code>/api/copytrade-bridge/topup/*</code> - create order, submit proof, status, optional webhook qris.id.</p>
                         <p><code>/api/copytrade-bridge/trade/*</code> - trade logs + history.</p>
                         <p><code>/api/admin/copytrade</code> - provider moderation.</p>
                         <p><code>/api/admin/copytrade-bridge/*</code> - bridge operational admin.</p>

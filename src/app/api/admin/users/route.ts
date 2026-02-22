@@ -3,17 +3,12 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient, { logActivity } from '@/lib/turso';
 import { randomUUID } from 'crypto';
-
-// Admin emails - add your admin email here
-const ADMIN_EMAILS = [
-    'apmexplore@gmail.com', // Add your email
-];
+import { isAdminEmail } from '@/lib/admin-access';
 
 export const dynamic = 'force-dynamic';
 
 export function isAdmin(email: string | null | undefined): boolean {
-    if (!email) return false;
-    return ADMIN_EMAILS.includes(email.toLowerCase());
+    return isAdminEmail(email);
 }
 
 // GET all users

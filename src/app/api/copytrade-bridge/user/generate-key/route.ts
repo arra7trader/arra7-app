@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 
-export async function POST(req: Request) {
+export async function POST() {
     try {
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
         const newKey = `ARRA-${rand()}-${rand()}`;
 
         // Upsert: update if exists, insert if not
-        let { data: ctUser } = await copytradeSupabase
+        const { data: ctUser } = await copytradeSupabase
             .from('ct_users')
             .select('id')
             .eq('email', email)
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ success: true, licenseKey: newKey });
-    } catch (error: any) {
+    } catch (error) {
         console.error('[CT GenerateKey] Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

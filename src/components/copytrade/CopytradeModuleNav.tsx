@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { isAdminEmail } from '@/lib/admin-access';
 
 type NavItem = {
     href: string;
@@ -10,8 +11,6 @@ type NavItem = {
     match: (pathname: string) => boolean;
     adminOnly?: boolean;
 };
-
-const ADMIN_EMAILS = new Set(['apmexplore@gmail.com', 'admin@arra.com']);
 
 const navItems: NavItem[] = [
     {
@@ -56,7 +55,7 @@ export default function CopytradeModuleNav() {
     const pathname = usePathname();
     const { data: session } = useSession();
     const email = session?.user?.email?.toLowerCase() || '';
-    const isAdmin = ADMIN_EMAILS.has(email);
+    const isAdmin = isAdminEmail(email);
 
     const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 

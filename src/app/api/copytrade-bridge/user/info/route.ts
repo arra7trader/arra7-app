@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -12,11 +13,16 @@ export async function GET(req: Request) {
         const email = session.user.email;
 
         // Get or create user in ct_users (Supabase copytrade DB)
-        let { data: ctUser, error } = await copytradeSupabase
+        const { data: existingUser, error: userError } = await copytradeSupabase
             .from('ct_users')
             .select('id, license_key, copytrade_balance')
             .eq('email', email)
             .single();
+        let ctUser = existingUser;
+
+        if (userError && userError.code !== 'PGRST116') {
+            return NextResponse.json({ error: userError.message }, { status: 500 });
+        }
 
         // If user doesn't exist in Supabase CT DB yet, create them
         if (!ctUser) {
@@ -53,7 +59,7 @@ export async function GET(req: Request) {
             isConnected,
             lastActive,
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error('[CT Info] Unexpected error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

@@ -1,31 +1,54 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
+import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
 
-export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const licenseKey = searchParams.get('licenseKey');
+const SIGNAL_WINDOW_MS = 5 * 60 * 1000;
+
+export async function GET(request: NextRequest) {
+    const ip = getRequestIp(request);
+    const rate = consumeRateLimit(`ct-validate-get:${ip}`, 50, 60_000);
+    if (!rate.allowed) {
+        return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+    }
+
+    const licenseKey = request.nextUrl.searchParams.get('licenseKey');
     if (!licenseKey) {
         return NextResponse.json({ error: 'licenseKey is required' }, { status: 400 });
     }
-    return validateKey(licenseKey);
+
+    return validateKey(licenseKey, false);
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
+    const ip = getRequestIp(request);
+    const rate = consumeRateLimit(`ct-validate-post:${ip}`, 120, 60_000);
+    if (!rate.allowed) {
+        return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+    }
+
+    const rawBody = await request.text();
+    const signatureCheck = verifyBridgeSignature(request, rawBody);
+    if (!signatureCheck.ok) {
+        return NextResponse.json({ error: signatureCheck.reason }, { status: 401 });
+    }
+
+    let body: { licenseKey?: string } = {};
     try {
-        const body = await req.json();
-        const { licenseKey } = body;
-        if (!licenseKey) {
-            return NextResponse.json({ error: 'licenseKey is required' }, { status: 400 });
-        }
-        return validateKey(licenseKey);
+        body = JSON.parse(rawBody);
     } catch {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+
+    const licenseKey = body.licenseKey;
+    if (!licenseKey) {
+        return NextResponse.json({ error: 'licenseKey is required' }, { status: 400 });
+    }
+
+    return validateKey(licenseKey, true);
 }
 
-async function validateKey(licenseKey: string) {
+async function validateKey(licenseKey: string, signedRequest: boolean) {
     try {
-        // Find user by license key in Supabase (ct_users table)
         const { data: user, error: userError } = await copytradeSupabase
             .from('ct_users')
             .select('id, copytrade_balance')
@@ -36,14 +59,13 @@ async function validateKey(licenseKey: string) {
             return NextResponse.json({ error: 'Invalid license key' }, { status: 401 });
         }
 
-        const isSubscribed = user.copytrade_balance > 0;
+        const isSubscribed = Number(user.copytrade_balance || 0) > 0;
+        const signalSince = new Date(Date.now() - SIGNAL_WINDOW_MS).toISOString();
 
-        // Get signals from the last 5 minutes to prevent EA from opening stale positions
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         const { data: signals, error: signalsError } = await copytradeSupabase
             .from('ai_signal_store')
-            .select('*')
-            .gte('created_at', fiveMinutesAgo)
+            .select('id, pair, type, entry_price, tp, sl, created_at')
+            .gte('created_at', signalSince)
             .order('created_at', { ascending: false })
             .limit(10);
 
@@ -53,11 +75,12 @@ async function validateKey(licenseKey: string) {
 
         return NextResponse.json({
             success: true,
-            balance: user.copytrade_balance,
+            securityMode: signedRequest ? 'signed' : 'legacy-get',
+            balance: Number(user.copytrade_balance || 0),
             isSubscribed,
             signals: isSubscribed ? (signals || []) : [],
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error('[CT Validate] Unexpected error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
