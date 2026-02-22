@@ -84,11 +84,6 @@ export default function CopytradeBridgePage() {
     const [logs, setLogs] = useState<TradeLog[]>([]);
     const [proofForm, setProofForm] = useState({
         providerReference: '',
-        proofSender: '',
-        proofChannel: '',
-        paidAmountIdr: '',
-        proofNote: '',
-        proofImageUrl: '',
     });
 
     const selectedPlan = useMemo(() => {
@@ -166,11 +161,6 @@ export default function CopytradeBridgePage() {
         if (!activeTopup) return;
         setProofForm({
             providerReference: activeTopup.providerReference || '',
-            proofSender: activeTopup.proofSender || '',
-            proofChannel: activeTopup.proofChannel || '',
-            paidAmountIdr: activeTopup.paidAmountIdr ? String(activeTopup.paidAmountIdr) : '',
-            proofNote: activeTopup.proofNote || '',
-            proofImageUrl: activeTopup.proofImageUrl || '',
         });
     }, [activeTopup]);
 
@@ -249,11 +239,10 @@ export default function CopytradeBridgePage() {
                 body: JSON.stringify({
                     orderId: activeTopup.orderId,
                     providerReference: proofForm.providerReference.trim(),
-                    proofSender: proofForm.proofSender.trim(),
-                    proofChannel: proofForm.proofChannel.trim(),
-                    paidAmountIdr: Number(proofForm.paidAmountIdr) || null,
-                    proofNote: proofForm.proofNote.trim(),
-                    proofImageUrl: proofForm.proofImageUrl.trim(),
+                    proofSender: session?.user?.name || '',
+                    proofChannel: 'telegram',
+                    paidAmountIdr: Number(activeTopup.amountIdr || 0),
+                    proofNote: 'Bukti pembayaran dikirim via Telegram @arra7trader',
                 }),
             });
             const data = await response.json();
@@ -261,6 +250,21 @@ export default function CopytradeBridgePage() {
                 throw new Error(data.error || 'Gagal mengirim bukti pembayaran');
             }
             setMessage(data.message || 'Bukti pembayaran berhasil dikirim.');
+            const telegramText = [
+                'Halo Admin ARRA7!',
+                '',
+                'Saya sudah melakukan pembayaran topup Copytrade Bridge:',
+                '',
+                `Order ID: ${activeTopup.orderId}`,
+                `Email: ${session?.user?.email || '-'}`,
+                `Nama: ${session?.user?.name || '-'}`,
+                `Paket: ${activeTopup.credits} kredit`,
+                `Nominal: Rp ${Number(activeTopup.amountIdr || 0).toLocaleString('id-ID')}`,
+                `Reference: ${proofForm.providerReference.trim() || '-'}`,
+                '',
+                'Berikut bukti screenshot pembayarannya (saya lampirkan di chat ini). Mohon diproses, terima kasih.',
+            ].join('\n');
+            window.open(`https://t.me/arra7trader?text=${encodeURIComponent(telegramText)}`, '_blank');
             await refreshTopupStatus();
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'Gagal mengirim bukti pembayaran');
@@ -449,56 +453,24 @@ export default function CopytradeBridgePage() {
                                     {['pending', 'paid', 'failed'].includes(activeTopup.status) && (
                                         <div className="mt-2 space-y-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
                                             <p className="text-xs text-[var(--text-secondary)]">
-                                                Setelah transfer, kirim bukti agar admin bisa verifikasi manual.
+                                                Sistem sama seperti pembelian paket pricing: setelah bayar, klik tombol di bawah untuk buka Telegram admin dan kirim screenshot bukti.
                                             </p>
                                             <input
                                                 value={proofForm.providerReference}
                                                 onChange={(event) => setProofForm((current) => ({ ...current, providerReference: event.target.value }))}
-                                                placeholder="Reference transaksi (opsional)"
-                                                className="w-full rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-xs"
-                                            />
-                                            <div className="grid gap-2 md:grid-cols-2">
-                                                <input
-                                                    value={proofForm.proofSender}
-                                                    onChange={(event) => setProofForm((current) => ({ ...current, proofSender: event.target.value }))}
-                                                    placeholder="Nama pengirim (opsional)"
-                                                    className="w-full rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-xs"
-                                                />
-                                                <input
-                                                    value={proofForm.proofChannel}
-                                                    onChange={(event) => setProofForm((current) => ({ ...current, proofChannel: event.target.value }))}
-                                                    placeholder="Metode bayar (DANA/OVO/MBanking)"
-                                                    className="w-full rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-xs"
-                                                />
-                                            </div>
-                                            <div className="grid gap-2 md:grid-cols-2">
-                                                <input
-                                                    value={proofForm.paidAmountIdr}
-                                                    onChange={(event) => setProofForm((current) => ({ ...current, paidAmountIdr: event.target.value }))}
-                                                    placeholder="Nominal dibayar (opsional)"
-                                                    className="w-full rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-xs"
-                                                />
-                                                <input
-                                                    value={proofForm.proofImageUrl}
-                                                    onChange={(event) => setProofForm((current) => ({ ...current, proofImageUrl: event.target.value }))}
-                                                    placeholder="Link bukti gambar (opsional)"
-                                                    className="w-full rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-xs"
-                                                />
-                                            </div>
-                                            <textarea
-                                                value={proofForm.proofNote}
-                                                onChange={(event) => setProofForm((current) => ({ ...current, proofNote: event.target.value }))}
-                                                rows={2}
-                                                placeholder="Catatan pembayaran (opsional)"
+                                                placeholder="Reference transaksi (opsional, contoh: TRX12345)"
                                                 className="w-full rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-xs"
                                             />
                                             <button
                                                 onClick={submitPaymentProof}
                                                 disabled={working}
-                                                className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                                                className="rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
                                             >
-                                                {working ? 'Mengirim...' : 'Saya Sudah Bayar, Kirim Bukti'}
+                                                {working ? 'Membuka Telegram...' : 'Konfirmasi & Kirim Bukti via Telegram'}
                                             </button>
+                                            <p className="text-[11px] text-[var(--text-muted)]">
+                                                Setelah chat Telegram terbuka, lampirkan screenshot bukti pembayaran di sana.
+                                            </p>
                                         </div>
                                     )}
                                 </div>

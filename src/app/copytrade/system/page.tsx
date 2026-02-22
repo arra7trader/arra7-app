@@ -43,7 +43,7 @@ export default function CopytradeSystemGuidePage() {
                             <li>Masuk ke <code>/copytrade-bridge</code> lalu generate license key.</li>
                             <li>Pasang EA bridge di MT4/MT5 dan isi license key.</li>
                             <li>Buat order topup kredit via QRIS (qris.id), lalu lakukan pembayaran.</li>
-                            <li>Kirim bukti pembayaran (ref transaksi/catatan/link bukti) dari panel topup.</li>
+                            <li>Kirim bukti pembayaran via Telegram admin dari tombol konfirmasi pada panel topup.</li>
                             <li>Tunggu verifikasi admin hingga status order menjadi <code>credited</code>.</li>
                             <li>EA membaca endpoint validasi signal secara periodik.</li>
                             <li>Trade log dikirim balik agar balance dan status sinkron.</li>
