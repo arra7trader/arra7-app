@@ -12,6 +12,7 @@ import DailyPerformanceSection from '@/components/home/DailyPerformanceSection';
 import AppGrid from '@/components/home/AppGrid';
 import NeuralBackground from '@/components/home/NeuralBackground';
 import VideoShowcase from '@/components/home/VideoShowcase';
+import CopytradeBridgeSection from '@/components/home/CopytradeBridgeSection';
 
 // Stats Counter Component
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -384,6 +385,7 @@ export default function Home() {
 
         </motion.div>
       </section>
+      <CopytradeBridgeSection />
       {/* Stats Section - Dynamic & Premium */}
       <section className="py-20 bg-[var(--bg-secondary)] relative overflow-hidden">
         {/* Background Decorative Elements */}

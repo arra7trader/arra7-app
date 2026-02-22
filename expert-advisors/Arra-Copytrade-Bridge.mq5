@@ -202,8 +202,10 @@ bool ProcessSignalObject(string signalJson)
    string slStr    = ExtractJsonValue(signalJson, "\"sl\":", 0);
 
    id   = Trim(id);
-   pair = StringToUpper(Trim(pair));
-   type = StringToUpper(Trim(type));
+   pair = Trim(pair);
+   type = Trim(type);
+   StringToUpper(pair);
+   StringToUpper(type);
 
    if(id == "" || pair == "" || type == "")
       return false;
@@ -368,7 +370,7 @@ bool BuildRequestHeaders(string body, string &headers)
       return true;
 
    long timestampMs = (long)TimeGMT() * 1000;
-   string timestamp = LongToString(timestampMs);
+   string timestamp = StringFormat("%I64d", timestampMs);
    string nonce = GenerateNonce();
    string signPayload = timestamp + "." + nonce + "." + body;
    string signature = HmacSha256Hex(BridgeSecret, signPayload);
@@ -529,7 +531,7 @@ string EscapeJson(string value)
       else if(ch == '\n') out += "\\n";
       else if(ch == '\r') out += "\\r";
       else if(ch == '\t') out += "\\t";
-      else out += CharToString((ushort)ch);
+      else out += StringSubstr(value, i, 1);
    }
    return out;
 }
@@ -555,7 +557,7 @@ string EscapeQuery(string value)
       else if(ch == '?')
          out += "%3F";
       else
-         out += CharToString((ushort)ch);
+         out += StringSubstr(value, i, 1);
    }
    return out;
 }
@@ -568,7 +570,7 @@ string GenerateNonce()
    long stamp = (long)TimeGMT() * 1000;
    uint rnd1 = (uint)MathRand();
    uint rnd2 = (uint)GetTickCount();
-   return LongToString(stamp) + "-" + IntegerToString((int)rnd1) + "-" + IntegerToString((int)rnd2);
+   return StringFormat("%I64d", stamp) + "-" + IntegerToString((int)rnd1) + "-" + IntegerToString((int)rnd2);
 }
 
 //+------------------------------------------------------------------+
@@ -602,7 +604,8 @@ bool Sha256Bytes(const uchar &data[], uchar &digest[])
 {
    uchar key[];
    ArrayResize(key, 0);
-   return CryptEncode(CRYPT_HASH_SHA256, data, key, digest);
+   int encoded = CryptEncode(CRYPT_HASH_SHA256, data, key, digest);
+   return (encoded > 0);
 }
 
 //+------------------------------------------------------------------+

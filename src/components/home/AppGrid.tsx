@@ -14,7 +14,7 @@ import {
     NewspaperIcon,
     HeartIcon,
     CurrencyYenIcon,
-    WrenchScrewdriverIcon
+    WifiIcon
 } from '@heroicons/react/24/solid';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
@@ -22,7 +22,6 @@ export default function AppGrid() {
     const tNav = useTranslations('nav');
     const tAI = useTranslations('aiDoctor');
     const tSent = useTranslations('sentiment');
-    const tMaintenance = useTranslations('maintenance');
 
     const [maintenanceModal, setMaintenanceModal] = useState({ isOpen: false, featureName: '' });
 
@@ -93,11 +92,15 @@ export default function AppGrid() {
             href: '/social',
             color: 'bg-teal-50 group-hover:bg-teal-100',
         },
+        {
+            id: 'copytrade-bridge',
+            label: 'Copytrade Bridge',
+            icon: <WifiIcon className="w-8 h-8 text-violet-500" />,
+            href: '/copytrade-bridge',
+            color: 'bg-violet-50 group-hover:bg-violet-100',
+            isNew: true,
+        },
     ];
-
-    const handleMaintenanceClick = (label: string) => {
-        setMaintenanceModal({ isOpen: true, featureName: label });
-    };
 
     return (
         <>
@@ -108,7 +111,7 @@ export default function AppGrid() {
                 className="w-full max-w-4xl mx-auto mt-10"
             >
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 p-6 bg-white/50 dark:bg-black/20 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
-                    {apps.map((app, index) => (
+                    {apps.map((app) => (
                         <Link key={app.id} href={app.href} className="group">
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
