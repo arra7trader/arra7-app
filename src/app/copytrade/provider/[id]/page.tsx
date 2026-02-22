@@ -80,6 +80,13 @@ export default function ProviderDetailPage() {
     const totalTrades = Number(provider.total_trades || 0);
     const winningTrades = Number(provider.winning_trades || 0);
     const losingTrades = Number(provider.losing_trades || 0);
+    const providerForFollowModal = {
+        id: provider.id,
+        display_name: provider.display_name,
+        subscription_fee: Number(provider.subscription_fee ?? 0),
+        profit_sharing_percent: Number(provider.profit_sharing_percent ?? 0),
+        broker_name: provider.broker_name ?? undefined,
+    };
     const handleFollow = () => {
         if (!session?.user?.email) {
             void signIn();
@@ -187,7 +194,7 @@ export default function ProviderDetailPage() {
 
             {openFollowModal && (
                 <FollowSettingsModal
-                    provider={provider}
+                    provider={providerForFollowModal}
                     onClose={() => setOpenFollowModal(false)}
                 />
             )}
