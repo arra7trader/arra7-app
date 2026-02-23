@@ -2,23 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { CHATBOT_SYSTEM_PROMPT } from '@/lib/chatbot-prompt';
-import { generateTextHybrid } from '@/lib/ai-provider';
+import { generateTextHybrid, hasAnyAIProviderConfigured } from '@/lib/ai-provider';
 
 export async function POST(request: NextRequest) {
     try {
-        // AUTHENTICATION CHECK
         let userName = 'Trader';
         let membershipTier = 'GUEST';
 
-        // 1. Check Session (Web)
         const session = await getServerSession(authOptions);
         if (session?.user) {
             userName = session.user.name || 'Trader';
-            // Assuming membership is stored in session or we fetch it. 
-            // For now, default to what's in session or basic.
-            membershipTier = (session.user as any).membership || 'BASIC';
+            membershipTier = (session.user as { membership?: string }).membership || 'BASIC';
         } else {
-            // 2. Check Mobile Bearer Token (if implementing for mobile later)
             const authHeader = request.headers.get('Authorization');
             if (authHeader?.startsWith('Bearer ')) {
                 const token = authHeader.split(' ')[1];
@@ -30,7 +25,7 @@ export async function POST(request: NextRequest) {
                         try {
                             const userRes = await turso.execute({
                                 sql: 'SELECT name, membership FROM users WHERE email = ?',
-                                args: [userEmail]
+                                args: [userEmail],
                             });
                             if (userRes.rows.length > 0) {
                                 userName = userRes.rows[0].name as string;
@@ -51,75 +46,57 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Message required' }, { status: 400 });
         }
 
-        // VALIDATE API KEYS (Critical for Deployment)
-        const hasGroq = !!process.env.GROQ_API_KEY;
+        const hasProvider = hasAnyAIProviderConfigured();
+        console.log(`[API/Chat] Request received. AI provider configured: ${hasProvider}`);
 
-        console.log(`[API/Chat] Request received. Keys Present - Groq: ${hasGroq}`);
-
-        if (!hasGroq) {
-            console.error('CRITICAL: No AI API Keys configured (GROQ_API_KEY)');
+        if (!hasProvider) {
+            console.error('CRITICAL: No AI provider keys configured.');
             return NextResponse.json(
-                { reply: "Maaf Kak, sistem AI belum dikonfigurasi oleh Admin (Missing API Keys). 🔧" },
-                { status: 503 }
+                { reply: 'Maaf, sistem AI belum dikonfigurasi oleh Admin (Missing API Keys).' },
+                { status: 503 },
             );
         }
 
-        // PREPARE SYSTEM PROMPT WITH CONTEXT
         const systemPrompt = CHATBOT_SYSTEM_PROMPT
             .replace('{userName}', userName)
             .replace('{membershipTier}', membershipTier);
 
-        // BUILD MESSAGES ARRAY
-        // Include partial history for context (limit to last 6 messages)
-        // Map history to simple { role, content } objects
-        const history = (conversationHistory || []).slice(-6).map((m: any) => ({
+        const history = (conversationHistory || []).slice(-6).map((m: { role: string; content: string }) => ({
             role: m.role,
-            content: m.content
+            content: m.content,
         }));
 
-        // Add current user message
         history.push({ role: 'user', content: message });
 
-        // CALL HYBRID AI (Pure Groq Multi-Key)
-        // Uses generateTextHybrid which handles the key rotation automatically
         const { text } = await generateTextHybrid({
             system: systemPrompt,
             messages: history,
-            temperature: 0.7, // Slightly creative for "chill" vibe
+            temperature: 0.7,
             maxTokens: 500,
         });
 
-        const reply = text || "Waduh, aku lagi bingung nih Kak. Coba tanya lagi ya? 🤔";
+        const reply = text || 'Maaf, saya tidak menemukan jawaban. Coba pertanyaan lain.';
 
-        // LOG ACTIVITY
-        // We defer this slightly to not block response if possible, or just await it effectively
-        // Since we are in a serverless function, we MUST await it or use waitUntil (if available)
-        // For safety, we await.
         if (session?.user?.id) {
             const { logActivity } = await import('@/lib/turso');
             await logActivity(session.user.id, 'ANALYSIS_CHAT', {
                 message: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
-                model: 'hybrid-groq'
+                model: 'hybrid-ai-pool',
             });
         }
 
         return NextResponse.json({ reply });
-
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Chatbot Error:', error);
 
-        // ... (error handling remains same)
-        // Provide more specific feedback if possible (e.g., API Quota)
-        let errorMessage = "Sorry Kak, ada gangguan teknis dikit. Coba refresh atau tanya lagi nanti ya! 🛠️";
-        if (error.message?.includes('401') || error.message?.includes('403')) {
-            errorMessage = "Akses AI sedang terkunci (API Key Issue). Harap lapor Admin. 🔒";
-        } else if (error.message?.includes('429')) {
-            errorMessage = "Lagi rame banget nih Kak, AI-nya pusing. Coba 1 menit lagi ya! ⏳";
+        let errorMessage = 'Maaf, ada gangguan teknis. Coba lagi beberapa saat.';
+        const message = error instanceof Error ? error.message : '';
+        if (message.includes('401') || message.includes('403')) {
+            errorMessage = 'Akses AI terkunci (API key issue). Mohon cek konfigurasi admin.';
+        } else if (message.includes('429')) {
+            errorMessage = 'Server AI sedang sibuk. Coba lagi 1 menit.';
         }
 
-        return NextResponse.json(
-            { reply: errorMessage },
-            { status: 500 }
-        );
+        return NextResponse.json({ reply: errorMessage }, { status: 500 });
     }
 }

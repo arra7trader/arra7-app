@@ -1,8 +1,6 @@
 // Multi-Timeframe Analysis (MTF) - Analyze across multiple timeframes for confluence
 import { getMarketData, formatMarketDataForAI, ForexPair, Timeframe } from './market-data';
-
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-const MODEL = 'llama-3.3-70b-versatile';
+import { generateTextHybrid } from './ai-provider';
 
 export interface MTFAnalysisResult {
     success: boolean;
@@ -52,24 +50,11 @@ export async function analyzeMultiTimeframe(pair: ForexPair): Promise<MTFAnalysi
             const formattedData = formatMarketDataForAI(marketData, tf);
             const prompt = MTF_PROMPT.replace('{market_data}', formattedData);
 
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`,
-                },
-                body: JSON.stringify({
-                    model: MODEL,
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.2,
-                    max_tokens: 500,
-                }),
+            const { text: content } = await generateTextHybrid({
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.2,
+                maxTokens: 500,
             });
-
-            if (!response.ok) continue;
-
-            const data = await response.json();
-            const content = data.choices?.[0]?.message?.content || '';
 
             try {
                 // Extract JSON from response

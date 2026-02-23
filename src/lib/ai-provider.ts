@@ -1,106 +1,212 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { generateText, ModelMessage, streamText } from 'ai';
 
-import { streamText, generateText, ModelMessage } from 'ai';
+type ProviderName = 'cerebras' | 'groq';
 
-// 1. Configure Groq Provider (Multi-Key Support) - LAZY LOADED
-let groqClients: ReturnType<typeof createOpenAI>[] = [];
-
-function ensureGroqInitialized() {
-    if (groqClients.length > 0) return;
-
-    // Load Keys
-    const apiKeysEnv = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
-    const groqApiKeys = apiKeysEnv.split(',').map(k => k.trim()).filter(k => k.length > 0);
-
-    // Auto-detect GROQ_API_KEY_2 ... 10
-    for (let i = 2; i <= 10; i++) {
-        const key = process.env[`GROQ_API_KEY_${i}`];
-        if (key && key.trim().length > 0) {
-            groqApiKeys.push(key.trim());
-        }
-    }
-
-    if (groqApiKeys.length === 0) {
-        console.warn('[AI Provider] ⚠️ NO GROQ API KEYS FOUND! Using empty string fallback.');
-        groqApiKeys.push('');
-    }
-
-    console.log(`[AI Provider] Loaded ${groqApiKeys.length} Groq API Keys for rotation.`);
-
-    // Create clients
-    groqClients = groqApiKeys.map(apiKey => createOpenAI({
-        baseURL: 'https://api.groq.com/openai/v1',
-        apiKey,
-    }));
-}
-
-// Function to get a Groq model with Round Robin support
-function getGroqModel(index?: number) {
-    ensureGroqInitialized(); // Lazy Init
-
-    const selectedIndex = index !== undefined
-        ? index % groqClients.length
-        : Math.floor(Math.random() * groqClients.length);
-
-    const selectedClient = groqClients[selectedIndex];
-    // Using Llama 3.1 8B Instant as requested (Speed optimized)
-    return selectedClient('llama-3.1-8b-instant');
-}
-
-// Export using Getter for dynamic selection (Default: Random)
-export const AI_MODELS = {
-    get groq() { return getGroqModel(); },
+type ProviderEntry = {
+    provider: ProviderName;
+    modelId: string;
+    modelFactory: ReturnType<typeof createOpenAI>;
 };
 
-/**
- * Streams text with automatic failover: Groq -> Gemini -> Gemini Pro
- */
+const providerPool: ProviderEntry[] = [];
+
+function splitCsv(value?: string): string[] {
+    return (value || '')
+        .split(',')
+        .map((v) => v.trim())
+        .filter((v) => v.length > 0);
+}
+
+function collectKeys(baseVars: string[], numberedUntil = 20): string[] {
+    const keys: string[] = [];
+    for (const base of baseVars) {
+        keys.push(...splitCsv(process.env[base]));
+        for (let i = 2; i <= numberedUntil; i++) {
+            const value = process.env[`${base}_${i}`];
+            if (value && value.trim().length > 0) {
+                keys.push(value.trim());
+            }
+        }
+    }
+    return Array.from(new Set(keys));
+}
+
+function ensureProvidersInitialized() {
+    if (providerPool.length > 0) {
+        return;
+    }
+
+    const cerebrasModel =
+        process.env.CEREBRAS_MODEL ||
+        process.env.CELEBRAS_MODEL ||
+        'llama3.1-8b';
+    const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
+    const cerebrasKeys = collectKeys([
+        'CEREBRAS_API_KEYS',
+        'CEREBRAS_API_KEY',
+        // Accept common typo to reduce config mistakes.
+        'CELEBRAS_API_KEYS',
+        'CELEBRAS_API_KEY',
+    ]);
+
+    const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
+
+    for (const apiKey of cerebrasKeys) {
+        providerPool.push({
+            provider: 'cerebras',
+            modelId: cerebrasModel,
+            modelFactory: createOpenAI({
+                baseURL: 'https://api.cerebras.ai/v1',
+                apiKey,
+            }),
+        });
+    }
+
+    for (const apiKey of groqKeys) {
+        providerPool.push({
+            provider: 'groq',
+            modelId: groqModel,
+            modelFactory: createOpenAI({
+                baseURL: 'https://api.groq.com/openai/v1',
+                apiKey,
+            }),
+        });
+    }
+
+    if (providerPool.length === 0) {
+        console.warn(
+            '[AI Provider] No API keys found. Set CEREBRAS_API_KEY or GROQ_API_KEY (and optional numbered variants).',
+        );
+        return;
+    }
+
+    const cerebrasCount = providerPool.filter((p) => p.provider === 'cerebras').length;
+    const groqCount = providerPool.filter((p) => p.provider === 'groq').length;
+    console.log(
+        `[AI Provider] Loaded ${providerPool.length} keys (Cerebras=${cerebrasCount}, Groq=${groqCount}).`,
+    );
+}
+
+function getPrimaryModel(index?: number) {
+    ensureProvidersInitialized();
+    if (providerPool.length === 0) {
+        throw new Error('No AI provider keys configured');
+    }
+
+    const selectedIndex =
+        index !== undefined
+            ? index % providerPool.length
+            : Math.floor(Math.random() * providerPool.length);
+    const selected = providerPool[selectedIndex];
+    return selected.modelFactory(selected.modelId);
+}
+
+function getProviderInfo(index: number) {
+    const selected = providerPool[index % providerPool.length];
+    return `${selected.provider}:${selected.modelId}`;
+}
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+    return 'unknown error';
+}
+
+function isPermanentProviderError(message: string): boolean {
+    const normalized = message.toLowerCase();
+    return (
+        normalized.includes('organization_restricted') ||
+        normalized.includes('organization has been restricted') ||
+        normalized.includes('invalid api key') ||
+        normalized.includes('unauthorized')
+    );
+}
+
+export function hasAnyAIProviderConfigured(): boolean {
+    ensureProvidersInitialized();
+    return providerPool.length > 0;
+}
+
+export function getAIProviderStats() {
+    ensureProvidersInitialized();
+    const cerebras = providerPool.filter((p) => p.provider === 'cerebras').length;
+    const groq = providerPool.filter((p) => p.provider === 'groq').length;
+    return {
+        total: providerPool.length,
+        cerebras,
+        groq,
+    };
+}
+
+// Keep backward compatibility for existing imports.
+export const AI_MODELS = {
+    get groq() {
+        return getPrimaryModel();
+    },
+    get primary() {
+        return getPrimaryModel();
+    },
+};
+
 export async function streamTextHybrid(params: {
     system?: string;
     messages: ModelMessage[];
     maxTokens?: number;
     temperature?: number;
 }) {
-    console.log('[AI Provider] Starting StreamHybrid...');
+    ensureProvidersInitialized();
+    if (providerPool.length === 0) {
+        throw new Error('No AI provider keys configured');
+    }
 
-    let lastError: any = null;
-    const MAX_RETRIES = 3;
+    let lastError: unknown = null;
+    const maxAttempts = providerPool.length;
+    const startIndex = Math.floor(Math.random() * providerPool.length);
 
-    // Ensure clients are initialized before accessing length
-    ensureGroqInitialized();
-    // Start with a random key index
-    const startIndex = Math.floor(Math.random() * groqClients.length);
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (providerPool.length === 0) {
+            break;
+        }
 
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        const providerIndex = (startIndex + attempt) % providerPool.length;
+        const providerLabel = getProviderInfo(providerIndex);
         try {
-            // Round Robin Rotation: (Start + Attempt) % Total
-            const keyIndex = (startIndex + attempt) % groqClients.length;
-            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq Key #${keyIndex + 1}...`);
-
-            // 1. Try Primary (Groq) with rotation
+            console.log(
+                `[AI Provider] Stream attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
+            );
             return await streamText({
-                model: getGroqModel(keyIndex),
+                model: getPrimaryModel(providerIndex),
                 system: params.system,
                 messages: params.messages,
                 maxOutputTokens: params.maxTokens,
                 temperature: params.temperature,
             });
-        } catch (error: any) {
-            console.error(`[AI Provider] ❌ Attempt ${attempt + 1} failed:`, error.message);
+        } catch (error: unknown) {
             lastError = error;
-            // Continue to next attempt with a guaranteed different key (if available)
+            const message = getErrorMessage(error);
+            console.error(
+                `[AI Provider] Stream attempt ${attempt + 1} failed: ${message}`,
+            );
+            if (isPermanentProviderError(message) && providerPool.length > 0) {
+                const removeIndex = providerIndex % providerPool.length;
+                providerPool.splice(removeIndex, 1);
+                console.warn(`[AI Provider] Removed provider from pool due to permanent error: ${providerLabel}`);
+            }
         }
     }
 
-    console.error('[AI Provider] ❌ All retry attempts failed.');
-    throw lastError || new Error('All AI attempts failed');
+    if (lastError instanceof Error) {
+        throw lastError;
+    }
+    throw new Error('All AI provider attempts failed');
 }
 
-// ...
-
-/**
- * Generates text (non-streaming) with automatic failover.
- */
 export async function generateTextHybrid(params: {
     prompt?: string;
     messages?: ModelMessage[];
@@ -108,49 +214,63 @@ export async function generateTextHybrid(params: {
     maxTokens?: number;
     temperature?: number;
 }) {
-    // Construct options dynamically to satisfy Prompt union type
-    const baseOptions: any = {
-        system: params.system,
-        maxOutputTokens: params.maxTokens,
-        temperature: params.temperature,
-    };
-
-    if (params.prompt) {
-        baseOptions.prompt = params.prompt;
-    } else if (params.messages) {
-        baseOptions.messages = params.messages;
-    } else {
+    if (!params.prompt && !params.messages) {
         throw new Error('Either prompt or messages must be provided');
     }
 
-    console.log('[AI Provider] Starting GenerateHybrid...');
+    ensureProvidersInitialized();
+    if (providerPool.length === 0) {
+        throw new Error('No AI provider keys configured');
+    }
 
-    let lastError: any = null;
-    const MAX_RETRIES = 3;
+    let lastError: unknown = null;
+    const maxAttempts = providerPool.length;
+    const startIndex = Math.floor(Math.random() * providerPool.length);
 
-    // Ensure clients are initialized before accessing length
-    ensureGroqInitialized();
-    // Start with a random key index
-    const startIndex = Math.floor(Math.random() * groqClients.length);
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (providerPool.length === 0) {
+            break;
+        }
 
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        const providerIndex = (startIndex + attempt) % providerPool.length;
+        const providerLabel = getProviderInfo(providerIndex);
         try {
-            // Round Robin Rotation: (Start + Attempt) % Total
-            const keyIndex = (startIndex + attempt) % groqClients.length;
-            console.log(`[AI Provider] Attempt ${attempt + 1}/${MAX_RETRIES} using Groq Key #${keyIndex + 1}...`);
+            console.log(
+                `[AI Provider] Generate attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
+            );
+            if (params.prompt) {
+                return await generateText({
+                    model: getPrimaryModel(providerIndex),
+                    system: params.system,
+                    maxOutputTokens: params.maxTokens,
+                    temperature: params.temperature,
+                    prompt: params.prompt,
+                });
+            }
 
-            // 1. Try Primary (Groq) with rotation
             return await generateText({
-                model: getGroqModel(keyIndex),
-                ...baseOptions,
+                model: getPrimaryModel(providerIndex),
+                system: params.system,
+                maxOutputTokens: params.maxTokens,
+                temperature: params.temperature,
+                messages: params.messages || [],
             });
-        } catch (error: any) {
-            console.error(`[AI Provider] ❌ Attempt ${attempt + 1} failed:`, error.message);
+        } catch (error: unknown) {
             lastError = error;
-            // Continue to next attempt with a guaranteed different key (if available)
+            const message = getErrorMessage(error);
+            console.error(
+                `[AI Provider] Generate attempt ${attempt + 1} failed: ${message}`,
+            );
+            if (isPermanentProviderError(message) && providerPool.length > 0) {
+                const removeIndex = providerIndex % providerPool.length;
+                providerPool.splice(removeIndex, 1);
+                console.warn(`[AI Provider] Removed provider from pool due to permanent error: ${providerLabel}`);
+            }
         }
     }
 
-    console.error('[AI Provider] ❌ All retry attempts failed.');
-    throw lastError || new Error('All AI attempts failed');
+    if (lastError instanceof Error) {
+        throw lastError;
+    }
+    throw new Error('All AI provider attempts failed');
 }

@@ -1,8 +1,7 @@
-import { streamTextHybrid } from '@/lib/ai-provider';
+import { hasAnyAIProviderConfigured } from '@/lib/ai-provider';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import { ANALYSIS_PROMPT } from '@/lib/analysis-prompt';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -18,18 +17,15 @@ export async function POST(req: Request) {
 
         // TEMPORARY BYPASS FOR DEBUGGING: Allow if clearly not production or if we want to test
         // In production, uncomment the check below:
-        // if (userTier !== 'VVIP' && userTier !== 'VIP') { // Allow VIP for now?
+        // if (userTier !== 'VVIP' && userTier !== 'VIP') {
         //     console.warn('[VVIP Chat] Unauthorized access attempt.');
         //     return NextResponse.json({ error: 'Akses khusus VVIP. Silakan upgrade membership Anda.' }, { status: 403 });
         // }
 
-        // VALIDATE API KEYS
-        // Check for ANY valid key (Groq or Google)
-        const hasGroq = !!(process.env.GROQ_API_KEY || process.env.GROQ_API_KEYS);
-        const hasGoogle = !!process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-        if (!hasGroq && !hasGoogle) {
-            console.error('[VVIP Chat] CRITICAL: No AI API keys found.');
+        // Validate AI providers (Cerebras/Groq pool).
+        const hasProvider = hasAnyAIProviderConfigured();
+        if (!hasProvider) {
+            console.error('[VVIP Chat] CRITICAL: No AI provider keys found.');
             return NextResponse.json({ error: 'Sistem AI sedang maintenance (Missing Configuration).' }, { status: 503 });
         }
 
@@ -177,14 +173,18 @@ Now, respond to the user's request below.`;
         // Call it with optional init parameter to get Response object
         return result.toTextStreamResponse();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('[VVIP Chat] Unhandled Error:', error);
 
         // Detailed error for client (in dev) or generic in prod
-        const errorMessage = error.message || 'Terjadi kesalahan internal pada server AI.';
+        const errorMessage = error instanceof Error
+            ? error.message
+            : 'Terjadi kesalahan internal pada server AI.';
         return NextResponse.json({
             error: errorMessage,
             details: process.env.NODE_ENV === 'development' ? String(error) : undefined
         }, { status: 500 });
     }
 }
+
+

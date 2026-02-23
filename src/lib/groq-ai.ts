@@ -1,9 +1,6 @@
 // Groq AI Service for ARRA7 Analysis
 import { generateTextHybrid } from './ai-provider';
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-const MODEL = 'llama-3.1-8b-instant';
-
 import { ANALYSIS_PROMPT } from './analysis-prompt';
 
 
