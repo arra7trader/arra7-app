@@ -1,5 +1,3 @@
-const DEFAULT_ADMIN_EMAILS = ['apmexplore@gmail.com', 'admin@arra.com'];
-
 function parseEnvAdminEmails(): string[] {
     const raw = process.env.ADMIN_EMAILS || '';
     if (!raw.trim()) return [];
@@ -10,10 +8,7 @@ function parseEnvAdminEmails(): string[] {
         .filter(Boolean);
 }
 
-export const ADMIN_EMAIL_SET = new Set([
-    ...DEFAULT_ADMIN_EMAILS.map((email) => email.toLowerCase()),
-    ...parseEnvAdminEmails(),
-]);
+export const ADMIN_EMAIL_SET = new Set(parseEnvAdminEmails());
 
 export function isAdminEmail(email: string | null | undefined): boolean {
     if (!email) return false;
