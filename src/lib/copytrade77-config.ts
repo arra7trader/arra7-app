@@ -14,6 +14,7 @@ function parseBoolSafe(value: string | undefined, fallback: boolean): boolean {
 
 export const CT77_CONFIG = {
   creditRateIdr: parseIntSafe(process.env.CT77_CREDIT_RATE_IDR, 1000),
+  minTopupIdr: parseIntSafe(process.env.CT77_MIN_TOPUP_IDR, 25000),
   signalCostCredits: parseIntSafe(process.env.CT77_SIGNAL_COST_CREDITS, 3),
   adminShareCredits: parseIntSafe(process.env.CT77_ADMIN_SHARE_CREDITS, 1),
   providerShareCredits: parseIntSafe(process.env.CT77_PROVIDER_SHARE_CREDITS, 2),
@@ -25,4 +26,3 @@ export const CT77_CONFIG = {
   qrisNmid: process.env.CT77_QRIS_NMID || '',
   bridgeHmacSecret: process.env.CT77_BRIDGE_HMAC_SECRET || '',
 };
-

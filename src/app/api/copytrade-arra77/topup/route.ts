@@ -9,6 +9,10 @@ function calculateCredits(amountIdr: number): number {
   return Math.floor(amountIdr / CT77_CONFIG.creditRateIdr);
 }
 
+function getMinimumTopupIdr(): number {
+  return Math.max(CT77_CONFIG.minTopupIdr, CT77_CONFIG.creditRateIdr);
+}
+
 export async function GET() {
   if (!isCopytrade77Configured()) {
     return NextResponse.json(
@@ -35,6 +39,7 @@ export async function GET() {
       orders: orders || [],
       pricing: {
         creditRateIdr: CT77_CONFIG.creditRateIdr,
+        minTopupIdr: getMinimumTopupIdr(),
       },
     });
   } catch (error: any) {
@@ -56,10 +61,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const amountIdr = Number(body?.amountIdr || 0);
     const proofNote = body?.proofNote ? String(body.proofNote).trim() : null;
+    const minTopupIdr = getMinimumTopupIdr();
 
-    if (!Number.isFinite(amountIdr) || amountIdr < CT77_CONFIG.creditRateIdr) {
+    if (!Number.isFinite(amountIdr) || amountIdr < minTopupIdr) {
       return NextResponse.json(
-        { status: 'error', message: `Nominal minimal Rp ${CT77_CONFIG.creditRateIdr.toLocaleString('id-ID')}.` },
+        { status: 'error', message: `Nominal minimal Rp ${minTopupIdr.toLocaleString('id-ID')}.` },
         { status: 400 }
       );
     }

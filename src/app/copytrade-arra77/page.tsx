@@ -249,10 +249,18 @@ export default function CopytradeArra77Page() {
               <h3 className="font-semibold">Topup QRIS Manual</h3>
               <p className="text-sm text-slate-600">{data?.qris?.merchantName || 'ARRA7'} | NMID {data?.qris?.nmid || '-'}</p>
               <p className="text-sm text-slate-600">Rate: {fmtIdr(data?.topupPricing?.creditRateIdr || 1000)} / credit</p>
+              <p className="text-sm text-slate-600">Minimal topup: {fmtIdr(data?.topupPricing?.minTopupIdr || 25000)}</p>
               {data?.qris?.imageUrl && (
                 <img src={String(data.qris.imageUrl)} alt="QRIS Payment" className="w-full max-w-sm rounded-xl border border-slate-200" />
               )}
-              <input type="number" value={amountIdr} onChange={(e) => setAmountIdr(Number(e.target.value || 0))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Nominal transfer" />
+              <input
+                type="number"
+                min={Number(data?.topupPricing?.minTopupIdr || 25000)}
+                value={amountIdr}
+                onChange={(e) => setAmountIdr(Number(e.target.value || 0))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                placeholder="Nominal transfer"
+              />
               <button
                 onClick={async () => {
                   try {

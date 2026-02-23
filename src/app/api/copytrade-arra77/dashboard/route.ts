@@ -105,6 +105,7 @@ export async function GET() {
       ledger: ledgerRes.data || [],
       topupPricing: {
         creditRateIdr: CT77_CONFIG.creditRateIdr,
+        minTopupIdr: Math.max(CT77_CONFIG.minTopupIdr, CT77_CONFIG.creditRateIdr),
         signalCostCredits: CT77_CONFIG.signalCostCredits,
       },
       qris: {
@@ -119,4 +120,3 @@ export async function GET() {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-
