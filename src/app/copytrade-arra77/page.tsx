@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -335,7 +334,6 @@ export default function CopytradeArra77Page() {
                 Broker bebas. Setelah approve, bagi hasil per signal: admin {providerRules?.adminShareCredits || 1} credit,
                 provider {providerRules?.providerShareCredits || 2} credit.
               </p>
-              <p className="text-xs text-slate-500">Opsional review admin manual: <Link className="underline" href="/admin/copytrade-arra77">/admin/copytrade-arra77</Link></p>
             </div>
           </div>
         )}
