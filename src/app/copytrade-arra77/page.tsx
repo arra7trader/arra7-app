@@ -5,6 +5,22 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 type Tab = 'overview' | 'providers' | 'provider-system' | 'topup' | 'setup';
+type DashboardPanel = 'activity' | 'wallet' | 'operations';
+
+interface TabCard {
+  key: Tab;
+  title: string;
+  short: string;
+  desc: string;
+  gradient: string;
+}
+
+interface DashboardPanelCard {
+  key: DashboardPanel;
+  title: string;
+  short: string;
+  desc: string;
+}
 
 function fmtDate(v?: string | null) {
   if (!v) return '-';
@@ -28,6 +44,7 @@ export default function CopytradeArra77Page() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [tab, setTab] = useState<Tab>('overview');
+  const [dashboardPanel, setDashboardPanel] = useState<DashboardPanel>('activity');
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -91,6 +108,15 @@ export default function CopytradeArra77Page() {
     return j;
   }
 
+  async function followProvider(providerId: string) {
+    try {
+      await act('/api/copytrade-arra77/follow', { providerId, fixedLot: 0.01, oneTradeAtATime: true }, 'Follow berhasil');
+      await refresh();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
+
   function openTelegramTopupConfirmation(order: { id: string; amount_idr: number; credit_amount: number }) {
     const merchantName = data?.qris?.merchantName || 'ARRA7 FULLSTACK DEVELOPER';
     const nmid = data?.qris?.nmid || '-';
@@ -122,6 +148,67 @@ export default function CopytradeArra77Page() {
   const challengeProgressPct = myChallenge
     ? Math.min(100, Math.round((Number(myChallenge.totalTrades || 0) / Math.max(1, Number(myChallenge.targetTrades || 1))) * 100))
     : 0;
+  const activeProviders = (providers || []).filter((p) => String(p?.status || '').toUpperCase() === 'APPROVED');
+  const activeFollowProviders = activeProviders.filter((p) => String(p?.myFollowStatus || '').toUpperCase() === 'ACTIVE');
+  const onlineTerminals = (terminals || []).filter((t) => String(t?.status || '').toUpperCase() === 'ONLINE');
+  const pendingTopups = (orders || []).filter((o) => ['DRAFT', 'SUBMITTED'].includes(String(o?.status || '').toUpperCase()));
+  const dashboardPanels: DashboardPanelCard[] = [
+    {
+      key: 'activity',
+      title: 'Aktivitas Trade',
+      short: 'AT',
+      desc: 'Open trade dan history eksekusi.',
+    },
+    {
+      key: 'wallet',
+      title: 'Wallet & Topup',
+      short: 'WL',
+      desc: 'Ledger credit dan status topup.',
+    },
+    {
+      key: 'operations',
+      title: 'Bridge & Follow',
+      short: 'OP',
+      desc: 'Terminal MT5 dan relasi follow.',
+    },
+  ];
+  const tabCards: TabCard[] = [
+    {
+      key: 'overview',
+      title: 'Dashboard',
+      short: 'DB',
+      desc: 'Pantau posisi, history, dan credit.',
+      gradient: 'from-blue-600 to-cyan-500',
+    },
+    {
+      key: 'providers',
+      title: 'Provider',
+      short: 'PR',
+      desc: 'Follow provider dan cek performa.',
+      gradient: 'from-indigo-600 to-blue-500',
+    },
+    {
+      key: 'provider-system',
+      title: 'Sistem Provider',
+      short: 'SP',
+      desc: 'Alur challenge dan pembagian hasil.',
+      gradient: 'from-emerald-600 to-teal-500',
+    },
+    {
+      key: 'topup',
+      title: 'Topup',
+      short: 'TP',
+      desc: 'Isi saldo credit via QRIS.',
+      gradient: 'from-amber-500 to-orange-500',
+    },
+    {
+      key: 'setup',
+      title: 'Setup EA',
+      short: 'EA',
+      desc: 'Generate key bridge dan pasang EA.',
+      gradient: 'from-slate-700 to-slate-900',
+    },
+  ];
 
   return (
     <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
@@ -130,7 +217,7 @@ export default function CopytradeArra77Page() {
           <p className="text-xs font-semibold tracking-widest uppercase text-blue-700">Copytrade ARRA77</p>
           <h1 className="text-2xl font-bold text-slate-900 mt-2">AI Signal + EA MT5 + Credit Wallet</h1>
           <p className="text-sm text-slate-600 mt-2">1 signal = 3 credits, 1 credit = Rp1.000, one-trade lock aktif by default.</p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
             <div className="rounded-xl bg-white border border-slate-200 p-3">
               <p className="text-xs text-slate-500">Saldo</p>
               <p className="font-semibold">{data?.summary?.balanceCredits ?? 0} cr</p>
@@ -161,64 +248,218 @@ export default function CopytradeArra77Page() {
         {msg && <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">{msg}</div>}
         {error && <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>}
 
-        <div className="flex gap-2 overflow-auto">
-          {(['overview', 'providers', 'provider-system', 'topup', 'setup'] as Tab[]).map((k) => (
-            <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-xl text-sm ${tab === k ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
-              {k === 'overview'
-                ? 'Dashboard'
-                : k === 'providers'
-                  ? 'Provider'
-                  : k === 'provider-system'
-                    ? 'Sistem Provider'
-                    : k === 'topup'
-                      ? 'Topup'
-                      : 'Setup EA'}
-            </button>
-          ))}
+        <div className="rounded-2xl bg-white border border-slate-200 p-3 sm:p-4">
+          <p className="text-xs font-semibold tracking-widest uppercase text-slate-500">Menu Fitur Copytrade</p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {tabCards.map((item) => {
+              const active = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setTab(item.key)}
+                  className={`group relative overflow-hidden rounded-2xl border p-3 text-left transition-all duration-300 ${
+                    active
+                      ? 'border-transparent text-white shadow-lg -translate-y-0.5'
+                      : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:shadow-md'
+                  }`}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`} />
+                  <div className="relative z-10">
+                    <div className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                      {item.short}
+                    </div>
+                    <p className={`mt-2 text-sm font-semibold ${active ? 'text-white' : 'text-slate-900'}`}>{item.title}</p>
+                    <p className={`mt-1 text-xs leading-relaxed ${active ? 'text-white/85' : 'text-slate-500'}`}>{item.desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {tab === 'overview' && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="space-y-4">
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
-              <h3 className="font-semibold mb-2">Open Trades</h3>
-              <div className="space-y-2 max-h-96 overflow-auto">
-                {(data?.openPositions || []).length === 0 && <p className="text-sm text-slate-500">Belum ada posisi aktif.</p>}
-                {(data?.openPositions || []).map((p: any) => (
-                  <div key={p.id} className="border border-slate-100 rounded-xl p-2 text-sm">
-                    <p className="font-medium">{p.symbol} | {p.side}</p>
-                    <p className="text-slate-600 text-xs">Lot {fmtNum(p.volume_lots)} | Entry {fmtNum(p.entry_price)} | SL {fmtNum(p.stop_loss)} | TP {fmtNum(p.take_profit)}</p>
-                    <p className="text-slate-500 text-xs">{fmtDate(p.opened_at)}</p>
-                  </div>
-                ))}
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <h3 className="font-semibold">Provider Aktif Marketplace</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Aktif: {activeProviders.length} provider | Kamu follow aktif: {activeFollowProviders.length}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setTab('providers')}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs hover:bg-slate-100"
+                >
+                  Kelola Provider
+                </button>
               </div>
-            </div>
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
-              <h3 className="font-semibold mb-2">Riwayat Trade</h3>
-              <div className="space-y-2 max-h-96 overflow-auto">
-                {(data?.recentTrades || []).length === 0 && <p className="text-sm text-slate-500">Belum ada trade closed.</p>}
-                {(data?.recentTrades || []).map((p: any) => (
-                  <div key={p.id} className="border border-slate-100 rounded-xl p-2 text-sm">
-                    <p className="font-medium">{p.symbol} | {p.side} | {p.status}</p>
-                    <p className="text-slate-600 text-xs">
-                      Entry {fmtNum(p.entry_price)} | Close {fmtNum(p.close_price)} | Pips {fmtNum(p.pips_result)} | PnL {fmtNum(p.pnl_value)}
+
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {activeProviders.length === 0 && (
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-500">
+                    Belum ada provider aktif.
+                  </div>
+                )}
+                {activeProviders.slice(0, 6).map((p) => (
+                  <div key={p.id} className="rounded-xl border border-slate-100 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold">{p.name}</p>
+                        <p className="text-xs text-slate-500">@{p.slug} | {p.riskLevel}</p>
+                      </div>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full ${p.myFollowStatus ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {p.myFollowStatus || 'Belum Follow'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2 line-clamp-2">{p.bio || 'No bio'}</p>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Winrate {p.stats?.winRatePct || 0}% | Followers {p.followers || 0}
                     </p>
-                    <p className="text-slate-500 text-xs">{fmtDate(p.closed_at)}</p>
+                    <button
+                      onClick={() => (p.myFollowStatus ? setTab('setup') : followProvider(String(p.id)))}
+                      className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${
+                        p.myFollowStatus ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-blue-600 text-white'
+                      }`}
+                    >
+                      {p.myFollowStatus ? 'Kelola di Setup EA' : 'Follow Provider'}
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
+
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
-              <h3 className="font-semibold mb-2">Credit Ledger</h3>
-              <div className="space-y-2 max-h-96 overflow-auto">
-                {(data?.ledger || []).length === 0 && <p className="text-sm text-slate-500">Belum ada transaksi.</p>}
-                {(data?.ledger || []).map((l: any) => (
-                  <div key={l.id} className="border border-slate-100 rounded-xl p-2 text-sm">
-                    <p className="font-medium">{l.direction === 'CREDIT' ? '+' : '-'}{l.amount_credits} cr | {l.entry_type}</p>
-                    <p className="text-slate-500 text-xs">{fmtDate(l.created_at)} | {l.description || '-'}</p>
-                  </div>
-                ))}
+              <p className="text-xs font-semibold tracking-widest uppercase text-slate-500">Sub Menu Dashboard</p>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {dashboardPanels.map((item) => {
+                  const active = dashboardPanel === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => setDashboardPanel(item.key)}
+                      className={`rounded-xl border p-3 text-left transition ${
+                        active ? 'border-blue-200 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold ${active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                        {item.short}
+                      </div>
+                      <p className="text-sm font-semibold mt-2">{item.title}</p>
+                      <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            {dashboardPanel === 'activity' && (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-2">Open Trades</h3>
+                  <div className="space-y-2 max-h-96 overflow-auto">
+                    {(data?.openPositions || []).length === 0 && <p className="text-sm text-slate-500">Belum ada posisi aktif.</p>}
+                    {(data?.openPositions || []).map((p: any) => (
+                      <div key={p.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                        <p className="font-medium">{p.symbol} | {p.side}</p>
+                        <p className="text-slate-600 text-xs">Lot {fmtNum(p.volume_lots)} | Entry {fmtNum(p.entry_price)} | SL {fmtNum(p.stop_loss)} | TP {fmtNum(p.take_profit)}</p>
+                        <p className="text-slate-500 text-xs">{fmtDate(p.opened_at)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-2">Riwayat Trade</h3>
+                  <div className="space-y-2 max-h-96 overflow-auto">
+                    {(data?.recentTrades || []).length === 0 && <p className="text-sm text-slate-500">Belum ada trade closed.</p>}
+                    {(data?.recentTrades || []).map((p: any) => (
+                      <div key={p.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                        <p className="font-medium">{p.symbol} | {p.side} | {p.status}</p>
+                        <p className="text-slate-600 text-xs">
+                          Entry {fmtNum(p.entry_price)} | Close {fmtNum(p.close_price)} | Pips {fmtNum(p.pips_result)} | PnL {fmtNum(p.pnl_value)}
+                        </p>
+                        <p className="text-slate-500 text-xs">{fmtDate(p.closed_at)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {dashboardPanel === 'wallet' && (
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+                  <h3 className="font-semibold">Ringkasan Wallet</h3>
+                  <p className="text-sm text-slate-700">Saldo: <span className="font-semibold">{data?.wallet?.balance_credits || 0} cr</span></p>
+                  <p className="text-sm text-slate-700">Total Topup: <span className="font-semibold">{data?.wallet?.total_topup_credits || 0} cr</span></p>
+                  <p className="text-sm text-slate-700">Total Spent: <span className="font-semibold">{data?.wallet?.total_spent_credits || 0} cr</span></p>
+                  <button onClick={() => setTab('topup')} className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-xs">
+                    Buka Menu Topup
+                  </button>
+                </div>
+                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-2">Order Topup Pending</h3>
+                  <div className="space-y-2 max-h-72 overflow-auto">
+                    {pendingTopups.length === 0 && <p className="text-sm text-slate-500">Tidak ada topup pending.</p>}
+                    {pendingTopups.map((o) => (
+                      <div key={o.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                        <p className="font-medium">{fmtIdr(o.amount_idr)} ({o.credit_amount} cr)</p>
+                        <p className="text-xs text-slate-500">Status {o.status} | {fmtDate(o.created_at)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-2">Credit Ledger</h3>
+                  <div className="space-y-2 max-h-72 overflow-auto">
+                    {(data?.ledger || []).length === 0 && <p className="text-sm text-slate-500">Belum ada transaksi.</p>}
+                    {(data?.ledger || []).map((l: any) => (
+                      <div key={l.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                        <p className="font-medium">{l.direction === 'CREDIT' ? '+' : '-'}{l.amount_credits} cr | {l.entry_type}</p>
+                        <p className="text-slate-500 text-xs">{fmtDate(l.created_at)} | {l.description || '-'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {dashboardPanel === 'operations' && (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-2">Follow Relations</h3>
+                  <div className="space-y-2 max-h-96 overflow-auto">
+                    {(data?.follows || []).length === 0 && <p className="text-sm text-slate-500">Belum ada relasi follow.</p>}
+                    {(data?.follows || []).map((f: any) => (
+                      <div key={f.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                        <p className="font-medium">{f.provider?.name || 'Provider'} | {f.status}</p>
+                        <p className="text-xs text-slate-500">@{f.provider?.slug || '-'} | Lot {fmtNum(f.fixedLot)} | One-trade {f.oneTradeAtATime ? 'ON' : 'OFF'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-semibold">Terminal Bridge</h3>
+                    <span className="text-xs rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">Online {onlineTerminals.length}</span>
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-auto mt-2">
+                    {terminals.length === 0 && <p className="text-sm text-slate-500">Belum ada terminal.</p>}
+                    {terminals.map((t) => (
+                      <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                        <p className="font-medium">{t.terminal_label} | {t.status}</p>
+                        <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {t.server_name || '-'}</p>
+                        <p className="text-slate-500 text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
+                        {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={() => setTab('setup')} className="mt-3 rounded-lg bg-blue-600 text-white px-3 py-1.5 text-xs">
+                    Kelola Setup EA
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -294,15 +535,10 @@ export default function CopytradeArra77Page() {
                   <p className="text-sm text-slate-600 mt-2">{p.bio || 'No bio'}</p>
                   <p className="text-xs text-slate-500 mt-2">Winrate {p.stats?.winRatePct || 0}% | Followers {p.followers || 0}</p>
                   <button
-                    onClick={async () => {
-                      try {
-                        await act('/api/copytrade-arra77/follow', { providerId: p.id, fixedLot: 0.01, oneTradeAtATime: true }, 'Follow berhasil');
-                        await refresh();
-                      } catch (e: any) {
-                        setError(e.message);
-                      }
-                    }}
-                    className="mt-3 rounded-lg bg-blue-600 text-white px-3 py-1.5 text-sm"
+                    onClick={() => (p.myFollowStatus ? setTab('setup') : followProvider(String(p.id)))}
+                    className={`mt-3 rounded-lg px-3 py-1.5 text-sm ${
+                      p.myFollowStatus ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-blue-600 text-white'
+                    }`}
                   >
                     {p.myFollowStatus ? `Status: ${p.myFollowStatus}` : 'Follow'}
                   </button>
