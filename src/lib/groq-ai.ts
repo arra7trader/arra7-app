@@ -24,6 +24,131 @@ export interface MarketContext {
     dxyCorrelation?: string;   // DXY data and correlation assessment
 }
 
+type TradeSide = 'BUY' | 'SELL' | 'WAIT';
+
+type StopLossRule = {
+    minPips: number;
+    pipSize: number;
+};
+
+function normalizeSymbol(raw: string): string {
+    return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function getStopLossRule(symbol: string): StopLossRule {
+    const s = normalizeSymbol(symbol);
+
+    // 70 pips = 7.00 points for XAUUSD (1 pip = 0.1)
+    if (s.includes('XAU')) {
+        return { minPips: 70, pipSize: 0.1 };
+    }
+
+    // JPY pairs (1 pip = 0.01)
+    if (s.endsWith('JPY')) {
+        return { minPips: 70, pipSize: 0.01 };
+    }
+
+    // Default forex-style pip size
+    return { minPips: 70, pipSize: 0.0001 };
+}
+
+function countDecimals(raw: string): number {
+    const idx = raw.indexOf('.');
+    if (idx === -1) return 2;
+    const decimals = raw.slice(idx + 1).length;
+    return Math.max(2, Math.min(decimals, 5));
+}
+
+function parseNumber(raw: string | undefined): number | null {
+    if (!raw) return null;
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function detectPair(analysis: string, marketDataText: string): string {
+    const fromMeta = analysis.match(/💠\s*([A-Z0-9/._-]+)/i)?.[1];
+    if (fromMeta) return fromMeta;
+
+    const fromAnalysisPair = analysis.match(/PAIR:\s*([A-Z0-9/._-]+)/i)?.[1];
+    if (fromAnalysisPair) return fromAnalysisPair;
+
+    const fromInputPair = marketDataText.match(/PAIR:\s*([A-Z0-9/._-]+)/i)?.[1];
+    if (fromInputPair) return fromInputPair;
+
+    return 'XAUUSD';
+}
+
+function enforceSignalRiskRules(analysis: string, marketDataText: string): string {
+    const actionMatch = analysis.match(/\b(BUY|SELL|WAIT)\b(?:\s+(?:INSTANT|LIMIT|STOP))?/i);
+    const entryMatch = analysis.match(/\bENTRY\b[^\n]*?([0-9]+(?:\.[0-9]+)?)/i);
+    const slMatch = analysis.match(/\bSL\b[^\n]*?([0-9]+(?:\.[0-9]+)?)/i);
+
+    if (!actionMatch || !entryMatch || !slMatch) {
+        return analysis;
+    }
+
+    const side = actionMatch[1].toUpperCase() as TradeSide;
+    if (side === 'WAIT') {
+        return analysis;
+    }
+
+    const entryRaw = entryMatch[1];
+    const slRaw = slMatch[1];
+    const entry = parseNumber(entryRaw);
+    const sl = parseNumber(slRaw);
+    if (entry === null || sl === null) {
+        return analysis;
+    }
+
+    const symbol = detectPair(analysis, marketDataText);
+    const rule = getStopLossRule(symbol);
+    const minDistancePrice = rule.minPips * rule.pipSize;
+    const currentDistance = Math.abs(entry - sl);
+
+    let correctedSl = sl;
+    let shouldCorrect = false;
+
+    if (side === 'SELL') {
+        if (sl <= entry || currentDistance < minDistancePrice) {
+            correctedSl = entry + minDistancePrice;
+            shouldCorrect = true;
+        }
+    } else {
+        if (sl >= entry || currentDistance < minDistancePrice) {
+            correctedSl = entry - minDistancePrice;
+            shouldCorrect = true;
+        }
+    }
+
+    const finalDistance = Math.abs(entry - correctedSl);
+    const actualPips = finalDistance / rule.pipSize;
+    const decimals = Math.max(countDecimals(entryRaw), countDecimals(slRaw));
+
+    let fixed = analysis;
+    fixed = fixed.replace(
+        /(\bSL\b\s*:\s*)([0-9]+(?:\.[0-9]+)?)/i,
+        `$1${correctedSl.toFixed(decimals)}`,
+    );
+
+    fixed = fixed.replace(
+        /(Distance:\s*)([^\n]+)/i,
+        `$1${actualPips.toFixed(2)} pips`,
+    );
+
+    fixed = fixed.replace(
+        /(Validation:\s*)([^\n]+)/i,
+        `$1Pass - Min required: ${rule.minPips} pips, Actual: ${actualPips.toFixed(2)} pips`,
+    );
+
+    if (shouldCorrect) {
+        console.warn(
+            `[Risk Guard] Auto-corrected SL for ${normalizeSymbol(symbol)} ${side}. Entry=${entry}, OldSL=${sl}, NewSL=${correctedSl}`,
+        );
+    }
+
+    return fixed;
+}
+
 export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPredictionContext, marketContext?: MarketContext): Promise<AIAnalysisResult> {
     const systemInstruction = ANALYSIS_PROMPT;
 
@@ -64,17 +189,20 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
             throw new Error('No analysis returned from AI');
         }
 
+        const fixedText = enforceSignalRiskRules(text, marketDataText);
+
         return {
             success: true,
-            analysis: text,
-            formattedHtml: formatAnalysisToHtml(text),
+            analysis: fixedText,
+            formattedHtml: formatAnalysisToHtml(fixedText),
         };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'API Error';
         console.error('Hybrid AI Error:', error);
         return {
             success: false,
-            error: error.message || 'API Error',
+            error: message,
         };
     }
 }
@@ -119,17 +247,20 @@ export async function analyzeWithLearningMode(marketDataText: string, mlContext?
             throw new Error('No analysis returned from AI');
         }
 
+        const fixedText = enforceSignalRiskRules(text, marketDataText);
+
         return {
             success: true,
-            analysis: text,
-            formattedHtml: formatAnalysisToHtml(text),
+            analysis: fixedText,
+            formattedHtml: formatAnalysisToHtml(fixedText),
         };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'API Error';
         console.error('Learning Mode AI Error:', error);
         return {
             success: false,
-            error: error.message || 'API Error',
+            error: message,
         };
     }
 }
