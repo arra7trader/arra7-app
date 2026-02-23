@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireCopytrade77SessionProfile } from '@/lib/copytrade77-session';
 import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
+import { getOrCreateSystemProviderId } from '@/lib/copytrade77-signal-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,9 @@ export async function GET() {
   try {
     const { profile } = await requireCopytrade77SessionProfile();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
+
+    // Ensure default system provider "Arra7" is always available in marketplace.
+    await getOrCreateSystemProviderId();
 
     const [providerRes, statsRes, followerRes, myFollowRes] = await Promise.all([
       supabase
@@ -85,4 +89,3 @@ export async function GET() {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-

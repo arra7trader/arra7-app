@@ -21,6 +21,8 @@ export const CT77_CONFIG = {
   minSlPips: parseIntSafe(process.env.CT77_MIN_SL_PIPS, 70),
   oneTradeLock: parseBoolSafe(process.env.CT77_ONE_TRADE_LOCK, true),
   bridgeMaxSkewSeconds: parseIntSafe(process.env.CT77_BRIDGE_MAX_SKEW_SECONDS, 60),
+  autoAnalyzeSymbol: (process.env.CT77_AUTO_ANALYZE_SYMBOL || 'XAUUSD').trim().toUpperCase(),
+  autoAnalyzeTimeframe: (process.env.CT77_AUTO_ANALYZE_TIMEFRAME || 'M15').trim().toUpperCase(),
   qrisImageUrl: process.env.CT77_QRIS_IMAGE_URL || '/qris-payment.jpg',
   qrisMerchantName: process.env.CT77_QRIS_MERCHANT_NAME || 'ARRA7',
   qrisNmid: process.env.CT77_QRIS_NMID || '',

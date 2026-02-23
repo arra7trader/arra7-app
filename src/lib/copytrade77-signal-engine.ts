@@ -213,24 +213,61 @@ export function normalizeTradeSignal(input: {
 export async function getOrCreateSystemProviderId(): Promise<string> {
   const supabase = getCopytrade77AdminClient().schema('copytrade77');
   const adminProfileId = await getSystemAdminCopytradeProfileId();
-  const slug = 'arra77-system-ai';
+  const preferredSlug = 'arra7';
+  const fallbackSlug = 'arra77-system-ai';
+  const displayName = 'Arra7';
+  const bio = 'Provider resmi ARRA7 untuk signal otomatis AI XAUUSD.';
 
-  const existing = await supabase
+  const existingByProfile = await supabase
     .from('providers')
-    .select('id')
-    .eq('slug', slug)
+    .select('id,display_name,slug,bio,status,risk_level')
+    .eq('profile_id', adminProfileId)
     .maybeSingle();
 
-  if (existing.error) throw existing.error;
-  if (existing.data?.id) return String(existing.data.id);
+  if (existingByProfile.error) throw existingByProfile.error;
+  if (existingByProfile.data?.id) {
+    const current = existingByProfile.data as any;
+    const needUpdate =
+      String(current.display_name || '') !== displayName ||
+      String(current.bio || '') !== bio ||
+      String(current.status || '') !== 'APPROVED' ||
+      String(current.risk_level || '') !== 'MEDIUM';
+    if (needUpdate) {
+      const updateRes = await supabase
+        .from('providers')
+        .update({
+          display_name: displayName,
+          bio,
+          status: 'APPROVED',
+          risk_level: 'MEDIUM',
+          approved_by_profile_id: adminProfileId,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', current.id);
+      if (updateRes.error) throw updateRes.error;
+    }
+    return String(current.id);
+  }
+
+  const preferredSlugRes = await supabase
+    .from('providers')
+    .select('id')
+    .eq('slug', preferredSlug)
+    .maybeSingle();
+
+  if (preferredSlugRes.error) throw preferredSlugRes.error;
+  let slug = preferredSlug;
+  if (preferredSlugRes.data?.id) {
+    slug = `${fallbackSlug}-${String(adminProfileId).slice(0, 8)}`;
+  }
 
   const created = await supabase
     .from('providers')
     .insert({
       profile_id: adminProfileId,
-      display_name: 'ARRA77 System AI',
+      display_name: displayName,
       slug,
-      bio: 'System provider untuk signal otomatis dari AI analisa ARRA7.',
+      bio,
       status: 'APPROVED',
       risk_level: 'MEDIUM',
       approved_by_profile_id: adminProfileId,
@@ -475,8 +512,10 @@ export async function generateAndQueueSignalForTerminal(terminalId: string): Pro
   }
 
   const providerId = String(follow.provider_id);
-  const symbol = normalizeSymbol(String(terminal.symbol || 'XAUUSD'));
-  const aiTimeframe = timeframeToAiKey(String(terminal.timeframe || 'M15'));
+  const forcedSymbol = CT77_CONFIG.autoAnalyzeSymbol || 'XAUUSD';
+  const forcedTimeframe = CT77_CONFIG.autoAnalyzeTimeframe || 'M15';
+  const symbol = normalizeSymbol(String(forcedSymbol || terminal.symbol || 'XAUUSD'));
+  const aiTimeframe = timeframeToAiKey(String(forcedTimeframe || terminal.timeframe || 'M15'));
   const timeframe = timeframeToDisplay(aiTimeframe);
 
   const existingQueue = await queueLatestProviderSignalForTerminal({
