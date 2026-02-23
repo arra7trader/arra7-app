@@ -3,6 +3,7 @@ import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
 import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
 import { COPYTRADE_CREDITS_PER_SIGNAL } from '@/lib/copytrade-credit';
+import { normalizeBridgeOrderType } from '@/lib/copytrade-bridge-order-type';
 
 const SIGNAL_WINDOW_MS = 5 * 60 * 1000;
 
@@ -77,6 +78,21 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
             console.error('[CT Validate] Signal fetch error:', signalsError);
         }
 
+        const normalizedSignals = (signals || [])
+            .map((signal) => {
+                const normalizedType = normalizeBridgeOrderType(signal.type);
+                if (!normalizedType) {
+                    return null;
+                }
+
+                return {
+                    ...signal,
+                    pair: String(signal.pair || '').toUpperCase().trim(),
+                    type: normalizedType,
+                };
+            })
+            .filter((signal): signal is NonNullable<typeof signal> => Boolean(signal));
+
         return NextResponse.json({
             success: true,
             securityMode: signedRequest ? 'signed' : 'legacy-get',
@@ -84,7 +100,7 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
             unlimited,
             requiredCredits: COPYTRADE_CREDITS_PER_SIGNAL,
             isSubscribed,
-            signals: isSubscribed ? (signals || []) : [],
+            signals: isSubscribed ? normalizedSignals : [],
         });
     } catch (error) {
         console.error('[CT Validate] Unexpected error:', error);

@@ -90,6 +90,7 @@ export default function AdminCopytradeBridgePage() {
         tp: '',
         sl: '',
     });
+    const signalTypeOptions = ['BUY', 'SELL', 'BUY LIMIT', 'SELL LIMIT', 'BUY STOP', 'SELL STOP'];
 
     const [adjustments, setAdjustments] = useState<Record<string, string>>({});
     const [adjustmentReasons, setAdjustmentReasons] = useState<Record<string, string>>({});
@@ -358,7 +359,11 @@ export default function AdminCopytradeBridgePage() {
                             <h3 className="text-sm font-bold text-[var(--text-primary)]">Broadcast Bridge Signal</h3>
                             <div className="mt-3 grid gap-2 md:grid-cols-5">
                                 <input value={signalForm.pair} onChange={(e) => setSignalForm({ ...signalForm, pair: e.target.value })} placeholder="Pair" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
-                                <input value={signalForm.type} onChange={(e) => setSignalForm({ ...signalForm, type: e.target.value })} placeholder="Type" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
+                                <select value={signalForm.type} onChange={(e) => setSignalForm({ ...signalForm, type: e.target.value })} className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm">
+                                    {signalTypeOptions.map((orderType) => (
+                                        <option key={orderType} value={orderType}>{orderType}</option>
+                                    ))}
+                                </select>
                                 <input value={signalForm.entry_price} onChange={(e) => setSignalForm({ ...signalForm, entry_price: e.target.value })} placeholder="Entry" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
                                 <input value={signalForm.tp} onChange={(e) => setSignalForm({ ...signalForm, tp: e.target.value })} placeholder="TP" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />
                                 <input value={signalForm.sl} onChange={(e) => setSignalForm({ ...signalForm, sl: e.target.value })} placeholder="SL" className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm" />

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { isAdminEmail } from '@/lib/admin-access';
+import { normalizeBridgeOrderType } from '@/lib/copytrade-bridge-order-type';
 
 export async function POST(req: Request) {
     try {
@@ -22,11 +23,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid numeric value' }, { status: 400 });
         }
 
+        const normalizedType = normalizeBridgeOrderType(type);
+        if (!normalizedType) {
+            return NextResponse.json(
+                { error: 'Invalid order type. Use BUY, SELL, BUY LIMIT, SELL LIMIT, BUY STOP, or SELL STOP.' },
+                { status: 400 },
+            );
+        }
+
         const { data, error } = await copytradeSupabase
             .from('ai_signal_store')
             .insert({
                 pair: String(pair).toUpperCase(),
-                type: String(type).toUpperCase(),
+                type: normalizedType,
                 entry_price: Number(entry_price),
                 tp: Number(tp),
                 sl: Number(sl),

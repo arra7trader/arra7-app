@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright   "ARRA Quantum AI"
 #property link        "https://arra.ai"
-#property version     "1.11"
+#property version     "1.12"
 #property description "EA Bridge: poll API signal ARRA dan eksekusi otomatis."
 
 #include <Trade\Trade.mqh>
@@ -287,10 +287,13 @@ BridgeOrderKind ParseOrderKind(string rawType)
    StringReplace(normalized, "_", "");
    StringReplace(normalized, "-", "");
    StringReplace(normalized, " ", "");
+   StringReplace(normalized, "ORDER", "");
+   StringReplace(normalized, "ENTRY", "");
+   StringReplace(normalized, "POSITION", "");
 
-   if(normalized == "BUY" || normalized == "BUYMARKET" || normalized == "MARKETBUY")
+   if(normalized == "BUY" || normalized == "BUYMARKET" || normalized == "MARKETBUY" || normalized == "CALL")
       return BRIDGE_ORDER_BUY_MARKET;
-   if(normalized == "SELL" || normalized == "SELLMARKET" || normalized == "MARKETSELL")
+   if(normalized == "SELL" || normalized == "SELLMARKET" || normalized == "MARKETSELL" || normalized == "PUT")
       return BRIDGE_ORDER_SELL_MARKET;
    if(normalized == "BUYLIMIT" || normalized == "LIMITBUY")
       return BRIDGE_ORDER_BUY_LIMIT;
@@ -319,7 +322,46 @@ bool IsPendingOrderType(ENUM_ORDER_TYPE type)
            type == ORDER_TYPE_BUY_STOP ||
            type == ORDER_TYPE_SELL_STOP ||
            type == ORDER_TYPE_BUY_STOP_LIMIT ||
-           type == ORDER_TYPE_SELL_STOP_LIMIT);
+            type == ORDER_TYPE_SELL_STOP_LIMIT);
+}
+
+string ResolveBrokerSymbol(string requestedPair)
+{
+   string requested = Trim(requestedPair);
+   if(requested == "")
+      return "";
+
+   string requestedUpper = requested;
+   StringToUpper(requestedUpper);
+
+   if(SymbolSelect(requested, true))
+      return requested;
+
+   // Search in Market Watch first, then all server symbols.
+   for(int pass = 0; pass < 2; pass++)
+   {
+      bool onlyMarketWatch = (pass == 0);
+      int total = SymbolsTotal(onlyMarketWatch);
+      for(int i = 0; i < total; i++)
+      {
+         string candidate = SymbolName(i, onlyMarketWatch);
+         if(candidate == "")
+            continue;
+
+         string candidateUpper = candidate;
+         StringToUpper(candidateUpper);
+
+         if(candidateUpper == requestedUpper ||
+            StringFind(candidateUpper, requestedUpper) == 0 ||
+            StringFind(candidateUpper, requestedUpper) > 0)
+         {
+            if(SymbolSelect(candidate, true))
+               return candidate;
+         }
+      }
+   }
+
+   return requested;
 }
 
 bool HasActiveBridgeExposure()
@@ -354,9 +396,16 @@ bool HasActiveBridgeExposure()
 
 bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
 {
-   if(!SymbolSelect(pair, true))
+   string brokerSymbol = ResolveBrokerSymbol(pair);
+   if(brokerSymbol == "")
    {
-      if(EnableLogging) Print("SymbolSelect failed: ", pair);
+      if(EnableLogging) Print("Resolve symbol failed: empty symbol for pair ", pair);
+      return false;
+   }
+
+   if(!SymbolSelect(brokerSymbol, true))
+   {
+      if(EnableLogging) Print("SymbolSelect failed: ", pair, " resolved=", brokerSymbol);
       return false;
    }
 
@@ -369,7 +418,7 @@ bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
 
    double price = 0.0;
 
-   int digits = (int)SymbolInfoInteger(pair, SYMBOL_DIGITS);
+   int digits = (int)SymbolInfoInteger(brokerSymbol, SYMBOL_DIGITS);
    entry = NormalizeDouble(entry, digits);
    tp = NormalizeDouble(tp, digits);
    sl = NormalizeDouble(sl, digits);
@@ -386,31 +435,31 @@ bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
    if(orderKind == BRIDGE_ORDER_BUY_MARKET || orderKind == BRIDGE_ORDER_SELL_MARKET)
    {
       ENUM_ORDER_TYPE marketType = (orderKind == BRIDGE_ORDER_BUY_MARKET) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-      price = (marketType == ORDER_TYPE_BUY) ? SymbolInfoDouble(pair, SYMBOL_ASK) : SymbolInfoDouble(pair, SYMBOL_BID);
+      price = (marketType == ORDER_TYPE_BUY) ? SymbolInfoDouble(brokerSymbol, SYMBOL_ASK) : SymbolInfoDouble(brokerSymbol, SYMBOL_BID);
       if(price <= 0.0)
       {
-         if(EnableLogging) Print("Failed to get price for symbol: ", pair);
+         if(EnableLogging) Print("Failed to get price for symbol: ", brokerSymbol, " (pair=", pair, ")");
          return false;
       }
-      opened = trade.PositionOpen(pair, marketType, FixedLotSize, price, sl, tp, "ARRA Bridge");
+      opened = trade.PositionOpen(brokerSymbol, marketType, FixedLotSize, price, sl, tp, "ARRA Bridge");
    }
    else if(orderKind == BRIDGE_ORDER_BUY_LIMIT)
-      opened = trade.BuyLimit(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+      opened = trade.BuyLimit(FixedLotSize, entry, brokerSymbol, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
    else if(orderKind == BRIDGE_ORDER_SELL_LIMIT)
-      opened = trade.SellLimit(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+      opened = trade.SellLimit(FixedLotSize, entry, brokerSymbol, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
    else if(orderKind == BRIDGE_ORDER_BUY_STOP)
-      opened = trade.BuyStop(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+      opened = trade.BuyStop(FixedLotSize, entry, brokerSymbol, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
    else if(orderKind == BRIDGE_ORDER_SELL_STOP)
-      opened = trade.SellStop(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+      opened = trade.SellStop(FixedLotSize, entry, brokerSymbol, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
 
    if(opened)
    {
       if(EnableLogging)
       {
          if(IsPendingKind(orderKind))
-            Print("Order placed (pending): ", pair, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " entry=", DoubleToString(entry, digits));
+            Print("Order placed (pending): pair=", pair, " symbol=", brokerSymbol, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " entry=", DoubleToString(entry, digits));
          else
-            Print("Order executed (market): ", pair, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " @", DoubleToString(price, digits));
+            Print("Order executed (market): pair=", pair, " symbol=", brokerSymbol, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " @", DoubleToString(price, digits));
       }
       return true;
    }
