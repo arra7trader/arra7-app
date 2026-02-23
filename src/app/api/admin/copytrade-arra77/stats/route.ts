@@ -17,13 +17,14 @@ export async function GET() {
 
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
 
-    const [profilesRes, providersRes, topupsPendingRes, terminalsOnlineRes, dispatchQueuedRes, positionsOpenRes] = await Promise.all([
+    const [profilesRes, providersRes, topupsPendingRes, terminalsOnlineRes, dispatchQueuedRes, positionsOpenRes, followsActiveRes] = await Promise.all([
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('providers').select('id,status', { count: 'exact' }),
-      supabase.from('topup_orders').select('id', { count: 'exact', head: true }).eq('status', 'SUBMITTED'),
+      supabase.from('topup_orders').select('id', { count: 'exact', head: true }).in('status', ['SUBMITTED', 'DRAFT']),
       supabase.from('bridge_terminals').select('id', { count: 'exact', head: true }).eq('status', 'ONLINE'),
       supabase.from('signal_dispatches').select('id', { count: 'exact', head: true }).in('status', ['QUEUED', 'SENT', 'ACKED']),
       supabase.from('positions').select('id', { count: 'exact', head: true }).eq('status', 'OPEN'),
+      supabase.from('follow_relations').select('id', { count: 'exact', head: true }).eq('status', 'ACTIVE'),
     ]);
 
     if (profilesRes.error) throw profilesRes.error;
@@ -32,6 +33,7 @@ export async function GET() {
     if (terminalsOnlineRes.error) throw terminalsOnlineRes.error;
     if (dispatchQueuedRes.error) throw dispatchQueuedRes.error;
     if (positionsOpenRes.error) throw positionsOpenRes.error;
+    if (followsActiveRes.error) throw followsActiveRes.error;
 
     const providerRows = providersRes.data || [];
     const providerApproved = providerRows.filter((row: any) => row.status === 'APPROVED').length;
@@ -45,6 +47,7 @@ export async function GET() {
         providersPending: providerPending,
         pendingTopups: topupsPendingRes.count || 0,
         terminalsOnline: terminalsOnlineRes.count || 0,
+        followsActive: followsActiveRes.count || 0,
         queuedDispatches: dispatchQueuedRes.count || 0,
         openPositions: positionsOpenRes.count || 0,
       },
@@ -55,4 +58,3 @@ export async function GET() {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-
