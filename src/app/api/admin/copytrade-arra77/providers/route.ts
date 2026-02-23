@@ -4,7 +4,7 @@ import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supaba
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (!isCopytrade77Configured()) {
     return NextResponse.json(
       { status: 'error', message: 'Copytrade ARRA77 belum dikonfigurasi.' },
@@ -16,7 +16,9 @@ export async function GET() {
     await requireCopytrade77Admin();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
 
-    const { data, error } = await supabase
+    const scope = (request.nextUrl.searchParams.get('scope') || 'pending').toLowerCase();
+
+    let query = supabase
       .from('providers')
       .select(`
         id,
@@ -33,8 +35,13 @@ export async function GET() {
           display_name
         )
       `)
-      .order('created_at', { ascending: false })
-      .limit(100);
+      .order('created_at', { ascending: false });
+
+    if (scope !== 'all') {
+      query = query.eq('status', 'PENDING');
+    }
+
+    const { data, error } = await query.limit(100);
 
     if (error) throw error;
 
@@ -82,16 +89,32 @@ export async function POST(request: NextRequest) {
       updatePayload.approved_at = new Date().toISOString();
     }
 
-    const { error } = await supabase
+    const { data: updatedRows, error } = await supabase
       .from('providers')
       .update(updatePayload)
-      .eq('id', providerId);
+      .eq('id', providerId)
+      .select('id,status');
 
     if (error) throw error;
+    if (!updatedRows || updatedRows.length === 0) {
+      return NextResponse.json(
+        { status: 'error', message: 'Provider tidak ditemukan atau tidak berubah.' },
+        { status: 404 }
+      );
+    }
+
+    const updatedStatus = String((updatedRows[0] as any).status || '');
+    if (updatedStatus !== statusValue) {
+      return NextResponse.json(
+        { status: 'error', message: `Provider gagal diupdate ke ${statusValue}.` },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({
       status: 'success',
       message: `Provider berhasil di-${action.toLowerCase()}.`,
+      provider: updatedRows[0],
     });
   } catch (error: any) {
     const message = error?.message || 'Failed to process provider action.';
@@ -99,4 +122,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-

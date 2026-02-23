@@ -32,6 +32,8 @@ export default function CopytradeArra77AdminPage() {
   const [topups, setTopups] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
   const [bridge, setBridge] = useState<{ terminals: any[]; logs: any[] }>({ terminals: [], logs: [] });
+  const pendingTopups = topups.filter((o) => ['SUBMITTED', 'DRAFT'].includes(String(o?.status || '').toUpperCase()));
+  const pendingProviders = providers.filter((p) => String(p?.status || '').toUpperCase() === 'PENDING');
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login?callbackUrl=/admin/copytrade-arra77');
@@ -42,13 +44,13 @@ export default function CopytradeArra77AdminPage() {
   async function refresh() {
     setLoading(true);
     setError('');
-    setMessage('');
     try {
+      const cacheBuster = Date.now();
       const [a, b, c, d] = await Promise.all([
-        fetch('/api/admin/copytrade-arra77/stats').then((r) => r.json()),
-        fetch('/api/admin/copytrade-arra77/topups').then((r) => r.json()),
-        fetch('/api/admin/copytrade-arra77/providers').then((r) => r.json()),
-        fetch('/api/admin/copytrade-arra77/terminals').then((r) => r.json()),
+        fetch(`/api/admin/copytrade-arra77/stats?_=${cacheBuster}`, { cache: 'no-store' }).then((r) => r.json()),
+        fetch(`/api/admin/copytrade-arra77/topups?_=${cacheBuster}`, { cache: 'no-store' }).then((r) => r.json()),
+        fetch(`/api/admin/copytrade-arra77/providers?_=${cacheBuster}`, { cache: 'no-store' }).then((r) => r.json()),
+        fetch(`/api/admin/copytrade-arra77/terminals?_=${cacheBuster}`, { cache: 'no-store' }).then((r) => r.json()),
       ]);
       if (a.status !== 'success') throw new Error(a.message || 'Unauthorized');
       setStats(a.stats || null);
@@ -65,11 +67,20 @@ export default function CopytradeArra77AdminPage() {
   async function adminAct(url: string, body: any, okMsg: string) {
     setError('');
     setMessage('');
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const j = await res.json();
-    if (j.status !== 'success') throw new Error(j.message || 'Action gagal');
-    setMessage(j.message || okMsg);
-    await refresh();
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await res.json();
+      if (!res.ok || j.status !== 'success') throw new Error(j.message || 'Action gagal');
+      setMessage(j.message || okMsg);
+      await refresh();
+    } catch (e: any) {
+      setError(e?.message || 'Action gagal diproses.');
+    }
   }
 
   if (status === 'loading' || loading) return <div className="min-h-screen pt-32 text-center">Loading admin copytrade...</div>;
@@ -113,8 +124,8 @@ export default function CopytradeArra77AdminPage() {
 
         {tab === 'topups' && (
           <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
-            {topups.length === 0 && <p className="text-sm text-slate-500">Belum ada topup order.</p>}
-            {topups.map((o) => (
+            {pendingTopups.length === 0 && <p className="text-sm text-slate-500">Tidak ada topup yang perlu direview.</p>}
+            {pendingTopups.map((o) => (
               <div key={o.id} className="border border-slate-100 rounded-xl p-3">
                 <div className="flex justify-between gap-4 flex-wrap">
                   <div>
@@ -134,8 +145,8 @@ export default function CopytradeArra77AdminPage() {
 
         {tab === 'providers' && (
           <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
-            {providers.length === 0 && <p className="text-sm text-slate-500">Belum ada pengajuan provider.</p>}
-            {providers.map((p) => (
+            {pendingProviders.length === 0 && <p className="text-sm text-slate-500">Tidak ada provider yang perlu direview.</p>}
+            {pendingProviders.map((p) => (
               <div key={p.id} className="border border-slate-100 rounded-xl p-3">
                 <div className="flex justify-between gap-4 flex-wrap">
                   <div>
@@ -177,4 +188,3 @@ export default function CopytradeArra77AdminPage() {
     </div>
   );
 }
-
