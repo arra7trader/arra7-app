@@ -98,32 +98,74 @@ async function resolveTargets(params: {
   const { providerId, terminalId } = params;
   const supabase = getCopytrade77AdminClient().schema('copytrade77');
 
+  async function ensureActiveFollowForProfile(profileId: string, targetProviderId: string): Promise<string> {
+    const upsertRes = await supabase
+      .from('follow_relations')
+      .upsert(
+        {
+          follower_profile_id: profileId,
+          provider_id: targetProviderId,
+          status: 'ACTIVE',
+          risk_mode: 'FIXED_LOT',
+          fixed_lot: 0.01,
+          one_trade_at_a_time: CT77_CONFIG.oneTradeLock,
+          max_concurrent_positions: CT77_CONFIG.oneTradeLock ? 1 : 3,
+        },
+        { onConflict: 'follower_profile_id,provider_id' }
+      )
+      .select('id')
+      .single();
+    if (upsertRes.error || !upsertRes.data?.id) {
+      throw upsertRes.error || new Error('FOLLOW_UPSERT_FAILED');
+    }
+    return String(upsertRes.data.id);
+  }
+
   if (terminalId) {
     const terminalRes = await supabase
       .from('bridge_terminals')
-      .select('id,terminal_label,follow_id,status')
+      .select('id,terminal_label,profile_id,follow_id,status')
       .eq('id', terminalId)
       .maybeSingle();
     if (terminalRes.error) throw terminalRes.error;
     if (!terminalRes.data) return { targets: [], reason: 'TERMINAL_NOT_FOUND' };
-    if (!terminalRes.data.follow_id) return { targets: [], reason: 'TERMINAL_NO_FOLLOW' };
     if (String(terminalRes.data.status || '').toUpperCase() === 'BLOCKED') return { targets: [], reason: 'TERMINAL_BLOCKED' };
 
-    const followRes = await supabase
-      .from('follow_relations')
-      .select('id,provider_id,status')
-      .eq('id', String(terminalRes.data.follow_id))
-      .maybeSingle();
-    if (followRes.error) throw followRes.error;
-    if (!followRes.data) return { targets: [], reason: 'FOLLOW_NOT_FOUND' };
-    if (String(followRes.data.status || '') !== 'ACTIVE') return { targets: [], reason: 'FOLLOW_NOT_ACTIVE' };
-    if (String(followRes.data.provider_id) !== providerId) return { targets: [], reason: 'FOLLOW_PROVIDER_MISMATCH' };
+    const profileId = String(terminalRes.data.profile_id || '');
+    if (!profileId) return { targets: [], reason: 'TERMINAL_PROFILE_MISSING' };
+
+    let resolvedFollowId = terminalRes.data.follow_id ? String(terminalRes.data.follow_id) : '';
+    if (resolvedFollowId) {
+      const followRes = await supabase
+        .from('follow_relations')
+        .select('id,provider_id,status')
+        .eq('id', resolvedFollowId)
+        .maybeSingle();
+      if (followRes.error) throw followRes.error;
+
+      const providerMismatch = !followRes.data || String(followRes.data.provider_id || '') !== providerId;
+      const notActive = !!followRes.data && String(followRes.data.status || '') !== 'ACTIVE';
+
+      if (providerMismatch || notActive) {
+        resolvedFollowId = await ensureActiveFollowForProfile(profileId, providerId);
+      }
+    } else {
+      resolvedFollowId = await ensureActiveFollowForProfile(profileId, providerId);
+    }
+
+    const bindRes = await supabase
+      .from('bridge_terminals')
+      .update({ follow_id: resolvedFollowId })
+      .eq('id', String(terminalRes.data.id))
+      .select('id')
+      .single();
+    if (bindRes.error) throw bindRes.error;
 
     return {
       targets: [
         {
           terminalId: String(terminalRes.data.id),
-          followId: String(terminalRes.data.follow_id),
+          followId: resolvedFollowId,
           terminalLabel: terminalRes.data.terminal_label ? String(terminalRes.data.terminal_label) : null,
         },
       ],
@@ -220,6 +262,18 @@ export async function POST(request: NextRequest) {
       confidence: 88,
     });
 
+    const targetResult = await resolveTargets({ providerId, terminalId: terminalId || undefined });
+    if (targetResult.targets.length === 0) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          message: `Target dispatch tidak ditemukan. Reason: ${targetResult.reason || 'UNKNOWN'}.`,
+          providerId,
+        },
+        { status: 409 }
+      );
+    }
+
     const signalRes = await supabase
       .from('signals')
       .insert({
@@ -257,18 +311,6 @@ export async function POST(request: NextRequest) {
     }
 
     const signalId = String(signalRes.data.id);
-    const targetResult = await resolveTargets({ providerId, terminalId: terminalId || undefined });
-    if (targetResult.targets.length === 0) {
-      return NextResponse.json(
-        {
-          status: 'error',
-          message: `Signal dibuat (${signalId}) tapi tidak ada target dispatch. Reason: ${targetResult.reason || 'UNKNOWN'}.`,
-          signalId,
-          providerId,
-        },
-        { status: 409 }
-      );
-    }
 
     const dispatchRows = targetResult.targets.map((target) => ({
       signal_id: signalId,
@@ -296,4 +338,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-
