@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { copytradeSupabase } from '@/lib/supabase-copytrade';
-import { normalizeBridgeOrderType } from '@/lib/copytrade-bridge-order-type';
+import { normalizeBridgeOrderType, normalizeBridgePair } from '@/lib/copytrade-bridge-order-type';
 
 export async function GET(req: NextRequest) {
     try {
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
         const normalizedSignals = (signals || []).map((signal) => ({
             ...signal,
-            pair: String(signal.pair || '').toUpperCase().trim(),
+            pair: normalizeBridgePair(signal.pair),
             type: normalizeBridgeOrderType(signal.type) || String(signal.type || '').toUpperCase().trim(),
         }));
 

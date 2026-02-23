@@ -3,9 +3,14 @@ import { copytradeSupabase } from '@/lib/supabase-copytrade';
 import { consumeRateLimit, getRequestIp, verifyBridgeSignature } from '@/lib/copytrade-bridge-security';
 import { isUnlimitedCopytradeEmail, UNLIMITED_COPYTRADE_BALANCE } from '@/lib/copytrade-unlimited';
 import { COPYTRADE_CREDITS_PER_SIGNAL } from '@/lib/copytrade-credit';
-import { normalizeBridgeOrderType } from '@/lib/copytrade-bridge-order-type';
+import { normalizeBridgeOrderType, normalizeBridgePair } from '@/lib/copytrade-bridge-order-type';
 
-const SIGNAL_WINDOW_MS = 5 * 60 * 1000;
+const parsedSignalWindowMinutes = Number(process.env.CT_BRIDGE_SIGNAL_WINDOW_MINUTES);
+const SIGNAL_WINDOW_MINUTES =
+    Number.isFinite(parsedSignalWindowMinutes) && parsedSignalWindowMinutes > 0
+        ? Math.max(5, parsedSignalWindowMinutes)
+        : 180;
+const SIGNAL_WINDOW_MS = SIGNAL_WINDOW_MINUTES * 60 * 1000;
 
 export async function GET(request: NextRequest) {
     const ip = getRequestIp(request);
@@ -87,15 +92,16 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
 
                 return {
                     ...signal,
-                    pair: String(signal.pair || '').toUpperCase().trim(),
+                    pair: normalizeBridgePair(signal.pair),
                     type: normalizedType,
                 };
             })
-            .filter((signal): signal is NonNullable<typeof signal> => Boolean(signal));
+            .filter((signal): signal is NonNullable<typeof signal> => Boolean(signal && signal.pair));
 
         return NextResponse.json({
             success: true,
             securityMode: signedRequest ? 'signed' : 'legacy-get',
+            signalWindowMinutes: SIGNAL_WINDOW_MINUTES,
             balance: unlimited ? UNLIMITED_COPYTRADE_BALANCE : realBalance,
             unlimited,
             requiredCredits: COPYTRADE_CREDITS_PER_SIGNAL,

@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright   "ARRA Quantum AI"
 #property link        "https://arra.ai"
-#property version     "1.12"
+#property version     "1.13"
 #property description "EA Bridge: poll API signal ARRA dan eksekusi otomatis."
 
 #include <Trade\Trade.mqh>
@@ -173,6 +173,7 @@ void ParseAndExecuteSignals(string jsonResponse)
       return;
 
    int cursor = arrayStart + 1;
+   int scannedCount = 0;
    int executedCount = 0;
 
    while(true)
@@ -186,6 +187,7 @@ void ParseAndExecuteSignals(string jsonResponse)
          break;
 
       string signalObject = StringSubstr(jsonResponse, objStart, objEnd - objStart + 1);
+      scannedCount++;
       if(ProcessSignalObject(signalObject))
       {
          executedCount++;
@@ -199,9 +201,9 @@ void ParseAndExecuteSignals(string jsonResponse)
    if(EnableLogging)
    {
       if(executedCount > 0)
-         Print("Signal batch processed. Executed count: ", executedCount);
+         Print("Signal batch processed. scanned=", scannedCount, " executed=", executedCount);
       else
-         Print("No executable signal in current batch.");
+         Print("No executable signal in current batch. scanned=", scannedCount);
    }
 }
 
@@ -218,13 +220,15 @@ bool ProcessSignalObject(string signalJson)
    string slStr    = ExtractJsonValue(signalJson, "\"sl\":", 0);
 
    id   = Trim(id);
-   pair = Trim(pair);
+   pair = NormalizePairToken(pair);
    type = Trim(type);
-   StringToUpper(pair);
    StringToUpper(type);
 
    if(id == "" || pair == "" || type == "")
+   {
+      if(EnableLogging) Print("Skip signal: missing id/pair/type. raw=", signalJson);
       return false;
+   }
 
    if(IsSignalProcessed(id))
    {
@@ -243,6 +247,18 @@ bool ProcessSignalObject(string signalJson)
    double entryPrice = StringToDouble(entryStr);
    double tp         = StringToDouble(tpStr);
    double sl         = StringToDouble(slStr);
+
+   if(!MathIsValidNumber(entryPrice) || !MathIsValidNumber(tp) || !MathIsValidNumber(sl))
+   {
+      if(EnableLogging) Print("Skip signal ", id, ": invalid numeric value. entry=", entryStr, " tp=", tpStr, " sl=", slStr);
+      return false;
+   }
+
+   if(tp <= 0.0 || sl <= 0.0)
+   {
+      if(EnableLogging) Print("Skip signal ", id, ": TP/SL must be > 0. tp=", tp, " sl=", sl);
+      return false;
+   }
 
    if(EnableLogging)
       Print("New signal: ", id, " | ", pair, " ", type, " entry=", entryPrice, " tp=", tp, " sl=", sl);
@@ -325,9 +341,64 @@ bool IsPendingOrderType(ENUM_ORDER_TYPE type)
             type == ORDER_TYPE_SELL_STOP_LIMIT);
 }
 
+string NormalizePairToken(string rawPair)
+{
+   string pair = Trim(rawPair);
+   StringToUpper(pair);
+   StringReplace(pair, "/", "");
+   StringReplace(pair, " ", "");
+   StringReplace(pair, "-", "");
+   StringReplace(pair, "_", "");
+   return pair;
+}
+
+bool IsBuyKind(BridgeOrderKind kind)
+{
+   return (kind == BRIDGE_ORDER_BUY_MARKET ||
+           kind == BRIDGE_ORDER_BUY_LIMIT ||
+           kind == BRIDGE_ORDER_BUY_STOP);
+}
+
+bool IsSellKind(BridgeOrderKind kind)
+{
+   return (kind == BRIDGE_ORDER_SELL_MARKET ||
+           kind == BRIDGE_ORDER_SELL_LIMIT ||
+           kind == BRIDGE_ORDER_SELL_STOP);
+}
+
+bool ValidateTpSlGeometry(BridgeOrderKind kind, double referencePrice, double tp, double sl)
+{
+   if(referencePrice <= 0.0 || tp <= 0.0 || sl <= 0.0)
+      return false;
+
+   if(IsBuyKind(kind))
+      return (sl < referencePrice && tp > referencePrice);
+
+   if(IsSellKind(kind))
+      return (sl > referencePrice && tp < referencePrice);
+
+   return false;
+}
+
+bool ValidatePendingEntryPlacement(BridgeOrderKind kind, double entry, double bid, double ask, double minDistance)
+{
+   double gap = MathMax(minDistance, 0.0);
+
+   if(kind == BRIDGE_ORDER_BUY_LIMIT)
+      return entry < (ask - gap);
+   if(kind == BRIDGE_ORDER_SELL_LIMIT)
+      return entry > (bid + gap);
+   if(kind == BRIDGE_ORDER_BUY_STOP)
+      return entry > (ask + gap);
+   if(kind == BRIDGE_ORDER_SELL_STOP)
+      return entry < (bid - gap);
+
+   return true;
+}
+
 string ResolveBrokerSymbol(string requestedPair)
 {
-   string requested = Trim(requestedPair);
+   string requested = NormalizePairToken(requestedPair);
    if(requested == "")
       return "";
 
@@ -396,16 +467,17 @@ bool HasActiveBridgeExposure()
 
 bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
 {
-   string brokerSymbol = ResolveBrokerSymbol(pair);
+   string cleanPair = NormalizePairToken(pair);
+   string brokerSymbol = ResolveBrokerSymbol(cleanPair);
    if(brokerSymbol == "")
    {
-      if(EnableLogging) Print("Resolve symbol failed: empty symbol for pair ", pair);
+      if(EnableLogging) Print("Resolve symbol failed: empty symbol for pair ", cleanPair);
       return false;
    }
 
    if(!SymbolSelect(brokerSymbol, true))
    {
-      if(EnableLogging) Print("SymbolSelect failed: ", pair, " resolved=", brokerSymbol);
+      if(EnableLogging) Print("SymbolSelect failed: ", cleanPair, " resolved=", brokerSymbol);
       return false;
    }
 
@@ -419,6 +491,11 @@ bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
    double price = 0.0;
 
    int digits = (int)SymbolInfoInteger(brokerSymbol, SYMBOL_DIGITS);
+    double point = SymbolInfoDouble(brokerSymbol, SYMBOL_POINT);
+   int stopLevelPts = (int)SymbolInfoInteger(brokerSymbol, SYMBOL_TRADE_STOPS_LEVEL);
+   double minDistance = MathMax(0.0, point * stopLevelPts);
+   double bid = SymbolInfoDouble(brokerSymbol, SYMBOL_BID);
+   double ask = SymbolInfoDouble(brokerSymbol, SYMBOL_ASK);
    entry = NormalizeDouble(entry, digits);
    tp = NormalizeDouble(tp, digits);
    sl = NormalizeDouble(sl, digits);
@@ -426,6 +503,29 @@ bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
    if(IsPendingKind(orderKind) && entry <= 0.0)
    {
       if(EnableLogging) Print("Pending order but entry_price invalid: ", entry);
+      return false;
+   }
+
+   double reference = entry;
+   if(reference <= 0.0)
+      reference = IsBuyKind(orderKind) ? ask : bid;
+
+   if(!ValidateTpSlGeometry(orderKind, reference, tp, sl))
+   {
+      if(EnableLogging)
+         Print("Invalid TP/SL geometry [", type, "]: reference=", DoubleToString(reference, digits),
+               " tp=", DoubleToString(tp, digits), " sl=", DoubleToString(sl, digits));
+      return false;
+   }
+
+   if(IsPendingKind(orderKind) && !ValidatePendingEntryPlacement(orderKind, entry, bid, ask, minDistance))
+   {
+      if(EnableLogging)
+         Print("Invalid pending entry placement [", type, "] for ", brokerSymbol,
+               ": bid=", DoubleToString(bid, digits),
+               " ask=", DoubleToString(ask, digits),
+               " entry=", DoubleToString(entry, digits),
+               " minDistance=", DoubleToString(minDistance, digits));
       return false;
    }
 
@@ -438,7 +538,7 @@ bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
       price = (marketType == ORDER_TYPE_BUY) ? SymbolInfoDouble(brokerSymbol, SYMBOL_ASK) : SymbolInfoDouble(brokerSymbol, SYMBOL_BID);
       if(price <= 0.0)
       {
-         if(EnableLogging) Print("Failed to get price for symbol: ", brokerSymbol, " (pair=", pair, ")");
+         if(EnableLogging) Print("Failed to get price for symbol: ", brokerSymbol, " (pair=", cleanPair, ")");
          return false;
       }
       opened = trade.PositionOpen(brokerSymbol, marketType, FixedLotSize, price, sl, tp, "ARRA Bridge");
@@ -457,9 +557,9 @@ bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
       if(EnableLogging)
       {
          if(IsPendingKind(orderKind))
-            Print("Order placed (pending): pair=", pair, " symbol=", brokerSymbol, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " entry=", DoubleToString(entry, digits));
+            Print("Order placed (pending): pair=", cleanPair, " symbol=", brokerSymbol, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " entry=", DoubleToString(entry, digits));
          else
-            Print("Order executed (market): pair=", pair, " symbol=", brokerSymbol, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " @", DoubleToString(price, digits));
+            Print("Order executed (market): pair=", cleanPair, " symbol=", brokerSymbol, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " @", DoubleToString(price, digits));
       }
       return true;
    }

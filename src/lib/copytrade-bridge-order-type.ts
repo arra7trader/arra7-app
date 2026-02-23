@@ -40,10 +40,18 @@ function compactToken(input: string): string {
         .replace(/\s+/g, '');
 }
 
+export function normalizeBridgePair(rawPair: unknown): string {
+    const pair = typeof rawPair === 'string' ? rawPair : String(rawPair ?? '');
+    return pair
+        .toUpperCase()
+        .replace(/[\/\s_-]+/g, '')
+        .replace(/[^A-Z0-9.]/g, '')
+        .trim();
+}
+
 export function normalizeBridgeOrderType(rawType: unknown): CanonicalBridgeOrderType | null {
     const raw = typeof rawType === 'string' ? rawType : String(rawType ?? '');
     const token = compactToken(raw);
     if (!token) return null;
     return TYPE_ALIASES[token] ?? null;
 }
-
