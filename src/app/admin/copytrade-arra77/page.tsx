@@ -27,6 +27,7 @@ export default function CopytradeArra77AdminPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [forcingKey, setForcingKey] = useState('');
 
   const [stats, setStats] = useState<any>(null);
   const [topups, setTopups] = useState<any[]>([]);
@@ -80,6 +81,34 @@ export default function CopytradeArra77AdminPage() {
       await refresh();
     } catch (e: any) {
       setError(e?.message || 'Action gagal diproses.');
+    }
+  }
+
+  async function forceTestSignal(side: 'BUY' | 'SELL', terminalId?: string) {
+    const actionKey = `${side}:${terminalId || 'broadcast'}`;
+    setForcingKey(actionKey);
+    setError('');
+    setMessage('');
+    try {
+      const res = await fetch('/api/admin/copytrade-arra77/force-test-signal', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          side,
+          terminalId: terminalId || undefined,
+          symbol: 'XAUUSD',
+          timeframe: 'M15',
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.status !== 'success') throw new Error(j.message || 'Force test signal gagal');
+      setMessage(`${j.message} (signalId: ${j.signalId})`);
+      await refresh();
+    } catch (e: any) {
+      setError(e?.message || 'Force test signal gagal diproses.');
+    } finally {
+      setForcingKey('');
     }
   }
 
@@ -167,10 +196,50 @@ export default function CopytradeArra77AdminPage() {
         {tab === 'bridge' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
-              <h3 className="font-semibold mb-2">Bridge Terminals</h3>
+              <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
+                <h3 className="font-semibold">Bridge Terminals</h3>
+                <div className="flex gap-2">
+                  <button
+                    disabled={forcingKey !== ''}
+                    onClick={() => forceTestSignal('BUY')}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs disabled:opacity-60"
+                  >
+                    Force BUY (Broadcast)
+                  </button>
+                  <button
+                    disabled={forcingKey !== ''}
+                    onClick={() => forceTestSignal('SELL')}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs disabled:opacity-60"
+                  >
+                    Force SELL (Broadcast)
+                  </button>
+                </div>
+              </div>
               <div className="space-y-2 max-h-96 overflow-auto">
                 {bridge.terminals.length === 0 && <p className="text-sm text-slate-500">Belum ada terminal.</p>}
-                {bridge.terminals.map((t) => <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">{t.terminal_label} • {t.status} • {t.profiles?.email || '-'} • heartbeat {fmtDate(t.last_heartbeat_at)}</div>)}
+                {bridge.terminals.map((t) => (
+                  <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div>{t.terminal_label} | {t.status} | {t.profiles?.email || '-'} | heartbeat {fmtDate(t.last_heartbeat_at)}</div>
+                      <div className="flex gap-2">
+                        <button
+                          disabled={forcingKey !== ''}
+                          onClick={() => forceTestSignal('BUY', String(t.id))}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs disabled:opacity-60"
+                        >
+                          Test BUY
+                        </button>
+                        <button
+                          disabled={forcingKey !== ''}
+                          onClick={() => forceTestSignal('SELL', String(t.id))}
+                          className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs disabled:opacity-60"
+                        >
+                          Test SELL
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
@@ -188,3 +257,4 @@ export default function CopytradeArra77AdminPage() {
     </div>
   );
 }
+
