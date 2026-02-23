@@ -9,7 +9,12 @@ Auth model:
   - `X-ARRA-KEY`: terminal bridge key
   - `X-ARRA-TS`: unix epoch seconds
   - `X-ARRA-NONCE`: random unique string
-  - `X-ARRA-SIGN`: `hex(hmac_sha256(secret, method + "\n" + path + "\n" + ts + "\n" + nonce + "\n" + body))`
+  - `X-ARRA-SIGN`: `hex(hmac_sha256(secret, method + "\n" + ts + "\n" + path + "\n" + nonce + "\n" + body))`
+
+Legacy compatibility:
+- Jika header signed belum dipakai, bridge key masih bisa dikirim via query/body:
+  - query: `bridgeKey` atau `api_key`
+  - body: `bridgeKey` atau `apiKey`
 
 ## 1) Heartbeat
 `POST /heartbeat`
@@ -38,13 +43,18 @@ Response:
 ```
 
 ## 2) Poll Next Signal
-`GET /signals/next?terminalId=<uuid>`
+`GET /signals/next`
 
 Response (no signal):
 ```json
 {
   "status": "ok",
-  "hasSignal": false
+  "hasSignal": false,
+  "reason": "ONE_TRADE_LOCK_ACTIVE",
+  "generation": {
+    "generated": false,
+    "reason": "one_trade_lock_active"
+  }
 }
 ```
 
@@ -67,9 +77,8 @@ Response (signal available):
     "takeProfit3": 5145.0,
     "expiresAt": "2026-02-23T12:15:00.000Z",
     "risk": {
-      "maxSlippagePoints": 50,
-      "maxSpreadPoints": 80,
-      "oneTradeAtATime": true
+      "oneTradeAtATime": true,
+      "maxConcurrentPositions": 1
     },
     "creditCost": 3
   }
@@ -211,4 +220,3 @@ Suggested error codes:
 - `ONE_TRADE_LOCK_ACTIVE`
 - `INVALID_PAYLOAD`
 - `INTERNAL_ERROR`
-

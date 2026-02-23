@@ -354,6 +354,112 @@ export async function POST(request: NextRequest) {
             remaining: quotaStatus.remaining === Infinity ? -1 : quotaStatus.remaining,
         } : null;
 
+        // Auto publish to Copytrade ARRA77 (optional, enabled by default if configured)
+        let copytradeAutoPublish: {
+            published: boolean;
+            signalId?: string;
+            queuedDispatches?: number;
+            reason?: string;
+        } | null = null;
+
+        try {
+            const enableAutoPublish = process.env.CT77_AUTOPUBLISH_FROM_ANALYZE !== 'false';
+            if (enableAutoPublish) {
+                const { isCopytrade77Configured } = await import('@/lib/supabase-copytrade77');
+                if (isCopytrade77Configured() && nativeSignalData) {
+                    const directionRaw = (nativeSignalData as any).direction || (nativeSignalData as any).type;
+                    const direction = directionRaw === 'BUY' || directionRaw === 'SELL' ? directionRaw : null;
+
+                    if (direction) {
+                        const entryPrice = Number(
+                            (nativeSignalData as any).entryPrice ??
+                            (nativeSignalData as any).entry ??
+                            marketData.current_price
+                        );
+                        const stopLoss = Number(
+                            (nativeSignalData as any).stopLoss ??
+                            (nativeSignalData as any).sl ??
+                            0
+                        );
+                        const takeProfit1 = Number(
+                            (nativeSignalData as any).takeProfit1 ??
+                            (nativeSignalData as any).tp ??
+                            0
+                        );
+                        const takeProfit2 = Number((nativeSignalData as any).takeProfit2 ?? 0) || null;
+                        const confidence = Number((nativeSignalData as any).confidence ?? 0) || null;
+
+                        const tfMap: Record<string, string> = {
+                            '1m': 'M1',
+                            '5m': 'M5',
+                            '15m': 'M15',
+                            '30m': 'M30',
+                            '1h': 'H1',
+                            '4h': 'H4',
+                            '1d': 'D1',
+                        };
+                        const displayTf = tfMap[timeframe] || 'M15';
+
+                        const {
+                            getOrCreateSystemProviderId,
+                            hasRecentPublishedSignal,
+                            normalizeTradeSignal,
+                            publishSignalAndQueue,
+                        } = await import('@/lib/copytrade77-signal-engine');
+
+                        const providerId = await getOrCreateSystemProviderId();
+                        const normalized = normalizeTradeSignal({
+                            symbol: pair,
+                            timeframe: displayTf,
+                            side: direction,
+                            orderType: 'MARKET',
+                            entryPrice,
+                            stopLoss,
+                            takeProfit1,
+                            takeProfit2,
+                            confidence,
+                        });
+
+                        const recent = await hasRecentPublishedSignal({
+                            providerId,
+                            symbol: normalized.symbol,
+                            timeframe: normalized.timeframe,
+                            withinSeconds: 180,
+                        });
+
+                        if (recent.exists) {
+                            copytradeAutoPublish = {
+                                published: false,
+                                signalId: recent.signalId,
+                                reason: 'recent_signal_exists',
+                            };
+                        } else {
+                            const published = await publishSignalAndQueue({
+                                providerId,
+                                signal: normalized,
+                                source: 'ARRA_AI',
+                                sourceRef: 'analyze_route',
+                                rawAnalysis: {
+                                    pair,
+                                    timeframe,
+                                    analysis: aiResult.analysis,
+                                    marketPrice: marketData.current_price,
+                                },
+                            });
+
+                            copytradeAutoPublish = {
+                                published: true,
+                                signalId: published.signalId,
+                                queuedDispatches: published.queuedDispatches,
+                            };
+                        }
+                    }
+                }
+            }
+        } catch (copytradeError) {
+            console.error('[Analyze] Copytrade auto publish error:', copytradeError);
+        }
+
         return NextResponse.json({
             status: 'success',
             result: aiResult.formattedHtml,
@@ -371,6 +477,7 @@ export async function POST(request: NextRequest) {
                 lastCandleTime: marketData.candles.length > 0 ? marketData.candles[marketData.candles.length - 1].time : null,
             },
             parsedSignal: nativeSignalData,
+            copytradeAutoPublish,
             quotaStatus: serializedQuotaStatus,
             timestamp: new Date().toISOString(),
         });

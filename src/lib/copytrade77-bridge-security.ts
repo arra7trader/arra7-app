@@ -25,12 +25,32 @@ function safeEqualHex(a: string, b: string): boolean {
   }
 }
 
-function getHeaderOrThrow(request: NextRequest, name: string): string {
-  const value = request.headers.get(name);
-  if (!value || !value.trim()) {
-    throw new Error(`MISSING_${name.toUpperCase().replace(/-/g, '_')}`);
+function tryParseBody(rawBody: string): Record<string, unknown> {
+  try {
+    if (!rawBody || !rawBody.trim()) return {};
+    const parsed = JSON.parse(rawBody);
+    return typeof parsed === 'object' && parsed ? parsed : {};
+  } catch {
+    return {};
   }
-  return value.trim();
+}
+
+function extractLegacyBridgeKey(request: NextRequest, rawBody: string): string | null {
+  const queryKey =
+    request.nextUrl.searchParams.get('bridgeKey') ||
+    request.nextUrl.searchParams.get('api_key');
+  if (queryKey && queryKey.trim()) return queryKey.trim();
+
+  const body = tryParseBody(rawBody);
+  const bodyKey =
+    (typeof body.bridgeKey === 'string' && body.bridgeKey) ||
+    (typeof body.apiKey === 'string' && body.apiKey);
+  if (bodyKey && bodyKey.trim()) return bodyKey.trim();
+
+  const headerKey = request.headers.get('X-ARRA-KEY');
+  if (headerKey && headerKey.trim()) return headerKey.trim();
+
+  return null;
 }
 
 export function generateBridgeCredentials(): { bridgeKey: string; bridgeSecret: string } {
@@ -43,23 +63,22 @@ export async function verifyBridgeRequest(
   request: NextRequest,
   rawBody: string
 ): Promise<BridgeTerminalAuthContext> {
-  const bridgeKey = getHeaderOrThrow(request, 'X-ARRA-KEY');
-  const tsRaw = getHeaderOrThrow(request, 'X-ARRA-TS');
-  const nonce = getHeaderOrThrow(request, 'X-ARRA-NONCE');
-  const incomingSign = getHeaderOrThrow(request, 'X-ARRA-SIGN');
-
-  const ts = Number.parseInt(tsRaw, 10);
-  if (!Number.isFinite(ts)) {
-    throw new Error('INVALID_TIMESTAMP');
-  }
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (Math.abs(nowSec - ts) > CT77_CONFIG.bridgeMaxSkewSeconds) {
-    throw new Error('TIMESTAMP_SKEW');
-  }
-
   const supabase = getCopytrade77AdminClient();
   const schema = supabase.schema('copytrade77');
+
+  const signedBridgeKey = request.headers.get('X-ARRA-KEY')?.trim() || null;
+  const signedTs = request.headers.get('X-ARRA-TS')?.trim() || null;
+  const signedNonce = request.headers.get('X-ARRA-NONCE')?.trim() || null;
+  const signedSign = request.headers.get('X-ARRA-SIGN')?.trim() || null;
+  const hasAllSignedHeaders = Boolean(signedBridgeKey && signedTs && signedNonce && signedSign);
+
+  const bridgeKey = hasAllSignedHeaders
+    ? signedBridgeKey
+    : extractLegacyBridgeKey(request, rawBody);
+
+  if (!bridgeKey) {
+    throw new Error('MISSING_X_ARRA_KEY');
+  }
 
   const { data: terminal, error: terminalError } = await schema
     .from('bridge_terminals')
@@ -75,32 +94,44 @@ export async function verifyBridgeRequest(
     throw new Error('TERMINAL_NOT_FOUND');
   }
 
-  const method = request.method.toUpperCase();
-  const path = new URL(request.url).pathname;
-  const canonical = `${method}\n${path}\n${tsRaw}\n${nonce}\n${rawBody}`;
-  const expectedSign = toHexHmac(String(terminal.bridge_secret || ''), canonical);
-
-  if (!safeEqualHex(expectedSign, incomingSign)) {
-    throw new Error('INVALID_SIGNATURE');
-  }
-
-  // Lightweight lazy cleanup to keep nonce table bounded without cron.
-  await schema
-    .from('bridge_nonces')
-    .delete()
-    .lt('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
-
-  const { error: nonceError } = await schema.from('bridge_nonces').insert({
-    bridge_key: bridgeKey,
-    nonce,
-    ts,
-  });
-
-  if (nonceError) {
-    if (nonceError.code === '23505') {
-      throw new Error('REPLAY_BLOCKED');
+  if (hasAllSignedHeaders) {
+    const ts = Number.parseInt(String(signedTs), 10);
+    if (!Number.isFinite(ts)) {
+      throw new Error('INVALID_TIMESTAMP');
     }
-    throw nonceError;
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (Math.abs(nowSec - ts) > CT77_CONFIG.bridgeMaxSkewSeconds) {
+      throw new Error('TIMESTAMP_SKEW');
+    }
+
+    const method = request.method.toUpperCase();
+    const path = new URL(request.url).pathname;
+    const canonical = `${method}\n${signedTs}\n${path}\n${signedNonce}\n${rawBody}`;
+    const expectedSign = toHexHmac(String(terminal.bridge_secret || ''), canonical);
+
+    if (!safeEqualHex(expectedSign, String(signedSign))) {
+      throw new Error('INVALID_SIGNATURE');
+    }
+
+    // Lazy cleanup for nonce table without cron.
+    await schema
+      .from('bridge_nonces')
+      .delete()
+      .lt('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
+
+    const { error: nonceError } = await schema.from('bridge_nonces').insert({
+      bridge_key: bridgeKey,
+      nonce: String(signedNonce),
+      ts,
+    });
+
+    if (nonceError) {
+      if (nonceError.code === '23505') {
+        throw new Error('REPLAY_BLOCKED');
+      }
+      throw nonceError;
+    }
   }
 
   return {

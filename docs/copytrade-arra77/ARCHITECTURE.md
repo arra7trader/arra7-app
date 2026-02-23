@@ -48,7 +48,7 @@
 - Terminal offline -> status terminal `OFFLINE` jika heartbeat stale.
 
 ## Security
-- HMAC signature mandatory untuk endpoint bridge:
+- HMAC signature direkomendasikan untuk endpoint bridge:
   - `X-ARRA-TS`
   - `X-ARRA-NONCE`
   - `X-ARRA-SIGN`
@@ -56,9 +56,9 @@
   - timestamp skew max 60s
   - nonce single-use window 5 menit
 - API key per terminal + secret hash di server.
+- Legacy mode masih didukung sementara (bridge key tanpa signature) untuk kompatibilitas EA lama.
 
 ## Performance Targets
 - Poll response p95 < 500ms.
 - Settle execution transaction < 200ms.
 - Dashboard queries memakai index by `profile_id`, `terminal_id`, `status`, `created_at`.
-
