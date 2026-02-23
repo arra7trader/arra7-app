@@ -31,6 +31,10 @@ export default function CopytradeArra77AdminPage() {
   const [topupScope, setTopupScope] = useState<'pending' | 'all'>('pending');
   const [providerScope, setProviderScope] = useState<'pending' | 'all'>('pending');
   const [followScope, setFollowScope] = useState<'active' | 'all'>('active');
+  const [manualEmail, setManualEmail] = useState('');
+  const [manualDirection, setManualDirection] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
+  const [manualAmount, setManualAmount] = useState('10');
+  const [manualNote, setManualNote] = useState('');
 
   const [stats, setStats] = useState<any>(null);
   const [topups, setTopups] = useState<any[]>([]);
@@ -69,7 +73,7 @@ export default function CopytradeArra77AdminPage() {
     }
   }
 
-  async function adminAct(url: string, body: any, okMsg: string) {
+  async function adminAct(url: string, body: any, okMsg: string): Promise<boolean> {
     setError('');
     setMessage('');
     try {
@@ -83,8 +87,45 @@ export default function CopytradeArra77AdminPage() {
       if (!res.ok || j.status !== 'success') throw new Error(j.message || 'Action gagal');
       setMessage(j.message || okMsg);
       await refresh();
+      return true;
     } catch (e: any) {
       setError(e?.message || 'Action gagal diproses.');
+      return false;
+    }
+  }
+
+  async function submitManualAdjust() {
+    const email = manualEmail.trim().toLowerCase();
+    const amount = Number(manualAmount);
+
+    if (!email) {
+      setMessage('');
+      setError('Email user wajib diisi untuk adjustment manual.');
+      return;
+    }
+
+    if (!Number.isInteger(amount) || amount <= 0) {
+      setMessage('');
+      setError('Jumlah credit harus angka bulat > 0.');
+      return;
+    }
+
+    const ok = await adminAct(
+      '/api/admin/copytrade-arra77/wallet-adjust',
+      {
+        email,
+        direction: manualDirection,
+        amountCredits: amount,
+        note: manualNote.trim() || undefined,
+      },
+      'Saldo manual berhasil diubah.'
+    );
+
+    if (ok) {
+      setManualEmail('');
+      setManualDirection('CREDIT');
+      setManualAmount('10');
+      setManualNote('');
     }
   }
 
@@ -179,6 +220,51 @@ export default function CopytradeArra77AdminPage() {
               >
                 All
               </button>
+            </div>
+            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 space-y-2 mb-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-slate-800">Manual Credit Adjustment</p>
+                <span className="text-xs text-slate-500">Untuk koreksi saldo tanpa topup order</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <input
+                  type="email"
+                  value={manualEmail}
+                  onChange={(e) => setManualEmail(e.target.value)}
+                  placeholder="Email user copytrade"
+                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                />
+                <select
+                  value={manualDirection}
+                  onChange={(e) => setManualDirection(e.target.value as 'CREDIT' | 'DEBIT')}
+                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                >
+                  <option value="CREDIT">CREDIT (+)</option>
+                  <option value="DEBIT">DEBIT (-)</option>
+                </select>
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={manualAmount}
+                  onChange={(e) => setManualAmount(e.target.value)}
+                  placeholder="Jumlah credit"
+                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                />
+                <button
+                  onClick={submitManualAdjust}
+                  className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm"
+                >
+                  Apply Adjustment
+                </button>
+              </div>
+              <input
+                type="text"
+                value={manualNote}
+                onChange={(e) => setManualNote(e.target.value)}
+                placeholder="Catatan admin (opsional)"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm"
+              />
             </div>
             {topups.length === 0 && <p className="text-sm text-slate-500">{topupScope === 'pending' ? 'Tidak ada topup yang perlu direview.' : 'Belum ada topup.'}</p>}
             {topups.map((o) => (
