@@ -14,7 +14,6 @@ import UserFormModal from '@/components/admin/UserFormModal';
 import BroadcastModal from '@/components/admin/BroadcastModal';
 import MarketingBot from '@/components/admin/MarketingBot';
 import UpgradeDurationModal, { DurationOption } from '@/components/admin/UpgradeDurationModal';
-import ProviderApproval from '@/components/admin/ProviderApproval';
 
 interface UpgradeNotification {
     userName: string;
@@ -39,10 +38,6 @@ export default function AdminDashboard() {
     const [isUserFormOpen, setIsUserFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
-    const [topupTargetUser, setTopupTargetUser] = useState<User | null>(null);
-    const [topupAmount, setTopupAmount] = useState('100');
-    const [topupReason, setTopupReason] = useState('Top up manual dari Admin User Management');
-    const [topupSubmitting, setTopupSubmitting] = useState(false);
 
     // Upgrade Duration Modal
     const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
@@ -394,105 +389,6 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleUpdateCopyTrade = async (user: User, access: 'FOLLOWER' | 'PROVIDER' | null) => {
-        const actionText = access === 'PROVIDER' ? 'Provider' : access === 'FOLLOWER' ? 'Follower' : 'Revoke';
-        if (!confirm(`Are you sure you want to set Copy Trade access to ${actionText} for ${user.name}?`)) return;
-
-        setUpdating(user.id);
-        setMessage(null);
-
-        try {
-            const res = await fetch('/api/admin/users/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'copytrade_update',
-                    userIds: [user.id],
-                    data: {
-                        access: access || 'REVOKE',
-                        duration: 30 // Default 30 days for manual activation? Or ask? For now default 30 days.
-                    }
-                })
-            });
-            const data = await res.json();
-
-            if (data.status === 'success') {
-                setMessage({ type: 'success', text: `✅ Copy Trade access updated for ${user.name}` });
-                fetchUsers();
-            } else {
-                setMessage({ type: 'error', text: data.message });
-            }
-        } catch (error) {
-            console.error('Update CT error:', error);
-            setMessage({ type: 'error', text: 'Failed to update Copy Trade access' });
-        } finally {
-            setUpdating(null);
-        }
-    };
-
-
-    const openTopupModal = (user: User) => {
-        setTopupTargetUser(user);
-        setTopupAmount('100');
-        setTopupReason(`Top up manual oleh admin untuk ${user.email}`);
-    };
-
-    const closeTopupModal = () => {
-        if (topupSubmitting) return;
-        setTopupTargetUser(null);
-    };
-
-    const handleSubmitTopup = async () => {
-        if (!topupTargetUser) return;
-
-        const amount = Number(topupAmount);
-        if (!Number.isFinite(amount) || amount <= 0) {
-            setMessage({ type: 'error', text: 'Nominal credit topup harus lebih besar dari 0.' });
-            return;
-        }
-
-        const reason = topupReason.trim();
-        if (reason.length < 3) {
-            setMessage({ type: 'error', text: 'Reason topup minimal 3 karakter.' });
-            return;
-        }
-
-        setTopupSubmitting(true);
-        setMessage(null);
-
-        try {
-            const response = await fetch('/api/admin/copytrade-bridge/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sourceUserId: topupTargetUser.id,
-                    email: topupTargetUser.email,
-                    name: topupTargetUser.name || '',
-                    amount: Math.round(amount),
-                    reason,
-                }),
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Gagal topup balance copytrade');
-            }
-
-            setMessage({
-                type: 'success',
-                text: `Topup copytrade ${topupTargetUser.email} +${Math.round(amount)} credit berhasil. Balance sekarang: ${Number(data.newBalance || 0)}.`,
-            });
-            setTopupTargetUser(null);
-        } catch (error) {
-            setMessage({
-                type: 'error',
-                text: error instanceof Error ? error.message : 'Gagal topup balance copytrade',
-            });
-        } finally {
-            setTopupSubmitting(false);
-        }
-    };
-
     const getNotificationMessage = () => {
         if (!notification) return '';
         return `✅ Akun Anda sudah diupgrade ke ${notification.membership}! 🎉
@@ -622,73 +518,6 @@ Tim ARRA7`;
                         </motion.div>
                     </motion.div>
                 )}
-                {topupTargetUser && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                        onClick={closeTopupModal}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.96, y: 16 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.96, y: 16 }}
-                            className="w-full max-w-lg rounded-2xl border border-[var(--border-light)] bg-white p-6 shadow-xl"
-                            onClick={(event) => event.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-bold text-[var(--text-primary)]">Topup Copytrade Balance</h3>
-                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                                User: <span className="font-semibold text-[var(--text-primary)]">{topupTargetUser.email}</span>
-                            </p>
-
-                            <div className="mt-4 space-y-3">
-                                <div>
-                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                                        Credit Topup
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        step={1}
-                                        value={topupAmount}
-                                        onChange={(event) => setTopupAmount(event.target.value)}
-                                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                                        Reason (Audit)
-                                    </label>
-                                    <textarea
-                                        value={topupReason}
-                                        onChange={(event) => setTopupReason(event.target.value)}
-                                        rows={3}
-                                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                                        placeholder="Contoh: Topup manual setelah verifikasi pembayaran QRIS"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-5 flex items-center justify-end gap-2">
-                                <button
-                                    onClick={closeTopupModal}
-                                    disabled={topupSubmitting}
-                                    className="rounded-xl border border-[var(--border-light)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-60"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={handleSubmitTopup}
-                                    disabled={topupSubmitting}
-                                    className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                                >
-                                    {topupSubmitting ? 'Memproses...' : 'Topup Sekarang'}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
             </AnimatePresence>
 
             <UserDetailModal
@@ -746,13 +575,6 @@ Tim ARRA7`;
                                 <ChartIcon size="sm" /> CRM
                             </button>
                         </Link>
-                        <Link href="/admin/copytrade-bridge">
-                            <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                </svg> CT Bridge
-                            </button>
-                        </Link>
                         <Link href="/admin/users-map">
                             <button className="px-4 py-2 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
                                 <GlobeIcon size="sm" /> Users Map
@@ -776,11 +598,6 @@ Tim ARRA7`;
                         <Link href="/performance">
                             <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
                                 <TrendUpIcon size="sm" /> Performance
-                            </button>
-                        </Link>
-                        <Link href="/admin/copytrade-bridge">
-                            <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                📡 CT Bridge
                             </button>
                         </Link>
                         <button
@@ -950,8 +767,6 @@ Tim ARRA7`;
                             onUserClick={setSelectedUser}
                             selectedIds={selectedUserIds}
                             onSelectionChange={setSelectedUserIds}
-                            onUpdateCopyTrade={handleUpdateCopyTrade}
-                            onOpenCopytradeTopup={openTopupModal}
                         />
                     </>
                 )}
@@ -971,4 +786,7 @@ Tim ARRA7`;
         </div >
     );
 }
+
+
+
 

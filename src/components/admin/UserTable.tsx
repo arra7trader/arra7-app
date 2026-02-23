@@ -19,8 +19,6 @@ export interface User {
     lastLoginCity: string | null;
     lastLoginAt: string | null;
     downloadedApk: boolean;
-    copytradeAccess?: string | null;
-    copytradeExpires?: string | null;
     // Subscription fields
     subscriptionStatus?: 'free' | 'active' | 'expired';
     subscriptionEndDate?: string | null;
@@ -31,8 +29,6 @@ interface UserTableProps {
     users: User[];
     loading: boolean;
     onUpdateMembership: (user: User, membership: string) => void;
-    onUpdateCopyTrade?: (user: User, access: 'FOLLOWER' | 'PROVIDER' | null) => void;
-    onOpenCopytradeTopup?: (user: User) => void;
     updating: string | null;
     onUserClick?: (user: User) => void;
     selectedIds?: string[];
@@ -46,9 +42,7 @@ export default function UserTable({
     updating,
     onUserClick,
     selectedIds = [],
-    onSelectionChange,
-    onUpdateCopyTrade,
-    onOpenCopytradeTopup
+    onSelectionChange
 }: UserTableProps) {
     const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'asc' | 'desc' } | null>(null);
 
@@ -241,15 +235,6 @@ export default function UserTable({
                                             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs transition-colors"
                                         >
                                             View/Edit
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onOpenCopytradeTopup?.(user);
-                                            }}
-                                            className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 rounded text-xs transition-colors"
-                                        >
-                                            + CT Topup
                                         </button>
                                         {user.membership !== 'PRO' && (
                                             <button

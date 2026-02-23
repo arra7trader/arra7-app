@@ -1,2 +1,0 @@
-export const COPYTRADE_CREDITS_PER_SIGNAL = 2;
-

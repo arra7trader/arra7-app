@@ -25,7 +25,6 @@ export default function Navbar() {
 
     const navItems = [
         { label: t('home'), href: '/' },
-        { label: 'Copytrade', href: '/copytrade-bridge' },
         { label: t('pricing'), href: '/pricing' },
         { label: 'FAQ', href: '/faq' },
         {
@@ -179,13 +178,6 @@ export default function Navbar() {
                                                         </svg>
                                                         {t('socialFeed')}
                                                     </Link>
-                                                    <Link
-                                                        href="/copytrade-bridge"
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors font-medium"
-                                                    >
-                                                        <span>📡</span>
-                                                        AI CT Bridge
-                                                    </Link>
                                                 </div>
 
                                                 <div className="border-t border-[var(--border-light)] pt-1">
@@ -272,13 +264,6 @@ export default function Navbar() {
                                         >
                                             {t('socialFeed')}
                                         </Link>
-                                        <Link
-                                            href="/copytrade-bridge"
-                                            className="block py-3 text-indigo-600 font-medium"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            📡 AI CT Bridge
-                                        </Link>
                                     </div>
                                 )}
 
@@ -308,3 +293,5 @@ export default function Navbar() {
         </motion.header>
     );
 }
+
+

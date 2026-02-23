@@ -74,34 +74,6 @@ export async function POST(request: NextRequest) {
                 }
             }
             await logActivity(session.user.email, 'BULK_UPGRADE', { count: successCount, failed: failCount, membership, duration });
-        } else if (action === 'copytrade_update') {
-            const { access, duration } = data || {};
-
-            for (const id of userIds) {
-                try {
-                    if (!access || access === 'REVOKE') {
-                        await turso.execute({
-                            sql: 'UPDATE users SET copytrade_access = NULL, copytrade_expires = NULL WHERE id = ?',
-                            args: [id]
-                        });
-                    } else {
-                        const days = duration || 30;
-                        const expiresAt = new Date();
-                        expiresAt.setDate(expiresAt.getDate() + days);
-                        const validAccess = access === 'PROVIDER' ? 'PROVIDER' : 'FOLLOWER';
-
-                        await turso.execute({
-                            sql: 'UPDATE users SET copytrade_access = ?, copytrade_expires = ? WHERE id = ?',
-                            args: [validAccess, expiresAt.toISOString(), id]
-                        });
-                    }
-                    successCount++;
-                } catch (e) {
-                    console.error(`Failed to update copytrade for ${id}:`, e);
-                    failCount++;
-                }
-            }
-            await logActivity(session.user.email, 'COPYTRADE_UPDATE', { count: successCount, failed: failCount, access });
         } else {
             return NextResponse.json({ status: 'error', message: 'Invalid action' }, { status: 400 });
         }

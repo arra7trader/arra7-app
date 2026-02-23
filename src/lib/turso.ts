@@ -567,18 +567,6 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
-    // AI COPYTRADE BRIDGE: Log executions by EA for User
-    await turso.execute(`
-      CREATE TABLE IF NOT EXISTS ai_trade_logs (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        status TEXT NOT NULL,
-        profit REAL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )
-    `);
-
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [
@@ -602,9 +590,6 @@ export async function initDatabase(): Promise<boolean> {
       // APK Tracking
       { column: 'downloaded_apk', sql: `ALTER TABLE users ADD COLUMN downloaded_apk INTEGER DEFAULT 0` },
       { column: 'apk_downloaded_at', sql: `ALTER TABLE users ADD COLUMN apk_downloaded_at DATETIME` },
-      // Copy Trade standalone subscription
-      { column: 'copytrade_access', sql: `ALTER TABLE users ADD COLUMN copytrade_access TEXT DEFAULT NULL` },
-      { column: 'copytrade_expires', sql: `ALTER TABLE users ADD COLUMN copytrade_expires DATETIME DEFAULT NULL` },
       // Exclusive Copytrade Subscription
       { column: 'subscription_status', sql: `ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'free'` },
       { column: 'subscription_end_date', sql: `ALTER TABLE users ADD COLUMN subscription_end_date DATETIME` },
@@ -612,9 +597,7 @@ export async function initDatabase(): Promise<boolean> {
       // Koin Balance Pay-Per-Signal
       { column: 'koin_balance', sql: `ALTER TABLE users ADD COLUMN koin_balance INTEGER DEFAULT 0` },
       { column: 'price_koin', sql: `ALTER TABLE provider_signals ADD COLUMN price_koin INTEGER DEFAULT 0` },
-      // AI Copytrade Bridge
       { column: 'license_key', sql: `ALTER TABLE users ADD COLUMN license_key TEXT UNIQUE` },
-      { column: 'copytrade_balance', sql: `ALTER TABLE users ADD COLUMN copytrade_balance REAL DEFAULT 0` },
     ];
 
     for (const migration of migrations) {
@@ -633,38 +616,6 @@ export async function initDatabase(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Database init error:', error);
-    return false;
-  }
-}
-
-// ============================================
-// COPY TRADE SUBSCRIPTION
-// ============================================
-export async function updateUserCopytradeAccess(
-  userId: string,
-  tier: string,   // 'CT_FOLLOWER' | 'CT_PROVIDER'
-  days: number
-): Promise<boolean> {
-  const turso = getTursoClient();
-  if (!turso) return false;
-
-  try {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
-    const expiresStr = expiresAt.toISOString();
-
-    // Map planId to the access level stored in DB
-    const accessLevel = tier === 'CT_PROVIDER' ? 'PROVIDER' : 'FOLLOWER';
-
-    await turso.execute({
-      sql: `UPDATE users SET copytrade_access = ?, copytrade_expires = ? WHERE id = ?`,
-      args: [accessLevel, expiresStr, userId],
-    });
-
-    console.log(`[CT] User ${userId} granted ${accessLevel} access until ${expiresStr}`);
-    return true;
-  } catch (error) {
-    console.error('[CT] updateUserCopytradeAccess error:', error);
     return false;
   }
 }
