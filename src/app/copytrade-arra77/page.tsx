@@ -309,11 +309,9 @@ export default function CopytradeArra77Page() {
               </div>
 
               <a href="/downloads/Arra-Copytrade-Bridge.ex5" className="inline-flex rounded-lg bg-slate-900 text-white px-3 py-2 text-sm" download>
-                Download EA (.ex5)
+                Download EA MT5 (.ex5)
               </a>
-              <a href="/downloads/Arra7-Copytrade77-Bridge-Test.mq5" className="inline-flex rounded-lg bg-slate-100 text-slate-800 px-3 py-2 text-sm border border-slate-200" download>
-                Download EA Test Source (.mq5)
-              </a>
+              <p className="text-xs text-slate-500">Source EA tidak ditampilkan di web. Gunakan file `.ex5` terbaru di atas.</p>
 
               <input value={terminalLabel} onChange={(e) => setTerminalLabel(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Label terminal MT5" />
               <select value={terminalFollowId} onChange={(e) => setTerminalFollowId(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
