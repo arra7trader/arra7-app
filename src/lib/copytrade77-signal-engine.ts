@@ -512,6 +512,11 @@ export async function generateAndQueueSignalForTerminal(terminalId: string): Pro
   }
 
   const providerId = String(follow.provider_id);
+  const systemProviderId = await getOrCreateSystemProviderId();
+  if (providerId !== systemProviderId) {
+    return { generated: false, reason: 'provider_not_auto_enabled' };
+  }
+
   const forcedSymbol = CT77_CONFIG.autoAnalyzeSymbol || 'XAUUSD';
   const forcedTimeframe = CT77_CONFIG.autoAnalyzeTimeframe || 'M15';
   const symbol = normalizeSymbol(String(forcedSymbol || terminal.symbol || 'XAUUSD'));
