@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright   "ARRA Quantum AI"
 #property link        "https://arra.ai"
-#property version     "1.10"
+#property version     "1.11"
 #property description "EA Bridge: poll API signal ARRA dan eksekusi otomatis."
 
 #include <Trade\Trade.mqh>
@@ -19,12 +19,14 @@ input double MaxDrawdownPct       = 20.0;                             // Max dra
 input int    PollIntervalSec      = 10;                               // Polling interval (detik)
 input int    HttpTimeoutMs        = 10000;                            // HTTP timeout (ms)
 input int    MaxSignalRetryPerId  = 3;                                // Retry eksekusi per signal ID
+input bool   SingleTradeMode      = true;                             // Entry baru hanya setelah posisi/order lama selesai
 input bool   EnableLogging        = true;                             // Print log detail
 
 //--- Runtime
 CTrade   trade;
 datetime lastPollTime = 0;
 double   initialBalance = 0.0;
+int      BRIDGE_MAGIC = 202600;
 
 //--- Persistence
 string PROCESSED_IDS_FILE = "ARRA_CopytradeBridge_processed_ids.txt";
@@ -60,6 +62,10 @@ int OnInit()
    if(EnableLogging)
    {
       Print("ARRA Bridge aktif. Polling setiap ", PollIntervalSec, " detik.");
+      if(SingleTradeMode)
+         Print("ARRA Bridge mode: SINGLE TRADE (entry baru menunggu posisi/order lama selesai).");
+      else
+         Print("ARRA Bridge mode: MULTI TRADE (boleh eksekusi beberapa signal).");
       if(StringLen(BridgeSecret) > 0)
          Print("ARRA Bridge security mode: signed requests enabled.");
       else
@@ -145,6 +151,12 @@ void PollAndExecute()
 //+------------------------------------------------------------------+
 void ParseAndExecuteSignals(string jsonResponse)
 {
+   if(SingleTradeMode && HasActiveBridgeExposure())
+   {
+      if(EnableLogging) Print("SingleTradeMode: masih ada posisi/order bridge aktif. Tunggu TP/SL dulu.");
+      return;
+   }
+
    int signalsKey = StringFind(jsonResponse, "\"signals\":");
    if(signalsKey < 0)
    {
@@ -175,7 +187,11 @@ void ParseAndExecuteSignals(string jsonResponse)
 
       string signalObject = StringSubstr(jsonResponse, objStart, objEnd - objStart + 1);
       if(ProcessSignalObject(signalObject))
+      {
          executedCount++;
+         if(SingleTradeMode)
+            break;
+      }
 
       cursor = objEnd + 1;
    }
@@ -231,7 +247,7 @@ bool ProcessSignalObject(string signalJson)
    if(EnableLogging)
       Print("New signal: ", id, " | ", pair, " ", type, " entry=", entryPrice, " tp=", tp, " sl=", sl);
 
-   bool success = ExecuteSignal(pair, type, tp, sl);
+   bool success = ExecuteSignal(pair, type, entryPrice, tp, sl);
    if(success)
    {
       MarkSignalProcessed(id);
@@ -253,7 +269,90 @@ bool ProcessSignalObject(string signalJson)
 //+------------------------------------------------------------------+
 //| Execute trading signal                                            |
 //+------------------------------------------------------------------+
-bool ExecuteSignal(string pair, string type, double tp, double sl)
+enum BridgeOrderKind
+{
+   BRIDGE_ORDER_UNKNOWN = 0,
+   BRIDGE_ORDER_BUY_MARKET,
+   BRIDGE_ORDER_SELL_MARKET,
+   BRIDGE_ORDER_BUY_LIMIT,
+   BRIDGE_ORDER_SELL_LIMIT,
+   BRIDGE_ORDER_BUY_STOP,
+   BRIDGE_ORDER_SELL_STOP
+};
+
+BridgeOrderKind ParseOrderKind(string rawType)
+{
+   string normalized = Trim(rawType);
+   StringToUpper(normalized);
+   StringReplace(normalized, "_", "");
+   StringReplace(normalized, "-", "");
+   StringReplace(normalized, " ", "");
+
+   if(normalized == "BUY" || normalized == "BUYMARKET" || normalized == "MARKETBUY")
+      return BRIDGE_ORDER_BUY_MARKET;
+   if(normalized == "SELL" || normalized == "SELLMARKET" || normalized == "MARKETSELL")
+      return BRIDGE_ORDER_SELL_MARKET;
+   if(normalized == "BUYLIMIT" || normalized == "LIMITBUY")
+      return BRIDGE_ORDER_BUY_LIMIT;
+   if(normalized == "SELLLIMIT" || normalized == "LIMITSELL")
+      return BRIDGE_ORDER_SELL_LIMIT;
+   if(normalized == "BUYSTOP" || normalized == "STOPBUY")
+      return BRIDGE_ORDER_BUY_STOP;
+   if(normalized == "SELLSTOP" || normalized == "STOPSELL")
+      return BRIDGE_ORDER_SELL_STOP;
+
+   return BRIDGE_ORDER_UNKNOWN;
+}
+
+bool IsPendingKind(BridgeOrderKind kind)
+{
+   return (kind == BRIDGE_ORDER_BUY_LIMIT ||
+           kind == BRIDGE_ORDER_SELL_LIMIT ||
+           kind == BRIDGE_ORDER_BUY_STOP ||
+           kind == BRIDGE_ORDER_SELL_STOP);
+}
+
+bool IsPendingOrderType(ENUM_ORDER_TYPE type)
+{
+   return (type == ORDER_TYPE_BUY_LIMIT ||
+           type == ORDER_TYPE_SELL_LIMIT ||
+           type == ORDER_TYPE_BUY_STOP ||
+           type == ORDER_TYPE_SELL_STOP ||
+           type == ORDER_TYPE_BUY_STOP_LIMIT ||
+           type == ORDER_TYPE_SELL_STOP_LIMIT);
+}
+
+bool HasActiveBridgeExposure()
+{
+   int pTotal = PositionsTotal();
+   for(int i = 0; i < pTotal; i++)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+         continue;
+
+      long magic = PositionGetInteger(POSITION_MAGIC);
+      if((int)magic == BRIDGE_MAGIC)
+         return true;
+   }
+
+   int oTotal = OrdersTotal();
+   for(int j = 0; j < oTotal; j++)
+   {
+      ulong oTicket = OrderGetTicket(j);
+      if(oTicket == 0 || !OrderSelect(oTicket))
+         continue;
+
+      long magic = OrderGetInteger(ORDER_MAGIC);
+      ENUM_ORDER_TYPE oType = (ENUM_ORDER_TYPE)OrderGetInteger(ORDER_TYPE);
+      if((int)magic == BRIDGE_MAGIC && IsPendingOrderType(oType))
+         return true;
+   }
+
+   return false;
+}
+
+bool ExecuteSignal(string pair, string type, double entry, double tp, double sl)
 {
    if(!SymbolSelect(pair, true))
    {
@@ -261,37 +360,63 @@ bool ExecuteSignal(string pair, string type, double tp, double sl)
       return false;
    }
 
-   ENUM_ORDER_TYPE orderType;
-   if(type == "BUY" || type == "BUY MARKET")
-      orderType = ORDER_TYPE_BUY;
-   else if(type == "SELL" || type == "SELL MARKET")
-      orderType = ORDER_TYPE_SELL;
-   else
+   BridgeOrderKind orderKind = ParseOrderKind(type);
+   if(orderKind == BRIDGE_ORDER_UNKNOWN)
    {
       if(EnableLogging) Print("Unsupported order type: ", type);
       return false;
    }
 
-   double price = (orderType == ORDER_TYPE_BUY) ? SymbolInfoDouble(pair, SYMBOL_ASK) : SymbolInfoDouble(pair, SYMBOL_BID);
-   if(price <= 0.0)
-   {
-      if(EnableLogging) Print("Failed to get price for symbol: ", pair);
-      return false;
-   }
+   double price = 0.0;
 
    int digits = (int)SymbolInfoInteger(pair, SYMBOL_DIGITS);
+   entry = NormalizeDouble(entry, digits);
    tp = NormalizeDouble(tp, digits);
    sl = NormalizeDouble(sl, digits);
 
-   trade.SetExpertMagicNumber(202600);
-   bool opened = trade.PositionOpen(pair, orderType, FixedLotSize, price, sl, tp, "ARRA Bridge");
+   if(IsPendingKind(orderKind) && entry <= 0.0)
+   {
+      if(EnableLogging) Print("Pending order but entry_price invalid: ", entry);
+      return false;
+   }
+
+   trade.SetExpertMagicNumber(BRIDGE_MAGIC);
+   bool opened = false;
+
+   if(orderKind == BRIDGE_ORDER_BUY_MARKET || orderKind == BRIDGE_ORDER_SELL_MARKET)
+   {
+      ENUM_ORDER_TYPE marketType = (orderKind == BRIDGE_ORDER_BUY_MARKET) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      price = (marketType == ORDER_TYPE_BUY) ? SymbolInfoDouble(pair, SYMBOL_ASK) : SymbolInfoDouble(pair, SYMBOL_BID);
+      if(price <= 0.0)
+      {
+         if(EnableLogging) Print("Failed to get price for symbol: ", pair);
+         return false;
+      }
+      opened = trade.PositionOpen(pair, marketType, FixedLotSize, price, sl, tp, "ARRA Bridge");
+   }
+   else if(orderKind == BRIDGE_ORDER_BUY_LIMIT)
+      opened = trade.BuyLimit(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+   else if(orderKind == BRIDGE_ORDER_SELL_LIMIT)
+      opened = trade.SellLimit(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+   else if(orderKind == BRIDGE_ORDER_BUY_STOP)
+      opened = trade.BuyStop(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+   else if(orderKind == BRIDGE_ORDER_SELL_STOP)
+      opened = trade.SellStop(FixedLotSize, entry, pair, sl, tp, ORDER_TIME_GTC, 0, "ARRA Bridge");
+
    if(opened)
    {
-      if(EnableLogging) Print("Order executed: ", pair, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " @", DoubleToString(price, digits));
+      if(EnableLogging)
+      {
+         if(IsPendingKind(orderKind))
+            Print("Order placed (pending): ", pair, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " entry=", DoubleToString(entry, digits));
+         else
+            Print("Order executed (market): ", pair, " ", type, " lot=", DoubleToString(FixedLotSize, 2), " @", DoubleToString(price, digits));
+      }
       return true;
    }
 
-   if(EnableLogging) Print("Order failed: ", trade.ResultRetcodeDescription());
+   if(EnableLogging)
+      Print("Order failed [", type, "]: retcode=", trade.ResultRetcode(), " desc=", trade.ResultRetcodeDescription());
    return false;
 }
 
