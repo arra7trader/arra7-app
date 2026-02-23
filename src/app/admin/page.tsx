@@ -570,6 +570,11 @@ Tim ARRA7`;
                             </svg>
                             Add User
                         </button>
+                        <Link href="/admin/copytrade-arra77">
+                            <button className="px-4 py-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
+                                📡 Copytrade ARRA77
+                            </button>
+                        </Link>
                         <Link href="/admin/crm">
                             <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/25 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
                                 <ChartIcon size="sm" /> CRM

@@ -13,7 +13,8 @@ import {
     BriefcaseIcon,
     NewspaperIcon,
     HeartIcon,
-    CurrencyYenIcon
+    CurrencyYenIcon,
+    WifiIcon
 } from '@heroicons/react/24/solid';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
@@ -83,6 +84,14 @@ export default function AppGrid() {
             icon: <BriefcaseIcon className="w-8 h-8 text-indigo-500" />,
             href: '/portfolio',
             color: 'bg-indigo-50 group-hover:bg-indigo-100',
+        },
+        {
+            id: 'copytrade-arra77',
+            label: 'Copytrade ARRA77',
+            icon: <WifiIcon className="w-8 h-8 text-emerald-500" />,
+            href: '/copytrade-arra77',
+            color: 'bg-emerald-50 group-hover:bg-emerald-100',
+            isNew: true,
         },
         {
             id: 'social',

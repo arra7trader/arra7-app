@@ -1,0 +1,113 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { CT77_CONFIG } from '@/lib/copytrade77-config';
+import { requireCopytrade77SessionProfile } from '@/lib/copytrade77-session';
+import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
+
+export const dynamic = 'force-dynamic';
+
+function calculateCredits(amountIdr: number): number {
+  return Math.floor(amountIdr / CT77_CONFIG.creditRateIdr);
+}
+
+export async function GET() {
+  if (!isCopytrade77Configured()) {
+    return NextResponse.json(
+      { status: 'error', message: 'Copytrade ARRA77 belum dikonfigurasi.' },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const { profile } = await requireCopytrade77SessionProfile();
+    const supabase = getCopytrade77AdminClient().schema('copytrade77');
+
+    const { data: orders, error } = await supabase
+      .from('topup_orders')
+      .select('id,amount_idr,credit_amount,rate_idr_per_credit,payment_channel,status,proof_image_url,proof_note,admin_note,created_at,submitted_at,approved_at')
+      .eq('profile_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      status: 'success',
+      orders: orders || [],
+      pricing: {
+        creditRateIdr: CT77_CONFIG.creditRateIdr,
+      },
+    });
+  } catch (error: any) {
+    const message = error?.message || 'Failed to fetch topup history.';
+    const status = message === 'UNAUTHORIZED' ? 401 : 500;
+    return NextResponse.json({ status: 'error', message }, { status });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  if (!isCopytrade77Configured()) {
+    return NextResponse.json(
+      { status: 'error', message: 'Copytrade ARRA77 belum dikonfigurasi.' },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const amountIdr = Number(body?.amountIdr || 0);
+    const proofImageUrl = body?.proofImageUrl ? String(body.proofImageUrl).trim() : null;
+    const proofNote = body?.proofNote ? String(body.proofNote).trim() : null;
+
+    if (!Number.isFinite(amountIdr) || amountIdr < CT77_CONFIG.creditRateIdr) {
+      return NextResponse.json(
+        { status: 'error', message: `Nominal minimal Rp ${CT77_CONFIG.creditRateIdr.toLocaleString('id-ID')}.` },
+        { status: 400 }
+      );
+    }
+
+    const creditAmount = calculateCredits(amountIdr);
+    if (creditAmount <= 0) {
+      return NextResponse.json(
+        { status: 'error', message: 'Nominal tidak valid untuk konversi credit.' },
+        { status: 400 }
+      );
+    }
+
+    const { profile } = await requireCopytrade77SessionProfile();
+    const supabase = getCopytrade77AdminClient().schema('copytrade77');
+
+    const status = proofImageUrl ? 'SUBMITTED' : 'DRAFT';
+
+    const { data, error } = await supabase
+      .from('topup_orders')
+      .insert({
+        profile_id: profile.id,
+        amount_idr: amountIdr,
+        credit_amount: creditAmount,
+        rate_idr_per_credit: CT77_CONFIG.creditRateIdr,
+        payment_channel: 'QRIS_MANUAL',
+        status,
+        proof_image_url: proofImageUrl,
+        proof_note: proofNote,
+        submitted_at: status === 'SUBMITTED' ? new Date().toISOString() : null,
+      })
+      .select('id,amount_idr,credit_amount,status,created_at')
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      status: 'success',
+      message:
+        status === 'SUBMITTED'
+          ? 'Topup berhasil dikirim. Menunggu approval admin.'
+          : 'Draft topup berhasil dibuat. Silakan upload bukti transfer.',
+      order: data,
+    });
+  } catch (error: any) {
+    const message = error?.message || 'Failed to create topup order.';
+    const status = message === 'UNAUTHORIZED' ? 401 : 500;
+    return NextResponse.json({ status: 'error', message }, { status });
+  }
+}
+

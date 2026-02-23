@@ -25,6 +25,7 @@ export default function Navbar() {
 
     const navItems = [
         { label: t('home'), href: '/' },
+        { label: 'Copytrade', href: '/copytrade-arra77' },
         { label: t('pricing'), href: '/pricing' },
         { label: 'FAQ', href: '/faq' },
         {
