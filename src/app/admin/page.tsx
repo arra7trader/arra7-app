@@ -338,10 +338,22 @@ export default function AdminDashboard() {
         setMessage(null);
 
         try {
+            const payload: Record<string, unknown> = {
+                userId,
+                membership,
+                durationDays: days,
+                duration: durationId,
+                extendFromCurrent: true,
+            };
+
+            if (option.customExpiresAt) {
+                payload.expiresAt = option.customExpiresAt;
+            }
+
             const response = await fetch('/api/admin/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, membership, durationDays: days, duration: durationId }),
+                body: JSON.stringify(payload),
             });
 
             const data = await response.json();
@@ -351,8 +363,20 @@ export default function AdminDashboard() {
                 fetchUsers();
 
                 // Show notification modal
-                const expiresDate = new Date();
-                expiresDate.setDate(expiresDate.getDate() + days);
+                const responseExpiry = typeof data.membershipExpires === 'string'
+                    ? new Date(data.membershipExpires)
+                    : null;
+                const hasResponseExpiry = responseExpiry && !Number.isNaN(responseExpiry.getTime());
+
+                let expiresDate: Date;
+                if (hasResponseExpiry && responseExpiry) {
+                    expiresDate = responseExpiry;
+                } else if (option.customExpiresAt) {
+                    expiresDate = new Date(option.customExpiresAt);
+                } else {
+                    expiresDate = new Date();
+                    expiresDate.setDate(expiresDate.getDate() + days);
+                }
                 setNotification({
                     userName,
                     userEmail,
@@ -937,6 +961,7 @@ Tim ARRA7`;
             <UpgradeDurationModal
                 isOpen={isDurationModalOpen}
                 membership={upgradeTargetMembership}
+                currentExpiresAt={upgradeTargetUser?.membershipExpires || null}
                 onSelect={handleDurationSelect}
                 onClose={() => {
                     setIsDurationModalOpen(false);
@@ -946,3 +971,4 @@ Tim ARRA7`;
         </div >
     );
 }
+

@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ status: 'error', message: 'User ID is required for update' }, { status: 400 });
             }
 
-            const { duration } = body; // Get duration string if passed
+            const { duration, expiresAt: requestedExpiresAt, extendFromCurrent } = body; // Get duration string if passed
 
             // Build dynamic update query
             const updates: string[] = [];
@@ -270,14 +270,48 @@ export async function POST(request: NextRequest) {
                 args.push(membership);
 
                 // If updating membership, also update expiry if it wasn't there or if we want to extend
-                if (membership !== 'BASIC' && durationDays) {
-                    const d = new Date();
-                    d.setDate(d.getDate() + durationDays);
-                    updates.push('membership_expires = ?');
-                    args.push(d.toISOString());
+                if (membership !== 'BASIC' && membership !== 'ADMIN') {
+                    let nextExpiry: string | null = null;
+
+                    if (typeof requestedExpiresAt === 'string' && requestedExpiresAt.trim().length > 0) {
+                        const requestedDate = new Date(requestedExpiresAt);
+                        if (Number.isNaN(requestedDate.getTime())) {
+                            return NextResponse.json({ status: 'error', message: 'Invalid expiresAt date format' }, { status: 400 });
+                        }
+                        nextExpiry = requestedDate.toISOString();
+                    } else if (durationDays) {
+                        let baseDate = new Date();
+
+                        if (extendFromCurrent) {
+                            try {
+                                const currentMembership = await turso.execute({
+                                    sql: 'SELECT membership_expires FROM users WHERE id = ?',
+                                    args: [targetId],
+                                });
+                                const currentExpiryValue = currentMembership.rows[0]?.membership_expires as string | null | undefined;
+                                if (currentExpiryValue) {
+                                    const currentExpiryDate = new Date(currentExpiryValue);
+                                    if (!Number.isNaN(currentExpiryDate.getTime()) && currentExpiryDate > baseDate) {
+                                        baseDate = currentExpiryDate;
+                                    }
+                                }
+                            } catch (lookupError) {
+                                console.error('[ADMIN] Failed to load current membership expiry:', lookupError);
+                                // fallback: keep baseDate as current time
+                            }
+                        }
+
+                        baseDate.setDate(baseDate.getDate() + durationDays);
+                        nextExpiry = baseDate.toISOString();
+                    }
+
+                    if (nextExpiry) {
+                        updates.push('membership_expires = ?');
+                        args.push(nextExpiry);
+                    }
 
                     // Increment promo slot usage if duration is provided
-                    if (duration) {
+                    if (duration && duration !== 'custom_date') {
                         try {
                             await turso.execute({
                                 sql: `INSERT INTO promo_slots (membership, duration, used_count, max_count)
@@ -318,7 +352,17 @@ export async function POST(request: NextRequest) {
                 updates: updates.map(u => u.split(' =')[0])
             });
 
-            return NextResponse.json({ status: 'success', message: 'User updated successfully' });
+            const updatedUser = await turso.execute({
+                sql: 'SELECT membership_expires FROM users WHERE id = ?',
+                args: [targetId]
+            });
+            const membershipExpires = (updatedUser.rows[0]?.membership_expires as string | null | undefined) ?? null;
+
+            return NextResponse.json({
+                status: 'success',
+                message: 'User updated successfully',
+                membershipExpires
+            });
         } else {
             return NextResponse.json({ status: 'error', message: 'Invalid action' }, { status: 400 });
         }

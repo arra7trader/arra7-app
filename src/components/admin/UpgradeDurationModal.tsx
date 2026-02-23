@@ -10,11 +10,13 @@ export interface DurationOption {
     usedSlots?: number;
     label: string;
     icon: string;
+    customExpiresAt?: string;
 }
 
 interface UpgradeDurationModalProps {
     isOpen: boolean;
     membership: 'PRO' | 'VVIP';
+    currentExpiresAt?: string | null;
     onSelect: (option: DurationOption) => void;
     onClose: () => void;
 }
@@ -96,13 +98,18 @@ const DURATION_OPTIONS: Record<'PRO' | 'VVIP', DurationOption[]> = {
     ],
 };
 
-export default function UpgradeDurationModal({ isOpen, membership, onSelect, onClose }: UpgradeDurationModalProps) {
+export default function UpgradeDurationModal({ isOpen, membership, currentExpiresAt, onSelect, onClose }: UpgradeDurationModalProps) {
     const [slots, setSlots] = useState<Record<string, { used: number; remaining: number; max: number }>>({});
     const [loading, setLoading] = useState(true);
+    const [customDate, setCustomDate] = useState('');
 
     useEffect(() => {
         if (isOpen) {
+            setLoading(true);
             fetchSlots();
+            const base = new Date();
+            base.setDate(base.getDate() + 30);
+            setCustomDate(base.toISOString().split('T')[0]);
         }
     }, [isOpen]);
 
@@ -134,6 +141,29 @@ export default function UpgradeDurationModal({ isOpen, membership, onSelect, onC
         onSelect(option);
     };
 
+    const handleSelectCustomDate = () => {
+        if (!customDate) return;
+        const selected = new Date(`${customDate}T23:59:59`);
+        if (Number.isNaN(selected.getTime())) return;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selected < today) return;
+
+        const now = new Date();
+        const diffMs = selected.getTime() - now.getTime();
+        const diffDays = Math.max(1, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
+
+        onSelect({
+            duration: 'custom_date',
+            days: diffDays,
+            price: 'Manual Date',
+            priceValue: 0,
+            label: `Sampai ${selected.toLocaleDateString('id-ID')}`,
+            icon: '📅',
+            customExpiresAt: selected.toISOString(),
+        });
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -157,6 +187,11 @@ export default function UpgradeDurationModal({ isOpen, membership, onSelect, onC
                                     Pilih Durasi Upgrade - {membership}
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">Pilih paket durasi untuk user</p>
+                                {currentExpiresAt && (
+                                    <p className="text-xs text-emerald-600 mt-2">
+                                        Expiry saat ini: {new Date(currentExpiresAt).toLocaleDateString('id-ID')}
+                                    </p>
+                                )}
                             </div>
                             <button
                                 onClick={onClose}
@@ -228,6 +263,30 @@ export default function UpgradeDurationModal({ isOpen, membership, onSelect, onC
                                     </motion.button>
                                 );
                             })
+                        )}
+
+                        {!loading && (
+                            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                                <p className="text-sm font-semibold text-blue-900">Atur Expiry Manual</p>
+                                <p className="mt-1 text-xs text-blue-700">
+                                    Gunakan ini jika user upgrade di tengah jalan dan kamu ingin set tanggal akhir spesifik.
+                                </p>
+                                <div className="mt-3 flex items-center gap-2">
+                                    <input
+                                        type="date"
+                                        value={customDate}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        onChange={(event) => setCustomDate(event.target.value)}
+                                        className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                    />
+                                    <button
+                                        onClick={handleSelectCustomDate}
+                                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                                    >
+                                        Set Tanggal
+                                    </button>
+                                </div>
+                            </div>
                         )}
                     </div>
 
