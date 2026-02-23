@@ -327,10 +327,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (!selected.dispatchRow) {
+      const fallbackReason = selected.holdReason || generation?.reason || 'NO_SIGNAL_AVAILABLE';
       return NextResponse.json({
         status: 'ok',
         hasSignal: false,
-        reason: selected.holdReason || null,
+        reason: fallbackReason,
         generation,
       });
     }

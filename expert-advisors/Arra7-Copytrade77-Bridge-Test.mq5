@@ -39,8 +39,9 @@ struct PositionMap
 };
 
 CTrade g_trade;
-datetime g_last_poll = 0;
-datetime g_last_heartbeat = 0;
+ulong g_last_poll_ms = 0;
+ulong g_last_heartbeat_ms = 0;
+int g_idle_poll_streak = 0;
 PositionMap g_positions[];
 
 string TrimSlashRight(const string value)
@@ -105,46 +106,53 @@ bool HttpRequest(const string method, const string url, const string body, int &
 string JsonGetString(const string json, const string key)
 {
    string marker = "\"" + key + "\":";
-   int idx = StringFind(json, marker);
-   if(idx < 0)
-      return "";
-
-   idx += StringLen(marker);
    int len = StringLen(json);
-   while(idx < len)
+   int search_from = 0;
+   while(search_from < len)
    {
-      ushort ch = (ushort)StringGetCharacter(json, idx);
-      if(ch == 32 || ch == 9)
+      int idx = StringFind(json, marker, search_from);
+      if(idx < 0)
+         return "";
+
+      idx += StringLen(marker);
+      while(idx < len)
+      {
+         ushort ch = (ushort)StringGetCharacter(json, idx);
+         if(ch == 32 || ch == 9)
+         {
+            idx++;
+            continue;
+         }
+         break;
+      }
+
+      if(idx < len && (ushort)StringGetCharacter(json, idx) == 34)
       {
          idx++;
-         continue;
+         int end = idx;
+         while(end < len)
+         {
+            ushort ch = (ushort)StringGetCharacter(json, end);
+            if(ch == 34)
+            {
+               ushort prev = (ushort)StringGetCharacter(json, end - 1);
+               if(prev != 92)
+                  break;
+            }
+            end++;
+         }
+         if(end > idx && end < len)
+         {
+            string out = StringSubstr(json, idx, end - idx);
+            StringReplace(out, "\\\"", "\"");
+            StringReplace(out, "\\\\", "\\");
+            return out;
+         }
       }
-      break;
+
+      search_from = idx + 1;
    }
-
-   if(idx >= len || (ushort)StringGetCharacter(json, idx) != 34)
-      return "";
-
-   idx++;
-   int end = idx;
-   while(end < len)
-   {
-      ushort ch = (ushort)StringGetCharacter(json, end);
-      if(ch == 34)
-      {
-         ushort prev = (ushort)StringGetCharacter(json, end - 1);
-         if(prev != 92)
-            break;
-      }
-      end++;
-   }
-   if(end <= idx || end >= len)
-      return "";
-
-   string out = StringSubstr(json, idx, end - idx);
-   StringReplace(out, "\\\"", "\"");
-   StringReplace(out, "\\\\", "\\");
-   return out;
+   return "";
 }
 
 double JsonGetNumber(const string json, const string key, const double fallback)
@@ -653,8 +661,15 @@ void PollAndExecute()
    {
       if(dispatch.reason != "")
          Print("ARRA7 Bridge no signal. reason=", dispatch.reason);
+      else
+      {
+         g_idle_poll_streak++;
+         if((g_idle_poll_streak % 20) == 0)
+            Print("ARRA7 Bridge no signal (idle). polling still active.");
+      }
       return;
    }
+   g_idle_poll_streak = 0;
 
    if(dispatch.symbol != InpSymbol)
    {
@@ -730,17 +745,20 @@ void OnTimer()
    if(!TerminalInfoInteger(TERMINAL_CONNECTED))
       return;
 
-   datetime now = TimeCurrent();
-   if(g_last_heartbeat == 0 || (now - g_last_heartbeat) >= InpHeartbeatSeconds)
+   ulong now_ms = (ulong)GetTickCount();
+   ulong heartbeat_interval_ms = (ulong)MathMax(1, InpHeartbeatSeconds) * 1000;
+   ulong poll_interval_ms = (ulong)MathMax(1, InpPollSeconds) * 1000;
+
+   if(g_last_heartbeat_ms == 0 || (now_ms - g_last_heartbeat_ms) >= heartbeat_interval_ms)
    {
       SendHeartbeat();
-      g_last_heartbeat = now;
+      g_last_heartbeat_ms = now_ms;
    }
 
-   if(g_last_poll == 0 || (now - g_last_poll) >= InpPollSeconds)
+   if(g_last_poll_ms == 0 || (now_ms - g_last_poll_ms) >= poll_interval_ms)
    {
       PollAndExecute();
-      g_last_poll = now;
+      g_last_poll_ms = now_ms;
    }
 
    ProcessClosedPositions();
