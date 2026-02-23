@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const amountIdr = Number(body?.amountIdr || 0);
-    const proofImageUrl = body?.proofImageUrl ? String(body.proofImageUrl).trim() : null;
     const proofNote = body?.proofNote ? String(body.proofNote).trim() : null;
 
     if (!Number.isFinite(amountIdr) || amountIdr < CT77_CONFIG.creditRateIdr) {
@@ -76,8 +75,6 @@ export async function POST(request: NextRequest) {
     const { profile } = await requireCopytrade77SessionProfile();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
 
-    const status = proofImageUrl ? 'SUBMITTED' : 'DRAFT';
-
     const { data, error } = await supabase
       .from('topup_orders')
       .insert({
@@ -86,10 +83,9 @@ export async function POST(request: NextRequest) {
         credit_amount: creditAmount,
         rate_idr_per_credit: CT77_CONFIG.creditRateIdr,
         payment_channel: 'QRIS_MANUAL',
-        status,
-        proof_image_url: proofImageUrl,
+        status: 'SUBMITTED',
         proof_note: proofNote,
-        submitted_at: status === 'SUBMITTED' ? new Date().toISOString() : null,
+        submitted_at: new Date().toISOString(),
       })
       .select('id,amount_idr,credit_amount,status,created_at')
       .single();
@@ -98,10 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       status: 'success',
-      message:
-        status === 'SUBMITTED'
-          ? 'Topup berhasil dikirim. Menunggu approval admin.'
-          : 'Draft topup berhasil dibuat. Silakan upload bukti transfer.',
+      message: 'Topup berhasil dibuat. Silakan konfirmasi pembayaran via Telegram seperti flow pricing.',
       order: data,
     });
   } catch (error: any) {
@@ -110,4 +103,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-

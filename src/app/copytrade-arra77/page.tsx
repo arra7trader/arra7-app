@@ -38,8 +38,6 @@ export default function CopytradeArra77Page() {
   const [terminals, setTerminals] = useState<any[]>([]);
 
   const [amountIdr, setAmountIdr] = useState(100000);
-  const [proofUrl, setProofUrl] = useState('');
-  const [proofNote, setProofNote] = useState('');
   const [terminalLabel, setTerminalLabel] = useState('');
   const [terminalFollowId, setTerminalFollowId] = useState('');
   const [newCreds, setNewCreds] = useState<{ key: string; secret: string } | null>(null);
@@ -83,6 +81,28 @@ export default function CopytradeArra77Page() {
     if (j.status !== 'success') throw new Error(j.message || 'Action failed');
     setMsg(j.message || successMsg);
     return j;
+  }
+
+  function openTelegramTopupConfirmation(order: { id: string; amount_idr: number; credit_amount: number }) {
+    const merchantName = data?.qris?.merchantName || 'ARRA7 FULLSTACK DEVELOPER';
+    const nmid = data?.qris?.nmid || '-';
+    const username = 'arra7trader';
+    const text = [
+      'Halo Admin ARRA7!',
+      '',
+      'Saya sudah transfer topup Copytrade ARRA77 via QRIS:',
+      `Order ID: ${order.id}`,
+      `Email: ${session?.user?.email || '-'}`,
+      `Nama: ${session?.user?.name || '-'}`,
+      `Nominal: ${fmtIdr(Number(order.amount_idr || 0))}`,
+      `Credit: ${Number(order.credit_amount || 0)} cr`,
+      `Merchant: ${merchantName}`,
+      `NMID: ${nmid}`,
+      '',
+      'Mohon diproses. Berikut bukti pembayarannya saya lampirkan di chat ini.',
+    ].join('\n');
+    const link = `https://t.me/${username}?text=${encodeURIComponent(text)}`;
+    window.open(link, '_blank', 'noopener,noreferrer');
   }
 
   if (status === 'loading' || loading) return <div className="min-h-screen pt-32 text-center">Loading Copytrade ARRA77...</div>;
@@ -233,14 +253,13 @@ export default function CopytradeArra77Page() {
                 <img src={String(data.qris.imageUrl)} alt="QRIS Payment" className="w-full max-w-sm rounded-xl border border-slate-200" />
               )}
               <input type="number" value={amountIdr} onChange={(e) => setAmountIdr(Number(e.target.value || 0))} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Nominal transfer" />
-              <input value={proofUrl} onChange={(e) => setProofUrl(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="URL bukti transfer (opsional)" />
-              <textarea value={proofNote} onChange={(e) => setProofNote(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm min-h-[80px]" placeholder="Catatan bukti" />
               <button
                 onClick={async () => {
                   try {
-                    await act('/api/copytrade-arra77/topup', { amountIdr, proofImageUrl: proofUrl || null, proofNote: proofNote || null }, 'Topup terkirim');
-                    setProofUrl('');
-                    setProofNote('');
+                    const r = await act('/api/copytrade-arra77/topup', { amountIdr }, 'Topup terkirim');
+                    if (r?.order?.id) {
+                      openTelegramTopupConfirmation(r.order);
+                    }
                     await refresh();
                   } catch (e: any) {
                     setError(e.message);
@@ -248,9 +267,9 @@ export default function CopytradeArra77Page() {
                 }}
                 className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-sm"
               >
-                Kirim Topup
+                Konfirmasi Topup via Telegram
               </button>
-              <p className="text-xs text-slate-500">Status akan berubah setelah approval admin.</p>
+              <p className="text-xs text-slate-500">Flow sama seperti pricing: scan QRIS, lalu kirim bukti pembayaran ke Telegram admin.</p>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
               <h3 className="font-semibold mb-2">Riwayat Topup</h3>
