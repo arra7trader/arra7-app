@@ -22,6 +22,12 @@ export async function POST(req: Request) {
         if (![entry_price, tp, sl].every((value) => Number.isFinite(Number(value)))) {
             return NextResponse.json({ error: 'Invalid numeric value' }, { status: 400 });
         }
+        const entryNum = Number(entry_price);
+        const tpNum = Number(tp);
+        const slNum = Number(sl);
+        if (entryNum <= 0 || tpNum <= 0 || slNum <= 0) {
+            return NextResponse.json({ error: 'entry_price, tp, dan sl harus lebih besar dari 0' }, { status: 400 });
+        }
 
         const normalizedPair = normalizeBridgePair(pair);
         if (!normalizedPair) {
@@ -41,9 +47,9 @@ export async function POST(req: Request) {
             .insert({
                 pair: normalizedPair,
                 type: normalizedType,
-                entry_price: Number(entry_price),
-                tp: Number(tp),
-                sl: Number(sl),
+                entry_price: entryNum,
+                tp: tpNum,
+                sl: slNum,
             })
             .select('id')
             .single();

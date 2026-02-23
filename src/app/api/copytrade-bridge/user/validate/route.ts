@@ -76,6 +76,9 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
             .from('ai_signal_store')
             .select('id, pair, type, entry_price, tp, sl, created_at')
             .gte('created_at', signalSince)
+            .gt('entry_price', 0)
+            .gt('tp', 0)
+            .gt('sl', 0)
             .order('created_at', { ascending: false })
             .limit(10);
 
@@ -96,7 +99,10 @@ async function validateKey(licenseKey: string, signedRequest: boolean) {
                     type: normalizedType,
                 };
             })
-            .filter((signal): signal is NonNullable<typeof signal> => Boolean(signal && signal.pair));
+            .filter((signal): signal is NonNullable<typeof signal> => {
+                if (!signal || !signal.pair) return false;
+                return Number(signal.entry_price) > 0 && Number(signal.tp) > 0 && Number(signal.sl) > 0;
+            });
 
         return NextResponse.json({
             success: true,

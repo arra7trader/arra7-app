@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
         const { data: signals, error } = await copytradeSupabase
             .from('ai_signal_store')
             .select('id, pair, type, entry_price, tp, sl, created_at')
+            .gt('entry_price', 0)
+            .gt('tp', 0)
+            .gt('sl', 0)
             .order('created_at', { ascending: false })
             .limit(limit);
 

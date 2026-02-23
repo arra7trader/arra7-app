@@ -209,15 +209,25 @@ export default function AdminCopytradeBridgePage() {
         setSaving(true);
         setMessage('');
         try {
+            const entryNum = Number(signalForm.entry_price);
+            const tpNum = Number(signalForm.tp);
+            const slNum = Number(signalForm.sl);
+            if (!Number.isFinite(entryNum) || !Number.isFinite(tpNum) || !Number.isFinite(slNum)) {
+                throw new Error('Entry/TP/SL wajib angka valid.');
+            }
+            if (entryNum <= 0 || tpNum <= 0 || slNum <= 0) {
+                throw new Error('Entry, TP, dan SL harus lebih besar dari 0.');
+            }
+
             const response = await fetch('/api/copytrade-bridge/signal', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     pair: signalForm.pair.toUpperCase().trim(),
                     type: signalForm.type,
-                    entry_price: Number(signalForm.entry_price),
-                    tp: Number(signalForm.tp),
-                    sl: Number(signalForm.sl),
+                    entry_price: entryNum,
+                    tp: tpNum,
+                    sl: slNum,
                 }),
             });
             const data = await response.json();
