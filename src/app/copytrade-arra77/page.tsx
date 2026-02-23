@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-type Tab = 'overview' | 'providers' | 'topup' | 'setup';
+type Tab = 'overview' | 'providers' | 'provider-system' | 'topup' | 'setup';
 
 function fmtDate(v?: string | null) {
   if (!v) return '-';
@@ -34,6 +34,7 @@ export default function CopytradeArra77Page() {
   const [error, setError] = useState<string>('');
   const [data, setData] = useState<any>(null);
   const [providers, setProviders] = useState<any[]>([]);
+  const [providerMeta, setProviderMeta] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [terminals, setTerminals] = useState<any[]>([]);
 
@@ -64,6 +65,14 @@ export default function CopytradeArra77Page() {
       if (a.status !== 'success') throw new Error(a.message || 'Gagal load Copytrade ARRA77');
       setData(a);
       setProviders(b.status === 'success' ? b.providers || [] : []);
+      setProviderMeta(
+        b.status === 'success'
+          ? {
+              myProvider: b.myProvider || null,
+              providerRules: b.providerRules || null,
+            }
+          : null
+      );
       setOrders(c.status === 'success' ? c.orders || [] : []);
       setTerminals(d.status === 'success' ? d.terminals || [] : []);
     } catch (e: any) {
@@ -107,6 +116,14 @@ export default function CopytradeArra77Page() {
 
   if (status === 'loading' || loading) return <div className="min-h-screen pt-32 text-center">Loading Copytrade ARRA77...</div>;
 
+  const myProvider = providerMeta?.myProvider || data?.provider || null;
+  const providerRules = providerMeta?.providerRules || null;
+  const providerCreditRate = Number(providerRules?.creditRateIdr || data?.topupPricing?.creditRateIdr || 1000);
+  const myChallenge = myProvider?.challenge || null;
+  const challengeProgressPct = myChallenge
+    ? Math.min(100, Math.round((Number(myChallenge.totalTrades || 0) / Math.max(1, Number(myChallenge.targetTrades || 1))) * 100))
+    : 0;
+
   return (
     <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
       <div className="max-w-7xl mx-auto space-y-4">
@@ -135,6 +152,10 @@ export default function CopytradeArra77Page() {
               <p className="text-xs text-slate-500">Spent Hari Ini</p>
               <p className="font-semibold">{data?.summary?.todaySpentCredits ?? 0} cr</p>
             </div>
+            <div className="rounded-xl bg-white border border-slate-200 p-3 col-span-2 md:col-span-1">
+              <p className="text-xs text-slate-500">Earning Provider</p>
+              <p className="font-semibold">{data?.summary?.providerRevenueCredits ?? 0} cr</p>
+            </div>
           </div>
         </div>
 
@@ -142,9 +163,17 @@ export default function CopytradeArra77Page() {
         {error && <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>}
 
         <div className="flex gap-2 overflow-auto">
-          {(['overview', 'providers', 'topup', 'setup'] as Tab[]).map((k) => (
+          {(['overview', 'providers', 'provider-system', 'topup', 'setup'] as Tab[]).map((k) => (
             <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-xl text-sm ${tab === k ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
-              {k === 'overview' ? 'Dashboard' : k === 'providers' ? 'Provider' : k === 'topup' ? 'Topup' : 'Setup EA'}
+              {k === 'overview'
+                ? 'Dashboard'
+                : k === 'providers'
+                  ? 'Provider'
+                  : k === 'provider-system'
+                    ? 'Sistem Provider'
+                    : k === 'topup'
+                      ? 'Topup'
+                      : 'Setup EA'}
             </button>
           ))}
         </div>
@@ -196,6 +225,67 @@ export default function CopytradeArra77Page() {
 
         {tab === 'providers' && (
           <div className="space-y-4">
+            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="font-semibold">Status Provider Saya</h3>
+                  {myProvider ? (
+                    <>
+                      <p className="text-sm text-slate-700 mt-1">
+                        <span className="font-medium">{myProvider.name}</span> @{myProvider.slug}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Status: <span className="font-medium">{myProvider.status}</span>
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-500 mt-1">Belum terdaftar sebagai provider.</p>
+                  )}
+                </div>
+                <button onClick={refresh} className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-1.5 text-xs">
+                  Refresh Progress
+                </button>
+              </div>
+
+              {myProvider && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Total Earning Provider</p>
+                    <p className="font-semibold">{myProvider.earnings?.totalProviderRevenueCredits || 0} cr</p>
+                    <p className="text-xs text-slate-500">{fmtIdr(Number(myProvider.earnings?.totalProviderRevenueIdr || 0))}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Saldo Wallet</p>
+                    <p className="font-semibold">{myProvider.earnings?.walletBalanceCredits || 0} cr</p>
+                    <p className="text-xs text-slate-500">
+                      Setara {fmtIdr((Number(myProvider.earnings?.walletBalanceCredits || 0) || 0) * providerCreditRate)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Update Revenue Terakhir</p>
+                    <p className="font-semibold text-sm">{fmtDate(myProvider.earnings?.lastProviderRevenueAt)}</p>
+                  </div>
+                </div>
+              )}
+
+              {myChallenge && (
+                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                  <div className="flex justify-between gap-3 flex-wrap">
+                    <p className="text-sm text-blue-900 font-medium">
+                      Challenge: {myChallenge.totalTrades}/{myChallenge.targetTrades} trade | Winrate {myChallenge.winRatePct}%
+                    </p>
+                    <p className="text-xs text-blue-700">Min winrate {myChallenge.minWinRatePct}%</p>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-blue-100 overflow-hidden">
+                    <div className="h-2 rounded-full bg-blue-600" style={{ width: `${challengeProgressPct}%` }} />
+                  </div>
+                  <p className="text-xs text-blue-700 mt-2">
+                    Wins {myChallenge.wins} | Loss {myChallenge.losses} | BE {myChallenge.breakevenCount} | Status {myChallenge.status}
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {providers.length === 0 && <div className="rounded-2xl bg-white border border-slate-200 p-4 text-sm text-slate-500">Belum ada provider aktif.</div>}
               {providers.map((p) => (
@@ -222,6 +312,9 @@ export default function CopytradeArra77Page() {
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
               <h3 className="font-semibold">Daftar jadi Provider</h3>
+              <p className="text-xs text-slate-500">
+                Challenge otomatis: {providerRules?.challengeTargetTrades || 50} trade demo, winrate minimal {providerRules?.challengeMinWinRatePct || 60}%.
+              </p>
               <input value={providerName} onChange={(e) => setProviderName(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Nama provider" />
               <textarea value={providerBio} onChange={(e) => setProviderBio(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm min-h-[90px]" placeholder="Bio trading style" />
               <button
@@ -238,7 +331,49 @@ export default function CopytradeArra77Page() {
               >
                 Ajukan Provider
               </button>
-              <p className="text-xs text-slate-500">Review admin: <Link className="underline" href="/admin/copytrade-arra77">/admin/copytrade-arra77</Link></p>
+              <p className="text-xs text-slate-500">
+                Broker bebas. Setelah approve, bagi hasil per signal: admin {providerRules?.adminShareCredits || 1} credit,
+                provider {providerRules?.providerShareCredits || 2} credit.
+              </p>
+              <p className="text-xs text-slate-500">Opsional review admin manual: <Link className="underline" href="/admin/copytrade-arra77">/admin/copytrade-arra77</Link></p>
+            </div>
+          </div>
+        )}
+
+        {tab === 'provider-system' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+              <h3 className="font-semibold">Alur Menjadi Provider</h3>
+              <ol className="list-decimal ml-5 text-sm text-slate-700 space-y-1">
+                <li>Ajukan provider dari tab Provider.</li>
+                <li>Generate terminal bridge dan pasang EA di akun demo broker apa pun.</li>
+                <li>Kirim trade close ke endpoint challenge provider.</li>
+                <li>Sistem validasi otomatis saat mencapai target trade.</li>
+                <li>Jika lolos winrate minimum, provider auto-approve.</li>
+              </ol>
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-700">
+                <p>Target challenge: <span className="font-medium">{providerRules?.challengeTargetTrades || 50} trade closed</span></p>
+                <p>Winrate minimum: <span className="font-medium">{providerRules?.challengeMinWinRatePct || 60}%</span></p>
+                <p>Support broker: <span className="font-medium">Broker bebas (asal EA aktif)</span></p>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+              <h3 className="font-semibold">Sistem Bagi Hasil & Endpoint</h3>
+              <p className="text-sm text-slate-700">
+                1 signal menelan {providerRules?.signalCostCredits || 3} credit dari follower. Distribusi otomatis:
+                admin {providerRules?.adminShareCredits || 1} credit, provider {providerRules?.providerShareCredits || 2} credit.
+              </p>
+              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-900 break-all">
+                Endpoint challenge close trade:
+                <br />
+                <code>/api/copytrade-arra77/bridge/provider/challenge/trade</code>
+              </div>
+              <p className="text-xs text-slate-500">
+                Payload minimal: <code>tradeId/ticket</code>, <code>symbol</code>, <code>side</code>, <code>entryPrice</code>, <code>closePrice</code>, <code>pnlValue/pipsResult</code>.
+              </p>
+              <p className="text-xs text-slate-500">
+                Akumulasi hasil provider bisa dipantau di tab Provider pada bagian <span className="font-medium">Total Earning Provider</span>.
+              </p>
             </div>
           </div>
         )}
@@ -305,6 +440,7 @@ export default function CopytradeArra77Page() {
                   <li>Generate `Bridge Key + Secret` di panel ini.</li>
                   <li>Isi endpoint bridge: `/api/copytrade-arra77/bridge`.</li>
                   <li>Attach EA di chart XAUUSD M15, aktifkan Algo Trading.</li>
+                  <li>Untuk challenge provider, kirim closed trade ke `/api/copytrade-arra77/bridge/provider/challenge/trade`.</li>
                 </ol>
               </div>
 

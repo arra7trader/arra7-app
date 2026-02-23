@@ -33,6 +33,19 @@ export async function GET(request: NextRequest) {
           id,
           email,
           display_name
+        ),
+        provider_challenges (
+          status,
+          target_trades,
+          min_win_rate_pct,
+          total_trades,
+          wins,
+          losses,
+          breakeven_count,
+          win_rate_pct,
+          started_at,
+          completed_at,
+          last_trade_at
         )
       `)
       .order('created_at', { ascending: false });

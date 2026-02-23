@@ -18,6 +18,8 @@ export const CT77_CONFIG = {
   signalCostCredits: parseIntSafe(process.env.CT77_SIGNAL_COST_CREDITS, 3),
   adminShareCredits: parseIntSafe(process.env.CT77_ADMIN_SHARE_CREDITS, 1),
   providerShareCredits: parseIntSafe(process.env.CT77_PROVIDER_SHARE_CREDITS, 2),
+  providerChallengeTargetTrades: parseIntSafe(process.env.CT77_PROVIDER_CHALLENGE_TARGET_TRADES, 50),
+  providerChallengeMinWinRatePct: parseIntSafe(process.env.CT77_PROVIDER_CHALLENGE_MIN_WIN_RATE_PCT, 60),
   minSlPips: parseIntSafe(process.env.CT77_MIN_SL_PIPS, 70),
   oneTradeLock: parseBoolSafe(process.env.CT77_ONE_TRADE_LOCK, true),
   bridgeMaxSkewSeconds: parseIntSafe(process.env.CT77_BRIDGE_MAX_SKEW_SECONDS, 60),

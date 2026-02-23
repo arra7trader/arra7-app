@@ -181,6 +181,12 @@ export default function CopytradeArra77AdminPage() {
                   <div>
                     <p className="font-medium text-sm">{p.display_name} @{p.slug}</p>
                     <p className="text-xs text-slate-500">Owner: {p.profiles?.email || '-'} • Risk {p.risk_level} • Status {p.status}</p>
+                    {Array.isArray(p.provider_challenges) && p.provider_challenges[0] && (
+                      <p className="text-xs text-blue-700">
+                        Challenge {p.provider_challenges[0].total_trades || 0}/{p.provider_challenges[0].target_trades || 0}
+                        {' '}| Winrate {p.provider_challenges[0].win_rate_pct || 0}% (min {p.provider_challenges[0].min_win_rate_pct || 0}%)
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => adminAct('/api/admin/copytrade-arra77/providers', { action: 'APPROVE', providerId: p.id }, 'Provider approved')} className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs">Approve</button>
@@ -257,4 +263,3 @@ export default function CopytradeArra77AdminPage() {
     </div>
   );
 }
-

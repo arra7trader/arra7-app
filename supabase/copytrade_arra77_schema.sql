@@ -50,6 +50,46 @@ create table if not exists copytrade77.providers (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists copytrade77.provider_challenges (
+  id uuid primary key default gen_random_uuid(),
+  provider_id uuid not null unique references copytrade77.providers(id) on delete cascade,
+  status text not null default 'IN_PROGRESS' check (status in ('IN_PROGRESS', 'PASSED', 'FAILED')),
+  target_trades integer not null default 50 check (target_trades > 0),
+  min_win_rate_pct numeric(5,2) not null default 60 check (min_win_rate_pct >= 0 and min_win_rate_pct <= 100),
+  total_trades integer not null default 0 check (total_trades >= 0),
+  wins integer not null default 0 check (wins >= 0),
+  losses integer not null default 0 check (losses >= 0),
+  breakeven_count integer not null default 0 check (breakeven_count >= 0),
+  win_rate_pct numeric(5,2) not null default 0 check (win_rate_pct >= 0 and win_rate_pct <= 100),
+  started_at timestamptz not null default now(),
+  completed_at timestamptz,
+  last_trade_at timestamptz,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists copytrade77.provider_challenge_trades (
+  id uuid primary key default gen_random_uuid(),
+  challenge_id uuid not null references copytrade77.provider_challenges(id) on delete cascade,
+  provider_id uuid not null references copytrade77.providers(id) on delete cascade,
+  terminal_id uuid references copytrade77.bridge_terminals(id) on delete set null,
+  external_trade_id text not null,
+  symbol text not null,
+  side text check (side in ('BUY', 'SELL')),
+  volume_lots numeric(10,2),
+  entry_price numeric(18,8),
+  close_price numeric(18,8),
+  opened_at timestamptz,
+  closed_at timestamptz not null default now(),
+  pips_result numeric(12,4),
+  pnl_value numeric(18,2),
+  result text not null check (result in ('WIN', 'LOSS', 'BE')),
+  raw_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  unique (provider_id, external_trade_id)
+);
+
 create table if not exists copytrade77.follow_relations (
   id uuid primary key default gen_random_uuid(),
   follower_profile_id uuid not null references copytrade77.profiles(id) on delete cascade,
@@ -252,6 +292,8 @@ on conflict (key) do nothing;
 
 create index if not exists idx_ct77_follow_provider_status on copytrade77.follow_relations(provider_id, status);
 create index if not exists idx_ct77_follow_follower_status on copytrade77.follow_relations(follower_profile_id, status);
+create index if not exists idx_ct77_provider_challenge_status on copytrade77.provider_challenges(status, updated_at desc);
+create index if not exists idx_ct77_provider_challenge_trade_provider_closed on copytrade77.provider_challenge_trades(provider_id, closed_at desc);
 create index if not exists idx_ct77_terminals_profile_status on copytrade77.bridge_terminals(profile_id, status);
 create index if not exists idx_ct77_terminals_heartbeat on copytrade77.bridge_terminals(last_heartbeat_at desc);
 create index if not exists idx_ct77_bridge_nonces_created on copytrade77.bridge_nonces(created_at desc);
@@ -290,6 +332,10 @@ begin
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'trg_ct77_providers_updated_at') then
     create trigger trg_ct77_providers_updated_at before update on copytrade77.providers
+      for each row execute procedure copytrade77.set_updated_at();
+  end if;
+  if not exists (select 1 from pg_trigger where tgname = 'trg_ct77_provider_challenge_updated_at') then
+    create trigger trg_ct77_provider_challenge_updated_at before update on copytrade77.provider_challenges
       for each row execute procedure copytrade77.set_updated_at();
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'trg_ct77_follow_updated_at') then
@@ -767,6 +813,19 @@ left join copytrade77.positions pos
   and pos.status in ('CLOSED_TP', 'CLOSED_SL', 'CLOSED_MANUAL', 'CLOSED_ERROR')
 group by p.id, p.display_name;
 
+create or replace view copytrade77.provider_revenue_stats as
+select
+  p.id as provider_id,
+  p.profile_id,
+  coalesce(sum(wl.amount_credits), 0)::integer as total_provider_revenue_credits,
+  max(wl.created_at) as last_provider_revenue_at
+from copytrade77.providers p
+left join copytrade77.wallet_ledger wl
+  on wl.profile_id = p.profile_id
+  and wl.direction = 'CREDIT'
+  and wl.entry_type = 'PROVIDER_REVENUE'
+group by p.id, p.profile_id;
+
 -- =========================================================
 -- RLS Baseline (deny by default, server uses service role)
 -- =========================================================
@@ -774,6 +833,8 @@ group by p.id, p.display_name;
 alter table copytrade77.profiles enable row level security;
 alter table copytrade77.wallets enable row level security;
 alter table copytrade77.providers enable row level security;
+alter table copytrade77.provider_challenges enable row level security;
+alter table copytrade77.provider_challenge_trades enable row level security;
 alter table copytrade77.follow_relations enable row level security;
 alter table copytrade77.bridge_terminals enable row level security;
 alter table copytrade77.topup_orders enable row level security;
@@ -794,6 +855,12 @@ create policy ct77_wallets_deny_all on copytrade77.wallets for all using (false)
 
 drop policy if exists ct77_providers_deny_all on copytrade77.providers;
 create policy ct77_providers_deny_all on copytrade77.providers for all using (false) with check (false);
+
+drop policy if exists ct77_provider_challenges_deny_all on copytrade77.provider_challenges;
+create policy ct77_provider_challenges_deny_all on copytrade77.provider_challenges for all using (false) with check (false);
+
+drop policy if exists ct77_provider_challenge_trades_deny_all on copytrade77.provider_challenge_trades;
+create policy ct77_provider_challenge_trades_deny_all on copytrade77.provider_challenge_trades for all using (false) with check (false);
 
 drop policy if exists ct77_follow_deny_all on copytrade77.follow_relations;
 create policy ct77_follow_deny_all on copytrade77.follow_relations for all using (false) with check (false);

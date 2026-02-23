@@ -26,13 +26,14 @@ export async function GET() {
     const { profile } = await requireCopytrade77SessionProfile();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
 
-    const [walletRes, terminalRes, followRes, openPosRes, recentPosRes, ledgerRes] = await Promise.all([
+    const [walletRes, terminalRes, followRes, openPosRes, recentPosRes, ledgerRes, myProviderRes] = await Promise.all([
       supabase.from('wallets').select('balance_credits,total_topup_credits,total_spent_credits,total_earned_credits').eq('profile_id', profile.id).maybeSingle(),
       supabase.from('bridge_terminals').select('id,terminal_label,broker_name,server_name,status,last_heartbeat_at,last_error').eq('profile_id', profile.id).order('updated_at', { ascending: false }).limit(10),
       supabase.from('follow_relations').select('id,provider_id,status,one_trade_at_a_time,fixed_lot,updated_at').eq('follower_profile_id', profile.id).order('updated_at', { ascending: false }),
       supabase.from('positions').select('id,symbol,side,volume_lots,entry_price,stop_loss,take_profit,opened_at,status').eq('follower_profile_id', profile.id).eq('status', 'OPEN').order('opened_at', { ascending: false }).limit(20),
       supabase.from('positions').select('id,symbol,side,volume_lots,entry_price,close_price,pips_result,pnl_value,opened_at,closed_at,status').eq('follower_profile_id', profile.id).neq('status', 'OPEN').order('closed_at', { ascending: false }).limit(20),
       supabase.from('wallet_ledger').select('id,direction,amount_credits,entry_type,description,created_at').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(30),
+      supabase.from('providers').select('id,display_name,slug,status').eq('profile_id', profile.id).maybeSingle(),
     ]);
 
     if (walletRes.error) throw walletRes.error;
@@ -41,6 +42,7 @@ export async function GET() {
     if (openPosRes.error) throw openPosRes.error;
     if (recentPosRes.error) throw recentPosRes.error;
     if (ledgerRes.error) throw ledgerRes.error;
+    if (myProviderRes.error) throw myProviderRes.error;
 
     const follows = followRes.data || [];
     const providerIds = follows.map((f) => f.provider_id).filter(Boolean);
@@ -83,6 +85,69 @@ export async function GET() {
     const onlineTerminals = (terminalRes.data || []).filter((t) => t.status === 'ONLINE').length;
     const activeFollows = followView.filter((f) => f.status === 'ACTIVE').length;
 
+    let providerView: any = null;
+    if (myProviderRes.data?.id) {
+      const challengeRes = await supabase
+        .from('provider_challenges')
+        .select('status,target_trades,min_win_rate_pct,total_trades,wins,losses,breakeven_count,win_rate_pct,started_at,completed_at,last_trade_at')
+        .eq('provider_id', myProviderRes.data.id)
+        .maybeSingle();
+      if (challengeRes.error && challengeRes.error.code !== '42P01') throw challengeRes.error;
+
+      let totalProviderRevenueCredits = 0;
+      let lastProviderRevenueAt: string | null = null;
+      const providerRevenueRes = await supabase
+        .from('provider_revenue_stats')
+        .select('total_provider_revenue_credits,last_provider_revenue_at')
+        .eq('provider_id', myProviderRes.data.id)
+        .maybeSingle();
+
+      if (providerRevenueRes.error) {
+        if (providerRevenueRes.error.code !== '42P01') throw providerRevenueRes.error;
+        const fallbackRevenueRes = await supabase
+          .from('wallet_ledger')
+          .select('amount_credits,created_at')
+          .eq('profile_id', profile.id)
+          .eq('entry_type', 'PROVIDER_REVENUE')
+          .order('created_at', { ascending: false })
+          .limit(5000);
+        if (fallbackRevenueRes.error) throw fallbackRevenueRes.error;
+        const rows = fallbackRevenueRes.data || [];
+        totalProviderRevenueCredits = rows.reduce((sum, row) => sum + Number(row.amount_credits || 0), 0);
+        lastProviderRevenueAt = rows[0]?.created_at || null;
+      } else {
+        totalProviderRevenueCredits = Number(providerRevenueRes.data?.total_provider_revenue_credits || 0);
+        lastProviderRevenueAt = providerRevenueRes.data?.last_provider_revenue_at || null;
+      }
+
+      providerView = {
+        id: myProviderRes.data.id,
+        name: myProviderRes.data.display_name,
+        slug: myProviderRes.data.slug,
+        status: myProviderRes.data.status,
+        challenge: challengeRes.data
+          ? {
+              status: challengeRes.data.status,
+              targetTrades: Number(challengeRes.data.target_trades || 0),
+              minWinRatePct: Number(challengeRes.data.min_win_rate_pct || 0),
+              totalTrades: Number(challengeRes.data.total_trades || 0),
+              wins: Number(challengeRes.data.wins || 0),
+              losses: Number(challengeRes.data.losses || 0),
+              breakevenCount: Number(challengeRes.data.breakeven_count || 0),
+              winRatePct: Number(challengeRes.data.win_rate_pct || 0),
+              startedAt: challengeRes.data.started_at,
+              completedAt: challengeRes.data.completed_at,
+              lastTradeAt: challengeRes.data.last_trade_at,
+            }
+          : null,
+        earnings: {
+          totalProviderRevenueCredits,
+          totalProviderRevenueIdr: totalProviderRevenueCredits * CT77_CONFIG.creditRateIdr,
+          lastProviderRevenueAt,
+        },
+      };
+    }
+
     return NextResponse.json({
       status: 'success',
       summary: {
@@ -91,6 +156,7 @@ export async function GET() {
         activeFollows,
         onlineTerminals,
         todaySpentCredits,
+        providerRevenueCredits: providerView?.earnings?.totalProviderRevenueCredits || 0,
       },
       wallet: walletRes.data || {
         balance_credits: 0,
@@ -103,6 +169,7 @@ export async function GET() {
       openPositions: openPosRes.data || [],
       recentTrades: recentPosRes.data || [],
       ledger: ledgerRes.data || [],
+      provider: providerView,
       topupPricing: {
         creditRateIdr: CT77_CONFIG.creditRateIdr,
         minTopupIdr: Math.max(CT77_CONFIG.minTopupIdr, CT77_CONFIG.creditRateIdr),
