@@ -932,7 +932,7 @@ export default function CopytradeArra77Page() {
                   <li>Download EA `.ex5`, lalu copy ke folder MT5: <code>MQL5/Experts</code>.</li>
                   <li>Restart MT5, buka chart <code>XAUUSD M15</code>, lalu attach EA.</li>
                   <li>Di panel ini klik <b>Generate Key &amp; Secret</b>, lalu simpan datanya.</li>
-                  <li>Isi endpoint di EA: <code>https://domain-kamu.com/api/copytrade-arra77/bridge</code>.</li>
+                  <li>Isi endpoint di EA: <code>https://arra7-app.vercel.app/api/copytrade-arra77/bridge</code>.</li>
                   <li>Isi <code>Bridge Key</code> dan <code>Bridge Secret</code> persis dari panel ini (jangan ada spasi).</li>
                   <li>Aktifkan <b>Algo Trading</b>. Jika benar, EA akan polling otomatis setiap beberapa detik.</li>
                 </ol>
