@@ -20,6 +20,23 @@ function fmtIdr(v: number) {
   return `Rp ${v.toLocaleString('id-ID')}`;
 }
 
+function lockDiagBadge(diag: any): { label: string; className: string } {
+  const reason = String(diag?.reasonCode || '').toUpperCase();
+  if (reason === 'LOCK_EXPECTED_OPEN_POSITION') {
+    return { label: 'Lock Normal', className: 'bg-blue-100 text-blue-700' };
+  }
+  if (reason === 'STALE_LOCK_SUSPECT') {
+    return { label: 'Reset Recommended', className: 'bg-rose-100 text-rose-700' };
+  }
+  if (reason === 'HEARTBEAT_STALE') {
+    return { label: 'EA Offline', className: 'bg-slate-100 text-slate-700' };
+  }
+  if (reason === 'LOCK_OBSERVED_WAIT_SYNC') {
+    return { label: 'Wait Sync', className: 'bg-amber-100 text-amber-700' };
+  }
+  return { label: 'Healthy', className: 'bg-emerald-100 text-emerald-700' };
+}
+
 export default function CopytradeArra77AdminPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -418,12 +435,27 @@ export default function CopytradeArra77AdminPage() {
                   </button>
                 </div>
               </div>
+              <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+                <p className="text-sm font-semibold text-slate-800">Checklist Monitoring Lock</p>
+                <ol className="list-decimal ml-4 mt-2 space-y-1 text-xs text-slate-700">
+                  <li>Jika Open(Follower) {'>'} 0: lock normal, jangan reset.</li>
+                  <li>Jika Open(Follower)=0, Lock5m {'>='} 3, Heartbeat {'<='} 180s: lakukan reset lock.</li>
+                  <li>Jika Heartbeat {'>'} 180s: minta user nyalakan EA dulu, jangan reset dulu.</li>
+                  <li>Sesudah reset, test BUY/SELL 1x untuk validasi alur.</li>
+                </ol>
+              </div>
               <div className="space-y-2 max-h-96 overflow-auto">
                 {bridge.terminals.length === 0 && <p className="text-sm text-slate-500">Belum ada terminal.</p>}
-                {bridge.terminals.map((t) => (
-                  <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                {bridge.terminals.map((t) => {
+                  const diag = t.lock_diagnostics || null;
+                  const badge = lockDiagBadge(diag);
+                  return (
+                  <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm space-y-1">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div>{t.terminal_label} | {t.status} | {t.profiles?.email || '-'} | heartbeat {fmtDate(t.last_heartbeat_at)}</div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{t.terminal_label} | {t.status} | {t.profiles?.email || '-'} | heartbeat {fmtDate(t.last_heartbeat_at)}</span>
+                        <span className={`px-2 py-0.5 rounded-lg text-[11px] font-medium ${badge.className}`}>{badge.label}</span>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           disabled={forcingKey !== '' || resettingTerminalId !== ''}
@@ -442,14 +474,24 @@ export default function CopytradeArra77AdminPage() {
                         <button
                           disabled={forcingKey !== '' || resettingTerminalId !== ''}
                           onClick={() => resetLock(String(t.id))}
-                          className="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-xs disabled:opacity-60"
+                          className={`px-2.5 py-1 rounded-lg text-white text-xs disabled:opacity-60 ${diag?.shouldReset ? 'bg-rose-600' : 'bg-amber-600'}`}
                         >
-                          {resettingTerminalId === String(t.id) ? 'Resetting...' : 'Reset Lock'}
+                          {resettingTerminalId === String(t.id) ? 'Resetting...' : diag?.shouldReset ? 'Reset Lock (Rec)' : 'Reset Lock'}
                         </button>
                       </div>
                     </div>
+                    {diag && (
+                      <>
+                        <p className="text-xs text-slate-500">
+                          Open(Terminal): {diag.openPositionsTerminal ?? 0} | Open(Follower): {diag.openPositionsFollower ?? 0} | Lock5m: {diag.lockEvents5m ?? 0} | HB age: {diag.heartbeatAgeSec ?? '-'}s
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          Rekomendasi: {diag.recommendation || '-'} {diag.lastLockAt ? `| Last lock: ${fmtDate(diag.lastLockAt)}` : ''}
+                        </p>
+                      </>
+                    )}
                   </div>
-                ))}
+                )})}
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
