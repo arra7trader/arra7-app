@@ -62,7 +62,7 @@ type FollowRow = {
 
 type OpenPositionRow = {
   id: string;
-  mt5_ticket: number | null;
+  dispatch_id: string | null;
   entry_price: number | null;
   opened_at: string | null;
 };
@@ -179,7 +179,7 @@ async function reconcileStaleOpenPositions(
 
   const { data, error } = await supabase
     .from('positions')
-    .select('id,mt5_ticket,entry_price,opened_at')
+    .select('id,dispatch_id,entry_price,opened_at')
     .eq('terminal_id', terminalId)
     .eq('status', 'OPEN')
     .limit(100);
@@ -187,6 +187,29 @@ async function reconcileStaleOpenPositions(
   if (error) throw error;
   const openRows = (data || []) as OpenPositionRow[];
   if (openRows.length === 0) return { closedCount: 0 };
+
+  const dispatchIds = Array.from(
+    new Set(
+      openRows
+        .map((row) => String(row.dispatch_id || ''))
+        .filter(Boolean)
+    )
+  );
+  const ticketByDispatchId = new Map<string, number>();
+  if (dispatchIds.length > 0) {
+    const dispatchRes = await supabase
+      .from('signal_dispatches')
+      .select('id,mt5_ticket')
+      .in('id', dispatchIds);
+    if (dispatchRes.error) throw dispatchRes.error;
+
+    for (const row of dispatchRes.data || []) {
+      const typed = row as { id: string; mt5_ticket: number | null };
+      if (typed.mt5_ticket != null && Number.isFinite(Number(typed.mt5_ticket))) {
+        ticketByDispatchId.set(String(typed.id), Math.trunc(Number(typed.mt5_ticket)));
+      }
+    }
+  }
 
   const graceMs = 90 * 1000;
   const now = Date.now();
@@ -197,7 +220,8 @@ async function reconcileStaleOpenPositions(
     const freshPosition = Number.isFinite(openedAtMs) && now - openedAtMs < graceMs;
     if (freshPosition) continue;
 
-    const ticketNum = row.mt5_ticket != null ? Number(row.mt5_ticket) : NaN;
+    const dispatchId = String(row.dispatch_id || '');
+    const ticketNum = dispatchId ? Number(ticketByDispatchId.get(dispatchId)) : NaN;
 
     if (snapshot.ticketsProvided) {
       if (!Number.isFinite(ticketNum) || !snapshot.openTickets.has(Math.trunc(ticketNum))) {
