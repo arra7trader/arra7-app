@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import AuthProvider from "@/components/providers/AuthProvider";
@@ -13,16 +12,6 @@ import WinningTicker from "@/components/WinningTicker";
 import LowBalancePopup from "@/components/LowBalancePopup";
 import AIEngineTrigger from "@/components/AIEngineTrigger";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 // Viewport configuration (separated from metadata in Next.js 16+)
 export const viewport: Viewport = {
@@ -113,7 +102,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0B0C10] text-white min-h-screen`}
+        className="antialiased bg-[#0B0C10] text-white min-h-screen"
       >
         <AuthProvider>
           <NextIntlClientProvider messages={messages}>
