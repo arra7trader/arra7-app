@@ -49,6 +49,29 @@ function fmtProviderWinrate(provider: any) {
   return isArra7 ? `${formatted}%+` : `${formatted}%`;
 }
 
+function riskBadgeClass(riskLevel: string | undefined) {
+  const risk = String(riskLevel || 'MEDIUM').toUpperCase();
+  if (risk === 'LOW') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+  if (risk === 'HIGH') return 'bg-rose-50 text-rose-700 border border-rose-200';
+  return 'bg-amber-50 text-amber-700 border border-amber-200';
+}
+
+function followBadgeClass(followStatus: string | undefined) {
+  const status = String(followStatus || '').toUpperCase();
+  if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+  if (status === 'PAUSED') return 'bg-amber-50 text-amber-700 border border-amber-200';
+  if (status === 'STOPPED') return 'bg-rose-50 text-rose-700 border border-rose-200';
+  return 'bg-slate-100 text-slate-600 border border-slate-200';
+}
+
+function providerStatusBadgeClass(providerStatus: string | undefined) {
+  const status = String(providerStatus || '').toUpperCase();
+  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+  if (status === 'PENDING') return 'bg-amber-50 text-amber-700 border border-amber-200';
+  if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-50 text-rose-700 border border-rose-200';
+  return 'bg-slate-100 text-slate-600 border border-slate-200';
+}
+
 export default function CopytradeArra77Page() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -161,6 +184,68 @@ export default function CopytradeArra77Page() {
   const activeFollowProviders = activeProviders.filter((p) => String(p?.myFollowStatus || '').toUpperCase() === 'ACTIVE');
   const onlineTerminals = (terminals || []).filter((t) => String(t?.status || '').toUpperCase() === 'ONLINE');
   const pendingTopups = (orders || []).filter((o) => ['DRAFT', 'SUBMITTED'].includes(String(o?.status || '').toUpperCase()));
+  const renderProviderCard = (p: any, context: 'overview' | 'providers') => {
+    const followStatus = String(p?.myFollowStatus || '').toUpperCase();
+    const isFollowed = followStatus !== '';
+    const providerStatus = String(p?.status || 'ACTIVE').toUpperCase();
+    const ctaLabel = isFollowed ? 'Kelola di Setup EA' : 'Follow Provider';
+
+    return (
+      <div key={p.id} className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500" />
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-base font-semibold text-slate-900">{p.name}</p>
+              <p className="text-xs text-slate-500 mt-0.5">@{p.slug}</p>
+            </div>
+            <span className={`text-[11px] px-2 py-1 rounded-lg font-medium ${riskBadgeClass(p.riskLevel)}`}>
+              {String(p.riskLevel || 'MEDIUM').toUpperCase()}
+            </span>
+          </div>
+
+          <p className="text-sm text-slate-600 mt-3 min-h-[42px] leading-relaxed">
+            {p.bio || 'Provider tanpa bio.'}
+          </p>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-2">
+              <p className="text-[10px] uppercase tracking-wide text-blue-700">Winrate</p>
+              <p className="text-sm font-semibold text-blue-900">{fmtProviderWinrate(p)}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <p className="text-[10px] uppercase tracking-wide text-slate-500">Followers</p>
+              <p className="text-sm font-semibold text-slate-900">{p.followers || 0}</p>
+            </div>
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-2">
+              <p className="text-[10px] uppercase tracking-wide text-emerald-700">Status</p>
+              <p className="text-sm font-semibold text-emerald-900">{providerStatus}</p>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
+            <span className={`text-[11px] px-2 py-1 rounded-lg font-medium ${followBadgeClass(isFollowed ? followStatus : '')}`}>
+              {isFollowed ? `Follow: ${followStatus}` : 'Belum Follow'}
+            </span>
+            <span className={`text-[11px] px-2 py-1 rounded-lg font-medium ${providerStatusBadgeClass(providerStatus)}`}>
+              Marketplace: {providerStatus}
+            </span>
+          </div>
+
+          <button
+            onClick={() => (isFollowed ? setTab('setup') : followProvider(String(p.id)))}
+            className={`mt-3 w-full rounded-xl px-3 py-2 text-sm font-medium transition ${
+              isFollowed
+                ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {context === 'overview' && isFollowed ? 'Kelola Provider Ini' : ctaLabel}
+          </button>
+        </div>
+      </div>
+    );
+  };
   const dashboardPanels: DashboardPanelCard[] = [
     {
       key: 'activity',
@@ -310,31 +395,7 @@ export default function CopytradeArra77Page() {
                     Belum ada provider aktif.
                   </div>
                 )}
-                {activeProviders.slice(0, 6).map((p) => (
-                  <div key={p.id} className="rounded-xl border border-slate-100 p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold">{p.name}</p>
-                        <p className="text-xs text-slate-500">@{p.slug} | {p.riskLevel}</p>
-                      </div>
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full ${p.myFollowStatus ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                        {p.myFollowStatus || 'Belum Follow'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-2 line-clamp-2">{p.bio || 'No bio'}</p>
-                    <p className="text-xs text-slate-500 mt-2">
-                      Winrate {fmtProviderWinrate(p)} | Followers {p.followers || 0}
-                    </p>
-                    <button
-                      onClick={() => (p.myFollowStatus ? setTab('setup') : followProvider(String(p.id)))}
-                      className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${
-                        p.myFollowStatus ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-blue-600 text-white'
-                      }`}
-                    >
-                      {p.myFollowStatus ? 'Kelola di Setup EA' : 'Follow Provider'}
-                    </button>
-                  </div>
-                ))}
+                {activeProviders.slice(0, 6).map((p) => renderProviderCard(p, 'overview'))}
               </div>
             </div>
 
@@ -537,22 +598,7 @@ export default function CopytradeArra77Page() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {providers.length === 0 && <div className="rounded-2xl bg-white border border-slate-200 p-4 text-sm text-slate-500">Belum ada provider aktif.</div>}
-              {providers.map((p) => (
-                <div key={p.id} className="rounded-2xl bg-white border border-slate-200 p-4">
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-xs text-slate-500">@{p.slug} | {p.riskLevel}</p>
-                  <p className="text-sm text-slate-600 mt-2">{p.bio || 'No bio'}</p>
-                  <p className="text-xs text-slate-500 mt-2">Winrate {fmtProviderWinrate(p)} | Followers {p.followers || 0}</p>
-                  <button
-                    onClick={() => (p.myFollowStatus ? setTab('setup') : followProvider(String(p.id)))}
-                    className={`mt-3 rounded-lg px-3 py-1.5 text-sm ${
-                      p.myFollowStatus ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-blue-600 text-white'
-                    }`}
-                  >
-                    {p.myFollowStatus ? `Status: ${p.myFollowStatus}` : 'Follow'}
-                  </button>
-                </div>
-              ))}
+              {providers.map((p) => renderProviderCard(p, 'providers'))}
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
               <h3 className="font-semibold">Daftar jadi Provider</h3>
