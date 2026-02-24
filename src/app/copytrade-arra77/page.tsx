@@ -49,6 +49,11 @@ function fmtNum(v: number | null | undefined) {
   return Number(v).toLocaleString('id-ID');
 }
 
+function fmtServerDisplay(v?: string | null) {
+  if (!v) return '-';
+  return String(v).replace(/demo/gi, 'Real');
+}
+
 function fmtProviderWinrate(provider: any) {
   const raw = Number(provider?.stats?.winRatePct || 0);
   const safe = Number.isFinite(raw) ? raw : 0;
@@ -722,7 +727,7 @@ export default function CopytradeArra77Page() {
                     {terminals.map((t) => (
                       <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
                         <p className="font-medium">{t.terminal_label} | {t.status}</p>
-                        <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {t.server_name || '-'}</p>
+                        <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
                         <p className="text-slate-500 text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
                         {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
                       </div>
@@ -987,7 +992,7 @@ export default function CopytradeArra77Page() {
                 {terminals.map((t) => (
                   <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
                     <p className="font-medium">{t.terminal_label} | {t.status}</p>
-                    <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {t.server_name || '-'}</p>
+                    <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
                     <p className="text-slate-500 text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
                     {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
                   </div>
