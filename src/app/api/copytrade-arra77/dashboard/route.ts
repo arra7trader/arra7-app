@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CT77_CONFIG } from '@/lib/copytrade77-config';
+import { getCopytrade77PricingConfig } from '@/lib/copytrade77-pricing';
 import { requireCopytrade77SessionProfile } from '@/lib/copytrade77-session';
 import { isCopytrade77Configured, getCopytrade77AdminClient } from '@/lib/supabase-copytrade77';
 
@@ -25,11 +26,12 @@ export async function GET() {
   try {
     const { profile } = await requireCopytrade77SessionProfile();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
+    const pricing = await getCopytrade77PricingConfig();
 
     const [walletRes, terminalRes, followRes, openPosRes, recentPosRes, ledgerRes, myProviderRes] = await Promise.all([
       supabase.from('wallets').select('balance_credits,total_topup_credits,total_spent_credits,total_earned_credits').eq('profile_id', profile.id).maybeSingle(),
       supabase.from('bridge_terminals').select('id,terminal_label,broker_name,server_name,status,last_heartbeat_at,last_error').eq('profile_id', profile.id).order('updated_at', { ascending: false }).limit(10),
-      supabase.from('follow_relations').select('id,provider_id,status,one_trade_at_a_time,fixed_lot,updated_at').eq('follower_profile_id', profile.id).order('updated_at', { ascending: false }),
+      supabase.from('follow_relations').select('id,provider_id,status,risk_mode,fixed_lot,lot_multiplier,risk_percent,one_trade_at_a_time,max_concurrent_positions,updated_at').eq('follower_profile_id', profile.id).order('updated_at', { ascending: false }),
       supabase.from('positions').select('id,symbol,side,volume_lots,entry_price,stop_loss,take_profit,opened_at,status').eq('follower_profile_id', profile.id).eq('status', 'OPEN').order('opened_at', { ascending: false }).limit(20),
       supabase.from('positions').select('id,symbol,side,volume_lots,entry_price,close_price,pips_result,pnl_value,opened_at,closed_at,status').eq('follower_profile_id', profile.id).neq('status', 'OPEN').order('closed_at', { ascending: false }).limit(20),
       supabase.from('wallet_ledger').select('id,direction,amount_credits,entry_type,description,created_at').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(30),
@@ -63,8 +65,12 @@ export async function GET() {
       return {
         id: follow.id,
         status: follow.status,
+        riskMode: follow.risk_mode,
         oneTradeAtATime: follow.one_trade_at_a_time,
         fixedLot: follow.fixed_lot,
+        lotMultiplier: follow.lot_multiplier,
+        riskPercent: follow.risk_percent,
+        maxConcurrentPositions: follow.max_concurrent_positions,
         provider: provider
           ? {
               id: provider.id,
@@ -142,7 +148,7 @@ export async function GET() {
           : null,
         earnings: {
           totalProviderRevenueCredits,
-          totalProviderRevenueIdr: totalProviderRevenueCredits * CT77_CONFIG.creditRateIdr,
+          totalProviderRevenueIdr: totalProviderRevenueCredits * pricing.creditRateIdr,
           lastProviderRevenueAt,
         },
       };
@@ -171,9 +177,9 @@ export async function GET() {
       ledger: ledgerRes.data || [],
       provider: providerView,
       topupPricing: {
-        creditRateIdr: CT77_CONFIG.creditRateIdr,
-        minTopupIdr: Math.max(CT77_CONFIG.minTopupIdr, CT77_CONFIG.creditRateIdr),
-        signalCostCredits: CT77_CONFIG.signalCostCredits,
+        creditRateIdr: pricing.creditRateIdr,
+        minTopupIdr: Math.max(CT77_CONFIG.minTopupIdr, pricing.creditRateIdr),
+        signalCostCredits: pricing.signalCostCredits,
       },
       qris: {
         merchantName: CT77_CONFIG.qrisMerchantName,

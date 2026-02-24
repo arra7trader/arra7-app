@@ -29,4 +29,5 @@ export const CT77_CONFIG = {
   qrisMerchantName: process.env.CT77_QRIS_MERCHANT_NAME || 'ARRA7',
   qrisNmid: process.env.CT77_QRIS_NMID || '',
   bridgeHmacSecret: process.env.CT77_BRIDGE_HMAC_SECRET || '',
+  bridgeAllowLegacyUnsigned: parseBoolSafe(process.env.CT77_BRIDGE_ALLOW_LEGACY_UNSIGNED, false),
 };

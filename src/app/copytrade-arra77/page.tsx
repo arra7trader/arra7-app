@@ -22,6 +22,15 @@ interface DashboardPanelCard {
   desc: string;
 }
 
+interface FollowDraft {
+  riskMode: 'FIXED_LOT' | 'MULTIPLIER' | 'RISK_PERCENT';
+  fixedLot: number;
+  lotMultiplier: number;
+  riskPercent: number;
+  oneTradeAtATime: boolean;
+  maxConcurrentPositions: number;
+}
+
 function fmtDate(v?: string | null) {
   if (!v) return '-';
   try {
@@ -85,6 +94,7 @@ export default function CopytradeArra77Page() {
   const [providerMeta, setProviderMeta] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [terminals, setTerminals] = useState<any[]>([]);
+  const [followDrafts, setFollowDrafts] = useState<Record<string, FollowDraft>>({});
 
   const [amountIdr, setAmountIdr] = useState(100000);
   const [terminalLabel, setTerminalLabel] = useState('');
@@ -98,6 +108,27 @@ export default function CopytradeArra77Page() {
     if (status === 'authenticated') refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  useEffect(() => {
+    const rows = Array.isArray(data?.follows) ? data.follows : [];
+    const nextDrafts: Record<string, FollowDraft> = {};
+    for (const follow of rows) {
+      const id = String(follow?.id || '').trim();
+      if (!id) continue;
+      const riskRaw = String(follow?.riskMode || 'FIXED_LOT').toUpperCase();
+      const riskMode: FollowDraft['riskMode'] =
+        riskRaw === 'MULTIPLIER' || riskRaw === 'RISK_PERCENT' ? riskRaw : 'FIXED_LOT';
+      nextDrafts[id] = {
+        riskMode,
+        fixedLot: Number(follow?.fixedLot || 0.01),
+        lotMultiplier: Number(follow?.lotMultiplier || 1),
+        riskPercent: Number(follow?.riskPercent || 1),
+        oneTradeAtATime: Boolean(follow?.oneTradeAtATime ?? true),
+        maxConcurrentPositions: Math.max(1, Number(follow?.maxConcurrentPositions || 1)),
+      };
+    }
+    setFollowDrafts(nextDrafts);
+  }, [data?.follows]);
 
   async function refresh() {
     setLoading(true);
@@ -130,14 +161,61 @@ export default function CopytradeArra77Page() {
     }
   }
 
-  async function act(url: string, body: any, successMsg: string) {
+  async function act(url: string, body: any, successMsg: string, method: 'POST' | 'PATCH' = 'POST') {
     setError('');
     setMsg('');
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await res.json();
     if (j.status !== 'success') throw new Error(j.message || 'Action failed');
     setMsg(j.message || successMsg);
     return j;
+  }
+
+  function updateFollowDraft(followId: string, patch: Partial<FollowDraft>) {
+    setFollowDrafts((prev) => {
+      const current = prev[followId];
+      if (!current) return prev;
+      const next: FollowDraft = { ...current, ...patch };
+      if (next.oneTradeAtATime) next.maxConcurrentPositions = 1;
+      if (!Number.isFinite(next.maxConcurrentPositions) || next.maxConcurrentPositions < 1) {
+        next.maxConcurrentPositions = 1;
+      }
+      return { ...prev, [followId]: next };
+    });
+  }
+
+  async function saveFollowSettings(followId: string) {
+    const draft = followDrafts[followId];
+    if (!draft) return;
+
+    try {
+      await act(
+        '/api/copytrade-arra77/follow',
+        {
+          followId,
+          riskMode: draft.riskMode,
+          fixedLot: draft.fixedLot,
+          lotMultiplier: draft.lotMultiplier,
+          riskPercent: draft.riskPercent,
+          oneTradeAtATime: draft.oneTradeAtATime,
+          maxConcurrentPositions: draft.oneTradeAtATime ? 1 : draft.maxConcurrentPositions,
+        },
+        'Follow settings tersimpan',
+        'PATCH'
+      );
+      await refresh();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
+
+  async function setFollowAction(followId: string, action: 'PAUSE' | 'RESUME' | 'STOP') {
+    try {
+      await act('/api/copytrade-arra77/follow', { followId, action }, 'Status follow diperbarui', 'PATCH');
+      await refresh();
+    } catch (e: any) {
+      setError(e.message);
+    }
   }
 
   async function followProvider(providerId: string) {
@@ -501,9 +579,135 @@ export default function CopytradeArra77Page() {
                   <div className="space-y-2 max-h-96 overflow-auto">
                     {(data?.follows || []).length === 0 && <p className="text-sm text-slate-500">Belum ada relasi follow.</p>}
                     {(data?.follows || []).map((f: any) => (
-                      <div key={f.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                      <div key={f.id} className="border border-slate-100 rounded-xl p-2 text-sm space-y-2">
                         <p className="font-medium">{f.provider?.name || 'Provider'} | {f.status}</p>
-                        <p className="text-xs text-slate-500">@{f.provider?.slug || '-'} | Lot {fmtNum(f.fixedLot)} | One-trade {f.oneTradeAtATime ? 'ON' : 'OFF'}</p>
+                        <p className="text-xs text-slate-500">
+                          @{f.provider?.slug || '-'} | Risk {f.riskMode || 'FIXED_LOT'} | Lot {fmtNum(f.fixedLot)} | One-trade {f.oneTradeAtATime ? 'ON' : 'OFF'}
+                        </p>
+
+                        {(() => {
+                          const draft = followDrafts[String(f.id)];
+                          if (!draft) return null;
+                          return (
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 space-y-2">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                <select
+                                  value={draft.riskMode}
+                                  onChange={(e) =>
+                                    updateFollowDraft(String(f.id), {
+                                      riskMode: e.target.value as FollowDraft['riskMode'],
+                                    })
+                                  }
+                                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                >
+                                  <option value="FIXED_LOT">FIXED_LOT</option>
+                                  <option value="MULTIPLIER">MULTIPLIER</option>
+                                  <option value="RISK_PERCENT">RISK_PERCENT</option>
+                                </select>
+
+                                {draft.riskMode === 'FIXED_LOT' && (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={draft.fixedLot}
+                                    onChange={(e) =>
+                                      updateFollowDraft(String(f.id), {
+                                        fixedLot: Number(e.target.value || 0),
+                                      })
+                                    }
+                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    placeholder="Fixed lot"
+                                  />
+                                )}
+
+                                {draft.riskMode === 'MULTIPLIER' && (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={draft.lotMultiplier}
+                                    onChange={(e) =>
+                                      updateFollowDraft(String(f.id), {
+                                        lotMultiplier: Number(e.target.value || 0),
+                                      })
+                                    }
+                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    placeholder="Lot multiplier"
+                                  />
+                                )}
+
+                                {draft.riskMode === 'RISK_PERCENT' && (
+                                  <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0.1"
+                                    value={draft.riskPercent}
+                                    onChange={(e) =>
+                                      updateFollowDraft(String(f.id), {
+                                        riskPercent: Number(e.target.value || 0),
+                                      })
+                                    }
+                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    placeholder="Risk percent"
+                                  />
+                                )}
+
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs">
+                                  <input
+                                    type="checkbox"
+                                    checked={draft.oneTradeAtATime}
+                                    onChange={(e) =>
+                                      updateFollowDraft(String(f.id), {
+                                        oneTradeAtATime: e.target.checked,
+                                      })
+                                    }
+                                  />
+                                  One-trade lock
+                                </label>
+
+                                <input
+                                  type="number"
+                                  step="1"
+                                  min="1"
+                                  disabled={draft.oneTradeAtATime}
+                                  value={draft.oneTradeAtATime ? 1 : draft.maxConcurrentPositions}
+                                  onChange={(e) =>
+                                    updateFollowDraft(String(f.id), {
+                                      maxConcurrentPositions: Number(e.target.value || 1),
+                                    })
+                                  }
+                                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                                  placeholder="Max concurrent"
+                                />
+                              </div>
+
+                              <div className="flex gap-2 flex-wrap">
+                                <button
+                                  onClick={() => saveFollowSettings(String(f.id))}
+                                  className="rounded-lg bg-blue-600 text-white px-2.5 py-1 text-xs"
+                                >
+                                  Simpan Settings
+                                </button>
+                                {String(f.status || '').toUpperCase() === 'ACTIVE' && (
+                                  <button onClick={() => setFollowAction(String(f.id), 'PAUSE')} className="rounded-lg bg-amber-500 text-white px-2.5 py-1 text-xs">
+                                    Pause
+                                  </button>
+                                )}
+                                {String(f.status || '').toUpperCase() !== 'ACTIVE' && (
+                                  <button onClick={() => setFollowAction(String(f.id), 'RESUME')} className="rounded-lg bg-emerald-600 text-white px-2.5 py-1 text-xs">
+                                    Resume
+                                  </button>
+                                )}
+                                {String(f.status || '').toUpperCase() !== 'STOPPED' && (
+                                  <button onClick={() => setFollowAction(String(f.id), 'STOP')} className="rounded-lg bg-rose-600 text-white px-2.5 py-1 text-xs">
+                                    Stop
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     ))}
                   </div>
@@ -728,6 +932,7 @@ export default function CopytradeArra77Page() {
                   <li>Download file EA dan pasang di MT5 folder `MQL5/Experts`.</li>
                   <li>Generate `Bridge Key + Secret` di panel ini.</li>
                   <li>Isi endpoint bridge: `/api/copytrade-arra77/bridge`.</li>
+                  <li>Gunakan EA versi signed mode (header `X-ARRA-KEY/TS/NONCE/SIGN`).</li>
                   <li>Attach EA di chart XAUUSD M15, aktifkan Algo Trading.</li>
                   <li>Untuk challenge provider, kirim closed trade ke `/api/copytrade-arra77/bridge/provider/challenge/trade`.</li>
                 </ol>

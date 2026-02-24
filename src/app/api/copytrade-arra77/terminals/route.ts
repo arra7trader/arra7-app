@@ -64,6 +64,30 @@ export async function POST(request: NextRequest) {
     const { bridgeKey, bridgeSecret } = generateBridgeCredentials();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
 
+    if (followId) {
+      const { data: followRow, error: followError } = await supabase
+        .from('follow_relations')
+        .select('id,status')
+        .eq('id', followId)
+        .eq('follower_profile_id', profile.id)
+        .maybeSingle();
+
+      if (followError) throw followError;
+      if (!followRow) {
+        return NextResponse.json(
+          { status: 'error', message: 'followId tidak valid atau bukan milik akun ini.' },
+          { status: 400 }
+        );
+      }
+
+      if (!['ACTIVE', 'PAUSED'].includes(String(followRow.status || '').toUpperCase())) {
+        return NextResponse.json(
+          { status: 'error', message: 'followId harus dalam status ACTIVE/PAUSED.' },
+          { status: 400 }
+        );
+      }
+    }
+
     const insertPayload: Record<string, unknown> = {
       profile_id: profile.id,
       terminal_label: terminalLabel,
@@ -104,4 +128,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message }, { status });
   }
 }
-

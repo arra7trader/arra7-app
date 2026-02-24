@@ -65,6 +65,7 @@ export async function verifyBridgeRequest(
 ): Promise<BridgeTerminalAuthContext> {
   const supabase = getCopytrade77AdminClient();
   const schema = supabase.schema('copytrade77');
+  const allowLegacyUnsigned = CT77_CONFIG.bridgeAllowLegacyUnsigned;
 
   const signedBridgeKey = request.headers.get('X-ARRA-KEY')?.trim() || null;
   const signedTs = request.headers.get('X-ARRA-TS')?.trim() || null;
@@ -72,13 +73,19 @@ export async function verifyBridgeRequest(
   const signedSign = request.headers.get('X-ARRA-SIGN')?.trim() || null;
   const hasAllSignedHeaders = Boolean(signedBridgeKey && signedTs && signedNonce && signedSign);
 
-  const bridgeKey = hasAllSignedHeaders
-    ? signedBridgeKey
-    : extractLegacyBridgeKey(request, rawBody);
-
-  if (!bridgeKey) {
-    throw new Error('MISSING_X_ARRA_KEY');
+  let bridgeKey: string | null = null;
+  if (hasAllSignedHeaders) {
+    bridgeKey = signedBridgeKey;
+  } else if (allowLegacyUnsigned) {
+    bridgeKey = extractLegacyBridgeKey(request, rawBody);
+  } else {
+    if (!signedBridgeKey) throw new Error('MISSING_X_ARRA_KEY');
+    if (!signedTs) throw new Error('MISSING_X_ARRA_TS');
+    if (!signedNonce) throw new Error('MISSING_X_ARRA_NONCE');
+    if (!signedSign) throw new Error('MISSING_X_ARRA_SIGN');
   }
+
+  if (!bridgeKey) throw new Error('MISSING_X_ARRA_KEY');
 
   const { data: terminal, error: terminalError } = await schema
     .from('bridge_terminals')
@@ -132,6 +139,8 @@ export async function verifyBridgeRequest(
       }
       throw nonceError;
     }
+  } else if (!allowLegacyUnsigned) {
+    throw new Error('MISSING_X_ARRA_SIGN');
   }
 
   return {

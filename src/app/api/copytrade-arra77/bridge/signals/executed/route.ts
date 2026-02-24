@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyBridgeRequest } from '@/lib/copytrade77-bridge-security';
+import { getCopytrade77PricingConfig } from '@/lib/copytrade77-pricing';
 import { getSystemAdminCopytradeProfileId } from '@/lib/copytrade77-profile';
 import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
-import { CT77_CONFIG } from '@/lib/copytrade77-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     const body = rawBody ? JSON.parse(rawBody) : {};
     const auth = await verifyBridgeRequest(request, rawBody);
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
+    const pricing = await getCopytrade77PricingConfig();
 
     const dispatchId = String(body?.dispatchId || '').trim();
     const mt5Ticket = Number(body?.mt5Ticket);
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       status: 'ok',
       positionId,
       wallet: {
-        debitedCredits: CT77_CONFIG.signalCostCredits,
+        debitedCredits: pricing.signalCostCredits,
         remainingCredits,
       },
     });
@@ -102,4 +103,3 @@ export async function POST(request: NextRequest) {
     return errorJson('INTERNAL_ERROR', message, 500);
   }
 }
-

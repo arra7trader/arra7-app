@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireCopytrade77SessionProfile } from '@/lib/copytrade77-session';
+import { getCopytrade77PricingConfig } from '@/lib/copytrade77-pricing';
 import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
 import { getOrCreateSystemProviderId } from '@/lib/copytrade77-signal-engine';
 import { CT77_CONFIG } from '@/lib/copytrade77-config';
@@ -17,6 +18,7 @@ export async function GET() {
   try {
     const { profile } = await requireCopytrade77SessionProfile();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
+    const pricing = await getCopytrade77PricingConfig();
 
     // Ensure default system provider "Arra7" is always available in marketplace.
     await getOrCreateSystemProviderId();
@@ -162,7 +164,7 @@ export async function GET() {
             : null,
           earnings: {
             totalProviderRevenueCredits,
-            totalProviderRevenueIdr: totalProviderRevenueCredits * CT77_CONFIG.creditRateIdr,
+            totalProviderRevenueIdr: totalProviderRevenueCredits * pricing.creditRateIdr,
             walletBalanceCredits: Number(myWalletRes.data?.balance_credits || 0),
             walletTotalEarnedCredits: Number(myWalletRes.data?.total_earned_credits || 0),
             lastProviderRevenueAt,
@@ -177,10 +179,10 @@ export async function GET() {
       providerRules: {
         challengeTargetTrades: CT77_CONFIG.providerChallengeTargetTrades,
         challengeMinWinRatePct: CT77_CONFIG.providerChallengeMinWinRatePct,
-        signalCostCredits: CT77_CONFIG.signalCostCredits,
-        adminShareCredits: CT77_CONFIG.adminShareCredits,
-        providerShareCredits: CT77_CONFIG.providerShareCredits,
-        creditRateIdr: CT77_CONFIG.creditRateIdr,
+        signalCostCredits: pricing.signalCostCredits,
+        adminShareCredits: pricing.adminShareCredits,
+        providerShareCredits: pricing.providerShareCredits,
+        creditRateIdr: pricing.creditRateIdr,
       },
     });
   } catch (error: any) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CT77_CONFIG } from '@/lib/copytrade77-config';
+import { getCopytrade77PricingConfig } from '@/lib/copytrade77-pricing';
 import { verifyBridgeRequest } from '@/lib/copytrade77-bridge-security';
 import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
 import { generateAndQueueSignalForTerminal } from '@/lib/copytrade77-signal-engine';
@@ -360,7 +361,11 @@ async function getOpenPositionCountMap(
   return map;
 }
 
-async function pickExecutableDispatch(supabase: CopytradeSchemaClient, terminalId: string): Promise<{
+async function pickExecutableDispatch(
+  supabase: CopytradeSchemaClient,
+  terminalId: string,
+  signalCostCredits: number
+): Promise<{
   dispatchRow: DispatchRow | null;
   followRow: FollowRow | null;
   holdReason: string | null;
@@ -419,7 +424,7 @@ async function pickExecutableDispatch(supabase: CopytradeSchemaClient, terminalI
     }
 
     const balanceCredits = walletMap.get(followerProfileId) || 0;
-    if (balanceCredits < CT77_CONFIG.signalCostCredits) {
+    if (balanceCredits < signalCostCredits) {
       return { dispatchRow: null, followRow: follow, holdReason: 'INSUFFICIENT_CREDITS' };
     }
 
@@ -447,6 +452,7 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await verifyBridgeRequest(request, '');
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
+    const pricing = await getCopytrade77PricingConfig();
 
     await supabase
       .from('bridge_terminals')
@@ -469,11 +475,11 @@ export async function GET(request: NextRequest) {
       signalId?: string;
     } | null = null;
 
-    let selected = await pickExecutableDispatch(supabase, auth.terminalId);
+    let selected = await pickExecutableDispatch(supabase, auth.terminalId, pricing.signalCostCredits);
 
     if (!selected.dispatchRow && !selected.holdReason) {
       generation = await generateAndQueueSignalForTerminal(auth.terminalId);
-      selected = await pickExecutableDispatch(supabase, auth.terminalId);
+      selected = await pickExecutableDispatch(supabase, auth.terminalId, pricing.signalCostCredits);
     }
 
     if (!selected.dispatchRow) {
@@ -519,7 +525,7 @@ export async function GET(request: NextRequest) {
         takeProfit2: signal.take_profit_2,
         takeProfit3: signal.take_profit_3,
         expiresAt: signal.valid_until,
-        creditCost: CT77_CONFIG.signalCostCredits,
+        creditCost: pricing.signalCostCredits,
         risk: {
           oneTradeAtATime: Boolean(follow?.one_trade_at_a_time ?? true),
           maxConcurrentPositions: Number(follow?.max_concurrent_positions ?? 1),

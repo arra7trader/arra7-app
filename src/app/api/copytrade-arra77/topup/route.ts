@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CT77_CONFIG } from '@/lib/copytrade77-config';
+import { getCopytrade77PricingConfig } from '@/lib/copytrade77-pricing';
 import { requireCopytrade77SessionProfile } from '@/lib/copytrade77-session';
 import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
 
 export const dynamic = 'force-dynamic';
 
-function calculateCredits(amountIdr: number): number {
-  return Math.floor(amountIdr / CT77_CONFIG.creditRateIdr);
+function calculateCredits(amountIdr: number, creditRateIdr: number): number {
+  return Math.floor(amountIdr / creditRateIdr);
 }
 
-function getMinimumTopupIdr(): number {
-  return Math.max(CT77_CONFIG.minTopupIdr, CT77_CONFIG.creditRateIdr);
+function getMinimumTopupIdr(creditRateIdr: number): number {
+  return Math.max(CT77_CONFIG.minTopupIdr, creditRateIdr);
 }
 
 export async function GET() {
@@ -24,6 +25,8 @@ export async function GET() {
   try {
     const { profile } = await requireCopytrade77SessionProfile();
     const supabase = getCopytrade77AdminClient().schema('copytrade77');
+    const pricing = await getCopytrade77PricingConfig();
+    const minTopupIdr = getMinimumTopupIdr(pricing.creditRateIdr);
 
     const { data: orders, error } = await supabase
       .from('topup_orders')
@@ -38,8 +41,8 @@ export async function GET() {
       status: 'success',
       orders: orders || [],
       pricing: {
-        creditRateIdr: CT77_CONFIG.creditRateIdr,
-        minTopupIdr: getMinimumTopupIdr(),
+        creditRateIdr: pricing.creditRateIdr,
+        minTopupIdr,
       },
     });
   } catch (error: any) {
@@ -61,7 +64,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const amountIdr = Number(body?.amountIdr || 0);
     const proofNote = body?.proofNote ? String(body.proofNote).trim() : null;
-    const minTopupIdr = getMinimumTopupIdr();
+    const pricing = await getCopytrade77PricingConfig();
+    const minTopupIdr = getMinimumTopupIdr(pricing.creditRateIdr);
 
     if (!Number.isFinite(amountIdr) || amountIdr < minTopupIdr) {
       return NextResponse.json(
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const creditAmount = calculateCredits(amountIdr);
+    const creditAmount = calculateCredits(amountIdr, pricing.creditRateIdr);
     if (creditAmount <= 0) {
       return NextResponse.json(
         { status: 'error', message: 'Nominal tidak valid untuk konversi credit.' },
@@ -87,7 +91,7 @@ export async function POST(request: NextRequest) {
         profile_id: profile.id,
         amount_idr: amountIdr,
         credit_amount: creditAmount,
-        rate_idr_per_credit: CT77_CONFIG.creditRateIdr,
+        rate_idr_per_credit: pricing.creditRateIdr,
         payment_channel: 'QRIS_MANUAL',
         status: 'SUBMITTED',
         proof_note: proofNote,

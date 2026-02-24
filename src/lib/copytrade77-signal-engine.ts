@@ -9,6 +9,7 @@ import {
 } from '@/lib/market-data';
 import { parseSignalFromAnalysis } from '@/lib/signal-tracker';
 import { CT77_CONFIG } from '@/lib/copytrade77-config';
+import { getCopytrade77PricingConfig } from '@/lib/copytrade77-pricing';
 import { getSystemAdminCopytradeProfileId } from '@/lib/copytrade77-profile';
 import { getCopytrade77AdminClient } from '@/lib/supabase-copytrade77';
 
@@ -456,6 +457,7 @@ export async function generateAndQueueSignalForTerminal(terminalId: string): Pro
   signalId?: string;
 }> {
   const supabase = getCopytrade77AdminClient().schema('copytrade77');
+  const pricing = await getCopytrade77PricingConfig();
 
   const terminalRes = await supabase
     .from('bridge_terminals')
@@ -491,7 +493,7 @@ export async function generateAndQueueSignalForTerminal(terminalId: string): Pro
   if (walletRes.error) throw walletRes.error;
 
   const balanceCredits = Number(walletRes.data?.balance_credits || 0);
-  if (balanceCredits < CT77_CONFIG.signalCostCredits) {
+  if (balanceCredits < pricing.signalCostCredits) {
     return { generated: false, reason: 'insufficient_credits' };
   }
 
