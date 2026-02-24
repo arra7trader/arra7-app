@@ -844,30 +844,37 @@ export default function CopytradeArra77Page() {
               <h3 className="font-semibold">Alur Menjadi Provider</h3>
               <ol className="list-decimal ml-5 text-sm text-slate-700 space-y-1">
                 <li>Ajukan provider dari tab Provider.</li>
-                <li>Generate terminal bridge dan pasang EA di akun demo broker apa pun.</li>
-                <li>Kirim trade close ke endpoint challenge provider.</li>
-                <li>Sistem validasi otomatis saat mencapai target trade.</li>
-                <li>Jika lolos winrate minimum, provider auto-approve.</li>
+                <li>Generate terminal bridge, lalu pasang EA di akun demo MT5 (broker bebas).</li>
+                <li>Trading seperti biasa di akun demo. Saat posisi ditutup, EA otomatis kirim hasil trade ke sistem challenge.</li>
+                <li>Sistem menghitung progres otomatis: total trade closed dan winrate secara real-time.</li>
+                <li>Jika mencapai target challenge, status provider otomatis APPROVED dan tampil di marketplace.</li>
+                <li>Jika belum lolos, challenge bisa diulang sampai memenuhi syarat.</li>
               </ol>
               <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-700">
                 <p>Target challenge: <span className="font-medium">{providerRules?.challengeTargetTrades || 50} trade closed</span></p>
                 <p>Winrate minimum: <span className="font-medium">{providerRules?.challengeMinWinRatePct || 60}%</span></p>
+                <p>Jika gagal: <span className="font-medium">bisa ulang challenge</span></p>
                 <p>Support broker: <span className="font-medium">Broker bebas (asal EA aktif)</span></p>
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
-              <h3 className="font-semibold">Sistem Bagi Hasil & Endpoint</h3>
+              <h3 className="font-semibold">Sistem Bagi Hasil Provider</h3>
               <p className="text-sm text-slate-700">
                 1 signal menelan {providerRules?.signalCostCredits || 3} credit dari follower. Distribusi otomatis:
                 admin {providerRules?.adminShareCredits || 1} credit, provider {providerRules?.providerShareCredits || 2} credit.
               </p>
+              <p className="text-xs text-slate-600">
+                1 credit = {fmtIdr(providerCreditRate)}. Pendapatan provider otomatis masuk ke wallet copytrade dan bisa dipantau di tab Provider.
+              </p>
               <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-900 break-all">
+                Catatan teknis (otomatis via EA):
+                <br />
                 Endpoint challenge close trade:
                 <br />
                 <code>/api/copytrade-arra77/bridge/provider/challenge/trade</code>
               </div>
               <p className="text-xs text-slate-500">
-                Payload minimal: <code>tradeId/ticket</code>, <code>symbol</code>, <code>side</code>, <code>entryPrice</code>, <code>closePrice</code>, <code>pnlValue/pipsResult</code>.
+                User tidak perlu kirim manual payload jika EA aktif dengan benar.
               </p>
               <p className="text-xs text-slate-500">
                 Akumulasi hasil provider bisa dipantau di tab Provider pada bagian <span className="font-medium">Total Earning Provider</span>.
