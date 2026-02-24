@@ -246,7 +246,8 @@ export async function POST(request: NextRequest) {
     const timeframe = timeframeFromBody || normalizeTimeframe(CT77_CONFIG.autoAnalyzeTimeframe || 'M15');
     const entryPrice = await getEntryPrice({ symbol, timeframe, providerId });
     const pipSize = getPipSize(symbol);
-    const riskDistance = Math.max(CT77_CONFIG.minSlPips, 70) * pipSize;
+    const enforcedMinSlPips = Math.max(70, Number(CT77_CONFIG.minSlPips || 70));
+    const riskDistance = enforcedMinSlPips * pipSize;
     const rewardDistance = riskDistance * 1.8;
 
     const normalized = normalizeTradeSignal({
@@ -289,7 +290,7 @@ export async function POST(request: NextRequest) {
         take_profit_1: normalized.takeProfit1,
         take_profit_2: normalized.takeProfit2 ?? null,
         take_profit_3: normalized.takeProfit3 ?? null,
-        min_stop_distance_pips: CT77_CONFIG.minSlPips,
+        min_stop_distance_pips: enforcedMinSlPips,
         confidence: normalized.confidence ?? null,
         raw_analysis: {
           forced_test_signal: true,

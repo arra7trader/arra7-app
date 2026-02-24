@@ -131,7 +131,8 @@ export function normalizeTradeSignal(input: {
   const symbol = normalizeSymbol(input.symbol);
   const decimals = priceDecimals(symbol);
   const pipSize = getPipSize(symbol);
-  const minDistance = CT77_CONFIG.minSlPips * pipSize;
+  const enforcedMinSlPips = Math.max(70, Number(CT77_CONFIG.minSlPips || 70));
+  const minDistance = enforcedMinSlPips * pipSize;
 
   const entry = Number(input.entryPrice);
   let sl = Number(input.stopLoss);
@@ -292,6 +293,7 @@ export async function publishSignalAndQueue(params: {
   createdByProfileId?: string | null;
 }): Promise<PublishSignalResult> {
   const supabase = getCopytrade77AdminClient().schema('copytrade77');
+  const enforcedMinSlPips = Math.max(70, Number(CT77_CONFIG.minSlPips || 70));
 
   const signalRes = await supabase
     .from('signals')
@@ -308,7 +310,7 @@ export async function publishSignalAndQueue(params: {
       take_profit_1: params.signal.takeProfit1,
       take_profit_2: params.signal.takeProfit2 ?? null,
       take_profit_3: params.signal.takeProfit3 ?? null,
-      min_stop_distance_pips: CT77_CONFIG.minSlPips,
+      min_stop_distance_pips: enforcedMinSlPips,
       confidence: params.signal.confidence ?? null,
       raw_analysis: params.rawAnalysis || {},
       status: 'PUBLISHED',

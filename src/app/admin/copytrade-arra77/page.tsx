@@ -28,6 +28,7 @@ export default function CopytradeArra77AdminPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [forcingKey, setForcingKey] = useState('');
+  const [resettingTerminalId, setResettingTerminalId] = useState('');
   const [topupScope, setTopupScope] = useState<'pending' | 'all'>('pending');
   const [providerScope, setProviderScope] = useState<'pending' | 'all'>('pending');
   const [followScope, setFollowScope] = useState<'active' | 'all'>('active');
@@ -154,6 +155,28 @@ export default function CopytradeArra77AdminPage() {
       setError(e?.message || 'Force test signal gagal diproses.');
     } finally {
       setForcingKey('');
+    }
+  }
+
+  async function resetLock(terminalId: string) {
+    setResettingTerminalId(terminalId);
+    setError('');
+    setMessage('');
+    try {
+      const res = await fetch('/api/admin/copytrade-arra77/reset-lock', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ terminalId }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.status !== 'success') throw new Error(j.message || 'Reset lock gagal');
+      setMessage(j.message || 'Reset lock berhasil.');
+      await refresh();
+    } catch (e: any) {
+      setError(e?.message || 'Reset lock gagal diproses.');
+    } finally {
+      setResettingTerminalId('');
     }
   }
 
@@ -380,14 +403,14 @@ export default function CopytradeArra77AdminPage() {
                 <h3 className="font-semibold">Bridge Terminals</h3>
                 <div className="flex gap-2">
                   <button
-                    disabled={forcingKey !== ''}
+                    disabled={forcingKey !== '' || resettingTerminalId !== ''}
                     onClick={() => forceTestSignal('BUY')}
                     className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs disabled:opacity-60"
                   >
                     Force BUY (Broadcast)
                   </button>
                   <button
-                    disabled={forcingKey !== ''}
+                    disabled={forcingKey !== '' || resettingTerminalId !== ''}
                     onClick={() => forceTestSignal('SELL')}
                     className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs disabled:opacity-60"
                   >
@@ -403,18 +426,25 @@ export default function CopytradeArra77AdminPage() {
                       <div>{t.terminal_label} | {t.status} | {t.profiles?.email || '-'} | heartbeat {fmtDate(t.last_heartbeat_at)}</div>
                       <div className="flex gap-2">
                         <button
-                          disabled={forcingKey !== ''}
+                          disabled={forcingKey !== '' || resettingTerminalId !== ''}
                           onClick={() => forceTestSignal('BUY', String(t.id))}
                           className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs disabled:opacity-60"
                         >
                           Test BUY
                         </button>
                         <button
-                          disabled={forcingKey !== ''}
+                          disabled={forcingKey !== '' || resettingTerminalId !== ''}
                           onClick={() => forceTestSignal('SELL', String(t.id))}
                           className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs disabled:opacity-60"
                         >
                           Test SELL
+                        </button>
+                        <button
+                          disabled={forcingKey !== '' || resettingTerminalId !== ''}
+                          onClick={() => resetLock(String(t.id))}
+                          className="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-xs disabled:opacity-60"
+                        >
+                          {resettingTerminalId === String(t.id) ? 'Resetting...' : 'Reset Lock'}
                         </button>
                       </div>
                     </div>
