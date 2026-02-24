@@ -45,6 +45,10 @@ Response:
 ## 2) Poll Next Signal
 `GET /signals/next`
 
+Optional query untuk sinkronisasi lock:
+- `openPositions=<int>` jumlah posisi open di terminal EA
+- `openTickets=<csv>` daftar ticket open (contoh `123456,123457`)
+
 Response (no signal):
 ```json
 {

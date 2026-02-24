@@ -251,6 +251,28 @@ int CountOpenPositions(const string symbol)
    return count;
 }
 
+string CollectOpenTicketsCsv(const string symbol)
+{
+   string csv = "";
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+         continue;
+
+      if((int)PositionGetInteger(POSITION_MAGIC) != InpMagic)
+         continue;
+
+      if(symbol != "" && PositionGetString(POSITION_SYMBOL) != symbol)
+         continue;
+
+      if(csv != "")
+         csv += ",";
+      csv += StringFormat("%I64d", (long)ticket);
+   }
+   return csv;
+}
+
 long FindLatestPositionTicket(const string symbol)
 {
    long best_ticket = 0;
@@ -322,14 +344,18 @@ bool SendHeartbeat()
 {
    int status = 0;
    string response = "";
+   int open_positions = CountOpenPositions(InpSymbol);
+   string open_tickets = CollectOpenTicketsCsv(InpSymbol);
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"mt5Login\":\"%I64d\",\"broker\":\"%s\",\"server\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"eaVersion\":\"1.0.0-test\"}",
+      "{\"bridgeKey\":\"%s\",\"mt5Login\":\"%I64d\",\"broker\":\"%s\",\"server\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"eaVersion\":\"1.1.0-test\",\"openPositions\":%d,\"openTickets\":\"%s\"}",
       EscapeJson(InpBridgeKey),
       (long)AccountInfoInteger(ACCOUNT_LOGIN),
       EscapeJson(AccountInfoString(ACCOUNT_COMPANY)),
       EscapeJson(AccountInfoString(ACCOUNT_SERVER)),
       EscapeJson(InpSymbol),
-      EscapeJson(EnumToString((ENUM_TIMEFRAMES)Period()))
+      EscapeJson(EnumToString((ENUM_TIMEFRAMES)Period())),
+      open_positions,
+      EscapeJson(open_tickets)
    );
 
    if(!HttpRequest("POST", BuildBridgeUrl("/heartbeat", false), payload, status, response))
@@ -368,7 +394,12 @@ bool PollNextSignal(DispatchData &out_dispatch)
 {
    int status = 0;
    string response = "";
-   if(!HttpRequest("GET", BuildBridgeUrl("/signals/next", true), "", status, response))
+   int open_positions = CountOpenPositions(InpSymbol);
+   string open_tickets = CollectOpenTicketsCsv(InpSymbol);
+   string url = BuildBridgeUrl("/signals/next", true) + "&openPositions=" + IntegerToString(open_positions);
+   url += "&openTickets=" + open_tickets;
+
+   if(!HttpRequest("GET", url, "", status, response))
       return false;
 
    if(status < 200 || status >= 300)

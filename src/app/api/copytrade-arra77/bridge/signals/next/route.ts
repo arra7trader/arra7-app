@@ -60,6 +60,13 @@ type FollowRow = {
   max_concurrent_positions: number;
 };
 
+type OpenPositionRow = {
+  id: string;
+  mt5_ticket: number | null;
+  entry_price: number | null;
+  opened_at: string | null;
+};
+
 type RawSignalRow = {
   id: unknown;
   provider_id: unknown;
@@ -123,6 +130,119 @@ function isExpired(validUntil: string | null | undefined): boolean {
   if (!validUntil) return false;
   const dt = new Date(validUntil);
   return Number.isFinite(dt.getTime()) && dt.getTime() < Date.now();
+}
+
+type TerminalSnapshot = {
+  hasSnapshot: boolean;
+  openPositions: number | null;
+  ticketsProvided: boolean;
+  openTickets: Set<number>;
+};
+
+function parseTerminalSnapshot(request: NextRequest): TerminalSnapshot {
+  const openPositionsRaw = request.nextUrl.searchParams.get('openPositions');
+  const openTicketsRaw = request.nextUrl.searchParams.get('openTickets');
+
+  const openPositionsParsed = openPositionsRaw != null ? Number(openPositionsRaw) : NaN;
+  const openPositions = Number.isFinite(openPositionsParsed) && openPositionsParsed >= 0
+    ? Math.floor(openPositionsParsed as number)
+    : null;
+
+  const ticketsProvided = openTicketsRaw != null;
+  const openTickets = new Set<number>();
+
+  if (ticketsProvided) {
+    for (const item of String(openTicketsRaw || '').split(/[,\s;|]+/)) {
+      const trimmed = item.trim();
+      if (!trimmed) continue;
+      const numeric = Number(trimmed);
+      if (Number.isFinite(numeric) && numeric > 0) {
+        openTickets.add(Math.trunc(numeric));
+      }
+    }
+  }
+
+  return {
+    hasSnapshot: openPositions !== null || ticketsProvided,
+    openPositions,
+    ticketsProvided,
+    openTickets,
+  };
+}
+
+async function reconcileStaleOpenPositions(
+  supabase: CopytradeSchemaClient,
+  terminalId: string,
+  snapshot: TerminalSnapshot
+): Promise<{ closedCount: number }> {
+  if (!snapshot.hasSnapshot) return { closedCount: 0 };
+
+  const { data, error } = await supabase
+    .from('positions')
+    .select('id,mt5_ticket,entry_price,opened_at')
+    .eq('terminal_id', terminalId)
+    .eq('status', 'OPEN')
+    .limit(100);
+
+  if (error) throw error;
+  const openRows = (data || []) as OpenPositionRow[];
+  if (openRows.length === 0) return { closedCount: 0 };
+
+  const graceMs = 90 * 1000;
+  const now = Date.now();
+  const closeCandidates: OpenPositionRow[] = [];
+
+  for (const row of openRows) {
+    const openedAtMs = row.opened_at ? new Date(row.opened_at).getTime() : NaN;
+    const freshPosition = Number.isFinite(openedAtMs) && now - openedAtMs < graceMs;
+    if (freshPosition) continue;
+
+    const ticketNum = row.mt5_ticket != null ? Number(row.mt5_ticket) : NaN;
+
+    if (snapshot.ticketsProvided) {
+      if (!Number.isFinite(ticketNum) || !snapshot.openTickets.has(Math.trunc(ticketNum))) {
+        closeCandidates.push(row);
+      }
+      continue;
+    }
+
+    if (snapshot.openPositions === 0) {
+      closeCandidates.push(row);
+    }
+  }
+
+  if (closeCandidates.length === 0) return { closedCount: 0 };
+
+  let closedCount = 0;
+  for (const row of closeCandidates) {
+    const closePrice = Number(row.entry_price || 0);
+    const { error: closeError } = await supabase.rpc('close_position', {
+      p_position_id: row.id,
+      p_close_reason: 'MANUAL',
+      p_close_price: closePrice > 0 ? closePrice : 0,
+      p_pips_result: 0,
+      p_pnl_value: 0,
+      p_closed_at: new Date().toISOString(),
+    });
+
+    if (closeError) throw closeError;
+    closedCount += 1;
+  }
+
+  if (closedCount > 0) {
+    await supabase.from('bridge_logs').insert({
+      terminal_id: terminalId,
+      level: 'WARN',
+      message: `Auto-reconciled ${closedCount} stale open position(s) from terminal snapshot.`,
+      metadata: {
+        source: 'signals_next',
+        openPositions: snapshot.openPositions,
+        openTickets: Array.from(snapshot.openTickets.values()),
+      },
+    });
+  }
+
+  return { closedCount };
 }
 
 async function getQueuedDispatches(supabase: CopytradeSchemaClient, terminalId: string): Promise<DispatchRow[]> {
@@ -313,6 +433,12 @@ export async function GET(request: NextRequest) {
       })
       .eq('id', auth.terminalId);
 
+    const snapshot = parseTerminalSnapshot(request);
+    const reconciliation = await reconcileStaleOpenPositions(supabase, auth.terminalId, snapshot);
+    const reconciliationPayload = reconciliation.closedCount > 0
+      ? { closedStaleOpenPositions: reconciliation.closedCount }
+      : null;
+
     let generation: {
       generated: boolean;
       reason: string;
@@ -333,6 +459,7 @@ export async function GET(request: NextRequest) {
         hasSignal: false,
         reason: fallbackReason,
         generation,
+        ...(reconciliationPayload ? { reconciliation: reconciliationPayload } : {}),
       });
     }
 
@@ -374,6 +501,7 @@ export async function GET(request: NextRequest) {
           maxConcurrentPositions: Number(follow?.max_concurrent_positions ?? 1),
         },
       },
+      ...(reconciliationPayload ? { reconciliation: reconciliationPayload } : {}),
     });
   } catch (error: unknown) {
     const message = getErrorMessage(error, 'Signal polling failed');
