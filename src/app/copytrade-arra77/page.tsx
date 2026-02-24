@@ -927,15 +927,19 @@ export default function CopytradeArra77Page() {
             <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
               <h3 className="font-semibold">Setup EA MT5</h3>
               <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
-                <p className="font-medium">Langkah cepat:</p>
+                <p className="font-medium">Panduan follower (wajib):</p>
                 <ol className="list-decimal ml-5 mt-1 space-y-1">
-                  <li>Download file EA dan pasang di MT5 folder `MQL5/Experts`.</li>
-                  <li>Generate `Bridge Key + Secret` di panel ini.</li>
-                  <li>Isi endpoint bridge: `/api/copytrade-arra77/bridge`.</li>
-                  <li>Gunakan EA versi signed mode (header `X-ARRA-KEY/TS/NONCE/SIGN`).</li>
-                  <li>Attach EA di chart XAUUSD M15, aktifkan Algo Trading.</li>
-                  <li>Untuk challenge provider, kirim closed trade ke `/api/copytrade-arra77/bridge/provider/challenge/trade`.</li>
+                  <li>Download EA `.ex5`, lalu copy ke folder MT5: <code>MQL5/Experts</code>.</li>
+                  <li>Restart MT5, buka chart <code>XAUUSD M15</code>, lalu attach EA.</li>
+                  <li>Di panel ini klik <b>Generate Key &amp; Secret</b>, lalu simpan datanya.</li>
+                  <li>Isi endpoint di EA: <code>https://domain-kamu.com/api/copytrade-arra77/bridge</code>.</li>
+                  <li>Isi <code>Bridge Key</code> dan <code>Bridge Secret</code> persis dari panel ini (jangan ada spasi).</li>
+                  <li>Aktifkan <b>Algo Trading</b>. Jika benar, EA akan polling otomatis setiap beberapa detik.</li>
                 </ol>
+                <p className="mt-2 text-xs text-blue-800">
+                  Khusus calon provider challenge: kirim closed trade ke endpoint
+                  {' '}<code>/api/copytrade-arra77/bridge/provider/challenge/trade</code>.
+                </p>
               </div>
 
               <a href="/downloads/Arra-Copytrade-Bridge.ex5" className="inline-flex rounded-lg bg-slate-900 text-white px-3 py-2 text-sm" download>
@@ -970,7 +974,9 @@ export default function CopytradeArra77Page() {
                   Secret: {newCreds.secret}
                 </div>
               )}
-              <p className="text-xs text-slate-500">EA endpoint base: <code>/api/copytrade-arra77/bridge</code></p>
+              <p className="text-xs text-slate-500">
+                Endpoint bridge (path): <code>/api/copytrade-arra77/bridge</code>
+              </p>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 p-4">
               <h3 className="font-semibold mb-2">Terminal List</h3>
