@@ -1,11 +1,12 @@
 #property strict
-#property version   "1.00"
-#property description "ARRA7 Copytrade77 Bridge Test EA (legacy bridge key mode)"
+#property version   "1.10"
+#property description "ARRA7 Copytrade77 Bridge Test EA (signed mode)"
 
 #include <Trade/Trade.mqh>
 
 input string InpBridgeBaseUrl = "https://arra7-app.vercel.app/api/copytrade-arra77/bridge";
 input string InpBridgeKey = "";
+input string InpBridgeSecret = "";
 input string InpSymbol = "XAUUSD";
 input double InpLots = 0.01;
 input int InpMagic = 770077;
@@ -43,6 +44,8 @@ ulong g_last_poll_ms = 0;
 ulong g_last_heartbeat_ms = 0;
 int g_idle_poll_streak = 0;
 PositionMap g_positions[];
+string g_bridge_key = "";
+string g_bridge_secret = "";
 
 string TrimSlashRight(const string value)
 {
@@ -70,12 +73,136 @@ string EscapeJson(const string value)
    return out;
 }
 
-string BuildBridgeUrl(const string path, const bool with_key_query)
+string BuildBridgeUrl(const string path)
 {
    string base = TrimSlashRight(InpBridgeBaseUrl);
-   if(with_key_query)
-      return base + path + "?bridgeKey=" + InpBridgeKey;
    return base + path;
+}
+
+void StringToUtf8Bytes(const string value, uchar &out[])
+{
+   char tmp[];
+   int size = StringToCharArray(value, tmp, 0, -1, CP_UTF8);
+   if(size <= 0)
+   {
+      ArrayResize(out, 0);
+      return;
+   }
+
+   int bytes = size - 1; // remove terminal zero
+   if(bytes < 0)
+      bytes = 0;
+   ArrayResize(out, bytes);
+   for(int i = 0; i < bytes; i++)
+      out[i] = (uchar)tmp[i];
+}
+
+bool Sha256Bytes(const uchar &data[], uchar &result[])
+{
+   uchar key[] = {};
+   ResetLastError();
+   int out_size = CryptEncode(CRYPT_HASH_SHA256, data, key, result);
+   return (out_size > 0 && ArraySize(result) == 32);
+}
+
+string BytesToHex(const uchar &data[])
+{
+   string out = "";
+   int size = ArraySize(data);
+   for(int i = 0; i < size; i++)
+      out += StringFormat("%02X", (int)data[i]);
+   return out;
+}
+
+bool HmacSha256Hex(const string secret, const string payload, string &out_hex)
+{
+   out_hex = "";
+
+   uchar key_bytes[];
+   uchar payload_bytes[];
+   StringToUtf8Bytes(secret, key_bytes);
+   StringToUtf8Bytes(payload, payload_bytes);
+
+   if(ArraySize(key_bytes) > 64)
+   {
+      uchar compressed_key[];
+      if(!Sha256Bytes(key_bytes, compressed_key))
+         return false;
+      ArrayCopy(key_bytes, compressed_key);
+      ArrayResize(key_bytes, ArraySize(compressed_key));
+   }
+
+   uchar key_block[];
+   ArrayResize(key_block, 64);
+   ArrayInitialize(key_block, 0);
+
+   int key_size = MathMin(ArraySize(key_bytes), 64);
+   for(int i = 0; i < key_size; i++)
+      key_block[i] = key_bytes[i];
+
+   uchar inner_pad[];
+   uchar outer_pad[];
+   ArrayResize(inner_pad, 64);
+   ArrayResize(outer_pad, 64);
+   for(int i = 0; i < 64; i++)
+   {
+      inner_pad[i] = (uchar)(key_block[i] ^ 0x36);
+      outer_pad[i] = (uchar)(key_block[i] ^ 0x5C);
+   }
+
+   int payload_size = ArraySize(payload_bytes);
+   uchar inner_input[];
+   ArrayResize(inner_input, 64 + payload_size);
+   for(int i = 0; i < 64; i++)
+      inner_input[i] = inner_pad[i];
+   for(int i = 0; i < payload_size; i++)
+      inner_input[64 + i] = payload_bytes[i];
+
+   uchar inner_hash[];
+   if(!Sha256Bytes(inner_input, inner_hash))
+      return false;
+
+   uchar outer_input[];
+   ArrayResize(outer_input, 64 + ArraySize(inner_hash));
+   for(int i = 0; i < 64; i++)
+      outer_input[i] = outer_pad[i];
+   for(int i = 0; i < ArraySize(inner_hash); i++)
+      outer_input[64 + i] = inner_hash[i];
+
+   uchar final_hash[];
+   if(!Sha256Bytes(outer_input, final_hash))
+      return false;
+
+   out_hex = BytesToHex(final_hash);
+   return (out_hex != "");
+}
+
+string ExtractPathFromUrl(const string url)
+{
+   int size = StringLen(url);
+   if(size <= 0)
+      return "/";
+
+   int start = 0;
+   int scheme = StringFind(url, "://", 0);
+   if(scheme >= 0)
+   {
+      int host_start = scheme + 3;
+      int slash = StringFind(url, "/", host_start);
+      if(slash < 0)
+         return "/";
+      start = slash;
+   }
+
+   int query = StringFind(url, "?", start);
+   if(query < 0)
+      return StringSubstr(url, start);
+   return StringSubstr(url, start, query - start);
+}
+
+string GenerateNonce()
+{
+   return StringFormat("%u%u%u", (uint)GetTickCount(), (uint)TimeLocal(), (uint)MathRand());
 }
 
 bool HttpRequest(const string method, const string url, const string body, int &status_code, string &response_body)
@@ -88,7 +215,25 @@ bool HttpRequest(const string method, const string url, const string body, int &
 
    char response_data[];
    string response_headers = "";
+   long ts_value = (long)TimeGMT();
+   if(ts_value <= 0)
+      ts_value = (long)TimeCurrent();
+   string ts = StringFormat("%I64d", ts_value);
+   string nonce = GenerateNonce();
+   string path = ExtractPathFromUrl(url);
+   string canonical = method + "\n" + ts + "\n" + path + "\n" + nonce + "\n" + body;
+   string signature = "";
+   if(!HmacSha256Hex(g_bridge_secret, canonical, signature))
+   {
+      Print("ARRA7 Bridge sign failed. path=", path, " err=", GetLastError());
+      return false;
+   }
+
    string headers = "Content-Type: application/json\r\nAccept: application/json\r\n";
+   headers += "X-ARRA-KEY: " + g_bridge_key + "\r\n";
+   headers += "X-ARRA-TS: " + ts + "\r\n";
+   headers += "X-ARRA-NONCE: " + nonce + "\r\n";
+   headers += "X-ARRA-SIGN: " + signature + "\r\n";
 
    ResetLastError();
    status_code = WebRequest(method, url, headers, InpRequestTimeoutMs, request_data, response_data, response_headers);
@@ -330,12 +475,11 @@ bool SendBridgeLog(const string level, const string message)
    int status = 0;
    string response = "";
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"level\":\"%s\",\"message\":\"%s\"}",
-      EscapeJson(InpBridgeKey),
+      "{\"level\":\"%s\",\"message\":\"%s\"}",
       EscapeJson(level),
       EscapeJson(message)
    );
-   if(!HttpRequest("POST", BuildBridgeUrl("/logs", false), payload, status, response))
+   if(!HttpRequest("POST", BuildBridgeUrl("/logs"), payload, status, response))
       return false;
    return (status >= 200 && status < 300);
 }
@@ -347,8 +491,7 @@ bool SendHeartbeat()
    int open_positions = CountOpenPositions(InpSymbol);
    string open_tickets = CollectOpenTicketsCsv(InpSymbol);
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"mt5Login\":\"%I64d\",\"broker\":\"%s\",\"server\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"eaVersion\":\"1.1.0-test\",\"openPositions\":%d,\"openTickets\":\"%s\"}",
-      EscapeJson(InpBridgeKey),
+      "{\"mt5Login\":\"%I64d\",\"broker\":\"%s\",\"server\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"eaVersion\":\"1.1.0-signed\",\"openPositions\":%d,\"openTickets\":\"%s\"}",
       (long)AccountInfoInteger(ACCOUNT_LOGIN),
       EscapeJson(AccountInfoString(ACCOUNT_COMPANY)),
       EscapeJson(AccountInfoString(ACCOUNT_SERVER)),
@@ -358,7 +501,7 @@ bool SendHeartbeat()
       EscapeJson(open_tickets)
    );
 
-   if(!HttpRequest("POST", BuildBridgeUrl("/heartbeat", false), payload, status, response))
+   if(!HttpRequest("POST", BuildBridgeUrl("/heartbeat"), payload, status, response))
       return false;
    if(status < 200 || status >= 300)
    {
@@ -396,7 +539,7 @@ bool PollNextSignal(DispatchData &out_dispatch)
    string response = "";
    int open_positions = CountOpenPositions(InpSymbol);
    string open_tickets = CollectOpenTicketsCsv(InpSymbol);
-   string url = BuildBridgeUrl("/signals/next", true) + "&openPositions=" + IntegerToString(open_positions);
+   string url = BuildBridgeUrl("/signals/next") + "?openPositions=" + IntegerToString(open_positions);
    url += "&openTickets=" + open_tickets;
 
    if(!HttpRequest("GET", url, "", status, response))
@@ -421,12 +564,11 @@ bool SendAck(const string dispatch_id)
    int status = 0;
    string response = "";
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"dispatchId\":\"%s\"}",
-      EscapeJson(InpBridgeKey),
+      "{\"dispatchId\":\"%s\"}",
       EscapeJson(dispatch_id)
    );
 
-   if(!HttpRequest("POST", BuildBridgeUrl("/signals/ack", false), payload, status, response))
+   if(!HttpRequest("POST", BuildBridgeUrl("/signals/ack"), payload, status, response))
       return false;
    return (status >= 200 && status < 300);
 }
@@ -436,14 +578,13 @@ bool SendRejected(const string dispatch_id, const string reason_code, const stri
    int status = 0;
    string response = "";
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"dispatchId\":\"%s\",\"reasonCode\":\"%s\",\"reason\":\"%s\"}",
-      EscapeJson(InpBridgeKey),
+      "{\"dispatchId\":\"%s\",\"reasonCode\":\"%s\",\"reason\":\"%s\"}",
       EscapeJson(dispatch_id),
       EscapeJson(reason_code),
       EscapeJson(reason_message)
    );
 
-   if(!HttpRequest("POST", BuildBridgeUrl("/signals/rejected", false), payload, status, response))
+   if(!HttpRequest("POST", BuildBridgeUrl("/signals/rejected"), payload, status, response))
       return false;
    return (status >= 200 && status < 300);
 }
@@ -454,15 +595,14 @@ bool SendExecuted(const string dispatch_id, const long mt5_ticket, const double 
    int status = 0;
    string response = "";
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"dispatchId\":\"%s\",\"mt5Ticket\":%I64d,\"executedPrice\":%s,\"volumeLots\":%s}",
-      EscapeJson(InpBridgeKey),
+      "{\"dispatchId\":\"%s\",\"mt5Ticket\":%I64d,\"executedPrice\":%s,\"volumeLots\":%s}",
       EscapeJson(dispatch_id),
       mt5_ticket,
       DoubleToString(executed_price, 5),
       DoubleToString(lots, 2)
    );
 
-   if(!HttpRequest("POST", BuildBridgeUrl("/signals/executed", false), payload, status, response))
+   if(!HttpRequest("POST", BuildBridgeUrl("/signals/executed"), payload, status, response))
       return false;
    if(status < 200 || status >= 300)
    {
@@ -479,8 +619,7 @@ bool SendPositionClosed(const string position_id, const string close_reason, con
    int status = 0;
    string response = "";
    string payload = StringFormat(
-      "{\"bridgeKey\":\"%s\",\"positionId\":\"%s\",\"closeReason\":\"%s\",\"closePrice\":%s,\"pipsResult\":%s,\"pnlValue\":%s}",
-      EscapeJson(InpBridgeKey),
+      "{\"positionId\":\"%s\",\"closeReason\":\"%s\",\"closePrice\":%s,\"pipsResult\":%s,\"pnlValue\":%s}",
       EscapeJson(position_id),
       EscapeJson(close_reason),
       DoubleToString(close_price, 5),
@@ -488,7 +627,7 @@ bool SendPositionClosed(const string position_id, const string close_reason, con
       DoubleToString(pnl, 2)
    );
 
-   if(!HttpRequest("POST", BuildBridgeUrl("/positions/closed", false), payload, status, response))
+   if(!HttpRequest("POST", BuildBridgeUrl("/positions/closed"), payload, status, response))
       return false;
    if(status < 200 || status >= 300)
    {
@@ -736,15 +875,26 @@ void PollAndExecute()
 
 int OnInit()
 {
+   MathSrand((int)(GetTickCount() ^ (ulong)TimeLocal()));
+
+   g_bridge_key = NormalizeText(InpBridgeKey);
+   g_bridge_secret = NormalizeText(InpBridgeSecret);
+
    if(NormalizeText(InpBridgeBaseUrl) == "")
    {
       Print("ARRA7 Bridge init failed: InpBridgeBaseUrl kosong.");
       return INIT_PARAMETERS_INCORRECT;
    }
 
-   if(NormalizeText(InpBridgeKey) == "")
+   if(g_bridge_key == "")
    {
       Print("ARRA7 Bridge init failed: InpBridgeKey kosong.");
+      return INIT_PARAMETERS_INCORRECT;
+   }
+
+   if(g_bridge_secret == "")
+   {
+      Print("ARRA7 Bridge init failed: InpBridgeSecret kosong.");
       return INIT_PARAMETERS_INCORRECT;
    }
 
@@ -755,8 +905,8 @@ int OnInit()
    g_trade.SetDeviationInPoints(InpDeviationPoints);
 
    EventSetTimer(1);
-   SendBridgeLog("INFO", "EA initialized.");
-   Print("ARRA7 Bridge test EA initialized. symbol=", InpSymbol, " poll=", InpPollSeconds, "s");
+   SendBridgeLog("INFO", "EA initialized (signed mode).");
+   Print("ARRA7 Bridge test EA initialized (signed). symbol=", InpSymbol, " poll=", InpPollSeconds, "s");
    return INIT_SUCCEEDED;
 }
 
