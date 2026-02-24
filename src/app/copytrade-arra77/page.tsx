@@ -930,6 +930,7 @@ export default function CopytradeArra77Page() {
                 <p className="font-medium">Panduan follower (wajib):</p>
                 <ol className="list-decimal ml-5 mt-1 space-y-1">
                   <li>Download EA `.ex5`, lalu copy ke folder MT5: <code>MQL5/Experts</code>.</li>
+                  <li>Di MT5: <b>Tools -&gt; Options -&gt; Expert Advisors</b>, centang <code>Allow WebRequest for listed URL</code>, lalu tambahkan <code>https://arra7-app.vercel.app</code>.</li>
                   <li>Restart MT5, buka chart gold broker kamu (contoh <code>XAUUSD.m</code>) di M15, lalu attach EA.</li>
                   <li>Di panel ini klik <b>Generate Key &amp; Secret</b>, lalu simpan datanya.</li>
                   <li>Isi endpoint di EA: <code>https://arra7-app.vercel.app/api/copytrade-arra77/bridge</code>.</li>
