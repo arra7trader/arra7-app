@@ -930,10 +930,11 @@ export default function CopytradeArra77Page() {
                 <p className="font-medium">Panduan follower (wajib):</p>
                 <ol className="list-decimal ml-5 mt-1 space-y-1">
                   <li>Download EA `.ex5`, lalu copy ke folder MT5: <code>MQL5/Experts</code>.</li>
-                  <li>Restart MT5, buka chart <code>XAUUSD M15</code>, lalu attach EA.</li>
+                  <li>Restart MT5, buka chart gold broker kamu (contoh <code>XAUUSD.m</code>) di M15, lalu attach EA.</li>
                   <li>Di panel ini klik <b>Generate Key &amp; Secret</b>, lalu simpan datanya.</li>
                   <li>Isi endpoint di EA: <code>https://arra7-app.vercel.app/api/copytrade-arra77/bridge</code>.</li>
                   <li>Isi <code>Bridge Key</code> dan <code>Bridge Secret</code> persis dari panel ini (jangan ada spasi).</li>
+                  <li>Set input <code>Symbol</code> EA sama persis dengan simbol broker di Market Watch (contoh <code>XAUUSD.m</code>, <code>GOLD</code>, dll).</li>
                   <li>Aktifkan <b>Algo Trading</b>. Jika benar, EA akan polling otomatis setiap beberapa detik.</li>
                 </ol>
                 <p className="mt-2 text-xs text-blue-800">

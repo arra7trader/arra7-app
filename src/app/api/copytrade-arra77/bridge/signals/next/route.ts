@@ -91,6 +91,29 @@ type RawDispatchRow = {
 
 type CopytradeSchemaClient = ReturnType<ReturnType<typeof getCopytrade77AdminClient>['schema']>;
 
+function normalizeSymbolKey(value: string): string {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+function resolveExecutionSymbol(signalSymbol: string, terminalSymbol: string | null | undefined): string {
+  const serverSymbol = String(signalSymbol || '').trim();
+  const brokerSymbol = String(terminalSymbol || '').trim();
+  if (!brokerSymbol) return serverSymbol;
+
+  const serverKey = normalizeSymbolKey(serverSymbol);
+  const brokerKey = normalizeSymbolKey(brokerSymbol);
+  if (!serverKey || !brokerKey) return serverSymbol;
+
+  // Broker often adds suffix/prefix (e.g. XAUUSD.m). Use broker symbol when keys are compatible.
+  if (serverKey === brokerKey || brokerKey.includes(serverKey) || serverKey.includes(brokerKey)) {
+    return brokerSymbol;
+  }
+  return serverSymbol;
+}
+
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object' && 'message' in error) {
     const message = (error as { message?: unknown }).message;
@@ -499,6 +522,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ status: 'ok', hasSignal: false });
     }
 
+    const terminalSymbolRes = await supabase
+      .from('bridge_terminals')
+      .select('symbol')
+      .eq('id', auth.terminalId)
+      .maybeSingle();
+    if (terminalSymbolRes.error) throw terminalSymbolRes.error;
+
+    const executionSymbol = resolveExecutionSymbol(
+      signal.symbol,
+      terminalSymbolRes.data?.symbol ? String(terminalSymbolRes.data.symbol) : null
+    );
+
     await supabase
       .from('signal_dispatches')
       .update({
@@ -515,7 +550,7 @@ export async function GET(request: NextRequest) {
         dispatchId: selected.dispatchRow.id,
         signalId: signal.id,
         providerId: signal.provider_id,
-        symbol: signal.symbol,
+        symbol: executionSymbol,
         timeframe: signal.timeframe,
         side: signal.side,
         orderType: signal.order_type,

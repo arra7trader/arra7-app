@@ -1,5 +1,5 @@
 #property strict
-#property version   "1.10"
+#property version   "1.11"
 #property description "ARRA7 Copytrade77 Bridge Test EA (signed mode)"
 
 #include <Trade/Trade.mqh>
@@ -61,6 +61,117 @@ string NormalizeText(const string value)
    StringTrimLeft(out);
    StringTrimRight(out);
    return out;
+}
+
+string NormalizeSymbolKey(const string value)
+{
+   string out = "";
+   string upper = NormalizeText(value);
+   StringToUpper(upper);
+
+   int len = StringLen(upper);
+   for(int i = 0; i < len; i++)
+   {
+      ushort ch = (ushort)StringGetCharacter(upper, i);
+      bool is_num = (ch >= 48 && ch <= 57);
+      bool is_upper = (ch >= 65 && ch <= 90);
+      if(is_num || is_upper)
+         out += StringSubstr(upper, i, 1);
+   }
+   return out;
+}
+
+bool IsGoldAliasKey(const string key)
+{
+   if(StringFind(key, "GOLD", 0) >= 0)
+      return true;
+
+   bool has_xau = (StringFind(key, "XAU", 0) >= 0);
+   bool has_usd = (StringFind(key, "USD", 0) >= 0 || StringFind(key, "USDT", 0) >= 0);
+   return (has_xau && has_usd);
+}
+
+bool IsSymbolCompatible(const string requested_symbol, const string candidate_symbol)
+{
+   string req_key = NormalizeSymbolKey(requested_symbol);
+   string cand_key = NormalizeSymbolKey(candidate_symbol);
+   if(req_key == "" || cand_key == "")
+      return false;
+
+   if(req_key == cand_key)
+      return true;
+
+   if(StringFind(cand_key, req_key, 0) >= 0 || StringFind(req_key, cand_key, 0) >= 0)
+      return true;
+
+   if(IsGoldAliasKey(req_key) && IsGoldAliasKey(cand_key))
+      return true;
+
+   return false;
+}
+
+void PushUniqueCandidate(const string value, string &arr[])
+{
+   string normalized = NormalizeText(value);
+   if(normalized == "")
+      return;
+
+   int size = ArraySize(arr);
+   for(int i = 0; i < size; i++)
+   {
+      if(arr[i] == normalized)
+         return;
+   }
+
+   ArrayResize(arr, size + 1);
+   arr[size] = normalized;
+}
+
+string ResolveTradableSymbol(const string requested_symbol, string &out_attempts)
+{
+   out_attempts = "";
+   string requested = NormalizeText(requested_symbol);
+
+   string candidates[];
+   PushUniqueCandidate(requested, candidates);
+   PushUniqueCandidate(InpSymbol, candidates);
+   PushUniqueCandidate(Symbol(), candidates);
+
+   int csize = ArraySize(candidates);
+   for(int i = 0; i < csize; i++)
+   {
+      string cand = candidates[i];
+      bool selectable = SymbolSelect(cand, true);
+      out_attempts += (out_attempts == "" ? "" : " | ") + cand + (selectable ? ":ok" : ":fail");
+      if(selectable && (requested == "" || IsSymbolCompatible(requested, cand)))
+         return cand;
+   }
+
+   int selected_total = SymbolsTotal(true);
+   for(int i = 0; i < selected_total; i++)
+   {
+      string market_symbol = SymbolName(i, true);
+      if(market_symbol == "")
+         continue;
+      if(requested != "" && !IsSymbolCompatible(requested, market_symbol))
+         continue;
+      if(SymbolSelect(market_symbol, true))
+         return market_symbol;
+   }
+
+   int all_total = SymbolsTotal(false);
+   for(int i = 0; i < all_total; i++)
+   {
+      string market_symbol = SymbolName(i, false);
+      if(market_symbol == "")
+         continue;
+      if(requested != "" && !IsSymbolCompatible(requested, market_symbol))
+         continue;
+      if(SymbolSelect(market_symbol, true))
+         return market_symbol;
+   }
+
+   return "";
 }
 
 string EscapeJson(const string value)
@@ -431,7 +542,7 @@ long FindLatestPositionTicket(const string symbol)
 
       if((int)PositionGetInteger(POSITION_MAGIC) != InpMagic)
          continue;
-      if(PositionGetString(POSITION_SYMBOL) != symbol)
+      if(symbol != "" && PositionGetString(POSITION_SYMBOL) != symbol)
          continue;
 
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
@@ -488,14 +599,14 @@ bool SendHeartbeat()
 {
    int status = 0;
    string response = "";
-   int open_positions = CountOpenPositions(InpSymbol);
-   string open_tickets = CollectOpenTicketsCsv(InpSymbol);
+   int open_positions = CountOpenPositions("");
+   string open_tickets = CollectOpenTicketsCsv("");
    string payload = StringFormat(
-      "{\"mt5Login\":\"%I64d\",\"broker\":\"%s\",\"server\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"eaVersion\":\"1.1.0-signed\",\"openPositions\":%d,\"openTickets\":\"%s\"}",
+      "{\"mt5Login\":\"%I64d\",\"broker\":\"%s\",\"server\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"eaVersion\":\"1.1.1-signed\",\"openPositions\":%d,\"openTickets\":\"%s\"}",
       (long)AccountInfoInteger(ACCOUNT_LOGIN),
       EscapeJson(AccountInfoString(ACCOUNT_COMPANY)),
       EscapeJson(AccountInfoString(ACCOUNT_SERVER)),
-      EscapeJson(InpSymbol),
+      EscapeJson(Symbol()),
       EscapeJson(EnumToString((ENUM_TIMEFRAMES)Period())),
       open_positions,
       EscapeJson(open_tickets)
@@ -537,8 +648,8 @@ bool PollNextSignal(DispatchData &out_dispatch)
 {
    int status = 0;
    string response = "";
-   int open_positions = CountOpenPositions(InpSymbol);
-   string open_tickets = CollectOpenTicketsCsv(InpSymbol);
+   int open_positions = CountOpenPositions("");
+   string open_tickets = CollectOpenTicketsCsv("");
    string url = BuildBridgeUrl("/signals/next") + "?openPositions=" + IntegerToString(open_positions);
    url += "&openTickets=" + open_tickets;
 
@@ -651,10 +762,12 @@ double CurrentSpreadPoints(const string symbol)
    return (ask - bid) / point;
 }
 
-bool PlaceMarketOrder(const DispatchData &dispatch, long &out_ticket, double &out_price, string &out_error)
+bool PlaceMarketOrder(const DispatchData &dispatch, long &out_ticket, double &out_price, double &out_lots, string &out_trade_symbol, string &out_error)
 {
    out_ticket = 0;
    out_price = 0.0;
+   out_lots = 0.0;
+   out_trade_symbol = "";
    out_error = "";
 
    if(dispatch.order_type != "MARKET")
@@ -663,33 +776,80 @@ bool PlaceMarketOrder(const DispatchData &dispatch, long &out_ticket, double &ou
       return false;
    }
 
-   if(!SymbolSelect(dispatch.symbol, true))
+   string resolve_attempts = "";
+   string trade_symbol = ResolveTradableSymbol(dispatch.symbol, resolve_attempts);
+   if(trade_symbol == "")
    {
-      out_error = "Failed to select symbol " + dispatch.symbol;
+      out_error = "Failed to resolve symbol " + dispatch.symbol + " | tried: " + resolve_attempts;
       return false;
    }
+   out_trade_symbol = trade_symbol;
 
-   double spread_points = CurrentSpreadPoints(dispatch.symbol);
+   double spread_points = CurrentSpreadPoints(trade_symbol);
    if(spread_points > InpMaxSpreadPoints)
    {
       out_error = StringFormat("Spread too wide: %.1f > %d points", spread_points, InpMaxSpreadPoints);
       return false;
    }
 
-   if(InpOneTradeAtATimeLocal && CountOpenPositions(dispatch.symbol) > 0)
+   if(InpOneTradeAtATimeLocal && CountOpenPositions("") > 0)
    {
       out_error = "Local one-trade lock active";
       return false;
    }
+
+   double vol_min = 0.0;
+   double vol_max = 0.0;
+   double vol_step = 0.0;
+   if(!SymbolInfoDouble(trade_symbol, SYMBOL_VOLUME_MIN, vol_min) || vol_min <= 0.0)
+      vol_min = InpLots;
+   if(!SymbolInfoDouble(trade_symbol, SYMBOL_VOLUME_MAX, vol_max) || vol_max <= 0.0)
+      vol_max = InpLots;
+   if(!SymbolInfoDouble(trade_symbol, SYMBOL_VOLUME_STEP, vol_step) || vol_step <= 0.0)
+      vol_step = 0.01;
+
+   double lots = InpLots;
+   if(lots < vol_min)
+      lots = vol_min;
+   if(lots > vol_max)
+      lots = vol_max;
+
+   if(vol_step > 0.0)
+   {
+      double steps = MathFloor((lots - vol_min) / vol_step + 0.5);
+      if(steps < 0.0)
+         steps = 0.0;
+      lots = vol_min + steps * vol_step;
+   }
+
+   if(lots < vol_min)
+      lots = vol_min;
+   if(lots > vol_max)
+      lots = vol_max;
+
+   int vol_digits = 2;
+   double step_tmp = vol_step;
+   while(vol_digits < 8 && MathAbs(step_tmp - MathRound(step_tmp)) > 1e-9)
+   {
+      step_tmp *= 10.0;
+      vol_digits++;
+   }
+   lots = NormalizeDouble(lots, vol_digits);
+   if(lots <= 0.0)
+   {
+      out_error = "Invalid lot after broker normalization";
+      return false;
+   }
+   out_lots = lots;
 
    g_trade.SetExpertMagicNumber(InpMagic);
    g_trade.SetDeviationInPoints(InpDeviationPoints);
 
    bool ok = false;
    if(dispatch.side == "BUY")
-      ok = g_trade.Buy(InpLots, dispatch.symbol, 0.0, dispatch.stop_loss, dispatch.take_profit_1, "ARRA7 CT77");
+      ok = g_trade.Buy(lots, trade_symbol, 0.0, dispatch.stop_loss, dispatch.take_profit_1, "ARRA7 CT77");
    else if(dispatch.side == "SELL")
-      ok = g_trade.Sell(InpLots, dispatch.symbol, 0.0, dispatch.stop_loss, dispatch.take_profit_1, "ARRA7 CT77");
+      ok = g_trade.Sell(lots, trade_symbol, 0.0, dispatch.stop_loss, dispatch.take_profit_1, "ARRA7 CT77");
    else
    {
       out_error = "Invalid side " + dispatch.side;
@@ -702,7 +862,7 @@ bool PlaceMarketOrder(const DispatchData &dispatch, long &out_ticket, double &ou
       return false;
    }
 
-   out_ticket = FindLatestPositionTicket(dispatch.symbol);
+   out_ticket = FindLatestPositionTicket(trade_symbol);
    if(out_ticket <= 0)
       out_ticket = (long)g_trade.ResultOrder();
 
@@ -841,19 +1001,15 @@ void PollAndExecute()
    }
    g_idle_poll_streak = 0;
 
-   if(dispatch.symbol != InpSymbol)
-   {
-      SendRejected(dispatch.dispatch_id, "SYMBOL_MISMATCH", "EA symbol mismatch. expected " + InpSymbol + ", got " + dispatch.symbol);
-      return;
-   }
-
    if(!SendAck(dispatch.dispatch_id))
       Print("ARRA7 Bridge ack failed for dispatch ", dispatch.dispatch_id);
 
    long ticket = 0;
    double executed_price = 0.0;
+   double executed_lots = 0.0;
+   string trade_symbol = "";
    string trade_error = "";
-   if(!PlaceMarketOrder(dispatch, ticket, executed_price, trade_error))
+   if(!PlaceMarketOrder(dispatch, ticket, executed_price, executed_lots, trade_symbol, trade_error))
    {
       Print("ARRA7 Bridge execute failed: dispatch=", dispatch.dispatch_id, " error=", trade_error);
       SendRejected(dispatch.dispatch_id, "EXECUTION_FAILED", trade_error);
@@ -861,14 +1017,14 @@ void PollAndExecute()
    }
 
    string position_id = "";
-   if(!SendExecuted(dispatch.dispatch_id, ticket, executed_price, InpLots, position_id))
+   if(!SendExecuted(dispatch.dispatch_id, ticket, executed_price, executed_lots, position_id))
    {
       Print("ARRA7 Bridge executed callback failed for dispatch=", dispatch.dispatch_id);
       return;
    }
 
    if(position_id != "")
-      RememberPosition(ticket, position_id, dispatch.symbol, dispatch.side);
+      RememberPosition(ticket, position_id, (trade_symbol == "" ? dispatch.symbol : trade_symbol), dispatch.side);
 
    Print("ARRA7 Bridge executed: dispatch=", dispatch.dispatch_id, " ticket=", ticket, " positionId=", position_id);
 }
