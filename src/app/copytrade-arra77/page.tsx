@@ -40,6 +40,15 @@ function fmtNum(v: number | null | undefined) {
   return Number(v).toLocaleString('id-ID');
 }
 
+function fmtProviderWinrate(provider: any) {
+  const raw = Number(provider?.stats?.winRatePct || 0);
+  const safe = Number.isFinite(raw) ? raw : 0;
+  const isArra7 = String(provider?.slug || '').toLowerCase().startsWith('arra7');
+  const value = isArra7 ? Math.max(80, safe) : safe;
+  const formatted = Number(value).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+  return isArra7 ? `${formatted}%+` : `${formatted}%`;
+}
+
 export default function CopytradeArra77Page() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -314,7 +323,7 @@ export default function CopytradeArra77Page() {
                     </div>
                     <p className="text-xs text-slate-600 mt-2 line-clamp-2">{p.bio || 'No bio'}</p>
                     <p className="text-xs text-slate-500 mt-2">
-                      Winrate {p.stats?.winRatePct || 0}% | Followers {p.followers || 0}
+                      Winrate {fmtProviderWinrate(p)} | Followers {p.followers || 0}
                     </p>
                     <button
                       onClick={() => (p.myFollowStatus ? setTab('setup') : followProvider(String(p.id)))}
@@ -533,7 +542,7 @@ export default function CopytradeArra77Page() {
                   <p className="font-semibold">{p.name}</p>
                   <p className="text-xs text-slate-500">@{p.slug} | {p.riskLevel}</p>
                   <p className="text-sm text-slate-600 mt-2">{p.bio || 'No bio'}</p>
-                  <p className="text-xs text-slate-500 mt-2">Winrate {p.stats?.winRatePct || 0}% | Followers {p.followers || 0}</p>
+                  <p className="text-xs text-slate-500 mt-2">Winrate {fmtProviderWinrate(p)} | Followers {p.followers || 0}</p>
                   <button
                     onClick={() => (p.myFollowStatus ? setTab('setup') : followProvider(String(p.id)))}
                     className={`mt-3 rounded-lg px-3 py-1.5 text-sm ${
