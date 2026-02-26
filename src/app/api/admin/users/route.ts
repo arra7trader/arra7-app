@@ -12,7 +12,7 @@ export function isAdmin(email: string | null | undefined): boolean {
 }
 
 // GET all users
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         console.log('[ADMIN] Starting GET users request... [VERSION: V2-FIX-LOADED]');
 
@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
                 sql: `SELECT user_id, count FROM quota_usage WHERE date = ?`,
                 args: [today],
             });
-            usageResult.rows.forEach((row: any) => {
-                forexUsageMap[row.user_id as string] = row.count as number;
+            usageResult.rows.forEach((row) => {
+                forexUsageMap[row.user_id as string] = Number(row.count || 0);
             });
             console.log('[ADMIN] Forex usage data loaded for', Object.keys(forexUsageMap).length, 'users');
         } catch (usageError) {
@@ -87,8 +87,8 @@ export async function GET(request: NextRequest) {
                 sql: `SELECT user_id, count FROM stock_quota_usage WHERE date = ?`,
                 args: [today],
             });
-            stockUsageResult.rows.forEach((row: any) => {
-                stockUsageMap[row.user_id as string] = row.count as number;
+            stockUsageResult.rows.forEach((row) => {
+                stockUsageMap[row.user_id as string] = Number(row.count || 0);
             });
             console.log('[ADMIN] Stock usage data loaded for', Object.keys(stockUsageMap).length, 'users');
         } catch (stockUsageError) {
@@ -96,7 +96,6 @@ export async function GET(request: NextRequest) {
         }
 
         // Safely map users with fallbacks for missing columns
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const users = [];
         const expiredUserIds: string[] = [];
         const now = new Date();
@@ -127,6 +126,9 @@ export async function GET(request: NextRequest) {
                 todayUsage: forexUsage + stockUsage, // Combined usage
                 forexUsage,
                 stockUsage,
+                subscriptionStatus: (row.subscription_status as string) || 'free',
+                subscriptionEndDate: row.subscription_end_date || null,
+                telegramChatId: row.telegram_chat_id || null,
                 // Geo-location data
                 lastLoginIp: row.last_login_ip || null,
                 lastLoginCountry: row.last_login_country || null,
@@ -191,7 +193,10 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { action, userId, email, name, membership, durationDays } = body;
+        const { action, userId, email, name, membership, durationDays, telegramChatId } = body;
+        const normalizedTelegramChatId = typeof telegramChatId === 'string'
+            ? telegramChatId.trim()
+            : telegramChatId;
 
         const turso = getTursoClient();
         if (!turso) {
@@ -221,7 +226,7 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ status: 'error', message: 'Email already exists' }, { status: 400 });
             }
 
-            const newId = crypto.randomUUID();
+            const newId = randomUUID();
             const now = new Date().toISOString();
 
             // Calculate membership expiry if provided
@@ -233,9 +238,9 @@ export async function POST(request: NextRequest) {
             }
 
             await turso.execute({
-                sql: `INSERT INTO users (id, email, name, membership, membership_expires, created_at)
-                      VALUES (?, ?, ?, ?, ?, ?)`,
-                args: [newId, email, name || '', membership || 'BASIC', expiresAt, now]
+                sql: `INSERT INTO users (id, email, name, membership, membership_expires, telegram_chat_id, created_at)
+                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                args: [newId, email, name || '', membership || 'BASIC', expiresAt, normalizedTelegramChatId || null, now]
             });
 
             await logActivity(newId, 'REGISTER_ADMIN', { message: 'User created by admin', admin: session.user.email });
@@ -253,7 +258,7 @@ export async function POST(request: NextRequest) {
 
             // Build dynamic update query
             const updates: string[] = [];
-            const args: any[] = [];
+            const args: Array<string | number | null> = [];
 
             if (email) {
                 updates.push('email = ?');
@@ -262,6 +267,10 @@ export async function POST(request: NextRequest) {
             if (name !== undefined) {
                 updates.push('name = ?');
                 args.push(name);
+            }
+            if (telegramChatId !== undefined) {
+                updates.push('telegram_chat_id = ?');
+                args.push(normalizedTelegramChatId || null);
             }
             if (membership) {
                 updates.push('membership = ?');
@@ -365,10 +374,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ status: 'error', message: 'Invalid action' }, { status: 400 });
         }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Internal server error';
         console.error('Admin POST error:', error);
         return NextResponse.json(
-            { status: 'error', message: error.message || 'Internal server error' },
+            { status: 'error', message: errorMessage },
             { status: 500 }
         );
     }

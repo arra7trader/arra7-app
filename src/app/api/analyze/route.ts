@@ -14,6 +14,20 @@ type TechnicalSignal = {
     detail: string;
 };
 
+type ParsedSignalPayload = {
+    direction?: 'BUY' | 'SELL' | 'HOLD';
+    type?: 'BUY' | 'SELL' | 'HOLD';
+    entryPrice?: number;
+    entry?: number;
+    stopLoss?: number;
+    sl?: number;
+    takeProfit1?: number;
+    tp?: number;
+    takeProfit2?: number;
+    confidence?: number;
+    analysis?: string;
+};
+
 function clamp(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, value));
 }
@@ -348,12 +362,13 @@ export async function POST(request: NextRequest) {
                     { status: 503 }
                 );
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const marketDataErrorMessage = error instanceof Error ? error.message : 'Gagal mengambil data harga real-time. Silakan coba lagi.';
             console.error('[Analyze API] Market data fetch error:', error);
             return NextResponse.json(
                 {
                     status: 'error',
-                    message: error.message || 'Gagal mengambil data harga real-time. Silakan coba lagi.'
+                    message: marketDataErrorMessage
                 },
                 { status: 503 }
             );
@@ -509,7 +524,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Save signal for performance tracking & prepare native response
-        let nativeSignalData = null;
+        let nativeSignalData: ParsedSignalPayload | null = null;
         try {
             const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
             if (aiResult.analysis) {
@@ -551,8 +566,8 @@ export async function POST(request: NextRequest) {
         let quotaCharged = false;
         if (process.env.TURSO_DATABASE_URL) {
             const directionRaw = String(
-                (nativeSignalData as any)?.direction ??
-                (nativeSignalData as any)?.type ??
+                nativeSignalData?.direction ??
+                nativeSignalData?.type ??
                 ''
             ).toUpperCase();
             const isTradableSignal = directionRaw === 'BUY' || directionRaw === 'SELL';
@@ -585,27 +600,27 @@ export async function POST(request: NextRequest) {
             if (enableAutoPublish) {
                 const { isCopytrade77Configured } = await import('@/lib/supabase-copytrade77');
                 if (isCopytrade77Configured() && nativeSignalData) {
-                    const directionRaw = (nativeSignalData as any).direction || (nativeSignalData as any).type;
+                    const directionRaw = nativeSignalData.direction || nativeSignalData.type;
                     const direction = directionRaw === 'BUY' || directionRaw === 'SELL' ? directionRaw : null;
 
                     if (direction) {
                         const entryPrice = Number(
-                            (nativeSignalData as any).entryPrice ??
-                            (nativeSignalData as any).entry ??
+                            nativeSignalData.entryPrice ??
+                            nativeSignalData.entry ??
                             marketData.current_price
                         );
                         const stopLoss = Number(
-                            (nativeSignalData as any).stopLoss ??
-                            (nativeSignalData as any).sl ??
+                            nativeSignalData.stopLoss ??
+                            nativeSignalData.sl ??
                             0
                         );
                         const takeProfit1 = Number(
-                            (nativeSignalData as any).takeProfit1 ??
-                            (nativeSignalData as any).tp ??
+                            nativeSignalData.takeProfit1 ??
+                            nativeSignalData.tp ??
                             0
                         );
-                        const takeProfit2 = Number((nativeSignalData as any).takeProfit2 ?? 0) || null;
-                        const confidence = Number((nativeSignalData as any).confidence ?? 0) || null;
+                        const takeProfit2 = Number(nativeSignalData.takeProfit2 ?? 0) || null;
+                        const confidence = Number(nativeSignalData.confidence ?? 0) || null;
 
                         const tfMap: Record<string, string> = {
                             '1m': 'M1',
@@ -678,6 +693,30 @@ export async function POST(request: NextRequest) {
             console.error('[Analyze] Copytrade auto publish error:', copytradeError);
         }
 
+        // VVIP best-signal auto alert to Telegram (event-based, no cron)
+        let vvipTelegramAlert: {
+            triggered: boolean;
+            sent: number;
+            failed: number;
+            reason: string;
+            signalHash?: string;
+        } | null = null;
+        try {
+            if (nativeSignalData) {
+                const { notifyVvipBestSignal } = await import('@/lib/vvip-telegram-alert');
+                vvipTelegramAlert = await notifyVvipBestSignal({
+                    pair,
+                    timeframe,
+                    signal: nativeSignalData,
+                    analysis: aiResult.analysis,
+                    marketPrice: marketData.current_price,
+                    sourceUserId: userId,
+                });
+            }
+        } catch (vvipAlertError) {
+            console.error('[Analyze] VVIP Telegram alert error:', vvipAlertError);
+        }
+
         return NextResponse.json({
             status: 'success',
             result: aiResult.formattedHtml,
@@ -696,6 +735,7 @@ export async function POST(request: NextRequest) {
             },
             parsedSignal: nativeSignalData,
             copytradeAutoPublish,
+            vvipTelegramAlert,
             quotaCharged,
             quotaStatus: serializedQuotaStatus,
             timestamp: new Date().toISOString(),

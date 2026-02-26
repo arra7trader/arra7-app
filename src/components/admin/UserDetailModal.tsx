@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface Log {
     id: number;
     action: string;
-    details: any;
+    details: Record<string, unknown> | null;
     createdAt: string;
 }
 
@@ -19,11 +19,10 @@ interface UserDetailModalProps {
 
 export default function UserDetailModal({ user, onClose, onEdit }: UserDetailModalProps) {
     const [logs, setLogs] = useState<Log[]>([]);
-    const [loadingLogs, setLoadingLogs] = useState(false);
+    const [loadingLogs, setLoadingLogs] = useState(true);
 
     useEffect(() => {
         if (user?.id) {
-            setLoadingLogs(true);
             fetch(`/api/admin/activity?userId=${user.id}&limit=10`)
                 .then(res => res.json())
                 .then(data => {
@@ -33,8 +32,6 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                 })
                 .catch(err => console.error('Fetch logs error:', err))
                 .finally(() => setLoadingLogs(false));
-        } else {
-            setLogs([]);
         }
     }, [user?.id]);
 
@@ -125,6 +122,12 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                     {user.lastLoginIp && <p className="text-xs text-gray-400 font-mono mt-1">{user.lastLoginIp}</p>}
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-xl">
+                                    <p className="text-xs text-gray-500 mb-1">Telegram Chat ID</p>
+                                    <p className="font-medium text-gray-900">
+                                        {user.telegramChatId || 'Belum diisi'}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl">
                                     <p className="text-xs text-gray-500 mb-1">Usage Today</p>
                                     <div className="flex items-end gap-2">
                                         <span className="text-2xl font-bold text-gray-900">{user.todayUsage}</span>
@@ -171,7 +174,9 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-gray-600 max-w-xs truncate" title={JSON.stringify(log.details, null, 2)}>
-                                                        {log.details?.message || JSON.stringify(log.details)}
+                                                        {typeof log.details?.message === 'string'
+                                                            ? log.details.message
+                                                            : JSON.stringify(log.details)}
                                                     </td>
                                                 </tr>
                                             ))}

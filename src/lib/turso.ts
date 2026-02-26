@@ -567,6 +567,24 @@ export async function initDatabase(): Promise<boolean> {
       )
     `);
 
+    // VVIP BEST SIGNAL ALERT LOGS: dedupe + cooldown for Telegram alerts
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS vvip_signal_alert_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        signal_hash TEXT NOT NULL UNIQUE,
+        symbol TEXT NOT NULL,
+        timeframe TEXT NOT NULL,
+        direction TEXT NOT NULL,
+        confidence INTEGER,
+        rr_ratio REAL,
+        sent_count INTEGER DEFAULT 0,
+        failed_count INTEGER DEFAULT 0,
+        source_user_id TEXT,
+        sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (source_user_id) REFERENCES users(id)
+      )
+    `);
+
     // Migrations: Add any missing columns to users table
     // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we try-catch each
     const migrations = [

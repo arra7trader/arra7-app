@@ -72,12 +72,12 @@ export default function UserTable({
 
     // Sorting Logic
     const sortedUsers = React.useMemo(() => {
-        let sortableUsers = [...users];
+        const sortableUsers = [...users];
         if (sortConfig !== null) {
             sortableUsers.sort((a, b) => {
                 if (sortConfig.key === 'membership') {
                     // Custom priority: VVIP > PRO > BASIC
-                    const priority: any = { VVIP: 3, PRO: 2, BASIC: 1, FREE: 0 };
+                    const priority: Record<string, number> = { VVIP: 3, PRO: 2, BASIC: 1, FREE: 0 };
                     const valA = priority[a.membership] || 0;
                     const valB = priority[b.membership] || 0;
 
@@ -167,6 +167,9 @@ export default function UserTable({
                                             )}
                                         </p>
                                         <p className="text-sm text-[var(--text-secondary)]">{user.email}</p>
+                                        <p className="text-xs text-[var(--text-muted)]">
+                                            Telegram: {user.telegramChatId ? user.telegramChatId : 'belum diisi'}
+                                        </p>
                                     </div>
                                 </td>
                                 <td className="p-4 text-sm">

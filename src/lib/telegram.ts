@@ -7,8 +7,8 @@ function getTelegramConfig() {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
 
-    if (!botToken || !channelId) {
-        console.warn('[TELEGRAM] Bot token or channel ID not configured');
+    if (!botToken) {
+        console.warn('[TELEGRAM] Bot token not configured');
         return null;
     }
 
@@ -33,6 +33,9 @@ export async function sendTelegramMessage(
 
     // Use provided destChatId or fall back to env channelId
     const targetChatId = destChatId || config.channelId;
+    if (!targetChatId) {
+        return { success: false, error: 'Telegram destination chat_id not configured' };
+    }
 
     try {
         const response = await fetch(`${TELEGRAM_API_BASE}${config.botToken}/sendMessage`, {

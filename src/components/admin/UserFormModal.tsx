@@ -15,6 +15,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
         name: '',
         email: '',
         membership: 'BASIC',
+        telegramChatId: '',
         password: '', // Only for new users
     });
     const [saving, setSaving] = useState(false);
@@ -26,6 +27,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                 name: user.name || '',
                 email: user.email,
                 membership: user.membership,
+                telegramChatId: user.telegramChatId || '',
                 password: '',
             });
         } else {
@@ -33,6 +35,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                 name: '',
                 email: '',
                 membership: 'BASIC',
+                telegramChatId: '',
                 password: '',
             });
         }
@@ -50,8 +53,8 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                 id: user?.id, // Includes ID if editing
             });
             onClose();
-        } catch (err: any) {
-            setError(err.message || 'Failed to save user');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to save user');
         } finally {
             setSaving(false);
         }
@@ -108,6 +111,18 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                 placeholder="user@example.com"
                                 required
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Telegram Chat ID</label>
+                            <input
+                                type="text"
+                                value={formData.telegramChatId}
+                                onChange={e => setFormData({ ...formData, telegramChatId: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                placeholder="Contoh: 123456789"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Kosongkan jika user belum menghubungkan Telegram.</p>
                         </div>
 
                         {!user && (
