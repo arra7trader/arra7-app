@@ -328,6 +328,12 @@ export default function AnalisaMarketPage() {
     const dailyLimitLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.dailyLimit ?? '-');
     const usedLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.used ?? '-');
     const remainingLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.remaining ?? '-');
+    const usedPercentage = isUnlimitedQuota
+        ? 0
+        : Math.min(100, Math.max(0, ((quotaStatus?.used ?? 0) / Math.max(1, quotaStatus?.dailyLimit ?? 1)) * 100));
+    const allowedTimeframes = quotaStatus?.allowedTimeframes?.length
+        ? quotaStatus.allowedTimeframes.map((tf) => tf.toUpperCase())
+        : [];
     const lastChargeLabel = lastQuotaCharged === null
         ? 'Belum ada analisa'
         : lastQuotaCharged
@@ -362,9 +368,12 @@ export default function AnalisaMarketPage() {
                         </div>
 
                         <div className="w-full lg:max-w-[620px]">
-                            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="text-sm font-medium text-[var(--text-secondary)]">Info Akun & Kuota</span>
+                            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Info Akun & Kuota</p>
+                                        <p className="text-sm font-semibold text-[var(--text-primary)]">Status akses analisa market</p>
+                                    </div>
                                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus?.membership === 'VVIP'
                                         ? 'bg-amber-100 text-amber-700'
                                         : quotaStatus?.membership === 'PRO'
@@ -375,33 +384,59 @@ export default function AnalisaMarketPage() {
                                     </span>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                                    <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[var(--text-secondary)]">Nama</span>
-                                        <p className="font-medium text-[var(--text-primary)]">{session.user?.name || '-'}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                                    <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
+                                        <p className="text-xs text-[var(--text-muted)]">Limit Harian</p>
+                                        <p className="text-sm font-semibold text-[var(--text-primary)]">{dailyLimitLabel}</p>
                                     </div>
-                                    <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[var(--text-secondary)]">Email</span>
-                                        <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.email || '-'}</p>
+                                    <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
+                                        <p className="text-xs text-[var(--text-muted)]">Terpakai</p>
+                                        <p className="text-sm font-semibold text-[var(--text-primary)]">{usedLabel}</p>
                                     </div>
-                                    <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[var(--text-secondary)]">Limit Harian</span>
-                                        <p className="font-medium text-[var(--text-primary)]">{dailyLimitLabel}</p>
+                                    <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
+                                        <p className="text-xs text-[var(--text-muted)]">Sisa Hari Ini</p>
+                                        <p className="text-sm font-semibold text-[var(--text-primary)]">{remainingLabel}</p>
                                     </div>
-                                    <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[var(--text-secondary)]">Sisa Hari Ini</span>
-                                        <p className="font-medium text-[var(--text-primary)]">{remainingLabel}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[var(--text-secondary)]">Terpakai</span>
-                                        <p className="font-medium text-[var(--text-primary)]">{usedLabel}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[var(--text-secondary)]">Timeframe Allow</span>
-                                        <p className="font-medium text-[var(--text-primary)]">
-                                            {quotaStatus?.allowedTimeframes?.length ? quotaStatus.allowedTimeframes.join(', ').toUpperCase() : '-'}
+                                </div>
+
+                                {!isUnlimitedQuota && (
+                                    <div className="mb-3">
+                                        <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all ${usedPercentage >= 90 ? 'bg-red-500' : 'bg-[var(--accent-blue)]'}`}
+                                                style={{ width: `${usedPercentage}%` }}
+                                            />
+                                        </div>
+                                        <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+                                            Penggunaan hari ini: {usedPercentage.toFixed(0)}%
                                         </p>
                                     </div>
+                                )}
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <div className="rounded-xl border border-[var(--border-light)] px-3 py-2">
+                                        <p className="text-xs text-[var(--text-muted)]">Nama</p>
+                                        <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.name || '-'}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-[var(--border-light)] px-3 py-2">
+                                        <p className="text-xs text-[var(--text-muted)]">Email</p>
+                                        <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.email || '-'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 rounded-xl border border-[var(--border-light)] px-3 py-2">
+                                    <p className="text-xs text-[var(--text-muted)] mb-2">Timeframe Allow</p>
+                                    {allowedTimeframes.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {allowedTimeframes.map((tf) => (
+                                                <span key={tf} className="px-2 py-0.5 rounded-md bg-[var(--bg-secondary)] text-[11px] font-semibold text-[var(--text-primary)]">
+                                                    {tf}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">-</p>
+                                    )}
                                 </div>
 
                                 <div className="mt-3 pt-3 border-t border-[var(--border-light)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
