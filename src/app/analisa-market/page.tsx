@@ -147,6 +147,8 @@ export default function AnalisaMarketPage() {
     const [newsHtml, setNewsHtml] = useState<string>('');
     const [quotaStatus, setQuotaStatus] = useState<QuotaStatus | null>(null);
     const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null); // Store end timestamp
+    const [lastQuotaCharged, setLastQuotaCharged] = useState<boolean | null>(null);
+    const [lastAnalyzeAt, setLastAnalyzeAt] = useState<string | null>(null);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -274,6 +276,12 @@ export default function AnalisaMarketPage() {
                 } else {
                     fetchQuota();
                 }
+                if (typeof data.quotaCharged === 'boolean') {
+                    setLastQuotaCharged(data.quotaCharged);
+                }
+                if (typeof data.timestamp === 'string') {
+                    setLastAnalyzeAt(data.timestamp);
+                }
             } else {
                 if (data.waitTimeSeconds) {
                     // Set cooldown end time based on server's wait time
@@ -316,6 +324,21 @@ export default function AnalisaMarketPage() {
         return null;
     }
 
+    const isUnlimitedQuota = quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null;
+    const dailyLimitLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.dailyLimit ?? '-');
+    const usedLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.used ?? '-');
+    const remainingLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.remaining ?? '-');
+    const lastChargeLabel = lastQuotaCharged === null
+        ? 'Belum ada analisa'
+        : lastQuotaCharged
+            ? 'Kuota terpotong'
+            : 'WAIT/SKIP - kuota aman';
+    const lastChargeClass = lastQuotaCharged === null
+        ? 'text-[var(--text-muted)]'
+        : lastQuotaCharged
+            ? 'text-amber-600'
+            : 'text-emerald-600';
+
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-wide section-padding pt-8">
@@ -325,15 +348,69 @@ export default function AnalisaMarketPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-6"
                 >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                            <SparklesIcon className="text-white" size="lg" />
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                <SparklesIcon className="text-white" size="lg" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
+                                <p className="text-sm text-[var(--text-secondary)]">
+                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session.user?.name}</span>
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
-                            <p className="text-sm text-[var(--text-secondary)]">
-                                {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session.user?.name}</span>
-                            </p>
+
+                        <div className="w-full lg:max-w-[620px]">
+                            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-sm font-medium text-[var(--text-secondary)]">Info Akun & Kuota</span>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus?.membership === 'VVIP'
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : quotaStatus?.membership === 'PRO'
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-gray-100 text-gray-700'
+                                        }`}>
+                                        {quotaStatus?.membership || 'BASIC'}
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                                    <div className="flex items-center justify-between sm:block">
+                                        <span className="text-[var(--text-secondary)]">Nama</span>
+                                        <p className="font-medium text-[var(--text-primary)]">{session.user?.name || '-'}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:block">
+                                        <span className="text-[var(--text-secondary)]">Email</span>
+                                        <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.email || '-'}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:block">
+                                        <span className="text-[var(--text-secondary)]">Limit Harian</span>
+                                        <p className="font-medium text-[var(--text-primary)]">{dailyLimitLabel}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:block">
+                                        <span className="text-[var(--text-secondary)]">Sisa Hari Ini</span>
+                                        <p className="font-medium text-[var(--text-primary)]">{remainingLabel}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:block">
+                                        <span className="text-[var(--text-secondary)]">Terpakai</span>
+                                        <p className="font-medium text-[var(--text-primary)]">{usedLabel}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:block">
+                                        <span className="text-[var(--text-secondary)]">Timeframe Allow</span>
+                                        <p className="font-medium text-[var(--text-primary)]">
+                                            {quotaStatus?.allowedTimeframes?.length ? quotaStatus.allowedTimeframes.join(', ').toUpperCase() : '-'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 pt-3 border-t border-[var(--border-light)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+                                    <span className="text-[var(--text-secondary)]">
+                                        Status analisa terakhir{lastAnalyzeAt ? ` (${new Date(lastAnalyzeAt).toLocaleTimeString('id-ID')})` : ''}:
+                                    </span>
+                                    <span className={`font-semibold ${lastChargeClass}`}>{lastChargeLabel}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </motion.div>

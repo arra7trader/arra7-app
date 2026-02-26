@@ -306,16 +306,18 @@ async function getQueuedDispatches(supabase: CopytradeSchemaClient, terminalId: 
   return (data || []).map((row) => {
     const typedRow = row as RawDispatchRow;
     const signalRaw = Array.isArray(typedRow.signals) ? typedRow.signals[0] || null : typedRow.signals || null;
+    const sideRaw = signalRaw ? String(signalRaw.side || '').toUpperCase() : '';
+    const normalizedSide = sideRaw === 'BUY' || sideRaw === 'SELL' ? sideRaw : null;
     return {
       id: String(typedRow.id),
       follow_id: String(typedRow.follow_id),
-      signals: signalRaw
+      signals: signalRaw && normalizedSide
         ? {
             id: String(signalRaw.id),
             provider_id: String(signalRaw.provider_id),
             symbol: String(signalRaw.symbol),
             timeframe: String(signalRaw.timeframe),
-            side: String(signalRaw.side).toUpperCase() === 'BUY' ? 'BUY' : 'SELL',
+            side: normalizedSide,
             order_type: String(signalRaw.order_type || 'MARKET').toUpperCase(),
             entry_price: Number(signalRaw.entry_price),
             stop_loss: Number(signalRaw.stop_loss),

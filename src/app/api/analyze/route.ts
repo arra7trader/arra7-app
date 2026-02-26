@@ -467,13 +467,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Use quota after successful analysis (only if Turso is configured)
-        let quotaStatus = null;
-        if (process.env.TURSO_DATABASE_URL) {
-            await consumeQuota(userId);
-            quotaStatus = await getQuotaStatus(userId);
-        }
-
         // Auto-post to social feed (anonymized)
         try {
             const { addToSocialFeed, parseSignalFromAnalysis: parseForSocial } = await import('@/lib/social');
@@ -551,6 +544,25 @@ export async function POST(request: NextRequest) {
             }
         } catch (signalError) {
             console.error('Failed to save signal:', signalError);
+        }
+
+        // Charge quota only for actionable trade signals (BUY/SELL).
+        let quotaStatus = null;
+        let quotaCharged = false;
+        if (process.env.TURSO_DATABASE_URL) {
+            const directionRaw = String(
+                (nativeSignalData as any)?.direction ??
+                (nativeSignalData as any)?.type ??
+                ''
+            ).toUpperCase();
+            const isTradableSignal = directionRaw === 'BUY' || directionRaw === 'SELL';
+
+            if (isTradableSignal) {
+                await consumeQuota(userId);
+                quotaCharged = true;
+            }
+
+            quotaStatus = await getQuotaStatus(userId);
         }
 
         // Serialize quotaStatus - convert Infinity to -1 for JSON
@@ -684,6 +696,7 @@ export async function POST(request: NextRequest) {
             },
             parsedSignal: nativeSignalData,
             copytradeAutoPublish,
+            quotaCharged,
             quotaStatus: serializedQuotaStatus,
             timestamp: new Date().toISOString(),
         });

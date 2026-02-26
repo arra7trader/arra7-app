@@ -563,11 +563,15 @@ export async function generateAndQueueSignalForTerminal(terminalId: string): Pro
   if (!parsed || parsed.direction === 'HOLD') {
     return { generated: false, reason: 'analysis_no_trade_signal' };
   }
+  const parsedDirection = String(parsed.direction || '').toUpperCase();
+  if (parsedDirection !== 'BUY' && parsedDirection !== 'SELL') {
+    return { generated: false, reason: 'analysis_invalid_trade_signal' };
+  }
 
   const normalized = normalizeTradeSignal({
     symbol,
     timeframe,
-    side: parsed.direction === 'BUY' ? 'BUY' : 'SELL',
+    side: parsedDirection,
     orderType: 'MARKET',
     entryPrice: Number(parsed.entryPrice || marketData.current_price),
     stopLoss: Number(parsed.stopLoss || 0),
