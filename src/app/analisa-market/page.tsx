@@ -1152,30 +1152,30 @@ export default function AnalisaMarketPage() {
                                 transition={{ delay: 0.18 }}
                                 className="mb-5 space-y-4"
                             >
-                                <div className="rounded-3xl border border-slate-800 bg-[radial-gradient(120%_120%_at_8%_8%,rgba(56,189,248,0.18)_0%,rgba(15,23,42,1)_38%,rgba(67,56,202,0.12)_100%)] p-5 text-slate-100 shadow-[0_24px_50px_rgba(2,6,23,0.48)]">
+                                <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50/35 to-amber-50/45 p-5 text-slate-900 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[11px] uppercase tracking-[0.24em] text-amber-300 font-semibold">Private VVIP Desk</p>
-                                            <h3 className="text-2xl font-semibold text-white">Deep Analyst Room</h3>
-                                            <p className="mt-2 text-sm leading-relaxed text-slate-300 max-w-2xl">
+                                            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-700 font-semibold">VVIP Exclusive Desk</p>
+                                            <h3 className="text-2xl font-semibold text-slate-900">Deep Analyst Room</h3>
+                                            <p className="mt-2 text-sm leading-relaxed text-slate-700 max-w-2xl">
                                                 {deepSections.executiveSummary}
                                             </p>
-                                            <p className="mt-2 text-xs text-slate-400">
-                                                Prepared for {vvipAlias} - {lastAnalyzeAt ? new Date(lastAnalyzeAt).toLocaleTimeString('id-ID') : 'awaiting run'}
+                                            <p className="mt-2 text-xs text-slate-500">
+                                                User: {vvipAlias} | Update: {lastAnalyzeAt ? new Date(lastAnalyzeAt).toLocaleTimeString('id-ID') : 'Belum ada analisa'}
                                             </p>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-300/15 border border-amber-300/35 text-amber-200 font-semibold">
+                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-700 font-semibold">
                                                 LSTM Core
                                             </span>
-                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-white font-semibold">
+                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-semibold">
                                                 {selectedPair} / {selectedTimeframe.toUpperCase()}
                                             </span>
                                             <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold border ${directionBadge === 'BUY'
-                                                ? 'bg-emerald-300/15 text-emerald-200 border-emerald-300/35'
+                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
                                                 : directionBadge === 'SELL'
-                                                    ? 'bg-rose-300/15 text-rose-200 border-rose-300/35'
-                                                    : 'bg-slate-300/15 text-slate-200 border-slate-300/35'
+                                                    ? 'bg-rose-100 text-rose-700 border-rose-200'
+                                                    : 'bg-slate-100 text-slate-700 border-slate-200'
                                                 }`}>
                                                 {directionBadge}
                                             </span>
@@ -1183,60 +1183,56 @@ export default function AnalisaMarketPage() {
                                     </div>
 
                                     <div className="mt-4 grid grid-cols-2 xl:grid-cols-4 gap-2">
-                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Model Conviction</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.conviction}</p>
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Keyakinan Model</p>
+                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.conviction}</p>
                                         </div>
-                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Market Regime</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.regime}</p>
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Bias Utama</p>
+                                            <p className="text-sm font-semibold text-slate-900">{directionBadge}</p>
                                         </div>
-                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Primary R:R</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.rr}</p>
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Rasio R:R</p>
+                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.rr}</p>
                                         </div>
-                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Risk Budget</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.riskBudget}</p>
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Risiko Setup</p>
+                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.riskBudget}</p>
                                         </div>
                                     </div>
 
                                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                        <div className="rounded-xl border border-sky-300/30 bg-sky-300/10 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-sky-200">Entry Zone</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.entry}</p>
+                                        <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-sky-700">Zona Entry</p>
+                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.entry}</p>
                                         </div>
-                                        <div className="rounded-xl border border-rose-300/30 bg-rose-300/10 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-rose-200">Invalidation</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.stop}</p>
+                                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-rose-700">Invalidasi</p>
+                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.stop}</p>
                                         </div>
-                                        <div className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-emerald-200">Target 1</p>
-                                            <p className="text-sm font-semibold text-white">{deskSnapshot.target}</p>
+                                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-emerald-700">Target 1</p>
+                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.target}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                                     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] text-sky-700 font-semibold mb-1">Institutional Read</p>
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Market Structure</h4>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Struktur Market</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.marketStructure}</p>
                                     </div>
                                     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] text-violet-700 font-semibold mb-1">Smart Money Layer</p>
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">SMC / ICT Confluence Map</h4>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Konfluensi SMC / ICT</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.smcConfluence}</p>
                                     </div>
                                     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] text-indigo-700 font-semibold mb-1">Quant Layer</p>
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Statistical Pressure & Momentum</h4>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Statistik & Momentum</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.statisticalSignals}</p>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.momentumAssessment}</p>
                                     </div>
                                     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-semibold mb-1">Risk Layer</p>
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Fibonacci Envelope & Risk Factors</h4>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Fibonacci & Faktor Risiko</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.fibonacciMapping}</p>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.riskFactors}</p>
                                     </div>
@@ -1244,9 +1240,9 @@ export default function AnalisaMarketPage() {
 
                                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">Scenario Matrix</h4>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">Skenario Trading</h4>
                                         <span className="text-[11px] px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-semibold">
-                                            Confidence {confidenceText}
+                                            Confidence: {confidenceText}
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
@@ -1262,7 +1258,7 @@ export default function AnalisaMarketPage() {
                                             >
                                                 <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">{scenario.name}</p>
                                                 <p className="text-xs text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Trigger:</span> {scenario.trigger}</p>
-                                                <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Invalidation:</span> {scenario.invalidation}</p>
+                                                <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Invalidasi:</span> {scenario.invalidation}</p>
                                                 <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Target:</span> {scenario.target}</p>
                                                 <p className="text-xs text-[var(--text-secondary)] mt-2 italic">{scenario.note}</p>
                                             </div>
