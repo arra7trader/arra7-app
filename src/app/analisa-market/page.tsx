@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +13,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'major',
         name: 'Forex Major',
-        icon: '💱',
+        icon: 'ðŸ’±',
         pairs: [
             { value: 'EURUSD', label: 'EUR/USD' },
             { value: 'GBPUSD', label: 'GBP/USD' },
@@ -27,7 +27,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'minor',
         name: 'Forex Minor',
-        icon: '📊',
+        icon: 'ðŸ“Š',
         pairs: [
             { value: 'EURGBP', label: 'EUR/GBP' },
             { value: 'EURJPY', label: 'EUR/JPY' },
@@ -52,7 +52,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'commodities',
         name: 'Komoditas',
-        icon: '🥇',
+        icon: 'ðŸ¥‡',
         pairs: [
             { value: 'XAUUSD', label: 'XAU/USD (Gold)' },
             { value: 'XAGUSD', label: 'XAG/USD (Silver)' },
@@ -67,7 +67,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'crypto',
         name: 'Crypto',
-        icon: '₿',
+        icon: 'â‚¿',
         pairs: [
             { value: 'BTCUSD', label: 'BTC/USD' },
             { value: 'ETHUSD', label: 'ETH/USD' },
@@ -86,7 +86,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'indices',
         name: 'Indices',
-        icon: '📈',
+        icon: 'ðŸ“ˆ',
         pairs: [
             { value: 'US30', label: 'US30 (Dow Jones)' },
             { value: 'US500', label: 'US500 (S&P 500)' },
@@ -169,6 +169,16 @@ interface ScenarioItem {
     note: string;
 }
 
+interface DeskSnapshot {
+    regime: string;
+    rr: string;
+    riskBudget: string;
+    conviction: string;
+    entry: string;
+    stop: string;
+    target: string;
+}
+
 const DEEP_HEADINGS: Record<DeepSectionKey, string[]> = {
     marketStructure: ['market structure', 'struktur pasar'],
     smcConfluence: ['smc/ict confluence', 'smc/ict', 'order block', 'fvg'],
@@ -181,19 +191,19 @@ const DEEP_HEADINGS: Record<DeepSectionKey, string[]> = {
 function cleanLine(line: string): string {
     return line
         .replace(/\*\*/g, '')
-        .replace(/^[-•\d.)\s]+/, '')
+        .replace(/^[-â€¢\d.)\s]+/, '')
         .trim();
 }
 
 function parseDeepAnalystSections(rawAnalysis: string | null): DeepAnalystSections {
     const fallback: DeepAnalystSections = {
-        executiveSummary: 'Jalankan analisa untuk melihat thesis VVIP mendalam.',
-        marketStructure: '-',
-        smcConfluence: '-',
-        statisticalSignals: '-',
-        momentumAssessment: '-',
-        fibonacciMapping: '-',
-        riskFactors: '-',
+        executiveSummary: 'Ruang analyst privat siap dipakai. Jalankan analisa untuk memuat thesis VVIP terbaru.',
+        marketStructure: 'Belum ada snapshot struktur market pada sesi ini.',
+        smcConfluence: 'Belum ada data orderflow SMC/ICT untuk pair dan timeframe aktif.',
+        statisticalSignals: 'Model statistik belum menghasilkan pembacaan sinyal.',
+        momentumAssessment: 'Momentum desk menunggu trigger terukur dari analisa baru.',
+        fibonacciMapping: 'Zona Fibonacci belum dihitung pada sesi ini.',
+        riskFactors: 'Risk map belum tersedia sebelum analisa dijalankan.',
     };
 
     if (!rawAnalysis) return fallback;
@@ -218,7 +228,7 @@ function parseDeepAnalystSections(rawAnalysis: string | null): DeepAnalystSectio
         const cleaned = cleanLine(line);
         if (!cleaned) continue;
         if (cleaned.toLowerCase().includes('arra quantum strategic')) continue;
-        if (cleaned.startsWith('━')) continue;
+        if (cleaned.startsWith('â”')) continue;
         summaryLines.push(cleaned);
         if (summaryLines.length >= 3) break;
     }
@@ -256,6 +266,16 @@ function formatPrice(value: number | null | undefined, symbol = ''): string {
     const upper = symbol.toUpperCase();
     const decimals = upper.includes('XAU') || upper.includes('XAG') ? 2 : upper.includes('JPY') ? 3 : value >= 100 ? 2 : 5;
     return value.toFixed(decimals);
+}
+
+function isPlaceholderInsight(value: string | null | undefined): boolean {
+    if (!value) return true;
+    const normalized = value.trim().toLowerCase();
+    return normalized === '' || normalized === '-' || normalized === 'n/a' || normalized === 'na' || normalized === 'none';
+}
+
+function withFallbackInsight(primary: string, fallback: string): string {
+    return isPlaceholderInsight(primary) ? fallback : primary;
 }
 
 function buildScenarioMatrix(
@@ -386,6 +406,102 @@ function buildScenarioMatrix(
     ];
 }
 
+function buildDeepAnalystNarrative(
+    sections: DeepAnalystSections,
+    signal: ParsedSignalData | null,
+    marketInfo: MarketInfo | null
+): DeepAnalystSections {
+    const symbol = marketInfo?.symbol || 'market';
+    const direction = String(signal?.direction || signal?.type || 'WAIT').toUpperCase();
+    const entry = signal?.entryPrice || signal?.entry || marketInfo?.price || 0;
+    const sl = signal?.stopLoss || signal?.sl || 0;
+    const tp = signal?.takeProfit1 || signal?.tp || 0;
+    const confidence = typeof signal?.confidence === 'number' && Number.isFinite(signal.confidence)
+        ? Math.round(signal.confidence)
+        : null;
+    const entryLabel = formatPrice(entry, symbol);
+    const slLabel = formatPrice(sl, symbol);
+    const tpLabel = formatPrice(tp, symbol);
+
+    const directionalBias = direction === 'BUY'
+        ? 'bias bullish masih dominan selama area support dipertahankan.'
+        : direction === 'SELL'
+            ? 'tekanan bearish masih unggul selama resistance tidak ditembus.'
+            : 'kondisi netral dan memerlukan konfirmasi breakout sebelum entry.';
+
+    const structureFallback = `Snapshot ${symbol}: harga referensi di sekitar ${entryLabel !== '-' ? entryLabel : 'zona utama'}, ${directionalBias}`;
+    const smcFallback = direction === 'WAIT'
+        ? 'Order block dan liquidity sweep belum valid, fokus menunggu displacement candle konfirmasi.'
+        : `Konfirmasi orderflow diarahkan pada area entry ${entryLabel !== '-' ? entryLabel : 'utama'} dengan invalidasi ${slLabel !== '-' ? slLabel : 'dinamis'}.`;
+    const statsFallback = confidence !== null
+        ? `Skor probabilitas model saat ini ${confidence}/100, gunakan hanya saat struktur dan momentum searah.`
+        : 'Skor probabilitas belum tersedia, jalankan analisa untuk memuat pembacaan statistik terbaru.';
+    const momentumFallback = direction === 'BUY'
+        ? 'Momentum naik valid jika candle close bertahan di atas area trigger.'
+        : direction === 'SELL'
+            ? 'Momentum turun valid jika rejection berulang terjadi di area resistance intraday.'
+            : 'Momentum belum matang, prioritas observasi volume dan impuls breakout.';
+    const fibFallback = tpLabel !== '-'
+        ? `Proyeksi Fibonacci diarahkan menuju target ${tpLabel} dengan area pullback pada entry ${entryLabel !== '-' ? entryLabel : 'utama'}.`
+        : 'Mapping Fibonacci belum lengkap karena target harga belum terbaca.';
+    const riskFallback = slLabel !== '-'
+        ? `Risk control: invalidasi utama berada di ${slLabel}, disiplin cut-loss wajib sebelum scale-in lanjutan.`
+        : 'Risk control belum valid karena level stop-loss belum tersedia.';
+
+    return {
+        executiveSummary: withFallbackInsight(
+            sections.executiveSummary,
+            `Desk privat VVIP aktif untuk ${symbol}. Jalankan analisa untuk memuat thesis multi-layer terbaru.`
+        ),
+        marketStructure: withFallbackInsight(sections.marketStructure, structureFallback),
+        smcConfluence: withFallbackInsight(sections.smcConfluence, smcFallback),
+        statisticalSignals: withFallbackInsight(sections.statisticalSignals, statsFallback),
+        momentumAssessment: withFallbackInsight(sections.momentumAssessment, momentumFallback),
+        fibonacciMapping: withFallbackInsight(sections.fibonacciMapping, fibFallback),
+        riskFactors: withFallbackInsight(sections.riskFactors, riskFallback),
+    };
+}
+
+function buildDeskSnapshot(
+    signal: ParsedSignalData | null,
+    marketInfo: MarketInfo | null
+): DeskSnapshot {
+    const symbol = marketInfo?.symbol || 'XAUUSD';
+    const direction = String(signal?.direction || signal?.type || 'WAIT').toUpperCase();
+    const entry = signal?.entryPrice || signal?.entry || marketInfo?.price || 0;
+    const sl = signal?.stopLoss || signal?.sl || 0;
+    const tp = signal?.takeProfit1 || signal?.tp || 0;
+    const confidence = typeof signal?.confidence === 'number' && Number.isFinite(signal.confidence)
+        ? signal.confidence
+        : null;
+
+    const riskDistance = entry > 0 && sl > 0 ? Math.abs(entry - sl) : 0;
+    const rewardDistance = entry > 0 && tp > 0
+        ? (direction === 'SELL' ? (entry - tp) : direction === 'BUY' ? (tp - entry) : Math.abs(tp - entry))
+        : 0;
+    const rr = riskDistance > 0 && rewardDistance > 0 ? `${(rewardDistance / riskDistance).toFixed(2)}R` : 'N/A';
+    const riskBudget = entry > 0 && sl > 0
+        ? `${((Math.abs(entry - sl) / entry) * 100).toFixed(2)}%`
+        : 'N/A';
+    const conviction = confidence !== null ? `${Math.round(confidence)}/100` : 'Pending';
+
+    const regime = direction === 'BUY'
+        ? 'Risk-On Bull Regime'
+        : direction === 'SELL'
+            ? 'Risk-Off Bear Regime'
+            : 'Compression / Wait';
+
+    return {
+        regime,
+        rr,
+        riskBudget,
+        conviction,
+        entry: formatPrice(entry, symbol),
+        stop: formatPrice(sl, symbol),
+        target: formatPrice(tp, symbol),
+    };
+}
+
 export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
@@ -468,7 +584,7 @@ export default function AnalisaMarketPage() {
     const trackLocation = async () => {
         try {
             await fetch('/api/location', { method: 'POST' });
-        } catch (err) {
+        } catch {
             // Silent fail
         }
     };
@@ -567,7 +683,7 @@ export default function AnalisaMarketPage() {
                     setQuotaStatus(data.quotaStatus);
                 }
             }
-        } catch (err) {
+        } catch {
             setError('Network error. Please try again.');
         } finally {
             setIsAnalyzing(false);
@@ -595,18 +711,29 @@ export default function AnalisaMarketPage() {
             ? 'text-amber-600'
             : 'text-emerald-600';
     const isVvipUser = (quotaStatus?.membership || '').toUpperCase() === 'VVIP';
+    const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
+    const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
+        ? `${Math.round(parsedSignal.confidence)}%`
+        : 'N/A';
     const deepSections = useMemo(
-        () => parseDeepAnalystSections(rawAnalysis),
-        [rawAnalysis]
+        () => buildDeepAnalystNarrative(
+            parseDeepAnalystSections(rawAnalysis),
+            parsedSignal,
+            marketInfo
+        ),
+        [rawAnalysis, parsedSignal, marketInfo]
     );
     const scenarioMatrix = useMemo(
         () => buildScenarioMatrix(parsedSignal, marketInfo),
         [parsedSignal, marketInfo]
     );
-    const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
-    const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
-        ? `${parsedSignal.confidence}%`
-        : 'N/A';
+    const deskSnapshot = useMemo(
+        () => buildDeskSnapshot(parsedSignal, marketInfo),
+        [parsedSignal, marketInfo]
+    );
+    const vvipAlias = session?.user?.name
+        ? session.user.name.split(' ')[0]
+        : 'VVIP Member';
 
     if (status === 'loading') {
         return (
@@ -857,7 +984,7 @@ export default function AnalisaMarketPage() {
                                     </div>
                                     <span className="text-sm font-mono text-[var(--text-primary)]">
                                         {(quotaStatus.dailyLimit === -1 || quotaStatus.dailyLimit === null)
-                                            ? '∞'
+                                            ? 'âˆž'
                                             : `${quotaStatus.used}/${quotaStatus.dailyLimit}`
                                         }
                                     </span>
@@ -923,7 +1050,7 @@ export default function AnalisaMarketPage() {
                                 {marketInfo.isSimulated && (
                                     <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-3 rounded">
                                         <div className="flex items-start gap-2">
-                                            <span className="text-red-600 text-lg">⚠️</span>
+                                            <span className="text-red-600 text-lg">âš ï¸</span>
                                             <div>
                                                 <p className="text-xs font-semibold text-red-800">Data Simulasi</p>
                                                 <p className="text-xs text-red-600 mt-1">API gagal. Data ini adalah simulasi untuk demo saja. Jangan gunakan untuk trading!</p>
@@ -936,7 +1063,7 @@ export default function AnalisaMarketPage() {
                                 {!marketInfo.isRealtime && !marketInfo.isSimulated && (
                                     <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-3 rounded">
                                         <div className="flex items-start gap-2">
-                                            <span className="text-yellow-600 text-lg">⏰</span>
+                                            <span className="text-yellow-600 text-lg">â°</span>
                                             <div>
                                                 <p className="text-xs font-semibold text-yellow-800">Data Delayed</p>
                                                 <p className="text-xs text-yellow-700 mt-1">
@@ -971,7 +1098,7 @@ export default function AnalisaMarketPage() {
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-yellow-100 text-yellow-700'
                                             }`}>
-                                            {marketInfo.isSimulated ? '🔴 SIMULATED' : marketInfo.isRealtime ? '🟢 LIVE' : '🟡 DELAYED'}
+                                            {marketInfo.isSimulated ? 'ðŸ”´ SIMULATED' : marketInfo.isRealtime ? 'ðŸŸ¢ LIVE' : 'ðŸŸ¡ DELAYED'}
                                         </span>
                                     </div>
                                     {marketInfo.dataSource && (
@@ -1023,86 +1150,117 @@ export default function AnalisaMarketPage() {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.18 }}
-                                className="mb-4 space-y-3"
+                                className="mb-5 space-y-4"
                             >
-                                <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-amber-50 p-5 shadow-[0_14px_32px_rgba(14,116,144,0.12)]">
-                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div className="rounded-3xl border border-slate-800 bg-[radial-gradient(120%_120%_at_8%_8%,rgba(56,189,248,0.18)_0%,rgba(15,23,42,1)_38%,rgba(67,56,202,0.12)_100%)] p-5 text-slate-100 shadow-[0_24px_50px_rgba(2,6,23,0.48)]">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-xs uppercase tracking-[0.18em] text-sky-700 font-semibold">VVIP Exclusive</p>
-                                            <h3 className="text-xl font-bold text-slate-900">Deep Analyst Room</h3>
+                                            <p className="text-[11px] uppercase tracking-[0.24em] text-amber-300 font-semibold">Private VVIP Desk</p>
+                                            <h3 className="text-2xl font-semibold text-white">Deep Analyst Room</h3>
+                                            <p className="mt-2 text-sm leading-relaxed text-slate-300 max-w-2xl">
+                                                {deepSections.executiveSummary}
+                                            </p>
+                                            <p className="mt-2 text-xs text-slate-400">
+                                                Prepared for {vvipAlias} - {lastAnalyzeAt ? new Date(lastAnalyzeAt).toLocaleTimeString('id-ID') : 'awaiting run'}
+                                            </p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs px-2 py-1 rounded-full bg-slate-900 text-white font-semibold">
-                                                {selectedPair} · {selectedTimeframe.toUpperCase()}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-300/15 border border-amber-300/35 text-amber-200 font-semibold">
+                                                LSTM Core
                                             </span>
-                                            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${directionBadge === 'BUY'
-                                                ? 'bg-emerald-100 text-emerald-700'
+                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-white font-semibold">
+                                                {selectedPair} / {selectedTimeframe.toUpperCase()}
+                                            </span>
+                                            <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold border ${directionBadge === 'BUY'
+                                                ? 'bg-emerald-300/15 text-emerald-200 border-emerald-300/35'
                                                 : directionBadge === 'SELL'
-                                                    ? 'bg-rose-100 text-rose-700'
-                                                    : 'bg-slate-100 text-slate-700'
+                                                    ? 'bg-rose-300/15 text-rose-200 border-rose-300/35'
+                                                    : 'bg-slate-300/15 text-slate-200 border-slate-300/35'
                                                 }`}>
                                                 {directionBadge}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <p className="text-sm leading-relaxed text-slate-700">
-                                        {deepSections.executiveSummary}
-                                    </p>
+                                    <div className="mt-4 grid grid-cols-2 xl:grid-cols-4 gap-2">
+                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Model Conviction</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.conviction}</p>
+                                        </div>
+                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Market Regime</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.regime}</p>
+                                        </div>
+                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Primary R:R</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.rr}</p>
+                                        </div>
+                                        <div className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Risk Budget</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.riskBudget}</p>
+                                        </div>
+                                    </div>
 
-                                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                        <div className="rounded-xl border border-sky-100 bg-white/90 px-3 py-2">
-                                            <p className="text-[11px] text-slate-500 uppercase tracking-wide">Confidence</p>
-                                            <p className="text-sm font-semibold text-slate-900">{confidenceText}</p>
+                                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <div className="rounded-xl border border-sky-300/30 bg-sky-300/10 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-sky-200">Entry Zone</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.entry}</p>
                                         </div>
-                                        <div className="rounded-xl border border-sky-100 bg-white/90 px-3 py-2">
-                                            <p className="text-[11px] text-slate-500 uppercase tracking-wide">Primary Bias</p>
-                                            <p className="text-sm font-semibold text-slate-900">{directionBadge}</p>
+                                        <div className="rounded-xl border border-rose-300/30 bg-rose-300/10 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-rose-200">Invalidation</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.stop}</p>
                                         </div>
-                                        <div className="rounded-xl border border-sky-100 bg-white/90 px-3 py-2">
-                                            <p className="text-[11px] text-slate-500 uppercase tracking-wide">Last Update</p>
-                                            <p className="text-sm font-semibold text-slate-900">
-                                                {lastAnalyzeAt ? new Date(lastAnalyzeAt).toLocaleTimeString('id-ID') : '-'}
-                                            </p>
+                                        <div className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-emerald-200">Target 1</p>
+                                            <p className="text-sm font-semibold text-white">{deskSnapshot.target}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-sky-700 font-semibold mb-1">Institutional Read</p>
                                         <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Market Structure</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.marketStructure}</p>
                                     </div>
-                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">SMC / ICT Confluence</h4>
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-violet-700 font-semibold mb-1">Smart Money Layer</p>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">SMC / ICT Confluence Map</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.smcConfluence}</p>
                                     </div>
-                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Statistical & Momentum</h4>
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-indigo-700 font-semibold mb-1">Quant Layer</p>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Statistical Pressure & Momentum</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.statisticalSignals}</p>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.momentumAssessment}</p>
                                     </div>
-                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
-                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Fibonacci & Risk Factors</h4>
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-semibold mb-1">Risk Layer</p>
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Fibonacci Envelope & Risk Factors</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.fibonacciMapping}</p>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.riskFactors}</p>
                                     </div>
                                 </div>
 
-                                <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
-                                    <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Scenario Matrix</h4>
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">Scenario Matrix</h4>
+                                        <span className="text-[11px] px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-semibold">
+                                            Confidence {confidenceText}
+                                        </span>
+                                    </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
                                         {scenarioMatrix.map((scenario) => (
                                             <div
                                                 key={scenario.name}
-                                                className={`rounded-xl border px-3 py-3 ${scenario.tone === 'bull'
-                                                    ? 'border-emerald-200 bg-emerald-50/70'
+                                                className={`rounded-xl border px-3 py-3 shadow-sm ${scenario.tone === 'bull'
+                                                    ? 'border-emerald-200 bg-emerald-50/80'
                                                     : scenario.tone === 'bear'
-                                                        ? 'border-rose-200 bg-rose-50/70'
-                                                        : 'border-slate-200 bg-slate-50/70'
+                                                        ? 'border-rose-200 bg-rose-50/80'
+                                                        : 'border-slate-200 bg-slate-50/90'
                                                     }`}
                                             >
-                                                <p className="text-xs uppercase tracking-wide text-[var(--text-muted)] mb-1">{scenario.name}</p>
+                                                <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">{scenario.name}</p>
                                                 <p className="text-xs text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Trigger:</span> {scenario.trigger}</p>
                                                 <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Invalidation:</span> {scenario.invalidation}</p>
                                                 <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Target:</span> {scenario.target}</p>
@@ -1148,7 +1306,7 @@ export default function AnalisaMarketPage() {
                                                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-white/60 backdrop-blur-sm">
                                                     <div className="bg-gradient-to-br from-white to-red-50 border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
                                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
-                                                            <span className="text-4xl filter drop-shadow-lg">🔒</span>
+                                                            <span className="text-4xl filter drop-shadow-lg">ðŸ”’</span>
                                                         </div>
 
                                                         {/* Dynamic Title & Message */}
@@ -1176,7 +1334,7 @@ export default function AnalisaMarketPage() {
                                                                 className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 group"
                                                             >
                                                                 <span>Buka Akses Premium</span>
-                                                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                                                <span className="group-hover:translate-x-1 transition-transform">â†’</span>
                                                             </button>
                                                             <button
                                                                 onClick={() => setError(null)}
@@ -1191,7 +1349,7 @@ export default function AnalisaMarketPage() {
                                         ) : (
                                             <>
                                                 <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                                                    <span className="text-2xl">❌</span>
+                                                    <span className="text-2xl">âŒ</span>
                                                 </div>
                                                 <p className="text-red-600 text-center mb-4">{error}</p>
                                                 <button
@@ -1215,7 +1373,7 @@ export default function AnalisaMarketPage() {
                                             <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
                                             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--accent-blue)] animate-spin" />
                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-2xl">🔮</span>
+                                                <span className="text-2xl">ðŸ”®</span>
                                             </div>
                                         </div>
                                         <p className="text-[var(--text-secondary)] animate-pulse">ARRA Quantum Strategist is analyzing...</p>
@@ -1243,7 +1401,7 @@ export default function AnalisaMarketPage() {
                                         </div>
                                         <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">Ready to Analyze</h3>
                                         <p className="text-[var(--text-secondary)] text-center max-w-md">
-                                            Pilih kategori, pair, dan timeframe. Lalu klik <strong className="text-[var(--accent-blue)]">"Analisa Market"</strong> untuk mendapatkan insights dari AI.
+                                            Pilih kategori, pair, dan timeframe. Lalu klik <strong className="text-[var(--accent-blue)]">&quot;Analisa Market&quot;</strong> untuk mendapatkan insights dari AI.
                                         </p>
                                         <div className="mt-6 flex flex-wrap gap-2 justify-center">
                                             {PAIR_CATEGORIES.map(cat => (
