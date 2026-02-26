@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
@@ -130,6 +130,262 @@ interface QuotaStatus {
     allowedTimeframes: string[];
 }
 
+interface ParsedSignalData {
+    type?: 'BUY' | 'SELL' | 'HOLD';
+    direction?: 'BUY' | 'SELL' | 'HOLD';
+    entryPrice?: number;
+    entry?: number;
+    stopLoss?: number;
+    sl?: number;
+    takeProfit1?: number;
+    tp?: number;
+    confidence?: number;
+}
+
+type DeepSectionKey =
+    | 'marketStructure'
+    | 'smcConfluence'
+    | 'statisticalSignals'
+    | 'momentumAssessment'
+    | 'fibonacciMapping'
+    | 'riskFactors';
+
+interface DeepAnalystSections {
+    executiveSummary: string;
+    marketStructure: string;
+    smcConfluence: string;
+    statisticalSignals: string;
+    momentumAssessment: string;
+    fibonacciMapping: string;
+    riskFactors: string;
+}
+
+interface ScenarioItem {
+    name: string;
+    tone: 'bull' | 'bear' | 'neutral';
+    trigger: string;
+    invalidation: string;
+    target: string;
+    note: string;
+}
+
+const DEEP_HEADINGS: Record<DeepSectionKey, string[]> = {
+    marketStructure: ['market structure', 'struktur pasar'],
+    smcConfluence: ['smc/ict confluence', 'smc/ict', 'order block', 'fvg'],
+    statisticalSignals: ['statistical signals', 'statistik', 'z-score'],
+    momentumAssessment: ['momentum assessment', 'momentum'],
+    fibonacciMapping: ['fibonacci mapping', 'fibonacci'],
+    riskFactors: ['risk factors', 'faktor risiko', 'risk'],
+};
+
+function cleanLine(line: string): string {
+    return line
+        .replace(/\*\*/g, '')
+        .replace(/^[-•\d.)\s]+/, '')
+        .trim();
+}
+
+function parseDeepAnalystSections(rawAnalysis: string | null): DeepAnalystSections {
+    const fallback: DeepAnalystSections = {
+        executiveSummary: 'Jalankan analisa untuk melihat thesis VVIP mendalam.',
+        marketStructure: '-',
+        smcConfluence: '-',
+        statisticalSignals: '-',
+        momentumAssessment: '-',
+        fibonacciMapping: '-',
+        riskFactors: '-',
+    };
+
+    if (!rawAnalysis) return fallback;
+
+    const lines = rawAnalysis
+        .replace(/\r/g, '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+    if (lines.length === 0) return fallback;
+
+    const headingEntries = Object.entries(DEEP_HEADINGS) as Array<[DeepSectionKey, string[]]>;
+    const isHeadingLine = (line: string) => {
+        const normalized = line.toLowerCase();
+        return headingEntries.some(([, labels]) => labels.some((label) => normalized.includes(label)));
+    };
+
+    const summaryLines: string[] = [];
+    for (const line of lines) {
+        if (isHeadingLine(line)) break;
+        const cleaned = cleanLine(line);
+        if (!cleaned) continue;
+        if (cleaned.toLowerCase().includes('arra quantum strategic')) continue;
+        if (cleaned.startsWith('━')) continue;
+        summaryLines.push(cleaned);
+        if (summaryLines.length >= 3) break;
+    }
+
+    const result: DeepAnalystSections = {
+        ...fallback,
+        executiveSummary: summaryLines.length > 0 ? summaryLines.join(' ') : fallback.executiveSummary,
+    };
+
+    for (const [key, labels] of headingEntries) {
+        const startIndex = lines.findIndex((line) => {
+            const normalized = line.toLowerCase();
+            return labels.some((label) => normalized.includes(label));
+        });
+
+        if (startIndex < 0) continue;
+
+        const content: string[] = [];
+        for (let i = startIndex + 1; i < lines.length; i++) {
+            if (isHeadingLine(lines[i])) break;
+            const cleaned = cleanLine(lines[i]);
+            if (cleaned) content.push(cleaned);
+        }
+
+        if (content.length > 0) {
+            result[key] = content.join(' ');
+        }
+    }
+
+    return result;
+}
+
+function formatPrice(value: number | null | undefined, symbol = ''): string {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return '-';
+    const upper = symbol.toUpperCase();
+    const decimals = upper.includes('XAU') || upper.includes('XAG') ? 2 : upper.includes('JPY') ? 3 : value >= 100 ? 2 : 5;
+    return value.toFixed(decimals);
+}
+
+function buildScenarioMatrix(
+    signal: ParsedSignalData | null,
+    marketInfo: MarketInfo | null
+): ScenarioItem[] {
+    const symbol = marketInfo?.symbol || 'XAUUSD';
+    const price = marketInfo?.price || 0;
+    const directionRaw = String(signal?.direction || signal?.type || '').toUpperCase();
+
+    const entry = (signal?.entryPrice || signal?.entry || price) || price;
+    const sl = (signal?.stopLoss || signal?.sl || 0) || 0;
+    const tp1 = (signal?.takeProfit1 || signal?.tp || 0) || 0;
+    const unit = entry > 0 ? entry * (symbol.toUpperCase().includes('XAU') ? 0.003 : 0.0015) : 1;
+
+    if (entry <= 0) {
+        return [
+            {
+                name: 'Base Case',
+                tone: 'neutral',
+                trigger: 'Jalankan analisa untuk mendapatkan trigger harga valid.',
+                invalidation: 'Belum tersedia sebelum analisa berjalan.',
+                target: 'Menunggu data',
+                note: 'Scenario matrix otomatis akan terisi dari hasil analisa terbaru.',
+            },
+            {
+                name: 'Bull Case',
+                tone: 'bull',
+                trigger: 'Menunggu konfirmasi momentum dari output AI.',
+                invalidation: 'Belum tersedia.',
+                target: 'Menunggu data',
+                note: 'Digunakan saat validasi arah bullish sudah terkonfirmasi.',
+            },
+            {
+                name: 'Bear Case',
+                tone: 'bear',
+                trigger: 'Menunggu konfirmasi tekanan jual dari output AI.',
+                invalidation: 'Belum tersedia.',
+                target: 'Menunggu data',
+                note: 'Digunakan saat validasi arah bearish sudah terkonfirmasi.',
+            },
+        ];
+    }
+
+    if (directionRaw === 'BUY') {
+        return [
+            {
+                name: 'Base Case',
+                tone: 'bull',
+                trigger: `Harga bertahan di atas ${formatPrice(entry, symbol)}`,
+                invalidation: `Tutup candle di bawah ${formatPrice(sl || (entry - unit), symbol)}`,
+                target: formatPrice(tp1 || (entry + unit * 1.5), symbol),
+                note: 'Momentum naik tetap sehat, pullback dangkal.',
+            },
+            {
+                name: 'Bull Case',
+                tone: 'bull',
+                trigger: `Breakout kuat di atas ${formatPrice(tp1 || (entry + unit), symbol)}`,
+                invalidation: `Reclaim gagal dan turun di bawah ${formatPrice(entry, symbol)}`,
+                target: formatPrice((tp1 || (entry + unit)) + unit * 1.2, symbol),
+                note: 'Trend extension, cocok untuk add-on konservatif.',
+            },
+            {
+                name: 'Bear Case',
+                tone: 'bear',
+                trigger: `Break di bawah ${formatPrice(sl || (entry - unit), symbol)}`,
+                invalidation: `Kembali stabil di atas ${formatPrice(entry, symbol)}`,
+                target: formatPrice((sl || (entry - unit)) - unit * 0.8, symbol),
+                note: 'Skenario batal; fokus proteksi modal.',
+            },
+        ];
+    }
+
+    if (directionRaw === 'SELL') {
+        return [
+            {
+                name: 'Base Case',
+                tone: 'bear',
+                trigger: `Harga tertahan di bawah ${formatPrice(entry, symbol)}`,
+                invalidation: `Tutup candle di atas ${formatPrice(sl || (entry + unit), symbol)}`,
+                target: formatPrice(tp1 || (entry - unit * 1.5), symbol),
+                note: 'Tekanan jual dominan, rebound lemah.',
+            },
+            {
+                name: 'Bear Case',
+                tone: 'bear',
+                trigger: `Breakdown kuat di bawah ${formatPrice(tp1 || (entry - unit), symbol)}`,
+                invalidation: `Recover di atas ${formatPrice(entry, symbol)}`,
+                target: formatPrice((tp1 || (entry - unit)) - unit * 1.2, symbol),
+                note: 'Trend continuation, cocok scale-out bertahap.',
+            },
+            {
+                name: 'Bull Case',
+                tone: 'bull',
+                trigger: `Break di atas ${formatPrice(sl || (entry + unit), symbol)}`,
+                invalidation: `Kembali gagal di bawah ${formatPrice(entry, symbol)}`,
+                target: formatPrice((sl || (entry + unit)) + unit * 0.8, symbol),
+                note: 'Skenario berlawanan; stop and reassess.',
+            },
+        ];
+    }
+
+    return [
+        {
+            name: 'Wait Mode',
+            tone: 'neutral',
+            trigger: `Tunggu break valid dari area ${formatPrice(entry - unit * 0.4, symbol)} - ${formatPrice(entry + unit * 0.4, symbol)}`,
+            invalidation: `Noise tinggi tanpa arah jelas`,
+            target: `Konfirmasi ulang di sekitar ${formatPrice(entry, symbol)}`,
+            note: 'Belum ada edge kuat, disiplin no-trade.',
+        },
+        {
+            name: 'Bull Trigger',
+            tone: 'bull',
+            trigger: `Close H1 di atas ${formatPrice(entry + unit * 0.7, symbol)}`,
+            invalidation: `Gagal hold di atas trigger`,
+            target: formatPrice(entry + unit * 1.6, symbol),
+            note: 'Aktif jika konfirmasi momentum masuk.',
+        },
+        {
+            name: 'Bear Trigger',
+            tone: 'bear',
+            trigger: `Close H1 di bawah ${formatPrice(entry - unit * 0.7, symbol)}`,
+            invalidation: `Gagal hold di bawah trigger`,
+            target: formatPrice(entry - unit * 1.6, symbol),
+            note: 'Aktif jika tekanan jual konsisten.',
+        },
+    ];
+}
+
 export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
@@ -142,6 +398,8 @@ export default function AnalisaMarketPage() {
     const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+    const [rawAnalysis, setRawAnalysis] = useState<string | null>(null);
+    const [parsedSignal, setParsedSignal] = useState<ParsedSignalData | null>(null);
     const [marketInfo, setMarketInfo] = useState<MarketInfo | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [newsHtml, setNewsHtml] = useState<string>('');
@@ -254,6 +512,8 @@ export default function AnalisaMarketPage() {
         setIsAnalyzing(true);
         setError(null);
         setAnalysisResult(null);
+        setRawAnalysis(null);
+        setParsedSignal(null);
 
         try {
             const response = await fetch('/api/analyze', {
@@ -270,6 +530,8 @@ export default function AnalisaMarketPage() {
 
             if (data.status === 'success') {
                 setAnalysisResult(data.result);
+                setRawAnalysis(typeof data.rawAnalysis === 'string' ? data.rawAnalysis : null);
+                setParsedSignal(data.parsedSignal && typeof data.parsedSignal === 'object' ? data.parsedSignal as ParsedSignalData : null);
                 setMarketInfo(data.marketInfo);
                 if (data.quotaStatus) {
                     setQuotaStatus(data.quotaStatus);
@@ -312,18 +574,6 @@ export default function AnalisaMarketPage() {
         }
     };
 
-    if (status === 'loading') {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
-                <div className="w-10 h-10 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!session) {
-        return null;
-    }
-
     const isUnlimitedQuota = quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null;
     const dailyLimitLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.dailyLimit ?? '-');
     const usedLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.used ?? '-');
@@ -344,6 +594,31 @@ export default function AnalisaMarketPage() {
         : lastQuotaCharged
             ? 'text-amber-600'
             : 'text-emerald-600';
+    const isVvipUser = (quotaStatus?.membership || '').toUpperCase() === 'VVIP';
+    const deepSections = useMemo(
+        () => parseDeepAnalystSections(rawAnalysis),
+        [rawAnalysis]
+    );
+    const scenarioMatrix = useMemo(
+        () => buildScenarioMatrix(parsedSignal, marketInfo),
+        [parsedSignal, marketInfo]
+    );
+    const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
+    const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
+        ? `${parsedSignal.confidence}%`
+        : 'N/A';
+
+    if (status === 'loading') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
+                <div className="w-10 h-10 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!session) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
@@ -743,6 +1018,102 @@ export default function AnalisaMarketPage() {
                         transition={{ delay: 0.2 }}
                         className="lg:col-span-2"
                     >
+                        {isVvipUser && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.18 }}
+                                className="mb-4 space-y-3"
+                            >
+                                <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-amber-50 p-5 shadow-[0_14px_32px_rgba(14,116,144,0.12)]">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                        <div>
+                                            <p className="text-xs uppercase tracking-[0.18em] text-sky-700 font-semibold">VVIP Exclusive</p>
+                                            <h3 className="text-xl font-bold text-slate-900">Deep Analyst Room</h3>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs px-2 py-1 rounded-full bg-slate-900 text-white font-semibold">
+                                                {selectedPair} · {selectedTimeframe.toUpperCase()}
+                                            </span>
+                                            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${directionBadge === 'BUY'
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : directionBadge === 'SELL'
+                                                    ? 'bg-rose-100 text-rose-700'
+                                                    : 'bg-slate-100 text-slate-700'
+                                                }`}>
+                                                {directionBadge}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-sm leading-relaxed text-slate-700">
+                                        {deepSections.executiveSummary}
+                                    </p>
+
+                                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <div className="rounded-xl border border-sky-100 bg-white/90 px-3 py-2">
+                                            <p className="text-[11px] text-slate-500 uppercase tracking-wide">Confidence</p>
+                                            <p className="text-sm font-semibold text-slate-900">{confidenceText}</p>
+                                        </div>
+                                        <div className="rounded-xl border border-sky-100 bg-white/90 px-3 py-2">
+                                            <p className="text-[11px] text-slate-500 uppercase tracking-wide">Primary Bias</p>
+                                            <p className="text-sm font-semibold text-slate-900">{directionBadge}</p>
+                                        </div>
+                                        <div className="rounded-xl border border-sky-100 bg-white/90 px-3 py-2">
+                                            <p className="text-[11px] text-slate-500 uppercase tracking-wide">Last Update</p>
+                                            <p className="text-sm font-semibold text-slate-900">
+                                                {lastAnalyzeAt ? new Date(lastAnalyzeAt).toLocaleTimeString('id-ID') : '-'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Market Structure</h4>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.marketStructure}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">SMC / ICT Confluence</h4>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.smcConfluence}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Statistical & Momentum</h4>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.statisticalSignals}</p>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.momentumAssessment}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                        <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Fibonacci & Risk Factors</h4>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.fibonacciMapping}</p>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.riskFactors}</p>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4">
+                                    <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Scenario Matrix</h4>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                                        {scenarioMatrix.map((scenario) => (
+                                            <div
+                                                key={scenario.name}
+                                                className={`rounded-xl border px-3 py-3 ${scenario.tone === 'bull'
+                                                    ? 'border-emerald-200 bg-emerald-50/70'
+                                                    : scenario.tone === 'bear'
+                                                        ? 'border-rose-200 bg-rose-50/70'
+                                                        : 'border-slate-200 bg-slate-50/70'
+                                                    }`}
+                                            >
+                                                <p className="text-xs uppercase tracking-wide text-[var(--text-muted)] mb-1">{scenario.name}</p>
+                                                <p className="text-xs text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Trigger:</span> {scenario.trigger}</p>
+                                                <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Invalidation:</span> {scenario.invalidation}</p>
+                                                <p className="text-xs text-[var(--text-secondary)] mt-1"><span className="font-semibold text-[var(--text-primary)]">Target:</span> {scenario.target}</p>
+                                                <p className="text-xs text-[var(--text-secondary)] mt-2 italic">{scenario.note}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
                         <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)] min-h-[600px]">
                             <AnimatePresence mode="wait">
                                 {error ? (
