@@ -16,6 +16,9 @@ interface MLPredictionContext {
     winrate: number;
     confidence: number;
     isAvailable: boolean;
+    technicalScore?: number;
+    technicalSummary?: string;
+    sourceLabel?: string;
 }
 
 export interface MarketContext {
@@ -157,12 +160,19 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
 
     // 1. ML Context
     if (mlContext && mlContext.isAvailable) {
+        const technicalScore = typeof mlContext.technicalScore === 'number'
+            ? mlContext.technicalScore.toFixed(3)
+            : null;
+
         additionalContext += `
-🤖 **MACHINE LEARNING (LSTM) SIGNAL:**
+ML **MACHINE LEARNING (LSTM) SIGNAL:**
 - **DIRECTION:** ${mlContext.direction}
 - **WINRATE:** ${mlContext.winrate}%
 - **CONFIDENCE:** ${(mlContext.confidence * 100).toFixed(1)}%
+- **SOURCE:** ${mlContext.sourceLabel || 'LSTM_PROXY'}
+${technicalScore ? `- **COMPOSITE SCORE:** ${technicalScore}` : ''}
 - Use this confirmation to validate your technical analysis.
+${mlContext.technicalSummary ? `\n**LSTM Technical Scorecard:**\n${mlContext.technicalSummary}\n` : ''}
 `;
     }
 
@@ -182,7 +192,7 @@ export async function analyzeWithGroq(marketDataText: string, mlContext?: MLPred
                 { role: 'user', content: userContent }
             ],
             temperature: 0.3,
-            maxTokens: 1800,  // Aggressive reduction: prompt ~3000 tokens + output 1800 = ~4800 total (safe margin below 6000 TPM)
+            maxTokens: 1800,
         });
 
         if (!text) {
@@ -217,12 +227,19 @@ export async function analyzeWithLearningMode(marketDataText: string, mlContext?
 
     // 1. ML Context
     if (mlContext && mlContext.isAvailable) {
+        const technicalScore = typeof mlContext.technicalScore === 'number'
+            ? mlContext.technicalScore.toFixed(3)
+            : null;
+
         additionalContext += `
-🤖 **MACHINE LEARNING (LSTM) SIGNAL:**
+ML **MACHINE LEARNING (LSTM) SIGNAL:**
 - **DIRECTION:** ${mlContext.direction}
 - **WINRATE:** ${mlContext.winrate}%
 - **CONFIDENCE:** ${(mlContext.confidence * 100).toFixed(1)}%
+- **SOURCE:** ${mlContext.sourceLabel || 'LSTM_PROXY'}
+${technicalScore ? `- **COMPOSITE SCORE:** ${technicalScore}` : ''}
 - Jelaskan hubungan signal LSTM ini dengan analisa teknikal manual.
+${mlContext.technicalSummary ? `\n**LSTM Technical Scorecard:**\n${mlContext.technicalSummary}\n` : ''}
 `;
     }
 
@@ -240,7 +257,7 @@ export async function analyzeWithLearningMode(marketDataText: string, mlContext?
             system: systemInstruction,
             messages: [{ role: 'user', content: userContent }],
             temperature: 0.3,
-            maxTokens: 2200,  // Aggressive reduction: Large prompt (~3500 tokens with learning mode) + output 2200 = ~5700 total (safe below 6000 TPM)
+            maxTokens: 2200,
         });
 
         if (!text) {

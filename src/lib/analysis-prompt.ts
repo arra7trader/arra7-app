@@ -186,7 +186,7 @@ FORMAT OUTPUT (WAJIB IKUTI PERSIS):
 ⚡ *EXECUTION STRATEGY:* [pilih SATU: MOMENTUM INSTANT atau RETRACEMENT LIMIT atau BREAKOUT STOP]
 
 🔥 *ACTION CALL*
-🚀 [tulis contoh: SELL INSTANT atau BUY LIMIT atau SELL STOP]
+🚀 [tulis contoh fleksibel: BUY INSTANT atau SELL LIMIT atau WAIT]
 
 📍 ENTRY: [tulis harga spesifik, contoh: 5053.73 atau range 5050.00 - 5055.00]
 💡 Entry Logic: [jelaskan alasan entry]

@@ -220,9 +220,18 @@ export interface Candle {
     volume: number;
 }
 
-export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Promise<MarketData> {
+export interface MarketDataOptions {
+    preferRealtimeBroker?: boolean;
+}
+
+export async function getMarketData(
+    pair: ForexPair,
+    timeframe: Timeframe,
+    options: MarketDataOptions = {}
+): Promise<MarketData> {
     const pairConfig = FOREX_PAIRS[pair];
     const tfConfig = TIMEFRAMES[timeframe];
+    const preferRealtimeBroker = options.preferRealtimeBroker !== false;
 
     if (!pairConfig) {
         return generateDummyData(pair, pair);
@@ -274,7 +283,7 @@ export async function getMarketData(pair: ForexPair, timeframe: Timeframe): Prom
         Object.keys(FOREX_MINOR).includes(pair) ||
         Object.keys(COMMODITIES).includes(pair);
 
-    if (isForexOrMetal) {
+    if (isForexOrMetal && preferRealtimeBroker) {
         try {
             const sqData = await fetchSwissquotePrice(pair, tfConfig.interval);
             if (sqData && sqData.current_price && sqData.current_price > 0) {
@@ -769,7 +778,9 @@ export function formatMarketDataForAI(data: MarketData, timeframe: string, marke
     const recentCandles = data.candles.slice(-10);
 
     // Determine decimal places based on symbol and market
+    const isForexPair = /^[A-Z]{6}$/.test(data.symbol) && !data.symbol.startsWith('X');
     const decimals = data.symbol.includes('JPY') ? 3 :
+        isForexPair ? 5 :
         market === 'US' ? 2 : // US Stocks usually 2 decimals
             data.symbol.includes('XAU') || data.symbol.includes('US') ? 2 :
                 data.symbol.includes('BTC') ? 2 :
@@ -785,6 +796,16 @@ export function formatMarketDataForAI(data: MarketData, timeframe: string, marke
     const resistance = Math.max(...highs);
     const support = Math.min(...lows);
     const pivot = (resistance + support + data.close) / 3;
+    const closeVsOpen =
+        data.close > data.open ? 'BULLISH' :
+            data.close < data.open ? 'BEARISH' :
+                'NEUTRAL';
+    const pivotDiff = data.close - pivot;
+    const pivotEpsilon = Math.max(Math.abs(data.close) * 0.00005, 1e-8);
+    const pivotBias =
+        pivotDiff > pivotEpsilon ? 'ABOVE PIVOT (Bullish Bias)' :
+            pivotDiff < -pivotEpsilon ? 'BELOW PIVOT (Bearish Bias)' :
+                'ON PIVOT (Neutral Bias)';
 
     return `
 === MARKET DATA ===
@@ -805,8 +826,8 @@ Pivot: ${pivot.toFixed(decimals)}
 Daily Range: ${(resistance - support).toFixed(decimals)}
 
 === PRICE ACTION ===
-Last Close vs Open: ${data.close > data.open ? 'BULLISH' : 'BEARISH'}
-Price Position: ${data.close > pivot ? 'ABOVE PIVOT (Bullish Bias)' : 'BELOW PIVOT (Bearish Bias)'}
+Last Close vs Open: ${closeVsOpen}
+Price Position: ${pivotBias}
 `.trim();
 }
 
@@ -852,7 +873,8 @@ export async function getMultiTimeframeData(
     // Fetch all timeframes in parallel with resilience
     const results = await Promise.allSettled(
         timeframesToFetch.map(async (tf) => {
-            const data = await getMarketData(pair, tf);
+            // Use candle-rich source for MTF trend quality (avoid single-tick broker snapshots).
+            const data = await getMarketData(pair, tf, { preferRealtimeBroker: false });
             return { timeframe: tf, data };
         })
     );
