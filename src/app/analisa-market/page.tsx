@@ -782,13 +782,13 @@ export default function AnalisaMarketPage() {
                         </div>
 
                         <div className="w-full lg:max-w-[620px]">
-                            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
+                            <div className="rounded-lg border border-[var(--border-light)] bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Info Akun & Kuota</p>
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">Status akses analisa market</p>
                                     </div>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus?.membership === 'VVIP'
+                                    <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${quotaStatus?.membership === 'VVIP'
                                         ? 'bg-amber-100 text-amber-700'
                                         : quotaStatus?.membership === 'PRO'
                                             ? 'bg-blue-100 text-blue-700'
@@ -799,15 +799,15 @@ export default function AnalisaMarketPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-                                    <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
+                                    <div className="rounded-md border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Limit Harian</p>
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">{dailyLimitLabel}</p>
                                     </div>
-                                    <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
+                                    <div className="rounded-md border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Terpakai</p>
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">{usedLabel}</p>
                                     </div>
-                                    <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
+                                    <div className="rounded-md border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Sisa Hari Ini</p>
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">{remainingLabel}</p>
                                     </div>
@@ -828,17 +828,17 @@ export default function AnalisaMarketPage() {
                                 )}
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                    <div className="rounded-xl border border-[var(--border-light)] px-3 py-2">
+                                    <div className="rounded-md border border-[var(--border-light)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Nama</p>
                                         <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.name || '-'}</p>
                                     </div>
-                                    <div className="rounded-xl border border-[var(--border-light)] px-3 py-2">
+                                    <div className="rounded-md border border-[var(--border-light)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Email</p>
                                         <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.email || '-'}</p>
                                     </div>
                                 </div>
 
-                                <div className="mt-3 rounded-xl border border-[var(--border-light)] px-3 py-2">
+                                <div className="mt-3 rounded-md border border-[var(--border-light)] px-3 py-2">
                                     <p className="text-xs text-[var(--text-muted)] mb-2">Timeframe Allow</p>
                                     {allowedTimeframes.length > 0 ? (
                                         <div className="flex flex-wrap gap-1.5">
