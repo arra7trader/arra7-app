@@ -549,6 +549,7 @@ export default function AnalisaMarketPage() {
     const [telegramLoading, setTelegramLoading] = useState(false);
     const [telegramGenerating, setTelegramGenerating] = useState(false);
     const [telegramError, setTelegramError] = useState<string | null>(null);
+    const [telegramCopiedTarget, setTelegramCopiedTarget] = useState<'chatId' | 'linkCode' | 'linkCommand' | null>(null);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -675,6 +676,23 @@ export default function AnalisaMarketPage() {
             setTelegramError('Gagal membuat kode link.');
         } finally {
             setTelegramGenerating(false);
+        }
+    };
+
+    const handleCopyTelegramText = async (
+        value: string,
+        target: 'chatId' | 'linkCode' | 'linkCommand'
+    ) => {
+        if (!value) return;
+        try {
+            await navigator.clipboard.writeText(value);
+            setTelegramCopiedTarget(target);
+            window.setTimeout(() => {
+                setTelegramCopiedTarget((prev) => (prev === target ? null : prev));
+            }, 1800);
+        } catch (err) {
+            console.error('Copy telegram text error:', err);
+            setTelegramError('Gagal menyalin teks. Coba copy manual.');
         }
     };
 
@@ -946,16 +964,44 @@ export default function AnalisaMarketPage() {
                                                     <p className="text-xs text-[var(--text-secondary)]">
                                                         Bot: @{telegramStatus?.botUsername || 'arra7trader_bot'}
                                                     </p>
-                                                    <p className="text-xs text-[var(--text-secondary)]">
-                                                        Chat ID: {telegramStatus?.telegramChatId || 'Belum terhubung'}
-                                                    </p>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-xs text-[var(--text-secondary)] truncate">
+                                                            Chat ID: {telegramStatus?.telegramChatId || 'Belum terhubung'}
+                                                        </p>
+                                                        {!!telegramStatus?.telegramChatId && (
+                                                            <button
+                                                                onClick={() => handleCopyTelegramText(telegramStatus?.telegramChatId ?? '', 'chatId')}
+                                                                className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-white text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                                            >
+                                                                {telegramCopiedTarget === 'chatId' ? 'Tersalin' : 'Copy'}
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                     {telegramLinkCode && (
                                                         <div className="rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] px-2 py-2">
-                                                            <p className="text-xs text-[var(--text-muted)]">Kode Link Aktif</p>
-                                                            <p className="text-sm font-mono font-semibold text-[var(--text-primary)]">{telegramLinkCode}</p>
-                                                            <p className="text-xs text-[var(--text-secondary)] mt-1">
-                                                                Kirim ke bot: <span className="font-mono">/link {telegramLinkCode}</span>
-                                                            </p>
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div>
+                                                                    <p className="text-xs text-[var(--text-muted)]">Kode Link Aktif</p>
+                                                                    <p className="text-sm font-mono font-semibold text-[var(--text-primary)]">{telegramLinkCode}</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleCopyTelegramText(telegramLinkCode, 'linkCode')}
+                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-white text-[11px] font-semibold text-[var(--text-primary)] hover:bg-white/80 transition-colors"
+                                                                >
+                                                                    {telegramCopiedTarget === 'linkCode' ? 'Tersalin' : 'Copy Kode'}
+                                                                </button>
+                                                            </div>
+                                                            <div className="mt-1 flex items-center justify-between gap-2">
+                                                                <p className="text-xs text-[var(--text-secondary)]">
+                                                                    Kirim ke bot: <span className="font-mono">/link {telegramLinkCode}</span>
+                                                                </p>
+                                                                <button
+                                                                    onClick={() => handleCopyTelegramText(`/link ${telegramLinkCode}`, 'linkCommand')}
+                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-white text-[11px] font-semibold text-[var(--text-primary)] hover:bg-white/80 transition-colors"
+                                                                >
+                                                                    {telegramCopiedTarget === 'linkCommand' ? 'Tersalin' : 'Copy /link'}
+                                                                </button>
+                                                            </div>
                                                             <p className="text-xs text-[var(--text-muted)] mt-1">
                                                                 Expired: {telegramCodeExpiresAt ? new Date(telegramCodeExpiresAt).toLocaleTimeString('id-ID') : '-'}
                                                             </p>
