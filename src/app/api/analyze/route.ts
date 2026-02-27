@@ -16,7 +16,7 @@ type TechnicalSignal = {
 
 type ParsedSignalPayload = {
     direction?: 'BUY' | 'SELL' | 'HOLD';
-    type?: 'BUY' | 'SELL' | 'HOLD';
+    type?: 'BUY' | 'SELL' | 'HOLD' | 'forex' | 'stock';
     entryPrice?: number;
     entry?: number;
     stopLoss?: number;
