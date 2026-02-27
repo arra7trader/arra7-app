@@ -853,8 +853,8 @@ export default function AnalisaMarketPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-6"
                 >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex items-center gap-3 mb-2">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
                                 <SparklesIcon className="text-white" size="lg" />
                             </div>
@@ -866,8 +866,8 @@ export default function AnalisaMarketPage() {
                             </div>
                         </div>
 
-                        <div className="w-full lg:max-w-[620px]">
-                            <div className="rounded-lg border border-[var(--border-light)] bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
+                        <div className="w-full">
+                            <div className="rounded-md border border-[var(--border-light)] bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Info Akun & Kuota</p>
