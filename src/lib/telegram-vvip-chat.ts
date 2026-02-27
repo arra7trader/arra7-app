@@ -123,6 +123,41 @@ function cleanSummary(analysis: string | null | undefined): string {
   return line.slice(0, 160);
 }
 
+function formatSignalPrice(value: number): string {
+  if (!(value > 0)) return '-';
+  const abs = Math.abs(value);
+  let maxDecimals = 2;
+  if (abs < 1) maxDecimals = 5;
+  else if (abs < 100) maxDecimals = 4;
+
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxDecimals,
+  });
+}
+
+function inferExecutionType(
+  direction: 'BUY' | 'SELL' | 'HOLD',
+  currentPrice: number,
+  entryPrice: number
+): string {
+  if (!(currentPrice > 0) || !(entryPrice > 0) || direction === 'HOLD') {
+    return 'WAIT / NO TRADE';
+  }
+
+  // Treat as market execution if entry is very close to current price.
+  const diffRatio = Math.abs(currentPrice - entryPrice) / entryPrice;
+  const isNearMarket = diffRatio <= 0.0008; // 0.08%
+
+  if (direction === 'BUY') {
+    if (isNearMarket) return 'MARKET BUY (Instant)';
+    return entryPrice > currentPrice ? 'BUY STOP (Pending)' : 'BUY LIMIT (Pending)';
+  }
+
+  if (isNearMarket) return 'MARKET SELL (Instant)';
+  return entryPrice < currentPrice ? 'SELL STOP (Pending)' : 'SELL LIMIT (Pending)';
+}
+
 async function buildDirectSignalReply(userId: string, rawText: string): Promise<string> {
   const symbol = extractSymbol(rawText) || 'XAUUSD';
   const timeframe = normalizeTimeframe(extractTimeframe(rawText));
@@ -141,6 +176,8 @@ async function buildDirectSignalReply(userId: string, rawText: string): Promise<
     const entry = parsed?.entryPrice ?? 0;
     const sl = parsed?.stopLoss ?? 0;
     const tp = parsed?.takeProfit1 ?? 0;
+    const currentPrice = marketData?.current_price ?? 0;
+    const executionType = inferExecutionType(direction, currentPrice, entry);
     const confidence = typeof parsed?.confidence === 'number'
       ? `${Math.round(parsed.confidence)}%`
       : 'N/A';
@@ -150,11 +187,15 @@ async function buildDirectSignalReply(userId: string, rawText: string): Promise<
     return [
       `Signal ${symbol} ${timeframe.toUpperCase()}`,
       `Direction: ${direction}`,
-      `Entry: ${entry > 0 ? entry : '-'}`,
-      `SL: ${sl > 0 ? sl : '-'}`,
-      `TP1: ${tp > 0 ? tp : '-'}`,
+      `Current Price: ${formatSignalPrice(currentPrice)}`,
+      `Order Type: ${executionType}`,
+      `Entry: ${formatSignalPrice(entry)}`,
+      `SL: ${formatSignalPrice(sl)}`,
+      `TP1: ${formatSignalPrice(tp)}`,
       `Confidence: ${confidence}`,
       `Thesis: ${summary}`,
+      '',
+      'Catatan: jika Order Type = Pending, pasang pending order di level Entry.',
       '',
       'Bila mau, saya bisa lanjutkan dengan skenario alternatif (bull/base/bear) dan risk map.',
     ].join('\n');
@@ -171,7 +212,7 @@ function buildSystemPrompt(firstName?: string): string {
     `Nama user: ${userLabel}.`,
     'Gunakan Bahasa Indonesia profesional namun natural.',
     'Jawaban harus ringkas, jelas, actionable, dan tidak bertele-tele.',
-    'Saat user meminta analisa/signal, gunakan tools dan berikan format: Direction, Entry, SL, TP, Confidence, dan Thesis singkat.',
+    'Saat user meminta analisa/signal, gunakan tools dan berikan format: Direction, Current Price, Order Type (Market/Pending), Entry, SL, TP, Confidence, dan Thesis singkat.',
     'Jangan mengarang harga/data.',
     'Selalu tutup jawaban dengan 1 pertanyaan lanjutan singkat.',
   ].join(' ');

@@ -526,6 +526,7 @@ export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
     const router = useRouter();
+    const telegramBotUsername = 'arra7trade_bot';
 
     const { openPopup } = useLowBalancePopup();
 
@@ -961,9 +962,19 @@ export default function AnalisaMarketPage() {
                                                 </p>
                                             ) : (
                                                 <>
-                                                    <p className="text-xs text-[var(--text-secondary)]">
-                                                        Bot: @{telegramStatus?.botUsername || 'arra7trader_bot'}
-                                                    </p>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-xs text-[var(--text-secondary)]">
+                                                            Bot: @{telegramBotUsername}
+                                                        </p>
+                                                        <a
+                                                            href={`https://t.me/${telegramBotUsername}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="shrink-0 px-2 py-1 rounded-md bg-[#229ED9] text-white text-[11px] font-semibold hover:bg-[#1e8fc6] transition-colors"
+                                                        >
+                                                            Buka Bot
+                                                        </a>
+                                                    </div>
                                                     <div className="flex items-center justify-between gap-2">
                                                         <p className="text-xs text-[var(--text-secondary)] truncate">
                                                             Chat ID: {telegramStatus?.telegramChatId || 'Belum terhubung'}
