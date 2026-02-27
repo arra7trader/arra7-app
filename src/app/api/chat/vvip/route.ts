@@ -15,12 +15,10 @@ export async function POST(req: Request) {
         // Strict VVIP Check
         console.log(`[VVIP Chat] User: ${userEmail} | Tier: ${userTier}`);
 
-        // TEMPORARY BYPASS FOR DEBUGGING: Allow if clearly not production or if we want to test
-        // In production, uncomment the check below:
-        // if (userTier !== 'VVIP' && userTier !== 'VIP') {
-        //     console.warn('[VVIP Chat] Unauthorized access attempt.');
-        //     return NextResponse.json({ error: 'Akses khusus VVIP. Silakan upgrade membership Anda.' }, { status: 403 });
-        // }
+        if (userTier !== 'VVIP') {
+            console.warn('[VVIP Chat] Unauthorized access attempt.');
+            return NextResponse.json({ error: 'Akses khusus VVIP aktif.' }, { status: 403 });
+        }
 
         // Validate AI providers (Cerebras/Groq pool).
         const hasProvider = hasAnyAIProviderConfigured();

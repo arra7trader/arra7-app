@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBrokerPrice } from '@/lib/market-data';
 import { getPredictor } from '@/lib/smart-predictor';
 
 export const maxDuration = 60; // Allow 1 minute timeout for cron
 
 export async function GET(request: NextRequest) {
     try {
-        // Authenticate Cron Job (Vercel CRON_SECRET) - REMOVED for Client Trigger Mode
-        // We now rely on user traffic to trigger this endpoint transparently.
-        // It has internal duplicate-signal checks to prevent spam.
+        // Authenticate cron job via bearer token when CRON_SECRET is configured.
+        const cronSecret = process.env.CRON_SECRET;
+        if (cronSecret) {
+            const authHeader = request.headers.get('authorization');
+            if (authHeader !== `Bearer ${cronSecret}`) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+        }
 
         // 1. Fetch Real-Time Data (XAUUSD)
         // Try getMarketData to allow Yahoo fallback if Swissquote/OANDA fails

@@ -1,4 +1,5 @@
 import { createClient, Client } from '@libsql/client';
+import { createHash } from 'crypto';
 
 // Check if Turso is configured
 export const isTursoConfigured = (): boolean => {
@@ -264,6 +265,60 @@ export async function initDatabase(): Promise<boolean> {
         last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // TELEGRAM LINK CODES (OTP from web -> bot)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_link_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        code_hash TEXT NOT NULL UNIQUE,
+        expires_at DATETIME NOT NULL,
+        used_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telegram_link_codes_user_id
+      ON telegram_link_codes(user_id)
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telegram_link_codes_expires_at
+      ON telegram_link_codes(expires_at)
+    `);
+
+    // TELEGRAM CHAT MEMORY (VVIP bot conversation history)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chat_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        role TEXT NOT NULL, -- 'user' | 'assistant'
+        content TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telegram_chat_messages_user_chat
+      ON telegram_chat_messages(user_id, chat_id, id DESC)
+    `);
+
+    // TELEGRAM DAILY USAGE (separate quota from web analysis)
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_vvip_daily_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        usage_date TEXT NOT NULL, -- YYYY-MM-DD (WIB)
+        count INTEGER DEFAULT 0,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        UNIQUE(user_id, usage_date)
       )
     `);
 
@@ -1253,6 +1308,17 @@ export async function getLastAnalysisTime(userId: string, type: string = 'forex'
 
 // ===== TELEGRAM USER FUNCTIONS =====
 
+function hashTelegramLinkCode(code: string): string {
+  return createHash('sha256')
+    .update(code.trim().toUpperCase())
+    .digest('hex');
+}
+
+export async function isVvipActive(userId: string): Promise<boolean> {
+  const { membership } = await getUserMembership(userId);
+  return membership === 'VVIP';
+}
+
 export async function linkTelegramUser(userId: string, telegramData: {
   chatId: string;
   username?: string;
@@ -1303,6 +1369,201 @@ export async function getTelegramUser(chatId: string): Promise<{ userId: string;
   } catch (error) {
     console.error('Get Telegram user error:', error);
     return null;
+  }
+}
+
+export async function setUserTelegramChatId(userId: string, chatId: string): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await turso.execute({
+      sql: `UPDATE users
+            SET telegram_chat_id = NULL
+            WHERE telegram_chat_id = ?
+              AND id != ?`,
+      args: [chatId.trim(), userId],
+    });
+
+    await turso.execute({
+      sql: `UPDATE users
+            SET telegram_chat_id = ?
+            WHERE id = ?`,
+      args: [chatId.trim(), userId],
+    });
+    return true;
+  } catch (error) {
+    console.error('Set user telegram_chat_id error:', error);
+    return false;
+  }
+}
+
+export async function createTelegramLinkCode(
+  userId: string,
+  plainCode: string,
+  ttlMinutes: number
+): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  const normalizedTtl = Math.max(1, Math.min(60, Math.floor(ttlMinutes || 10)));
+  const codeHash = hashTelegramLinkCode(plainCode);
+
+  try {
+    // Cleanup old/expired/used codes for this user first
+    await turso.execute({
+      sql: `DELETE FROM telegram_link_codes
+            WHERE user_id = ?
+               OR used_at IS NOT NULL
+               OR expires_at <= datetime('now')`,
+      args: [userId],
+    });
+
+    await turso.execute({
+      sql: `INSERT INTO telegram_link_codes (user_id, code_hash, expires_at)
+            VALUES (?, ?, datetime('now', '+${normalizedTtl} minutes'))`,
+      args: [userId, codeHash],
+    });
+    return true;
+  } catch (error) {
+    console.error('Create telegram link code error:', error);
+    return false;
+  }
+}
+
+export async function findValidTelegramLinkCode(
+  plainCode: string
+): Promise<{ id: number; userId: string; expiresAt: string } | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+
+  try {
+    const codeHash = hashTelegramLinkCode(plainCode);
+    const result = await turso.execute({
+      sql: `SELECT id, user_id, expires_at
+            FROM telegram_link_codes
+            WHERE code_hash = ?
+              AND used_at IS NULL
+              AND expires_at > datetime('now')
+            ORDER BY id DESC
+            LIMIT 1`,
+      args: [codeHash],
+    });
+
+    if (result.rows.length === 0) return null;
+    return {
+      id: Number(result.rows[0].id),
+      userId: String(result.rows[0].user_id),
+      expiresAt: String(result.rows[0].expires_at),
+    };
+  } catch (error) {
+    console.error('Find telegram link code error:', error);
+    return null;
+  }
+}
+
+export async function markTelegramLinkCodeUsed(linkCodeId: number): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await turso.execute({
+      sql: `UPDATE telegram_link_codes
+            SET used_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+              AND used_at IS NULL`,
+      args: [linkCodeId],
+    });
+    return true;
+  } catch (error) {
+    console.error('Mark telegram link code used error:', error);
+    return false;
+  }
+}
+
+export interface TelegramChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+export async function getTelegramChatHistory(
+  userId: string,
+  chatId: string,
+  limit: number
+): Promise<TelegramChatMessage[]> {
+  const turso = getTursoClient();
+  if (!turso) return [];
+
+  const safeLimit = Math.max(1, Math.min(40, Math.floor(limit || 12)));
+  try {
+    const result = await turso.execute({
+      sql: `SELECT role, content, created_at
+            FROM telegram_chat_messages
+            WHERE user_id = ?
+              AND chat_id = ?
+            ORDER BY id DESC
+            LIMIT ?`,
+      args: [userId, chatId, safeLimit],
+    });
+
+    return result.rows
+      .map((row) => {
+        const role: TelegramChatMessage['role'] =
+          String(row.role) === 'assistant' ? 'assistant' : 'user';
+        return {
+          role,
+          content: String(row.content || ''),
+          createdAt: String(row.created_at || ''),
+        };
+      })
+      .reverse();
+  } catch (error) {
+    console.error('Get telegram chat history error:', error);
+    return [];
+  }
+}
+
+export async function appendTelegramChatMessage(params: {
+  userId: string;
+  chatId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  keepLast?: number;
+}): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  const keepLast = Math.max(12, Math.min(80, Math.floor(params.keepLast || 24)));
+  const content = params.content.trim();
+  if (!content) return true;
+
+  try {
+    await turso.execute({
+      sql: `INSERT INTO telegram_chat_messages (chat_id, user_id, role, content)
+            VALUES (?, ?, ?, ?)`,
+      args: [params.chatId, params.userId, params.role, content],
+    });
+
+    await turso.execute({
+      sql: `DELETE FROM telegram_chat_messages
+            WHERE user_id = ?
+              AND chat_id = ?
+              AND id NOT IN (
+                SELECT id
+                FROM telegram_chat_messages
+                WHERE user_id = ?
+                  AND chat_id = ?
+                ORDER BY id DESC
+                LIMIT ?
+              )`,
+      args: [params.userId, params.chatId, params.userId, params.chatId, keepLast],
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Append telegram chat message error:', error);
+    return false;
   }
 }
 

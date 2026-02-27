@@ -142,6 +142,14 @@ interface QuotaStatus {
     allowedTimeframes: string[];
 }
 
+interface TelegramLinkStatus {
+    membership: string;
+    isVvipActive: boolean;
+    linked: boolean;
+    telegramChatId: string | null;
+    botUsername: string;
+}
+
 interface ParsedSignalData {
     type?: 'BUY' | 'SELL' | 'HOLD';
     direction?: 'BUY' | 'SELL' | 'HOLD';
@@ -535,6 +543,12 @@ export default function AnalisaMarketPage() {
     const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null); // Store end timestamp
     const [lastQuotaCharged, setLastQuotaCharged] = useState<boolean | null>(null);
     const [lastAnalyzeAt, setLastAnalyzeAt] = useState<string | null>(null);
+    const [telegramStatus, setTelegramStatus] = useState<TelegramLinkStatus | null>(null);
+    const [telegramLinkCode, setTelegramLinkCode] = useState<string | null>(null);
+    const [telegramCodeExpiresAt, setTelegramCodeExpiresAt] = useState<string | null>(null);
+    const [telegramLoading, setTelegramLoading] = useState(false);
+    const [telegramGenerating, setTelegramGenerating] = useState(false);
+    const [telegramError, setTelegramError] = useState<string | null>(null);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -545,6 +559,7 @@ export default function AnalisaMarketPage() {
     useEffect(() => {
         fetchNews();
         fetchQuota();
+        fetchTelegramLinkStatus();
         trackLocation();
     }, []);
 
@@ -610,6 +625,56 @@ export default function AnalisaMarketPage() {
             }
         } catch (err) {
             console.error('Quota fetch error:', err);
+        }
+    };
+
+    const fetchTelegramLinkStatus = async () => {
+        setTelegramLoading(true);
+        setTelegramError(null);
+        try {
+            const res = await fetch('/api/user/telegram/link-status', { cache: 'no-store' });
+            const data = await res.json();
+            if (!res.ok || !data?.ok) {
+                setTelegramError(data?.message || 'Gagal mengambil status Telegram bot.');
+                return;
+            }
+
+            setTelegramStatus({
+                membership: String(data.membership || 'BASIC'),
+                isVvipActive: Boolean(data.isVvipActive),
+                linked: Boolean(data.linked),
+                telegramChatId: data.telegramChatId || null,
+                botUsername: String(data.botUsername || 'arra7trader_bot'),
+            });
+        } catch (err) {
+            console.error('Telegram status fetch error:', err);
+            setTelegramError('Gagal mengambil status Telegram bot.');
+        } finally {
+            setTelegramLoading(false);
+        }
+    };
+
+    const handleGenerateTelegramCode = async () => {
+        setTelegramGenerating(true);
+        setTelegramError(null);
+        try {
+            const res = await fetch('/api/user/telegram/link-code', {
+                method: 'POST',
+            });
+            const data = await res.json();
+            if (!res.ok || !data?.ok) {
+                setTelegramError(data?.message || 'Gagal membuat kode link.');
+                return;
+            }
+
+            setTelegramLinkCode(String(data.code));
+            setTelegramCodeExpiresAt(String(data.expiresAt));
+            await fetchTelegramLinkStatus();
+        } catch (err) {
+            console.error('Generate telegram code error:', err);
+            setTelegramError('Gagal membuat kode link.');
+        } finally {
+            setTelegramGenerating(false);
         }
     };
 
@@ -723,6 +788,7 @@ export default function AnalisaMarketPage() {
             ? 'text-amber-600'
             : 'text-emerald-600';
     const isVvipUser = (quotaStatus?.membership || '').toUpperCase() === 'VVIP';
+    const isSessionVvip = (session?.user?.tier || '').toUpperCase() === 'VVIP';
     const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
     const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
         ? `${Math.round(parsedSignal.confidence)}%`
@@ -850,6 +916,74 @@ export default function AnalisaMarketPage() {
                                         </div>
                                     ) : (
                                         <p className="text-sm font-medium text-[var(--text-primary)]">-</p>
+                                    )}
+                                </div>
+
+                                <div className="mt-3 rounded-md border border-[var(--border-light)] px-3 py-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div>
+                                            <p className="text-xs text-[var(--text-muted)]">Telegram VVIP Bot</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">Chat langsung untuk signal dan analisa</p>
+                                        </div>
+                                        <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold ${telegramStatus?.linked
+                                            ? 'bg-emerald-100 text-emerald-700'
+                                            : 'bg-gray-100 text-gray-700'
+                                            }`}>
+                                            {telegramStatus?.linked ? 'Linked' : 'Not Linked'}
+                                        </span>
+                                    </div>
+
+                                    {telegramLoading ? (
+                                        <p className="mt-2 text-xs text-[var(--text-muted)]">Memuat status bot...</p>
+                                    ) : (
+                                        <div className="mt-2 space-y-2">
+                                            {!isSessionVvip || !telegramStatus?.isVvipActive ? (
+                                                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                                                    Fitur ini khusus VVIP aktif. Upgrade/aktifkan VVIP untuk menghubungkan bot.
+                                                </p>
+                                            ) : (
+                                                <>
+                                                    <p className="text-xs text-[var(--text-secondary)]">
+                                                        Bot: @{telegramStatus?.botUsername || 'arra7trader_bot'}
+                                                    </p>
+                                                    <p className="text-xs text-[var(--text-secondary)]">
+                                                        Chat ID: {telegramStatus?.telegramChatId || 'Belum terhubung'}
+                                                    </p>
+                                                    {telegramLinkCode && (
+                                                        <div className="rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] px-2 py-2">
+                                                            <p className="text-xs text-[var(--text-muted)]">Kode Link Aktif</p>
+                                                            <p className="text-sm font-mono font-semibold text-[var(--text-primary)]">{telegramLinkCode}</p>
+                                                            <p className="text-xs text-[var(--text-secondary)] mt-1">
+                                                                Kirim ke bot: <span className="font-mono">/link {telegramLinkCode}</span>
+                                                            </p>
+                                                            <p className="text-xs text-[var(--text-muted)] mt-1">
+                                                                Expired: {telegramCodeExpiresAt ? new Date(telegramCodeExpiresAt).toLocaleTimeString('id-ID') : '-'}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    <button
+                                                        onClick={handleGenerateTelegramCode}
+                                                        disabled={telegramGenerating}
+                                                        className={`w-full py-2 rounded-md text-xs font-semibold transition-colors ${telegramGenerating
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                            : 'bg-[var(--accent-blue)] text-white hover:bg-blue-600'
+                                                            }`}
+                                                    >
+                                                        {telegramGenerating
+                                                            ? 'Membuat kode...'
+                                                            : telegramStatus?.linked
+                                                                ? 'Regenerate Kode Link'
+                                                                : 'Generate Kode Link'}
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            {telegramError && (
+                                                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">
+                                                    {telegramError}
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 

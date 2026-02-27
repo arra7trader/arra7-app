@@ -79,20 +79,30 @@ export const newsTool = tool({
 // ═══════════════════════════════════════════════════════
 // 3. FOREX AI ANALYSIS TOOL (Deep Analysis)
 // ═══════════════════════════════════════════════════════
-export const createAnalyzeForexTool = (userId: string) => tool({
+export const createAnalyzeForexTool = (
+    userId: string,
+    options?: {
+        skipQuota?: boolean;
+    }
+) => tool({
     description: 'Run deep AI analysis on a forex/crypto/commodity pair. Returns comprehensive analysis with BUY/SELL signals, entry, SL, TP. Use when user asks to "analisa", "analyze", "signal", or "setup".',
     inputSchema: z.object({
         symbol: z.string().describe('Symbol to analyze (e.g., XAUUSD, EURUSD, BTCUSD)'),
-        timeframe: z.enum(['15m', '1h', '4h', '1d']).optional().describe('Timeframe (default: 1h)'),
+        timeframe: z.enum(['1m', '5m', '15m', '30m', '1h', '4h', '1d']).optional().describe('Timeframe (default: 1h)'),
     }),
     execute: async ({ symbol, timeframe = '1h' }: { symbol: string, timeframe?: string }) => {
         try {
-            // QUOTA CHECK
-            const { checkQuota, useQuota } = await import('@/lib/quota');
-            const quotaCheck = await checkQuota(userId, timeframe, symbol);
+            if (!options?.skipQuota) {
+                // QUOTA CHECK
+                const { checkQuota, useQuota } = await import('@/lib/quota');
+                const quotaCheck = await checkQuota(userId, timeframe, symbol);
 
-            if (!quotaCheck.allowed) {
-                return { error: 'QUOTA_EXCEEDED', message: quotaCheck.message };
+                if (!quotaCheck.allowed) {
+                    return { error: 'QUOTA_EXCEEDED', message: quotaCheck.message };
+                }
+
+                // CONSUME QUOTA
+                await useQuota(userId);
             }
 
             let pair = symbol.toUpperCase().replace('/', '').replace('-', '');
@@ -109,9 +119,6 @@ export const createAnalyzeForexTool = (userId: string) => tool({
                     return { error: `Symbol ${symbol} not available for analysis.` };
                 }
             }
-
-            // CONSUME QUOTA
-            await useQuota(userId);
 
             const marketData = await getMarketData(pair as any, timeframe as any);
             const formattedData = formatMarketDataForAI(marketData, timeframe);
@@ -139,7 +146,12 @@ export const createAnalyzeForexTool = (userId: string) => tool({
 // ═══════════════════════════════════════════════════════
 // 4. STOCK ANALYSIS TOOL
 // ═══════════════════════════════════════════════════════
-export const createAnalyzeStockTool = (userId: string) => tool({
+export const createAnalyzeStockTool = (
+    userId: string,
+    options?: {
+        skipQuota?: boolean;
+    }
+) => tool({
     description: 'Run AI analysis on Indonesian (IDX) or US stocks. LONG-ONLY (no short selling). Use when user mentions "saham", "stock", "BBRI", "TLKM", "AAPL", etc.',
     inputSchema: z.object({
         symbol: z.string().describe('Stock ticker (e.g., BBRI.JK, TLKM.JK, AAPL, GOOGL)'),
@@ -147,12 +159,17 @@ export const createAnalyzeStockTool = (userId: string) => tool({
     }),
     execute: async ({ symbol, market }: { symbol: string, market?: string }) => {
         try {
-            // QUOTA CHECK
-            const { checkStockQuota, useStockQuota } = await import('@/lib/quota');
-            const quotaCheck = await checkStockQuota(userId);
+            if (!options?.skipQuota) {
+                // QUOTA CHECK
+                const { checkStockQuota, useStockQuota } = await import('@/lib/quota');
+                const quotaCheck = await checkStockQuota(userId);
 
-            if (!quotaCheck.allowed) {
-                return { error: 'QUOTA_EXCEEDED', message: quotaCheck.message };
+                if (!quotaCheck.allowed) {
+                    return { error: 'QUOTA_EXCEEDED', message: quotaCheck.message };
+                }
+
+                // CONSUME QUOTA
+                await useStockQuota(userId);
             }
 
             let ticker = symbol.toUpperCase();
@@ -162,9 +179,6 @@ export const createAnalyzeStockTool = (userId: string) => tool({
             if (detectedMarket === 'IDX' && !ticker.includes('.JK')) {
                 ticker = ticker + '.JK';
             }
-
-            // CONSUME QUOTA
-            await useStockQuota(userId);
 
             // Use formatMarketDataForAI with stock context
             const formattedData = `STOCK ANALYSIS REQUEST
