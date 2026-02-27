@@ -6,14 +6,26 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useLowBalancePopup } from '@/components/LowBalancePopup';
-import { SparklesIcon, ChartIcon, RocketIcon, LightbulbIcon, DocumentIcon, ClockIcon, BellIcon } from '@/components/PremiumIcons';
+import {
+    SparklesIcon,
+    ChartIcon,
+    RocketIcon,
+    LightbulbIcon,
+    DocumentIcon,
+    ClockIcon,
+    BellIcon,
+    WarningIcon,
+    LockIcon,
+    XCircleIcon,
+    ArrowRightIcon,
+} from '@/components/PremiumIcons';
 
 // Pair Categories with icons
 const PAIR_CATEGORIES = [
     {
         id: 'major',
         name: 'Forex Major',
-        icon: 'ðŸ’±',
+        icon: 'FX',
         pairs: [
             { value: 'EURUSD', label: 'EUR/USD' },
             { value: 'GBPUSD', label: 'GBP/USD' },
@@ -27,7 +39,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'minor',
         name: 'Forex Minor',
-        icon: 'ðŸ“Š',
+        icon: 'MNR',
         pairs: [
             { value: 'EURGBP', label: 'EUR/GBP' },
             { value: 'EURJPY', label: 'EUR/JPY' },
@@ -52,7 +64,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'commodities',
         name: 'Komoditas',
-        icon: 'ðŸ¥‡',
+        icon: 'CMD',
         pairs: [
             { value: 'XAUUSD', label: 'XAU/USD (Gold)' },
             { value: 'XAGUSD', label: 'XAG/USD (Silver)' },
@@ -67,7 +79,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'crypto',
         name: 'Crypto',
-        icon: 'â‚¿',
+        icon: 'CRP',
         pairs: [
             { value: 'BTCUSD', label: 'BTC/USD' },
             { value: 'ETHUSD', label: 'ETH/USD' },
@@ -86,7 +98,7 @@ const PAIR_CATEGORIES = [
     {
         id: 'indices',
         name: 'Indices',
-        icon: 'ðŸ“ˆ',
+        icon: 'IDX',
         pairs: [
             { value: 'US30', label: 'US30 (Dow Jones)' },
             { value: 'US500', label: 'US500 (S&P 500)' },
@@ -191,7 +203,7 @@ const DEEP_HEADINGS: Record<DeepSectionKey, string[]> = {
 function cleanLine(line: string): string {
     return line
         .replace(/\*\*/g, '')
-        .replace(/^[-â€¢\d.)\s]+/, '')
+        .replace(/^[-*\u2022\d.)\s]+/, '')
         .trim();
 }
 
@@ -228,7 +240,7 @@ function parseDeepAnalystSections(rawAnalysis: string | null): DeepAnalystSectio
         const cleaned = cleanLine(line);
         if (!cleaned) continue;
         if (cleaned.toLowerCase().includes('arra quantum strategic')) continue;
-        if (cleaned.startsWith('â”')) continue;
+        if (cleaned.startsWith('\u2501') || /^[\-=*_]{3,}$/.test(cleaned)) continue;
         summaryLines.push(cleaned);
         if (summaryLines.length >= 3) break;
     }
@@ -984,7 +996,7 @@ export default function AnalisaMarketPage() {
                                     </div>
                                     <span className="text-sm font-mono text-[var(--text-primary)]">
                                         {(quotaStatus.dailyLimit === -1 || quotaStatus.dailyLimit === null)
-                                            ? 'âˆž'
+                                            ? 'UNLIMITED'
                                             : `${quotaStatus.used}/${quotaStatus.dailyLimit}`
                                         }
                                     </span>
@@ -1050,7 +1062,7 @@ export default function AnalisaMarketPage() {
                                 {marketInfo.isSimulated && (
                                     <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-3 rounded">
                                         <div className="flex items-start gap-2">
-                                            <span className="text-red-600 text-lg">âš ï¸</span>
+                                            <WarningIcon size="sm" className="text-red-600 mt-0.5 shrink-0" />
                                             <div>
                                                 <p className="text-xs font-semibold text-red-800">Data Simulasi</p>
                                                 <p className="text-xs text-red-600 mt-1">API gagal. Data ini adalah simulasi untuk demo saja. Jangan gunakan untuk trading!</p>
@@ -1063,7 +1075,7 @@ export default function AnalisaMarketPage() {
                                 {!marketInfo.isRealtime && !marketInfo.isSimulated && (
                                     <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-3 rounded">
                                         <div className="flex items-start gap-2">
-                                            <span className="text-yellow-600 text-lg">â°</span>
+                                            <ClockIcon size="sm" className="text-yellow-600 mt-0.5 shrink-0" />
                                             <div>
                                                 <p className="text-xs font-semibold text-yellow-800">Data Delayed</p>
                                                 <p className="text-xs text-yellow-700 mt-1">
@@ -1098,7 +1110,7 @@ export default function AnalisaMarketPage() {
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-yellow-100 text-yellow-700'
                                             }`}>
-                                            {marketInfo.isSimulated ? 'ðŸ”´ SIMULATED' : marketInfo.isRealtime ? 'ðŸŸ¢ LIVE' : 'ðŸŸ¡ DELAYED'}
+                                            {marketInfo.isSimulated ? 'SIMULATED' : marketInfo.isRealtime ? 'LIVE' : 'DELAYED'}
                                         </span>
                                     </div>
                                     {marketInfo.dataSource && (
@@ -1302,7 +1314,7 @@ export default function AnalisaMarketPage() {
                                                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-white/60 backdrop-blur-sm">
                                                     <div className="bg-gradient-to-br from-white to-red-50 border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
                                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
-                                                            <span className="text-4xl filter drop-shadow-lg">ðŸ”’</span>
+                                                            <LockIcon size="xl" className="text-red-600" />
                                                         </div>
 
                                                         {/* Dynamic Title & Message */}
@@ -1330,7 +1342,7 @@ export default function AnalisaMarketPage() {
                                                                 className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 group"
                                                             >
                                                                 <span>Buka Akses Premium</span>
-                                                                <span className="group-hover:translate-x-1 transition-transform">â†’</span>
+                                                                <ArrowRightIcon size="sm" className="group-hover:translate-x-1 transition-transform" />
                                                             </button>
                                                             <button
                                                                 onClick={() => setError(null)}
@@ -1345,7 +1357,7 @@ export default function AnalisaMarketPage() {
                                         ) : (
                                             <>
                                                 <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                                                    <span className="text-2xl">âŒ</span>
+                                                    <XCircleIcon size="lg" className="text-red-500" />
                                                 </div>
                                                 <p className="text-red-600 text-center mb-4">{error}</p>
                                                 <button
@@ -1369,7 +1381,7 @@ export default function AnalisaMarketPage() {
                                             <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
                                             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--accent-blue)] animate-spin" />
                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-2xl">ðŸ”®</span>
+                                                <SparklesIcon size="lg" className="text-[var(--accent-blue)]" />
                                             </div>
                                         </div>
                                         <p className="text-[var(--text-secondary)] animate-pulse">ARRA Quantum Strategist is analyzing...</p>
