@@ -10,7 +10,7 @@ function serializeQuota(quota: {
   used: number;
   remaining: number;
   canAnalyze: boolean;
-  allowedTimeframes?: string[];
+  allowedTimeframes?: readonly string[];
 }) {
   return {
     ...quota,
