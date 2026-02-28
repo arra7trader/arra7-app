@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "deploy-trigger": "echo 'Deploy Triggered'",
+    "vercel-build": "next build",
     "build": "next build",
     "train": "node scripts/train-lstm.mjs",
     "start": "next start",
