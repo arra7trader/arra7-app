@@ -48,7 +48,7 @@ export default function DownloadAppPage() {
             </div>
             <div className="rounded-2xl border border-[var(--border-light)] p-4">
               <p className="text-xs text-[var(--text-muted)]">Ukuran</p>
-              <p className="text-lg font-bold">~93 MB</p>
+              <p className="text-lg font-bold">~25 MB</p>
             </div>
             <div className="rounded-2xl border border-[var(--border-light)] p-4">
               <p className="text-xs text-[var(--text-muted)]">Minimum Android</p>

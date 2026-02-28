@@ -41,7 +41,7 @@ export default function DownloadAppSection() {
                                 </div>
                                 <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-4">
                                     <p className="text-xs text-[var(--text-muted)]">Ukuran</p>
-                                    <p className="font-semibold text-[var(--text-primary)]">~93 MB</p>
+                                    <p className="font-semibold text-[var(--text-primary)]">~25 MB</p>
                                 </div>
                             </div>
 

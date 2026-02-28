@@ -36,5 +36,5 @@ ls "d:\LOCAL DOC\ARRA 7 WEB\arra7-app\public\downloads"
 ## Notes
 
 - APK file is served from `/downloads/arra7-v3.0.0-beta.apk`
-- File size is ~93MB (debug build from latest mobile output)
+- File size is ~25MB (release build from latest mobile output)
 - Minimum Android version: 7.0 (Nougat)
