@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { upsertUser, getUserMembership } from '@/lib/turso';
+import { createMobileAccessToken } from '@/lib/mobile-session';
 
 export async function POST(req: Request) {
     try {
@@ -19,14 +20,24 @@ export async function POST(req: Request) {
         }
 
         const payload = await verifyRes.json();
+        const { sub: id, email, name, picture: image, aud, email_verified: emailVerified } = payload;
 
-        // Verify audience (optional but recommended if you had the client ID here)
-        // if (payload.aud !== process.env.GOOGLE_CLIENT_ID) ...
-
-        const { sub: id, email, name, picture: image } = payload;
-
-        if (!email) {
+        if (!email || !id) {
             return NextResponse.json({ error: 'Email not found in token' }, { status: 400 });
+        }
+
+        if (emailVerified !== true && emailVerified !== 'true') {
+            return NextResponse.json({ error: 'Email is not verified' }, { status: 401 });
+        }
+
+        // Enforce audience when configured
+        const allowedAudiences = [
+            process.env.MOBILE_GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_ID,
+        ].filter((value): value is string => Boolean(value));
+
+        if (allowedAudiences.length > 0 && (!aud || !allowedAudiences.includes(aud))) {
+            return NextResponse.json({ error: 'Invalid audience' }, { status: 401 });
         }
 
         // Upsert user to Turso
@@ -43,15 +54,17 @@ export async function POST(req: Request) {
 
         // Get membership status
         const { membership } = await getUserMembership(id);
-
-        // Return session data mimic standard NextAuth structure
-        // In a real app we might issue a JWT here, for now we assume the app trusts the user 
-        // after verification and uses the GOOGLE token or a simple session structure.
-        // For simplicity, we return the user data and the same ID token (or a newly minted one if we had a signer).
-        // The mobile app will interpret success = logged in.
+        const { token, expiresAt } = createMobileAccessToken({
+            userId: id,
+            email,
+        });
 
         return NextResponse.json({
             success: true,
+            accessToken: token,
+            appAccessToken: token,
+            token, // Backward-compatible key
+            expiresAt,
             user: {
                 id,
                 email,
@@ -59,7 +72,6 @@ export async function POST(req: Request) {
                 image,
                 tier: membership,
             },
-            token: idToken, // In future, replace with app-specific JWT
         });
 
     } catch (error) {

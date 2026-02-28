@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { getMarketData, getBrokerPrice, formatMarketDataForAI, getMultiTimeframeData, getDXYCorrelation, ForexPair, Timeframe, FOREX_PAIRS, TIMEFRAMES, BrokerSource, MarketData } from '@/lib/market-data';
 import { analyzeWithGroq, MarketContext } from '@/lib/groq-ai';
 import { checkQuota, useQuota as consumeQuota, getQuotaStatus } from '@/lib/quota';
+import { resolveMobileUserFromRequest } from '@/lib/mobile-session';
 
 type LstmDirection = 'UP' | 'DOWN' | 'NEUTRAL';
 
@@ -262,37 +263,14 @@ function buildMeasuredLstmSignal(data: MarketData, marketContext: MarketContext)
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
-        let userId: string | null = null;
         const session = await getServerSession(authOptions);
+        let userId: string | null = session?.user?.id || null;
 
-        if (session?.user?.id) {
-            userId = session.user.id;
-        } else {
-            // Try Mobile Bearer Token
-            const authHeader = request.headers.get('Authorization');
-            if (authHeader?.startsWith('Bearer ')) {
-                const token = authHeader.split(' ')[1];
-                const { verifyMobileToken } = await import('@/lib/mobile-auth');
-                const userEmail = await verifyMobileToken(token);
-
-                if (userEmail) {
-                    // Get User ID from DB
-                    const turso = (await import('@/lib/turso')).default();
-                    if (turso) {
-                        try {
-                            const userRes = await turso.execute({
-                                sql: 'SELECT id FROM users WHERE email = ?',
-                                args: [userEmail]
-                            });
-                            if (userRes.rows.length > 0) {
-                                userId = userRes.rows[0].id as string;
-                            }
-                        } catch (e) {
-                            console.error('DB fetch user error:', e);
-                        }
-                    }
-                }
-            }
+        if (!userId) {
+            const mobileUser = await resolveMobileUserFromRequest(request, {
+                allowLegacyGoogleIdToken: true,
+            });
+            userId = mobileUser?.userId || null;
         }
 
         if (!userId) {

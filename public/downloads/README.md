@@ -4,9 +4,9 @@ This directory contains the Android APK files for direct download.
 
 ## Current Version
 
-- **Version:** 1.0.0
-- **File:** `arra7-v1.0.0.apk`
-- **Date:** 2026-02-04
+- **Version:** 3.0.0 Beta
+- **File:** `arra7-v3.0.0-beta.apk`
+- **Date:** 2026-02-28
 
 ## How to Upload APK
 
@@ -14,13 +14,13 @@ This directory contains the Android APK files for direct download.
 
 1. **Build Release APK:**
 ```bash
-cd "d:\LOCAL DOC\ARRA 7 WEB\arra7-flutter"
+cd "d:\LOCAL DOC\ARRA 7 WEB\arra7-mobile"
 flutter build apk --release
 ```
 
 2. **Copy APK to Public Directory:**
 ```bash
-Copy-Item "d:\LOCAL DOC\ARRA 7 WEB\arra7-flutter\build\app\outputs\flutter-apk\app-release.apk" "d:\LOCAL DOC\ARRA 7 WEB\arra7-app\public\downloads\arra7-v1.0.0.apk"
+Copy-Item "d:\LOCAL DOC\ARRA 7 WEB\arra7-mobile\build\app\outputs\flutter-apk\app-release.apk" "d:\LOCAL DOC\ARRA 7 WEB\arra7-app\public\downloads\arra7-v3.0.0-beta.apk"
 ```
 
 3. **Verify File Exists:**
@@ -30,10 +30,11 @@ ls "d:\LOCAL DOC\ARRA 7 WEB\arra7-app\public\downloads"
 
 ## Version History
 
-- **v1.0.0** (2026-02-04): Initial release with Forex, Stock, Fibonacci features
+- **v3.0.0-beta** (2026-02-28): Android vNext rebuild, simplified modern menu, market + account focus
+- **v1.0.0** (2026-02-04): Initial release
 
 ## Notes
 
-- APK file will be served from `/downloads/arra7-v1.0.0.apk`
-- File size should be ~15-20MB
+- APK file is served from `/downloads/arra7-v3.0.0-beta.apk`
+- File size is ~93MB (debug build from latest mobile output)
 - Minimum Android version: 7.0 (Nougat)

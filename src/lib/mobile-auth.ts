@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 /**
  * Verifies a Google ID Token
  * @param token The ID token from the Authorization header

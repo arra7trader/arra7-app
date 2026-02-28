@@ -2,12 +2,21 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getQuotaStatus } from '@/lib/quota';
+import { resolveMobileUserFromRequest } from '@/lib/mobile-session';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
+        let userId = session?.user?.id || null;
 
-        if (!session?.user?.id) {
+        if (!userId) {
+            const mobileUser = await resolveMobileUserFromRequest(request, {
+                allowLegacyGoogleIdToken: true,
+            });
+            userId = mobileUser?.userId || null;
+        }
+
+        if (!userId) {
             return NextResponse.json(
                 { status: 'error', message: 'Not authenticated' },
                 { status: 401 }
@@ -31,7 +40,7 @@ export async function GET() {
             });
         }
 
-        const quotaStatus = await getQuotaStatus(session.user.id);
+        const quotaStatus = await getQuotaStatus(userId);
 
         // Convert Infinity to -1 for JSON serialization
         const serializedQuota = {
