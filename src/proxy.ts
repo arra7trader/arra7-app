@@ -11,7 +11,7 @@ const maintenanceBypassPrefixes = [
     '/downloads',
     '/login',
 ];
-const maintenanceEnabled = (process.env.APP_MAINTENANCE_MODE ?? 'true') === 'true';
+const maintenanceEnabled = false;
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -54,3 +54,4 @@ export const config = {
         '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|public).*)',
     ],
 };
+
