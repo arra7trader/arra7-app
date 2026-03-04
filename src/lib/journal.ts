@@ -205,7 +205,8 @@ export async function autoSaveSignalToJournal(
     direction: 'BUY' | 'SELL',
     entryPrice: number,
     stopLoss?: number,
-    takeProfit?: number
+    takeProfit?: number,
+    notes?: string
 ): Promise<boolean> {
     return addJournalEntry({
         userId,
@@ -214,6 +215,7 @@ export async function autoSaveSignalToJournal(
         entryPrice,
         stopLoss,
         takeProfit,
+        notes,
         status: 'OPEN',
     });
 }

@@ -35,11 +35,44 @@ interface JournalStats {
     avgLoss: number;
 }
 
+interface ActualTradeEntry {
+    id: string;
+    terminalId: string | null;
+    accountLabel: string;
+    mt5Login: string | null;
+    broker: string | null;
+    server: string | null;
+    symbol: string;
+    side: 'BUY' | 'SELL';
+    volumeLots: number;
+    entryPrice: number;
+    stopLoss: number | null;
+    takeProfit: number | null;
+    status: string;
+    outcome: 'OPEN' | 'TP' | 'SL' | 'MANUAL' | 'ERROR';
+    closePrice: number | null;
+    pipsResult: number | null;
+    pnlValue: number | null;
+    openedAt: string;
+    closedAt: string | null;
+}
+
+interface ActualTradeStats {
+    total: number;
+    open: number;
+    tp: number;
+    sl: number;
+    manual: number;
+    error: number;
+}
+
 export default function JournalPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [stats, setStats] = useState<JournalStats | null>(null);
+    const [actualTrades, setActualTrades] = useState<ActualTradeEntry[]>([]);
+    const [actualStats, setActualStats] = useState<ActualTradeStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showCloseModal, setShowCloseModal] = useState<JournalEntry | null>(null);
@@ -69,6 +102,8 @@ export default function JournalPage() {
             if (data.status === 'success') {
                 setEntries(data.entries);
                 setStats(data.stats);
+                setActualTrades(Array.isArray(data.actualTrades) ? data.actualTrades : []);
+                setActualStats(data.actualStats || null);
             }
         } catch (error) {
             console.error('Fetch journal error:', error);
@@ -221,6 +256,34 @@ export default function JournalPage() {
                         </div>
                     </div>
                 )}
+                {actualStats && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Actual Trades</p>
+                            <p className="text-2xl font-bold text-[var(--text-primary)]">{actualStats.total}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Open</p>
+                            <p className="text-2xl font-bold text-blue-600">{actualStats.open}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">TP Hit</p>
+                            <p className="text-2xl font-bold text-green-600">{actualStats.tp}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">SL Hit</p>
+                            <p className="text-2xl font-bold text-red-600">{actualStats.sl}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Manual Close</p>
+                            <p className="text-2xl font-bold text-slate-600">{actualStats.manual}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                            <p className="text-xs text-[var(--text-muted)]">Error Close</p>
+                            <p className="text-2xl font-bold text-amber-600">{actualStats.error}</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Journal Table */}
                 <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
@@ -295,7 +358,84 @@ export default function JournalPage() {
                             <div className="mb-4">
                                 <BookOpenIcon className="text-green-500 mx-auto" size="xl" />
                             </div>
-                            Belum ada trade. Klik "Add Trade" untuk mulai tracking.
+                            Belum ada trade. Klik &quot;Add Trade&quot; untuk mulai tracking.
+                        </div>
+                    )}
+                </div>
+
+                {/* Actual Trades Table */}
+                <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden mt-8">
+                    <div className="px-4 py-3 border-b border-[var(--border-light)] bg-[var(--bg-secondary)]">
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">Trade Actual Per Akun</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Data posisi real dari Copytrade ARRA77, termasuk TP/SL untuk tiap terminal.</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-white">
+                                <tr>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Akun</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Symbol</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Side</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Entry</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">SL/TP</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Outcome</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">P/L</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Open</th>
+                                    <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Close</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {actualTrades.map((trade) => (
+                                    <tr key={trade.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
+                                        <td className="p-4">
+                                            <p className="font-medium text-[var(--text-primary)]">{trade.accountLabel}</p>
+                                            <p className="text-xs text-[var(--text-muted)]">
+                                                {trade.mt5Login || '-'} | {trade.server || '-'}
+                                            </p>
+                                        </td>
+                                        <td className="p-4 font-medium text-[var(--text-primary)]">{trade.symbol}</td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${trade.side === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {trade.side}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 font-mono text-[var(--text-primary)]">{trade.entryPrice}</td>
+                                        <td className="p-4 text-sm">
+                                            <span className="text-red-600">{trade.stopLoss ?? '-'}</span>
+                                            <span className="text-[var(--text-muted)]"> / </span>
+                                            <span className="text-green-600">{trade.takeProfit ?? '-'}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${trade.outcome === 'TP'
+                                                ? 'bg-green-100 text-green-700'
+                                                : trade.outcome === 'SL'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : trade.outcome === 'MANUAL'
+                                                        ? 'bg-slate-100 text-slate-700'
+                                                        : trade.outcome === 'ERROR'
+                                                            ? 'bg-amber-100 text-amber-700'
+                                                            : 'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                {trade.outcome}
+                                            </span>
+                                        </td>
+                                        <td className={`p-4 font-medium ${(trade.pnlValue || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            {trade.pnlValue != null ? `$${Number(trade.pnlValue).toFixed(2)}` : '-'}
+                                        </td>
+                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
+                                            {trade.openedAt ? new Date(trade.openedAt).toLocaleString('id-ID') : '-'}
+                                        </td>
+                                        <td className="p-4 text-sm text-[var(--text-secondary)]">
+                                            {trade.closedAt ? new Date(trade.closedAt).toLocaleString('id-ID') : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {actualTrades.length === 0 && (
+                        <div className="p-10 text-center text-[var(--text-secondary)]">
+                            Belum ada trade actual dari akun copytrade.
                         </div>
                     )}
                 </div>

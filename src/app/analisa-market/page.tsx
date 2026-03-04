@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useLowBalancePopup } from '@/components/LowBalancePopup';
 import {
     SparklesIcon,
@@ -544,6 +545,7 @@ export default function AnalisaMarketPage() {
     const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null); // Store end timestamp
     const [lastQuotaCharged, setLastQuotaCharged] = useState<boolean | null>(null);
     const [lastAnalyzeAt, setLastAnalyzeAt] = useState<string | null>(null);
+    const [journalAutoSaved, setJournalAutoSaved] = useState<boolean | null>(null);
     const [telegramStatus, setTelegramStatus] = useState<TelegramLinkStatus | null>(null);
     const [telegramLinkCode, setTelegramLinkCode] = useState<string | null>(null);
     const [telegramCodeExpiresAt, setTelegramCodeExpiresAt] = useState<string | null>(null);
@@ -726,6 +728,7 @@ export default function AnalisaMarketPage() {
         setAnalysisResult(null);
         setRawAnalysis(null);
         setParsedSignal(null);
+        setJournalAutoSaved(null);
 
         try {
             const response = await fetch('/api/analyze', {
@@ -755,6 +758,9 @@ export default function AnalisaMarketPage() {
                 }
                 if (typeof data.timestamp === 'string') {
                     setLastAnalyzeAt(data.timestamp);
+                }
+                if (typeof data.journalAutoSaved === 'boolean') {
+                    setJournalAutoSaved(data.journalAutoSaved);
                 }
             } else {
                 if (data.waitTimeSeconds) {
@@ -1210,6 +1216,21 @@ export default function AnalisaMarketPage() {
                         */}
 
                         {/* Analyze Button */}
+                        <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <Link
+                                href="/journal"
+                                className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                            >
+                                Buka Trade Journal
+                            </Link>
+                            <Link
+                                href="/copytrade-arra77"
+                                className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                            >
+                                Trade Actual Per Akun
+                            </Link>
+                        </div>
+
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -1239,6 +1260,11 @@ export default function AnalisaMarketPage() {
                                 </span>
                             )}
                         </motion.button>
+                        {journalAutoSaved === true && (
+                            <p className="mt-2 text-xs text-emerald-700">
+                                Sinyal BUY/SELL otomatis tersimpan ke jurnal.
+                            </p>
+                        )}
 
                         {/* Market Info */}
                         {marketInfo && (

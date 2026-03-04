@@ -503,6 +503,7 @@ export async function POST(request: NextRequest) {
 
         // Save signal for performance tracking & prepare native response
         let nativeSignalData: ParsedSignalPayload | null = null;
+        let journalAutoSaved = false;
         try {
             const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
             if (aiResult.analysis) {
@@ -537,6 +538,36 @@ export async function POST(request: NextRequest) {
             }
         } catch (signalError) {
             console.error('Failed to save signal:', signalError);
+        }
+
+        // Auto-save actionable signal to Trade Journal.
+        try {
+            if (nativeSignalData) {
+                const directionRaw = String(nativeSignalData.direction || nativeSignalData.type || '').toUpperCase();
+                const direction = directionRaw === 'BUY' || directionRaw === 'SELL' ? directionRaw : null;
+                const entryPrice = Number(
+                    nativeSignalData.entryPrice ??
+                    nativeSignalData.entry ??
+                    marketData.current_price
+                );
+                const stopLoss = Number(nativeSignalData.stopLoss ?? nativeSignalData.sl ?? 0);
+                const takeProfit = Number(nativeSignalData.takeProfit1 ?? nativeSignalData.tp ?? 0);
+
+                if (direction && Number.isFinite(entryPrice) && entryPrice > 0) {
+                    const { autoSaveSignalToJournal } = await import('@/lib/journal');
+                    journalAutoSaved = await autoSaveSignalToJournal(
+                        userId,
+                        pair,
+                        direction,
+                        entryPrice,
+                        Number.isFinite(stopLoss) && stopLoss > 0 ? stopLoss : undefined,
+                        Number.isFinite(takeProfit) && takeProfit > 0 ? takeProfit : undefined,
+                        `AUTO_ANALYZE ${pair} ${timeframe.toUpperCase()}`
+                    );
+                }
+            }
+        } catch (journalError) {
+            console.error('[Analyze] Failed auto-save to journal:', journalError);
         }
 
         // Charge quota only for actionable trade signals (BUY/SELL).
@@ -712,6 +743,7 @@ export async function POST(request: NextRequest) {
                 lastCandleTime: marketData.candles.length > 0 ? marketData.candles[marketData.candles.length - 1].time : null,
             },
             parsedSignal: nativeSignalData,
+            journalAutoSaved,
             copytradeAutoPublish,
             vvipTelegramAlert,
             quotaCharged,
