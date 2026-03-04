@@ -11,6 +11,7 @@ import {
     getJournalStats
 } from '@/lib/journal';
 import { getCopytrade77AdminClient, isCopytrade77Configured } from '@/lib/supabase-copytrade77';
+import getTursoClient from '@/lib/turso';
 
 type ActualTradeOutcome = 'OPEN' | 'TP' | 'SL' | 'MANUAL' | 'ERROR';
 
@@ -59,6 +60,51 @@ function parseNumeric(value: unknown): number | null {
     return Number.isFinite(num) ? num : null;
 }
 
+function parseResetTimestamp(raw: unknown): number | null {
+    if (raw == null) return null;
+    const value = String(raw).trim();
+    if (!value) return null;
+
+    const asNumber = Number(value);
+    if (Number.isFinite(asNumber) && asNumber > 0) {
+        // Handle both unix seconds and unix milliseconds.
+        return asNumber > 1_000_000_000_000 ? asNumber : asNumber * 1000;
+    }
+
+    const asDate = Date.parse(value);
+    return Number.isFinite(asDate) ? asDate : null;
+}
+
+async function getActualTradeResetAtMs(userId: string): Promise<number | null> {
+    const turso = getTursoClient();
+    if (!turso) return null;
+
+    try {
+        const userKey = `journal_actual_reset_after:${userId}`;
+        const globalKey = 'journal_actual_reset_after_all';
+
+        const [userRes, globalRes] = await Promise.all([
+            turso.execute({
+                sql: 'SELECT value FROM settings WHERE key = ? LIMIT 1',
+                args: [userKey],
+            }),
+            turso.execute({
+                sql: 'SELECT value FROM settings WHERE key = ? LIMIT 1',
+                args: [globalKey],
+            }),
+        ]);
+
+        const userMs = parseResetTimestamp(userRes.rows?.[0]?.value);
+        const globalMs = parseResetTimestamp(globalRes.rows?.[0]?.value);
+
+        if (userMs && globalMs) return Math.max(userMs, globalMs);
+        return userMs || globalMs || null;
+    } catch (error) {
+        console.error('Read actual trade reset marker error:', error);
+        return null;
+    }
+}
+
 async function getActualTradesFromCopytrade(userId: string): Promise<{ trades: ActualTradeEntry[]; stats: ActualTradeStats }> {
     const emptyStats: ActualTradeStats = { total: 0, open: 0, tp: 0, sl: 0, manual: 0, error: 0 };
     if (!isCopytrade77Configured()) {
@@ -84,7 +130,14 @@ async function getActualTradesFromCopytrade(userId: string): Promise<{ trades: A
             .limit(200);
 
         if (positionsError) throw positionsError;
-        const rows = positions || [];
+        const allRows = positions || [];
+        const resetAtMs = await getActualTradeResetAtMs(userId);
+        const rows = resetAtMs
+            ? allRows.filter((row) => {
+                const openedMs = Date.parse(String(row.opened_at || ''));
+                return Number.isFinite(openedMs) && openedMs >= resetAtMs;
+            })
+            : allRows;
 
         const terminalIds = [...new Set(rows.map((row) => String(row.terminal_id || '')).filter(Boolean))];
         const terminalMap = new Map<string, { terminal_label: string; mt5_login: string | null; broker_name: string | null; server_name: string | null }>();
