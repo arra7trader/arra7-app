@@ -4,7 +4,8 @@
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
 function getTelegramConfig() {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    // Use TELEGRAM_BOT_TOKEN_2 for marketing/admin panel
+    const botToken = process.env.TELEGRAM_BOT_TOKEN_2 || process.env.TELEGRAM_BOT_TOKEN;
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
 
     if (!botToken) {
@@ -659,7 +660,11 @@ export function getAllTemplateKeys(): string[] {
 }
 
 export function isTelegramConfigured(): boolean {
-    return !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHANNEL_ID);
+    // Check for marketing bot token (TELEGRAM_BOT_TOKEN_2) or fallback to main token
+    return !!(
+        (process.env.TELEGRAM_BOT_TOKEN_2 || process.env.TELEGRAM_BOT_TOKEN) && 
+        process.env.TELEGRAM_CHANNEL_ID
+    );
 }
 
 export async function broadcastSignalToSubscribers(message: string): Promise<{ sent: number; failed: number }> {
