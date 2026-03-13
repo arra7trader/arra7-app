@@ -69,294 +69,565 @@ export async function sendTelegramMessage(
 // ============================================
 // COPYTRADE ARRA77 - DAILY ROTATING TEMPLATE
 // ============================================
+// 1 PANDUAN LENGKAP - 7 GAYA PENYAMPAIAN BERBEDA
 // Template berubah otomatis setiap 24 jam (7 hari cycle)
-// Konten: Panduan mudah Copytrade ARRA77
+// Konten: Panduan lengkap Copytrade ARRA77 (Daftar → Profit)
 
 export const COPYTRADE_TEMPLATES: Record<string, string> = {
-    // HARI 1: Pengenalan & Cara Daftar
-    day1_register: `🎯 <b>COPYTRADE ARRA77 - Trading Otomatis Dimulai!</b>
-
-<b>Apa itu Copytrade ARRA77?</b>
-Sistem yang memungkinkan Anda <b>copy trading otomatis</b> dari provider profesional langsung ke akun MT5 Anda!
-
-✅ <b>Keuntungan:</b>
-• Trading otomatis 24/7 via EA Bridge
-• Pilih provider sesuai profil risiko
-• Kontrol penuh atas lot size & risk
-• Saldo sistem credit (1 credit = Rp 1.000)
-
-📝 <b>Cara Daftar (3 Langkah):</b>
-1️⃣ Login di https://arra7-app.vercel.app
-2️⃣ Menu "Copytrade" → Buat Profile
-3️⃣ Generate License Key untuk EA
-
-💡 <b>Biaya:</b>
-• 1 signal = 3 credits (Rp 3.000)
-• Provider dapat 2 credits
-• Admin dapat 1 credit
-
-🔗 <b>Mulai Sekarang:</b>
-https://arra7-app.vercel.app/copytrade
-
-#CopytradeARRA77 #TradingOtomatis #MT5`,
-
-    // HARI 2: Cara Top Up Saldo
-    day2_topup: `💰 <b>CARA TOP UP SALDO COPYTRADE</b>
-
-Saldo credit diperlukan untuk eksekusi signal trading.
-
-💵 <b>Konversi Credit:</b>
-• 1 Credit = Rp 1.000
-• 1 Signal = 3 Credits (Rp 3.000)
-• Minimal topup: 10 credits (Rp 10.000)
-
-📲 <b>Cara Top Up (QRIS):</b>
-1️⃣ Menu "Copytrade" → Top Up
-2️⃣ Pilih jumlah credit
-3️⃣ Scan QRIS yang muncul
-4️⃣ Upload bukti pembayaran
-5️⃣ Admin approve (max 1x24 jam)
-
-⚡ <b>Saldo Masuk!</b>
-Setelah approve, credit langsung tersedia untuk trading.
-
-🔍 <b>Cek Saldo:</b>
-Dashboard Copytrade menampilkan:
-• Balance Credits
-• Total Spent
-• Total Earned (untuk provider)
-
-❓ <b>Butuh Bantuan?</b>
-Admin siap membantu via Telegram!
-
-🔗 <b>Top Up Sekarang:</b>
-https://arra7-app.vercel.app/copytrade
-
-#TopUpCopytrade #QRIS #TradingMudah`,
-
-    // HARI 3: Cara Pilih Provider & Follow
-    day3_follow: `👥 <b>PILIH PROVIDER & MULAI COPY!</b>
-
-<b>Langkah Penting Setelah Top Up:</b>
-
-1️⃣ <b>Browse Provider:</b>
-• Lihat track record trading
-• Cek win rate & total trades
-• Pilih risk level (LOW/MEDIUM/HIGH)
-
-2️⃣ <b>Klik "Follow":</b>
-• Set risk mode:
-  - FIXED LOT (lot konstan)
-  - MULTIPLIER (kali dari provider)
-  - RISK PERCENT (% dari balance)
-
-3️⃣ <b>Konfigurasi Lanjutan:</b>
-• Max concurrent positions
-• One trade at a time (ON/OFF)
-• Fixed lot size (misal: 0.01 lot)
-
-⚠️ <b>Perhatian:</b>
-• Pastikan saldo cukup untuk signal
-• Provider harus APPROVED oleh admin
-• EA Bridge harus ONLINE di PC/VPS
-
-📊 <b>Monitor Posisi:</b>
-• Lihat posisi aktif di dashboard
-• Track profit/loss real-time
-• Riwayat trading lengkap
-
-🔗 <b>Pilih Provider:</b>
-https://arra7-app.vercel.app/copytrade/providers
-
-#FollowProvider #CopyTrading #PassiveIncome`,
-
-    // HARI 4: Cara Kerja EA Bridge
-    day4_ea_bridge: `🔧 <b>EA BRIDGE - Jantung Copytrade!</b>
-
-<b>Apa itu EA Bridge?</b>
-Software yang menghubungkan sinyal dari server ke MT5 Anda!
-
-🖥️ <b>Instalasi EA Bridge:</b>
-1️⃣ Download file .ex5 dari dashboard
-2️⃣ Copy ke folder MQL5/Experts/MT5
-3️⃣ Buka MT5 → Navigator → Experts
-4️⃣ Drag "Arra-Copytrade-Bridge" ke chart
-5️⃣ Input License Key dari dashboard
-
-⚙️ <b>Konfigurasi EA:</b>
-• License Key (wajib!)
-• MT5 Login
-• Broker Name
-• Server Name
-• Symbol & Timeframe
-
-✅ <b>Status Monitoring:</b>
-Dashboard menampilkan:
-• Terminal Status (ONLINE/OFFLINE)
-• Last Heartbeat (max 30 detik)
-• Last Error (jika ada)
-
-🔴 <b>Troubleshooting:</b>
-• Offline > 180s? Nyalakan EA!
-• Error lock? Reset dari dashboard
-• No signal? Cek koneksi internet
-
-💡 <b>Tips:</b>
-• Gunakan VPS untuk uptime 24/7
-• Restart EA jika ada error
-• Update ke versi terbaru
-
-🔗 <b>Download EA:</b>
-https://arra7-app.vercel.app/copytrade/bridge
-
-#EABridge #MT5 #TradingBot #Automation`,
-
-    // HARI 5: Contoh Hasil Trading
-    day5_results: `📈 <b>HASIL TRADING COPYTRADE</b>
-
-<b>Statistik Real-Time:</b>
-
-🏆 <b>Provider Performance:</b>
-• Total Trades: 50+ trades
-• Win Rate: 60%+ (minimal challenge)
-• Profit Factor: > 1.5
-• Max Drawdown: < 20%
-
-💰 <b>Contoh Perhitungan:</b>
-Modal: 100 credits (Rp 100.000)
-Signal/hari: ~5 signals
-Biaya/hari: 15 credits (Rp 15.000)
-
-Jika win rate 60%:
-• 3 win x Rp 50.000 = +150.000
-• 2 loss x Rp 30.000 = -60.000
-• Profit bersih: +90.000/hari*
-
-⚠️ <b>Disclaimer:</b>
-*Hasil tidak garantised, tergantung market & provider
-
-📊 <b>Dashboard Analytics:</b>
-• Total Profit/Loss
-• Win/Loss Ratio
-• Average Pips per Trade
-• Revenue Share (untuk provider)
-
-🎯 <b>Target Challenge Provider:</b>
-• 50 trades minimum
-• Win rate > 60%
-• Lolos = Approved & Revenue Share!
-
-🔗 <b>Lihat Statistik:</b>
-https://arra7-app.vercel.app/copytrade/stats
-
-#HasilTrading #WinRate #ProfitableTrading`,
-
-    // HARI 6: FAQ & Troubleshooting
-    day6_faq: `❓ <b>FAQ COPYTRADE ARRA77</b>
-
-<b>Q: Berapa minimal deposit?</b>
-A: 10 credits (Rp 10.000) via QRIS
-
-<b>Q: Berapa biaya per signal?</b>
-A: 3 credits (Rp 3.000) per eksekusi
-
-<b>Q: Bisa trade manual sambil copytrade?</b>
-A: Bisa! Tapi aktifkan "One Trade at a Time"
-
-<b>Q: EA offline, apa yang terjadi?</b>
-A: Signal tidak masuk. Nyalakan EA untuk resume!
-
-<b>Q: Bagaimana cara jadi Provider?</b>
-A:
-1. Buat profile provider
-2. Trade minimal 50x
-3. Maintain win rate > 60%
-4. Admin approve = Revenue share!
-
-<b>Q: Saldo kurang, apa yang terjadi?</b>
-A: Signal di-skip. Top up untuk lanjut!
-
-<b>Q: Bisa refund saldo?</b>
-A: Hubungi admin untuk penarikan
-
-<b>Q: Support broker apa?</b>
-A: Semua broker MT5 (IC Markets, Pepperstone, dll)
-
-<b>Q: Butuh VPS?</b>
-A: Recommended untuk uptime 24/7
-
-❓ <b>Pertanyaan Lain?</b>
-DM admin via Telegram!
-
-🔗 <b>Bantuan Lengkap:</b>
-https://arra7-app.vercel.app/copytrade/help
-
-#FAQ #HelpDesk #CopytradeHelp`,
-
-    // HARI 7: Promo & Testimoni
-    day7_promo: `🎉 <b>PROMO & TESTIMONI COPYTRADE</b>
-
-🔥 <b>PROMO SPESIAL BULAN INI!</b>
-
-💎 <b>Bonus Top Up:</b>
-• Top up 100 credits → Bonus 10 credits!
-• Top up 500 credits → Bonus 75 credits!
-
-🎁 <b>Provider Challenge:</b>
-• Gratis biaya pendaftaran
-• Revenue share 2 credits/signal
-• Bonus khusus top performer!
-
-⭐ <b>Testimoni Users:</b>
-
-_"Alhamdulillah, 2 minggu copytrade udah +30% dari modal. Providernya konsisten, EA juga stabil."_
-— Budi, Jakarta
-
-_"Awalnya ragu, tapi setelah coba 1 bulan hasilnya memuaskan. Win rate 65%, worth it!"_
-— Andi, Surabaya
-
-_"Sistem credit transparan, nggak ada biaya tersembunyi. Recommended!"_
-— Reza, Bandung
-
-📊 <b>Statistik Platform:</b>
-• 100+ Active Users
-• 10+ Approved Providers
-• 500+ Signals Executed
-• 85%+ User Satisfaction
-
-🚀 <b>Join Sekarang!</b>
-Jangan ketinggalan profit dari copytrade!
+    // HARI 1: STORYTELLING - "Perjalanan Budi"
+    day1_story: `🎯 <b>DARI NOL JADI PROFIT: Kisah Budi dengan Copytrade</b>
+
+<b>📖 CHAPTER 1: Masalah Budi</b>
+Budi trader pemula. Sering loss karena:
+❌ Tidak punya strategi jelas
+❌ Emosional saat trading
+❌ Tidak punya waktu analisa market
+
+<b>📖 CHAPTER 2: Penemuan Budi</b>
+Budi menemukan <b>Copytrade ARRA77</b>:
+✅ Copy trading otomatis dari provider pro
+✅ Trading 24/7 via EA Bridge
+✅ Kontrol penuh atas risiko
+
+<b>📖 CHAPTER 3: Langkah Budi</b>
+1️⃣ <b>Daftar:</b> Login → Menu Copytrade → Buat Profile
+2️⃣ <b>Top Up:</b> QRIS min. 10 credits (Rp 10.000)
+3️⃣ <b>Pilih Provider:</b> Lihat track record → Klik Follow
+4️⃣ <b>Install EA:</b> Download → Input License Key → Run!
+
+<b>📖 CHAPTER 4: Hasil Budi</b>
+📊 Minggu 1: Belajar sistem
+📊 Minggu 2: Mulai profit konsisten
+📊 Minggu 3: +25% dari modal!
+
+<b>💡 KUNCI SUKSES BUDI:</b>
+• Pilih provider win rate > 60%
+• Gunakan fixed lot 0.01
+• Biarkan EA bekerja 24/7
+• Top up cukup untuk 20+ signals
+
+<b>🚀 GILIRAN ANDA!</b>
+Modal kecil bisa profit besar. Mulai sekarang!
 
 🔗 <b>Daftar Gratis:</b>
 https://arra7-app.vercel.app/copytrade
 
-#Promo #Testimoni #CopytradeSuccess #PassiveIncome`,
+💰 <b>Biaya:</b> 1 signal = 3 credits (Rp 3.000)
+
+#CopytradeARRA77 #SuccessStory #TradingOtomatis`,
+
+    // HARI 2: STEP-BY-STEP - "Panduan Visual"
+    day2_stepbystep: `📚 <b>PANDUAN LENGKAP COPYTRADE ARRA77</b>
+<i>Dari Nol Sampai Bisa Profit (Step-by-Step)</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>🎯 STEP 1: DAFTAR (5 MENIT)</b>
+━━━━━━━━━━━━━━━━━━━━
+
+1. Buka https://arra7-app.vercel.app
+2. Login/Register akun
+3. Menu "Copytrade" → "Create Profile"
+4. Isi nama & email → Submit
+
+✅ <i>Done! Profile aktif.</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>💰 STEP 2: TOP UP (3 MENIT)</b>
+━━━━━━━━━━━━━━━━━━━━
+
+1. Klik "Top Up" di dashboard
+2. Pilih jumlah credits:
+   • 10 credits = Rp 10.000 (min)
+   • 50 credits = Rp 50.000 (recommended)
+   • 100 credits = Rp 100.000 (best value)
+3. Scan QRIS → Bayar
+4. Upload bukti → Tunggu approve
+
+✅ <i>Saldo masuk dalam 1x24 jam.</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>👥 STEP 3: PILIH PROVIDER (10 MENIT)</b>
+━━━━━━━━━━━━━━━━━━━━
+
+1. Menu "Providers" → Browse
+2. Cek statistik:
+   ✓ Win Rate > 60%
+   ✓ Total Trades > 20
+   ✓ Risk Level: MEDIUM
+3. Klik "Follow" pada provider pilihan
+4. Set konfigurasi:
+   • Risk Mode: FIXED_LOT
+   • Fixed Lot: 0.01
+   • One Trade: ON
+
+✅ <i>Provider siap di-copy!</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>🔧 STEP 4: INSTALL EA (15 MENIT)</b>
+━━━━━━━━━━━━━━━━━━━━
+
+1. Download EA dari dashboard
+2. Copy file ke MT5/Experts/
+3. Buka MT5 → Navigator → Experts
+4. Drag "Arra-Copytrade-Bridge" ke chart
+5. Input License Key dari dashboard
+6. Centang "Allow WebRequest"
+7. OK → EA aktif!
+
+✅ <i>EA running, siap copy signal!</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📈 STEP 5: MONITOR PROFIT</b>
+━━━━━━━━━━━━━━━━━━━━
+
+Dashboard menampilkan:
+• Saldo credits
+• Posisi aktif
+• Riwayat trading
+• Profit/Loss
+
+💡 <b>Tips:</b>
+• Gunakan VPS untuk 24/7
+• Cek EA setiap hari
+• Top up sebelum habis
+
+🔗 <b>MULAI SEKARANG:</b>
+https://arra7-app.vercel.app/copytrade
+
+#Tutorial #Copytrade #StepByStep #MT5`,
+
+    // HARI 3: FAQ STYLE - "Tanya Jawab"
+    day3_faq: `❓ <b>COPYTRADE ARRA77: 10 Pertanyaan Paling Sering</b>
+
+<b>Q1: Apa itu Copytrade ARRA77?</b>
+A: Sistem copy trading otomatis. Anda copy trade dari provider pro langsung ke akun MT5 Anda via EA Bridge.
+
+<b>Q2: Berapa modal minimal?</b>
+A: 
+• Top up min: 10 credits (Rp 10.000)
+• Biaya per signal: 3 credits (Rp 3.000)
+• Recommended: 50 credits untuk mulai
+
+<b>Q3: Bagaimana cara daftar?</b>
+A: 
+1. Login di https://arra7-app.vercel.app
+2. Menu Copytrade → Create Profile
+3. Generate License Key
+4. Install EA di MT5
+
+<b>Q4: Apa itu EA Bridge?</b>
+A: Software yang menghubungkan sinyal dari server ke MT5 Anda. Jalan otomatis 24/7.
+
+<b>Q5: Bagaimana cara pilih provider?</b>
+A:
+• Win Rate > 60%
+• Total Trades > 20
+• Risk Level sesuai profil Anda
+• Lihat konsistensi profit
+
+<b>Q6: Berapa profit per bulan?</b>
+A: Tergantung provider & market. Rata-rata:
+• Konservatif: 5-10%/bulan
+• Moderat: 10-20%/bulan
+• Agresif: 20-30%/bulan (risk tinggi)
+
+<b>Q7: Apakah ada biaya bulanan?</b>
+A: Tidak ada! Hanya bayar per signal (3 credits). Tidak ada subscription fee.
+
+<b>Q8: Bisa trade manual sambil copytrade?</b>
+A: Bisa! Aktifkan "One Trade at a Time" untuk hindari konflik.
+
+<b>Q9: Bagaimana jika saldo habis?</b>
+A: Signal otomatis di-skip. Top up untuk lanjut copy.
+
+<b>Q10: Bisa withdraw saldo?</b>
+A: Hubungi admin untuk penarikan saldo.
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>🚀 SIAP MULAI?</b>
+
+Panduan lengkap tersedia di:
+🔗 https://arra7-app.vercel.app/copytrade
+
+<b>💬 Butuh bantuan?</b>
+DM admin via Telegram!
+
+#FAQ #Copytrade #TanyaJawab #HelpDesk`,
+
+    // HARI 4: CHECKLIST - "To-Do List"
+    day4_checklist: `✅ <b>CHECKLIST LENGKAP COPYTRADE ARRA77</b>
+<i>Centang setiap step sampai profit!</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 PREPARATION (Hari 1)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Download & install MT5
+□ Buka akun demo/live di broker
+□ Siapkan modal min. Rp 50.000
+□ Siapkan VPS (optional tapi recommended)
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 REGISTRATION (Hari 1)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Daftar di https://arra7-app.vercel.app
+□ Login ke akun
+□ Menu "Copytrade"
+□ Create Profile (isi nama & email)
+□ Generate License Key
+□ Screenshot License Key untuk EA
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 TOP UP (Hari 1-2)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Klik "Top Up"
+□ Pilih jumlah credits (min. 10)
+□ Scan QRIS & bayar
+□ Upload bukti pembayaran
+□ Tunggu approve admin (max 1x24 jam)
+□ Cek saldo sudah masuk
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 PROVIDER SELECTION (Hari 2)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Menu "Providers" → Browse
+□ Filter provider dengan:
+  □ Win Rate > 60%
+  □ Total Trades > 20
+  □ Status: APPROVED
+□ Klik "Follow"
+□ Set konfigurasi:
+  □ Risk Mode: FIXED_LOT
+  □ Fixed Lot: 0.01 (untuk mulai)
+  □ One Trade at a Time: ON
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 EA INSTALLATION (Hari 2-3)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Download EA dari dashboard
+□ Copy file .ex5 ke MT5/Experts/
+□ Restart MT5
+□ Buka Navigator → Experts
+□ Drag EA ke chart (XAUUSD/M15 recommended)
+□ Input License Key
+□ Centang "Allow WebRequest"
+□ Pastikan smiley face muncul di EA
+□ Cek status di dashboard: ONLINE
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 MONITORING (Hari 3-7)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Cek EA setiap hari (heartbeat < 30s)
+□ Monitor saldo credits
+□ Lihat posisi aktif di dashboard
+□ Track profit/loss
+□ Top up jika saldo < 10 credits
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📋 OPTIMIZATION (Minggu 2+)</b>
+━━━━━━━━━━━━━━━━━━━━
+□ Evaluasi performa provider
+□ Adjust lot size jika perlu
+□ Diversifikasi ke multiple providers
+□ Scale up modal jika profit konsisten
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>🎉 SELAMAT!</b>
+Anda sekarang copytrader aktif!
+
+<b>💡 TIPS PRO:</b>
+• Jangan sering ganti provider
+• Biarkan EA bekerja (jangan micromanage)
+• Fokus pada long-term consistency
+
+🔗 <b>Start Now:</b>
+https://arra7-app.vercel.app/copytrade
+
+#Checklist #Copytrade #TradingPlan #Success`,
+
+    // HARI 5: VISUAL GUIDE - "Infographic Style"
+    day5_visual: `🎨 <b>COPYTRADE ARRA77: Visual Guide</b>
+<i>1 Gambar = 1000 Kata</i>
+
+╔═══════════════════════════════════╗
+║   🚀 CARA KERJA COPYTRADE         ║
+╚═══════════════════════════════════╝
+
+┌─────────────┐
+│  PROVIDER   │ → Trade Signal (BUY/SL/TP)
+│  (Trader Pro)│
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│  ARRA77     │ → Process & Distribute
+│   SERVER    │
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│  EA BRIDGE  │ → Execute di MT5
+│  (Your PC)  │    Anda!
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│   PROFIT!   │ 💰💰💰
+└─────────────┘
+
+╔═══════════════════════════════════╗
+║   💰 BREAKDOWN BIAYA              ║
+╚═══════════════════════════════════╝
+
+┌──────────────────────────────┐
+│ 1 Signal = 3 Credits         │
+│                              │
+│ ├─ Provider: 2 credits       │
+│ └─ Admin: 1 credit           │
+│                              │
+│ 1 Credit = Rp 1.000          │
+│ 1 Signal = Rp 3.000          │
+└──────────────────────────────┘
+
+╔═══════════════════════════════════╗
+║   📊 CONTOH PERHITUNGAN           ║
+╚═══════════════════════════════════╝
+
+Modal: Rp 100.000 (100 credits)
+Signals/hari: 5
+Biaya/hari: 15 credits (Rp 15.000)
+
+Scenario (Win Rate 60%):
+├─ 3 Win x Rp 50.000 = +150.000
+├─ 2 Loss x Rp 30.000 = -60.000
+├─ Biaya signal = -15.000
+└─ NET PROFIT = +75.000/hari*
+
+*Disclaimer: Hasil tidak guaranteed
+
+╔═══════════════════════════════════╗
+║   ⚡ TIMELINE MULAI               ║
+╚═══════════════════════════════════╝
+
+Day 1: Daftar + Top Up ✅
+Day 2: Pilih Provider ✅
+Day 3: Install EA ✅
+Day 4: First Signal! 🎯
+Day 7: Evaluate Results 📊
+Day 30: Scale Up! 🚀
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>🎯 READY TO START?</b>
+
+🔗 https://arra7-app.vercel.app/copytrade
+
+#VisualGuide #Infographic #Copytrade #EasyStart`,
+
+    // HARI 6: MISTAKES - "Jangan Lakukan Ini!"
+    day6_mistakes: `⚠️ <b>7 KESALAHAN FATAL COPYTRADE PEMULA</b>
+<i>Jangan sampai Anda mengalaminya!</i>
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>❌ MISTAKE #1: Modal Terlalu Kecil</b>
+<b>Masalah:</b> Top up 10 credits, langsung habis dalam 3 signal.
+<b>Solusi:</b> Minimal 50 credits untuk buffer 15+ signals.
+
+<b>❌ MISTAKE #2: Ganti Provider Terus</b>
+<b>Masalah:</b> Panik saat loss, ganti provider. Akhirnya tidak pernah tahu performa jangka panjang.
+<b>Solusi:</b> Minimal 2 minggu evaluasi sebelum ganti.
+
+<b>❌ MISTAKE #3: Lot Size Terlalu Besar</b>
+<b>Masalah:</b> Langsung pakai 0.1 lot, loss besar dalam 1 trade.
+<b>Solusi:</b> Mulai 0.01 lot, scale up perlahan.
+
+<b>❌ MISTAKE #4: EA Offline Tidak Dipantau</b>
+<b>Masalah:</b> EA mati 3 hari, kehilangan 10+ signal profit.
+<b>Solusi:</b> Cek dashboard setiap hari. Gunakan VPS.
+
+<b>❌ MISTAKE #5: Tidak Paham Biaya</b>
+<b>Masalah:</b> Kaget saldo cepat habis, tidak tahu ada biaya per signal.
+<b>Solusi:</b> Pahami: 1 signal = 3 credits = Rp 3.000.
+
+<b>❌ MISTAKE #6: Pilih Provider Salah</b>
+<b>Masalah:</b> Tergiur profit 100%/bulan, ternyata high risk, loss semua.
+<b>Solusi:</b> Pilih win rate > 60%, total trades > 20, risk MEDIUM.
+
+<b>❌ MISTAKE #7: Trade Manual Saat Copytrade</b>
+<b>Masalah:</b> Buka posisi manual saat EA aktif, konflik signal.
+<b>Solusi:</b> Aktifkan "One Trade at a Time" atau trade di akun terpisah.
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>✅ CHECKLIST ANTI-GAGAL:</b>
+
+□ Modal cukup (50+ credits)
+□ Provider berkualitas (win rate > 60%)
+□ Lot size konservatif (0.01 untuk mulai)
+□ EA monitored daily (heartbeat < 30s)
+□ Pahami biaya (3 credits/signal)
+□ Pakai VPS untuk uptime 24/7
+□ One Trade at a Time: ON
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>💡 BONUS TIP:</b>
+
+<b>"Copytrade itu marathon, bukan sprint."</b>
+
+Fokus pada konsistensi, bukan profit instan.
+Provider terbaik = yang konsisten 6-12 bulan.
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>🚀 START SMART:</b>
+https://arra7-app.vercel.app/copytrade
+
+#Mistakes #Copytrade #TradingTips #LearnFromOthers`,
+
+    // HARI 7: SUCCESS BLUEPRINT - "Roadmap to Profit"
+    day7_blueprint: `🗺️ <b>BLUEPRINT SUKSES COPYTRADE ARRA77</b>
+<i>Roadmap 30 Hari dari Nol ke Profit Konsisten</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📅 MINGGU 1: FOUNDATION</b>
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Day 1-2: Setup</b>
+□ Daftar & buat profile
+□ Top up 50-100 credits
+□ Download & install EA
+□ Test EA dengan demo account
+
+<b>Day 3-4: Provider Research</b>
+□ Browse semua provider
+□ Catat 3-5 kandidat terbaik
+□ Cek track record (min. 20 trades)
+□ Pilih 1 provider utama
+
+<b>Day 5-7: First Signals</b>
+□ Follow provider pilihan
+□ Set lot size 0.01
+□ Monitor 5-10 signals pertama
+□ Catat hasil (win/loss)
+
+<b>🎯 Target Minggu 1:</b>
+• Sistem berjalan stabil
+• EA online 24/7
+• Minimal 5 signals executed
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📅 MINGGU 2: OPTIMIZATION</b>
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Day 8-10: Performance Review</b>
+□ Evaluasi win rate aktual
+□ Cek average profit/loss
+□ Adjust lot size jika perlu
+□ Top up jika saldo < 30 credits
+
+<b>Day 11-14: Scale Up</b>
+□ Naikkan lot ke 0.02 (jika profit konsisten)
+□ Pertimbangkan provider ke-2 untuk diversifikasi
+□ Setup VPS jika belum
+
+<b>🎯 Target Minggu 2:</b>
+• Win rate > 55%
+• Profit > 10% dari modal
+• Sistem 100% otomatis
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📅 MINGGU 3-4: CONSISTENCY</b>
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Day 15-21: Stabilization</b>
+□ Maintain konfigurasi optimal
+□ Monitor daily performance
+□ Reinvest profit (compound)
+□ Build emergency buffer (50+ credits)
+
+<b>Day 22-30: Expansion</b>
+□ Evaluasi monthly performance
+□ Plan scale up untuk bulan depan
+□ Consider additional providers
+□ Document lessons learned
+
+<b>🎯 Target Minggu 3-4:</b>
+• Profit konsisten 15-25%/bulan
+• Drawdown < 20%
+• Sistem fully automated
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📊 EXPECTED RESULTS (30 Hari)</b>
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Conservative Scenario:</b>
+• Modal awal: Rp 100.000
+• Win rate: 60%
+• Profit: +Rp 50.000 (50%)
+• Signals: ~100
+
+<b>Moderate Scenario:</b>
+• Modal awal: Rp 100.000
+• Win rate: 65%
+• Profit: +Rp 100.000 (100%)
+• Signals: ~100
+
+<b>Aggressive Scenario:</b>
+• Modal awal: Rp 100.000
+• Win rate: 70%
+• Profit: +Rp 200.000 (200%)
+• Signals: ~100
+
+⚠️ <i>Disclaimer: Past performance ≠ future results</i>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>🔑 KEYS TO SUCCESS</b>
+━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ <b>Patience:</b> Jangan ganti provider setiap loss
+2️⃣ <b>Consistency:</b> Biarkan sistem bekerja
+3️⃣ <b>Risk Management:</b> Lot size sesuai modal
+4️⃣ <b>Monitoring:</b> Cek EA & saldo daily
+5️⃣ <b>Continuous Learning:</b> Track & analyze results
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>🚀 START YOUR JOURNEY:</b>
+https://arra7-app.vercel.app/copytrade
+
+<b>💬 Need Help?</b>
+Admin support via Telegram!
+
+#Blueprint #Success #Copytrade #Roadmap #Profit`,
 };
 
 // Template metadata untuk admin display
 export const TEMPLATE_METADATA: Record<string, { name: string; emoji: string; description: string; day: number }> = {
-    day1_register: { name: 'Hari 1: Daftar', emoji: '🎯', description: 'Pengenalan & Cara Daftar Copytrade', day: 1 },
-    day2_topup: { name: 'Hari 2: Top Up', emoji: '💰', description: 'Panduan Top Up Saldo Credit', day: 2 },
-    day3_follow: { name: 'Hari 3: Follow', emoji: '👥', description: 'Cara Pilih Provider & Follow', day: 3 },
-    day4_ea_bridge: { name: 'Hari 4: EA Bridge', emoji: '🔧', description: 'Instalasi & Konfigurasi EA', day: 4 },
-    day5_results: { name: 'Hari 5: Hasil', emoji: '📈', description: 'Contoh Hasil Trading & Statistik', day: 5 },
-    day6_faq: { name: 'Hari 6: FAQ', emoji: '❓', description: 'Pertanyaan & Troubleshooting', day: 6 },
-    day7_promo: { name: 'Hari 7: Promo', emoji: '🎉', description: 'Promo & Testimoni Users', day: 7 },
+    day1_story: { name: 'Hari 1: Storytelling', emoji: '📖', description: 'Kisah Perjalanan Budi (Storytelling)', day: 1 },
+    day2_stepbystep: { name: 'Hari 2: Step-by-Step', emoji: '📚', description: 'Panduan Visual Step-by-Step', day: 2 },
+    day3_faq: { name: 'Hari 3: FAQ', emoji: '❓', description: '10 Pertanyaan Paling Sering', day: 3 },
+    day4_checklist: { name: 'Hari 4: Checklist', emoji: '✅', description: 'To-Do List Lengkap', day: 4 },
+    day5_visual: { name: 'Hari 5: Visual', emoji: '🎨', description: 'Infographic Style Guide', day: 5 },
+    day6_mistakes: { name: 'Hari 6: Mistakes', emoji: '⚠️', description: '7 Kesalahan Fatal Pemula', day: 6 },
+    day7_blueprint: { name: 'Hari 7: Blueprint', emoji: '🗺️', description: 'Roadmap 30 Hari ke Profit', day: 7 },
 };
 
 // Mendapatkan key template berdasarkan hari (1-7)
 export function getTemplateKeyForDay(dayOfWeek: number): string {
     // dayOfWeek: 1 (Senin) - 7 (Minggu)
     const mapping: Record<number, string> = {
-        1: 'day1_register',
-        2: 'day2_topup',
-        3: 'day3_follow',
-        4: 'day4_ea_bridge',
-        5: 'day5_results',
-        6: 'day6_faq',
-        7: 'day7_promo',
+        1: 'day1_story',
+        2: 'day2_stepbystep',
+        3: 'day3_faq',
+        4: 'day4_checklist',
+        5: 'day5_visual',
+        6: 'day6_mistakes',
+        7: 'day7_blueprint',
     };
-    return mapping[dayOfWeek] || 'day1_register';
+    return mapping[dayOfWeek] || 'day1_story';
 }
 
 // Mendapatkan template yang aktif untuk hari ini (berubah setiap 24 jam)

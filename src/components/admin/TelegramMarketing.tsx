@@ -18,15 +18,15 @@ export default function TelegramMarketing({
     onToggleAutoPost,
     onSendPromo
 }: TelegramMarketingProps) {
-    // Template harian untuk Copytrade ARRA77
+    // Template harian untuk Copytrade ARRA77 - 1 PANDUAN LENGKAP, 7 GAYA BERBEDA
     const dailyTemplates = [
-        { id: 'day1_register', label: 'Hari 1: Daftar', icon: '🎯', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-        { id: 'day2_topup', label: 'Hari 2: Top Up', icon: '💰', color: 'bg-green-50 border-green-200 text-green-700' },
-        { id: 'day3_follow', label: 'Hari 3: Follow', icon: '👥', color: 'bg-purple-50 border-purple-200 text-purple-700' },
-        { id: 'day4_ea_bridge', label: 'Hari 4: EA Bridge', icon: '🔧', color: 'bg-amber-50 border-amber-200 text-amber-700' },
-        { id: 'day5_results', label: 'Hari 5: Hasil', icon: '📈', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-        { id: 'day6_faq', label: 'Hari 6: FAQ', icon: '❓', color: 'bg-slate-50 border-slate-200 text-slate-700' },
-        { id: 'day7_promo', label: 'Hari 7: Promo', icon: '🎉', color: 'bg-pink-50 border-pink-200 text-pink-700' },
+        { id: 'day1_story', label: 'Hari 1: Story', icon: '📖', color: 'bg-blue-50 border-blue-200 text-blue-700' },
+        { id: 'day2_stepbystep', label: 'Hari 2: Tutorial', icon: '📚', color: 'bg-green-50 border-green-200 text-green-700' },
+        { id: 'day3_faq', label: 'Hari 3: FAQ', icon: '❓', color: 'bg-purple-50 border-purple-200 text-purple-700' },
+        { id: 'day4_checklist', label: 'Hari 4: Checklist', icon: '✅', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+        { id: 'day5_visual', label: 'Hari 5: Visual', icon: '🎨', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        { id: 'day6_mistakes', label: 'Hari 6: Mistakes', icon: '⚠️', color: 'bg-slate-50 border-slate-200 text-slate-700' },
+        { id: 'day7_blueprint', label: 'Hari 7: Blueprint', icon: '🗺️', color: 'bg-pink-50 border-pink-200 text-pink-700' },
     ];
 
     return (
@@ -37,7 +37,7 @@ export default function TelegramMarketing({
                     <div>
                         <h3 className="text-lg font-semibold text-[var(--text-primary)]">Telegram Marketing - Copytrade ARRA77</h3>
                         <p className="text-sm text-[var(--text-secondary)]">
-                            1 template • Berubah otomatis setiap hari (7 hari cycle)
+                            1 Panduan Lengkap • 7 Gaya Penyampaian • Berubah setiap hari
                             {telegramConfigured ? (
                                 <span className="ml-2 text-green-400">● Connected</span>
                             ) : (
@@ -98,11 +98,12 @@ export default function TelegramMarketing({
             {/* Info Box */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <p className="text-sm text-blue-800">
-                    <b>📋 Tentang Template:</b>
+                    <b>📋 Konsep Template:</b>
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                    Template berubah otomatis setiap hari dengan konten edukasi Copytrade ARRA77. 
-                    Cycle 7 hari: Daftar → Top Up → Follow → EA Bridge → Hasil → FAQ → Promo
+                    <b>1 Panduan Lengkap - 7 Gaya Berbeda.</b> Setiap hari template yang sama disampaikan dengan cara berbeda agar tidak bosan. 
+                    <br/><br/>
+                    <b>Cycle 7 Hari:</b> Story → Tutorial → FAQ → Checklist → Visual → Mistakes → Blueprint
                 </p>
             </div>
 
