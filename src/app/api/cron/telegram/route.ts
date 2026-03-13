@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { sendTelegramMessage, getRotatingTemplate, isTelegramConfigured, TEMPLATE_METADATA } from '@/lib/telegram';
+import { sendTelegramMessage, getTodaysTemplate, isTelegramConfigured, TEMPLATE_METADATA } from '@/lib/telegram';
 import getTursoClient from '@/lib/turso';
 
-// Vercel Cron Job - Auto-post to Telegram every 5 hours
-// Schedule: 0 */5 * * * (at minute 0 past every 5th hour)
+// Vercel Cron Job - Auto-post to Telegram daily (every 24 hours)
+// Schedule: 0 8 * * * (at 8:00 AM every day)
 
 // Helper to get auto-post status from database
 async function isAutoPostEnabled(): Promise<boolean> {
@@ -59,11 +59,11 @@ export async function GET(request: Request) {
     }
 
     try {
-        // Get the rotating template
-        const { key, message } = getRotatingTemplate();
+        // Get today's template (changes every 24 hours)
+        const { key, message, dayName } = getTodaysTemplate();
         const metadata = TEMPLATE_METADATA[key];
 
-        console.log(`[CRON] Sending template: ${key} (${metadata?.name || 'Unknown'})`);
+        console.log(`[CRON] Sending daily template: ${key} (${metadata?.name || dayName})`);
 
         // Send to Telegram
         const result = await sendTelegramMessage(message);
@@ -72,8 +72,9 @@ export async function GET(request: Request) {
             console.log(`[CRON] Successfully sent: ${key}, messageId: ${result.messageId}`);
             return NextResponse.json({
                 status: 'success',
-                message: `Template "${metadata?.name || key}" sent successfully`,
+                message: `Template "${metadata?.name || dayName}" sent successfully`,
                 templateKey: key,
+                dayName: dayName,
                 messageId: result.messageId,
                 timestamp: new Date().toISOString(),
             });

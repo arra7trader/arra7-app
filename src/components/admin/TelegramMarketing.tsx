@@ -18,15 +18,26 @@ export default function TelegramMarketing({
     onToggleAutoPost,
     onSendPromo
 }: TelegramMarketingProps) {
+    // Template harian untuk Copytrade ARRA77
+    const dailyTemplates = [
+        { id: 'day1_register', label: 'Hari 1: Daftar', icon: '🎯', color: 'bg-blue-50 border-blue-200 text-blue-700' },
+        { id: 'day2_topup', label: 'Hari 2: Top Up', icon: '💰', color: 'bg-green-50 border-green-200 text-green-700' },
+        { id: 'day3_follow', label: 'Hari 3: Follow', icon: '👥', color: 'bg-purple-50 border-purple-200 text-purple-700' },
+        { id: 'day4_ea_bridge', label: 'Hari 4: EA Bridge', icon: '🔧', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+        { id: 'day5_results', label: 'Hari 5: Hasil', icon: '📈', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        { id: 'day6_faq', label: 'Hari 6: FAQ', icon: '❓', color: 'bg-slate-50 border-slate-200 text-slate-700' },
+        { id: 'day7_promo', label: 'Hari 7: Promo', icon: '🎉', color: 'bg-pink-50 border-pink-200 text-pink-700' },
+    ];
+
     return (
         <div className="mb-8 bg-white rounded-2xl border border-[var(--border-light)] p-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">📢</span>
                     <div>
-                        <h3 className="text-lg font-semibold text-[var(--text-primary)]">Telegram Marketing</h3>
+                        <h3 className="text-lg font-semibold text-[var(--text-primary)]">Telegram Marketing - Copytrade ARRA77</h3>
                         <p className="text-sm text-[var(--text-secondary)]">
-                            2 templates • Auto-post setiap 5 jam
+                            1 template • Berubah otomatis setiap hari (7 hari cycle)
                             {telegramConfigured ? (
                                 <span className="ml-2 text-green-400">● Connected</span>
                             ) : (
@@ -58,7 +69,7 @@ export default function TelegramMarketing({
             <div className="mb-6 p-4 bg-[var(--bg-secondary)] rounded-xl flex items-center justify-between">
                 <div>
                     <p className="font-medium text-[var(--text-primary)]">Auto-Posting Control</p>
-                    <p className="text-sm text-[var(--text-secondary)]">Toggle auto-posting setiap 5 jam</p>
+                    <p className="text-sm text-[var(--text-secondary)]">Kirim template harian otomatis ke Telegram</p>
                 </div>
                 <div className="flex gap-3">
                     <button
@@ -84,66 +95,39 @@ export default function TelegramMarketing({
                 </div>
             </div>
 
-            {/* 2 Marketing Templates */}
-            <div className="grid grid-cols-2 gap-4">
-                <button
-                    onClick={() => onSendPromo('arra7')}
-                    disabled={sendingTelegram || !telegramConfigured}
-                    className="flex flex-col items-center gap-2 p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                    <span className="text-3xl">🔮</span>
-                    <span className="font-medium">ARRA7</span>
-                    <span className="text-xs text-purple-500">AI Trading Analysis</span>
-                </button>
-
-                <button
-                    onClick={() => onSendPromo('saham')}
-                    disabled={sendingTelegram || !telegramConfigured}
-                    className="flex flex-col items-center gap-2 p-4 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl text-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                    <span className="text-3xl">📈</span>
-                    <span className="font-medium">Saham Indonesia</span>
-                    <span className="text-xs text-green-500">Analisa IDX AI</span>
-                </button>
-
-                <button
-                    onClick={() => onSendPromo('bookmap_ai')}
-                    disabled={sendingTelegram || !telegramConfigured}
-                    className="col-span-2 flex flex-col items-center gap-2 p-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                    <span className="text-3xl">🚀</span>
-                    <span className="font-medium">Bookmap X AI</span>
-                    <span className="text-xs text-amber-600">Promo Heatmap & AI (Short & Cool)</span>
-                </button>
+            {/* Info Box */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <p className="text-sm text-blue-800">
+                    <b>📋 Tentang Template:</b>
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                    Template berubah otomatis setiap hari dengan konten edukasi Copytrade ARRA77. 
+                    Cycle 7 hari: Daftar → Top Up → Follow → EA Bridge → Hasil → FAQ → Promo
+                </p>
             </div>
 
-            {/* Content Series Section */}
-            <div className="mt-8 pt-6 border-t border-[var(--border-light)]">
+            {/* 7 Daily Templates - Manual Send */}
+            <div>
                 <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
-                    📢 Content Series (Part 1-4)
+                    📅 Template Harian (Klik untuk Kirim Manual)
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[
-                        { id: 'series_part1', label: 'Part 1: Teaser', icon: '⚠️', color: 'bg-slate-50 border-slate-200 text-slate-700' },
-                        { id: 'series_part2', label: 'Part 2: Solution', icon: '💡', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-                        { id: 'series_part3', label: 'Part 3: Proof', icon: '🔥', color: 'bg-amber-50 border-amber-200 text-amber-700' },
-                        { id: 'series_part4', label: 'Part 4: Offer', icon: '💎', color: 'bg-green-50 border-green-200 text-green-700' },
-                    ].map((series) => (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {dailyTemplates.map((template) => (
                         <button
-                            key={series.id}
-                            onClick={() => onSendPromo(series.id)}
+                            key={template.id}
+                            onClick={() => onSendPromo(template.id)}
                             disabled={sendingTelegram || !telegramConfigured}
-                            className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed ${series.color}`}
+                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed ${template.color}`}
                         >
-                            <span className="text-2xl">{series.icon}</span>
-                            <span className="text-sm font-bold">{series.label}</span>
+                            <span className="text-3xl">{template.icon}</span>
+                            <span className="text-sm font-bold text-center">{template.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
             <p className="mt-4 text-xs text-[var(--text-muted)] text-center">
-                {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post bergantian setiap 5 jam'}
+                {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post aktif = kirim otomatis setiap hari'}
             </p>
 
             {!telegramConfigured && (

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sendTelegramMessage, MARKETING_TEMPLATES, isTelegramConfigured, TEMPLATE_METADATA } from '@/lib/telegram';
+import { sendTelegramMessage, COPYTRADE_TEMPLATES, isTelegramConfigured, TEMPLATE_METADATA, getTodaysTemplate } from '@/lib/telegram';
 import getTursoClient from '@/lib/turso';
 
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
@@ -57,13 +57,15 @@ export async function GET() {
     }
 
     const autoPostEnabled = await getAutoPostStatus();
+    const todaysTemplate = getTodaysTemplate();
 
     return NextResponse.json({
         status: 'success',
         configured: isTelegramConfigured(),
         autoPostEnabled,
-        templates: Object.keys(MARKETING_TEMPLATES),
+        templates: Object.keys(COPYTRADE_TEMPLATES),
         templateMetadata: TEMPLATE_METADATA,
+        todaysTemplate: todaysTemplate,
     });
 }
 
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
 
         // Use template if specified
         if (template && !customMessage) {
-            const templateContent = MARKETING_TEMPLATES[template as keyof typeof MARKETING_TEMPLATES];
+            const templateContent = COPYTRADE_TEMPLATES[template as keyof typeof COPYTRADE_TEMPLATES];
             if (typeof templateContent === 'string') {
                 message = templateContent;
             } else {

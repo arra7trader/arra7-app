@@ -67,221 +67,324 @@ export async function sendTelegramMessage(
 }
 
 // ============================================
-// 2 FOCUSED MARKETING TEMPLATES FOR AUTO-POSTING
+// COPYTRADE ARRA77 - DAILY ROTATING TEMPLATE
 // ============================================
+// Template berubah otomatis setiap 24 jam (7 hari cycle)
+// Konten: Panduan mudah Copytrade ARRA77
 
-export const MARKETING_TEMPLATES: Record<string, string> = {
-    // 1. ARRA7 - AI Trading Analysis (Updated)
-    arra7: `🔮 <b>ARRA7 - AI Trading Analysis</b>
+export const COPYTRADE_TEMPLATES: Record<string, string> = {
+    // HARI 1: Pengenalan & Cara Daftar
+    day1_register: `🎯 <b>COPYTRADE ARRA77 - Trading Otomatis Dimulai!</b>
 
-Analisa Trading dengan AI & Akurasi Tinggi!
+<b>Apa itu Copytrade ARRA77?</b>
+Sistem yang memungkinkan Anda <b>copy trading otomatis</b> dari provider profesional langsung ke akun MT5 Anda!
 
-🤖 <b>Platform Analisa AI Level Institusional:</b>
-✅ Forex (XAUUSD, EUR/USD, GBP/JPY, dll)
-✅ Crypto (BTC, ETH, SOL, XRP, dll)  
-✅ Saham Indonesia (BBCA, BBRI, TLKM, ANTM, dll)
+✅ <b>Keuntungan:</b>
+• Trading otomatis 24/7 via EA Bridge
+• Pilih provider sesuai profil risiko
+• Kontrol penuh atas lot size & risk
+• Saldo sistem credit (1 credit = Rp 1.000)
 
-⚡ <b>Fitur Unggulan:</b>
-• AI Quantum Strategist - LLM 70B parameter
-• Entry Zone, Stop Loss, Take Profit otomatis
-• Investment Thesis lengkap
-• Analisa Fundamental & Teknikal
+📝 <b>Cara Daftar (3 Langkah):</b>
+1️⃣ Login di https://arra7-app.vercel.app
+2️⃣ Menu "Copytrade" → Buat Profile
+3️⃣ Generate License Key untuk EA
 
-📊 <b>Cara Kerjanya (3 Langkah!):</b>
-1️⃣ Pilih Pair/Saham
-2️⃣ Klik Analisa
-3️⃣ Trading dengan percaya diri!
+💡 <b>Biaya:</b>
+• 1 signal = 3 credits (Rp 3.000)
+• Provider dapat 2 credits
+• Admin dapat 1 credit
 
-💰 <b>Harga:</b>
-• GRATIS - 2x analisa/hari
-• PRO - <b>Rp 99.000/bulan</b> (25x/hari)
-• VVIP - <b>Rp 399.000/bulan</b> (UNLIMITED!)
+🔗 <b>Mulai Sekarang:</b>
+https://arra7-app.vercel.app/copytrade
 
-🔥 <b>PROMO TAHUN BARU - Diskon hingga 50%!</b>
+#CopytradeARRA77 #TradingOtomatis #MT5`,
 
-🔗 <b>Coba Sekarang (GRATIS!):</b>
-👉 https://arra7-app.vercel.app
+    // HARI 2: Cara Top Up Saldo
+    day2_topup: `💰 <b>CARA TOP UP SALDO COPYTRADE</b>
 
-🚀 <b>Coming Soon: DOM ARRA</b>
-Depth of Market + AI Order Flow Analysis
+Saldo credit diperlukan untuk eksekusi signal trading.
 
-#ARRA7 #AITrading #Forex #Crypto #SahamIndonesia`,
+💵 <b>Konversi Credit:</b>
+• 1 Credit = Rp 1.000
+• 1 Signal = 3 Credits (Rp 3.000)
+• Minimal topup: 10 credits (Rp 10.000)
 
-    // 2. ARRA7 Saham Indonesia Focus
-    saham: `📈 <b>ANALISA SAHAM INDONESIA dengan AI</b>
+📲 <b>Cara Top Up (QRIS):</b>
+1️⃣ Menu "Copytrade" → Top Up
+2️⃣ Pilih jumlah credit
+3️⃣ Scan QRIS yang muncul
+4️⃣ Upload bukti pembayaran
+5️⃣ Admin approve (max 1x24 jam)
 
-Analisa setingkat Mandiri Sekuritas & Morgan Stanley!
+⚡ <b>Saldo Masuk!</b>
+Setelah approve, credit langsung tersedia untuk trading.
 
-🏢 <b>ARRA Institutional Research:</b>
-• Fundamental Scorecard (Valuasi, Profitabilitas, Growth)
-• Technical Outlook (Support, Resistance, Trend)
-• Investment Thesis lengkap
-• Key Risks identification
-• Overall Score 1-10
+🔍 <b>Cek Saldo:</b>
+Dashboard Copytrade menampilkan:
+• Balance Credits
+• Total Spent
+• Total Earned (untuk provider)
 
-📊 <b>Contoh Emiten Populer:</b>
-BBCA | BBRI | BMRI | TLKM | ANTM
-ASII | UNVR | ICBP | GOTO | BREN
+❓ <b>Butuh Bantuan?</b>
+Admin siap membantu via Telegram!
 
-💡 <b>Yang Kamu Dapat:</b>
-✅ Verdict: BUY / HOLD / SELL
-✅ Entry Zone & Target Price
-✅ Stop Loss recommendation
-✅ Risk/Reward Ratio
+🔗 <b>Top Up Sekarang:</b>
+https://arra7-app.vercel.app/copytrade
 
-💰 <b>Harga Spesial:</b>
-• GRATIS - 2x analisa/hari
-• PRO - Rp 99.000/bulan (unlimited emiten!)
-• VVIP - Rp 399.000/bulan (ALL ACCESS)
+#TopUpCopytrade #QRIS #TradingMudah`,
 
-🔗 <b>Mulai Analisa Saham:</b>
-👉 https://arra7-app.vercel.app
+    // HARI 3: Cara Pilih Provider & Follow
+    day3_follow: `👥 <b>PILIH PROVIDER & MULAI COPY!</b>
 
-#SahamIndonesia #IDXAnalysis #IHSG #InvestasiSaham #ARRA7`,
+<b>Langkah Penting Setelah Top Up:</b>
 
-    // 3. Bookmap X AI (Short & Cool)
-    bookmap_ai: `🚀 <b>Next Level Trading!</b>
+1️⃣ <b>Browse Provider:</b>
+• Lihat track record trading
+• Cek win rate & total trades
+• Pilih risk level (LOW/MEDIUM/HIGH)
 
-Mau lihat Whale sembunyi di mana? 👀
-Analisa market jadi makin transparan dengan <b>Bookmap Heatmap</b> & <b>AI Prediction</b> di ARRA7.
+2️⃣ <b>Klik "Follow":</b>
+• Set risk mode:
+  - FIXED LOT (lot konstan)
+  - MULTIPLIER (kali dari provider)
+  - RISK PERCENT (% dari balance)
 
-✅ <b>Real-time Order Flow</b> - Liat tembok buy/sell asli.
-✅ <b>AI Signal</b> - Akurasi tinggi, bukan tebak-tebakan.
-✅ <b>Download APK</b> - Trading pro dalam genggaman.
+3️⃣ <b>Konfigurasi Lanjutan:</b>
+• Max concurrent positions
+• One trade at a time (ON/OFF)
+• Fixed lot size (misal: 0.01 lot)
 
-🔥 <b>Upgrade ke PRO sekarang!</b>
-Coba fitur premium tanpa ribet.
+⚠️ <b>Perhatian:</b>
+• Pastikan saldo cukup untuk signal
+• Provider harus APPROVED oleh admin
+• EA Bridge harus ONLINE di PC/VPS
 
-🔗 <b>Download:</b> https://arra7-app.vercel.app/download/android
-#ARRA7 #TradingSmart #Bookmap #AITrading`,
+📊 <b>Monitor Posisi:</b>
+• Lihat posisi aktif di dashboard
+• Track profit/loss real-time
+• Riwayat trading lengkap
 
-    // ============================================
-    // CONTENT SERIES (PART 1 - 4)
-    // ============================================
+🔗 <b>Pilih Provider:</b>
+https://arra7-app.vercel.app/copytrade/providers
 
-    // Part 1: The Problem / Teaser
-    series_part1: `⚠️ <b>STOP! Baca ini sebelum deposit lagi.</b>
+#FollowProvider #CopyTrading #PassiveIncome`,
 
-90% Trader pemula kehilangan modal dalam 90 hari pertama. Kenapa?
-Karena kamu "buta" melawan Institusi/Bandar yang punya data lengkap. 🏦
+    // HARI 4: Cara Kerja EA Bridge
+    day4_ea_bridge: `🔧 <b>EA BRIDGE - Jantung Copytrade!</b>
 
-❌ Kamu pakai indikator lagging (RSI, MACD standard).
-❌ Kamu tebak-tebakan support/resistance.
-❌ Kamu tidak tahu di mana "Uang Besar" bersembunyi.
+<b>Apa itu EA Bridge?</b>
+Software yang menghubungkan sinyal dari server ke MT5 Anda!
 
-<b>Sudah saatnya buka mata.</b> 👀
-Bayangkan jika kamu bisa melihat apa yang dilihat Institusi.
-Bayangkan jika kamu punya "Asisten AI" yang menganalisa 24/7 untukmu.
+🖥️ <b>Instalasi EA Bridge:</b>
+1️⃣ Download file .ex5 dari dashboard
+2️⃣ Copy ke folder MQL5/Experts/MT5
+3️⃣ Buka MT5 → Navigator → Experts
+4️⃣ Drag "Arra-Copytrade-Bridge" ke chart
+5️⃣ Input License Key dari dashboard
 
-Tunggu Part 2 besok. Kita akan bahas solusinya.
-#DayTrading #Forex #Saham #SmartMoney #ARRA7Series`,
+⚙️ <b>Konfigurasi EA:</b>
+• License Key (wajib!)
+• MT5 Login
+• Broker Name
+• Server Name
+• Symbol & Timeframe
 
-    // Part 2: The Solution / Introduction
-    series_part2: `💡 <b>Trading Level Institusi di Genggamanmu.</b>
+✅ <b>Status Monitoring:</b>
+Dashboard menampilkan:
+• Terminal Status (ONLINE/OFFLINE)
+• Last Heartbeat (max 30 detik)
+• Last Error (jika ada)
 
-Kemarin kita bahas kenapa trader ritel sering kalah.
-Jawabannya: <b>Informasi yang Tidak Seimbang.</b>
+🔴 <b>Troubleshooting:</b>
+• Offline > 180s? Nyalakan EA!
+• Error lock? Reset dari dashboard
+• No signal? Cek koneksi internet
 
-Memperkenalkan: <b>ARRA7 - AI Trading Intelligence</b> 🔮
+💡 <b>Tips:</b>
+• Gunakan VPS untuk uptime 24/7
+• Restart EA jika ada error
+• Update ke versi terbaru
 
-Bukan sekadar sinyal. Ini adalah ekosistem trading lengkap yang menggabungkan:
-1️⃣ <b>Deep Learning AI (70B Model):</b> Menganalisa sentimen & teknikal secara realtime.
-2️⃣ <b>Institutional Data:</b> Order Flow, Liquidity Zones, & Market Profile.
-3️⃣ <b>Smart Risk Management:</b> Menghitung Entry/SL/TP yang optimal.
+🔗 <b>Download EA:</b>
+https://arra7-app.vercel.app/copytrade/bridge
 
-Kami tidak menjanjikan "Cepat Kaya".
-Tapi kami menjanjikan <b>Edge (Keunggulan)</b> yang adil melawan pasar.
+#EABridge #MT5 #TradingBot #Automation`,
 
-Siap lihat buktinya? Stay tuned untuk Part 3.
-#ARRA7 #AITrading #Fintech #InvestasiCerdas #ARRA7Series`,
+    // HARI 5: Contoh Hasil Trading
+    day5_results: `📈 <b>HASIL TRADING COPYTRADE</b>
 
-    // Part 3: The Proof / Features
-    series_part3: `🔥 <b>Fitur yang Bikin Bandar Ketar-ketir?</b>
+<b>Statistik Real-Time:</b>
 
-Di ARRA7, kami membuka "Kartu" para Big Player.
-Apa saja senjata rahasiamu nanti?
+🏆 <b>Provider Performance:</b>
+• Total Trades: 50+ trades
+• Win Rate: 60%+ (minimal challenge)
+• Profit Factor: > 1.5
+• Max Drawdown: < 20%
 
-🗺️ <b>HEATMAP & WHALE TRACKING</b>
-Lihat tumpukan limit order (tembok support/resistance asli) secara visual. Jangan mau lagi dijebak fake breakout!
+💰 <b>Contoh Perhitungan:</b>
+Modal: 100 credits (Rp 100.000)
+Signal/hari: ~5 signals
+Biaya/hari: 15 credits (Rp 15.000)
 
-🧠 <b>AI PREDICTION ENGINE</b>
-"Bullish 85%"? "Bearish 90%"?
-AI kami memberikan probabilitas arah market berdasarkan data historis dan order flow terkini.
+Jika win rate 60%:
+• 3 win x Rp 50.000 = +150.000
+• 2 loss x Rp 30.000 = -60.000
+• Profit bersih: +90.000/hari*
 
-📉 <b>AUTOMATED ZONES</b>
-Supply & Demand, Order Blocks, Liquidity Voids...
-Semua digambar OTOMATIS di chart Anda. Tidak perlu garis-garis manual lagi.
+⚠️ <b>Disclaimer:</b>
+*Hasil tidak garantised, tergantung market & provider
 
-Ribuan trader sudah beralih ke cara cerdas ini.
-Kapan giliranmu?
+📊 <b>Dashboard Analytics:</b>
+• Total Profit/Loss
+• Win/Loss Ratio
+• Average Pips per Trade
+• Revenue Share (untuk provider)
 
-Part 4 (Terakhir): Penawaran Spesial untukmu. 🎁
-#TradingFeatures #Heatmap #OrderFlow #ARRA7 #ARRA7Series`,
+🎯 <b>Target Challenge Provider:</b>
+• 50 trades minimum
+• Win rate > 60%
+• Lolos = Approved & Revenue Share!
 
-    // Part 4: The Offer / CTA
-    series_part4: `💎 <b>PENAWARAN TERBATAS: Upgrade Skill Tradingmu!</b>
+🔗 <b>Lihat Statistik:</b>
+https://arra7-app.vercel.app/copytrade/stats
 
-Kamu sudah paham masalahnya. Kamu sudah lihat solusinya.
-Sekarang saatnya mengambil tindakan. 🚀
+#HasilTrading #WinRate #ProfitableTrading`,
 
-Khusus untuk Subscriber channel ini, dapatkan akses <b>ARRA7 PRO</b> dengan harga promo!
+    // HARI 6: FAQ & Troubleshooting
+    day6_faq: `❓ <b>FAQ COPYTRADE ARRA77</b>
 
-✅ <b>Akses Full AI Analysis</b>
-✅ <b>Akses Heatmap & Order Flow</b>
-✅ <b>Unlimited Saham & Forex Pairs</b>
+<b>Q: Berapa minimal deposit?</b>
+A: 10 credits (Rp 10.000) via QRIS
 
-💰 <b>Hanya Rp 99.000 / Bulan!</b>
-(Harga normal Rp 149.000)
+<b>Q: Berapa biaya per signal?</b>
+A: 3 credits (Rp 3.000) per eksekusi
 
-Atau ambil <b>VVIP (Rp 249.000)</b> untuk fitur prioritas & support khusus.
+<b>Q: Bisa trade manual sambil copytrade?</b>
+A: Bisa! Tapi aktifkan "One Trade at a Time"
 
-👉 <b>Klaim Promo Sekarang:</b>
-https://arra7-app.vercel.app/pricing
+<b>Q: EA offline, apa yang terjadi?</b>
+A: Signal tidak masuk. Nyalakan EA untuk resume!
 
-Jangan biarkan tradingmu "buta" lagi.
-Join the Smart Money. Join ARRA7.
+<b>Q: Bagaimana cara jadi Provider?</b>
+A:
+1. Buat profile provider
+2. Trade minimal 50x
+3. Maintain win rate > 60%
+4. Admin approve = Revenue share!
 
-#ARRA7 #PromoTrading #Investasi #SahamIndonesia #ForexSignal`,
+<b>Q: Saldo kurang, apa yang terjadi?</b>
+A: Signal di-skip. Top up untuk lanjut!
+
+<b>Q: Bisa refund saldo?</b>
+A: Hubungi admin untuk penarikan
+
+<b>Q: Support broker apa?</b>
+A: Semua broker MT5 (IC Markets, Pepperstone, dll)
+
+<b>Q: Butuh VPS?</b>
+A: Recommended untuk uptime 24/7
+
+❓ <b>Pertanyaan Lain?</b>
+DM admin via Telegram!
+
+🔗 <b>Bantuan Lengkap:</b>
+https://arra7-app.vercel.app/copytrade/help
+
+#FAQ #HelpDesk #CopytradeHelp`,
+
+    // HARI 7: Promo & Testimoni
+    day7_promo: `🎉 <b>PROMO & TESTIMONI COPYTRADE</b>
+
+🔥 <b>PROMO SPESIAL BULAN INI!</b>
+
+💎 <b>Bonus Top Up:</b>
+• Top up 100 credits → Bonus 10 credits!
+• Top up 500 credits → Bonus 75 credits!
+
+🎁 <b>Provider Challenge:</b>
+• Gratis biaya pendaftaran
+• Revenue share 2 credits/signal
+• Bonus khusus top performer!
+
+⭐ <b>Testimoni Users:</b>
+
+_"Alhamdulillah, 2 minggu copytrade udah +30% dari modal. Providernya konsisten, EA juga stabil."_
+— Budi, Jakarta
+
+_"Awalnya ragu, tapi setelah coba 1 bulan hasilnya memuaskan. Win rate 65%, worth it!"_
+— Andi, Surabaya
+
+_"Sistem credit transparan, nggak ada biaya tersembunyi. Recommended!"_
+— Reza, Bandung
+
+📊 <b>Statistik Platform:</b>
+• 100+ Active Users
+• 10+ Approved Providers
+• 500+ Signals Executed
+• 85%+ User Satisfaction
+
+🚀 <b>Join Sekarang!</b>
+Jangan ketinggalan profit dari copytrade!
+
+🔗 <b>Daftar Gratis:</b>
+https://arra7-app.vercel.app/copytrade
+
+#Promo #Testimoni #CopytradeSuccess #PassiveIncome`,
 };
 
-// Template metadata for admin display
-export const TEMPLATE_METADATA: Record<string, { name: string; emoji: string; description: string }> = {
-    arra7: { name: 'ARRA7', emoji: '🔮', description: 'AI Trading Analysis - Forex, Crypto, Saham' },
-    saham: { name: 'Saham Indonesia', emoji: '📈', description: 'Analisa Saham IDX dengan AI Institusional' },
-    bookmap_ai: { name: 'Bookmap X AI', emoji: '🚀', description: 'Promo fitur Heatmap & AI' },
-
-    // Content Series
-    series_part1: { name: 'Part 1: The Awakening', emoji: '⚠️', description: 'Why Traders Fail (Teaser)' },
-    series_part2: { name: 'Part 2: The Solution', emoji: '💡', description: 'Introducing ARRA7 (Institutional Edge)' },
-    series_part3: { name: 'Part 3: The Proof', emoji: '🔥', description: 'Features & Social Proof' },
-    series_part4: { name: 'Part 4: The Offer', emoji: '💎', description: 'Special Offer (CTA)' },
+// Template metadata untuk admin display
+export const TEMPLATE_METADATA: Record<string, { name: string; emoji: string; description: string; day: number }> = {
+    day1_register: { name: 'Hari 1: Daftar', emoji: '🎯', description: 'Pengenalan & Cara Daftar Copytrade', day: 1 },
+    day2_topup: { name: 'Hari 2: Top Up', emoji: '💰', description: 'Panduan Top Up Saldo Credit', day: 2 },
+    day3_follow: { name: 'Hari 3: Follow', emoji: '👥', description: 'Cara Pilih Provider & Follow', day: 3 },
+    day4_ea_bridge: { name: 'Hari 4: EA Bridge', emoji: '🔧', description: 'Instalasi & Konfigurasi EA', day: 4 },
+    day5_results: { name: 'Hari 5: Hasil', emoji: '📈', description: 'Contoh Hasil Trading & Statistik', day: 5 },
+    day6_faq: { name: 'Hari 6: FAQ', emoji: '❓', description: 'Pertanyaan & Troubleshooting', day: 6 },
+    day7_promo: { name: 'Hari 7: Promo', emoji: '🎉', description: 'Promo & Testimoni Users', day: 7 },
 };
 
-// Get all template keys for iteration
-export function getAllTemplateKeys(): string[] {
-    return Object.keys(MARKETING_TEMPLATES);
+// Mendapatkan key template berdasarkan hari (1-7)
+export function getTemplateKeyForDay(dayOfWeek: number): string {
+    // dayOfWeek: 1 (Senin) - 7 (Minggu)
+    const mapping: Record<number, string> = {
+        1: 'day1_register',
+        2: 'day2_topup',
+        3: 'day3_follow',
+        4: 'day4_ea_bridge',
+        5: 'day5_results',
+        6: 'day6_faq',
+        7: 'day7_promo',
+    };
+    return mapping[dayOfWeek] || 'day1_register';
 }
 
-// Get rotating template based on current hour
-// Changes every 5 hours, alternates between 2 templates
-export function getRotatingTemplate(): { key: string; message: string } {
-    const keys = getAllTemplateKeys();
+// Mendapatkan template yang aktif untuk hari ini (berubah setiap 24 jam)
+export function getTodaysTemplate(): { key: string; message: string; dayName: string } {
     const now = new Date();
-
-    // Calculate rotation index: changes every 5 hours
-    const hoursSinceEpoch = Math.floor(now.getTime() / (1000 * 60 * 60));
-    const rotationIndex = Math.floor(hoursSinceEpoch / 5) % keys.length;
-
-    const key = keys[rotationIndex];
+    const dayOfWeek = now.getDay(); // 0 (Minggu) - 6 (Sabtu)
+    
+    // Konversi: 0 (Minggu) → 7, 1 (Senin) → 1, dst
+    const adjustedDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+    
+    const key = getTemplateKeyForDay(adjustedDay);
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    
     return {
         key,
-        message: MARKETING_TEMPLATES[key],
+        message: COPYTRADE_TEMPLATES[key],
+        dayName: dayNames[adjustedDay - 1],
     };
 }
 
-// Get specific template by key
+// Mendapatkan template berdasarkan key
 export function getTemplateByKey(key: string): string | null {
-    return MARKETING_TEMPLATES[key] || null;
+    return COPYTRADE_TEMPLATES[key] || null;
+}
+
+// Mendapatkan semua template keys
+export function getAllTemplateKeys(): string[] {
+    return Object.keys(COPYTRADE_TEMPLATES);
 }
 
 export function isTelegramConfigured(): boolean {
