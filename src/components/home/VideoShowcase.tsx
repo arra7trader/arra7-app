@@ -79,7 +79,7 @@ export default function VideoShowcase() {
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="badge-apple mb-4 inline-flex shadow-sm bg-white/50 backdrop-blur-md"
+                        className="badge-apple mb-4 inline-flex shadow-sm bg-[var(--bg-primary)]/50 backdrop-blur-md"
                     >
                         {t('badge')}
                     </motion.span>
@@ -164,7 +164,7 @@ export default function VideoShowcase() {
                                                 <motion.div
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
-                                                    className="w-20 h-20 md:w-24 md:h-24 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/30 shadow-2xl transition-all hover:bg-white/30"
+                                                    className="w-20 h-20 md:w-24 md:h-24 bg-[var(--bg-primary)]/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/30 shadow-2xl transition-all hover:bg-[var(--bg-primary)]/30"
                                                 >
                                                     <PlayIcon className="text-white w-8 h-8 md:w-10 md:h-10 ml-1" />
                                                 </motion.div>

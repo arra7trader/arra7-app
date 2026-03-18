@@ -44,7 +44,7 @@ export default function QuotaExceededCard({ message, limitType = 'FOREX' }: Quot
                         </motion.button>
                     </Link>
 
-                    <button className="text-xs text-slate-500 hover:text-slate-400 underline decoration-slate-700">
+                    <button className="text-xs text-[var(--text-secondary)] hover:text-slate-400 underline decoration-slate-700">
                         View Plan Comparison
                     </button>
                 </div>

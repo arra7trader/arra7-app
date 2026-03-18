@@ -102,7 +102,7 @@ export default function LowBalancePopup() {
 
                                 <button
                                     onClick={closePopup}
-                                    className="text-slate-500 text-xs hover:text-slate-300 transition-colors"
+                                    className="text-[var(--text-secondary)] text-xs hover:text-slate-300 transition-colors"
                                 >
                                     Maybe later, I'll wait for tomorrow
                                 </button>

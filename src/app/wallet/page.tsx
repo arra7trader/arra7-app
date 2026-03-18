@@ -104,13 +104,13 @@ export default function WalletPage() {
                     </motion.div>
 
                     {/* Quick Stats or Withdraw (if Provider) */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex-1 bg-white/5 border border-[var(--border-light)] rounded-3xl p-8 flex flex-col justify-center">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex-1 bg-[var(--bg-primary)]/5 border border-[var(--border-light)] rounded-3xl p-8 flex flex-col justify-center">
                         <h3 className="text-lg font-bold mb-4">Pencairan Koin (Withdraw)</h3>
                         <p className="text-sm text-[var(--text-secondary)] mb-6">
                             Jika kamu adalah Signal Provider dan memiliki minimal 200 Koin hasil penjualan sinyal, kamu bisa menukarkannya menjadi Uang Tunai. (1 Koin = Rp 1.000)
                         </p>
                         <Link href="/wallet/withdraw">
-                            <button className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 border border-[var(--border-light)] rounded-xl font-semibold transition-colors">
+                            <button className="w-full py-3 px-4 bg-[var(--bg-primary)]/10 hover:bg-[var(--bg-primary)]/20 border border-[var(--border-light)] rounded-xl font-semibold transition-colors">
                                 Tarik Saldo Menjadi Rupiah 💳
                             </button>
                         </Link>
@@ -151,7 +151,7 @@ export default function WalletPage() {
                                 </div>
                                 <button
                                     onClick={() => handleTopUp(pkg)}
-                                    className={`w-full py-3 rounded-xl font-bold transition-all ${pkg.popular ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-white/10 hover:bg-white/20 text-[var(--text-primary)]'}`}
+                                    className={`w-full py-3 rounded-xl font-bold transition-all ${pkg.popular ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-[var(--bg-primary)]/10 hover:bg-[var(--bg-primary)]/20 text-[var(--text-primary)]'}`}
                                 >
                                     Beli via Admin (QRIS)
                                 </button>
@@ -180,7 +180,7 @@ export default function WalletPage() {
                                 </thead>
                                 <tbody>
                                     {transactions.map((trx) => (
-                                        <tr key={trx.id} className="border-b border-[var(--border-light)]/50 last:border-0 hover:bg-white/5 transition-colors">
+                                        <tr key={trx.id} className="border-b border-[var(--border-light)]/50 last:border-0 hover:bg-[var(--bg-primary)]/5 transition-colors">
                                             <td className="px-6 py-4 text-sm text-[var(--text-secondary)] whitespace-nowrap">
                                                 {new Date(trx.created_at).toLocaleString('id-ID')}
                                             </td>

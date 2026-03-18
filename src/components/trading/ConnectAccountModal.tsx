@@ -94,10 +94,10 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-md bg-white border border-gray-200 rounded-2xl p-6 shadow-2xl z-50 max-h-[90vh] overflow-y-auto"
+                            className="relative w-full max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-2xl p-6 shadow-2xl z-50 max-h-[90vh] overflow-y-auto"
                         >
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">Connect Trading Account</h2>
-                            <p className="text-sm text-gray-500 mb-6">
+                            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Connect Trading Account</h2>
+                            <p className="text-sm text-[var(--text-secondary)] mb-6">
                                 Connect your Exness or FBS account to enable auto-trading.
                             </p>
 
@@ -111,10 +111,10 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                                     )}
 
                                     <div className="space-y-2">
-                                        <label htmlFor="name" className="text-sm font-medium text-gray-700">Account Name</label>
+                                        <label htmlFor="name" className="text-sm font-medium text-[var(--text-primary)]">Account Name</label>
                                         <input
                                             id="name"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            className="w-full px-3 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                             placeholder="e.g. My Exness Real"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -124,10 +124,10 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label htmlFor="broker" className="text-sm font-medium text-gray-700">Broker</label>
+                                            <label htmlFor="broker" className="text-sm font-medium text-[var(--text-primary)]">Broker</label>
                                             <select
                                                 id="broker"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                                className="w-full px-3 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-[var(--bg-primary)]"
                                                 value={formData.broker}
                                                 onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
                                                 required
@@ -140,10 +140,10 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="platform" className="text-sm font-medium text-gray-700">Platform</label>
+                                            <label htmlFor="platform" className="text-sm font-medium text-[var(--text-primary)]">Platform</label>
                                             <select
                                                 id="platform"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                                className="w-full px-3 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-[var(--bg-primary)]"
                                                 value={formData.platform}
                                                 onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
                                             >
@@ -154,10 +154,10 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label htmlFor="server" className="text-sm font-medium text-gray-700">Server</label>
+                                        <label htmlFor="server" className="text-sm font-medium text-[var(--text-primary)]">Server</label>
                                         <input
                                             id="server"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                            className="w-full px-3 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                             placeholder="e.g. Exness-Real12"
                                             value={formData.server}
                                             onChange={(e) => setFormData({ ...formData, server: e.target.value })}
@@ -167,11 +167,11 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label htmlFor="login" className="text-sm font-medium text-gray-700">Login ID</label>
+                                            <label htmlFor="login" className="text-sm font-medium text-[var(--text-primary)]">Login ID</label>
                                             <input
                                                 id="login"
                                                 type="number"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                                className="w-full px-3 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                                 placeholder="Account No."
                                                 value={formData.login}
                                                 onChange={(e) => setFormData({ ...formData, login: e.target.value })}
@@ -179,11 +179,11 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
+                                            <label htmlFor="password" className="text-sm font-medium text-[var(--text-primary)]">Password</label>
                                             <input
                                                 id="password"
                                                 type="password"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                                className="w-full px-3 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                                 placeholder="Trading Password"
                                                 value={formData.password}
                                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -216,8 +216,8 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    <h3 className="text-lg font-semibold text-gray-900">Connecting to Broker...</h3>
-                                    <p className="text-sm text-gray-500 mt-2">Verifying credentials with {formData.broker}</p>
+                                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Connecting to Broker...</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Verifying credentials with {formData.broker}</p>
                                 </div>
                             )}
 
@@ -227,7 +227,7 @@ export default function ConnectAccountModal({ onSuccess }: ConnectAccountModalPr
                                         <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                     </div>
                                     <h3 className="text-xl font-bold text-green-700">Connected!</h3>
-                                    <p className="text-sm text-gray-500 mt-2">Your account is now ready for auto-trading.</p>
+                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Your account is now ready for auto-trading.</p>
                                 </div>
                             )}
                         </motion.div>

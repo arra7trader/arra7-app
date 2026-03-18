@@ -78,7 +78,7 @@ export default function ZoneVisualChart({ levels, trend }: ZoneVisualChartProps)
     if (levels.length === 0) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-2xl">
-                <div className="text-center text-gray-500">
+                <div className="text-center text-[var(--text-secondary)]">
                     <div className="text-4xl mb-4">📊</div>
                     <div className="font-medium">No Levels Calculated</div>
                     <div className="text-sm">Enter prices and calculate to see zones</div>
@@ -98,10 +98,10 @@ export default function ZoneVisualChart({ levels, trend }: ZoneVisualChartProps)
                             <div className={`font-bold ${trend === 'UP' ? 'text-green-400' : 'text-red-400'}`}>
                                 {trend === 'UP' ? 'BULLISH' : 'BEARISH'} PROJECTION
                             </div>
-                            <div className="text-[10px] text-gray-500">Fibonacci Kanji Zones</div>
+                            <div className="text-[10px] text-[var(--text-secondary)]">Fibonacci Kanji Zones</div>
                         </div>
                     </div>
-                    <div className="text-[10px] text-gray-600 bg-gray-800 px-3 py-1 rounded-full">
+                    <div className="text-[10px] text-[var(--text-secondary)] bg-gray-800 px-3 py-1 rounded-full">
                         Based on Calculation
                     </div>
                 </div>
@@ -167,7 +167,7 @@ export default function ZoneVisualChart({ levels, trend }: ZoneVisualChartProps)
             <div className="absolute bottom-4 left-4 right-4 z-20">
                 <div className="flex flex-wrap gap-2 justify-center">
                     {ZONE_CONFIG.map((zone, i) => (
-                        <div key={i} className="flex items-center gap-1 text-[10px] text-gray-500 bg-gray-800/50 px-2 py-1 rounded-full">
+                        <div key={i} className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)] bg-gray-800/50 px-2 py-1 rounded-full">
                             <span>{zone.emoji}</span>
                             <span>{zone.name}</span>
                         </div>

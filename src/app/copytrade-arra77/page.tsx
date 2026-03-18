@@ -75,7 +75,7 @@ function followBadgeClass(followStatus: string | undefined) {
   if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
   if (status === 'PAUSED') return 'bg-amber-50 text-amber-700 border border-amber-200';
   if (status === 'STOPPED') return 'bg-rose-50 text-rose-700 border border-rose-200';
-  return 'bg-slate-100 text-slate-600 border border-slate-200';
+  return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
 function providerStatusBadgeClass(providerStatus: string | undefined) {
@@ -83,7 +83,7 @@ function providerStatusBadgeClass(providerStatus: string | undefined) {
   if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
   if (status === 'PENDING') return 'bg-amber-50 text-amber-700 border border-amber-200';
   if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-50 text-rose-700 border border-rose-200';
-  return 'bg-slate-100 text-slate-600 border border-slate-200';
+  return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
 export default function CopytradeArra77Page() {
@@ -274,20 +274,20 @@ export default function CopytradeArra77Page() {
     const ctaLabel = isFollowed ? 'Kelola di Setup EA' : 'Follow Provider';
 
     return (
-      <div key={p.id} className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all overflow-hidden">
+      <div key={p.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] shadow-sm hover:shadow-lg transition-all overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500" />
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-base font-semibold text-slate-900">{p.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">@{p.slug}</p>
+              <p className="text-base font-semibold text-[var(--text-primary)]">{p.name}</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">@{p.slug}</p>
             </div>
             <span className={`text-[11px] px-2 py-1 rounded-lg font-medium ${riskBadgeClass(p.riskLevel)}`}>
               {String(p.riskLevel || 'MEDIUM').toUpperCase()}
             </span>
           </div>
 
-          <p className="text-sm text-slate-600 mt-3 min-h-[42px] leading-relaxed">
+          <p className="text-sm text-[var(--text-secondary)] mt-3 min-h-[42px] leading-relaxed">
             {p.bio || 'Provider tanpa bio.'}
           </p>
 
@@ -296,9 +296,9 @@ export default function CopytradeArra77Page() {
               <p className="text-[10px] uppercase tracking-wide text-blue-700">Winrate</p>
               <p className="text-sm font-semibold text-blue-900">{fmtProviderWinrate(p)}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <p className="text-[10px] uppercase tracking-wide text-slate-500">Followers</p>
-              <p className="text-sm font-semibold text-slate-900">{p.followers || 0}</p>
+            <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-2">
+              <p className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">Followers</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">{p.followers || 0}</p>
             </div>
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-2">
               <p className="text-[10px] uppercase tracking-wide text-emerald-700">Status</p>
@@ -319,7 +319,7 @@ export default function CopytradeArra77Page() {
             onClick={() => (isFollowed ? setTab('setup') : followProvider(String(p.id)))}
             className={`mt-3 w-full rounded-xl px-3 py-2 text-sm font-medium transition ${
               isFollowed
-                ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:bg-slate-200'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
@@ -392,31 +392,31 @@ export default function CopytradeArra77Page() {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="rounded-3xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 p-6">
           <p className="text-xs font-semibold tracking-widest uppercase text-blue-700">Copytrade ARRA77</p>
-          <h1 className="text-2xl font-bold text-slate-900 mt-2">AI Signal + EA MT5 + Credit Wallet</h1>
-          <p className="text-sm text-slate-600 mt-2">1 signal = 3 credits, 1 credit = Rp1.000, one-trade lock aktif by default.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-2">AI Signal + EA MT5 + Credit Wallet</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-2">1 signal = 3 credits, 1 credit = Rp1.000, one-trade lock aktif by default.</p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
-            <div className="rounded-xl bg-white border border-slate-200 p-3">
-              <p className="text-xs text-slate-500">Saldo</p>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">Saldo</p>
               <p className="font-semibold">{data?.summary?.balanceCredits ?? 0} cr</p>
             </div>
-            <div className="rounded-xl bg-white border border-slate-200 p-3">
-              <p className="text-xs text-slate-500">Open Trades</p>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">Open Trades</p>
               <p className="font-semibold">{data?.summary?.openPositions ?? 0}</p>
             </div>
-            <div className="rounded-xl bg-white border border-slate-200 p-3">
-              <p className="text-xs text-slate-500">Follows</p>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">Follows</p>
               <p className="font-semibold">{data?.summary?.activeFollows ?? 0}</p>
             </div>
-            <div className="rounded-xl bg-white border border-slate-200 p-3">
-              <p className="text-xs text-slate-500">Terminal Online</p>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">Terminal Online</p>
               <p className="font-semibold">{data?.summary?.onlineTerminals ?? 0}</p>
             </div>
-            <div className="rounded-xl bg-white border border-slate-200 p-3">
-              <p className="text-xs text-slate-500">Spent Hari Ini</p>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">Spent Hari Ini</p>
               <p className="font-semibold">{data?.summary?.todaySpentCredits ?? 0} cr</p>
             </div>
-            <div className="rounded-xl bg-white border border-slate-200 p-3 col-span-2 md:col-span-1">
-              <p className="text-xs text-slate-500">Earning Provider</p>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3 col-span-2 md:col-span-1">
+              <p className="text-xs text-[var(--text-secondary)]">Earning Provider</p>
               <p className="font-semibold">{data?.summary?.providerRevenueCredits ?? 0} cr</p>
             </div>
           </div>
@@ -425,8 +425,8 @@ export default function CopytradeArra77Page() {
         {msg && <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">{msg}</div>}
         {error && <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>}
 
-        <div className="rounded-2xl bg-white border border-slate-200 p-3 sm:p-4">
-          <p className="text-xs font-semibold tracking-widest uppercase text-slate-500">Menu Fitur Copytrade</p>
+        <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3 sm:p-4">
+          <p className="text-xs font-semibold tracking-widest uppercase text-[var(--text-secondary)]">Menu Fitur Copytrade</p>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {tabCards.map((item) => {
               const active = tab === item.key;
@@ -437,16 +437,16 @@ export default function CopytradeArra77Page() {
                   className={`group relative overflow-hidden rounded-2xl border p-3 text-left transition-all duration-300 ${
                     active
                       ? 'border-transparent text-white shadow-lg -translate-y-0.5'
-                      : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:shadow-md'
+                      : 'border-[var(--border-light)] bg-[var(--bg-primary)] text-[var(--text-primary)] hover:border-[var(--border-medium)] hover:shadow-md'
                   }`}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`} />
                   <div className="relative z-10">
-                    <div className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                    <div className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold ${active ? 'bg-[var(--bg-primary)]/20 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
                       {item.short}
                     </div>
-                    <p className={`mt-2 text-sm font-semibold ${active ? 'text-white' : 'text-slate-900'}`}>{item.title}</p>
-                    <p className={`mt-1 text-xs leading-relaxed ${active ? 'text-white/85' : 'text-slate-500'}`}>{item.desc}</p>
+                    <p className={`mt-2 text-sm font-semibold ${active ? 'text-white' : 'text-[var(--text-primary)]'}`}>{item.title}</p>
+                    <p className={`mt-1 text-xs leading-relaxed ${active ? 'text-white/85' : 'text-[var(--text-secondary)]'}`}>{item.desc}</p>
                   </div>
                 </button>
               );
@@ -456,17 +456,17 @@ export default function CopytradeArra77Page() {
 
         {tab === 'overview' && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <h3 className="font-semibold">Provider Aktif Marketplace</h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
                     Aktif: {activeProviders.length} provider | Kamu follow aktif: {activeFollowProviders.length}
                   </p>
                 </div>
                 <button
                   onClick={() => setTab('providers')}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs hover:bg-slate-100"
+                  className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] px-3 py-1.5 text-xs hover:bg-[var(--bg-secondary)]"
                 >
                   Kelola Provider
                 </button>
@@ -474,7 +474,7 @@ export default function CopytradeArra77Page() {
 
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {activeProviders.length === 0 && (
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-500">
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3 text-sm text-[var(--text-secondary)]">
                     Belum ada provider aktif.
                   </div>
                 )}
@@ -482,8 +482,8 @@ export default function CopytradeArra77Page() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
-              <p className="text-xs font-semibold tracking-widest uppercase text-slate-500">Sub Menu Dashboard</p>
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
+              <p className="text-xs font-semibold tracking-widest uppercase text-[var(--text-secondary)]">Sub Menu Dashboard</p>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
                 {dashboardPanels.map((item) => {
                   const active = dashboardPanel === item.key;
@@ -492,14 +492,14 @@ export default function CopytradeArra77Page() {
                       key={item.key}
                       onClick={() => setDashboardPanel(item.key)}
                       className={`rounded-xl border p-3 text-left transition ${
-                        active ? 'border-blue-200 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                        active ? 'border-blue-200 bg-blue-50' : 'border-[var(--border-light)] bg-[var(--bg-primary)] hover:border-[var(--border-medium)]'
                       }`}
                     >
-                      <div className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold ${active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                      <div className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold ${active ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
                         {item.short}
                       </div>
                       <p className="text-sm font-semibold mt-2">{item.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mt-1">{item.desc}</p>
                     </button>
                   );
                 })}
@@ -508,30 +508,30 @@ export default function CopytradeArra77Page() {
 
             {dashboardPanel === 'activity' && (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
                   <h3 className="font-semibold mb-2">Open Trades</h3>
                   <div className="space-y-2 max-h-96 overflow-auto">
-                    {(data?.openPositions || []).length === 0 && <p className="text-sm text-slate-500">Belum ada posisi aktif.</p>}
+                    {(data?.openPositions || []).length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada posisi aktif.</p>}
                     {(data?.openPositions || []).map((p: any) => (
-                      <div key={p.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                      <div key={p.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                         <p className="font-medium">{p.symbol} | {p.side}</p>
-                        <p className="text-slate-600 text-xs">Lot {fmtNum(p.volume_lots)} | Entry {fmtNum(p.entry_price)} | SL {fmtNum(p.stop_loss)} | TP {fmtNum(p.take_profit)}</p>
-                        <p className="text-slate-500 text-xs">{fmtDate(p.opened_at)}</p>
+                        <p className="text-[var(--text-secondary)] text-xs">Lot {fmtNum(p.volume_lots)} | Entry {fmtNum(p.entry_price)} | SL {fmtNum(p.stop_loss)} | TP {fmtNum(p.take_profit)}</p>
+                        <p className="text-[var(--text-secondary)] text-xs">{fmtDate(p.opened_at)}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
                   <h3 className="font-semibold mb-2">Riwayat Trade</h3>
                   <div className="space-y-2 max-h-96 overflow-auto">
-                    {(data?.recentTrades || []).length === 0 && <p className="text-sm text-slate-500">Belum ada trade closed.</p>}
+                    {(data?.recentTrades || []).length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada trade closed.</p>}
                     {(data?.recentTrades || []).map((p: any) => (
-                      <div key={p.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                      <div key={p.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                         <p className="font-medium">{p.symbol} | {p.side} | {p.status}</p>
-                        <p className="text-slate-600 text-xs">
+                        <p className="text-[var(--text-secondary)] text-xs">
                           Entry {fmtNum(p.entry_price)} | Close {fmtNum(p.close_price)} | Pips {fmtNum(p.pips_result)} | PnL {fmtNum(p.pnl_value)}
                         </p>
-                        <p className="text-slate-500 text-xs">{fmtDate(p.closed_at)}</p>
+                        <p className="text-[var(--text-secondary)] text-xs">{fmtDate(p.closed_at)}</p>
                       </div>
                     ))}
                   </div>
@@ -541,35 +541,35 @@ export default function CopytradeArra77Page() {
 
             {dashboardPanel === 'wallet' && (
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
                   <h3 className="font-semibold">Ringkasan Wallet</h3>
-                  <p className="text-sm text-slate-700">Saldo: <span className="font-semibold">{data?.wallet?.balance_credits || 0} cr</span></p>
-                  <p className="text-sm text-slate-700">Total Topup: <span className="font-semibold">{data?.wallet?.total_topup_credits || 0} cr</span></p>
-                  <p className="text-sm text-slate-700">Total Spent: <span className="font-semibold">{data?.wallet?.total_spent_credits || 0} cr</span></p>
+                  <p className="text-sm text-[var(--text-secondary)]">Saldo: <span className="font-semibold">{data?.wallet?.balance_credits || 0} cr</span></p>
+                  <p className="text-sm text-[var(--text-secondary)]">Total Topup: <span className="font-semibold">{data?.wallet?.total_topup_credits || 0} cr</span></p>
+                  <p className="text-sm text-[var(--text-secondary)]">Total Spent: <span className="font-semibold">{data?.wallet?.total_spent_credits || 0} cr</span></p>
                   <button onClick={() => setTab('topup')} className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-xs">
                     Buka Menu Topup
                   </button>
                 </div>
-                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
                   <h3 className="font-semibold mb-2">Order Topup Pending</h3>
                   <div className="space-y-2 max-h-72 overflow-auto">
-                    {pendingTopups.length === 0 && <p className="text-sm text-slate-500">Tidak ada topup pending.</p>}
+                    {pendingTopups.length === 0 && <p className="text-sm text-[var(--text-secondary)]">Tidak ada topup pending.</p>}
                     {pendingTopups.map((o) => (
-                      <div key={o.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                      <div key={o.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                         <p className="font-medium">{fmtIdr(o.amount_idr)} ({o.credit_amount} cr)</p>
-                        <p className="text-xs text-slate-500">Status {o.status} | {fmtDate(o.created_at)}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Status {o.status} | {fmtDate(o.created_at)}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
                   <h3 className="font-semibold mb-2">Credit Ledger</h3>
                   <div className="space-y-2 max-h-72 overflow-auto">
-                    {(data?.ledger || []).length === 0 && <p className="text-sm text-slate-500">Belum ada transaksi.</p>}
+                    {(data?.ledger || []).length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada transaksi.</p>}
                     {(data?.ledger || []).map((l: any) => (
-                      <div key={l.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                      <div key={l.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                         <p className="font-medium">{l.direction === 'CREDIT' ? '+' : '-'}{l.amount_credits} cr | {l.entry_type}</p>
-                        <p className="text-slate-500 text-xs">{fmtDate(l.created_at)} | {l.description || '-'}</p>
+                        <p className="text-[var(--text-secondary)] text-xs">{fmtDate(l.created_at)} | {l.description || '-'}</p>
                       </div>
                     ))}
                   </div>
@@ -579,14 +579,14 @@ export default function CopytradeArra77Page() {
 
             {dashboardPanel === 'operations' && (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
                   <h3 className="font-semibold mb-2">Follow Relations</h3>
                   <div className="space-y-2 max-h-96 overflow-auto">
-                    {(data?.follows || []).length === 0 && <p className="text-sm text-slate-500">Belum ada relasi follow.</p>}
+                    {(data?.follows || []).length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada relasi follow.</p>}
                     {(data?.follows || []).map((f: any) => (
-                      <div key={f.id} className="border border-slate-100 rounded-xl p-2 text-sm space-y-2">
+                      <div key={f.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm space-y-2">
                         <p className="font-medium">{f.provider?.name || 'Provider'} | {f.status}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-[var(--text-secondary)]">
                           @{f.provider?.slug || '-'} | Risk {f.riskMode || 'FIXED_LOT'} | Lot {fmtNum(f.fixedLot)} | One-trade {f.oneTradeAtATime ? 'ON' : 'OFF'}
                         </p>
 
@@ -594,7 +594,7 @@ export default function CopytradeArra77Page() {
                           const draft = followDrafts[String(f.id)];
                           if (!draft) return null;
                           return (
-                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 space-y-2">
+                            <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-secondary)] p-2 space-y-2">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                 <select
                                   value={draft.riskMode}
@@ -603,7 +603,7 @@ export default function CopytradeArra77Page() {
                                       riskMode: e.target.value as FollowDraft['riskMode'],
                                     })
                                   }
-                                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                  className="rounded-lg border border-[var(--border-light)] px-2 py-1 text-xs bg-[var(--bg-primary)]"
                                 >
                                   <option value="FIXED_LOT">FIXED_LOT</option>
                                   <option value="MULTIPLIER">MULTIPLIER</option>
@@ -621,7 +621,7 @@ export default function CopytradeArra77Page() {
                                         fixedLot: Number(e.target.value || 0),
                                       })
                                     }
-                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    className="rounded-lg border border-[var(--border-light)] px-2 py-1 text-xs bg-[var(--bg-primary)]"
                                     placeholder="Fixed lot"
                                   />
                                 )}
@@ -637,7 +637,7 @@ export default function CopytradeArra77Page() {
                                         lotMultiplier: Number(e.target.value || 0),
                                       })
                                     }
-                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    className="rounded-lg border border-[var(--border-light)] px-2 py-1 text-xs bg-[var(--bg-primary)]"
                                     placeholder="Lot multiplier"
                                   />
                                 )}
@@ -653,12 +653,12 @@ export default function CopytradeArra77Page() {
                                         riskPercent: Number(e.target.value || 0),
                                       })
                                     }
-                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    className="rounded-lg border border-[var(--border-light)] px-2 py-1 text-xs bg-[var(--bg-primary)]"
                                     placeholder="Risk percent"
                                   />
                                 )}
 
-                                <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs">
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-light)] bg-[var(--bg-primary)] px-2 py-1 text-xs">
                                   <input
                                     type="checkbox"
                                     checked={draft.oneTradeAtATime}
@@ -682,7 +682,7 @@ export default function CopytradeArra77Page() {
                                       maxConcurrentPositions: Number(e.target.value || 1),
                                     })
                                   }
-                                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                                  className="rounded-lg border border-[var(--border-light)] px-2 py-1 text-xs bg-[var(--bg-primary)] disabled:bg-[var(--bg-secondary)] disabled:text-slate-400"
                                   placeholder="Max concurrent"
                                 />
                               </div>
@@ -717,18 +717,18 @@ export default function CopytradeArra77Page() {
                     ))}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-semibold">Terminal Bridge</h3>
-                    <span className="text-xs rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">Online {onlineTerminals.length}</span>
+                    <span className="text-xs rounded-full bg-[var(--bg-secondary)] px-2 py-0.5 text-[var(--text-secondary)]">Online {onlineTerminals.length}</span>
                   </div>
                   <div className="space-y-2 max-h-96 overflow-auto mt-2">
-                    {terminals.length === 0 && <p className="text-sm text-slate-500">Belum ada terminal.</p>}
+                    {terminals.length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada terminal.</p>}
                     {terminals.map((t) => (
-                      <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                      <div key={t.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                         <p className="font-medium">{t.terminal_label} | {t.status}</p>
-                        <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
-                        <p className="text-slate-500 text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
+                        <p className="text-[var(--text-secondary)] text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
+                        <p className="text-[var(--text-secondary)] text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
                         {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
                       </div>
                     ))}
@@ -744,44 +744,44 @@ export default function CopytradeArra77Page() {
 
         {tab === 'providers' && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <h3 className="font-semibold">Status Provider Saya</h3>
                   {myProvider ? (
                     <>
-                      <p className="text-sm text-slate-700 mt-1">
+                      <p className="text-sm text-[var(--text-secondary)] mt-1">
                         <span className="font-medium">{myProvider.name}</span> @{myProvider.slug}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-[var(--text-secondary)] mt-1">
                         Status: <span className="font-medium">{myProvider.status}</span>
                       </p>
                     </>
                   ) : (
-                    <p className="text-sm text-slate-500 mt-1">Belum terdaftar sebagai provider.</p>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">Belum terdaftar sebagai provider.</p>
                   )}
                 </div>
-                <button onClick={refresh} className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-1.5 text-xs">
+                <button onClick={refresh} className="rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-light)] px-3 py-1.5 text-xs">
                   Refresh Progress
                 </button>
               </div>
 
               {myProvider && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                    <p className="text-xs text-slate-500">Total Earning Provider</p>
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
+                    <p className="text-xs text-[var(--text-secondary)]">Total Earning Provider</p>
                     <p className="font-semibold">{myProvider.earnings?.totalProviderRevenueCredits || 0} cr</p>
-                    <p className="text-xs text-slate-500">{fmtIdr(Number(myProvider.earnings?.totalProviderRevenueIdr || 0))}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{fmtIdr(Number(myProvider.earnings?.totalProviderRevenueIdr || 0))}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                    <p className="text-xs text-slate-500">Saldo Wallet</p>
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
+                    <p className="text-xs text-[var(--text-secondary)]">Saldo Wallet</p>
                     <p className="font-semibold">{myProvider.earnings?.walletBalanceCredits || 0} cr</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--text-secondary)]">
                       Setara {fmtIdr((Number(myProvider.earnings?.walletBalanceCredits || 0) || 0) * providerCreditRate)}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                    <p className="text-xs text-slate-500">Update Revenue Terakhir</p>
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
+                    <p className="text-xs text-[var(--text-secondary)]">Update Revenue Terakhir</p>
                     <p className="font-semibold text-sm">{fmtDate(myProvider.earnings?.lastProviderRevenueAt)}</p>
                   </div>
                 </div>
@@ -806,16 +806,16 @@ export default function CopytradeArra77Page() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {providers.length === 0 && <div className="rounded-2xl bg-white border border-slate-200 p-4 text-sm text-slate-500">Belum ada provider aktif.</div>}
+              {providers.length === 0 && <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 text-sm text-[var(--text-secondary)]">Belum ada provider aktif.</div>}
               {providers.map((p) => renderProviderCard(p, 'providers'))}
             </div>
-            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
               <h3 className="font-semibold">Daftar jadi Provider</h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Challenge otomatis: {providerRules?.challengeTargetTrades || 50} trade demo, winrate minimal {providerRules?.challengeMinWinRatePct || 60}%.
               </p>
-              <input value={providerName} onChange={(e) => setProviderName(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Nama provider" />
-              <textarea value={providerBio} onChange={(e) => setProviderBio(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm min-h-[90px]" placeholder="Bio trading style" />
+              <input value={providerName} onChange={(e) => setProviderName(e.target.value)} className="w-full rounded-xl border border-[var(--border-light)] px-3 py-2 text-sm" placeholder="Nama provider" />
+              <textarea value={providerBio} onChange={(e) => setProviderBio(e.target.value)} className="w-full rounded-xl border border-[var(--border-light)] px-3 py-2 text-sm min-h-[90px]" placeholder="Bio trading style" />
               <button
                 onClick={async () => {
                   try {
@@ -830,7 +830,7 @@ export default function CopytradeArra77Page() {
               >
                 Ajukan Provider
               </button>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Broker bebas. Setelah approve, bagi hasil per signal: admin {providerRules?.adminShareCredits || 1} credit,
                 provider {providerRules?.providerShareCredits || 2} credit.
               </p>
@@ -840,9 +840,9 @@ export default function CopytradeArra77Page() {
 
         {tab === 'provider-system' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
               <h3 className="font-semibold">Alur Menjadi Provider</h3>
-              <ol className="list-decimal ml-5 text-sm text-slate-700 space-y-1">
+              <ol className="list-decimal ml-5 text-sm text-[var(--text-secondary)] space-y-1">
                 <li>Ajukan provider dari tab Provider.</li>
                 <li>Generate terminal bridge, lalu pasang EA di akun demo MT5 (broker bebas).</li>
                 <li>Trading seperti biasa di akun demo. Saat posisi ditutup, EA otomatis kirim hasil trade ke sistem challenge.</li>
@@ -850,20 +850,20 @@ export default function CopytradeArra77Page() {
                 <li>Jika mencapai target challenge, status provider otomatis APPROVED dan tampil di marketplace.</li>
                 <li>Jika belum lolos, challenge bisa diulang sampai memenuhi syarat.</li>
               </ol>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-700">
+              <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] p-3 text-sm text-[var(--text-secondary)]">
                 <p>Target challenge: <span className="font-medium">{providerRules?.challengeTargetTrades || 50} trade closed</span></p>
                 <p>Winrate minimum: <span className="font-medium">{providerRules?.challengeMinWinRatePct || 60}%</span></p>
                 <p>Jika gagal: <span className="font-medium">bisa ulang challenge</span></p>
                 <p>Support broker: <span className="font-medium">Broker bebas (asal EA aktif)</span></p>
               </div>
             </div>
-            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
               <h3 className="font-semibold">Sistem Bagi Hasil Provider</h3>
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-[var(--text-secondary)]">
                 1 signal menelan {providerRules?.signalCostCredits || 3} credit dari follower. Distribusi otomatis:
                 admin {providerRules?.adminShareCredits || 1} credit, provider {providerRules?.providerShareCredits || 2} credit.
               </p>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-[var(--text-secondary)]">
                 1 credit = {fmtIdr(providerCreditRate)}. Pendapatan provider otomatis masuk ke wallet copytrade dan bisa dipantau di tab Provider.
               </p>
               <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-900 break-all">
@@ -873,10 +873,10 @@ export default function CopytradeArra77Page() {
                 <br />
                 <code>/api/copytrade-arra77/bridge/provider/challenge/trade</code>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-secondary)]">
                 User tidak perlu kirim manual payload jika EA aktif dengan benar.
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Akumulasi hasil provider bisa dipantau di tab Provider pada bagian <span className="font-medium">Total Earning Provider</span>.
               </p>
             </div>
@@ -885,20 +885,20 @@ export default function CopytradeArra77Page() {
 
         {tab === 'topup' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
               <h3 className="font-semibold">Topup QRIS Manual</h3>
-              <p className="text-sm text-slate-600">{data?.qris?.merchantName || 'ARRA7'} | NMID {data?.qris?.nmid || '-'}</p>
-              <p className="text-sm text-slate-600">Rate: {fmtIdr(data?.topupPricing?.creditRateIdr || 1000)} / credit</p>
-              <p className="text-sm text-slate-600">Minimal topup: {fmtIdr(data?.topupPricing?.minTopupIdr || 25000)}</p>
+              <p className="text-sm text-[var(--text-secondary)]">{data?.qris?.merchantName || 'ARRA7'} | NMID {data?.qris?.nmid || '-'}</p>
+              <p className="text-sm text-[var(--text-secondary)]">Rate: {fmtIdr(data?.topupPricing?.creditRateIdr || 1000)} / credit</p>
+              <p className="text-sm text-[var(--text-secondary)]">Minimal topup: {fmtIdr(data?.topupPricing?.minTopupIdr || 25000)}</p>
               {data?.qris?.imageUrl && (
-                <img src={String(data.qris.imageUrl)} alt="QRIS Payment" className="w-full max-w-sm rounded-xl border border-slate-200" />
+                <img src={String(data.qris.imageUrl)} alt="QRIS Payment" className="w-full max-w-sm rounded-xl border border-[var(--border-light)]" />
               )}
               <input
                 type="number"
                 min={Number(data?.topupPricing?.minTopupIdr || 25000)}
                 value={amountIdr}
                 onChange={(e) => setAmountIdr(Number(e.target.value || 0))}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[var(--border-light)] px-3 py-2 text-sm"
                 placeholder="Nominal transfer"
               />
               <button
@@ -917,16 +917,16 @@ export default function CopytradeArra77Page() {
               >
                 Konfirmasi Topup via Telegram
               </button>
-              <p className="text-xs text-slate-500">Flow sama seperti pricing: scan QRIS, lalu kirim bukti pembayaran ke Telegram admin.</p>
+              <p className="text-xs text-[var(--text-secondary)]">Flow sama seperti pricing: scan QRIS, lalu kirim bukti pembayaran ke Telegram admin.</p>
             </div>
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
               <h3 className="font-semibold mb-2">Riwayat Topup</h3>
               <div className="space-y-2 max-h-96 overflow-auto">
-                {orders.length === 0 && <p className="text-sm text-slate-500">Belum ada order topup.</p>}
+                {orders.length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada order topup.</p>}
                 {orders.map((o) => (
-                  <div key={o.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                  <div key={o.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                     <p className="font-medium">{fmtIdr(o.amount_idr)} ({o.credit_amount} cr)</p>
-                    <p className="text-slate-500 text-xs">Status: {o.status} | {fmtDate(o.created_at)}</p>
+                    <p className="text-[var(--text-secondary)] text-xs">Status: {o.status} | {fmtDate(o.created_at)}</p>
                   </div>
                 ))}
               </div>
@@ -936,7 +936,7 @@ export default function CopytradeArra77Page() {
 
         {tab === 'setup' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
               <h3 className="font-semibold">Setup EA MT5</h3>
               <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
                 <p className="font-medium">Panduan follower (wajib):</p>
@@ -959,10 +959,10 @@ export default function CopytradeArra77Page() {
               <a href="/downloads/Arra-Copytrade-Bridge.ex5" className="inline-flex rounded-lg bg-slate-900 text-white px-3 py-2 text-sm" download>
                 Download EA MT5 (.ex5)
               </a>
-              <p className="text-xs text-slate-500">Source EA tidak ditampilkan di web. Gunakan file `.ex5` terbaru di atas.</p>
+              <p className="text-xs text-[var(--text-secondary)]">Source EA tidak ditampilkan di web. Gunakan file `.ex5` terbaru di atas.</p>
 
-              <input value={terminalLabel} onChange={(e) => setTerminalLabel(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Label terminal MT5" />
-              <select value={terminalFollowId} onChange={(e) => setTerminalFollowId(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+              <input value={terminalLabel} onChange={(e) => setTerminalLabel(e.target.value)} className="w-full rounded-xl border border-[var(--border-light)] px-3 py-2 text-sm" placeholder="Label terminal MT5" />
+              <select value={terminalFollowId} onChange={(e) => setTerminalFollowId(e.target.value)} className="w-full rounded-xl border border-[var(--border-light)] px-3 py-2 text-sm">
                 <option value="">Pilih follow relation (opsional)</option>
                 {(data?.follows || []).map((f: any) => <option key={f.id} value={f.id}>{f.provider?.name || 'Provider'} - {f.status}</option>)}
               </select>
@@ -988,19 +988,19 @@ export default function CopytradeArra77Page() {
                   Secret: {newCreds.secret}
                 </div>
               )}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Endpoint bridge (path): <code>/api/copytrade-arra77/bridge</code>
               </p>
             </div>
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
               <h3 className="font-semibold mb-2">Terminal List</h3>
               <div className="space-y-2 max-h-96 overflow-auto">
-                {terminals.length === 0 && <p className="text-sm text-slate-500">Belum ada terminal.</p>}
+                {terminals.length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada terminal.</p>}
                 {terminals.map((t) => (
-                  <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm">
+                  <div key={t.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">
                     <p className="font-medium">{t.terminal_label} | {t.status}</p>
-                    <p className="text-slate-500 text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
-                    <p className="text-slate-500 text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
+                    <p className="text-[var(--text-secondary)] text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
+                    <p className="text-[var(--text-secondary)] text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
                     {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
                   </div>
                 ))}

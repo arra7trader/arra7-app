@@ -146,23 +146,23 @@ export default function CRMDashboard() {
                     transition={{ delay: 0.1 }}
                     className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
                 >
-                    <div className="bg-white rounded-xl p-5 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">Total Member</p>
                         <p className="text-3xl font-bold text-[var(--text-primary)]">{data?.memberStats.total || 0}</p>
                     </div>
-                    <div className="bg-white rounded-xl p-5 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">BASIC</p>
-                        <p className="text-3xl font-bold text-slate-500">{data?.memberStats.basic || 0}</p>
+                        <p className="text-3xl font-bold text-[var(--text-secondary)]">{data?.memberStats.basic || 0}</p>
                     </div>
-                    <div className="bg-white rounded-xl p-5 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">PRO</p>
                         <p className="text-3xl font-bold text-blue-600">{data?.memberStats.pro || 0}</p>
                     </div>
-                    <div className="bg-white rounded-xl p-5 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">VVIP</p>
                         <p className="text-3xl font-bold text-amber-600">{data?.memberStats.vvip || 0}</p>
                     </div>
-                    <div className="bg-white rounded-xl p-5 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">Conversion</p>
                         <p className="text-3xl font-bold gradient-text">{data?.metrics.conversionRate || 0}%</p>
                     </div>
@@ -175,7 +175,7 @@ export default function CRMDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-white rounded-2xl border border-[var(--border-light)] p-6"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6"
                     >
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[var(--text-primary)]">
                             💰 Revenue Overview
@@ -213,7 +213,7 @@ export default function CRMDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-white rounded-2xl border border-[var(--border-light)] p-6"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6"
                     >
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[var(--text-primary)]">
                             ⚠️ Attention Needed
@@ -265,7 +265,7 @@ export default function CRMDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="bg-white rounded-2xl border border-amber-200 p-6 mb-8"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-amber-200 p-6 mb-8"
                     >
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-amber-700">
                             🔔 Members Expiring Soon
@@ -305,7 +305,7 @@ export default function CRMDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="bg-white rounded-2xl border border-red-200 p-6"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-red-200 p-6"
                     >
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-700">
                             😴 Inactive Members (7+ days)

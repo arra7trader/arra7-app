@@ -22,12 +22,12 @@ const FibonacciChart = dynamic(() => import('@/components/FibonacciChart'), {
 // Dynamic imports for PriceLadder and TradeWizard with proper typing
 const PriceLadder = dynamic(() => import('@/components/PriceLadder'), {
     ssr: false,
-    loading: () => <div className="animate-pulse bg-gray-100 rounded-xl h-96"></div>
+    loading: () => <div className="animate-pulse bg-[var(--bg-secondary)] rounded-xl h-96"></div>
 }) as React.ComponentType<any>;
 
 const TradeWizard = dynamic(() => import('@/components/TradeWizard'), {
     ssr: false,
-    loading: () => <div className="animate-pulse bg-gray-100 rounded-xl h-96"></div>
+    loading: () => <div className="animate-pulse bg-[var(--bg-secondary)] rounded-xl h-96"></div>
 }) as React.ComponentType<any>;
 
 // KANJI LEVELS CONFIGURATION
@@ -241,7 +241,7 @@ export default function FibonacciKanjiPage() {
                                     <div className="px-2 py-1 bg-blue-600 rounded text-[10px] font-bold text-white">
                                         {timeframe.toUpperCase()}
                                     </div>
-                                    <div className="text-gray-500 text-[10px] font-mono">
+                                    <div className="text-[var(--text-secondary)] text-[10px] font-mono">
                                         {selectedPair} • {calculatedLevels.length > 0 ? `${calculatedLevels.length} LEVELS` : 'REAL-TIME FEED'}
                                     </div>
                                 </div>
@@ -275,7 +275,7 @@ export default function FibonacciKanjiPage() {
                                         <div className="text-center">
                                             <div className="text-6xl mb-4">🧮</div>
                                             <p className="text-gray-400 text-sm mb-2">Calculate Fibonacci Levels</p>
-                                            <p className="text-gray-600 text-xs">Enter High/Low prices or enable AI Auto-Detect</p>
+                                            <p className="text-[var(--text-secondary)] text-xs">Enter High/Low prices or enable AI Auto-Detect</p>
                                         </div>
                                     </div>
                                 )}
@@ -286,18 +286,18 @@ export default function FibonacciKanjiPage() {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="lg:col-span-1 bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col h-full overflow-hidden"
+                            className="lg:col-span-1 bg-[var(--bg-primary)] rounded-3xl p-6 shadow-xl border border-[var(--border-light)] flex flex-col h-full overflow-hidden"
                         >
                             <div className="mb-4 flex-shrink-0">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-1">🧮 Kanji Pro</h2>
-                                <p className="text-gray-500 text-xs">AI-Powered Fibonacci Levels</p>
+                                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1">🧮 Kanji Pro</h2>
+                                <p className="text-[var(--text-secondary)] text-xs">AI-Powered Fibonacci Levels</p>
                             </div>
 
                             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                                 {/* Auto Scan Toggle */}
                                 <div className="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <div className={`p-2 rounded-lg bg-white shadow-sm ${isScanning ? 'animate-pulse' : ''}`}>
+                                        <div className={`p-2 rounded-lg bg-[var(--bg-primary)] shadow-sm ${isScanning ? 'animate-pulse' : ''}`}>
                                             <span className="text-xl">🤖</span>
                                         </div>
                                         <div>
@@ -312,7 +312,7 @@ export default function FibonacciKanjiPage() {
                                             onChange={(e) => setIsAutoScan(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--bg-primary)] after:border-[var(--border-medium)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                                     </label>
                                 </div>
 
@@ -322,7 +322,7 @@ export default function FibonacciKanjiPage() {
                                     <select
                                         value={selectedPair}
                                         onChange={handlePairChange}
-                                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer hover:bg-gray-100 transition"
+                                        className="w-full p-3 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl font-bold text-[var(--text-primary)] text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer hover:bg-[var(--bg-secondary)] transition"
                                     >
                                         <optgroup label="🥇 Commodities">
                                             <option value="XAUUSD">Gold (XAUUSD)</option>
@@ -388,16 +388,16 @@ export default function FibonacciKanjiPage() {
                                 {/* TREND SELECTOR (NEW) */}
                                 <div className="mb-4">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Trend Direction</label>
-                                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                                    <div className="flex bg-[var(--bg-secondary)] p-1 rounded-xl">
                                         <button
                                             onClick={() => setTrend('UP')}
-                                            className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition ${trend === 'UP' ? 'bg-green-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition ${trend === 'UP' ? 'bg-green-500 text-white shadow-md' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                                         >
                                             <span>📈 Bullish</span>
                                         </button>
                                         <button
                                             onClick={() => setTrend('DOWN')}
-                                            className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition ${trend === 'DOWN' ? 'bg-red-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition ${trend === 'DOWN' ? 'bg-red-500 text-white shadow-md' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                                         >
                                             <span>📉 Bearish</span>
                                         </button>
@@ -407,7 +407,7 @@ export default function FibonacciKanjiPage() {
                                 {/* Inputs */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">
+                                        <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">
                                             {trend === 'UP' ? 'Swing Low (Start)' : 'Swing High (Start)'}
                                         </label>
                                         <input
@@ -415,11 +415,11 @@ export default function FibonacciKanjiPage() {
                                             value={trend === 'UP' ? lowPrice : highPrice}
                                             onChange={(e) => trend === 'UP' ? setLowPrice(e.target.value) : setHighPrice(e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full p-2.5 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg font-mono text-sm text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">
+                                        <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">
                                             {trend === 'UP' ? 'Swing High (End)' : 'Swing Low (End)'}
                                         </label>
                                         <input
@@ -427,7 +427,7 @@ export default function FibonacciKanjiPage() {
                                             value={trend === 'UP' ? highPrice : lowPrice}
                                             onChange={(e) => trend === 'UP' ? setHighPrice(e.target.value) : setLowPrice(e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full p-2.5 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg font-mono text-sm text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
                                 </div>
@@ -452,7 +452,7 @@ export default function FibonacciKanjiPage() {
                                                 <div className={`font-bold text-sm ${trend === 'UP' ? 'text-green-700' : 'text-red-700'}`}>
                                                     {trend === 'UP' ? 'BULLISH TREND' : 'BEARISH TREND'}
                                                 </div>
-                                                <div className="text-[10px] text-gray-500">
+                                                <div className="text-[10px] text-[var(--text-secondary)]">
                                                     {trend === 'UP' ? 'Low → High Projection' : 'High → Low Projection'}
                                                 </div>
                                             </div>
@@ -473,7 +473,7 @@ export default function FibonacciKanjiPage() {
 
                                         {/* Interactive Table */}
                                         <table className="w-full text-xs">
-                                            <tbody className="divide-y divide-gray-50 border-t border-gray-100">
+                                            <tbody className="divide-y divide-gray-50 border-t border-[var(--border-light)]">
                                                 {calculatedLevels.map((lvl) => {
                                                     const levelPrice = parseFloat(lvl.price);
                                                     const distance = currentPrice ? Math.abs(currentPrice - levelPrice) : null;
@@ -514,7 +514,7 @@ export default function FibonacciKanjiPage() {
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: lvl.color }}></div>
                                                                     <div className="flex-1">
-                                                                        <div className="font-bold text-gray-700 group-hover:text-blue-700">{lvl.label}</div>
+                                                                        <div className="font-bold text-[var(--text-primary)] group-hover:text-blue-700">{lvl.label}</div>
                                                                         <div className="text-[9px] text-gray-400">{lvl.desc}</div>
                                                                         <div className={`text-[8px] font-bold ${statusColor} mt-0.5`}>
                                                                             {status}
@@ -526,7 +526,7 @@ export default function FibonacciKanjiPage() {
                                                                 <div className="flex flex-col items-end gap-1">
                                                                     <span
                                                                         id={`price-${lvl.level}`}
-                                                                        className="font-mono font-medium text-gray-900 group-hover:text-blue-600 transition-all duration-150"
+                                                                        className="font-mono font-medium text-[var(--text-primary)] group-hover:text-blue-600 transition-all duration-150"
                                                                     >
                                                                         {lvl.price}
                                                                     </span>
@@ -576,28 +576,28 @@ export default function FibonacciKanjiPage() {
                                                     return (
                                                         <div className="space-y-2 text-xs">
                                                             <div className="grid grid-cols-2 gap-2">
-                                                                <div className="bg-white p-2 rounded-lg">
-                                                                    <div className="text-[9px] text-gray-500 font-bold mb-1">ENTRY</div>
+                                                                <div className="bg-[var(--bg-primary)] p-2 rounded-lg">
+                                                                    <div className="text-[9px] text-[var(--text-secondary)] font-bold mb-1">ENTRY</div>
                                                                     <div className="font-mono font-bold text-indigo-700">{entry.toFixed(2)}</div>
                                                                     <div className="text-[8px] text-gray-400">{entryZone.label}</div>
                                                                 </div>
-                                                                <div className="bg-white p-2 rounded-lg">
-                                                                    <div className="text-[9px] text-gray-500 font-bold mb-1">STOP LOSS</div>
+                                                                <div className="bg-[var(--bg-primary)] p-2 rounded-lg">
+                                                                    <div className="text-[9px] text-[var(--text-secondary)] font-bold mb-1">STOP LOSS</div>
                                                                     <div className="font-mono font-bold text-red-600">{stopLoss.toFixed(2)}</div>
                                                                     <div className="text-[8px] text-gray-400">-{risk.toFixed(2)} pips</div>
                                                                 </div>
                                                             </div>
 
-                                                            <div className="bg-white p-2 rounded-lg">
-                                                                <div className="text-[9px] text-gray-500 font-bold mb-1">TAKE PROFIT LEVELS</div>
+                                                            <div className="bg-[var(--bg-primary)] p-2 rounded-lg">
+                                                                <div className="text-[9px] text-[var(--text-secondary)] font-bold mb-1">TAKE PROFIT LEVELS</div>
                                                                 <div className="space-y-1">
                                                                     <div className="flex justify-between items-center">
-                                                                        <span className="text-[9px] text-gray-600">TP1 (Golden):</span>
+                                                                        <span className="text-[9px] text-[var(--text-secondary)]">TP1 (Golden):</span>
                                                                         <span className="font-mono font-bold text-green-600">{takeProfit1.toFixed(2)}</span>
                                                                     </div>
                                                                     {takeProfit2 && (
                                                                         <div className="flex justify-between items-center">
-                                                                            <span className="text-[9px] text-gray-600">TP2 (Conf):</span>
+                                                                            <span className="text-[9px] text-[var(--text-secondary)]">TP2 (Conf):</span>
                                                                             <span className="font-mono font-bold text-green-600">{takeProfit2.toFixed(2)}</span>
                                                                         </div>
                                                                     )}
@@ -606,7 +606,7 @@ export default function FibonacciKanjiPage() {
 
                                                             <div className={`p-2 rounded-lg ${rr >= 2 ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300'}`}>
                                                                 <div className="flex justify-between items-center">
-                                                                    <span className="text-[9px] font-bold text-gray-700">Risk/Reward:</span>
+                                                                    <span className="text-[9px] font-bold text-[var(--text-primary)]">Risk/Reward:</span>
                                                                     <span className={`font-bold ${rr >= 2 ? 'text-green-700' : 'text-yellow-700'}`}>
                                                                         1:{rr.toFixed(2)} {rr >= 2 ? '✅' : '⚠️'}
                                                                     </span>
@@ -626,7 +626,7 @@ export default function FibonacciKanjiPage() {
                                                     navigator.clipboard.writeText(text);
                                                     alert('All levels copied to clipboard!');
                                                 }}
-                                                className="flex-1 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition"
+                                                className="flex-1 py-2 px-3 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition"
                                             >
                                                 <span>📋</span> Copy All
                                             </button>
@@ -652,52 +652,52 @@ export default function FibonacciKanjiPage() {
                                     <span className="text-2xl">📚</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cara Menggunakan</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Panduan lengkap Fibonacci Kanji</p>
+                                    <h2 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">Cara Menggunakan</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Panduan lengkap Fibonacci Kanji</p>
                                 </div>
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
                                 {/* Step 1 */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                <div className="bg-[var(--bg-primary)] dark:bg-gray-800 rounded-xl p-5 shadow-sm">
                                     <div className="flex items-start gap-3">
                                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
                                         <div>
-                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Pilih Asset Pair</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Pilih instrumen yang ingin dianalisa dari dropdown menu (Gold, Forex, Crypto, dll)</p>
+                                            <h3 className="font-bold text-[var(--text-primary)] dark:text-white mb-2">Pilih Asset Pair</h3>
+                                            <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Pilih instrumen yang ingin dianalisa dari dropdown menu (Gold, Forex, Crypto, dll)</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Step 2 */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                <div className="bg-[var(--bg-primary)] dark:bg-gray-800 rounded-xl p-5 shadow-sm">
                                     <div className="flex items-start gap-3">
                                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
                                         <div>
-                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Tentukan Trend</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Pilih Bullish (📈) jika trend naik, atau Bearish (📉) jika trend turun</p>
+                                            <h3 className="font-bold text-[var(--text-primary)] dark:text-white mb-2">Tentukan Trend</h3>
+                                            <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Pilih Bullish (📈) jika trend naik, atau Bearish (📉) jika trend turun</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Step 3 */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                <div className="bg-[var(--bg-primary)] dark:bg-gray-800 rounded-xl p-5 shadow-sm">
                                     <div className="flex items-start gap-3">
                                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
                                         <div>
-                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Input High & Low</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Masukkan harga Swing High dan Swing Low secara manual, atau aktifkan AI Auto-Detect</p>
+                                            <h3 className="font-bold text-[var(--text-primary)] dark:text-white mb-2">Input High & Low</h3>
+                                            <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Masukkan harga Swing High dan Swing Low secara manual, atau aktifkan AI Auto-Detect</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Step 4 */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+                                <div className="bg-[var(--bg-primary)] dark:bg-gray-800 rounded-xl p-5 shadow-sm">
                                     <div className="flex items-start gap-3">
                                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
                                         <div>
-                                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Lihat Level & Trade</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Gunakan level yang dihitung untuk planning entry, stop loss, dan take profit Anda</p>
+                                            <h3 className="font-bold text-[var(--text-primary)] dark:text-white mb-2">Lihat Level & Trade</h3>
+                                            <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Gunakan level yang dihitung untuk planning entry, stop loss, dan take profit Anda</p>
                                         </div>
                                     </div>
                                 </div>
@@ -725,15 +725,15 @@ export default function FibonacciKanjiPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
-                            className="bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-200 dark:border-gray-800 shadow-lg"
+                            className="bg-[var(--bg-primary)] dark:bg-gray-900 rounded-3xl p-8 border border-[var(--border-light)] dark:border-gray-800 shadow-lg"
                         >
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center">
                                     <span className="text-2xl">📖</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Glossary Istilah</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Penjelasan lengkap setiap zone & istilah</p>
+                                    <h2 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">Glossary Istilah</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Penjelasan lengkap setiap zone & istilah</p>
                                 </div>
                             </div>
 
@@ -744,11 +744,11 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-teal-500 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-teal-900 dark:text-teal-300 text-lg mb-2">Entry Zone 1 & 2</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Zone optimal untuk melakukan entry position. Entry Zone 1 adalah zona entry pertama, sementara Entry Zone 2 adalah zona entry alternatif jika price melewati zone pertama.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Strategi:</strong> Wait for price action confirmation (candlestick pattern, support/resistance test) sebelum entry di zone ini.
                                                 </p>
                                             </div>
@@ -762,11 +762,11 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-yellow-500 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-yellow-900 dark:text-yellow-300 text-lg mb-2">Scalping Zone A & B</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Zone reversal yang kuat, sering digunakan untuk scalping atau swing trading. Zone ini menandakan area di mana price kemungkinan besar akan mengalami reversal atau pullback signifikan.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Strategi:</strong> Ideal untuk counter-trend entry atau taking profit jika sudah dalam posisi. Watch for rejection candlestick patterns.
                                                 </p>
                                             </div>
@@ -780,11 +780,11 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-orange-500 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-orange-900 dark:text-orange-300 text-lg mb-2">Breakout Zone 1 & 2</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Zone di mana price kemungkinan melakukan breakout atau pullback setelah melewati swing point. Zone ini penting untuk monitoring continuation atau reversal pattern.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Strategi:</strong> Watch for volume confirmation saat breakout. Jika breakout gagal (false breakout), ini bisa menjadi signal reversal yang kuat.
                                                 </p>
                                             </div>
@@ -798,11 +798,11 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-blue-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-blue-900 dark:text-blue-300 text-lg mb-2">Golden Ratio, Confluence & Moon Target</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Tiga level Take Profit utama. <strong>Golden Ratio (TP1)</strong> adalah target pertama dengan probabilitas tertinggi, <strong>Confluence (TP2)</strong> adalah target kedua untuk extension move, dan <strong>Moon Target (TP3)</strong> adalah target maksimal untuk momentum ekstrim.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Strategi:</strong> Close sebagian position di TP1 (50%), sebagian di TP2 (30%), dan sisanya target TP3. Move stop loss ke breakeven setelah TP1 tercapai.
                                                 </p>
                                             </div>
@@ -816,12 +816,12 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-green-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-green-900 dark:text-green-300 text-lg mb-2">Bullish vs Bearish Trend</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 <strong>Bullish (📈):</strong> Trend naik, level dihitung dari Low ke High, mencari buy opportunity.<br />
                                                 <strong>Bearish (📉):</strong> Trend turun, level dihitung dari High ke Low, mencari sell opportunity.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Tip:</strong> Identifikasi trend dengan higher highs & higher lows (bullish) atau lower highs & lower lows (bearish). Gunakan timeframe lebih tinggi untuk trend confirmation.
                                                 </p>
                                             </div>
@@ -835,11 +835,11 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-purple-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-purple-900 dark:text-purple-300 text-lg mb-2">Risk/Reward Ratio</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Perbandingan antara potential profit (reward) dengan potential loss (risk). Ratio 1:2 berarti jika risk Anda 100 pips, target profit minimal 200 pips.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Rule:</strong> Minimum R:R adalah 1:2. Dengan R:R 1:2 dan win rate 40%, Anda masih profitable. R:R 1:3 atau lebih tinggi adalah excellent.
                                                 </p>
                                             </div>
@@ -853,11 +853,11 @@ export default function FibonacciKanjiPage() {
                                         <div className="w-3 h-3 bg-indigo-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-indigo-900 dark:text-indigo-300 text-lg mb-2">🤖 AI Auto-Detect</h3>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                            <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Fitur AI yang secara otomatis mendeteksi Swing High dan Swing Low terbaru dari chart, serta menentukan trend direction. AI melakukan scan setiap 60 detik untuk update level secara real-time.
                                             </p>
-                                            <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="bg-[var(--bg-primary)]/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <p className="text-xs text-[var(--text-secondary)] dark:text-gray-400">
                                                     <strong>Best Use:</strong> Ideal untuk trending market. Di ranging market, manual input mungkin lebih akurat. Toggle ON untuk monitoring real-time, OFF untuk analisa manual.
                                                 </p>
                                             </div>
@@ -872,13 +872,13 @@ export default function FibonacciKanjiPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
-                            className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                            className="bg-[var(--bg-secondary)] dark:bg-gray-800/50 rounded-2xl p-6 border border-[var(--border-light)] dark:border-gray-700"
                         >
                             <div className="flex items-start gap-3">
                                 <span className="text-2xl">⚠️</span>
                                 <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">Disclaimer</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    <h3 className="font-bold text-[var(--text-primary)] dark:text-white mb-2">Disclaimer</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">
                                         Fibonacci Kanji adalah tools analisa teknikal. Hasil analisa bukan merupakan rekomendasi trading atau jaminan profit.
                                         Selalu lakukan analisa fundamental, gunakan proper risk management, dan trading sesuai dengan risk tolerance Anda.
                                         Past performance tidak menjamin future results.

@@ -99,7 +99,7 @@ export default function WithdrawPage() {
                             <span className="text-4xl">💸</span>
                         </div>
                         <h1 className="text-2xl font-bold mb-2">Pencairan Koin Diproses!</h1>
-                        <p className="text-gray-500 mb-8 px-4">Admin ARRA 7 telah menerima permintaanmu. Saldo Koin telah dipotong dan rupiah akan ditransfer ke rekeningmu dalam 1x24 jam kerja.</p>
+                        <p className="text-[var(--text-secondary)] mb-8 px-4">Admin ARRA 7 telah menerima permintaanmu. Saldo Koin telah dipotong dan rupiah akan ditransfer ke rekeningmu dalam 1x24 jam kerja.</p>
 
                         <div className="bg-[var(--bg-secondary)] border border-[var(--border-light)] p-5 rounded-2xl text-left mb-8 mx-auto max-w-sm space-y-2">
                             <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Koin Ditarik</span><span className="font-bold">{formData.koinAmount} Koin</span></div>
@@ -149,7 +149,7 @@ export default function WithdrawPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-3xl p-8 shadow-sm">
+                    <div className="bg-[var(--bg-primary)] rounded-3xl p-8 shadow-sm">
                         {error && (
                             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm">
                                 {error}
@@ -158,7 +158,7 @@ export default function WithdrawPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label className="block text-sm text-gray-600 mb-2 font-medium">Berapa koin yang ingin dicairkan?</label>
+                                <label className="block text-sm text-[var(--text-secondary)] mb-2 font-medium">Berapa koin yang ingin dicairkan?</label>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -166,12 +166,12 @@ export default function WithdrawPage() {
                                         max={Math.max(200, balance)}
                                         value={formData.koinAmount}
                                         onChange={(e) => setFormData({ ...formData, koinAmount: Number(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-16 py-4 text-gray-900 text-xl font-bold focus:outline-none focus:border-amber-400 focus:bg-white transition-colors"
+                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl pl-4 pr-16 py-4 text-[var(--text-primary)] text-xl font-bold focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">Koin</span>
                                 </div>
                                 <div className="flex justify-between items-center mt-2">
-                                    <p className="text-xs text-gray-500">Minimal 200 Koin</p>
+                                    <p className="text-xs text-[var(--text-secondary)]">Minimal 200 Koin</p>
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, koinAmount: balance })}
@@ -182,15 +182,15 @@ export default function WithdrawPage() {
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-gray-100">
-                                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">🏦 Rekening Penerima</h3>
+                            <div className="pt-4 border-t border-[var(--border-light)]">
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-4">🏦 Rekening Penerima</h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-1.5 font-medium">Pilih Bank / E-Wallet</label>
+                                        <label className="block text-sm text-[var(--text-secondary)] mb-1.5 font-medium">Pilih Bank / E-Wallet</label>
                                         <select
                                             value={formData.bankName}
                                             onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-amber-400 focus:bg-white transition-colors"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
                                         >
                                             <option>BCA</option>
                                             <option>Bank Mandiri</option>
@@ -204,22 +204,22 @@ export default function WithdrawPage() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-1.5 font-medium">Nomor Rekening / HP</label>
+                                        <label className="block text-sm text-[var(--text-secondary)] mb-1.5 font-medium">Nomor Rekening / HP</label>
                                         <input
                                             type="text" required
                                             value={formData.accountNumber}
                                             onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-amber-400 focus:bg-white transition-colors"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
                                             placeholder="Misal: 0812345678"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-1.5 font-medium">Nama Pemilik Rekening</label>
+                                        <label className="block text-sm text-[var(--text-secondary)] mb-1.5 font-medium">Nama Pemilik Rekening</label>
                                         <input
                                             type="text" required
                                             value={formData.accountName}
                                             onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-amber-400 focus:bg-white transition-colors"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
                                             placeholder="Sesuai buku tabungan"
                                         />
                                     </div>

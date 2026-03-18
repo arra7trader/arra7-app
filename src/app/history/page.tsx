@@ -68,7 +68,7 @@ export default function HistoryPage() {
             <div className="container-wide section-padding pt-8">
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-white mb-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-[var(--bg-primary)] mb-6">
                         <DocumentIcon className="text-[var(--accent-blue)]" size="lg" />
                         <span className="text-sm text-[var(--text-secondary)]">Analysis History</span>
                     </div>
@@ -89,15 +89,15 @@ export default function HistoryPage() {
 
                 {/* Stats */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-3 gap-4 mb-6 max-w-lg mx-auto">
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                         <p className="text-2xl font-bold text-[var(--text-primary)]">{history.length}</p>
                         <p className="text-xs text-[var(--text-muted)]">Total Analisa</p>
                     </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                         <p className="text-2xl font-bold text-[var(--accent-blue)]">{history.filter(h => h.type === 'forex').length}</p>
                         <p className="text-xs text-[var(--text-muted)]">Forex</p>
                     </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                         <p className="text-2xl font-bold text-green-600">{history.filter(h => h.type === 'stock').length}</p>
                         <p className="text-xs text-[var(--text-muted)]">Saham</p>
                     </div>
@@ -106,7 +106,7 @@ export default function HistoryPage() {
                 {/* History List */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-3 max-w-4xl mx-auto">
                     {filteredHistory.length === 0 ? (
-                        <div className="bg-white rounded-2xl p-12 border border-[var(--border-light)] text-center">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-12 border border-[var(--border-light)] text-center">
                             <span className="text-5xl mb-4 block">📭</span>
                             <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Belum Ada Riwayat</h3>
                             <p className="text-[var(--text-secondary)] mb-4">Mulai analisa untuk menyimpan riwayat</p>
@@ -117,7 +117,7 @@ export default function HistoryPage() {
                         </div>
                     ) : (
                         filteredHistory.map((item) => (
-                            <motion.div key={item.id} layout className="bg-white rounded-xl border border-[var(--border-light)] overflow-hidden">
+                            <motion.div key={item.id} layout className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] overflow-hidden">
                                 <button onClick={() => setExpandedId(expandedId === item.id ? null : item.id)} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--bg-secondary)] transition-colors">
                                     <div className="flex items-center gap-3">
                                         <span className={`px-2 py-1 rounded text-xs font-semibold ${getTypeColor(item.type)}`}>

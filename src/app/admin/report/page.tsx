@@ -140,23 +140,23 @@ export default function AdminReportPage() {
                         transition={{ delay: 0.1 }}
                         className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"
                     >
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                             <p className="text-2xl font-bold text-[var(--text-primary)]">{summary.total}</p>
                             <p className="text-xs text-[var(--text-muted)]">Total</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                             <p className="text-2xl font-bold text-green-600">{summary.tpHit}</p>
                             <p className="text-xs text-[var(--text-muted)]">TP Hit</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                             <p className="text-2xl font-bold text-red-600">{summary.slHit}</p>
                             <p className="text-xs text-[var(--text-muted)]">SL Hit</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                             <p className="text-2xl font-bold text-amber-600">{summary.pending}</p>
                             <p className="text-xs text-[var(--text-muted)]">Pending</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)] text-center">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
                             <p className="text-2xl font-bold gradient-text">{summary.winRate}%</p>
                             <p className="text-xs text-[var(--text-muted)]">Win Rate</p>
                         </div>
@@ -168,7 +168,7 @@ export default function AdminReportPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white rounded-xl p-6 border border-[var(--border-light)] mb-6"
+                    className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] mb-6"
                 >
                     <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 1: Generate Report</h2>
 
@@ -198,7 +198,7 @@ export default function AdminReportPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-xl p-6 border border-[var(--border-light)] mb-6"
+                        className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] mb-6"
                     >
                         <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 2: Preview & Edit</h2>
                         <textarea
@@ -215,7 +215,7 @@ export default function AdminReportPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-xl p-6 border border-[var(--border-light)]"
+                        className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)]"
                     >
                         <h2 className="text-lg font-bold mb-4 text-[var(--text-primary)]">Step 3: Send to Telegram</h2>
 

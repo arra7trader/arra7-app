@@ -4,30 +4,30 @@
 /* ===== ARRA7 Apple-Style Design System ===== */
 
 :root {
-  /* Light Theme - Apple Inspired */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F5F5F7;
-  --bg-tertiary: #E8E8ED;
+  /* Dark Theme - Modern & Elegant */
+  --bg-primary: #0B0C10;     /* Deep dark background */
+  --bg-secondary: #12141A;   /* Slightly lighter for cards/sections */
+  --bg-tertiary: #1A1D24;    /* Inputs/Dropdowns */
 
   /* Text Colors */
-  --text-primary: #1D1D1F;
-  --text-secondary: #86868B;
-  --text-muted: #A1A1A6;
+  --text-primary: #F8FAFC;   /* Crisp white text */
+  --text-secondary: #94A3B8; /* Muted text */
+  --text-muted: #64748B;
 
   /* Accent Colors */
-  --accent-blue: #0071E3;
-  --accent-blue-hover: #0077ED;
-  --accent-gradient: linear-gradient(135deg, #0071E3 0%, #00C7BE 100%);
+  --accent-blue: #3B82F6;
+  --accent-blue-hover: #2563EB;
+  --accent-gradient: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
 
   /* Borders */
-  --border-light: rgba(0, 0, 0, 0.08);
-  --border-medium: rgba(0, 0, 0, 0.12);
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.15);
 
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+  /* Shadows for dark mode (using black with higher opacity) */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.8);
 }
 
 @theme inline {
@@ -274,7 +274,7 @@ body {
 
 /* ===== Navbar ===== */
 .nav-apple {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(11, 12, 16, 0.8);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border-light);

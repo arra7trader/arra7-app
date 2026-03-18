@@ -50,7 +50,7 @@ function getStrengthColor(probability: number): string {
     if (probability >= 0.75) return 'text-emerald-600 font-bold';
     if (probability >= 0.65) return 'text-green-600 font-semibold';
     if (probability >= 0.55) return 'text-amber-600';
-    return 'text-gray-500';
+    return 'text-[var(--text-secondary)]';
 }
 
 // ═══════════════════════════════════════════════
@@ -122,7 +122,7 @@ export default function GoldHeatmap() {
     // ─── Loading ───
     if (isLoading && !data) {
         return (
-            <div className="w-full min-h-[400px] flex items-center justify-center bg-white rounded-2xl border border-[var(--border-light)]">
+            <div className="w-full min-h-[400px] flex items-center justify-center bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)]">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
                     <span className="text-sm text-gray-400 font-medium">Loading heatmap data…</span>
@@ -133,7 +133,7 @@ export default function GoldHeatmap() {
 
     if (error && !data) {
         return (
-            <div className="w-full min-h-[200px] flex items-center justify-center bg-white rounded-2xl border border-red-200">
+            <div className="w-full min-h-[200px] flex items-center justify-center bg-[var(--bg-primary)] rounded-2xl border border-red-200">
                 <p className="text-red-500 text-sm">⚠️ {error}</p>
             </div>
         );
@@ -191,14 +191,14 @@ export default function GoldHeatmap() {
                     </div>
 
                     {/* Sentiment Gauge */}
-                    <div className="flex items-center gap-6 bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm">
+                    <div className="flex items-center gap-6 bg-[var(--bg-primary)]/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm">
                         <div className="text-center">
                             <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Smart Money Bias</div>
                             <div className={`text-xl font-black ${bias === 'NET LONG' ? 'text-green-400' : bias === 'NET SHORT' ? 'text-red-400' : 'text-gray-200'}`}>
                                 {bias}
                             </div>
                         </div>
-                        <div className="h-10 w-px bg-white/10" />
+                        <div className="h-10 w-px bg-[var(--bg-primary)]/10" />
                         <div className="flex flex-col gap-1 w-32">
                             <div className="flex justify-between text-[10px] font-mono">
                                 <span className="text-green-400">B: {Math.round(buyPct)}%</span>
@@ -215,12 +215,12 @@ export default function GoldHeatmap() {
 
             {/* ═══ CONTROLS ═══ */}
             <div className="flex items-center justify-between px-2">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span className="text-xl">📊</span> Institutional Volume Depth
                 </h3>
                 <button
                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isVoiceEnabled ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-500/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isVoiceEnabled ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-500/20' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200'
                         }`}
                 >
                     {isVoiceEnabled ? '🎙️ VOICE ALERT: ON' : '🔇 VOICE ALERT: OFF'}
@@ -231,9 +231,9 @@ export default function GoldHeatmap() {
             {/* ═══ 2. INSTITUTIONAL ZONES (ORDER BOOK STYLE) ═══ */}
             <div className="grid md:grid-cols-2 gap-6">
                 {/* DEMAND / BUY SIDE */}
-                <div className="bg-white rounded-2xl border border-green-100 shadow-lg shadow-green-900/5 overflow-hidden">
-                    <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Demand Zones (Bids)</span>
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-green-100 shadow-lg shadow-green-900/5 overflow-hidden">
+                    <div className="bg-[var(--bg-secondary)] px-5 py-3 border-b border-[var(--border-light)] flex justify-between items-center">
+                        <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Demand Zones (Bids)</span>
                         <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">
                             Total: {buyZones.length}
                         </span>
@@ -246,9 +246,9 @@ export default function GoldHeatmap() {
                 </div>
 
                 {/* SUPPLY / SELL SIDE */}
-                <div className="bg-white rounded-2xl border border-red-100 shadow-lg shadow-red-900/5 overflow-hidden">
-                    <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Supply Zones (Asks)</span>
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-red-100 shadow-lg shadow-red-900/5 overflow-hidden">
+                    <div className="bg-[var(--bg-secondary)] px-5 py-3 border-b border-[var(--border-light)] flex justify-between items-center">
+                        <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Supply Zones (Asks)</span>
                         <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">
                             Total: {sellZones.length}
                         </span>
@@ -263,10 +263,10 @@ export default function GoldHeatmap() {
 
             {/* ═══ NEUTRAL ZONES (Collapsed) ═══ */}
             {neutralZones.length > 0 && (
-                <div className="border-t border-gray-200 pt-4">
+                <div className="border-t border-[var(--border-light)] pt-4">
                     <button
                         onClick={() => setShowNeutral(!showNeutral)}
-                        className="text-xs font-medium text-gray-400 hover:text-gray-600 flex items-center gap-1 mx-auto"
+                        className="text-xs font-medium text-gray-400 hover:text-[var(--text-secondary)] flex items-center gap-1 mx-auto"
                     >
                         {showNeutral ? 'Hide Neutral Zones' : `Show ${neutralZones.length} Neutral Zones`}
                     </button>
@@ -279,7 +279,7 @@ export default function GoldHeatmap() {
                                 className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"
                             >
                                 {neutralZones.slice(0, 6).map((zone) => (
-                                    <div key={zone.price} className="bg-gray-50 rounded p-2 flex justify-between text-xs text-gray-500">
+                                    <div key={zone.price} className="bg-[var(--bg-secondary)] rounded p-2 flex justify-between text-xs text-[var(--text-secondary)]">
                                         <span>${zone.price.toFixed(2)}</span>
                                         <span>{Math.round(zone.probability * 100)}%</span>
                                     </div>
@@ -307,7 +307,7 @@ function OrderBookRow({ zone, type, currentPrice }: {
     const isWhale = zone.probability >= 0.8;
 
     return (
-        <div className={`relative px-4 py-2.5 flex items-center justify-between group ${isNear ? 'bg-amber-50' : 'hover:bg-gray-50'}`}>
+        <div className={`relative px-4 py-2.5 flex items-center justify-between group ${isNear ? 'bg-amber-50' : 'hover:bg-[var(--bg-secondary)]'}`}>
             {/* Volume Bar Background */}
             <div
                 className={`absolute inset-y-0 ${type === 'buy' ? 'left-0 bg-green-100' : 'right-0 bg-red-100'} transition-all duration-1000 ease-out`}
@@ -332,7 +332,7 @@ function OrderBookRow({ zone, type, currentPrice }: {
             {/* Interest/Vol */}
             <div className="relative z-10 flex items-center gap-2">
                 <div className="text-right">
-                    <div className="text-xs font-bold text-gray-600">{pct}% Interest</div>
+                    <div className="text-xs font-bold text-[var(--text-secondary)]">{pct}% Interest</div>
                     <div className="text-[10px] text-gray-400">{isNear ? '⚠️ APPROACHING' : 'Pending'}</div>
                 </div>
             </div>

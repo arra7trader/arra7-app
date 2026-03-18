@@ -84,8 +84,8 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                 <div className="flex items-center gap-3">
                     <div className="text-3xl">🧙‍♂️</div>
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900">Trade Wizard</h2>
-                        <p className="text-xs text-gray-500">Step-by-step trade setup</p>
+                        <h2 className="text-xl font-bold text-[var(--text-primary)]">Trade Wizard</h2>
+                        <p className="text-xs text-[var(--text-secondary)]">Step-by-step trade setup</p>
                     </div>
                 </div>
 
@@ -96,7 +96,7 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                             key={s}
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition ${step >= s
                                     ? 'bg-indigo-600 text-white shadow-lg'
-                                    : 'bg-white text-gray-400 border-2 border-gray-200'
+                                    : 'bg-[var(--bg-primary)] text-gray-400 border-2 border-[var(--border-light)]'
                                 }`}
                         >
                             {s}
@@ -115,19 +115,19 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                     >
-                        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-                            <h3 className="text-sm font-bold text-gray-700 mb-3">📍 Step 1: Where Are You?</h3>
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-5 shadow-md border border-[var(--border-light)]">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3">📍 Step 1: Where Are You?</h3>
 
                             {currentPrice ? (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
-                                        <span className="text-xs text-gray-600">Current Price:</span>
+                                        <span className="text-xs text-[var(--text-secondary)]">Current Price:</span>
                                         <span className="text-xl font-mono font-bold text-blue-700">{currentPrice.toFixed(2)}</span>
                                     </div>
 
                                     {currentZone && (
                                         <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-200">
-                                            <span className="text-xs text-gray-600">You are in:</span>
+                                            <span className="text-xs text-[var(--text-secondary)]">You are in:</span>
                                             <span className="text-sm font-bold text-green-700">{currentZone.label}</span>
                                         </div>
                                     )}
@@ -157,8 +157,8 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                     >
-                        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-                            <h3 className="text-sm font-bold text-gray-700 mb-4">🎯 Step 2: Choose Your Direction</h3>
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-5 shadow-md border border-[var(--border-light)]">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">🎯 Step 2: Choose Your Direction</h3>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <button
@@ -167,7 +167,7 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                                     }}
                                     className={`p-6 rounded-xl border-2 transition ${trend === 'UP'
                                             ? 'bg-green-500 border-green-600 text-white shadow-xl shadow-green-200'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:border-green-300'
+                                            : 'bg-[var(--bg-primary)] border-[var(--border-light)] text-[var(--text-secondary)] hover:border-green-300'
                                         }`}
                                 >
                                     <div className="text-4xl mb-2">📈</div>
@@ -181,7 +181,7 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                                     }}
                                     className={`p-6 rounded-xl border-2 transition ${trend === 'DOWN'
                                             ? 'bg-red-500 border-red-600 text-white shadow-xl shadow-red-200'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:border-red-300'
+                                            : 'bg-[var(--bg-primary)] border-[var(--border-light)] text-[var(--text-secondary)] hover:border-red-300'
                                         }`}
                                 >
                                     <div className="text-4xl mb-2">📉</div>
@@ -194,7 +194,7 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setStep(1)}
-                                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition"
+                                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-[var(--text-primary)] rounded-xl font-bold transition"
                             >
                                 ← Back
                             </button>
@@ -216,37 +216,37 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                     >
-                        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-                            <h3 className="text-sm font-bold text-gray-700 mb-4">✅ Step 3: Your Trade Setup</h3>
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-5 shadow-md border border-[var(--border-light)]">
+                            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">✅ Step 3: Your Trade Setup</h3>
 
                             {tradeSetup ? (
                                 <div className="space-y-3">
                                     {/* Entry & SL */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-200">
-                                            <div className="text-[10px] text-gray-500 font-bold mb-1">🎯 ENTRY</div>
+                                            <div className="text-[10px] text-[var(--text-secondary)] font-bold mb-1">🎯 ENTRY</div>
                                             <div className="text-lg font-mono font-bold text-indigo-700">{tradeSetup.entry.toFixed(2)}</div>
-                                            <div className="text-[9px] text-gray-500">{tradeSetup.entryLabel}</div>
+                                            <div className="text-[9px] text-[var(--text-secondary)]">{tradeSetup.entryLabel}</div>
                                         </div>
 
                                         <div className="p-3 bg-red-50 rounded-xl border border-red-200">
-                                            <div className="text-[10px] text-gray-500 font-bold mb-1">🛡️ STOP LOSS</div>
+                                            <div className="text-[10px] text-[var(--text-secondary)] font-bold mb-1">🛡️ STOP LOSS</div>
                                             <div className="text-lg font-mono font-bold text-red-600">{tradeSetup.stopLoss.toFixed(2)}</div>
-                                            <div className="text-[9px] text-gray-500">-{tradeSetup.risk.toFixed(2)} pips</div>
+                                            <div className="text-[9px] text-[var(--text-secondary)]">-{tradeSetup.risk.toFixed(2)} pips</div>
                                         </div>
                                     </div>
 
                                     {/* Take Profits */}
                                     <div className="p-3 bg-green-50 rounded-xl border border-green-200">
-                                        <div className="text-[10px] text-gray-500 font-bold mb-2">💰 TAKE PROFIT</div>
+                                        <div className="text-[10px] text-[var(--text-secondary)] font-bold mb-2">💰 TAKE PROFIT</div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-xs text-gray-600">TP1 ({tradeSetup.tp1Label}):</span>
+                                                <span className="text-xs text-[var(--text-secondary)]">TP1 ({tradeSetup.tp1Label}):</span>
                                                 <span className="font-mono font-bold text-green-700">{tradeSetup.takeProfit1.toFixed(2)}</span>
                                             </div>
                                             {tradeSetup.takeProfit2 && (
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-xs text-gray-600">TP2 ({tradeSetup.tp2Label}):</span>
+                                                    <span className="text-xs text-[var(--text-secondary)]">TP2 ({tradeSetup.tp2Label}):</span>
                                                     <span className="font-mono font-bold text-green-700">{tradeSetup.takeProfit2.toFixed(2)}</span>
                                                 </div>
                                             )}
@@ -259,7 +259,7 @@ export default function TradeWizard({ levels, currentPrice, trend, onTrendChange
                                             : 'bg-yellow-100 border-yellow-400'
                                         }`}>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-bold text-gray-700">Risk/Reward Ratio:</span>
+                                            <span className="text-sm font-bold text-[var(--text-primary)]">Risk/Reward Ratio:</span>
                                             <span className={`text-xl font-bold ${tradeSetup.rr >= 2 ? 'text-green-700' : 'text-yellow-700'
                                                 }`}>
                                                 1:{tradeSetup.rr.toFixed(2)} {tradeSetup.rr >= 2 ? '✅' : '⚠️'}
@@ -288,15 +288,15 @@ R/R: 1:${tradeSetup.rr.toFixed(2)}
                                     </div>
                                 </div>
                             ) : (
-                                <div className="p-4 bg-gray-50 rounded-xl text-center">
-                                    <p className="text-sm text-gray-600">Unable to generate trade setup</p>
+                                <div className="p-4 bg-[var(--bg-secondary)] rounded-xl text-center">
+                                    <p className="text-sm text-[var(--text-secondary)]">Unable to generate trade setup</p>
                                 </div>
                             )}
                         </div>
 
                         <button
                             onClick={() => setStep(1)}
-                            className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition"
+                            className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-[var(--text-primary)] rounded-xl font-bold transition"
                         >
                             ← Start Over
                         </button>

@@ -158,7 +158,7 @@ export default function UsersMapPage() {
     return (
         <div className="min-h-screen bg-[var(--bg-primary)]">
             {/* Header */}
-            <div className="border-b border-[var(--border-light)] bg-white">
+            <div className="border-b border-[var(--border-light)] bg-[var(--bg-primary)]">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
@@ -221,7 +221,7 @@ export default function UsersMapPage() {
                                 exit={{ width: 0, opacity: 0 }}
                                 className="shrink-0 overflow-hidden"
                             >
-                                <div className="bg-white rounded-xl border border-[var(--border-light)] p-4 h-[600px] flex flex-col">
+                                <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] p-4 h-[600px] flex flex-col">
                                     <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-[var(--text-primary)]">
                                         🎯 User Tracker
                                         <span className="text-xs text-[var(--text-muted)]">({filteredUsers.length})</span>
@@ -275,7 +275,7 @@ export default function UsersMapPage() {
                                                     </div>
                                                     <span className={`text-xs px-1.5 py-0.5 rounded ${user.membership === 'VVIP' ? 'bg-amber-100 text-amber-700' :
                                                         user.membership === 'PRO' ? 'bg-blue-100 text-blue-700' :
-                                                            'bg-gray-100 text-gray-600'
+                                                            'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                                         }`}>
                                                         {user.membership}
                                                     </span>
@@ -314,7 +314,7 @@ export default function UsersMapPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-xl overflow-hidden border border-[var(--border-light)]"
+                            className="bg-[var(--bg-primary)] rounded-xl overflow-hidden border border-[var(--border-light)]"
                             style={{ height: '600px' }}
                         >
                             {mapReady && !loading ? (
@@ -334,7 +334,7 @@ export default function UsersMapPage() {
                                             position={[user.lat, user.lon]}
                                         >
                                             <Popup>
-                                                <div className="text-black">
+                                                <div className="text-[var(--text-primary)]">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         {user.image && (
                                                             <img
@@ -345,7 +345,7 @@ export default function UsersMapPage() {
                                                         )}
                                                         <div>
                                                             <div className="font-bold">{user.name}</div>
-                                                            <div className="text-xs text-gray-600">{user.email}</div>
+                                                            <div className="text-xs text-[var(--text-secondary)]">{user.email}</div>
                                                         </div>
                                                     </div>
                                                     <div className="text-sm">
@@ -377,7 +377,7 @@ export default function UsersMapPage() {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="bg-white rounded-xl p-4 border border-[var(--border-light)]"
+                            className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]"
                         >
                             <h3 className="text-[var(--text-muted)] text-sm mb-2">Total Users</h3>
                             <div className="text-3xl font-bold text-[var(--text-primary)]">{users.length}</div>
@@ -387,7 +387,7 @@ export default function UsersMapPage() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-white rounded-xl p-4 border border-[var(--border-light)]"
+                            className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]"
                         >
                             <h3 className="text-[var(--text-muted)] text-sm mb-3">By Country</h3>
                             <div className="space-y-2">
@@ -407,7 +407,7 @@ export default function UsersMapPage() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-white rounded-xl p-4 border border-[var(--border-light)]"
+                            className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]"
                         >
                             <h3 className="text-[var(--text-muted)] text-sm mb-3">Recent Activity</h3>
                             <div className="space-y-2">

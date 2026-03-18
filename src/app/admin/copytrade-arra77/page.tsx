@@ -29,7 +29,7 @@ function lockDiagBadge(diag: any): { label: string; className: string } {
     return { label: 'Reset Recommended', className: 'bg-rose-100 text-rose-700' };
   }
   if (reason === 'HEARTBEAT_STALE') {
-    return { label: 'EA Offline', className: 'bg-slate-100 text-slate-700' };
+    return { label: 'EA Offline', className: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]' };
   }
   if (reason === 'LOCK_OBSERVED_WAIT_SYNC') {
     return { label: 'Wait Sync', className: 'bg-amber-100 text-amber-700' };
@@ -202,15 +202,15 @@ export default function CopytradeArra77AdminPage() {
   return (
     <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
       <div className="max-w-7xl mx-auto space-y-4">
-        <div className="rounded-3xl bg-white border border-slate-200 p-6">
+        <div className="rounded-3xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-xs font-semibold tracking-widest uppercase text-blue-700">Admin Panel</p>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">Copytrade ARRA77 Operations</h1>
-              <p className="text-sm text-slate-600 mt-1">Topup review, provider approval, follow monitoring, bridge monitoring.</p>
+              <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-1">Copytrade ARRA77 Operations</h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Topup review, provider approval, follow monitoring, bridge monitoring.</p>
             </div>
             <div className="flex gap-2">
-              <Link href="/admin" className="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-sm">Admin Home</Link>
+              <Link href="/admin" className="px-3 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] text-sm">Admin Home</Link>
               <button onClick={refresh} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">Refresh</button>
             </div>
           </div>
@@ -221,7 +221,7 @@ export default function CopytradeArra77AdminPage() {
 
         <div className="flex gap-2 overflow-auto">
           {(['overview', 'topups', 'providers', 'follows', 'bridge'] as AdminTab[]).map((k) => (
-            <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-xl text-sm ${tab === k ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
+            <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-xl text-sm ${tab === k ? 'bg-blue-600 text-white' : 'bg-[var(--bg-primary)] border border-[var(--border-light)]'}`}>
               {k === 'overview'
                 ? 'Overview'
                 : k === 'topups'
@@ -237,34 +237,34 @@ export default function CopytradeArra77AdminPage() {
 
         {tab === 'overview' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-            <div className="rounded-xl bg-white border border-slate-200 p-4"><p className="text-xs text-slate-500">Profiles</p><p className="text-2xl font-semibold">{stats?.profilesTotal ?? 0}</p></div>
-            <div className="rounded-xl bg-white border border-slate-200 p-4"><p className="text-xs text-slate-500">Provider Approved</p><p className="text-2xl font-semibold">{stats?.providersApproved ?? 0}</p></div>
-            <div className="rounded-xl bg-white border border-slate-200 p-4"><p className="text-xs text-slate-500">Pending Topup</p><p className="text-2xl font-semibold">{stats?.pendingTopups ?? 0}</p></div>
-            <div className="rounded-xl bg-white border border-slate-200 p-4"><p className="text-xs text-slate-500">Follow Active</p><p className="text-2xl font-semibold">{stats?.followsActive ?? 0}</p></div>
-            <div className="rounded-xl bg-white border border-slate-200 p-4"><p className="text-xs text-slate-500">Terminal Online</p><p className="text-2xl font-semibold">{stats?.terminalsOnline ?? 0}</p></div>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4"><p className="text-xs text-[var(--text-secondary)]">Profiles</p><p className="text-2xl font-semibold">{stats?.profilesTotal ?? 0}</p></div>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4"><p className="text-xs text-[var(--text-secondary)]">Provider Approved</p><p className="text-2xl font-semibold">{stats?.providersApproved ?? 0}</p></div>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4"><p className="text-xs text-[var(--text-secondary)]">Pending Topup</p><p className="text-2xl font-semibold">{stats?.pendingTopups ?? 0}</p></div>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4"><p className="text-xs text-[var(--text-secondary)]">Follow Active</p><p className="text-2xl font-semibold">{stats?.followsActive ?? 0}</p></div>
+            <div className="rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4"><p className="text-xs text-[var(--text-secondary)]">Terminal Online</p><p className="text-2xl font-semibold">{stats?.terminalsOnline ?? 0}</p></div>
           </div>
         )}
 
         {tab === 'topups' && (
-          <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+          <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={() => setTopupScope('pending')}
-                className={`px-3 py-1.5 rounded-lg text-xs ${topupScope === 'pending' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs ${topupScope === 'pending' ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
               >
                 Pending
               </button>
               <button
                 onClick={() => setTopupScope('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs ${topupScope === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs ${topupScope === 'all' ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
               >
                 All
               </button>
             </div>
             <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 space-y-2 mb-2">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-slate-800">Manual Credit Adjustment</p>
-                <span className="text-xs text-slate-500">Untuk koreksi saldo tanpa topup order</span>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">Manual Credit Adjustment</p>
+                <span className="text-xs text-[var(--text-secondary)]">Untuk koreksi saldo tanpa topup order</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <input
@@ -272,12 +272,12 @@ export default function CopytradeArra77AdminPage() {
                   value={manualEmail}
                   onChange={(e) => setManualEmail(e.target.value)}
                   placeholder="Email user copytrade"
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                  className="px-3 py-2 rounded-lg border border-[var(--border-light)] text-sm"
                 />
                 <select
                   value={manualDirection}
                   onChange={(e) => setManualDirection(e.target.value as 'CREDIT' | 'DEBIT')}
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                  className="px-3 py-2 rounded-lg border border-[var(--border-light)] text-sm"
                 >
                   <option value="CREDIT">CREDIT (+)</option>
                   <option value="DEBIT">DEBIT (-)</option>
@@ -289,7 +289,7 @@ export default function CopytradeArra77AdminPage() {
                   value={manualAmount}
                   onChange={(e) => setManualAmount(e.target.value)}
                   placeholder="Jumlah credit"
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                  className="px-3 py-2 rounded-lg border border-[var(--border-light)] text-sm"
                 />
                 <button
                   onClick={submitManualAdjust}
@@ -303,16 +303,16 @@ export default function CopytradeArra77AdminPage() {
                 value={manualNote}
                 onChange={(e) => setManualNote(e.target.value)}
                 placeholder="Catatan admin (opsional)"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-light)] text-sm"
               />
             </div>
-            {topups.length === 0 && <p className="text-sm text-slate-500">{topupScope === 'pending' ? 'Tidak ada topup yang perlu direview.' : 'Belum ada topup.'}</p>}
+            {topups.length === 0 && <p className="text-sm text-[var(--text-secondary)]">{topupScope === 'pending' ? 'Tidak ada topup yang perlu direview.' : 'Belum ada topup.'}</p>}
             {topups.map((o) => (
-              <div key={o.id} className="border border-slate-100 rounded-xl p-3">
+              <div key={o.id} className="border border-[var(--border-light)] rounded-xl p-3">
                 <div className="flex justify-between gap-4 flex-wrap">
                   <div>
                     <p className="font-medium text-sm">{o.profiles?.display_name || o.profiles?.email || 'User'} | {fmtIdr(o.amount_idr)} ({o.credit_amount} cr)</p>
-                    <p className="text-xs text-slate-500">Status: {o.status} | {fmtDate(o.created_at)}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Status: {o.status} | {fmtDate(o.created_at)}</p>
                     {o.proof_image_url && <a href={o.proof_image_url} className="text-xs text-blue-600 underline" target="_blank" rel="noreferrer">Buka bukti</a>}
                   </div>
                   <div className="flex gap-2">
@@ -322,7 +322,7 @@ export default function CopytradeArra77AdminPage() {
                         <button onClick={() => adminAct('/api/admin/copytrade-arra77/topups', { action: 'REJECT', orderId: o.id }, 'Topup rejected')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs">Reject</button>
                       </>
                     ) : (
-                      <span className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs">No Action</span>
+                      <span className="px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] text-xs">No Action</span>
                     )}
                   </div>
                 </div>
@@ -332,28 +332,28 @@ export default function CopytradeArra77AdminPage() {
         )}
 
         {tab === 'providers' && (
-          <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+          <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={() => setProviderScope('pending')}
-                className={`px-3 py-1.5 rounded-lg text-xs ${providerScope === 'pending' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs ${providerScope === 'pending' ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
               >
                 Pending
               </button>
               <button
                 onClick={() => setProviderScope('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs ${providerScope === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs ${providerScope === 'all' ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
               >
                 All
               </button>
             </div>
-            {providers.length === 0 && <p className="text-sm text-slate-500">{providerScope === 'pending' ? 'Tidak ada provider yang perlu direview.' : 'Belum ada provider.'}</p>}
+            {providers.length === 0 && <p className="text-sm text-[var(--text-secondary)]">{providerScope === 'pending' ? 'Tidak ada provider yang perlu direview.' : 'Belum ada provider.'}</p>}
             {providers.map((p) => (
-              <div key={p.id} className="border border-slate-100 rounded-xl p-3">
+              <div key={p.id} className="border border-[var(--border-light)] rounded-xl p-3">
                 <div className="flex justify-between gap-4 flex-wrap">
                   <div>
                     <p className="font-medium text-sm">{p.display_name} @{p.slug}</p>
-                    <p className="text-xs text-slate-500">Owner: {p.profiles?.email || '-'} | Risk {p.risk_level} | Status {p.status}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Owner: {p.profiles?.email || '-'} | Risk {p.risk_level} | Status {p.status}</p>
                     {Array.isArray(p.provider_challenges) && p.provider_challenges[0] && (
                       <p className="text-xs text-blue-700">
                         Challenge {p.provider_challenges[0].total_trades || 0}/{p.provider_challenges[0].target_trades || 0}
@@ -382,30 +382,30 @@ export default function CopytradeArra77AdminPage() {
         )}
 
         {tab === 'follows' && (
-          <div className="rounded-2xl bg-white border border-slate-200 p-4 space-y-2">
+          <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={() => setFollowScope('active')}
-                className={`px-3 py-1.5 rounded-lg text-xs ${followScope === 'active' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs ${followScope === 'active' ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
               >
                 Active
               </button>
               <button
                 onClick={() => setFollowScope('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs ${followScope === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs ${followScope === 'all' ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}
               >
                 All
               </button>
             </div>
-            {follows.length === 0 && <p className="text-sm text-slate-500">{followScope === 'active' ? 'Tidak ada follow aktif.' : 'Belum ada data follow.'}</p>}
+            {follows.length === 0 && <p className="text-sm text-[var(--text-secondary)]">{followScope === 'active' ? 'Tidak ada follow aktif.' : 'Belum ada data follow.'}</p>}
             {follows.map((f) => (
-              <div key={f.id} className="border border-slate-100 rounded-xl p-3">
+              <div key={f.id} className="border border-[var(--border-light)] rounded-xl p-3">
                 <div className="flex justify-between gap-4 flex-wrap">
                   <div>
                     <p className="font-medium text-sm">{f.follower?.name || f.follower?.email || 'Follower'} {'->'} {f.provider?.name || 'Provider'} @{f.provider?.slug || '-'}</p>
-                    <p className="text-xs text-slate-500">Follower: {f.follower?.email || '-'} | Provider owner: {f.provider?.ownerEmail || '-'}</p>
-                    <p className="text-xs text-slate-500">Status: {f.status} | Risk: {f.riskMode} | Lot: {f.fixedLot ?? '-'} | One-trade: {f.oneTradeAtATime ? 'ON' : 'OFF'}</p>
-                    <p className="text-xs text-slate-500">Updated: {fmtDate(f.updatedAt)}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Follower: {f.follower?.email || '-'} | Provider owner: {f.provider?.ownerEmail || '-'}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Status: {f.status} | Risk: {f.riskMode} | Lot: {f.fixedLot ?? '-'} | One-trade: {f.oneTradeAtATime ? 'ON' : 'OFF'}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Updated: {fmtDate(f.updatedAt)}</p>
                   </div>
                 </div>
               </div>
@@ -415,7 +415,7 @@ export default function CopytradeArra77AdminPage() {
 
         {tab === 'bridge' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
               <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
                 <h3 className="font-semibold">Bridge Terminals</h3>
                 <div className="flex gap-2">
@@ -436,8 +436,8 @@ export default function CopytradeArra77AdminPage() {
                 </div>
               </div>
               <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
-                <p className="text-sm font-semibold text-slate-800">Checklist Monitoring Lock</p>
-                <ol className="list-decimal ml-4 mt-2 space-y-1 text-xs text-slate-700">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">Checklist Monitoring Lock</p>
+                <ol className="list-decimal ml-4 mt-2 space-y-1 text-xs text-[var(--text-secondary)]">
                   <li>Jika Open(Follower) {'>'} 0: lock normal, jangan reset.</li>
                   <li>Jika Open(Follower)=0, Lock5m {'>='} 3, Heartbeat {'<='} 180s: lakukan reset lock.</li>
                   <li>Jika Heartbeat {'>'} 180s: minta user nyalakan EA dulu, jangan reset dulu.</li>
@@ -445,12 +445,12 @@ export default function CopytradeArra77AdminPage() {
                 </ol>
               </div>
               <div className="space-y-2 max-h-96 overflow-auto">
-                {bridge.terminals.length === 0 && <p className="text-sm text-slate-500">Belum ada terminal.</p>}
+                {bridge.terminals.length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada terminal.</p>}
                 {bridge.terminals.map((t) => {
                   const diag = t.lock_diagnostics || null;
                   const badge = lockDiagBadge(diag);
                   return (
-                  <div key={t.id} className="border border-slate-100 rounded-xl p-2 text-sm space-y-1">
+                  <div key={t.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm space-y-1">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span>{t.terminal_label} | {t.status} | {t.profiles?.email || '-'} | heartbeat {fmtDate(t.last_heartbeat_at)}</span>
@@ -482,10 +482,10 @@ export default function CopytradeArra77AdminPage() {
                     </div>
                     {diag && (
                       <>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-[var(--text-secondary)]">
                           Open(Terminal): {diag.openPositionsTerminal ?? 0} | Open(Follower): {diag.openPositionsFollower ?? 0} | Lock5m: {diag.lockEvents5m ?? 0} | HB age: {diag.heartbeatAgeSec ?? '-'}s
                         </p>
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs text-[var(--text-secondary)]">
                           Rekomendasi: {diag.recommendation || '-'} {diag.lastLockAt ? `| Last lock: ${fmtDate(diag.lastLockAt)}` : ''}
                         </p>
                       </>
@@ -494,11 +494,11 @@ export default function CopytradeArra77AdminPage() {
                 )})}
               </div>
             </div>
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4">
               <h3 className="font-semibold mb-2">Bridge Logs</h3>
               <div className="space-y-2 max-h-96 overflow-auto">
-                {bridge.logs.length === 0 && <p className="text-sm text-slate-500">Belum ada logs.</p>}
-                {bridge.logs.map((l) => <div key={l.id} className="border border-slate-100 rounded-xl p-2 text-sm">[{l.level}] {l.message} • {fmtDate(l.created_at)}</div>)}
+                {bridge.logs.length === 0 && <p className="text-sm text-[var(--text-secondary)]">Belum ada logs.</p>}
+                {bridge.logs.map((l) => <div key={l.id} className="border border-[var(--border-light)] rounded-xl p-2 text-sm">[{l.level}] {l.message} • {fmtDate(l.created_at)}</div>)}
               </div>
             </div>
           </div>

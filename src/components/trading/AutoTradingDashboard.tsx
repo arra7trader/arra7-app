@@ -155,23 +155,23 @@ export default function AutoTradingDashboard() {
 
                                 <div className="space-y-3 mb-6">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Login ID</span>
+                                        <span className="text-[var(--text-secondary)]">Login ID</span>
                                         <span className="text-gray-300 font-mono">{account.login}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Server</span>
+                                        <span className="text-[var(--text-secondary)]">Server</span>
                                         <span className="text-gray-300 truncate max-w-[150px]" title={account.server}>{account.server}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Risk / Trade</span>
+                                        <span className="text-[var(--text-secondary)]">Risk / Trade</span>
                                         <span className="text-gray-300">{account.settings.riskPercent}%</span>
                                     </div>
 
                                     {/* BRIDGE CONFIGURATION */}
                                     <div className="mt-4 pt-4 border-t border-gray-700">
-                                        <div className="text-xs text-gray-500 mb-2 uppercase font-semibold tracking-wider">Bridge Configuration</div>
+                                        <div className="text-xs text-[var(--text-secondary)] mb-2 uppercase font-semibold tracking-wider">Bridge Configuration</div>
                                         <div className="bg-black/30 rounded p-2 mb-2">
-                                            <div className="text-[10px] text-gray-500 mb-1">API KEY (Paste in Python Script)</div>
+                                            <div className="text-[10px] text-[var(--text-secondary)] mb-1">API KEY (Paste in Python Script)</div>
                                             <div className="flex items-center gap-2">
                                                 <code className="text-xs text-blue-400 font-mono flex-1 truncate">{account.id}</code>
                                                 <button
@@ -186,7 +186,7 @@ export default function AutoTradingDashboard() {
                                         <a href="/scripts/arra7-bridge.py" download className="block w-full text-center text-xs bg-gray-700 hover:bg-gray-600 text-white py-1.5 rounded transition">
                                             Download Bridge Script (.py)
                                         </a>
-                                        <div className="text-[10px] text-gray-500 mt-1 text-center">
+                                        <div className="text-[10px] text-[var(--text-secondary)] mt-1 text-center">
                                             Requires Python & MetaTrader 5
                                         </div>
                                     </div>
@@ -222,7 +222,7 @@ export default function AutoTradingDashboard() {
                                 </div>
                             </div>
                             <div className="bg-gray-900/50 px-5 py-3 border-t border-gray-700 flex justify-between items-center">
-                                <span className={`text-xs flex items-center space-x-1 ${account.connectionStatus === 'CONNECTED' ? 'text-green-500' : 'text-gray-500'}`}>
+                                <span className={`text-xs flex items-center space-x-1 ${account.connectionStatus === 'CONNECTED' ? 'text-green-500' : 'text-[var(--text-secondary)]'}`}>
                                     <span className={`w-1.5 h-1.5 rounded-full ${account.connectionStatus === 'CONNECTED' ? 'bg-green-500' : 'bg-gray-500'}`} />
                                     <span>{account.connectionStatus || 'Disconnected'}</span>
                                 </span>

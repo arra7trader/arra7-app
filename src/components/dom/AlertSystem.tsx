@@ -270,7 +270,7 @@ function AlertToast({ alert, onDismiss }: AlertToastProps) {
                         {alert.message}
                     </p>
                     <div className="flex items-center justify-between mt-2">
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-[10px] text-[var(--text-secondary)]">
                             {new Date(alert.timestamp).toLocaleTimeString()}
                         </span>
                         {alert.price && (
@@ -282,7 +282,7 @@ function AlertToast({ alert, onDismiss }: AlertToastProps) {
                 </div>
                 <button
                     onClick={onDismiss}
-                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                    className="p-1 hover:bg-[var(--bg-primary)]/10 rounded transition-colors"
                 >
                     <span className="text-slate-400 text-sm">✕</span>
                 </button>
@@ -304,11 +304,11 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
     const highPriorityCount = activeAlerts.filter(a => a.level === 'HIGH').length;
 
     return (
-        <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
+        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden">
             {/* Header */}
             <button
                 onClick={() => setExpanded(!expanded)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--bg-secondary)] transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <span className="text-lg">🔔</span>
@@ -343,7 +343,7 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-4 pb-4 border-t border-gray-100 pt-2">
+                        <div className="px-4 pb-4 border-t border-[var(--border-light)] pt-2">
                             {activeAlerts.length === 0 ? (
                                 <p className="text-center text-gray-400 text-sm py-4">
                                     No active alerts
@@ -353,7 +353,7 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                                     <div className="flex justify-end mb-2">
                                         <button
                                             onClick={onClear}
-                                            className="text-xs text-gray-400 hover:text-gray-600"
+                                            className="text-xs text-gray-400 hover:text-[var(--text-secondary)]"
                                         >
                                             Clear All
                                         </button>
@@ -371,13 +371,13 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                                                         <p className={`text-xs font-medium ${config.color}`}>
                                                             {alert.title}
                                                         </p>
-                                                        <p className="text-[10px] text-gray-500 truncate">
+                                                        <p className="text-[10px] text-[var(--text-secondary)] truncate">
                                                             {alert.message}
                                                         </p>
                                                     </div>
                                                     <button
                                                         onClick={() => onDismiss(alert.id)}
-                                                        className="text-gray-400 hover:text-gray-600 text-xs"
+                                                        className="text-gray-400 hover:text-[var(--text-secondary)] text-xs"
                                                     >
                                                         ✕
                                                     </button>

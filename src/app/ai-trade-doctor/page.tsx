@@ -166,19 +166,19 @@ export default function AITradeDoctorPage() {
                                     <span className="text-2xl">📖</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cara Export Trading Statement</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Panduan lengkap untuk MT4 & MT5</p>
+                                    <h2 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">Cara Export Trading Statement</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400">Panduan lengkap untuk MT4 & MT5</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* MT4 Tutorial */}
-                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6">
+                                <div className="bg-[var(--bg-primary)] dark:bg-gray-800 rounded-2xl p-6">
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="text-2xl">📊</span>
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">MetaTrader 4</h3>
+                                        <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">MetaTrader 4</h3>
                                     </div>
-                                    <ol className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                                    <ol className="space-y-3 text-sm text-[var(--text-primary)] dark:text-gray-300">
                                         <li className="flex gap-3">
                                             <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">1</span>
                                             <span>Buka <strong>MetaTrader 4</strong></span>
@@ -207,12 +207,12 @@ export default function AITradeDoctorPage() {
                                 </div>
 
                                 {/* MT5 Tutorial */}
-                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6">
+                                <div className="bg-[var(--bg-primary)] dark:bg-gray-800 rounded-2xl p-6">
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="text-2xl">📈</span>
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">MetaTrader 5</h3>
+                                        <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">MetaTrader 5</h3>
                                     </div>
-                                    <ol className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                                    <ol className="space-y-3 text-sm text-[var(--text-primary)] dark:text-gray-300">
                                         <li className="flex gap-3">
                                             <span className="flex-shrink-0 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xs">1</span>
                                             <span>Buka <strong>MetaTrader 5</strong></span>
@@ -261,7 +261,7 @@ export default function AITradeDoctorPage() {
                         {/* Upload Area */}
                         <div
                             {...getRootProps()}
-                            className={`bg-white dark:bg-gray-800 rounded-3xl border-dashed border-2 p-12 text-center mb-12 transition-all cursor-pointer ${isDragActive
+                            className={`bg-[var(--bg-primary)] dark:bg-gray-800 rounded-3xl border-dashed border-2 p-12 text-center mb-12 transition-all cursor-pointer ${isDragActive
                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                                 : 'border-[var(--border-light)] hover:border-blue-400'
                                 }`}
@@ -333,19 +333,19 @@ export default function AITradeDoctorPage() {
                                 >
                                     <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-800">
                                         <div className="text-2xl font-bold text-blue-900 dark:text-blue-300">{summary.totalTrades}</div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">Total Trades</div>
+                                        <div className="text-xs text-[var(--text-secondary)] dark:text-gray-400">Total Trades</div>
                                     </div>
                                     <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-800">
                                         <div className="text-2xl font-bold text-green-900 dark:text-green-300">{summary.winRate.toFixed(1)}%</div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">Win Rate</div>
+                                        <div className="text-xs text-[var(--text-secondary)] dark:text-gray-400">Win Rate</div>
                                     </div>
                                     <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-800">
                                         <div className="text-2xl font-bold text-purple-900 dark:text-purple-300">{summary.profitFactor.toFixed(2)}</div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">Profit Factor</div>
+                                        <div className="text-xs text-[var(--text-secondary)] dark:text-gray-400">Profit Factor</div>
                                     </div>
                                     <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-800">
                                         <div className="text-2xl font-bold text-amber-900 dark:text-amber-300">${summary.totalProfit.toFixed(0)}</div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">Total Profit</div>
+                                        <div className="text-xs text-[var(--text-secondary)] dark:text-gray-400">Total Profit</div>
                                     </div>
                                 </motion.div>
                             )}
@@ -403,12 +403,12 @@ export default function AITradeDoctorPage() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                                                        <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-4">
                                                             {flaw.description}
                                                         </p>
-                                                        <div className="bg-white dark:bg-black/20 p-3 rounded-xl">
-                                                            <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mb-1">💊 PRESCRIPTION:</p>
-                                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{flaw.prescription}</p>
+                                                        <div className="bg-[var(--bg-primary)] dark:bg-black/20 p-3 rounded-xl">
+                                                            <p className="text-xs font-mono text-[var(--text-secondary)] dark:text-gray-400 mb-1">💊 PRESCRIPTION:</p>
+                                                            <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white">{flaw.prescription}</p>
                                                         </div>
                                                     </motion.div>
                                                 ))}
@@ -440,12 +440,12 @@ export default function AITradeDoctorPage() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                                                        <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-4">
                                                             {strength.description}
                                                         </p>
-                                                        <div className="bg-white dark:bg-black/20 p-3 rounded-xl">
-                                                            <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mb-1">💎 AMPLIFY:</p>
-                                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{strength.prescription}</p>
+                                                        <div className="bg-[var(--bg-primary)] dark:bg-black/20 p-3 rounded-xl">
+                                                            <p className="text-xs font-mono text-[var(--text-secondary)] dark:text-gray-400 mb-1">💎 AMPLIFY:</p>
+                                                            <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white">{strength.prescription}</p>
                                                         </div>
                                                     </motion.div>
                                                 ))}
@@ -455,10 +455,10 @@ export default function AITradeDoctorPage() {
 
                                     {/* No Issues Found */}
                                     {analysis.criticalFlaws.length === 0 && analysis.strengths.length === 0 && (
-                                        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-3xl">
+                                        <div className="text-center py-12 bg-[var(--bg-secondary)] dark:bg-gray-800/50 rounded-3xl">
                                             <span className="text-6xl mb-4 block">🎯</span>
                                             <h3 className="text-2xl font-bold mb-2">Looking Good!</h3>
-                                            <p className="text-gray-600 dark:text-gray-400">
+                                            <p className="text-[var(--text-secondary)] dark:text-gray-400">
                                                 No critical issues detected. Keep up the disciplined trading!
                                             </p>
                                         </div>

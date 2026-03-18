@@ -23,7 +23,7 @@ function StatCard({ value, label, color }: { value: string | number; label: stri
     return (
         <motion.div
             variants={{ hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 } }}
-            className="bg-white rounded-xl p-3 md:p-4 border border-[var(--border-light)] text-center shadow-sm hover:shadow-md transition-all group"
+            className="bg-[var(--bg-primary)] rounded-xl p-3 md:p-4 border border-[var(--border-light)] text-center shadow-sm hover:shadow-md transition-all group"
         >
             <p className={`text-xl md:text-2xl font-bold ${color ?? 'text-[var(--text-primary)]'} group-hover:scale-110 transition-transform`}>
                 {value}
@@ -73,7 +73,7 @@ export default function DailyPerformanceSection() {
     };
 
     return (
-        <section className="py-10 border-y border-[var(--border-light)] bg-white/50 backdrop-blur-sm relative overflow-hidden">
+        <section className="py-10 border-y border-[var(--border-light)] bg-[var(--bg-primary)]/50 backdrop-blur-sm relative overflow-hidden">
             <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #0071e3 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">

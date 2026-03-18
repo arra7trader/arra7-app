@@ -58,7 +58,7 @@ function PaymentCheckoutContent() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-3xl p-6 md:p-8 border border-[var(--border-light)] shadow-lg"
+                    className="bg-[var(--bg-primary)] rounded-3xl p-6 md:p-8 border border-[var(--border-light)] shadow-lg"
                 >
                     <div className="text-center mb-6">
                         <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3 bg-gradient-to-br ${plan.color} text-2xl`}>
@@ -74,7 +74,7 @@ function PaymentCheckoutContent() {
                         <p className="text-4xl font-bold gradient-text">{plan.priceFormatted}</p>
                     </div>
 
-                    <div className="bg-white p-6 rounded-2xl mb-6 flex flex-col items-center justify-center border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] p-6 rounded-2xl mb-6 flex flex-col items-center justify-center border border-[var(--border-light)]">
                         <div className="relative aspect-square w-full max-w-[280px] mb-4">
                             <img
                                 src="/qris-payment.jpg"
@@ -82,8 +82,8 @@ function PaymentCheckoutContent() {
                                 className="w-full h-full object-contain rounded-lg"
                             />
                         </div>
-                        <p className="text-sm font-semibold text-gray-700">ARRA7 FULLSTACK DEVELOPER</p>
-                        <p className="text-xs text-gray-500 font-mono">NMID: ID1025468752486</p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">ARRA7 FULLSTACK DEVELOPER</p>
+                        <p className="text-xs text-[var(--text-secondary)] font-mono">NMID: ID1025468752486</p>
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">

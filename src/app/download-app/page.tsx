@@ -31,7 +31,7 @@ export default function DownloadAppPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] pt-32 pb-16">
       <div className="container-apple section-padding max-w-5xl mx-auto">
-        <div className="rounded-3xl border border-[var(--border-light)] bg-white p-8 md:p-10 shadow-sm mb-8">
+        <div className="rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-8 md:p-10 shadow-sm mb-8">
           <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 mb-4">
             Android APK v3.0.0 Beta
           </div>
@@ -78,7 +78,7 @@ export default function DownloadAppPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="rounded-3xl border border-[var(--border-light)] bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-6 shadow-sm">
             <h2 className="text-xl font-bold mb-4">Fitur Utama</h2>
             <div className="space-y-4">
               {highlights.map((item) => (
@@ -90,7 +90,7 @@ export default function DownloadAppPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[var(--border-light)] bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-6 shadow-sm">
             <h2 className="text-xl font-bold mb-4">Cara Install</h2>
             <div className="space-y-3">
               {steps.map((step, index) => (

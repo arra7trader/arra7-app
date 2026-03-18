@@ -61,7 +61,7 @@ export default function AIStockPicks() {
                 <div className="h-8 w-48 bg-gray-200 rounded-lg mb-4"></div>
                 <div className="flex gap-4 overflow-x-auto pb-4">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="min-w-[280px] h-40 bg-gray-100 rounded-xl"></div>
+                        <div key={i} className="min-w-[280px] h-40 bg-[var(--bg-secondary)] rounded-xl"></div>
                     ))}
                 </div>
             </div>
@@ -98,7 +98,7 @@ export default function AIStockPicks() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="min-w-[280px] bg-white rounded-2xl p-5 border border-[var(--border-light)] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow snap-start"
+                        className="min-w-[280px] bg-[var(--bg-primary)] rounded-2xl p-5 border border-[var(--border-light)] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow snap-start"
                     >
                         {/* Background Effect */}
                         <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-50 -mr-4 -mt-4 ${rec.confidence > 0.75 ? 'bg-gradient-to-br from-green-200 to-transparent' : 'bg-gradient-to-br from-amber-100 to-transparent'
@@ -148,7 +148,7 @@ export default function AIStockPicks() {
                                 </div>
                             </div>
 
-                            <div className="mt-3 pt-3 border-t border-dashed border-gray-100">
+                            <div className="mt-3 pt-3 border-t border-dashed border-[var(--border-light)]">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-gray-400">{t('direction')}</span>
                                     <span className="font-bold text-green-600 flex items-center gap-1">

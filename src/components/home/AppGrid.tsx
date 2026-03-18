@@ -110,7 +110,7 @@ export default function AppGrid() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="w-full max-w-4xl mx-auto mt-10"
             >
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 p-6 bg-white/50 dark:bg-black/20 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 p-6 bg-[var(--bg-primary)]/50 dark:bg-black/20 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
                     {apps.map((app) => (
                         <Link key={app.id} href={app.href} className="group">
                             <motion.div

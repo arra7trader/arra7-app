@@ -25,12 +25,12 @@ export default function TelegramMarketing({
         { id: 'day3_faq', label: 'Hari 3: FAQ', icon: '❓', color: 'bg-purple-50 border-purple-200 text-purple-700' },
         { id: 'day4_checklist', label: 'Hari 4: Checklist', icon: '✅', color: 'bg-amber-50 border-amber-200 text-amber-700' },
         { id: 'day5_visual', label: 'Hari 5: Visual', icon: '🎨', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-        { id: 'day6_mistakes', label: 'Hari 6: Mistakes', icon: '⚠️', color: 'bg-slate-50 border-slate-200 text-slate-700' },
+        { id: 'day6_mistakes', label: 'Hari 6: Mistakes', icon: '⚠️', color: 'bg-[var(--bg-secondary)] border-[var(--border-light)] text-[var(--text-secondary)]' },
         { id: 'day7_blueprint', label: 'Hari 7: Blueprint', icon: '🗺️', color: 'bg-pink-50 border-pink-200 text-pink-700' },
     ];
 
     return (
-        <div className="mb-8 bg-white rounded-2xl border border-[var(--border-light)] p-6">
+        <div className="mb-8 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">📢</span>

@@ -62,7 +62,7 @@ export default function AdminMLDashboard() {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-8 border border-gray-200">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-8 border border-[var(--border-light)]">
                 <div className="flex items-center justify-center h-64">
                     <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
                 </div>
@@ -72,7 +72,7 @@ export default function AdminMLDashboard() {
 
     if (!data) {
         return (
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 text-center text-gray-500">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-8 border border-[var(--border-light)] text-center text-[var(--text-secondary)]">
                 Failed to load ML dashboard data
             </div>
         );
@@ -87,14 +87,14 @@ export default function AdminMLDashboard() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-900">🤖 ML Performance Dashboard</h2>
+                    <h2 className="text-xl font-bold text-[var(--text-primary)]">🤖 ML Performance Dashboard</h2>
                     <div className="flex gap-2">
                         <select
                             value={symbol}
                             onChange={(e) => setSymbol(e.target.value)}
-                            className="px-3 py-2 bg-gray-100 rounded-lg text-sm"
+                            className="px-3 py-2 bg-[var(--bg-secondary)] rounded-lg text-sm"
                         >
                             <option value="BTCUSD">BTCUSD</option>
                             <option value="XAUUSD">XAUUSD</option>
@@ -102,7 +102,7 @@ export default function AdminMLDashboard() {
                         <select
                             value={days}
                             onChange={(e) => setDays(Number(e.target.value))}
-                            className="px-3 py-2 bg-gray-100 rounded-lg text-sm"
+                            className="px-3 py-2 bg-[var(--bg-secondary)] rounded-lg text-sm"
                         >
                             <option value={1}>24h</option>
                             <option value={7}>7 Days</option>
@@ -154,20 +154,20 @@ export default function AdminMLDashboard() {
             {/* Model Ranking & Direction Performance */}
             <div className="grid grid-cols-2 gap-6">
                 {/* Model Ranking */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-4">🏆 Model Ranking</h3>
+                <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
+                    <h3 className="font-semibold text-[var(--text-primary)] mb-4">🏆 Model Ranking</h3>
                     <div className="space-y-3">
                         {data.modelRanking.map((model, idx) => (
                             <div key={model.model} className="flex items-center gap-3">
                                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                    idx === 1 ? 'bg-gray-300 text-gray-700' :
+                                    idx === 1 ? 'bg-gray-300 text-[var(--text-primary)]' :
                                         idx === 2 ? 'bg-amber-600 text-white' :
-                                            'bg-gray-100 text-gray-500'
+                                            'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                     }`}>
                                     {idx + 1}
                                 </span>
-                                <span className="flex-1 font-medium text-gray-700">{model.model}</span>
-                                <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <span className="flex-1 font-medium text-[var(--text-primary)]">{model.model}</span>
+                                <div className="w-24 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-purple-500 rounded-full"
                                         style={{ width: `${model.accuracy * 100}%` }}
@@ -188,8 +188,8 @@ export default function AdminMLDashboard() {
                 </div>
 
                 {/* Direction Performance */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-4">📊 Direction Accuracy</h3>
+                <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
+                    <h3 className="font-semibold text-[var(--text-primary)] mb-4">📊 Direction Accuracy</h3>
                     <div className="space-y-4">
                         {[
                             { dir: 'UP', color: '#22c55e', emoji: '↑' },
@@ -201,7 +201,7 @@ export default function AdminMLDashboard() {
                                 <div key={dir} className="flex items-center gap-3">
                                     <span className="text-2xl">{emoji}</span>
                                     <span className="w-20 font-medium" style={{ color }}>{dir}</span>
-                                    <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                         <motion.div
                                             className="h-full rounded-full"
                                             style={{ backgroundColor: color }}
@@ -222,8 +222,8 @@ export default function AdminMLDashboard() {
                     </div>
 
                     {/* Confidence Analysis */}
-                    <div className="mt-6 pt-4 border-t border-gray-100">
-                        <h4 className="text-sm font-medium text-gray-600 mb-3">High Confidence Analysis (&gt;70%)</h4>
+                    <div className="mt-6 pt-4 border-t border-[var(--border-light)]">
+                        <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-3">High Confidence Analysis (&gt;70%)</h4>
                         <div className="grid grid-cols-2 gap-3 text-center">
                             <div className="bg-blue-50 rounded-lg p-3">
                                 <p className="text-2xl font-bold text-blue-600">
@@ -231,11 +231,11 @@ export default function AdminMLDashboard() {
                                 </p>
                                 <p className="text-xs text-blue-500">Accuracy</p>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-3">
-                                <p className="text-2xl font-bold text-gray-700">
+                            <div className="bg-[var(--bg-secondary)] rounded-lg p-3">
+                                <p className="text-2xl font-bold text-[var(--text-primary)]">
                                     {data.confidenceAnalysis.highConfidenceCount}
                                 </p>
-                                <p className="text-xs text-gray-500">Predictions</p>
+                                <p className="text-xs text-[var(--text-secondary)]">Predictions</p>
                             </div>
                         </div>
                     </div>
@@ -243,12 +243,12 @@ export default function AdminMLDashboard() {
             </div>
 
             {/* Recent Predictions */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-4">📜 Recent Predictions</h3>
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
+                <h3 className="font-semibold text-[var(--text-primary)] mb-4">📜 Recent Predictions</h3>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left text-gray-500 border-b border-gray-100">
+                            <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
                                 <th className="pb-2 font-medium">Direction</th>
                                 <th className="pb-2 font-medium">Confidence</th>
                                 <th className="pb-2 font-medium">Model</th>
@@ -258,7 +258,7 @@ export default function AdminMLDashboard() {
                         </thead>
                         <tbody>
                             {data.recentPredictions.map((pred) => (
-                                <tr key={pred.id} className="border-b border-gray-50 hover:bg-gray-50">
+                                <tr key={pred.id} className="border-b border-gray-50 hover:bg-[var(--bg-secondary)]">
                                     <td className="py-2">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${pred.direction === 'UP' ? 'bg-green-100 text-green-700' :
                                             pred.direction === 'DOWN' ? 'bg-red-100 text-red-700' :
@@ -268,7 +268,7 @@ export default function AdminMLDashboard() {
                                         </span>
                                     </td>
                                     <td className="py-2">{pred.confidence}%</td>
-                                    <td className="py-2 text-gray-600">{pred.model}</td>
+                                    <td className="py-2 text-[var(--text-secondary)]">{pred.model}</td>
                                     <td className="py-2">
                                         {pred.isCorrect !== undefined ? (
                                             pred.isCorrect ? (

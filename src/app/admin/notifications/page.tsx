@@ -136,17 +136,17 @@ export default function AdminNotificationsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)]">Subscribers</p>
                         <p className="text-3xl font-bold text-blue-600">{subscriberCount}</p>
                     </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)]">VAPID Config</p>
                         <p className={`text-lg font-bold ${vapidConfigured ? 'text-green-600' : 'text-red-600'}`}>
                             {vapidConfigured ? '✅ Ready' : '❌ Not Set'}
                         </p>
                     </div>
-                    <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)]">Total Sent</p>
                         <p className="text-3xl font-bold text-purple-600">
                             {recentNotifications.reduce((acc, n) => acc + n.sent_count, 0)}
@@ -169,7 +169,7 @@ export default function AdminNotificationsPage() {
                 )}
 
                 {/* Quick Templates */}
-                <div className="bg-white rounded-2xl border border-[var(--border-light)] p-6 mb-6">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6 mb-6">
                     <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">⚡ Quick Templates</h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         {TEMPLATES.map((template) => (
@@ -186,7 +186,7 @@ export default function AdminNotificationsPage() {
                 </div>
 
                 {/* Send Form */}
-                <div className="bg-white rounded-2xl border border-[var(--border-light)] p-6 mb-6">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6 mb-6">
                     <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">📤 Kirim Notifikasi</h3>
 
                     <div className="space-y-4">
@@ -229,7 +229,7 @@ export default function AdminNotificationsPage() {
                 </div>
 
                 {/* Recent Notifications */}
-                <div className="bg-white rounded-2xl border border-[var(--border-light)] p-6">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6">
                     <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">📋 Recent Notifications</h3>
 
                     {recentNotifications.length > 0 ? (

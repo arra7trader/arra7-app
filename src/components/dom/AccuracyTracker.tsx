@@ -244,7 +244,7 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
     };
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+        <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 📊 Accuracy Tracker
                 {pendingCount > 0 && (
@@ -300,11 +300,11 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 gap-2 text-center">
-                        <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="bg-[var(--bg-secondary)] rounded-lg p-2">
                             <p className="text-lg font-bold text-[var(--text-primary)]">{stats.total}</p>
                             <p className="text-xs text-gray-400">Total</p>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="bg-[var(--bg-secondary)] rounded-lg p-2">
                             <p className="text-lg font-bold" style={{ color: getColor(stats.last20) }}>
                                 {last20Pct}%
                             </p>
@@ -323,7 +323,7 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
                         ].map(({ key, label, color, stats: dirStats }) => (
                             <div key={key} className="flex items-center gap-2">
                                 <span className="text-xs w-16" style={{ color }}>{label}</span>
-                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                     <motion.div
                                         className="h-full rounded-full"
                                         style={{ backgroundColor: color }}

@@ -80,7 +80,7 @@ export default function FAQPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: sectionIndex * 0.1 }}
-                                className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden"
+                                className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden"
                             >
                                 <div className="p-6 border-b border-[var(--border-light)] bg-[var(--bg-secondary)]">
                                     <h2 className="font-semibold flex items-center gap-3">

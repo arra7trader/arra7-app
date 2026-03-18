@@ -423,7 +423,7 @@ function formatAnalysisToHtml(text: string): string {
     html = html.replace(
         /💡\s*Entry Logic\s*(?:\:|\*+)?\s*(.*?)(?:\n|$)/i,
         `<div class="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50">
-            <div class="text-xs text-gray-500 mb-2 uppercase tracking-wider font-bold">Logic & Reasoning</div>
+            <div class="text-xs text-[var(--text-secondary)] mb-2 uppercase tracking-wider font-bold">Logic & Reasoning</div>
             <div class="text-sm text-gray-300 leading-relaxed italic border-l-2 border-gray-600 pl-3">$1</div>
         </div>
         </div>` // Closing grid
@@ -558,15 +558,15 @@ function formatAnalysisToHtml(text: string): string {
         /💠\s*([A-Za-z0-9/.]+)\s*\|\s*⏳\s*([A-Za-z0-9]+)\s*\|\s*🎯\s*(?:CONFIDENCE:?\s*)?([0-9.]+)%/i,
         `<div class="grid grid-cols-3 gap-2 mt-6 py-4 border-y border-gray-700/50">
             <div class="text-center">
-                <div class="text-[10px] text-gray-500 uppercase">Pair</div>
+                <div class="text-[10px] text-[var(--text-secondary)] uppercase">Pair</div>
                 <div class="font-bold text-blue-400">$1</div>
             </div>
             <div class="text-center border-l border-gray-700/50">
-                <div class="text-[10px] text-gray-500 uppercase">Timeframe</div>
+                <div class="text-[10px] text-[var(--text-secondary)] uppercase">Timeframe</div>
                 <div class="font-bold text-white">$2</div>
             </div>
             <div class="text-center border-l border-gray-700/50">
-                <div class="text-[10px] text-gray-500 uppercase">Confidence</div>
+                <div class="text-[10px] text-[var(--text-secondary)] uppercase">Confidence</div>
                 <div class="font-bold text-purple-400">$3%</div>
             </div>
          </div>`
@@ -577,15 +577,15 @@ function formatAnalysisToHtml(text: string): string {
         /[◆💠]\s*\[?([A-Za-z0-9/.]+)\]?\s*\|\s*[⏳🕐]\s*\[?([A-Za-z0-9]+)\]?\s*\|\s*[🎯]\s*\[?(?:CONFIDENCE:?\s*)?([0-9.]+)%?\]?/i,
         `<div class="grid grid-cols-3 gap-2 mt-6 py-4 border-y border-gray-700/50">
             <div class="text-center">
-                <div class="text-[10px] text-gray-500 uppercase">Pair</div>
+                <div class="text-[10px] text-[var(--text-secondary)] uppercase">Pair</div>
                 <div class="font-bold text-blue-400">$1</div>
             </div>
             <div class="text-center border-l border-gray-700/50">
-                <div class="text-[10px] text-gray-500 uppercase">Timeframe</div>
+                <div class="text-[10px] text-[var(--text-secondary)] uppercase">Timeframe</div>
                 <div class="font-bold text-white">$2</div>
             </div>
             <div class="text-center border-l border-gray-700/50">
-                <div class="text-[10px] text-gray-500 uppercase">Confidence</div>
+                <div class="text-[10px] text-[var(--text-secondary)] uppercase">Confidence</div>
                 <div class="font-bold text-purple-400">$3%</div>
             </div>
          </div>`
@@ -597,11 +597,11 @@ function formatAnalysisToHtml(text: string): string {
         /📊\s*RISK:\s*(LOW|MID|HIGH)\s*\|\s*Z-Score:\s*\[?([-\d.]+)\]?/gi,
         `<div class="flex justify-between items-center mt-3 px-2">
             <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Risk Profile:</span>
+                <span class="text-xs text-[var(--text-secondary)]">Risk Profile:</span>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-700 text-white uppercase risk-$1">$1</span>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Z-Score:</span>
+                <span class="text-xs text-[var(--text-secondary)]">Z-Score:</span>
                 <span class="font-mono text-xs text-yellow-500">$2</span>
             </div>
          </div>`
@@ -648,7 +648,7 @@ function formatAnalysisToHtml(text: string): string {
     // Simpler: Just style the bullets nicely.
     html = html.replace(
         /•\s*(.*?):\s*(.*?)(?:\n|$)/g,
-        `<div class="flex justify-between items-center mb-1 text-sm"><span class="text-gray-500">$1</span><span class="text-white font-medium">$2</span></div>`
+        `<div class="flex justify-between items-center mb-1 text-sm"><span class="text-[var(--text-secondary)]">$1</span><span class="text-white font-medium">$2</span></div>`
     );
     // Close the div opened in EDGE title? 
     // Wait, regex replace doesn't know context. 
@@ -686,7 +686,7 @@ function formatAnalysisToHtml(text: string): string {
         /⚠️\s*Disclaimer:?\s*(.*?)(?:\n|$)/gi,
         `</div> <!-- Close analysis text -->
          </div> <!-- Close analysis container -->
-         <div class="mt-6 text-[10px] text-gray-600 text-center italic border-t border-gray-800 pt-4">
+         <div class="mt-6 text-[10px] text-[var(--text-secondary)] text-center italic border-t border-gray-800 pt-4">
             ⚠️ Disclaimer: $1
          </div>`
     );

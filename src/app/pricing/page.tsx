@@ -158,7 +158,7 @@ export default function PricingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafbfc] text-slate-900 pt-36 pb-20 font-sans selection:bg-blue-100">
+        <div className="min-h-screen bg-[#fafbfc] text-[var(--text-primary)] pt-36 pb-20 font-sans selection:bg-blue-100">
             {/* Header / Hero */}
             <header className="text-center px-4 max-w-4xl mx-auto mb-16 md:mb-24">
                 <motion.div
@@ -170,10 +170,10 @@ export default function PricingPage() {
                         <SparklesIcon size="sm" className="text-blue-500" />
                         Diskon Spesial Terbatas
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-[var(--text-primary)] mb-6 leading-tight">
                         Pilih Paket Trading <br className="hidden md:block" /> Sesuai <span className="text-blue-600">Gaya Anda</span>
                     </h1>
-                    <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
                         Mulai dari yang gratis hingga fitur tak terbatas untuk akun institusional. Tingkatkan Win Rate Anda dengan dukungan Neural Ensemble AI.
                     </p>
                 </motion.div>
@@ -186,10 +186,10 @@ export default function PricingPage() {
                     const isReversed = index % 2 !== 0; // Reverse middle card
 
                     // Theme styles
-                    let leftBg = 'bg-slate-50/50';
-                    let titleColor = 'text-slate-900';
+                    let leftBg = 'bg-[var(--bg-secondary)]/50';
+                    let titleColor = 'text-[var(--text-primary)]';
                     let ctaStyle = 'bg-slate-800 hover:bg-slate-900 text-white';
-                    let checkStyle = 'bg-slate-200 text-slate-700';
+                    let checkStyle = 'bg-slate-200 text-[var(--text-secondary)]';
 
                     if (plan.theme === 'blue') {
                         leftBg = 'bg-blue-50/50';
@@ -209,10 +209,10 @@ export default function PricingPage() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.15, duration: 0.5 }}
-                            className={`bg-white rounded-[2.5rem] border ${plan.id === 'PRO' ? 'border-blue-200 ring-2 ring-blue-100 shadow-2xl shadow-blue-900/10' : 'border-slate-200 shadow-xl'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
+                            className={`bg-[var(--bg-primary)] rounded-[2.5rem] border ${plan.id === 'PRO' ? 'border-blue-200 ring-2 ring-blue-100 shadow-2xl shadow-blue-900/10' : 'border-[var(--border-light)] shadow-xl'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
                         >
                             {/* Left Pane (Details & Features) */}
-                            <div className={`w-full md:w-3/5 p-8 md:p-14 ${leftBg} h-full flex flex-col justify-center border-b md:border-b-0 ${isReversed ? 'md:border-l' : 'md:border-r'} border-slate-100`}>
+                            <div className={`w-full md:w-3/5 p-8 md:p-14 ${leftBg} h-full flex flex-col justify-center border-b md:border-b-0 ${isReversed ? 'md:border-l' : 'md:border-r'} border-[var(--border-light)]`}>
                                 <div className="flex flex-wrap items-center gap-4 mb-4">
                                     <span className="text-4xl">{plan.icon}</span>
                                     <h2 className={`text-3xl md:text-4xl font-extrabold ${titleColor}`}>
@@ -225,23 +225,23 @@ export default function PricingPage() {
                                     )}
                                 </div>
 
-                                <p className="text-slate-600 leading-relaxed mb-8 max-w-lg">
+                                <p className="text-[var(--text-secondary)] leading-relaxed mb-8 max-w-lg">
                                     {plan.description}
                                 </p>
 
                                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                                     {plan.features.map((feature, i) => (
-                                        <li key={i} className={`flex items-start gap-3 text-sm leading-snug ${feature.included ? 'text-slate-700' : 'text-slate-400 opacity-60'}`}>
+                                        <li key={i} className={`flex items-start gap-3 text-sm leading-snug ${feature.included ? 'text-[var(--text-secondary)]' : 'text-slate-400 opacity-60'}`}>
                                             {feature.included ? (
                                                 <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${checkStyle}`}>
                                                     <CheckIcon size="xs" />
                                                 </span>
                                             ) : (
-                                                <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-slate-100">
+                                                <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-[var(--bg-secondary)]">
                                                     <XIcon size="xs" />
                                                 </span>
                                             )}
-                                            <span className={`mt-0.5 ${feature.highlight ? 'font-semibold text-slate-900' : ''}`}>
+                                            <span className={`mt-0.5 ${feature.highlight ? 'font-semibold text-[var(--text-primary)]' : ''}`}>
                                                 {feature.text}
                                             </span>
                                         </li>
@@ -250,11 +250,11 @@ export default function PricingPage() {
                             </div>
 
                             {/* Right Pane (Pricing & CTA) */}
-                            <div className="w-full md:w-2/5 p-8 md:p-14 text-center bg-white flex flex-col justify-center items-center">
+                            <div className="w-full md:w-2/5 p-8 md:p-14 text-center bg-[var(--bg-primary)] flex flex-col justify-center items-center">
                                 {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
                                     <div className="mb-8 w-full">
                                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Durasi</label>
-                                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
+                                        <div className="flex bg-[var(--bg-secondary)] p-1 rounded-xl border border-[var(--border-light)]/50">
                                             {DURATION_OPTIONS[plan.id].map((option) => {
                                                 const isSelected = selectedDuration[plan.id] === option.duration;
                                                 const slotInfo = promoSlots?.[plan.id]?.[option.duration];
@@ -265,7 +265,7 @@ export default function PricingPage() {
                                                         key={option.duration}
                                                         onClick={() => setSelectedDuration({ ...selectedDuration, [plan.id]: option.duration })}
                                                         disabled={isSoldOut}
-                                                        className={`flex-1 py-1.5 px-1 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors ${isSelected ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'} ${isSoldOut ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                                        className={`flex-1 py-1.5 px-1 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors ${isSelected ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm border border-[var(--border-light)]/50' : 'text-[var(--text-secondary)] hover:text-[var(--text-secondary)]'} ${isSoldOut ? 'opacity-40 cursor-not-allowed' : ''}`}
                                                     >
                                                         {option.label}
                                                     </button>
@@ -294,9 +294,9 @@ export default function PricingPage() {
                                     )}
 
                                     <div className="flex items-baseline justify-center gap-1">
-                                        <span className={`text-4xl xl:text-5xl font-black tracking-tight ${plan.id === 'BASIC' ? 'text-slate-700' : 'text-slate-900'}`}>{pricing.price}</span>
+                                        <span className={`text-4xl xl:text-5xl font-black tracking-tight ${plan.id === 'BASIC' ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>{pricing.price}</span>
                                         {pricing.period && (
-                                            <span className="text-slate-500 font-medium whitespace-nowrap">{pricing.period}</span>
+                                            <span className="text-[var(--text-secondary)] font-medium whitespace-nowrap">{pricing.period}</span>
                                         )}
                                     </div>
                                 </div>
@@ -323,19 +323,19 @@ export default function PricingPage() {
                     );
                 })}
 
-                <p className="text-center text-slate-500 text-sm mt-4">
+                <p className="text-center text-[var(--text-secondary)] text-sm mt-4">
                     * Pembayaran menggunakan QRIS via qris.id. Mendukung semua e-wallet dan mobile banking yang support QRIS.
                 </p>
             </section>
 
             {/* Bottom Section */}
             <section className="px-4 text-center max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Masih Butuh Waktu?</h2>
-                <p className="text-slate-600 mb-8">
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Masih Butuh Waktu?</h2>
+                <p className="text-[var(--text-secondary)] mb-8">
                     Anda selalu dapat mencoba akun Basic secara gratis untuk melakukan analisis harian XAUUSD.
                 </p>
                 <Link href={session ? '/analisa-market' : '/login?callbackUrl=/analisa-market'}>
-                    <button className="px-8 py-3 rounded-full border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 font-bold transition-all">
+                    <button className="px-8 py-3 rounded-full border-2 border-[var(--border-light)] text-[var(--text-secondary)] hover:border-[var(--border-medium)] hover:bg-[var(--bg-secondary)] font-bold transition-all">
                         Lanjut dengan Akun Gratis
                     </button>
                 </Link>

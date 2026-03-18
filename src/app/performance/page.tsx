@@ -99,7 +99,7 @@ export default function PerformancePage() {
             <div className="container-wide section-padding pt-8">
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-white mb-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-[var(--bg-primary)] mb-6">
                         <ChartIcon className="text-[var(--accent-blue)]" size="lg" />
                         <span className="text-sm text-[var(--text-secondary)]">Verified Stats</span>
                         <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">LIVE</span>
@@ -130,23 +130,23 @@ export default function PerformancePage() {
 
                 {/* Main Stats */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                    <div className="bg-white rounded-xl p-6 border border-[var(--border-light)] text-center col-span-2 lg:col-span-1">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center col-span-2 lg:col-span-1">
                         <p className="text-4xl font-bold gradient-text">{overall.winRate}%</p>
                         <p className="text-sm text-[var(--text-muted)]">Win Rate</p>
                     </div>
-                    <div className="bg-white rounded-xl p-6 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
                         <p className="text-3xl font-bold text-[var(--text-primary)]">{overall.total}</p>
                         <p className="text-sm text-[var(--text-muted)]">Total Signal</p>
                     </div>
-                    <div className="bg-white rounded-xl p-6 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
                         <p className="text-3xl font-bold text-green-600">{overall.tpHit}</p>
                         <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><CheckCircleIcon className="text-green-600" size="sm" /> TP Hit</p>
                     </div>
-                    <div className="bg-white rounded-xl p-6 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
                         <p className="text-3xl font-bold text-red-600">{overall.slHit}</p>
                         <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><XCircleIcon className="text-red-600" size="sm" /> SL Hit</p>
                     </div>
-                    <div className="bg-white rounded-xl p-6 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
                         <p className="text-3xl font-bold text-yellow-600">{overall.pending}</p>
                         <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><ClockIcon className="text-yellow-600" size="sm" /> Pending</p>
                     </div>
@@ -155,7 +155,7 @@ export default function PerformancePage() {
                 {/* Two Column Layout */}
                 <div className="grid lg:grid-cols-2 gap-6 mb-8">
                     {/* Top Symbols */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-xl border border-[var(--border-light)] overflow-hidden">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] overflow-hidden">
                         <div className="p-4 border-b border-[var(--border-light)]">
                             <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--text-primary)]">
                                 <TrophyIcon className="text-yellow-500" size="md" /> Top Performing Symbols
@@ -184,7 +184,7 @@ export default function PerformancePage() {
                     </motion.div>
 
                     {/* Recent Signals */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white rounded-xl border border-[var(--border-light)] overflow-hidden">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] overflow-hidden">
                         <div className="p-4 border-b border-[var(--border-light)]">
                             <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--text-primary)]">
                                 <DocumentIcon className="text-[var(--accent-blue)]" size="md" /> Recent Signals

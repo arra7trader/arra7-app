@@ -126,7 +126,7 @@ export default function RevenueDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="bg-white rounded-xl p-5 border border-[var(--border-light)]"
+                        className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]"
                     >
                         <p className="text-sm text-[var(--text-muted)] mb-1">Bulan Ini</p>
                         <p className="text-2xl font-bold text-blue-600">{formatCurrency(data?.monthlyRevenue || 0)}</p>
@@ -137,7 +137,7 @@ export default function RevenueDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-white rounded-xl p-5 border border-[var(--border-light)]"
+                        className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]"
                     >
                         <p className="text-sm text-[var(--text-muted)] mb-1">Minggu Ini</p>
                         <p className="text-2xl font-bold text-purple-600">{formatCurrency(data?.weeklyRevenue || 0)}</p>
@@ -148,7 +148,7 @@ export default function RevenueDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-white rounded-xl p-5 border border-[var(--border-light)]"
+                        className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]"
                     >
                         <p className="text-sm text-[var(--text-muted)] mb-1">Hari Ini</p>
                         <p className="text-2xl font-bold text-amber-600">{formatCurrency(data?.todayRevenue || 0)}</p>
@@ -162,7 +162,7 @@ export default function RevenueDashboard() {
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-white rounded-2xl p-6 border border-[var(--border-light)]"
+                        className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -191,7 +191,7 @@ export default function RevenueDashboard() {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-white rounded-2xl p-6 border border-[var(--border-light)]"
+                        className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
@@ -221,7 +221,7 @@ export default function RevenueDashboard() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-2xl p-6 border border-[var(--border-light)] mb-8"
+                    className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)] mb-8"
                 >
                     <h3 className="font-semibold mb-4 text-[var(--text-primary)]">📊 Revenue Trend</h3>
                     <div className="h-48 flex items-end justify-between gap-2">
@@ -249,7 +249,7 @@ export default function RevenueDashboard() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden"
+                    className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden"
                 >
                     <div className="p-6 border-b border-[var(--border-light)]">
                         <h3 className="font-semibold text-[var(--text-primary)]">📋 Recent Upgrades</h3>
@@ -300,7 +300,7 @@ export default function RevenueDashboard() {
                 </motion.div>
 
                 {/* Quick Stats Footer */}
-                <div className="mt-8 p-4 bg-white rounded-xl border border-[var(--border-light)] flex items-center justify-between flex-wrap gap-4">
+                <div className="mt-8 p-4 bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] flex items-center justify-between flex-wrap gap-4">
                     <div className="text-sm text-[var(--text-muted)]">
                         💡 PRO: {formatCurrency(PRICES.PRO)} | VVIP: {formatCurrency(PRICES.VVIP)}
                     </div>

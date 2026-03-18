@@ -46,10 +46,10 @@ export default function KeyLevels() {
         fetchLevels();
     }, []);
 
-    if (loading) return <div className="p-6 bg-white rounded-2xl animate-pulse h-full">Loading Levels...</div>;
+    if (loading) return <div className="p-6 bg-[var(--bg-primary)] rounded-2xl animate-pulse h-full">Loading Levels...</div>;
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm h-full">
+        <div className="bg-[var(--bg-primary)] p-6 rounded-2xl border border-[var(--border-light)] shadow-sm h-full">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="font-semibold text-[var(--text-primary)] flex items-center gap-2">
                     <span>🔑</span> Key Levels (Live)
@@ -63,7 +63,7 @@ export default function KeyLevels() {
                         key={level.label}
                         className={`flex items-center justify-between p-3 rounded-lg border ${level.type === 'res' ? 'bg-red-50 border-red-100 text-red-700' :
                             level.type === 'sup' ? 'bg-green-50 border-green-100 text-green-700' :
-                                'bg-gray-100 border-gray-200 text-gray-800 font-bold'
+                                'bg-[var(--bg-secondary)] border-[var(--border-light)] text-[var(--text-primary)] font-bold'
                             }`}
                     >
                         <span className="font-mono font-semibold text-sm">{level.label}</span>

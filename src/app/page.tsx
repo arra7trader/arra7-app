@@ -86,7 +86,7 @@ function StatItem({ icon, value, label, suffix, decimals = 0, isInView }: any) {
   }, [value, decimals, isInView]);
 
   return (
-    <div className="text-center p-6 group hover:bg-white/50 hover:dark:bg-white/5 rounded-2xl transition-all duration-500">
+    <div className="text-center p-6 group hover:bg-[var(--bg-primary)]/50 hover:dark:bg-[var(--bg-primary)]/5 rounded-2xl transition-all duration-500">
       <div className="mb-4 flex justify-center group-hover:scale-110 transition-transform duration-500">{icon}</div>
       <div className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-1 flex justify-center items-center gap-0.5">
         <span ref={nodeRef}>0</span>
@@ -188,7 +188,7 @@ function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
             onClick={() => setActiveTab(tab)}
             className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === tab
               ? `bg-gradient-to-r ${tabConfig[tab].color} text-white shadow-lg scale-105`
-              : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+              : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
               }`}
           >
             {tHowItWorks(`tabs.${tab}`)}
@@ -220,7 +220,7 @@ function TutorialTabs({ tHowItWorks }: { tHowItWorks: any }) {
               </div>
 
               {/* Icon */}
-              <div className="w-14 h-14 mx-auto rounded-xl bg-white/80 flex items-center justify-center mb-4 mt-2 shadow-sm">
+              <div className="w-14 h-14 mx-auto rounded-xl bg-[var(--bg-primary)]/80 flex items-center justify-center mb-4 mt-2 shadow-sm">
                 {config.stepIcons[i]}
               </div>
 
@@ -348,7 +348,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-wrap justify-center gap-6 mb-12 text-xs font-mono text-slate-500"
+            className="flex flex-wrap justify-center gap-6 mb-12 text-xs font-mono text-[var(--text-secondary)]"
           >
             <span className="flex items-center gap-2">
               <CpuChipIcon className="text-blue-500" size="sm" />
@@ -531,7 +531,7 @@ export default function Home() {
 
                 {/* Icon */}
                 <div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg ${feature.glow} group-hover:scale-110 transition-transform duration-300`}>
-                  <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-[var(--bg-primary)]/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   {feature.icon}
                 </div>
 

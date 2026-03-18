@@ -18,7 +18,7 @@ export default function DownloadAppSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="mx-auto max-w-5xl rounded-3xl border border-[var(--border-light)] bg-white p-7 shadow-sm md:p-10"
+                    className="mx-auto max-w-5xl rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-7 shadow-sm md:p-10"
                 >
                     <div className="mb-4 inline-flex rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
                         ARRA7 Mobile v3.0.0 Beta
@@ -65,16 +65,16 @@ export default function DownloadAppSection() {
                         <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-5">
                             <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">Fitur Android vNext</p>
                             <div className="space-y-3">
-                                <div className="rounded-lg bg-white px-4 py-3 text-sm text-[var(--text-secondary)]">
+                                <div className="rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                                     Login Google native tanpa webview
                                 </div>
-                                <div className="rounded-lg bg-white px-4 py-3 text-sm text-[var(--text-secondary)]">
+                                <div className="rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                                     Analisa market Forex, Gold, Crypto
                                 </div>
-                                <div className="rounded-lg bg-white px-4 py-3 text-sm text-[var(--text-secondary)]">
+                                <div className="rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                                     Info akun dan quota real-time
                                 </div>
-                                <div className="rounded-lg bg-white px-4 py-3 text-sm text-[var(--text-secondary)]">
+                                <div className="rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                                     UI adaptif light/dark yang lebih rapi
                                 </div>
                             </div>

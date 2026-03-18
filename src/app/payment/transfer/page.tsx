@@ -68,7 +68,7 @@ function TransferContent() {
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
             <div className="container-apple section-padding pt-8 max-w-lg mx-auto">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-6 border border-[var(--border-light)] shadow-lg">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)] shadow-lg">
                     <div className="text-center mb-6">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center"><span className="text-3xl">📱</span></div>
                         <h1 className="text-2xl font-bold mb-2 text-[var(--text-primary)]">Pembayaran QRIS</h1>
@@ -88,9 +88,9 @@ function TransferContent() {
                     </div>
 
                     <div className="space-y-4 mb-6">
-                        <div className="bg-white p-4 rounded-xl text-center border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] p-4 rounded-xl text-center border border-[var(--border-light)]">
                             <p className="text-[var(--text-primary)] font-bold mb-3 text-lg">Scan QRIS untuk Bayar</p>
-                            <div className="relative aspect-square w-full max-w-[280px] mx-auto border-2 border-gray-200 rounded-lg overflow-hidden">
+                            <div className="relative aspect-square w-full max-w-[280px] mx-auto border-2 border-[var(--border-light)] rounded-lg overflow-hidden">
                                 <img src="/qris-payment.jpg" alt="QRIS Payment ARRA7" className="w-full h-full object-contain" />
                             </div>
                             <p className="text-[var(--text-muted)] text-xs mt-2 font-mono">ARRA7 FULLSTACK DEVELOPER</p>

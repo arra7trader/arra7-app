@@ -191,27 +191,27 @@ export default function PortfolioPage() {
                 {/* Summary Cards */}
                 {summary && (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Open Positions</p>
                             <p className="text-2xl font-bold text-[var(--accent-blue)]">{summary.openPositions}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Equity</p>
                             <p className={`text-2xl font-bold ${summary.totalEquity >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.totalEquity.toFixed(2)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Unrealized P/L</p>
                             <p className={`text-2xl font-bold ${summary.unrealizedPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.unrealizedPL.toFixed(2)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Realized P/L</p>
                             <p className={`text-2xl font-bold ${summary.realizedPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.realizedPL.toFixed(2)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Margin Used</p>
                             <p className="text-2xl font-bold text-amber-600">${summary.marginUsed.toFixed(2)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Trades</p>
                             <p className="text-2xl font-bold text-[var(--text-primary)]">{summary.totalPositions}</p>
                         </div>
@@ -226,7 +226,7 @@ export default function PortfolioPage() {
                             layout
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`bg-white rounded-2xl p-5 border ${(pos.profitLoss || 0) >= 0 ? 'border-green-200' : 'border-red-200'}`}
+                            className={`bg-[var(--bg-primary)] rounded-2xl p-5 border ${(pos.profitLoss || 0) >= 0 ? 'border-green-200' : 'border-red-200'}`}
                         >
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export default function PortfolioPage() {
                                         <span className="text-red-600">SL: {pos.stopLoss || '-'}</span>
                                         <span className="text-green-600">TP: {pos.takeProfit || '-'}</span>
                                     </div>
-                                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                         <div className={`h-full transition-all ${(pos.profitLoss || 0) >= 0 ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: '50%' }} />
                                     </div>
                                 </div>
@@ -277,7 +277,7 @@ export default function PortfolioPage() {
                 </div>
 
                 {positions.length === 0 && (
-                    <div className="bg-white rounded-2xl p-12 border border-[var(--border-light)] text-center">
+                    <div className="bg-[var(--bg-primary)] rounded-2xl p-12 border border-[var(--border-light)] text-center">
                         <div className="mb-4"><ChartIcon className="text-purple-500 mx-auto" size="xl" /></div>
                         <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">No Open Positions</h3>
                         <p className="text-[var(--text-secondary)] mb-4">Klik "Add Position" untuk mulai tracking.</p>
@@ -290,7 +290,7 @@ export default function PortfolioPage() {
             <AnimatePresence>
                 {showAddModal && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
-                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white rounded-2xl p-6 max-w-md w-full border border-[var(--border-light)] shadow-xl" onClick={e => e.stopPropagation()}>
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-[var(--bg-primary)] rounded-2xl p-6 max-w-md w-full border border-[var(--border-light)] shadow-xl" onClick={e => e.stopPropagation()}>
                             <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Add Position</h3>
                             <form onSubmit={handleAddPosition} className="space-y-4">
                                 <div>
@@ -343,7 +343,7 @@ export default function PortfolioPage() {
             <AnimatePresence>
                 {showCloseModal && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={() => setShowCloseModal(null)}>
-                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white rounded-2xl p-6 max-w-sm w-full border border-[var(--border-light)] shadow-xl" onClick={e => e.stopPropagation()}>
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-[var(--bg-primary)] rounded-2xl p-6 max-w-sm w-full border border-[var(--border-light)] shadow-xl" onClick={e => e.stopPropagation()}>
                             <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Close Position</h3>
                             <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-4">
                                 <div className="flex justify-between mb-2"><span className="text-[var(--text-muted)]">Symbol</span><span className="font-bold text-[var(--text-primary)]">{showCloseModal.symbol}</span></div>

@@ -102,12 +102,12 @@ export default function ArraBot() {
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed bottom-24 right-6 z-50 w-[90vw] max-w-[380px] h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
+                        className="fixed bottom-24 right-6 z-50 w-[90vw] max-w-[380px] h-[500px] bg-[var(--bg-primary)] rounded-2xl shadow-2xl border border-[var(--border-light)] flex flex-col overflow-hidden"
                     >
                         {/* HEADER */}
                         <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 flex items-center justify-between text-white">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-full bg-[var(--bg-primary)]/20 flex items-center justify-center">
                                     🤖
                                 </div>
                                 <div>
@@ -121,7 +121,7 @@ export default function ArraBot() {
                         </div>
 
                         {/* MESSAGES AREA */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--bg-secondary)]">
                             {messages.map((msg, idx) => (
                                 <div
                                     key={idx}
@@ -132,14 +132,14 @@ export default function ArraBot() {
                                             max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed
                                             ${msg.role === 'user'
                                                 ? 'bg-blue-600 text-white rounded-tr-none'
-                                                : 'bg-white text-gray-700 border border-gray-200 rounded-tl-none shadow-sm'
+                                                : 'bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-light)] rounded-tl-none shadow-sm'
                                             }
                                         `}
                                     >
                                         {msg.role === 'user' ? (
                                             msg.content
                                         ) : (
-                                            <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 text-gray-700">
+                                            <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 text-[var(--text-primary)]">
                                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                     {msg.content}
                                                 </ReactMarkdown>
@@ -151,7 +151,7 @@ export default function ArraBot() {
 
                             {isTyping && (
                                 <div className="flex justify-start">
-                                    <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm flex items-center gap-1">
+                                    <div className="bg-[var(--bg-primary)] p-3 rounded-2xl rounded-tl-none border border-[var(--border-light)] shadow-sm flex items-center gap-1">
                                         <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce duration-500" />
                                         <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce duration-500 delay-100" />
                                         <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce duration-500 delay-200" />
@@ -162,15 +162,15 @@ export default function ArraBot() {
                         </div>
 
                         {/* INPUT AREA */}
-                        <div className="p-3 bg-white border-t border-gray-100">
-                            <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
+                        <div className="p-3 bg-[var(--bg-primary)] border-t border-[var(--border-light)]">
+                            <div className="flex items-center gap-2 bg-[var(--bg-secondary)] rounded-xl px-3 py-2">
                                 <input
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyPress}
                                     placeholder="Tanya ARRA sesuatu..."
-                                    className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                                    className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder-gray-400 focus:outline-none"
                                 />
                                 <button
                                     onClick={handleSend}

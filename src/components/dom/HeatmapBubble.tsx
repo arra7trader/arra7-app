@@ -628,7 +628,7 @@ export default function BookmapChart({ currentOrderBook, history, mlPrediction, 
                     <span>High Vol</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800/90 border border-slate-700 backdrop-blur text-[10px] text-white font-bold">
-                    <div className="w-2.5 h-2.5 rounded-sm bg-white shadow-[0_0_6px_white]"></div>
+                    <div className="w-2.5 h-2.5 rounded-sm bg-[var(--bg-primary)] shadow-[0_0_6px_white]"></div>
                     <span>Whale Wall</span>
                 </div>
             </div>

@@ -463,7 +463,7 @@ Tim ARRA7`;
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-2xl p-6 max-w-lg w-full border border-[var(--border-light)] shadow-xl"
+                            className="bg-[var(--bg-primary)] rounded-2xl p-6 max-w-lg w-full border border-[var(--border-light)] shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="flex items-center gap-3 mb-4">
@@ -655,24 +655,24 @@ Tim ARRA7`;
                 <AdminStats stats={stats} />
 
                 {/* Tabs */}
-                <div className="flex gap-2 overflow-x-auto pb-2 mb-6 border-b border-gray-200">
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-6 border-b border-[var(--border-light)]">
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'users' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'users' ? 'bg-[var(--bg-primary)] border-b-2 border-blue-600 text-blue-600' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                             }`}
                     >
                         👥 User Management
                     </button>
                     <button
                         onClick={() => setActiveTab('broadcast')}
-                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'broadcast' ? 'bg-white border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700'
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'broadcast' ? 'bg-[var(--bg-primary)] border-b-2 border-purple-600 text-purple-600' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                             }`}
                     >
                         📢 Forecast & Broadcast
                     </button>
                     <button
                         onClick={() => setActiveTab('marketing')}
-                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'marketing' ? 'bg-white border-b-2 border-pink-600 text-pink-600' : 'text-gray-500 hover:text-gray-700'
+                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'marketing' ? 'bg-[var(--bg-primary)] border-b-2 border-pink-600 text-pink-600' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                             }`}
                     >
                         🤖 Marketing Bot
@@ -720,7 +720,7 @@ Tim ARRA7`;
                             </div>
                             <button
                                 onClick={downloadCSV}
-                                className="px-6 py-3 bg-white border border-[var(--border-light)] hover:bg-[var(--bg-secondary)] rounded-xl font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all shadow-sm"
+                                className="px-6 py-3 bg-[var(--bg-primary)] border border-[var(--border-light)] hover:bg-[var(--bg-secondary)] rounded-xl font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all shadow-sm"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -735,14 +735,14 @@ Tim ARRA7`;
                         )}
 
                         {selectedUserIds.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                            <div className="bg-[var(--bg-primary)] rounded-xl shadow-lg border border-purple-100 p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
                                 <div className="flex items-center gap-3">
                                     <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-medium">
                                         {selectedUserIds.length} Selected
                                     </div>
                                     <button
                                         onClick={() => setSelectedUserIds([])}
-                                        className="text-gray-500 hover:text-gray-700 text-sm underline"
+                                        className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm underline"
                                     >
                                         Clear
                                     </button>

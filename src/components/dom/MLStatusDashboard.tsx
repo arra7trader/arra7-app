@@ -50,7 +50,7 @@ export default function MLStatusDashboard() {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
                     🤖 ML Model Status
                 </h3>
@@ -63,12 +63,12 @@ export default function MLStatusDashboard() {
 
     if (error || !status) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
                     🤖 ML Model Status
                 </h3>
                 <div className="text-center py-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                    <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center mx-auto mb-3">
                         <span className="text-2xl">⚠️</span>
                     </div>
                     <p className="text-sm text-[var(--text-muted)]">{error || 'Status tidak tersedia'}</p>
@@ -81,7 +81,7 @@ export default function MLStatusDashboard() {
     }
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+        <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 🤖 ML Model Status
                 <span className={`ml-auto text-xs px-2 py-1 rounded-full ${status.available
@@ -94,11 +94,11 @@ export default function MLStatusDashboard() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className="bg-[var(--bg-secondary)] rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-purple-600">{status.models_loaded}</p>
                     <p className="text-xs text-[var(--text-muted)]">Models Loaded</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className="bg-[var(--bg-secondary)] rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-blue-600">{status.symbols.length}</p>
                     <p className="text-xs text-[var(--text-muted)]">Symbols</p>
                 </div>
@@ -120,7 +120,7 @@ export default function MLStatusDashboard() {
                             <span className="w-16 text-xs font-medium text-[var(--text-primary)]">
                                 {name}
                             </span>
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                 <motion.div
                                     className="h-full rounded-full"
                                     style={{
@@ -142,7 +142,7 @@ export default function MLStatusDashboard() {
             )}
 
             {/* Default Model */}
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="mt-4 pt-3 border-t border-[var(--border-light)]">
                 <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-muted)]">Default Model:</span>
                     <span className="font-medium text-[var(--text-primary)]">

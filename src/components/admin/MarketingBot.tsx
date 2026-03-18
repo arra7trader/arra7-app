@@ -108,7 +108,7 @@ export default function MarketingBot() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800">Marketing Bot Automation 🤖</h2>
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">Marketing Bot Automation 🤖</h2>
                 <button
                     onClick={() => { setEditing(null); resetForm(); setShowForm(true); }}
                     className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"
@@ -118,27 +118,27 @@ export default function MarketingBot() {
             </div>
 
             {showForm && (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 animate-in fade-in">
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl p-6 animate-in fade-in">
                     <h3 className="text-lg font-semibold mb-4">{editing ? 'Edit Campaign' : 'Create Campaign'}</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Campaign Name</label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500"
                                 required
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Trigger Type</label>
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Trigger Type</label>
                                 <select
                                     value={type}
                                     onChange={e => setType(e.target.value as any)}
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500"
                                 >
                                     <option value="INACTIVITY">User Inactivity (Retention)</option>
                                     <option value="NEW_USER">New User (Onboarding)</option>
@@ -146,12 +146,12 @@ export default function MarketingBot() {
                             </div>
                             {type === 'INACTIVITY' && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Days Inactive</label>
+                                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Days Inactive</label>
                                     <input
                                         type="number"
                                         value={daysInactive}
                                         onChange={e => setDaysInactive(Number(e.target.value))}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500"
                                         min={1}
                                     />
                                 </div>
@@ -159,18 +159,18 @@ export default function MarketingBot() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Message Template (HTML supported for Email)</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Message Template (HTML supported for Email)</label>
                             <textarea
                                 value={message}
                                 onChange={e => setMessage(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 h-32 font-mono text-sm"
+                                className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500 h-32 font-mono text-sm"
                                 required
                             />
-                            <p className="text-xs text-gray-500 mt-1">Available variables: {'{name}'}</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">Available variables: {'{name}'}</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Channels</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Channels</label>
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
@@ -197,7 +197,7 @@ export default function MarketingBot() {
                             <button
                                 type="button"
                                 onClick={() => setShowForm(false)}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                className="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] rounded-lg"
                             >
                                 Cancel
                             </button>
@@ -214,15 +214,15 @@ export default function MarketingBot() {
 
             <div className="grid gap-4">
                 {campaigns.map(campaign => (
-                    <div key={campaign.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div key={campaign.id} className="bg-[var(--bg-primary)] p-4 rounded-xl shadow-sm border border-[var(--border-light)] flex justify-between items-center">
                         <div>
                             <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold text-gray-800">{campaign.name}</h4>
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                <h4 className="font-semibold text-[var(--text-primary)]">{campaign.name}</h4>
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
                                     {campaign.status}
                                 </span>
                             </div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-[var(--text-secondary)]">
                                 {campaign.type === 'INACTIVITY' ? `Inactive for ${campaign.trigger_rule.daysInactive} days` : 'New User Signup'}
                                 {' • '}
                                 {campaign.channels.join(', ')}
@@ -245,7 +245,7 @@ export default function MarketingBot() {
                     </div>
                 ))}
                 {campaigns.length === 0 && !loading && (
-                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                    <div className="text-center py-8 text-[var(--text-secondary)] bg-[var(--bg-secondary)] rounded-xl border border-dashed border-[var(--border-medium)]">
                         No active campaigns. Create one to start automating!
                     </div>
                 )}

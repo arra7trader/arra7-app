@@ -53,16 +53,16 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
+                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
                 >
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                    <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
                         <h2 className="text-xl font-bold flex items-center gap-2">
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                             </svg>
                             Create Broadcast
                         </h2>
-                        <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+                        <button onClick={onClose} className="p-2 hover:bg-[var(--bg-primary)]/20 rounded-full transition-colors">
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -77,23 +77,23 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Title</label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
                                 placeholder="Announcement Title"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Message</label>
                             <textarea
                                 value={message}
                                 onChange={e => setMessage(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all h-32 resize-none"
+                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all h-32 resize-none"
                                 placeholder="Type your message here..."
                                 required
                             />
@@ -101,11 +101,11 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Target Audience</label>
                                 <select
                                     value={target}
                                     onChange={e => setTarget(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+                                    className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
                                 >
                                     <option value="ALL">All Users</option>
                                     <option value="VVIP">VVIP Only</option>
@@ -114,7 +114,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Channels</label>
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Channels</label>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -123,7 +123,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                                             onChange={() => toggleChannel('IN_APP')}
                                             className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                                         />
-                                        <span className="text-sm text-gray-700">In-App Notification</span>
+                                        <span className="text-sm text-[var(--text-primary)]">In-App Notification</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -132,7 +132,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                                             onChange={() => toggleChannel('TELEGRAM')}
                                             className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                                         />
-                                        <span className="text-sm text-gray-700">Telegram Channel</span>
+                                        <span className="text-sm text-[var(--text-primary)]">Telegram Channel</span>
                                     </label>
                                 </div>
                             </div>
@@ -142,7 +142,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+                                className="flex-1 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-xl font-medium transition-colors"
                             >
                                 Cancel
                             </button>

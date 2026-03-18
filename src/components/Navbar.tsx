@@ -144,7 +144,7 @@ export default function Navbar() {
                                             <motion.div
                                                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                className="bg-white rounded-xl p-2 min-w-[200px] shadow-lg border border-[var(--border-light)]"
+                                                className="bg-[var(--bg-primary)] rounded-xl p-2 min-w-[200px] shadow-lg border border-[var(--border-light)]"
                                             >
                                                 <div className="px-3 py-2 border-b border-[var(--border-light)]">
                                                     <div className="text-sm font-medium text-[var(--text-primary)] truncate">{session.user?.name}</div>
@@ -228,7 +228,7 @@ export default function Navbar() {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="md:hidden overflow-hidden bg-white border-t border-[var(--border-light)]"
+                            className="md:hidden overflow-hidden bg-[var(--bg-primary)] border-t border-[var(--border-light)]"
                         >
                             <div className="py-4 space-y-1">
                                 {navItems.map((item) => (

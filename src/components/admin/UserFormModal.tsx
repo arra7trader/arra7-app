@@ -69,14 +69,14 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
                 >
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-gray-800">
+                    <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-[var(--text-primary)]">
                             {user ? 'Edit User' : 'Add New User'}
                         </h2>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button onClick={onClose} className="p-2 hover:bg-[var(--bg-secondary)] rounded-full transition-colors">
+                            <svg className="w-5 h-5 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -90,62 +90,62 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Name</label>
                             <input
                                 type="text"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                 placeholder="Full Name"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Email</label>
                             <input
                                 type="email"
                                 value={formData.email}
                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 disabled={!!user} // Cannot change email for existing users usually
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-100 disabled:text-gray-500"
+                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-[var(--bg-secondary)] disabled:text-[var(--text-secondary)]"
                                 placeholder="user@example.com"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Telegram Chat ID</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Telegram Chat ID</label>
                             <input
                                 type="text"
                                 value={formData.telegramChatId}
                                 onChange={e => setFormData({ ...formData, telegramChatId: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                 placeholder="Contoh: 123456789"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Kosongkan jika user belum menghubungkan Telegram.</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">Kosongkan jika user belum menghubungkan Telegram.</p>
                         </div>
 
                         {!user && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Password</label>
                                 <input
                                     type="password"
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     placeholder="••••••••"
                                     required={!user}
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Default password for new users.</p>
+                                <p className="text-xs text-[var(--text-secondary)] mt-1">Default password for new users.</p>
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Membership</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Membership</label>
                             <select
                                 value={formData.membership}
                                 onChange={e => setFormData({ ...formData, membership: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                             >
                                 <option value="BASIC">BASIC</option>
                                 <option value="PRO">PRO</option>
@@ -157,7 +157,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+                                className="flex-1 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-xl font-medium transition-colors"
                             >
                                 Cancel
                             </button>

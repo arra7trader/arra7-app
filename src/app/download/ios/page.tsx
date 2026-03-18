@@ -46,9 +46,9 @@ export default function IOSDownloadPage() {
                             ARRA7 tersedia versi iOS Web App (PWA). Nikmati performa native tanpa perlu lewat App Store.
                         </p>
 
-                        <div className="space-y-6 bg-white p-6 rounded-3xl border border-[var(--border-light)] shadow-sm">
+                        <div className="space-y-6 bg-[var(--bg-primary)] p-6 rounded-3xl border border-[var(--border-light)] shadow-sm">
                             <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 shrink-0">1</div>
+                                <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center font-bold text-[var(--text-secondary)] shrink-0">1</div>
                                 <div>
                                     <h3 className="font-semibold text-[var(--text-primary)]">Buka di Safari</h3>
                                     <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -58,7 +58,7 @@ export default function IOSDownloadPage() {
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 shrink-0">2</div>
+                                <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center font-bold text-[var(--text-secondary)] shrink-0">2</div>
                                 <div>
                                     <h3 className="font-semibold text-[var(--text-primary)]">Tap Tombol "Share"</h3>
                                     <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -69,12 +69,12 @@ export default function IOSDownloadPage() {
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 shrink-0">3</div>
+                                <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center font-bold text-[var(--text-secondary)] shrink-0">3</div>
                                 <div>
                                     <h3 className="font-semibold text-[var(--text-primary)]">Pilih "Add to Home Screen"</h3>
                                     <p className="text-sm text-[var(--text-muted)] mt-1">
                                         Scroll ke bawah & pilih menu:
-                                        <span className="inline-flex items-center gap-1 font-medium text-slate-900 ml-1">
+                                        <span className="inline-flex items-center gap-1 font-medium text-[var(--text-primary)] ml-1">
                                             <Square2StackIcon className="w-4 h-4" />
                                             Add to Home Screen
                                         </span>
@@ -106,30 +106,30 @@ export default function IOSDownloadPage() {
                     >
                         <div className="relative z-10 mx-auto max-w-[300px]">
                             {/* iPhone Frame */}
-                            <div className="relative rounded-[3rem] overflow-hidden border-[8px] border-slate-800 shadow-2xl bg-white aspect-[9/19.5]">
+                            <div className="relative rounded-[3rem] overflow-hidden border-[8px] border-slate-800 shadow-2xl bg-[var(--bg-primary)] aspect-[9/19.5]">
                                 {/* Notch */}
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-slate-800 rounded-b-2xl z-20" />
 
                                 {/* Content in Phone: Step 3 visualization */}
-                                <div className="h-full bg-slate-50 p-6 flex flex-col justify-end pb-20">
-                                    <div className="bg-white rounded-xl p-4 shadow-lg mb-4 border border-slate-100">
+                                <div className="h-full bg-[var(--bg-secondary)] p-6 flex flex-col justify-end pb-20">
+                                    <div className="bg-[var(--bg-primary)] rounded-xl p-4 shadow-lg mb-4 border border-[var(--border-light)]">
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
                                                 <span className="text-xl font-bold text-white">A7</span>
                                             </div>
                                             <div>
-                                                <div className="font-semibold text-slate-900">ARRA7 App</div>
-                                                <div className="text-xs text-slate-500">arra7.com</div>
+                                                <div className="font-semibold text-[var(--text-primary)]">ARRA7 App</div>
+                                                <div className="text-xs text-[var(--text-secondary)]">arra7.com</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="bg-slate-200/50 rounded-xl p-2">
-                                        <div className="bg-white rounded-lg p-3 shadow-sm flex items-center justify-between">
+                                        <div className="bg-[var(--bg-primary)] rounded-lg p-3 shadow-sm flex items-center justify-between">
                                             <span>Add to Home Screen</span>
                                             <span className="text-blue-500 font-semibold">Add</span>
                                         </div>
-                                        <div className="mt-2 bg-white rounded-lg p-3 shadow-sm text-slate-400">
+                                        <div className="mt-2 bg-[var(--bg-primary)] rounded-lg p-3 shadow-sm text-slate-400">
                                             Copy
                                         </div>
                                     </div>

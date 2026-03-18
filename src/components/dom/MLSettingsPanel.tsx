@@ -43,11 +43,11 @@ export default function MLSettingsPanel({
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
+        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden">
             {/* Header - Always visible */}
             <button
                 onClick={() => setExpanded(!expanded)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--bg-secondary)] transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <span className="text-lg">⚙️</span>
@@ -74,7 +74,7 @@ export default function MLSettingsPanel({
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-6 pb-6 space-y-5 border-t border-gray-100 pt-4">
+                        <div className="px-6 pb-6 space-y-5 border-t border-[var(--border-light)] pt-4">
 
                             {/* Prediction Horizon */}
                             <div>
@@ -88,7 +88,7 @@ export default function MLSettingsPanel({
                                             onClick={() => updateSetting('horizon', h as 5 | 10 | 30)}
                                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${settings.horizon === h
                                                 ? 'bg-purple-600 text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200'
                                                 }`}
                                         >
                                             {h}s
@@ -135,7 +135,7 @@ export default function MLSettingsPanel({
                                             onClick={() => updateSetting('refreshInterval', s)}
                                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${settings.refreshInterval === s
                                                 ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200'
                                                 }`}
                                         >
                                             {s}s
@@ -160,7 +160,7 @@ export default function MLSettingsPanel({
                                         }`}
                                 >
                                     <motion.div
-                                        className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow"
+                                        className="absolute top-1 left-1 w-4 h-4 bg-[var(--bg-primary)] rounded-full shadow"
                                         animate={{ x: settings.showOverlay ? 24 : 0 }}
                                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                                     />
@@ -170,7 +170,7 @@ export default function MLSettingsPanel({
                             {/* Reset Button */}
                             <button
                                 onClick={() => onSettingsChange(DEFAULT_SETTINGS)}
-                                className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                className="w-full py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
                             >
                                 Reset to Defaults
                             </button>

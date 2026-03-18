@@ -30,7 +30,7 @@ export default function TermsPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="bg-white rounded-2xl border border-[var(--border-light)] p-8 prose max-w-none"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-8 prose max-w-none"
                     >
                         {/* Warning Box */}
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">

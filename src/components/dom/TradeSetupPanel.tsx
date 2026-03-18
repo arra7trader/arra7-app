@@ -58,20 +58,20 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
     if (!stableSetup || stableSetup.action === 'WAIT') {
         const currentConfidence = prediction?.confidence ? Math.round(prediction.confidence * 100) : 0;
         const currentDirection = prediction?.direction || 'NEUTRAL';
-        const dirColor = currentDirection === 'UP' ? 'text-green-600' : currentDirection === 'DOWN' ? 'text-red-600' : 'text-gray-500';
+        const dirColor = currentDirection === 'UP' ? 'text-green-600' : currentDirection === 'DOWN' ? 'text-red-600' : 'text-[var(--text-secondary)]';
 
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-                <div className="text-center text-gray-500 mb-3">
+            <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] p-4">
+                <div className="text-center text-[var(--text-secondary)] mb-3">
                     <div className="text-2xl mb-1">⏳</div>
                     <p className="text-sm font-medium">Scanning for High Confidence Setup...</p>
                     <p className="text-xs text-gray-400">Signal appears when AI &gt; 75%</p>
                 </div>
 
                 {/* Live ML Confidence Display */}
-                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <div className="bg-[var(--bg-secondary)] rounded-lg p-3 border border-[var(--border-light)]">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-medium text-gray-500">Current AI Reading</span>
+                        <span className="text-xs font-medium text-[var(--text-secondary)]">Current AI Reading</span>
                         <span className={`text-xs font-bold ${dirColor}`}>{currentDirection}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                                 style={{ width: `${currentConfidence}%` }}
                             />
                         </div>
-                        <span className="text-sm font-bold text-gray-700">{currentConfidence}%</span>
+                        <span className="text-sm font-bold text-[var(--text-primary)]">{currentConfidence}%</span>
                     </div>
                     <p className="text-[10px] text-gray-400 mt-1 text-center">Threshold: 75% for signal</p>
                 </div>
@@ -103,7 +103,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                             {stableSetup.action} SIGNAL
                         </h3>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-xs font-semibold text-gray-500">Quality:</span>
+                            <span className="text-xs font-semibold text-[var(--text-secondary)]">Quality:</span>
                             <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${stableSetup.quality === 'HIGH' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
                                 }`}>
                                 {stableSetup.quality}
@@ -112,21 +112,21 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                     </div>
                 </div>
                 <div className="text-right">
-                    <div className="text-sm text-gray-500">Entry Zone</div>
-                    <div className="text-xl font-bold text-gray-800">{stableSetup.entry.toLocaleString()}</div>
+                    <div className="text-sm text-[var(--text-secondary)]">Entry Zone</div>
+                    <div className="text-xl font-bold text-[var(--text-primary)]">{stableSetup.entry.toLocaleString()}</div>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-2.5 shadow-sm">
-                    <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-light)] p-2.5 shadow-sm">
+                    <div className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1">
                         🎯 Take Profit (TP)
                     </div>
                     <div className="text-lg font-bold text-green-600">{stableSetup.tp.toLocaleString()}</div>
                     <div className="text-[10px] text-gray-400">Risk/Reward {stableSetup.riskRewardRatio}</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-2.5 shadow-sm">
-                    <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-light)] p-2.5 shadow-sm">
+                    <div className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1">
                         🛡️ Stop Loss (SL)
                     </div>
                     <div className="text-lg font-bold text-red-600">{stableSetup.sl.toLocaleString()}</div>

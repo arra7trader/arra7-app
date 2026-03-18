@@ -33,15 +33,15 @@ export default function MaintenanceModal({ isOpen, onClose, featureName }: Maint
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             transition={{ type: "spring", duration: 0.5 }}
-                            className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+                            className="bg-[var(--bg-primary)] rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Close Button */}
                             <button
                                 onClick={onClose}
-                                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[var(--bg-secondary)] transition-colors"
                             >
-                                <XMarkIcon className="w-6 h-6 text-gray-500" />
+                                <XMarkIcon className="w-6 h-6 text-[var(--text-secondary)]" />
                             </button>
 
                             {/* Icon */}

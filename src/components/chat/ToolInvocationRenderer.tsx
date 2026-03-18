@@ -253,7 +253,7 @@ export default function ToolInvocationRenderer({ toolInvocation }: { toolInvocat
                             {result.signals.map((s: any, i: number) => (
                                 <div key={i} className="flex justify-between text-sm">
                                     <span className="text-slate-300">{s.name}</span>
-                                    <span className={`font-semibold ${s.signal === 'BULLISH' ? 'text-green-400' : s.signal === 'BEARISH' ? 'text-red-400' : 'text-slate-500'}`}>
+                                    <span className={`font-semibold ${s.signal === 'BULLISH' ? 'text-green-400' : s.signal === 'BEARISH' ? 'text-red-400' : 'text-[var(--text-secondary)]'}`}>
                                         {s.signal} ({s.weight})
                                     </span>
                                 </div>
@@ -476,7 +476,7 @@ export default function ToolInvocationRenderer({ toolInvocation }: { toolInvocat
 
     // Default fallback
     return (
-        <div className="text-sm text-slate-500 italic">
+        <div className="text-sm text-[var(--text-secondary)] italic">
             Tool invocation: {toolName} ({state})
         </div>
     );

@@ -228,27 +228,27 @@ export default function JournalPage() {
                 {/* Stats Cards */}
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Trades</p>
                             <p className="text-2xl font-bold text-[var(--text-primary)]">{stats.totalTrades}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Open</p>
                             <p className="text-2xl font-bold text-[var(--accent-blue)]">{stats.openTrades}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Win Rate</p>
                             <p className="text-2xl font-bold text-green-600">{stats.winRate.toFixed(1)}%</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Wins</p>
                             <p className="text-2xl font-bold text-green-600">{stats.winningTrades}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Losses</p>
                             <p className="text-2xl font-bold text-red-600">{stats.losingTrades}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total P/L</p>
                             <p className={`text-2xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 ${stats.totalProfitLoss.toFixed(2)}
@@ -258,27 +258,27 @@ export default function JournalPage() {
                 )}
                 {actualStats && (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Actual Trades</p>
                             <p className="text-2xl font-bold text-[var(--text-primary)]">{actualStats.total}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Open</p>
                             <p className="text-2xl font-bold text-blue-600">{actualStats.open}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">TP Hit</p>
                             <p className="text-2xl font-bold text-green-600">{actualStats.tp}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">SL Hit</p>
                             <p className="text-2xl font-bold text-red-600">{actualStats.sl}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Manual Close</p>
-                            <p className="text-2xl font-bold text-slate-600">{actualStats.manual}</p>
+                            <p className="text-2xl font-bold text-[var(--text-secondary)]">{actualStats.manual}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Error Close</p>
                             <p className="text-2xl font-bold text-amber-600">{actualStats.error}</p>
                         </div>
@@ -286,7 +286,7 @@ export default function JournalPage() {
                 )}
 
                 {/* Journal Table */}
-                <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-[var(--bg-secondary)]">
@@ -320,7 +320,7 @@ export default function JournalPage() {
                                         <td className="p-4 text-[var(--text-primary)]">{entry.lotSize || '-'}</td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
-                                                entry.status === 'CLOSED' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                entry.status === 'CLOSED' ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {entry.status}
                                             </span>
                                         </td>
@@ -364,14 +364,14 @@ export default function JournalPage() {
                 </div>
 
                 {/* Actual Trades Table */}
-                <div className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden mt-8">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden mt-8">
                     <div className="px-4 py-3 border-b border-[var(--border-light)] bg-[var(--bg-secondary)]">
                         <p className="text-sm font-semibold text-[var(--text-primary)]">Trade Actual Per Akun</p>
                         <p className="text-xs text-[var(--text-secondary)]">Data posisi real dari Copytrade ARRA77, termasuk TP/SL untuk tiap terminal.</p>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-white">
+                            <thead className="bg-[var(--bg-primary)]">
                                 <tr>
                                     <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Akun</th>
                                     <th className="text-left p-4 text-sm text-[var(--text-muted)] font-medium">Symbol</th>
@@ -411,7 +411,7 @@ export default function JournalPage() {
                                                 : trade.outcome === 'SL'
                                                     ? 'bg-red-100 text-red-700'
                                                     : trade.outcome === 'MANUAL'
-                                                        ? 'bg-slate-100 text-slate-700'
+                                                        ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                                         : trade.outcome === 'ERROR'
                                                             ? 'bg-amber-100 text-amber-700'
                                                             : 'bg-blue-100 text-blue-700'
@@ -455,7 +455,7 @@ export default function JournalPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-2xl p-6 max-w-md w-full border border-[var(--border-light)] shadow-xl"
+                            className="bg-[var(--bg-primary)] rounded-2xl p-6 max-w-md w-full border border-[var(--border-light)] shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Add New Trade</h3>
@@ -573,7 +573,7 @@ export default function JournalPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-2xl p-6 max-w-sm w-full border border-[var(--border-light)] shadow-xl"
+                            className="bg-[var(--bg-primary)] rounded-2xl p-6 max-w-sm w-full border border-[var(--border-light)] shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Close Trade</h3>

@@ -7,7 +7,7 @@ import KeyLevels from '@/components/vvip/KeyLevels';
 
 export default function VvipAssistantPage() {
     return (
-        <div className="min-h-screen bg-gray-50 pt-36 pb-12">
+        <div className="min-h-screen bg-[var(--bg-secondary)] pt-36 pb-12">
             <div className="container-wide">
                 <div className="max-w-7xl mx-auto space-y-8">
 
@@ -32,8 +32,8 @@ export default function VvipAssistantPage() {
 
                         {/* Middle Column: Heatmap (Spans 2 cols on LG) */}
                         <div className="lg:col-span-2 space-y-6">
-                            <div className="bg-white p-1 rounded-3xl border border-[var(--border-light)] shadow-sm h-full">
-                                <div className="bg-gray-50 rounded-[20px] p-6 h-full flex flex-col">
+                            <div className="bg-[var(--bg-primary)] p-1 rounded-3xl border border-[var(--border-light)] shadow-sm h-full">
+                                <div className="bg-[var(--bg-secondary)] rounded-[20px] p-6 h-full flex flex-col">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="font-bold text-[var(--text-primary)]">Live Market Monitor</h3>
                                         <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100">

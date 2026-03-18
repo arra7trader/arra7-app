@@ -12,7 +12,7 @@ interface MLPredictionPanelProps {
 export default function MLPredictionPanel({ prediction, isLoading = false }: MLPredictionPanelProps) {
     if (isLoading) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                     <SparklesIcon size="sm" className="text-purple-500" />
                     ML Prediction
@@ -26,7 +26,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
 
     if (!prediction) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                     <SparklesIcon size="sm" className="text-purple-500" />
                     ML Prediction
@@ -41,13 +41,13 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
     const confidencePct = Math.round(prediction.confidence * 100);
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+        <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 <SparklesIcon size="sm" className="text-purple-500" />
                 ML Prediction
                 <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${prediction.source === 'ml-backend'
                         ? 'bg-purple-100 text-purple-700'
-                        : 'bg-gray-100 text-gray-600'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                     }`}>
                     {prediction.source === 'ml-backend' ? '🤖 AI' : '📊 Heuristic'}
                 </span>
@@ -105,7 +105,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
             <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2">
                     <span className="text-xs w-16 text-green-600">↑ UP</span>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-green-500 rounded-full"
                             initial={{ width: 0 }}
@@ -119,7 +119,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs w-16 text-amber-600">→ NEU</span>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-amber-500 rounded-full"
                             initial={{ width: 0 }}
@@ -133,7 +133,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs w-16 text-red-600">↓ DOWN</span>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-red-500 rounded-full"
                             initial={{ width: 0 }}
@@ -148,7 +148,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
             </div>
 
             {/* Model Info */}
-            <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <div className="pt-3 border-t border-[var(--border-light)] flex items-center justify-between text-xs text-[var(--text-muted)]">
                 <span>Model: <span className="font-medium text-[var(--text-secondary)]">{prediction.model_used}</span></span>
                 {prediction.inference_time_ms && (
                     <span>⚡ {prediction.inference_time_ms.toFixed(0)}ms</span>

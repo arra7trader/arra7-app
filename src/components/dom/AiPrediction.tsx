@@ -69,13 +69,13 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
     }, [symbol]);
 
     const renderContent = () => {
-        if (loading && !prediction) return <div className="text-sm text-gray-500 flex items-center gap-2"><div className="w-3 h-3 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" /> Loading AI model...</div>;
+        if (loading && !prediction) return <div className="text-sm text-[var(--text-secondary)] flex items-center gap-2"><div className="w-3 h-3 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" /> Loading AI model...</div>;
 
         if (error) {
             if (error === "Model not loaded") {
                 return (
-                    <div className="text-xs text-[var(--text-muted)] bg-gray-50 p-2 rounded border border-gray-100">
-                        <div className="flex items-center gap-1 mb-1 text-gray-700 font-medium">
+                    <div className="text-xs text-[var(--text-muted)] bg-[var(--bg-secondary)] p-2 rounded border border-[var(--border-light)]">
+                        <div className="flex items-center gap-1 mb-1 text-[var(--text-primary)] font-medium">
                             <WarningIcon size="sm" /> Model Not Found
                         </div>
                         Waiting for server...
@@ -104,7 +104,7 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
             return (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Estimated Price</span>
+                        <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Estimated Price</span>
                         <span className={`text-xl font-bold flex items-center gap-2 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {prediction.value.toFixed(2)}
                             {isUp ? <TrendUpIcon size="md" /> : <TrendDownIcon size="md" />}
@@ -138,15 +138,15 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
             return (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Next Move</span>
+                        <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Next Move</span>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${colorClass}`}>
                             {predictedClass} <Icon size="sm" />
                         </span>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Confidence</span>
+                        <span className="text-xs text-[var(--text-secondary)]">Confidence</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="w-16 h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                 <div className="h-full bg-[var(--accent-blue)] rounded-full" style={{ width: `${confidence}%` }} />
                             </div>
                             <span className="text-xs font-bold">{confidence.toFixed(1)}%</span>
@@ -160,12 +160,12 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)] shadow-sm">
+        <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)] shadow-sm">
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-50">
                 <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                     <ChartIcon size="sm" />
                 </div>
-                <h3 className="font-semibold text-gray-800 text-sm">AI Market Prediction</h3>
+                <h3 className="font-semibold text-[var(--text-primary)] text-sm">AI Market Prediction</h3>
             </div>
             {renderContent()}
         </div>

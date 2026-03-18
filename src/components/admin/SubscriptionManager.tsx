@@ -78,7 +78,7 @@ export default function SubscriptionManager({ userId, initialStatus, initialTele
                     placeholder="e.g. 123456789"
                     className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white outline-none focus:border-blue-500"
                 />
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className="text-[10px] text-[var(--text-secondary)] mt-1">
                     User must chat to bot first to get ID.
                 </p>
             </div>

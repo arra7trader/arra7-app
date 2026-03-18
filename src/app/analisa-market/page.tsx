@@ -873,7 +873,7 @@ export default function AnalisaMarketPage() {
                         </div>
 
                         <div className="w-full">
-                            <div className="rounded-md border border-[var(--border-light)] bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
+                            <div className="rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] p-4 shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Info Akun & Kuota</p>
@@ -883,7 +883,7 @@ export default function AnalisaMarketPage() {
                                         ? 'bg-amber-100 text-amber-700'
                                         : quotaStatus?.membership === 'PRO'
                                             ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-gray-100 text-gray-700'
+                                            : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                         }`}>
                                         {quotaStatus?.membership || 'BASIC'}
                                     </span>
@@ -906,7 +906,7 @@ export default function AnalisaMarketPage() {
 
                                 {!isUnlimitedQuota && (
                                     <div className="mb-3">
-                                        <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                                        <div className="h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
                                             <div
                                                 className={`h-full transition-all ${usedPercentage >= 90 ? 'bg-red-500' : 'bg-[var(--accent-blue)]'}`}
                                                 style={{ width: `${usedPercentage}%` }}
@@ -952,7 +952,7 @@ export default function AnalisaMarketPage() {
                                         </div>
                                         <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold ${telegramStatus?.linked
                                             ? 'bg-emerald-100 text-emerald-700'
-                                            : 'bg-gray-100 text-gray-700'
+                                            : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                             }`}>
                                             {telegramStatus?.linked ? 'Linked' : 'Not Linked'}
                                         </span>
@@ -988,7 +988,7 @@ export default function AnalisaMarketPage() {
                                                         {!!telegramStatus?.telegramChatId && (
                                                             <button
                                                                 onClick={() => handleCopyTelegramText(telegramStatus?.telegramChatId ?? '', 'chatId')}
-                                                                className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-white text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                                                className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                                                             >
                                                                 {telegramCopiedTarget === 'chatId' ? 'Tersalin' : 'Copy'}
                                                             </button>
@@ -1003,7 +1003,7 @@ export default function AnalisaMarketPage() {
                                                                 </div>
                                                                 <button
                                                                     onClick={() => handleCopyTelegramText(telegramLinkCode, 'linkCode')}
-                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-white text-[11px] font-semibold text-[var(--text-primary)] hover:bg-white/80 transition-colors"
+                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-primary)]/80 transition-colors"
                                                                 >
                                                                     {telegramCopiedTarget === 'linkCode' ? 'Tersalin' : 'Copy Kode'}
                                                                 </button>
@@ -1014,7 +1014,7 @@ export default function AnalisaMarketPage() {
                                                                 </p>
                                                                 <button
                                                                     onClick={() => handleCopyTelegramText(`/link ${telegramLinkCode}`, 'linkCommand')}
-                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-white text-[11px] font-semibold text-[var(--text-primary)] hover:bg-white/80 transition-colors"
+                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-primary)]/80 transition-colors"
                                                                 >
                                                                     {telegramCopiedTarget === 'linkCommand' ? 'Tersalin' : 'Copy /link'}
                                                                 </button>
@@ -1028,7 +1028,7 @@ export default function AnalisaMarketPage() {
                                                         onClick={handleGenerateTelegramCode}
                                                         disabled={telegramGenerating}
                                                         className={`w-full py-2 rounded-md text-xs font-semibold transition-colors ${telegramGenerating
-                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                            ? 'bg-gray-200 text-[var(--text-secondary)] cursor-not-allowed'
                                                             : 'bg-[var(--accent-blue)] text-white hover:bg-blue-600'
                                                             }`}
                                                     >
@@ -1070,7 +1070,7 @@ export default function AnalisaMarketPage() {
                         className="lg:col-span-1 space-y-4"
                     >
                         {/* Category Tabs */}
-                        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
                                 <DocumentIcon size="sm" /> Kategori
                             </h3>
@@ -1095,7 +1095,7 @@ export default function AnalisaMarketPage() {
                         </div>
 
                         {/* Pair Selection Grid */}
-                        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
                                 <span>{currentCategory?.icon}</span> {currentCategory?.name} Pairs
                                 <span className="text-xs text-[var(--text-muted)]">({currentPairs.length})</span>
@@ -1121,7 +1121,7 @@ export default function AnalisaMarketPage() {
                         </div>
 
                         {/* Timeframe Selection */}
-                        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
                                 <ClockIcon size="sm" /> Timeframe
                             </h3>
@@ -1145,7 +1145,7 @@ export default function AnalisaMarketPage() {
                         </div>
 
                         {/* Selected Pair Display */}
-                        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)]">
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-sm text-[var(--text-secondary)]">Trading:</span>
                                 <span className="text-lg font-bold gradient-text">{selectedPair}</span>
@@ -1162,7 +1162,7 @@ export default function AnalisaMarketPage() {
                                 ? 'bg-amber-50 border-amber-200'
                                 : quotaStatus.membership === 'PRO'
                                     ? 'bg-blue-50 border-blue-200'
-                                    : 'bg-white border-[var(--border-light)]'
+                                    : 'bg-[var(--bg-primary)] border-[var(--border-light)]'
                                 }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-[var(--text-secondary)] flex items-center gap-1"><ChartIcon size="sm" /> Quota Hari Ini</span>
@@ -1170,7 +1170,7 @@ export default function AnalisaMarketPage() {
                                         ? 'bg-amber-100 text-amber-700'
                                         : quotaStatus.membership === 'PRO'
                                             ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-gray-100 text-gray-600'
+                                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                         }`}>
                                         {quotaStatus.membership}
                                     </span>
@@ -1219,13 +1219,13 @@ export default function AnalisaMarketPage() {
                         <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <Link
                                 href="/journal"
-                                className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                             >
                                 Buka Trade Journal
                             </Link>
                             <Link
                                 href="/copytrade-arra77"
-                                className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-white px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                             >
                                 Trade Actual Per Akun
                             </Link>
@@ -1250,7 +1250,7 @@ export default function AnalisaMarketPage() {
                                     Analyzing...
                                 </span>
                             ) : cooldownSeconds > 0 ? (
-                                <span className="flex items-center justify-center gap-2 text-gray-500">
+                                <span className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
                                     <ClockIcon size="md" />
                                     Cooldown: {formatCooldown(cooldownSeconds)}
                                 </span>
@@ -1271,7 +1271,7 @@ export default function AnalisaMarketPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-2xl p-4 border border-[var(--border-light)]"
+                                className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)]"
                             >
                                 <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2"><ChartIcon size="sm" /> Market Info</h3>
 
@@ -1331,12 +1331,12 @@ export default function AnalisaMarketPage() {
                                         </span>
                                     </div>
                                     {marketInfo.dataSource && (
-                                        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                        <div className="flex justify-between items-center pt-2 border-t border-[var(--border-light)]">
                                             <span className="text-[var(--text-secondary)] text-xs">Source</span>
                                             <span className="text-xs text-[var(--text-muted)] font-mono">{marketInfo.dataSource}</span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100">
+                                    <div className="flex justify-between items-center pt-2 mt-2 border-t border-[var(--border-light)]">
                                         <span className="text-[var(--text-secondary)] text-xs">Last Update</span>
                                         <span className="text-xs text-[var(--text-muted)]">
                                             {marketInfo.lastCandleTime
@@ -1356,7 +1356,7 @@ export default function AnalisaMarketPage() {
                         )}
 
                         {/* News */}
-                        <div className="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)]">
                             <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center gap-2">
                                 <BellIcon size="sm" /> Economic News
                             </h3>
@@ -1381,15 +1381,15 @@ export default function AnalisaMarketPage() {
                                 transition={{ delay: 0.18 }}
                                 className="mb-5 space-y-4"
                             >
-                                <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50/35 to-amber-50/45 p-5 text-slate-900 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                                <div className="rounded-3xl border border-[var(--border-light)] bg-gradient-to-br from-white via-sky-50/35 to-amber-50/45 p-5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
                                             <p className="text-[11px] uppercase tracking-[0.22em] text-sky-700 font-semibold">VVIP Exclusive Desk</p>
-                                            <h3 className="text-2xl font-semibold text-slate-900">Deep Analyst Room</h3>
-                                            <p className="mt-2 text-sm leading-relaxed text-slate-700 max-w-2xl">
+                                            <h3 className="text-2xl font-semibold text-[var(--text-primary)]">Deep Analyst Room</h3>
+                                            <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)] max-w-2xl">
                                                 {deepSections.executiveSummary}
                                             </p>
-                                            <p className="mt-2 text-xs text-slate-500">
+                                            <p className="mt-2 text-xs text-[var(--text-secondary)]">
                                                 User: {vvipAlias} | Update: {lastAnalyzeAt ? new Date(lastAnalyzeAt).toLocaleTimeString('id-ID') : 'Belum ada analisa'}
                                             </p>
                                         </div>
@@ -1397,14 +1397,14 @@ export default function AnalisaMarketPage() {
                                             <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-700 font-semibold">
                                                 LSTM Core
                                             </span>
-                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-semibold">
+                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-secondary)] font-semibold">
                                                 {selectedPair} / {selectedTimeframe.toUpperCase()}
                                             </span>
                                             <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold border ${directionBadge === 'BUY'
                                                 ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
                                                 : directionBadge === 'SELL'
                                                     ? 'bg-rose-100 text-rose-700 border-rose-200'
-                                                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                                                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-light)]'
                                                 }`}>
                                                 {directionBadge}
                                             </span>
@@ -1412,65 +1412,65 @@ export default function AnalisaMarketPage() {
                                     </div>
 
                                     <div className="mt-4 grid grid-cols-2 xl:grid-cols-4 gap-2">
-                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Keyakinan Model</p>
-                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.conviction}</p>
+                                        <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">Keyakinan Model</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.conviction}</p>
                                         </div>
-                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Bias Utama</p>
-                                            <p className="text-sm font-semibold text-slate-900">{directionBadge}</p>
+                                        <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">Bias Utama</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{directionBadge}</p>
                                         </div>
-                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Rasio R:R</p>
-                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.rr}</p>
+                                        <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">Rasio R:R</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.rr}</p>
                                         </div>
-                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-500">Risiko Setup</p>
-                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.riskBudget}</p>
+                                        <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">Risiko Setup</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.riskBudget}</p>
                                         </div>
                                     </div>
 
                                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2">
                                             <p className="text-[10px] uppercase tracking-wider text-sky-700">Zona Entry</p>
-                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.entry}</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.entry}</p>
                                         </div>
                                         <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
                                             <p className="text-[10px] uppercase tracking-wider text-rose-700">Invalidasi</p>
-                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.stop}</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.stop}</p>
                                         </div>
                                         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
                                             <p className="text-[10px] uppercase tracking-wider text-emerald-700">Target 1</p>
-                                            <p className="text-sm font-semibold text-slate-900">{deskSnapshot.target}</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.target}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
                                         <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Struktur Market</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.marketStructure}</p>
                                     </div>
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
                                         <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Konfluensi SMC / ICT</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.smcConfluence}</p>
                                     </div>
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
                                         <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Statistik & Momentum</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.statisticalSignals}</p>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.momentumAssessment}</p>
                                     </div>
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                    <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
                                         <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Fibonacci & Faktor Risiko</h4>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{deepSections.fibonacciMapping}</p>
                                         <p className="text-sm leading-relaxed text-[var(--text-secondary)] mt-2">{deepSections.riskFactors}</p>
                                     </div>
                                 </div>
 
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                                <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                                         <h4 className="text-sm font-semibold text-[var(--text-primary)]">Skenario Trading</h4>
-                                        <span className="text-[11px] px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-semibold">
+                                        <span className="text-[11px] px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-semibold">
                                             Confidence: {confidenceText}
                                         </span>
                                     </div>
@@ -1482,7 +1482,7 @@ export default function AnalisaMarketPage() {
                                                     ? 'border-emerald-200 bg-emerald-50/80'
                                                     : scenario.tone === 'bear'
                                                         ? 'border-rose-200 bg-rose-50/80'
-                                                        : 'border-slate-200 bg-slate-50/90'
+                                                        : 'border-[var(--border-light)] bg-[var(--bg-secondary)]/90'
                                                     }`}
                                             >
                                                 <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">{scenario.name}</p>
@@ -1497,7 +1497,7 @@ export default function AnalisaMarketPage() {
                             </motion.div>
                         )}
 
-                        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)] min-h-[600px]">
+                        <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)] min-h-[600px]">
                             <AnimatePresence mode="wait">
                                 {error ? (
                                     <motion.div
@@ -1511,24 +1511,24 @@ export default function AnalisaMarketPage() {
                                         {error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") ? (
                                             <>
                                                 {/* BLURRED MOCKUP BACKGROUND */}
-                                                <div className="absolute inset-0 filter blur-md opacity-50 select-none pointer-events-none bg-white p-6 overflow-hidden">
+                                                <div className="absolute inset-0 filter blur-md opacity-50 select-none pointer-events-none bg-[var(--bg-primary)] p-6 overflow-hidden">
                                                     <div className="h-8 w-3/4 bg-gray-200 rounded mb-4"></div>
                                                     <div className="flex gap-2 mb-6">
                                                         <div className="h-6 w-20 bg-blue-100 rounded-full"></div>
-                                                        <div className="h-6 w-16 bg-gray-100 rounded-full"></div>
+                                                        <div className="h-6 w-16 bg-[var(--bg-secondary)] rounded-full"></div>
                                                     </div>
                                                     <div className="space-y-3">
-                                                        <div className="h-4 w-full bg-gray-100 rounded"></div>
-                                                        <div className="h-4 w-5/6 bg-gray-100 rounded"></div>
-                                                        <div className="h-4 w-full bg-gray-100 rounded"></div>
-                                                        <div className="h-32 w-full bg-gray-50 rounded my-4 border border-gray-100"></div>
-                                                        <div className="h-4 w-4/5 bg-gray-100 rounded"></div>
-                                                        <div className="h-4 w-full bg-gray-100 rounded"></div>
+                                                        <div className="h-4 w-full bg-[var(--bg-secondary)] rounded"></div>
+                                                        <div className="h-4 w-5/6 bg-[var(--bg-secondary)] rounded"></div>
+                                                        <div className="h-4 w-full bg-[var(--bg-secondary)] rounded"></div>
+                                                        <div className="h-32 w-full bg-[var(--bg-secondary)] rounded my-4 border border-[var(--border-light)]"></div>
+                                                        <div className="h-4 w-4/5 bg-[var(--bg-secondary)] rounded"></div>
+                                                        <div className="h-4 w-full bg-[var(--bg-secondary)] rounded"></div>
                                                     </div>
                                                 </div>
 
                                                 {/* PREMIUM OVERLAY CARD */}
-                                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-white/60 backdrop-blur-sm">
+                                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[var(--bg-primary)]/60 backdrop-blur-sm">
                                                     <div className="bg-gradient-to-br from-white to-red-50 border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
                                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
                                                             <LockIcon size="xl" className="text-red-600" />
@@ -1537,16 +1537,16 @@ export default function AnalisaMarketPage() {
                                                         {/* Dynamic Title & Message */}
                                                         {error.includes("Timeframe") ? (
                                                             <>
-                                                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Timeframe Locked</h3>
-                                                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                                                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Timeframe Locked</h3>
+                                                                <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
                                                                     Timeframe ini khusus untuk member PRO/VVIP.
                                                                     <br />Upgrade sekarang untuk akses ke semua timeframe.
                                                                 </p>
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Daily Quota Reached</h3>
-                                                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                                                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Daily Quota Reached</h3>
+                                                                <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
                                                                     Anda telah mencapai batas <span className="font-semibold text-red-500">1x Analisa Harian</span>.
                                                                     <br />Upgrade ke PRO untuk membuka akses unlimited dan sinyal AI akurasi tinggi.
                                                                 </p>
@@ -1563,7 +1563,7 @@ export default function AnalisaMarketPage() {
                                                             </button>
                                                             <button
                                                                 onClick={() => setError(null)}
-                                                                className="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                                                                className="text-sm font-medium text-gray-400 hover:text-[var(--text-secondary)] transition-colors"
                                                             >
                                                                 Kembali
                                                             </button>

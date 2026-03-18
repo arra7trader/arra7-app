@@ -325,7 +325,7 @@ export default function CompanionPage() {
                                 ))}
                             </div>
 
-                            <p className="text-center text-slate-500 text-sm">
+                            <p className="text-center text-[var(--text-secondary)] text-sm">
                                 Tanya apa saja — AI akan otomatis chain tools untuk insight komprehensif
                             </p>
                         </motion.div>
@@ -437,7 +437,7 @@ export default function CompanionPage() {
                         </button>
                     </form>
 
-                    <p className="text-xs text-slate-500 text-center">
+                    <p className="text-xs text-[var(--text-secondary)] text-center">
                         Powered by OpenClaw principles • Multi-step reasoning • 8 tools active
                     </p>
                 </div>

@@ -45,7 +45,7 @@ function LoginContent() {
                 className="w-full max-w-md"
             >
                 {/* Card */}
-                <div className="bg-white rounded-2xl p-8 shadow-xl border border-[var(--border-light)]">
+                <div className="bg-[var(--bg-primary)] rounded-2xl p-8 shadow-xl border border-[var(--border-light)]">
                     {/* Logo */}
                     <div className="text-center mb-8">
                         <motion.div

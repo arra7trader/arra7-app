@@ -153,7 +153,7 @@ export default function WinningTicker() {
                             </span>
 
                             {/* TIME */}
-                            <span className="text-xs text-gray-500 border-l border-white/10 pl-2 ml-1">
+                            <span className="text-xs text-[var(--text-secondary)] border-l border-white/10 pl-2 ml-1">
                                 {win.time}
                             </span>
                         </div>

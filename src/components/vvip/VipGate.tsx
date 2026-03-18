@@ -31,7 +31,7 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
                         transition={{ duration: 0.5 }}
                         className="w-24 h-24 bg-gradient-to-tr from-amber-400 to-yellow-600 rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(251,191,36,0.3)]"
                     >
-                        <svg className="w-10 h-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-10 h-10 text-[var(--text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </motion.div>
@@ -49,7 +49,7 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
                     <div className="pt-4">
                         <Link
                             href="/pricing"
-                            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-bold hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:scale-105 transition-all duration-300"
+                            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 text-[var(--text-primary)] font-bold hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:scale-105 transition-all duration-300"
                         >
                             <span>Upgrade ke VVIP</span>
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

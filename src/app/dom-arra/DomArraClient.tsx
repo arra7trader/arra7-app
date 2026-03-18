@@ -133,7 +133,7 @@ function ImbalanceMeter({ imbalance }: { imbalance: number }) {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+        <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 <span>⚖️</span> Order Imbalance
             </h3>
@@ -172,7 +172,7 @@ function ImbalanceMeter({ imbalance }: { imbalance: number }) {
 function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
     if (!prediction) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)] h-full flex items-center justify-center">
+            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)] h-full flex items-center justify-center">
                 <p className="text-[var(--text-muted)]">Analyzing...</p>
             </div>
         );
@@ -191,7 +191,7 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+        <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 <SparklesIcon size="sm" className="text-purple-500" />
                 AI Prediction
@@ -217,7 +217,7 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
                 <div className="bg-[var(--bg-secondary)] rounded-xl p-3 text-center">
                     <p className="text-xs text-[var(--text-muted)]">Whale Activity</p>
                     <p className={`text-lg font-bold ${prediction.whaleActivity === 'HIGH' ? 'text-purple-600' :
-                        prediction.whaleActivity === 'MEDIUM' ? 'text-blue-600' : 'text-gray-500'
+                        prediction.whaleActivity === 'MEDIUM' ? 'text-blue-600' : 'text-[var(--text-secondary)]'
                         }`}>
                         {prediction.whaleActivity === 'HIGH' ? '🐋 High' :
                             prediction.whaleActivity === 'MEDIUM' ? '🐬 Medium' : '🐟 Low'}
@@ -279,8 +279,8 @@ function ComingSoonView() {
                     transition={{ delay: 0.1 }}
                     className="max-w-2xl mx-auto"
                 >
-                    <div className="relative bg-white rounded-3xl border border-[var(--border-light)] overflow-hidden">
-                        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                    <div className="relative bg-[var(--bg-primary)] rounded-3xl border border-[var(--border-light)] overflow-hidden">
+                        <div className="absolute inset-0 bg-[var(--bg-primary)]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
                             <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
@@ -309,9 +309,9 @@ function ComingSoonView() {
                         <div className="p-8 opacity-30 blur-sm">
                             <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-4"></div>
                             <div className="grid grid-cols-3 gap-4">
-                                <div className="h-20 bg-gray-100 rounded-xl"></div>
-                                <div className="h-20 bg-gray-100 rounded-xl"></div>
-                                <div className="h-20 bg-gray-100 rounded-xl"></div>
+                                <div className="h-20 bg-[var(--bg-secondary)] rounded-xl"></div>
+                                <div className="h-20 bg-[var(--bg-secondary)] rounded-xl"></div>
+                                <div className="h-20 bg-[var(--bg-secondary)] rounded-xl"></div>
                             </div>
                         </div>
                     </div>
@@ -348,7 +348,7 @@ function TrialBanner({ daysLeft }: { daysLeft: number }) {
     return (
         <div className="fixed bottom-6 right-6 z-50 animate-bounce-slow">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-4 rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-4">
-                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                <div className="p-2 bg-[var(--bg-primary)]/20 rounded-lg backdrop-blur-sm">
                     <SparklesIcon className="text-white" size="md" />
                 </div>
                 <div>
@@ -356,7 +356,7 @@ function TrialBanner({ daysLeft }: { daysLeft: number }) {
                     <p className="text-xs opacity-90">Sisa waktu: {daysLeft} hari lagi</p>
                 </div>
                 <Link href="/pricing">
-                    <button className="bg-white text-orange-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-50 transition-colors">
+                    <button className="bg-[var(--bg-primary)] text-orange-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-50 transition-colors">
                         Upgrade
                     </button>
                 </Link>
@@ -376,10 +376,10 @@ function BlockedView({ reason }: { reason: string }) {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white p-8 rounded-3xl border border-[var(--border-light)] shadow-xl"
+                        className="bg-[var(--bg-primary)] p-8 rounded-3xl border border-[var(--border-light)] shadow-xl"
                     >
-                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${isExpired ? 'bg-red-100' : 'bg-gray-100'}`}>
-                            <LockIcon className={isExpired ? 'text-red-500' : 'text-gray-500'} size="xl" />
+                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${isExpired ? 'bg-red-100' : 'bg-[var(--bg-secondary)]'}`}>
+                            <LockIcon className={isExpired ? 'text-red-500' : 'text-[var(--text-secondary)]'} size="xl" />
                         </div>
 
                         <h1 className="headline-md mb-4">
@@ -817,7 +817,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                             onClick={() => setSelectedSymbol(key as DOMSymbolId)}
                             className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${selectedSymbol === key
                                 ? 'bg-blue-600 text-white'
-                                : 'bg-white border border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                                : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
                                 }`}
                         >
                             <span className="text-xl">{config.icon}</span>
@@ -843,7 +843,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                         onClick={() => setActiveTab('orderbook')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'orderbook'
                             ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                            : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                            : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                     >
                         <CircleStackIcon size="sm" />
@@ -853,7 +853,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                         onClick={() => setActiveTab('heatmap')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'heatmap'
                             ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                            : 'bg-white border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                            : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                     >
                         <ChartIcon size="sm" />
@@ -879,7 +879,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                                         onClick={() => setHeatmapTimeframe(tf)}
                                         className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${heatmapTimeframe === tf
                                             ? 'bg-blue-600 text-white shadow-md'
-                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                            : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                                             }`}
                                     >
                                         {tf}m
@@ -951,7 +951,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                             transition={{ delay: 0.2 }}
                             className="lg:col-span-2"
                         >
-                            <div className="bg-white rounded-2xl p-6 border border-[var(--border-light)]">
+                            <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
                                         <CircleStackIcon size="md" className="text-blue-600" />
@@ -991,19 +991,19 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                         transition={{ delay: 0.4 }}
                         className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"
                     >
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Mid Price</p>
                             <p className="text-xl font-bold text-[var(--text-primary)]">${orderBook.midPrice.toFixed(2)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Bid Volume</p>
                             <p className="text-xl font-bold text-green-600">{orderBook.totalBidVolume.toFixed(4)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Ask Volume</p>
                             <p className="text-xl font-bold text-red-600">{orderBook.totalAskVolume.toFixed(4)}</p>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Data Source</p>
                             <p className={`text-xl font-bold ${orderBook.dataSource === 'REAL' ? 'text-green-600' : 'text-amber-600'}`}>
                                 {orderBook.dataSource === 'REAL' ? '🔴 Live' : '🟡 Simulated'}

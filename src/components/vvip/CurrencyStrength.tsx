@@ -56,10 +56,10 @@ export default function CurrencyStrength() {
     const maxStrength = 10;
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-[var(--border-light)] shadow-sm h-full">
+        <div className="bg-[var(--bg-primary)] p-6 rounded-2xl border border-[var(--border-light)] shadow-sm h-full">
             <h3 className="font-semibold text-[var(--text-primary)] mb-6 flex items-center gap-2">
                 <span>📊</span> Currency Strength Meter
-                <span className="text-xs font-normal text-gray-500 ml-auto">Real-time Power</span>
+                <span className="text-xs font-normal text-[var(--text-secondary)] ml-auto">Real-time Power</span>
             </h3>
 
             <div className="space-y-4">
@@ -72,7 +72,7 @@ export default function CurrencyStrength() {
                             <div className="w-8 font-bold text-sm text-[var(--text-secondary)]">
                                 {currency.code}
                             </div>
-                            <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden relative">
+                            <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden relative">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${percentage}%` }}
@@ -88,7 +88,7 @@ export default function CurrencyStrength() {
                 })}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between text-xs text-gray-400">
+            <div className="mt-6 pt-4 border-t border-[var(--border-light)] flex justify-between text-xs text-gray-400">
                 <span>Weak</span>
                 <span>Strong</span>
             </div>

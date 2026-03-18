@@ -71,7 +71,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
 
                     // Status badges
                     let statusBadge = '';
-                    let statusColor = 'bg-gray-100 text-gray-600';
+                    let statusColor = 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]';
 
                     if (isActive) {
                         statusBadge = '⚡ ACTIVE';
@@ -112,7 +112,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                                             ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-4 border-orange-400 shadow-lg shadow-orange-200'
                                             : isCurrentZone
                                                 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 shadow-lg'
-                                                : 'bg-white border-2 border-gray-200 hover:border-gray-300 shadow-md'
+                                                : 'bg-[var(--bg-primary)] border-2 border-[var(--border-light)] hover:border-[var(--border-medium)] shadow-md'
                                     }`}
                             >
                                 {/* Color Strip Left */}
@@ -126,18 +126,18 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                                         {/* Zone Info */}
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="text-lg font-bold text-gray-900">{level.label}</h3>
+                                                <h3 className="text-lg font-bold text-[var(--text-primary)]">{level.label}</h3>
                                                 {statusBadge && (
                                                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${statusColor}`}>
                                                         {statusBadge}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-500 mb-2">{level.desc}</p>
+                                            <p className="text-xs text-[var(--text-secondary)] mb-2">{level.desc}</p>
 
                                             {/* Price */}
                                             <div className="flex items-baseline gap-2">
-                                                <span className="text-2xl font-mono font-bold text-gray-900">
+                                                <span className="text-2xl font-mono font-bold text-[var(--text-primary)]">
                                                     {level.price}
                                                 </span>
                                                 {distance !== null && (
@@ -164,7 +164,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
 
                                 {/* Progress Bar - Distance Visualization */}
                                 {currentPrice && (
-                                    <div className="h-1.5 bg-gray-100">
+                                    <div className="h-1.5 bg-[var(--bg-secondary)]">
                                         <div
                                             className={`h-full transition-all duration-500 ${isActive
                                                     ? 'bg-gradient-to-r from-green-400 to-emerald-500'

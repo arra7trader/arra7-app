@@ -183,7 +183,7 @@ export default function AnalisaSahamPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-10"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-white mb-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-[var(--bg-primary)] mb-6">
                         <ChartIcon className="text-[var(--accent-blue)]" size="lg" />
                         <span className="text-sm text-[var(--text-secondary)]">AI Stock Analysis</span>
                     </div>
@@ -203,7 +203,7 @@ export default function AnalisaSahamPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        className="bg-white rounded-xl p-4 border border-[var(--border-light)] mb-6 max-w-2xl mx-auto"
+                        className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] mb-6 max-w-2xl mx-auto"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
@@ -211,7 +211,7 @@ export default function AnalisaSahamPage() {
                                     ? 'bg-amber-100 text-amber-700'
                                     : quota.membership === 'PRO'
                                         ? 'bg-blue-100 text-blue-700'
-                                        : 'bg-gray-100 text-gray-600'
+                                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                     }`}>
                                     {quota.membership}
                                 </div>
@@ -242,7 +242,7 @@ export default function AnalisaSahamPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-white rounded-2xl p-6 border border-[var(--border-light)] mb-6 max-w-2xl mx-auto"
+                    className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)] mb-6 max-w-2xl mx-auto"
                 >
                     {/* Market Selector Tabs */}
                     <div className="flex p-1 bg-[var(--bg-secondary)] rounded-xl mb-6 w-fit mx-auto">
@@ -254,7 +254,7 @@ export default function AnalisaSahamPage() {
                                 setError(null);
                             }}
                             className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${market === 'IDX'
-                                ? 'bg-white text-[var(--text-primary)] shadow-sm'
+                                ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm'
                                 : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                                 }`}
                         >
@@ -268,7 +268,7 @@ export default function AnalisaSahamPage() {
                                 setError(null);
                             }}
                             className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${market === 'US'
-                                ? 'bg-white text-[var(--text-primary)] shadow-sm'
+                                ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm'
                                 : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                                 }`}
                         >
@@ -325,7 +325,7 @@ export default function AnalisaSahamPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-2xl p-6 border border-[var(--border-light)] mb-6 max-w-4xl mx-auto"
+                            className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)] mb-6 max-w-4xl mx-auto"
                         >
                             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
                                 <div>
@@ -379,7 +379,7 @@ export default function AnalisaSahamPage() {
                                         AI Sedang Menganalisa...
                                     </>
                                 ) : cooldownSeconds > 0 ? (
-                                    <span className="flex items-center justify-center gap-2 text-gray-500">
+                                    <span className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
                                         <div className="w-5 h-5 flex items-center justify-center">⏳</div>
                                         Cooldown: {formatCooldown(cooldownSeconds)}
                                     </span>
@@ -399,7 +399,7 @@ export default function AnalisaSahamPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden max-w-4xl mx-auto"
+                            className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden max-w-4xl mx-auto"
                         >
                             <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-[var(--border-light)]">
                                 <h3 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">

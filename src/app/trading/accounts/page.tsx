@@ -77,12 +77,12 @@ export default function TradingAccountsPage() {
                         </svg>
                     </div>
                 ) : accounts.length === 0 ? (
-                    <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center flex flex-col items-center">
+                    <div className="bg-[var(--bg-primary)] border-2 border-dashed border-[var(--border-light)] rounded-2xl p-12 text-center flex flex-col items-center">
                         <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
                             <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">No Accounts Connected</h3>
-                        <p className="text-gray-500 max-w-sm mt-2 mb-6">Connect your Exness or FBS account to start using our auto-trading features.</p>
+                        <h3 className="text-lg font-semibold text-[var(--text-primary)]">No Accounts Connected</h3>
+                        <p className="text-[var(--text-secondary)] max-w-sm mt-2 mb-6">Connect your Exness or FBS account to start using our auto-trading features.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -91,19 +91,19 @@ export default function TradingAccountsPage() {
                                 key={account.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group"
+                                className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] shadow-sm overflow-hidden hover:shadow-md transition-shadow group"
                             >
                                 <div className="h-2 bg-blue-600 w-full" />
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                                            <h3 className="font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
                                                 {account.name}
                                             </h3>
-                                            <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                                                <span className="font-semibold text-gray-700">{account.broker}</span>
+                                            <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mt-1">
+                                                <span className="font-semibold text-[var(--text-primary)]">{account.broker}</span>
                                                 <span>•</span>
-                                                <span className="bg-gray-100 px-2 py-0.5 rounded text-xs text-gray-600 font-medium">{account.platform}</span>
+                                                <span className="bg-[var(--bg-secondary)] px-2 py-0.5 rounded text-xs text-[var(--text-secondary)] font-medium">{account.platform}</span>
                                             </div>
                                         </div>
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${account.status === 'CONNECTED'
@@ -114,20 +114,20 @@ export default function TradingAccountsPage() {
                                         </span>
                                     </div>
 
-                                    <div className="space-y-3 pt-4 border-t border-gray-100">
+                                    <div className="space-y-3 pt-4 border-t border-[var(--border-light)]">
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
-                                                <p className="text-gray-500 text-xs uppercase tracking-wide">Login ID</p>
-                                                <p className="font-medium font-mono text-gray-900">{account.login}</p>
+                                                <p className="text-[var(--text-secondary)] text-xs uppercase tracking-wide">Login ID</p>
+                                                <p className="font-medium font-mono text-[var(--text-primary)]">{account.login}</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500 text-xs uppercase tracking-wide">Server</p>
-                                                <p className="font-medium truncate text-gray-900" title={account.server}>{account.server}</p>
+                                                <p className="text-[var(--text-secondary)] text-xs uppercase tracking-wide">Server</p>
+                                                <p className="font-medium truncate text-[var(--text-primary)]" title={account.server}>{account.server}</p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-2 pt-4 mt-2">
-                                            <button className="flex-1 py-1.5 px-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-700 font-medium flex items-center justify-center gap-2 transition-colors">
+                                            <button className="flex-1 py-1.5 px-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-primary)] font-medium flex items-center justify-center gap-2 transition-colors">
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                                 Configure
                                             </button>

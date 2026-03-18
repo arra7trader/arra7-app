@@ -44,13 +44,13 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
                     onClick={e => e.stopPropagation()}
                 >
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                        <h2 className="text-xl font-bold text-gray-800">User Details</h2>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                            <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center sticky top-0 bg-[var(--bg-primary)] z-10">
+                        <h2 className="text-xl font-bold text-[var(--text-primary)]">User Details</h2>
+                        <button onClick={onClose} className="p-2 hover:bg-[var(--bg-secondary)] rounded-full transition-colors">
+                            <svg className="w-6 h-6 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -63,10 +63,10 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                 {user.name ? user.name.charAt(0).toUpperCase() : '?'}
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900">{user.name || 'No Name'}</h3>
-                                <p className="text-gray-500">{user.email}</p>
+                                <h3 className="text-lg font-bold text-[var(--text-primary)]">{user.name || 'No Name'}</h3>
+                                <p className="text-[var(--text-secondary)]">{user.email}</p>
                                 <div className="flex gap-2 mt-2">
-                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${user.membership === 'VVIP' ? 'bg-amber-100 text-amber-700' : user.membership === 'PRO' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${user.membership === 'VVIP' ? 'bg-amber-100 text-amber-700' : user.membership === 'PRO' ? 'bg-blue-100 text-blue-700' : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'}`}>
                                         {user.membership}
                                     </span>
                                     {user.downloadedApk && (
@@ -79,7 +79,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                         </div>
 
                         {/* Subscription Manager */}
-                        <div className="bg-slate-900/5 p-4 rounded-xl border border-slate-200">
+                        <div className="bg-slate-900/5 p-4 rounded-xl border border-[var(--border-light)]">
                             <SubscriptionManager
                                 userId={user.id}
                                 initialStatus={user.subscriptionStatus || 'free'}
@@ -93,23 +93,23 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
 
                         {/* Recent Activity Grid */}
                         <div>
-                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Recent Activity</h4>
+                            <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Recent Activity</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Last Login</p>
-                                    <p className="font-medium text-gray-900">
+                                <div className="bg-[var(--bg-secondary)] p-4 rounded-xl">
+                                    <p className="text-xs text-[var(--text-secondary)] mb-1">Last Login</p>
+                                    <p className="font-medium text-[var(--text-primary)]">
                                         {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString('id-ID') : 'Never'}
                                     </p>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Registered On</p>
-                                    <p className="font-medium text-gray-900">
+                                <div className="bg-[var(--bg-secondary)] p-4 rounded-xl">
+                                    <p className="text-xs text-[var(--text-secondary)] mb-1">Registered On</p>
+                                    <p className="font-medium text-[var(--text-primary)]">
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : 'Unknown'}
                                     </p>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Location</p>
-                                    <p className="font-medium text-gray-900 flex items-center gap-2">
+                                <div className="bg-[var(--bg-secondary)] p-4 rounded-xl">
+                                    <p className="text-xs text-[var(--text-secondary)] mb-1">Location</p>
+                                    <p className="font-medium text-[var(--text-primary)] flex items-center gap-2">
                                         {user.lastLoginCity || user.lastLoginCountry ? (
                                             <>
                                                 <span>📍</span>
@@ -121,19 +121,19 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                     </p>
                                     {user.lastLoginIp && <p className="text-xs text-gray-400 font-mono mt-1">{user.lastLoginIp}</p>}
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Telegram Chat ID</p>
-                                    <p className="font-medium text-gray-900">
+                                <div className="bg-[var(--bg-secondary)] p-4 rounded-xl">
+                                    <p className="text-xs text-[var(--text-secondary)] mb-1">Telegram Chat ID</p>
+                                    <p className="font-medium text-[var(--text-primary)]">
                                         {user.telegramChatId || 'Belum diisi'}
                                     </p>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-xs text-gray-500 mb-1">Usage Today</p>
+                                <div className="bg-[var(--bg-secondary)] p-4 rounded-xl">
+                                    <p className="text-xs text-[var(--text-secondary)] mb-1">Usage Today</p>
                                     <div className="flex items-end gap-2">
-                                        <span className="text-2xl font-bold text-gray-900">{user.todayUsage}</span>
-                                        <span className="text-sm text-gray-500 mb-1">requests</span>
+                                        <span className="text-2xl font-bold text-[var(--text-primary)]">{user.todayUsage}</span>
+                                        <span className="text-sm text-[var(--text-secondary)] mb-1">requests</span>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-[var(--text-secondary)] mt-1">
                                         Forex: {user.forexUsage} • Stocks: {user.stockUsage}
                                     </p>
                                 </div>
@@ -142,38 +142,38 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
 
                         {/* Analysis History / Logs */}
                         <div className="space-y-4">
-                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Activity Logs</h4>
+                            <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Activity Logs</h4>
 
                             {loadingLogs ? (
                                 <div className="text-center py-8 text-gray-400">Loading activity...</div>
                             ) : logs.length > 0 ? (
-                                <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                                <div className="bg-[var(--bg-secondary)] rounded-xl overflow-hidden border border-[var(--border-light)]">
                                     <table className="w-full text-sm">
-                                        <thead className="bg-gray-100/50">
+                                        <thead className="bg-[var(--bg-secondary)]/50">
                                             <tr>
-                                                <th className="px-4 py-3 text-left font-medium text-gray-500">Time</th>
-                                                <th className="px-4 py-3 text-left font-medium text-gray-500">Action</th>
-                                                <th className="px-4 py-3 text-left font-medium text-gray-500">Details</th>
+                                                <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Time</th>
+                                                <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Action</th>
+                                                <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Details</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {logs.map((log) => (
-                                                <tr key={log.id} className="hover:bg-gray-100/50 transition-colors">
-                                                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                                                <tr key={log.id} className="hover:bg-[var(--bg-secondary)]/50 transition-colors">
+                                                    <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">
                                                         {new Date(log.createdAt).toLocaleString('id-ID', {
                                                             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                                                         })}
                                                     </td>
-                                                    <td className="px-4 py-3 font-medium text-gray-700">
+                                                    <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
                                                         <span className={`px-2 py-1 rounded text-xs ${log.action === 'REGISTER_ADMIN' ? 'bg-green-100 text-green-700' :
                                                             log.action === 'UPDATE_ADMIN' ? 'bg-blue-100 text-blue-700' :
-                                                                log.action === 'LOGIN' ? 'bg-gray-100 text-gray-700' :
-                                                                    'bg-gray-100 text-gray-700'
+                                                                log.action === 'LOGIN' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)]' :
+                                                                    'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                                             }`}>
                                                             {log.action}
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-gray-600 max-w-xs truncate" title={JSON.stringify(log.details, null, 2)}>
+                                                    <td className="px-4 py-3 text-[var(--text-secondary)] max-w-xs truncate" title={JSON.stringify(log.details, null, 2)}>
                                                         {typeof log.details?.message === 'string'
                                                             ? log.details.message
                                                             : JSON.stringify(log.details)}
@@ -184,7 +184,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                     </table>
                                 </div>
                             ) : (
-                                <div className="bg-gray-50 rounded-xl p-8 text-center border-dashed border-gray-200">
+                                <div className="bg-[var(--bg-secondary)] rounded-xl p-8 text-center border-dashed border-[var(--border-light)]">
                                     <p className="text-gray-400">No activity logs found.</p>
                                 </div>
                             )}
@@ -205,7 +205,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                             </button>
                             <button
                                 onClick={onClose}
-                                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                                className="px-6 py-2 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-lg font-medium transition-colors"
                             >
                                 Close
                             </button>

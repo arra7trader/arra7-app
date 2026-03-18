@@ -227,7 +227,7 @@ export default function CVDIndicator({ history, currentOrderBook, height = 150 }
     if (!currentOrderBook || cvdData.length === 0) {
         return (
             <div className="bg-slate-900 rounded-xl border border-slate-800 p-4" style={{ height }}>
-                <div className="flex items-center justify-center h-full text-slate-500">
+                <div className="flex items-center justify-center h-full text-[var(--text-secondary)]">
                     <div className="text-center">
                         <div className="w-6 h-6 border-2 border-slate-600 border-t-blue-500 animate-spin rounded-full mx-auto mb-2" />
                         <span className="text-sm">Collecting CVD data...</span>

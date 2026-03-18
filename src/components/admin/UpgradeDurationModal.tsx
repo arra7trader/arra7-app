@@ -176,17 +176,17 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
+                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
+                    <div className="p-6 border-b border-[var(--border-light)] sticky top-0 bg-[var(--bg-primary)] z-10">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-800">
+                                <h2 className="text-xl font-bold text-[var(--text-primary)]">
                                     Pilih Durasi Upgrade - {membership}
                                 </h2>
-                                <p className="text-sm text-gray-500 mt-1">Pilih paket durasi untuk user</p>
+                                <p className="text-sm text-[var(--text-secondary)] mt-1">Pilih paket durasi untuk user</p>
                                 {currentExpiresAt && (
                                     <p className="text-xs text-emerald-600 mt-2">
                                         Expiry saat ini: {new Date(currentExpiresAt).toLocaleDateString('id-ID')}
@@ -195,9 +195,9 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-2 hover:bg-[var(--bg-secondary)] rounded-full transition-colors"
                             >
-                                <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-6 h-6 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
@@ -226,7 +226,7 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                             w-full p-4 rounded-xl border-2 text-left transition-all
                                             ${isRecommended
                                                 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                                                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                                : 'border-[var(--border-light)] hover:border-blue-300 hover:bg-[var(--bg-secondary)]'
                                             }
                                         `}
                                     >
@@ -234,14 +234,14 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-2xl">{option.icon}</span>
-                                                    <span className="font-bold text-gray-900">{option.label}</span>
+                                                    <span className="font-bold text-[var(--text-primary)]">{option.label}</span>
                                                     {isRecommended && (
                                                         <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs font-bold">
                                                             REKOMENDASI
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-lg font-semibold text-gray-700">{option.price}</p>
+                                                <p className="text-lg font-semibold text-[var(--text-primary)]">{option.price}</p>
                                                 {isPromo && (
                                                     <div className="mt-2 flex items-center gap-2">
                                                         {isSoldOut ? (
@@ -256,7 +256,7 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                                     </div>
                                                 )}
                                                 {!isPromo && (
-                                                    <p className="text-xs text-gray-500 mt-1">Standard pricing</p>
+                                                    <p className="text-xs text-[var(--text-secondary)] mt-1">Standard pricing</p>
                                                 )}
                                             </div>
                                         </div>
@@ -277,7 +277,7 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                         value={customDate}
                                         min={new Date().toISOString().split('T')[0]}
                                         onChange={(event) => setCustomDate(event.target.value)}
-                                        className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        className="flex-1 rounded-lg border border-blue-200 bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-300"
                                     />
                                     <button
                                         onClick={handleSelectCustomDate}
@@ -300,10 +300,10 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                     </div>
 
                     {/* Footer */}
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 sticky bottom-0">
+                    <div className="p-6 border-t border-[var(--border-light)] bg-[var(--bg-secondary)] sticky bottom-0">
                         <button
                             onClick={onClose}
-                            className="w-full py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                            className="w-full py-3 rounded-xl border border-[var(--border-medium)] text-[var(--text-primary)] font-medium hover:bg-[var(--bg-secondary)] transition-colors"
                         >
                             Batal
                         </button>

@@ -14,7 +14,7 @@ function PaymentSuccessContent() {
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center px-4">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-8 md:p-12 max-w-lg w-full text-center border border-[var(--border-light)] shadow-lg">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-[var(--bg-primary)] rounded-3xl p-8 md:p-12 max-w-lg w-full text-center border border-[var(--border-light)] shadow-lg">
                 {status === 'loading' ? (
                     <>
                         <div className="w-20 h-20 mx-auto mb-6 relative">
