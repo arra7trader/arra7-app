@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
 
             // Swissquote BBO only returns 1 candle. We ALWAYS need historical data for the LSTM.
             if (candles.length < 60) {
-                const yahooData = await getMarketData('XAUUSD' as any, timeframe as any);
+                // Must force preferRealtimeBroker to false so it hits Yahoo for history instead of Swissquote again
+                const yahooData = await getMarketData('XAUUSD' as any, timeframe as any, { preferRealtimeBroker: false });
                 if (yahooData.candles && yahooData.candles.length >= 10) {
                     // Use Yahoo candles but overwrite the last candle's close with Swissquote live price
                     candles = yahooData.candles;
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
         } catch {
             // Absolute Fallback: Yahoo Finance everything
             try {
-                const marketData = await getMarketData('XAUUSD' as any, timeframe as any);
+                const marketData = await getMarketData('XAUUSD' as any, timeframe as any, { preferRealtimeBroker: false });
                 currentPrice = marketData.current_price;
                 change = marketData.change_percent;
                 high = marketData.high;
