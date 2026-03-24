@@ -114,6 +114,10 @@ export default function XauusdNeuralLabPage() {
     const [mtfPredictions, setMtfPredictions] = useState<Record<string, Prediction | null>>({});
     const [mtfLoading, setMtfLoading] = useState(false);
 
+    // Membership Check State
+    const [isCheckingVvip, setIsCheckingVvip] = useState(true);
+    const [isVvip, setIsVvip] = useState(false);
+
     // Auth check
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -121,9 +125,28 @@ export default function XauusdNeuralLabPage() {
         }
     }, [status, router]);
 
-    // VVIP check (client-side)
-    const membership = (session?.user as any)?.membership || 'BASIC';
-    const isVvip = membership === 'VVIP' || membership === 'ADMIN';
+    // Check VVIP Status
+    useEffect(() => {
+        if (status === 'authenticated') {
+            const checkMembership = async () => {
+                try {
+                    const res = await fetch('/api/user/quota');
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        const membership = (data.quota?.membership || 'BASIC').toUpperCase();
+                        setIsVvip(membership === 'VVIP' || membership === 'ADMIN');
+                    }
+                } catch (error) {
+                    console.error('Membership check failed:', error);
+                } finally {
+                    setIsCheckingVvip(false);
+                }
+            };
+            checkMembership();
+        } else if (status === 'unauthenticated') {
+            setIsCheckingVvip(false);
+        }
+    }, [status]);
 
     const fetchPrediction = useCallback(async (tf: string = selectedTimeframe) => {
         setIsLoading(true);
@@ -186,10 +209,10 @@ export default function XauusdNeuralLabPage() {
         }
     }, [isVvip, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    if (status === 'loading') {
+    if (status === 'loading' || (status === 'authenticated' && isCheckingVvip)) {
         return (
             <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--accent-blue)] border-t-[var(--accent-blue)]/30 rounded-full animate-spin" />
             </div>
         );
     }
