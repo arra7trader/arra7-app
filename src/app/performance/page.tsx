@@ -78,8 +78,8 @@ export default function PerformancePage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'TP_HIT': return 'bg-green-100 text-green-400';
-            case 'SL_HIT': return 'bg-red-100 text-red-400';
+            case 'TP_HIT': return 'bg-green-500/10 text-green-400';
+            case 'SL_HIT': return 'bg-red-500/10 text-red-400';
             default: return 'bg-yellow-100 text-yellow-700';
         }
     };
@@ -102,7 +102,7 @@ export default function PerformancePage() {
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-[var(--bg-primary)] mb-6">
                         <ChartIcon className="text-[var(--accent-blue)]" size="lg" />
                         <span className="text-sm text-[var(--text-secondary)]">Verified Stats</span>
-                        <span className="px-2 py-0.5 bg-green-100 text-green-400 text-xs rounded-full">LIVE</span>
+                        <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-xs rounded-full">LIVE</span>
                     </div>
                     <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-3">
                         AI <span className="gradient-text">Performance</span>
@@ -218,7 +218,7 @@ export default function PerformancePage() {
                 </div>
 
                 {/* Disclaimer */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-50 border border-amber-500/20 rounded-xl p-4 text-center">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
                     <p className="text-sm text-amber-400">
                         <WarningIcon className="text-amber-400 inline mr-1" size="sm" /> <strong>Disclaimer:</strong> Performa masa lalu tidak menjamin hasil di masa depan. Selalu gunakan money management yang baik dan lakukan riset mandiri (DYOR).
                     </p>

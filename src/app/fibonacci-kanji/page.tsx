@@ -295,13 +295,13 @@ export default function FibonacciKanjiPage() {
 
                             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                                 {/* Auto Scan Toggle */}
-                                <div className="mb-4 p-3 bg-indigo-500/10 border-indigo-500/20 border border-indigo-100 rounded-xl flex items-center justify-between">
+                                <div className="mb-4 p-3 bg-indigo-500/10 border-indigo-500/20 border border-indigo-500/20 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className={`p-2 rounded-lg bg-[var(--bg-primary)] shadow-sm ${isScanning ? 'animate-pulse' : ''}`}>
                                             <span className="text-xl">🤖</span>
                                         </div>
                                         <div>
-                                            <div className="text-sm font-bold text-indigo-900">AI Auto-Detect</div>
+                                            <div className="text-sm font-bold text-indigo-400">AI Auto-Detect</div>
                                             <div className="text-[10px] text-indigo-400">Auto Scan every 60s</div>
                                         </div>
                                     </div>
@@ -549,7 +549,7 @@ export default function FibonacciKanjiPage() {
                                             <div className="mt-4 p-4 bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-500/20 rounded-xl">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <span className="text-lg">🎯</span>
-                                                    <h3 className="text-sm font-bold text-indigo-900">Smart Trade Setup</h3>
+                                                    <h3 className="text-sm font-bold text-indigo-400">Smart Trade Setup</h3>
                                                 </div>
 
                                                 {(() => {
@@ -708,7 +708,7 @@ export default function FibonacciKanjiPage() {
                                 <div className="flex items-start gap-2">
                                     <span className="text-xl">💡</span>
                                     <div>
-                                        <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-1">Pro Tips</h4>
+                                        <h4 className="font-bold text-amber-400 dark:text-amber-300 mb-1">Pro Tips</h4>
                                         <ul className="text-sm text-amber-400 dark:text-amber-400 space-y-1">
                                             <li>• Gunakan timeframe lebih tinggi (4H, Daily) untuk swing point yang lebih akurat</li>
                                             <li>• Konfirmasi dengan price action sebelum entry di zone yang diberikan</li>
@@ -739,11 +739,11 @@ export default function FibonacciKanjiPage() {
 
                             <div className="space-y-4">
                                 {/* Entry Zones */}
-                                <div className="p-5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 rounded-xl border border-teal-200 dark:border-teal-800">
+                                <div className="p-5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 rounded-xl border border-teal-500/20 dark:border-teal-800">
                                     <div className="flex items-start gap-3">
                                         <div className="w-3 h-3 bg-teal-500 rounded-full mt-1"></div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-teal-900 dark:text-teal-300 text-lg mb-2">Entry Zone 1 & 2</h3>
+                                            <h3 className="font-bold text-teal-400 dark:text-teal-300 text-lg mb-2">Entry Zone 1 & 2</h3>
                                             <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Zone optimal untuk melakukan entry position. Entry Zone 1 adalah zona entry pertama, sementara Entry Zone 2 adalah zona entry alternatif jika price melewati zone pertama.
                                             </p>
@@ -797,7 +797,7 @@ export default function FibonacciKanjiPage() {
                                     <div className="flex items-start gap-3">
                                         <div className="w-3 h-3 bg-blue-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-blue-900 dark:text-blue-300 text-lg mb-2">Golden Ratio, Confluence & Moon Target</h3>
+                                            <h3 className="font-bold text-blue-400 dark:text-blue-300 text-lg mb-2">Golden Ratio, Confluence & Moon Target</h3>
                                             <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Tiga level Take Profit utama. <strong>Golden Ratio (TP1)</strong> adalah target pertama dengan probabilitas tertinggi, <strong>Confluence (TP2)</strong> adalah target kedua untuk extension move, dan <strong>Moon Target (TP3)</strong> adalah target maksimal untuk momentum ekstrim.
                                             </p>
@@ -815,7 +815,7 @@ export default function FibonacciKanjiPage() {
                                     <div className="flex items-start gap-3">
                                         <div className="w-3 h-3 bg-green-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-green-900 dark:text-green-300 text-lg mb-2">Bullish vs Bearish Trend</h3>
+                                            <h3 className="font-bold text-green-400 dark:text-green-300 text-lg mb-2">Bullish vs Bearish Trend</h3>
                                             <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 <strong>Bullish (📈):</strong> Trend naik, level dihitung dari Low ke High, mencari buy opportunity.<br />
                                                 <strong>Bearish (📉):</strong> Trend turun, level dihitung dari High ke Low, mencari sell opportunity.
@@ -834,7 +834,7 @@ export default function FibonacciKanjiPage() {
                                     <div className="flex items-start gap-3">
                                         <div className="w-3 h-3 bg-purple-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-purple-900 dark:text-purple-300 text-lg mb-2">Risk/Reward Ratio</h3>
+                                            <h3 className="font-bold text-purple-400 dark:text-purple-300 text-lg mb-2">Risk/Reward Ratio</h3>
                                             <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Perbandingan antara potential profit (reward) dengan potential loss (risk). Ratio 1:2 berarti jika risk Anda 100 pips, target profit minimal 200 pips.
                                             </p>
@@ -852,7 +852,7 @@ export default function FibonacciKanjiPage() {
                                     <div className="flex items-start gap-3">
                                         <div className="w-3 h-3 bg-indigo-600 rounded-full mt-1"></div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-indigo-900 dark:text-indigo-300 text-lg mb-2">🤖 AI Auto-Detect</h3>
+                                            <h3 className="font-bold text-indigo-400 dark:text-indigo-300 text-lg mb-2">🤖 AI Auto-Detect</h3>
                                             <p className="text-sm text-[var(--text-primary)] dark:text-gray-300 mb-3">
                                                 Fitur AI yang secara otomatis mendeteksi Swing High dan Swing Low terbaru dari chart, serta menentukan trend direction. AI melakukan scan setiap 60 detik untuk update level secara real-time.
                                             </p>

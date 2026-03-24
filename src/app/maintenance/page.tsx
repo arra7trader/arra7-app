@@ -4,7 +4,7 @@ export default function MaintenancePage() {
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center px-6 py-20">
             <div className="w-full max-w-xl rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-8 shadow-sm">
-                <div className="mb-6 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-400">
+                <div className="mb-6 inline-flex rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-400">
                     Maintenance Mode
                 </div>
                 <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-3">

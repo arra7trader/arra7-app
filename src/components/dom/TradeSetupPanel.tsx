@@ -92,7 +92,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
     const isLong = stableSetup.action === 'LONG';
 
     return (
-        <div className={`rounded-xl border p-4 ${isLong ? 'border-green-100 bg-green-500/10 border-green-500/20/30' : 'border-red-100 bg-red-500/10 border-red-500/20/30'}`}>
+        <div className={`rounded-xl border p-4 ${isLong ? 'border-green-500/20 bg-green-500/10 border-green-500/20/30' : 'border-red-500/20 bg-red-500/10 border-red-500/20/30'}`}>
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg text-xl ${isLong ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>

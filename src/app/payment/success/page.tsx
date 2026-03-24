@@ -18,7 +18,7 @@ function PaymentSuccessContent() {
                 {status === 'loading' ? (
                     <>
                         <div className="w-20 h-20 mx-auto mb-6 relative">
-                            <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
+                            <div className="absolute inset-0 rounded-full border-4 border-blue-500/20" />
                             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--accent-blue)] animate-spin" />
                         </div>
                         <h1 className="text-2xl font-bold mb-2 text-[var(--text-primary)]">Memproses Pembayaran...</h1>

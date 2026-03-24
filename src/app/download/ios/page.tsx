@@ -33,7 +33,7 @@ export default function IOSDownloadPage() {
                         animate="animate"
                         variants={fadeInUp}
                     >
-                        <span className="badge-apple mb-4 inline-flex bg-blue-50 text-blue-400 border-blue-500/20">
+                        <span className="badge-apple mb-4 inline-flex bg-blue-500/10 text-blue-400 border-blue-500/20">
                              iOS / iPadOS
                         </span>
 
@@ -124,7 +124,7 @@ export default function IOSDownloadPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-slate-200/50 rounded-xl p-2">
+                                    <div className="bg-[var(--bg-secondary)]/50 rounded-xl p-2">
                                         <div className="bg-[var(--bg-primary)] rounded-lg p-3 shadow-sm flex items-center justify-between">
                                             <span>Add to Home Screen</span>
                                             <span className="text-blue-500 font-semibold">Add</span>

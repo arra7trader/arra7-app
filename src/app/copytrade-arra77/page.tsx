@@ -65,24 +65,24 @@ function fmtProviderWinrate(provider: any) {
 
 function riskBadgeClass(riskLevel: string | undefined) {
   const risk = String(riskLevel || 'MEDIUM').toUpperCase();
-  if (risk === 'LOW') return 'bg-emerald-50 text-emerald-400 border border-emerald-500/20';
-  if (risk === 'HIGH') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
-  return 'bg-amber-50 text-amber-400 border border-amber-500/20';
+  if (risk === 'LOW') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+  if (risk === 'HIGH') return 'bg-rose-500/10 text-rose-700 border border-rose-500/20';
+  return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
 }
 
 function followBadgeClass(followStatus: string | undefined) {
   const status = String(followStatus || '').toUpperCase();
-  if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-400 border border-emerald-500/20';
-  if (status === 'PAUSED') return 'bg-amber-50 text-amber-400 border border-amber-500/20';
-  if (status === 'STOPPED') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
+  if (status === 'ACTIVE') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+  if (status === 'PAUSED') return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+  if (status === 'STOPPED') return 'bg-rose-500/10 text-rose-700 border border-rose-500/20';
   return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
 function providerStatusBadgeClass(providerStatus: string | undefined) {
   const status = String(providerStatus || '').toUpperCase();
-  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-400 border border-emerald-500/20';
-  if (status === 'PENDING') return 'bg-amber-50 text-amber-400 border border-amber-500/20';
-  if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
+  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+  if (status === 'PENDING') return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+  if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-500/10 text-rose-700 border border-rose-500/20';
   return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
@@ -292,17 +292,17 @@ export default function CopytradeArra77Page() {
           </p>
 
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="rounded-xl border border-blue-100 bg-blue-50 p-2">
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-2">
               <p className="text-[10px] uppercase tracking-wide text-blue-400">Winrate</p>
-              <p className="text-sm font-semibold text-blue-900">{fmtProviderWinrate(p)}</p>
+              <p className="text-sm font-semibold text-blue-400">{fmtProviderWinrate(p)}</p>
             </div>
             <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-2">
               <p className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">Followers</p>
               <p className="text-sm font-semibold text-[var(--text-primary)]">{p.followers || 0}</p>
             </div>
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-2">
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2">
               <p className="text-[10px] uppercase tracking-wide text-emerald-400">Status</p>
-              <p className="text-sm font-semibold text-emerald-900">{providerStatus}</p>
+              <p className="text-sm font-semibold text-emerald-400">{providerStatus}</p>
             </div>
           </div>
 
@@ -319,7 +319,7 @@ export default function CopytradeArra77Page() {
             onClick={() => (isFollowed ? setTab('setup') : followProvider(String(p.id)))}
             className={`mt-3 w-full rounded-xl px-3 py-2 text-sm font-medium transition ${
               isFollowed
-                ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:bg-slate-200'
+                ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:bg-[var(--bg-secondary)]'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
@@ -390,7 +390,7 @@ export default function CopytradeArra77Page() {
   return (
     <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
       <div className="max-w-7xl mx-auto space-y-4">
-        <div className="rounded-3xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 p-6">
+        <div className="rounded-3xl bg-gradient-to-br from-white to-blue-50 border border-blue-500/20 p-6">
           <p className="text-xs font-semibold tracking-widest uppercase text-blue-400">Copytrade ARRA77</p>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-2">AI Signal + EA MT5 + Credit Wallet</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-2">1 signal = 3 credits, 1 credit = Rp1.000, one-trade lock aktif by default.</p>
@@ -422,8 +422,8 @@ export default function CopytradeArra77Page() {
           </div>
         </div>
 
-        {msg && <div className="rounded-xl bg-green-50 border border-green-500/20 px-4 py-2 text-sm text-green-400">{msg}</div>}
-        {error && <div className="rounded-xl bg-red-50 border border-red-500/20 px-4 py-2 text-sm text-red-400">{error}</div>}
+        {msg && <div className="rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-2 text-sm text-green-400">{msg}</div>}
+        {error && <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">{error}</div>}
 
         <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3 sm:p-4">
           <p className="text-xs font-semibold tracking-widest uppercase text-[var(--text-secondary)]">Menu Fitur Copytrade</p>
@@ -492,7 +492,7 @@ export default function CopytradeArra77Page() {
                       key={item.key}
                       onClick={() => setDashboardPanel(item.key)}
                       className={`rounded-xl border p-3 text-left transition ${
-                        active ? 'border-blue-500/20 bg-blue-50' : 'border-[var(--border-light)] bg-[var(--bg-primary)] hover:border-[var(--border-medium)]'
+                        active ? 'border-blue-500/20 bg-blue-500/10' : 'border-[var(--border-light)] bg-[var(--bg-primary)] hover:border-[var(--border-medium)]'
                       }`}
                     >
                       <div className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold ${active ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
@@ -788,14 +788,14 @@ export default function CopytradeArra77Page() {
               )}
 
               {myChallenge && (
-                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3">
                   <div className="flex justify-between gap-3 flex-wrap">
-                    <p className="text-sm text-blue-900 font-medium">
+                    <p className="text-sm text-blue-400 font-medium">
                       Challenge: {myChallenge.totalTrades}/{myChallenge.targetTrades} trade | Winrate {myChallenge.winRatePct}%
                     </p>
                     <p className="text-xs text-blue-400">Min winrate {myChallenge.minWinRatePct}%</p>
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-blue-100 overflow-hidden">
+                  <div className="mt-2 h-2 rounded-full bg-blue-500/10 overflow-hidden">
                     <div className="h-2 rounded-full bg-blue-600" style={{ width: `${challengeProgressPct}%` }} />
                   </div>
                   <p className="text-xs text-blue-400 mt-2">
@@ -866,7 +866,7 @@ export default function CopytradeArra77Page() {
               <p className="text-xs text-[var(--text-secondary)]">
                 1 credit = {fmtIdr(providerCreditRate)}. Pendapatan provider otomatis masuk ke wallet copytrade dan bisa dipantau di tab Provider.
               </p>
-              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-900 break-all">
+              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 text-xs text-blue-400 break-all">
                 Catatan teknis (otomatis via EA):
                 <br />
                 Endpoint challenge close trade:
@@ -938,7 +938,7 @@ export default function CopytradeArra77Page() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-4 space-y-2">
               <h3 className="font-semibold">Setup EA MT5</h3>
-              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
+              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 text-sm text-blue-400">
                 <p className="font-medium">Panduan follower (wajib):</p>
                 <ol className="list-decimal ml-5 mt-1 space-y-1">
                   <li>Download EA `.ex5`, lalu copy ke folder MT5: <code>MQL5/Experts</code>.</li>
@@ -982,7 +982,7 @@ export default function CopytradeArra77Page() {
                 Generate Key & Secret
               </button>
               {newCreds && (
-                <div className="rounded-xl bg-amber-50 border border-amber-500/20 p-2 text-xs break-all">
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-2 text-xs break-all">
                   Key: {newCreds.key}
                   <br />
                   Secret: {newCreds.secret}

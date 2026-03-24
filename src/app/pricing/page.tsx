@@ -158,7 +158,7 @@ export default function PricingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] pt-36 pb-20 font-sans selection:bg-blue-100">
+        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] pt-36 pb-20 font-sans selection:bg-blue-500/10">
             {/* Header / Hero */}
             <header className="text-center px-4 max-w-4xl mx-auto mb-16 md:mb-24">
                 <motion.div
@@ -189,18 +189,18 @@ export default function PricingPage() {
                     let leftBg = 'bg-[var(--bg-secondary)]/50';
                     let titleColor = 'text-[var(--text-primary)]';
                     let ctaStyle = 'bg-slate-800 hover:bg-slate-900 text-white';
-                    let checkStyle = 'bg-slate-200 text-[var(--text-secondary)]';
+                    let checkStyle = 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]';
 
                     if (plan.theme === 'blue') {
-                        leftBg = 'bg-blue-50/50';
+                        leftBg = 'bg-blue-500/5';
                         titleColor = 'text-blue-400';
                         ctaStyle = 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20';
-                        checkStyle = 'bg-blue-100 text-blue-400';
+                        checkStyle = 'bg-blue-500/10 text-blue-400';
                     } else if (plan.theme === 'amber') {
-                        leftBg = 'bg-amber-50/50';
+                        leftBg = 'bg-amber-500/5';
                         titleColor = 'text-amber-400';
                         ctaStyle = 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20';
-                        checkStyle = 'bg-amber-100 text-amber-400';
+                        checkStyle = 'bg-amber-500/10 text-amber-400';
                     }
 
                     return (

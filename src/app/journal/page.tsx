@@ -307,7 +307,7 @@ export default function JournalPage() {
                                     <tr key={entry.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
                                         <td className="p-4 font-medium text-[var(--text-primary)]">{entry.symbol}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.direction === 'BUY' ? 'bg-green-100 text-green-400' : 'bg-red-100 text-red-400'}`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.direction === 'BUY' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                                                 {entry.direction}
                                             </span>
                                         </td>
@@ -319,7 +319,7 @@ export default function JournalPage() {
                                         </td>
                                         <td className="p-4 text-[var(--text-primary)]">{entry.lotSize || '-'}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-100 text-blue-400' :
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-500/10 text-blue-400' :
                                                 entry.status === 'CLOSED' ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {entry.status}
                                             </span>
@@ -335,14 +335,14 @@ export default function JournalPage() {
                                                 {entry.status === 'OPEN' && (
                                                     <button
                                                         onClick={() => setShowCloseModal(entry)}
-                                                        className="px-2 py-1 bg-green-100 text-green-400 rounded text-xs hover:bg-green-200"
+                                                        className="px-2 py-1 bg-green-500/10 text-green-400 rounded text-xs hover:bg-green-200"
                                                     >
                                                         Close
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleDeleteTrade(entry.id)}
-                                                    className="px-2 py-1 bg-red-100 text-red-400 rounded text-xs hover:bg-red-200"
+                                                    className="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs hover:bg-red-200"
                                                 >
                                                     Delete
                                                 </button>
@@ -395,7 +395,7 @@ export default function JournalPage() {
                                         </td>
                                         <td className="p-4 font-medium text-[var(--text-primary)]">{trade.symbol}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${trade.side === 'BUY' ? 'bg-green-100 text-green-400' : 'bg-red-100 text-red-400'}`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${trade.side === 'BUY' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                                                 {trade.side}
                                             </span>
                                         </td>
@@ -407,14 +407,14 @@ export default function JournalPage() {
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${trade.outcome === 'TP'
-                                                ? 'bg-green-100 text-green-400'
+                                                ? 'bg-green-500/10 text-green-400'
                                                 : trade.outcome === 'SL'
-                                                    ? 'bg-red-100 text-red-400'
+                                                    ? 'bg-red-500/10 text-red-400'
                                                     : trade.outcome === 'MANUAL'
                                                         ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                                         : trade.outcome === 'ERROR'
-                                                            ? 'bg-amber-100 text-amber-400'
-                                                            : 'bg-blue-100 text-blue-400'
+                                                            ? 'bg-amber-500/10 text-amber-400'
+                                                            : 'bg-blue-500/10 text-blue-400'
                                                 }`}>
                                                 {trade.outcome}
                                             </span>

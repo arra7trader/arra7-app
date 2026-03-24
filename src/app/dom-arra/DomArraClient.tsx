@@ -402,7 +402,7 @@ function BlockedView({ reason }: { reason: string }) {
                                 </ul>
                             </div>
                             <div className="p-4 bg-blue-500/10 border-blue-500/20 border border-blue-500/20 rounded-xl text-left">
-                                <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-400 px-2 py-0.5 rounded-full">Recommended</span></h4>
+                                <h4 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-400 px-2 py-0.5 rounded-full">Recommended</span></h4>
                                 <ul className="text-sm space-y-2 text-blue-400">
                                     <li className="flex items-center gap-2">✅ Analisa Market Premium</li>
                                     <li className="flex items-center gap-2">✅ Bookmap ARRA7 Unlimited</li>

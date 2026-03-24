@@ -246,7 +246,7 @@ export default function AITradeDoctorPage() {
                                 <div className="flex gap-2 items-start">
                                     <span className="text-xl">⚠️</span>
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-1">Penting:</h4>
+                                        <h4 className="font-bold text-amber-400 dark:text-amber-300 mb-1">Penting:</h4>
                                         <ul className="text-sm text-amber-400 dark:text-amber-200 space-y-1">
                                             <li>✅ Format yang diterima: <strong>.html</strong> atau <strong>.htm</strong></li>
                                             <li>❌ Format yang TIDAK diterima: .pdf, .xlsx, .csv, .txt</li>
@@ -294,7 +294,7 @@ export default function AITradeDoctorPage() {
                                 >
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                                        <span className="font-semibold text-blue-900 dark:text-blue-300">Uploading and parsing...</span>
+                                        <span className="font-semibold text-blue-400 dark:text-blue-300">Uploading and parsing...</span>
                                     </div>
                                     <div className="w-full bg-slate-800 dark:bg-gray-700 rounded-full h-2">
                                         <div
@@ -332,19 +332,19 @@ export default function AITradeDoctorPage() {
                                     className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
                                 >
                                     <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-500/20 dark:border-blue-800">
-                                        <div className="text-2xl font-bold text-blue-900 dark:text-blue-300">{summary.totalTrades}</div>
+                                        <div className="text-2xl font-bold text-blue-400 dark:text-blue-300">{summary.totalTrades}</div>
                                         <div className="text-xs text-[var(--text-secondary)] dark:text-slate-400">Total Trades</div>
                                     </div>
                                     <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-500/20 dark:border-green-800">
-                                        <div className="text-2xl font-bold text-green-900 dark:text-green-300">{summary.winRate.toFixed(1)}%</div>
+                                        <div className="text-2xl font-bold text-green-400 dark:text-green-300">{summary.winRate.toFixed(1)}%</div>
                                         <div className="text-xs text-[var(--text-secondary)] dark:text-slate-400">Win Rate</div>
                                     </div>
                                     <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-500/20 dark:border-purple-800">
-                                        <div className="text-2xl font-bold text-purple-900 dark:text-purple-300">{summary.profitFactor.toFixed(2)}</div>
+                                        <div className="text-2xl font-bold text-purple-400 dark:text-purple-300">{summary.profitFactor.toFixed(2)}</div>
                                         <div className="text-xs text-[var(--text-secondary)] dark:text-slate-400">Profit Factor</div>
                                     </div>
                                     <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-500/20 dark:border-amber-800">
-                                        <div className="text-2xl font-bold text-amber-900 dark:text-amber-300">${summary.totalProfit.toFixed(0)}</div>
+                                        <div className="text-2xl font-bold text-amber-400 dark:text-amber-300">${summary.totalProfit.toFixed(0)}</div>
                                         <div className="text-xs text-[var(--text-secondary)] dark:text-slate-400">Total Profit</div>
                                     </div>
                                 </motion.div>
@@ -362,7 +362,7 @@ export default function AITradeDoctorPage() {
                                 >
                                     <div className="inline-flex items-center gap-3 px-6 py-3 bg-indigo-500/10 border-indigo-500/20 dark:bg-indigo-900/20 rounded-full">
                                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-                                        <span className="font-semibold text-indigo-900 dark:text-indigo-300">AI analyzing your patterns...</span>
+                                        <span className="font-semibold text-indigo-400 dark:text-indigo-300">AI analyzing your patterns...</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -390,7 +390,7 @@ export default function AITradeDoctorPage() {
                                                         initial={{ opacity: 0, x: -20 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: index * 0.1 }}
-                                                        className="p-6 bg-red-500/10 border-red-500/20 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-900/30"
+                                                        className="p-6 bg-red-500/10 border-red-500/20 dark:bg-red-900/20 rounded-2xl border border-red-500/20 dark:border-red-900/30"
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h3 className="font-bold text-red-400 dark:text-red-400">{flaw.title}</h3>
@@ -430,7 +430,7 @@ export default function AITradeDoctorPage() {
                                                         initial={{ opacity: 0, x: -20 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: index * 0.1 }}
-                                                        className="p-6 bg-green-500/10 border-green-500/20 dark:bg-green-900/20 rounded-2xl border border-green-100 dark:border-green-900/30"
+                                                        className="p-6 bg-green-500/10 border-green-500/20 dark:bg-green-900/20 rounded-2xl border border-green-500/20 dark:border-green-900/30"
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h3 className="font-bold text-green-400 dark:text-green-400">{strength.title}</h3>

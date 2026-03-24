@@ -231,7 +231,7 @@ export default function GoldHeatmap() {
             {/* ═══ 2. INSTITUTIONAL ZONES (ORDER BOOK STYLE) ═══ */}
             <div className="grid md:grid-cols-2 gap-6">
                 {/* DEMAND / BUY SIDE */}
-                <div className="bg-[var(--bg-primary)] rounded-2xl border border-green-100 shadow-lg shadow-green-900/5 overflow-hidden">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-green-500/20 shadow-lg shadow-green-900/5 overflow-hidden">
                     <div className="bg-[var(--bg-secondary)] px-5 py-3 border-b border-[var(--border-light)] flex justify-between items-center">
                         <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Demand Zones (Bids)</span>
                         <span className="text-xs font-bold text-green-400 bg-green-500/10 border-green-500/20 px-2 py-0.5 rounded">
@@ -246,7 +246,7 @@ export default function GoldHeatmap() {
                 </div>
 
                 {/* SUPPLY / SELL SIDE */}
-                <div className="bg-[var(--bg-primary)] rounded-2xl border border-red-100 shadow-lg shadow-red-900/5 overflow-hidden">
+                <div className="bg-[var(--bg-primary)] rounded-2xl border border-red-500/20 shadow-lg shadow-red-900/5 overflow-hidden">
                     <div className="bg-[var(--bg-secondary)] px-5 py-3 border-b border-[var(--border-light)] flex justify-between items-center">
                         <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Supply Zones (Asks)</span>
                         <span className="text-xs font-bold text-red-400 bg-red-500/10 border-red-500/20 px-2 py-0.5 rounded">

@@ -36,7 +36,7 @@ export default function VvipAssistantPage() {
                                 <div className="bg-[var(--bg-secondary)] rounded-[20px] p-6 h-full flex flex-col">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="font-bold text-[var(--text-primary)]">Live Market Monitor</h3>
-                                        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border-green-500/20 px-2 py-1 rounded-full border border-green-100">
+                                        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border-green-500/20 px-2 py-1 rounded-full border border-green-500/20">
                                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                                             REAL-TIME
                                         </div>

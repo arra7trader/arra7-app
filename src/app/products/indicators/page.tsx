@@ -128,7 +128,7 @@ export default function IndicatorsPage() {
                                 <div className="blur-[2px]">
                                     <h3 className="text-lg font-semibold mb-2">{indicator.name}</h3>
                                     <div className="flex gap-2 mb-3">
-                                        <span className="px-2 py-1 rounded-full bg-green-100 text-green-400 text-xs font-medium">
+                                        <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium">
                                             {indicator.winrate} Winrate
                                         </span>
                                         <span className="px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)] text-xs">

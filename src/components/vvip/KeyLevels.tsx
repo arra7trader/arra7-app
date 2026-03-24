@@ -61,8 +61,8 @@ export default function KeyLevels() {
                 {levels.length > 0 ? levels.map((level) => (
                     <div
                         key={level.label}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${level.type === 'res' ? 'bg-red-500/10 border-red-500/20 border-red-100 text-red-400' :
-                            level.type === 'sup' ? 'bg-green-500/10 border-green-500/20 border-green-100 text-green-400' :
+                        className={`flex items-center justify-between p-3 rounded-lg border ${level.type === 'res' ? 'bg-red-500/10 border-red-500/20 border-red-500/20 text-red-400' :
+                            level.type === 'sup' ? 'bg-green-500/10 border-green-500/20 border-green-500/20 text-green-400' :
                                 'bg-[var(--bg-secondary)] border-[var(--border-light)] text-[var(--text-primary)] font-bold'
                             }`}
                     >
@@ -74,7 +74,7 @@ export default function KeyLevels() {
                 )}
             </div>
 
-            <div className="mt-6 p-3 bg-blue-500/10 border-blue-500/20 rounded-lg text-xs text-blue-400 leading-relaxed border border-blue-100">
+            <div className="mt-6 p-3 bg-blue-500/10 border-blue-500/20 rounded-lg text-xs text-blue-400 leading-relaxed border border-blue-500/20">
                 <strong>Strategy:</strong> Watch for reversals at S1/R1. Breakout above R2 suggests strong bullish trend.
             </div>
         </div>

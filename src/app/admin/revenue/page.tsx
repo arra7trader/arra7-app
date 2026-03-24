@@ -165,7 +165,7 @@ export default function RevenueDashboard() {
                         className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                                 <span className="text-2xl">💎</span>
                             </div>
                             <div>
@@ -194,7 +194,7 @@ export default function RevenueDashboard() {
                         className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
                                 <span className="text-2xl">👑</span>
                             </div>
                             <div>
@@ -273,8 +273,8 @@ export default function RevenueDashboard() {
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${tx.membership === 'VVIP'
-                                                ? 'bg-amber-100 text-amber-400'
-                                                : 'bg-blue-100 text-blue-400'
+                                                ? 'bg-amber-500/10 text-amber-400'
+                                                : 'bg-blue-500/10 text-blue-400'
                                                 }`}>
                                                 {tx.membership}
                                             </span>

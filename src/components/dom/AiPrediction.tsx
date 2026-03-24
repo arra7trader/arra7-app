@@ -84,7 +84,7 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
             }
             if (error.includes("Failed to fetch") || error.includes("NetworkError")) {
                 return (
-                    <div className="text-xs text-red-500 bg-red-500/10 border-red-500/20 p-2 rounded border border-red-100">
+                    <div className="text-xs text-red-500 bg-red-500/10 border-red-500/20 p-2 rounded border border-red-500/20">
                         <div className="font-semibold mb-1">Backend Offline</div>
                         Run <code>ml-backend/run_server.bat</code>
                     </div>

@@ -151,7 +151,7 @@ export default function WithdrawPage() {
 
                     <div className="bg-[var(--bg-primary)] rounded-3xl p-8 shadow-sm">
                         {error && (
-                            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border-red-500/20 border border-red-100 text-red-400 text-sm">
+                            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border-red-500/20 border border-red-500/20 text-red-400 text-sm">
                                 {error}
                             </div>
                         )}
@@ -226,7 +226,7 @@ export default function WithdrawPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-amber-500/10 border-amber-500/20 rounded-xl p-4 flex gap-3 text-amber-400 text-sm border border-amber-100 items-start">
+                            <div className="bg-amber-500/10 border-amber-500/20 rounded-xl p-4 flex gap-3 text-amber-400 text-sm border border-amber-500/20 items-start">
                                 <span className="text-xl">⚠️</span>
                                 <p>Setiap penarikan dikenakan biaya admin antar Bank/SKN sebesar <strong className="font-bold">Rp 5.000</strong> yang dipotong langsung dari total transfer Rupiah Anda.</p>
                             </div>

@@ -32,7 +32,7 @@ export default function DownloadAppPage() {
     <div className="min-h-screen bg-[var(--bg-primary)] pt-32 pb-16">
       <div className="container-apple section-padding max-w-5xl mx-auto">
         <div className="rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-8 md:p-10 shadow-sm mb-8">
-          <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-400 mb-4">
+          <div className="inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400 mb-4">
             Android APK v3.0.0 Beta
           </div>
 
@@ -72,7 +72,7 @@ export default function DownloadAppPage() {
             </Link>
           </div>
 
-          <p className="mt-4 text-xs text-amber-400 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          <p className="mt-4 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
             Catatan: versi ini adalah build beta terbaru sebelum rilis final Play Store.
           </p>
         </div>

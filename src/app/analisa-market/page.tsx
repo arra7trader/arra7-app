@@ -1529,7 +1529,7 @@ export default function AnalisaMarketPage() {
 
                                                 {/* PREMIUM OVERLAY CARD */}
                                                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[var(--bg-primary)]/60 backdrop-blur-sm">
-                                                    <div className="bg-gradient-to-br from-white to-red-50 border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
+                                                    <div className="bg-gradient-to-br from-white to-red-50 border border-red-500/20 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
                                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
                                                             <LockIcon size="xl" className="text-red-400" />
                                                         </div>
@@ -1595,7 +1595,7 @@ export default function AnalisaMarketPage() {
                                         className="flex flex-col items-center justify-center h-full py-20"
                                     >
                                         <div className="relative w-20 h-20 mb-6">
-                                            <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
+                                            <div className="absolute inset-0 rounded-full border-4 border-blue-500/20" />
                                             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--accent-blue)] animate-spin" />
                                             <div className="absolute inset-0 flex items-center justify-center">
                                                 <SparklesIcon size="lg" className="text-[var(--accent-blue)]" />

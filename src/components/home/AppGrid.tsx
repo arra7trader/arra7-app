@@ -76,7 +76,7 @@ export default function AppGrid() {
             label: tNav('tradeJournal'),
             icon: <BookOpenIcon className="w-8 h-8 text-cyan-500" />,
             href: '/journal',
-            color: 'bg-cyan-50 group-hover:bg-cyan-100',
+            color: 'bg-cyan-500/10 group-hover:bg-cyan-500/10',
         },
         {
             id: 'portfolio',
@@ -98,7 +98,7 @@ export default function AppGrid() {
             label: tNav('socialFeed'),
             icon: <UserGroupIcon className="w-8 h-8 text-teal-500" />,
             href: '/social',
-            color: 'bg-teal-50 group-hover:bg-teal-100',
+            color: 'bg-teal-500/10 group-hover:bg-teal-500/10',
         },
     ];
 

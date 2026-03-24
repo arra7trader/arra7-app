@@ -86,7 +86,7 @@ function PaymentCheckoutContent() {
                         <p className="text-xs text-[var(--text-secondary)] font-mono">NMID: ID1025468752486</p>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-500/20 rounded-xl p-4 mb-6">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-6">
                         <h3 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">
                             <span>ℹ️</span> Cara Pembayaran:
                         </h3>
