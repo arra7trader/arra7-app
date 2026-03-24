@@ -125,8 +125,8 @@ export default function SocialPage() {
                                                 <span className="font-medium text-[var(--text-primary)]">{pair.symbol}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs px-2 py-0.5 rounded ${pair.direction === 'BULLISH' ? 'bg-green-100 text-green-700' : pair.direction === 'BEARISH' ? 'bg-red-100 text-red-700' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
-                                                    {pair.direction === 'BULLISH' ? <TrendUpIcon className="text-green-600" size="sm" /> : pair.direction === 'BEARISH' ? <TrendDownIcon className="text-red-600" size="sm" /> : <ArrowRightIcon className="text-[var(--text-secondary)]" size="sm" />}
+                                                <span className={`text-xs px-2 py-0.5 rounded ${pair.direction === 'BULLISH' ? 'bg-green-100 text-green-400' : pair.direction === 'BEARISH' ? 'bg-red-100 text-red-400' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
+                                                    {pair.direction === 'BULLISH' ? <TrendUpIcon className="text-green-400" size="sm" /> : pair.direction === 'BEARISH' ? <TrendDownIcon className="text-red-400" size="sm" /> : <ArrowRightIcon className="text-[var(--text-secondary)]" size="sm" />}
                                                 </span>
                                                 <span className="text-xs text-[var(--text-muted)]">{pair.count} analyses</span>
                                             </div>
@@ -178,7 +178,7 @@ export default function SocialPage() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {item.confidence && (
-                                                <span className={`text-xs px-2 py-1 rounded-full ${item.confidence >= 80 ? 'bg-green-100 text-green-700' : item.confidence >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
+                                                <span className={`text-xs px-2 py-1 rounded-full ${item.confidence >= 80 ? 'bg-green-100 text-green-400' : item.confidence >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
                                                     {item.confidence}% confidence
                                                 </span>
                                             )}
@@ -189,7 +189,7 @@ export default function SocialPage() {
                                         <span className="text-lg font-bold text-[var(--text-primary)]">{item.symbol}</span>
                                         {item.timeframe && <span className="text-xs px-2 py-1 bg-[var(--bg-secondary)] rounded text-[var(--text-secondary)]">{item.timeframe}</span>}
                                         {item.direction && (
-                                            <span className={`text-sm px-3 py-1 rounded-full font-medium ${item.direction === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`text-sm px-3 py-1 rounded-full font-medium ${item.direction === 'BUY' ? 'bg-green-100 text-green-400' : 'bg-red-100 text-red-400'}`}>
                                                 {item.direction === 'BUY' ? <><TrendUpIcon className="inline mr-1" size="sm" /> BUY</> : <><TrendDownIcon className="inline mr-1" size="sm" /> SELL</>}
                                             </span>
                                         )}
@@ -198,8 +198,8 @@ export default function SocialPage() {
                                     {(item.entryPrice || item.stopLoss || item.takeProfit) && (
                                         <div className="flex flex-wrap gap-4 mb-3 text-sm">
                                             {item.entryPrice && <div><span className="text-[var(--text-muted)]">Entry: </span><span className="font-mono text-[var(--accent-blue)]">{item.entryPrice}</span></div>}
-                                            {item.stopLoss && <div><span className="text-[var(--text-muted)]">SL: </span><span className="font-mono text-red-600">{item.stopLoss}</span></div>}
-                                            {item.takeProfit && <div><span className="text-[var(--text-muted)]">TP: </span><span className="font-mono text-green-600">{item.takeProfit}</span></div>}
+                                            {item.stopLoss && <div><span className="text-[var(--text-muted)]">SL: </span><span className="font-mono text-red-400">{item.stopLoss}</span></div>}
+                                            {item.takeProfit && <div><span className="text-[var(--text-muted)]">TP: </span><span className="font-mono text-green-400">{item.takeProfit}</span></div>}
                                         </div>
                                     )}
 

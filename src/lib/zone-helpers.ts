@@ -13,14 +13,14 @@ export const getZoneStatus = (levelPrice: number, currentPrice: number | null, t
     if (percentDiff < 0.001) {
         // Within 0.1% - ACTIVE
         status = '🟢 ACTIVE';
-        color = 'text-green-600';
+        color = 'text-green-400';
     } else if (
         (trend === 'UP' && currentPrice > levelPrice) ||
         (trend === 'DOWN' && currentPrice < levelPrice)
     ) {
         // Price passed zone based on trend
         status = '🔴 BREACHED';
-        color = 'text-red-600';
+        color = 'text-red-400';
     }
 
     return { status, color, distance, isAbove, isNear };

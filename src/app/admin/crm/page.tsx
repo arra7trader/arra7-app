@@ -156,11 +156,11 @@ export default function CRMDashboard() {
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">PRO</p>
-                        <p className="text-3xl font-bold text-blue-600">{data?.memberStats.pro || 0}</p>
+                        <p className="text-3xl font-bold text-blue-400">{data?.memberStats.pro || 0}</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">VVIP</p>
-                        <p className="text-3xl font-bold text-amber-600">{data?.memberStats.vvip || 0}</p>
+                        <p className="text-3xl font-bold text-amber-400">{data?.memberStats.vvip || 0}</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)] mb-1">Conversion</p>
@@ -183,20 +183,20 @@ export default function CRMDashboard() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-[var(--text-secondary)]">Monthly Recurring (MRR)</span>
-                                <span className="text-2xl font-bold text-green-600">
+                                <span className="text-2xl font-bold text-green-400">
                                     {formatCurrency(data?.revenueStats.mrr || 0)}
                                 </span>
                             </div>
                             <div className="h-px bg-[var(--border-light)]" />
                             <div className="flex justify-between items-center">
                                 <span className="text-[var(--text-secondary)]">PRO Members ({data?.memberStats.pro || 0})</span>
-                                <span className="font-semibold text-blue-600">
+                                <span className="font-semibold text-blue-400">
                                     {formatCurrency(data?.revenueStats.proRevenue || 0)}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-[var(--text-secondary)]">VVIP Members ({data?.memberStats.vvip || 0})</span>
-                                <span className="font-semibold text-amber-600">
+                                <span className="font-semibold text-amber-400">
                                     {formatCurrency(data?.revenueStats.vvipRevenue || 0)}
                                 </span>
                             </div>

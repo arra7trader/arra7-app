@@ -6,7 +6,7 @@ export default function DownloadAndroidPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] pt-32 pb-16 px-6">
       <div className="max-w-2xl mx-auto rounded-3xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-8 shadow-sm">
-        <div className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 mb-4">
+        <div className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-400 mb-4">
           Android Direct Download
         </div>
 

@@ -314,7 +314,7 @@ export default function CopytradeArra77AdminPage() {
                   <div>
                     <p className="font-medium text-sm">{o.profiles?.display_name || o.profiles?.email || 'User'} | {fmtIdr(o.amount_idr)} ({o.credit_amount} cr)</p>
                     <p className="text-xs text-[var(--text-secondary)]">Status: {o.status} | {fmtDate(o.created_at)}</p>
-                    {o.proof_image_url && <a href={o.proof_image_url} className="text-xs text-blue-600 underline" target="_blank" rel="noreferrer">Buka bukti</a>}
+                    {o.proof_image_url && <a href={o.proof_image_url} className="text-xs text-blue-400 underline" target="_blank" rel="noreferrer">Buka bukti</a>}
                   </div>
                   <div className="flex gap-2">
                     {['SUBMITTED', 'DRAFT'].includes(String(o.status || '').toUpperCase()) ? (
@@ -356,7 +356,7 @@ export default function CopytradeArra77AdminPage() {
                     <p className="font-medium text-sm">{p.display_name} @{p.slug}</p>
                     <p className="text-xs text-[var(--text-secondary)]">Owner: {p.profiles?.email || '-'} | Risk {p.risk_level} | Status {p.status}</p>
                     {Array.isArray(p.provider_challenges) && p.provider_challenges[0] && (
-                      <p className="text-xs text-blue-700">
+                      <p className="text-xs text-blue-400">
                         Challenge {p.provider_challenges[0].total_trades || 0}/{p.provider_challenges[0].target_trades || 0}
                         {' '}| Winrate {p.provider_challenges[0].win_rate_pct || 0}% (min {p.provider_challenges[0].min_win_rate_pct || 0}%)
                       </p>

@@ -71,15 +71,15 @@ export default function PerformancePage() {
 
     const getWinRateColor = (winRate: number | string) => {
         const rate = typeof winRate === 'string' ? parseFloat(winRate) : winRate;
-        if (rate >= 70) return 'text-green-600';
+        if (rate >= 70) return 'text-green-400';
         if (rate >= 50) return 'text-yellow-600';
-        return 'text-red-600';
+        return 'text-red-400';
     };
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'TP_HIT': return 'bg-green-100 text-green-700';
-            case 'SL_HIT': return 'bg-red-100 text-red-700';
+            case 'TP_HIT': return 'bg-green-100 text-green-400';
+            case 'SL_HIT': return 'bg-red-100 text-red-400';
             default: return 'bg-yellow-100 text-yellow-700';
         }
     };
@@ -102,7 +102,7 @@ export default function PerformancePage() {
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-light)] bg-[var(--bg-primary)] mb-6">
                         <ChartIcon className="text-[var(--accent-blue)]" size="lg" />
                         <span className="text-sm text-[var(--text-secondary)]">Verified Stats</span>
-                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">LIVE</span>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-400 text-xs rounded-full">LIVE</span>
                     </div>
                     <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-3">
                         AI <span className="gradient-text">Performance</span>
@@ -139,12 +139,12 @@ export default function PerformancePage() {
                         <p className="text-sm text-[var(--text-muted)]">Total Signal</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
-                        <p className="text-3xl font-bold text-green-600">{overall.tpHit}</p>
-                        <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><CheckCircleIcon className="text-green-600" size="sm" /> TP Hit</p>
+                        <p className="text-3xl font-bold text-green-400">{overall.tpHit}</p>
+                        <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><CheckCircleIcon className="text-green-400" size="sm" /> TP Hit</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
-                        <p className="text-3xl font-bold text-red-600">{overall.slHit}</p>
-                        <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><XCircleIcon className="text-red-600" size="sm" /> SL Hit</p>
+                        <p className="text-3xl font-bold text-red-400">{overall.slHit}</p>
+                        <p className="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1"><XCircleIcon className="text-red-400" size="sm" /> SL Hit</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-6 border border-[var(--border-light)] text-center">
                         <p className="text-3xl font-bold text-yellow-600">{overall.pending}</p>
@@ -197,7 +197,7 @@ export default function PerformancePage() {
                                         <div key={signal.id} className="flex items-center justify-between bg-[var(--bg-secondary)] rounded-lg p-3">
                                             <div className="flex items-center gap-3">
                                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadge(signal.status)}`}>
-                                                    {signal.status === 'TP_HIT' ? <CheckCircleIcon className="text-green-600" size="sm" /> : signal.status === 'SL_HIT' ? <XCircleIcon className="text-red-600" size="sm" /> : <ClockIcon className="text-yellow-600" size="sm" />}
+                                                    {signal.status === 'TP_HIT' ? <CheckCircleIcon className="text-green-400" size="sm" /> : signal.status === 'SL_HIT' ? <XCircleIcon className="text-red-400" size="sm" /> : <ClockIcon className="text-yellow-600" size="sm" />}
                                                 </span>
                                                 <div>
                                                     <p className="font-semibold text-sm text-[var(--text-primary)]">{signal.symbol}</p>
@@ -219,8 +219,8 @@ export default function PerformancePage() {
 
                 {/* Disclaimer */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-50 border border-amber-500/20 rounded-xl p-4 text-center">
-                    <p className="text-sm text-amber-700">
-                        <WarningIcon className="text-amber-600 inline mr-1" size="sm" /> <strong>Disclaimer:</strong> Performa masa lalu tidak menjamin hasil di masa depan. Selalu gunakan money management yang baik dan lakukan riset mandiri (DYOR).
+                    <p className="text-sm text-amber-400">
+                        <WarningIcon className="text-amber-400 inline mr-1" size="sm" /> <strong>Disclaimer:</strong> Performa masa lalu tidak menjamin hasil di masa depan. Selalu gunakan money management yang baik dan lakukan riset mandiri (DYOR).
                     </p>
                 </motion.div>
 

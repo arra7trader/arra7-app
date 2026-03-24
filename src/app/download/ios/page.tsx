@@ -33,7 +33,7 @@ export default function IOSDownloadPage() {
                         animate="animate"
                         variants={fadeInUp}
                     >
-                        <span className="badge-apple mb-4 inline-flex bg-blue-50 text-blue-600 border-blue-500/20">
+                        <span className="badge-apple mb-4 inline-flex bg-blue-50 text-blue-400 border-blue-500/20">
                              iOS / iPadOS
                         </span>
 

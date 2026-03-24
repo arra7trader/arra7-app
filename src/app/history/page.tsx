@@ -52,7 +52,7 @@ export default function HistoryPage() {
     };
 
     const getTypeColor = (type: string) => {
-        return type === 'forex' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+        return type === 'forex' ? 'bg-blue-100 text-blue-400' : 'bg-green-100 text-green-400';
     };
 
     if (status === 'loading' || loading) {
@@ -98,7 +98,7 @@ export default function HistoryPage() {
                         <p className="text-xs text-[var(--text-muted)]">Forex</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
-                        <p className="text-2xl font-bold text-green-600">{history.filter(h => h.type === 'stock').length}</p>
+                        <p className="text-2xl font-bold text-green-400">{history.filter(h => h.type === 'stock').length}</p>
                         <p className="text-xs text-[var(--text-muted)]">Saham</p>
                     </div>
                 </motion.div>
@@ -111,8 +111,8 @@ export default function HistoryPage() {
                             <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Belum Ada Riwayat</h3>
                             <p className="text-[var(--text-secondary)] mb-4">Mulai analisa untuk menyimpan riwayat</p>
                             <div className="flex justify-center gap-3">
-                                <Link href="/analisa-market" className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors">Analisa Forex</Link>
-                                <Link href="/analisa-saham" className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition-colors">Analisa Saham</Link>
+                                <Link href="/analisa-market" className="px-4 py-2 bg-blue-100 text-blue-400 rounded-lg text-sm hover:bg-blue-200 transition-colors">Analisa Forex</Link>
+                                <Link href="/analisa-saham" className="px-4 py-2 bg-green-100 text-green-400 rounded-lg text-sm hover:bg-green-200 transition-colors">Analisa Saham</Link>
                             </div>
                         </div>
                     ) : (

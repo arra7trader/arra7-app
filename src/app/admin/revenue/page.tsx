@@ -117,9 +117,9 @@ export default function RevenueDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-500/20"
                     >
-                        <p className="text-sm text-green-700 mb-1">Total Revenue</p>
-                        <p className="text-2xl font-bold text-green-800">{formatCurrency(data?.totalRevenue || 0)}</p>
-                        <p className="text-xs text-green-600 mt-1">All time</p>
+                        <p className="text-sm text-green-400 mb-1">Total Revenue</p>
+                        <p className="text-2xl font-bold text-green-400">{formatCurrency(data?.totalRevenue || 0)}</p>
+                        <p className="text-xs text-green-400 mt-1">All time</p>
                     </motion.div>
 
                     <motion.div
@@ -129,7 +129,7 @@ export default function RevenueDashboard() {
                         className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]"
                     >
                         <p className="text-sm text-[var(--text-muted)] mb-1">Bulan Ini</p>
-                        <p className="text-2xl font-bold text-blue-600">{formatCurrency(data?.monthlyRevenue || 0)}</p>
+                        <p className="text-2xl font-bold text-blue-400">{formatCurrency(data?.monthlyRevenue || 0)}</p>
                         <p className="text-xs text-[var(--text-muted)] mt-1">{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
                     </motion.div>
 
@@ -140,7 +140,7 @@ export default function RevenueDashboard() {
                         className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]"
                     >
                         <p className="text-sm text-[var(--text-muted)] mb-1">Minggu Ini</p>
-                        <p className="text-2xl font-bold text-purple-600">{formatCurrency(data?.weeklyRevenue || 0)}</p>
+                        <p className="text-2xl font-bold text-purple-400">{formatCurrency(data?.weeklyRevenue || 0)}</p>
                         <p className="text-xs text-[var(--text-muted)] mt-1">7 hari terakhir</p>
                     </motion.div>
 
@@ -151,7 +151,7 @@ export default function RevenueDashboard() {
                         className="bg-[var(--bg-primary)] rounded-xl p-5 border border-[var(--border-light)]"
                     >
                         <p className="text-sm text-[var(--text-muted)] mb-1">Hari Ini</p>
-                        <p className="text-2xl font-bold text-amber-600">{formatCurrency(data?.todayRevenue || 0)}</p>
+                        <p className="text-2xl font-bold text-amber-400">{formatCurrency(data?.todayRevenue || 0)}</p>
                         <p className="text-xs text-[var(--text-muted)] mt-1">{new Date().toLocaleDateString('id-ID')}</p>
                     </motion.div>
                 </div>
@@ -175,11 +175,11 @@ export default function RevenueDashboard() {
                         </div>
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-4xl font-bold text-blue-600">{data?.proCount || 0}</p>
+                                <p className="text-4xl font-bold text-blue-400">{data?.proCount || 0}</p>
                                 <p className="text-sm text-[var(--text-muted)]">total members</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-lg font-semibold text-green-600">
+                                <p className="text-lg font-semibold text-green-400">
                                     {formatCurrency((data?.proCount || 0) * PRICES.PRO)}
                                 </p>
                                 <p className="text-xs text-[var(--text-muted)]">potential monthly</p>
@@ -204,11 +204,11 @@ export default function RevenueDashboard() {
                         </div>
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-4xl font-bold text-amber-600">{data?.vvipCount || 0}</p>
+                                <p className="text-4xl font-bold text-amber-400">{data?.vvipCount || 0}</p>
                                 <p className="text-sm text-[var(--text-muted)]">total members</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-lg font-semibold text-green-600">
+                                <p className="text-lg font-semibold text-green-400">
                                     {formatCurrency((data?.vvipCount || 0) * PRICES.VVIP)}
                                 </p>
                                 <p className="text-xs text-[var(--text-muted)]">potential monthly</p>
@@ -273,13 +273,13 @@ export default function RevenueDashboard() {
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${tx.membership === 'VVIP'
-                                                ? 'bg-amber-100 text-amber-700'
-                                                : 'bg-blue-100 text-blue-700'
+                                                ? 'bg-amber-100 text-amber-400'
+                                                : 'bg-blue-100 text-blue-400'
                                                 }`}>
                                                 {tx.membership}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-green-600 font-medium">
+                                        <td className="p-4 text-green-400 font-medium">
                                             {formatCurrency(tx.amount)}
                                         </td>
                                         <td className="p-4 text-sm text-[var(--text-secondary)]">

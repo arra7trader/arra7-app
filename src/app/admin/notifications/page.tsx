@@ -138,17 +138,17 @@ export default function AdminNotificationsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)]">Subscribers</p>
-                        <p className="text-3xl font-bold text-blue-600">{subscriberCount}</p>
+                        <p className="text-3xl font-bold text-blue-400">{subscriberCount}</p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)]">VAPID Config</p>
-                        <p className={`text-lg font-bold ${vapidConfigured ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`text-lg font-bold ${vapidConfigured ? 'text-green-400' : 'text-red-400'}`}>
                             {vapidConfigured ? '✅ Ready' : '❌ Not Set'}
                         </p>
                     </div>
                     <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                         <p className="text-sm text-[var(--text-muted)]">Total Sent</p>
-                        <p className="text-3xl font-bold text-purple-600">
+                        <p className="text-3xl font-bold text-purple-400">
                             {recentNotifications.reduce((acc, n) => acc + n.sent_count, 0)}
                         </p>
                     </div>
@@ -221,7 +221,7 @@ export default function AdminNotificationsPage() {
                         </button>
 
                         {!vapidConfigured && (
-                            <p className="text-sm text-red-600 text-center">
+                            <p className="text-sm text-red-400 text-center">
                                 ⚠️ Set VAPID_PRIVATE_KEY di Vercel Environment Variables
                             </p>
                         )}
@@ -242,9 +242,9 @@ export default function AdminNotificationsPage() {
                                             <p className="text-sm text-[var(--text-secondary)]">{notif.body}</p>
                                         </div>
                                         <div className="text-right text-xs">
-                                            <p className="text-green-600">✅ {notif.sent_count}</p>
+                                            <p className="text-green-400">✅ {notif.sent_count}</p>
                                             {notif.failed_count > 0 && (
-                                                <p className="text-red-600">❌ {notif.failed_count}</p>
+                                                <p className="text-red-400">❌ {notif.failed_count}</p>
                                             )}
                                         </div>
                                     </div>

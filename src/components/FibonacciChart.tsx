@@ -166,7 +166,7 @@ export default function FibonacciChart({ pair, timeframe, calculatedLevels }: Fi
                             className="absolute right-2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
                             style={{
                                 backgroundColor: level.color,
-                                color: '#000',
+                                color: '#fff',
                             }}
                         >
                             {level.label} ({level.price})

@@ -165,7 +165,7 @@ export default function UsersMapPage() {
                             <h1 className="text-xl font-bold text-[var(--text-primary)]">🗺️ User Locations Map</h1>
                             <p className="text-[var(--text-secondary)] text-sm">
                                 Tracking {users.length} users
-                                {trackedUser && <span className="text-green-600 ml-2">• Following: {trackedUser.name}</span>}
+                                {trackedUser && <span className="text-green-400 ml-2">• Following: {trackedUser.name}</span>}
                             </p>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -268,7 +268,7 @@ export default function UsersMapPage() {
                                                         <div className="text-sm font-medium truncate flex items-center gap-1 text-[var(--text-primary)]">
                                                             {user.name}
                                                             {trackedUser?.id === user.id && (
-                                                                <span className="text-green-600">📍</span>
+                                                                <span className="text-green-400">📍</span>
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-[var(--text-muted)] truncate">{user.city}, {user.country}</div>
@@ -294,7 +294,7 @@ export default function UsersMapPage() {
                                     {trackedUser && (
                                         <div className="mt-3 pt-3 border-t border-[var(--border-light)]">
                                             <div className="text-xs text-[var(--text-muted)] mb-1">Currently Tracking:</div>
-                                            <div className="text-sm font-medium text-green-700">{trackedUser.name}</div>
+                                            <div className="text-sm font-medium text-green-400">{trackedUser.name}</div>
                                             <div className="text-xs text-[var(--text-muted)]">{trackedUser.email}</div>
                                             <div className="text-xs text-[var(--text-muted)] mt-1">
                                                 📍 {trackedUser.city}, {trackedUser.country}
@@ -397,7 +397,7 @@ export default function UsersMapPage() {
                                     .map(([country, count]) => (
                                         <div key={country} className="flex items-center justify-between">
                                             <span className="text-sm truncate text-[var(--text-secondary)]">{country}</span>
-                                            <span className="text-blue-600 font-medium">{count}</span>
+                                            <span className="text-blue-400 font-medium">{count}</span>
                                         </div>
                                     ))}
                             </div>

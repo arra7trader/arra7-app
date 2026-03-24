@@ -65,23 +65,23 @@ function fmtProviderWinrate(provider: any) {
 
 function riskBadgeClass(riskLevel: string | undefined) {
   const risk = String(riskLevel || 'MEDIUM').toUpperCase();
-  if (risk === 'LOW') return 'bg-emerald-50 text-emerald-700 border border-emerald-500/20';
+  if (risk === 'LOW') return 'bg-emerald-50 text-emerald-400 border border-emerald-500/20';
   if (risk === 'HIGH') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
-  return 'bg-amber-50 text-amber-700 border border-amber-500/20';
+  return 'bg-amber-50 text-amber-400 border border-amber-500/20';
 }
 
 function followBadgeClass(followStatus: string | undefined) {
   const status = String(followStatus || '').toUpperCase();
-  if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-500/20';
-  if (status === 'PAUSED') return 'bg-amber-50 text-amber-700 border border-amber-500/20';
+  if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-400 border border-emerald-500/20';
+  if (status === 'PAUSED') return 'bg-amber-50 text-amber-400 border border-amber-500/20';
   if (status === 'STOPPED') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
   return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
 function providerStatusBadgeClass(providerStatus: string | undefined) {
   const status = String(providerStatus || '').toUpperCase();
-  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-500/20';
-  if (status === 'PENDING') return 'bg-amber-50 text-amber-700 border border-amber-500/20';
+  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-400 border border-emerald-500/20';
+  if (status === 'PENDING') return 'bg-amber-50 text-amber-400 border border-amber-500/20';
   if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
   return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
@@ -293,7 +293,7 @@ export default function CopytradeArra77Page() {
 
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div className="rounded-xl border border-blue-100 bg-blue-50 p-2">
-              <p className="text-[10px] uppercase tracking-wide text-blue-700">Winrate</p>
+              <p className="text-[10px] uppercase tracking-wide text-blue-400">Winrate</p>
               <p className="text-sm font-semibold text-blue-900">{fmtProviderWinrate(p)}</p>
             </div>
             <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-2">
@@ -301,7 +301,7 @@ export default function CopytradeArra77Page() {
               <p className="text-sm font-semibold text-[var(--text-primary)]">{p.followers || 0}</p>
             </div>
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-2">
-              <p className="text-[10px] uppercase tracking-wide text-emerald-700">Status</p>
+              <p className="text-[10px] uppercase tracking-wide text-emerald-400">Status</p>
               <p className="text-sm font-semibold text-emerald-900">{providerStatus}</p>
             </div>
           </div>
@@ -391,7 +391,7 @@ export default function CopytradeArra77Page() {
     <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="rounded-3xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 p-6">
-          <p className="text-xs font-semibold tracking-widest uppercase text-blue-700">Copytrade ARRA77</p>
+          <p className="text-xs font-semibold tracking-widest uppercase text-blue-400">Copytrade ARRA77</p>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-2">AI Signal + EA MT5 + Credit Wallet</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-2">1 signal = 3 credits, 1 credit = Rp1.000, one-trade lock aktif by default.</p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
@@ -422,8 +422,8 @@ export default function CopytradeArra77Page() {
           </div>
         </div>
 
-        {msg && <div className="rounded-xl bg-green-50 border border-green-500/20 px-4 py-2 text-sm text-green-700">{msg}</div>}
-        {error && <div className="rounded-xl bg-red-50 border border-red-500/20 px-4 py-2 text-sm text-red-700">{error}</div>}
+        {msg && <div className="rounded-xl bg-green-50 border border-green-500/20 px-4 py-2 text-sm text-green-400">{msg}</div>}
+        {error && <div className="rounded-xl bg-red-50 border border-red-500/20 px-4 py-2 text-sm text-red-400">{error}</div>}
 
         <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3 sm:p-4">
           <p className="text-xs font-semibold tracking-widest uppercase text-[var(--text-secondary)]">Menu Fitur Copytrade</p>
@@ -729,7 +729,7 @@ export default function CopytradeArra77Page() {
                         <p className="font-medium">{t.terminal_label} | {t.status}</p>
                         <p className="text-[var(--text-secondary)] text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
                         <p className="text-[var(--text-secondary)] text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
-                        {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
+                        {t.last_error && <p className="text-red-400 text-xs">Error: {t.last_error}</p>}
                       </div>
                     ))}
                   </div>
@@ -793,12 +793,12 @@ export default function CopytradeArra77Page() {
                     <p className="text-sm text-blue-900 font-medium">
                       Challenge: {myChallenge.totalTrades}/{myChallenge.targetTrades} trade | Winrate {myChallenge.winRatePct}%
                     </p>
-                    <p className="text-xs text-blue-700">Min winrate {myChallenge.minWinRatePct}%</p>
+                    <p className="text-xs text-blue-400">Min winrate {myChallenge.minWinRatePct}%</p>
                   </div>
                   <div className="mt-2 h-2 rounded-full bg-blue-100 overflow-hidden">
                     <div className="h-2 rounded-full bg-blue-600" style={{ width: `${challengeProgressPct}%` }} />
                   </div>
-                  <p className="text-xs text-blue-700 mt-2">
+                  <p className="text-xs text-blue-400 mt-2">
                     Wins {myChallenge.wins} | Loss {myChallenge.losses} | BE {myChallenge.breakevenCount} | Status {myChallenge.status}
                   </p>
                 </div>
@@ -950,7 +950,7 @@ export default function CopytradeArra77Page() {
                   <li>Set input <code>Symbol</code> EA sama persis dengan simbol broker di Market Watch (contoh <code>XAUUSD.m</code>, <code>GOLD</code>, dll).</li>
                   <li>Aktifkan <b>Algo Trading</b>. Jika benar, EA akan polling otomatis setiap beberapa detik.</li>
                 </ol>
-                <p className="mt-2 text-xs text-blue-800">
+                <p className="mt-2 text-xs text-blue-400">
                   Khusus calon provider challenge: kirim closed trade ke endpoint
                   {' '}<code>/api/copytrade-arra77/bridge/provider/challenge/trade</code>.
                 </p>
@@ -1001,7 +1001,7 @@ export default function CopytradeArra77Page() {
                     <p className="font-medium">{t.terminal_label} | {t.status}</p>
                     <p className="text-[var(--text-secondary)] text-xs">Broker: {t.broker_name || '-'} | Server: {fmtServerDisplay(t.server_name)}</p>
                     <p className="text-[var(--text-secondary)] text-xs">Heartbeat: {fmtDate(t.last_heartbeat_at)}</p>
-                    {t.last_error && <p className="text-red-600 text-xs">Error: {t.last_error}</p>}
+                    {t.last_error && <p className="text-red-400 text-xs">Error: {t.last_error}</p>}
                   </div>
                 ))}
               </div>

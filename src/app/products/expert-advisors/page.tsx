@@ -129,7 +129,7 @@ export default function ExpertAdvisorsPage() {
                                             </span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                                            <span className="px-2 py-1 rounded-full bg-green-100 text-green-400 text-xs font-medium">
                                                 {ea.monthly}/mo
                                             </span>
                                         </div>

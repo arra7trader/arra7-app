@@ -110,7 +110,7 @@ function TransferContent() {
                         <div className="flex gap-3">
                             <span className="text-xl">⚠️</span>
                             <div className="text-sm">
-                                <p className="font-semibold text-amber-700 mb-2">Langkah Selanjutnya:</p>
+                                <p className="font-semibold text-amber-400 mb-2">Langkah Selanjutnya:</p>
                                 <ol className="list-decimal list-inside space-y-1 text-[var(--text-secondary)]">
                                     <li>Scan QRIS di atas dengan aplikasi e-wallet/banking apapun</li>
                                     <li>Masukan nominal sesuai total pembayaran: <strong className="text-[var(--text-primary)]">{plan.priceDisplay}</strong></li>

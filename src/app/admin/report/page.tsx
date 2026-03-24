@@ -145,15 +145,15 @@ export default function AdminReportPage() {
                             <p className="text-xs text-[var(--text-muted)]">Total</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
-                            <p className="text-2xl font-bold text-green-600">{summary.tpHit}</p>
+                            <p className="text-2xl font-bold text-green-400">{summary.tpHit}</p>
                             <p className="text-xs text-[var(--text-muted)]">TP Hit</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
-                            <p className="text-2xl font-bold text-red-600">{summary.slHit}</p>
+                            <p className="text-2xl font-bold text-red-400">{summary.slHit}</p>
                             <p className="text-xs text-[var(--text-muted)]">SL Hit</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">
-                            <p className="text-2xl font-bold text-amber-600">{summary.pending}</p>
+                            <p className="text-2xl font-bold text-amber-400">{summary.pending}</p>
                             <p className="text-xs text-[var(--text-muted)]">Pending</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)] text-center">

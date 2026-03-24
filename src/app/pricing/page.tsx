@@ -171,7 +171,7 @@ export default function PricingPage() {
                         Diskon Spesial Terbatas
                     </div>
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-[var(--text-primary)] mb-6 leading-tight">
-                        Pilih Paket Trading <br className="hidden md:block" /> Sesuai <span className="text-blue-600">Gaya Anda</span>
+                        Pilih Paket Trading <br className="hidden md:block" /> Sesuai <span className="text-blue-400">Gaya Anda</span>
                     </h1>
                     <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
                         Mulai dari yang gratis hingga fitur tak terbatas untuk akun institusional. Tingkatkan Win Rate Anda dengan dukungan Neural Ensemble AI.
@@ -193,14 +193,14 @@ export default function PricingPage() {
 
                     if (plan.theme === 'blue') {
                         leftBg = 'bg-blue-50/50';
-                        titleColor = 'text-blue-700';
+                        titleColor = 'text-blue-400';
                         ctaStyle = 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20';
-                        checkStyle = 'bg-blue-100 text-blue-600';
+                        checkStyle = 'bg-blue-100 text-blue-400';
                     } else if (plan.theme === 'amber') {
                         leftBg = 'bg-amber-50/50';
-                        titleColor = 'text-amber-600';
+                        titleColor = 'text-amber-400';
                         ctaStyle = 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20';
-                        checkStyle = 'bg-amber-100 text-amber-600';
+                        checkStyle = 'bg-amber-100 text-amber-400';
                     }
 
                     return (

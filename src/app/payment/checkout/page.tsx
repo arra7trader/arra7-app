@@ -87,10 +87,10 @@ function PaymentCheckoutContent() {
                     </div>
 
                     <div className="bg-blue-50 border border-blue-500/20 rounded-xl p-4 mb-6">
-                        <h3 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                        <h3 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">
                             <span>ℹ️</span> Cara Pembayaran:
                         </h3>
-                        <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
+                        <ol className="text-sm text-blue-400 list-decimal list-inside space-y-1">
                             <li>Scan QRIS di atas pakai GoPay/OVO/Dana/BCA/dll.</li>
                             <li>Input nominal: <strong>{plan.priceFormatted}</strong></li>
                             <li>Screenshot bukti bayar.</li>

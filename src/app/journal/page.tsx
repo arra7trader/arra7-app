@@ -238,19 +238,19 @@ export default function JournalPage() {
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Win Rate</p>
-                            <p className="text-2xl font-bold text-green-600">{stats.winRate.toFixed(1)}%</p>
+                            <p className="text-2xl font-bold text-green-400">{stats.winRate.toFixed(1)}%</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Wins</p>
-                            <p className="text-2xl font-bold text-green-600">{stats.winningTrades}</p>
+                            <p className="text-2xl font-bold text-green-400">{stats.winningTrades}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Losses</p>
-                            <p className="text-2xl font-bold text-red-600">{stats.losingTrades}</p>
+                            <p className="text-2xl font-bold text-red-400">{stats.losingTrades}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total P/L</p>
-                            <p className={`text-2xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <p className={`text-2xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                 ${stats.totalProfitLoss.toFixed(2)}
                             </p>
                         </div>
@@ -264,15 +264,15 @@ export default function JournalPage() {
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Open</p>
-                            <p className="text-2xl font-bold text-blue-600">{actualStats.open}</p>
+                            <p className="text-2xl font-bold text-blue-400">{actualStats.open}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">TP Hit</p>
-                            <p className="text-2xl font-bold text-green-600">{actualStats.tp}</p>
+                            <p className="text-2xl font-bold text-green-400">{actualStats.tp}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">SL Hit</p>
-                            <p className="text-2xl font-bold text-red-600">{actualStats.sl}</p>
+                            <p className="text-2xl font-bold text-red-400">{actualStats.sl}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Manual Close</p>
@@ -280,7 +280,7 @@ export default function JournalPage() {
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Error Close</p>
-                            <p className="text-2xl font-bold text-amber-600">{actualStats.error}</p>
+                            <p className="text-2xl font-bold text-amber-400">{actualStats.error}</p>
                         </div>
                     </div>
                 )}
@@ -307,24 +307,24 @@ export default function JournalPage() {
                                     <tr key={entry.id} className="border-t border-[var(--border-light)] hover:bg-[var(--bg-secondary)]">
                                         <td className="p-4 font-medium text-[var(--text-primary)]">{entry.symbol}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.direction === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.direction === 'BUY' ? 'bg-green-100 text-green-400' : 'bg-red-100 text-red-400'}`}>
                                                 {entry.direction}
                                             </span>
                                         </td>
                                         <td className="p-4 font-mono text-[var(--text-primary)]">{entry.entryPrice}</td>
                                         <td className="p-4 text-sm">
-                                            <span className="text-red-600">{entry.stopLoss || '-'}</span>
+                                            <span className="text-red-400">{entry.stopLoss || '-'}</span>
                                             <span className="text-[var(--text-muted)]"> / </span>
-                                            <span className="text-green-600">{entry.takeProfit || '-'}</span>
+                                            <span className="text-green-400">{entry.takeProfit || '-'}</span>
                                         </td>
                                         <td className="p-4 text-[var(--text-primary)]">{entry.lotSize || '-'}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.status === 'OPEN' ? 'bg-blue-100 text-blue-400' :
                                                 entry.status === 'CLOSED' ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {entry.status}
                                             </span>
                                         </td>
-                                        <td className={`p-4 font-medium ${(entry.profitLoss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        <td className={`p-4 font-medium ${(entry.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                             {entry.profitLoss ? `$${entry.profitLoss.toFixed(2)}` : '-'}
                                         </td>
                                         <td className="p-4 text-sm text-[var(--text-secondary)]">
@@ -335,14 +335,14 @@ export default function JournalPage() {
                                                 {entry.status === 'OPEN' && (
                                                     <button
                                                         onClick={() => setShowCloseModal(entry)}
-                                                        className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+                                                        className="px-2 py-1 bg-green-100 text-green-400 rounded text-xs hover:bg-green-200"
                                                     >
                                                         Close
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleDeleteTrade(entry.id)}
-                                                    className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
+                                                    className="px-2 py-1 bg-red-100 text-red-400 rounded text-xs hover:bg-red-200"
                                                 >
                                                     Delete
                                                 </button>
@@ -395,31 +395,31 @@ export default function JournalPage() {
                                         </td>
                                         <td className="p-4 font-medium text-[var(--text-primary)]">{trade.symbol}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${trade.side === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${trade.side === 'BUY' ? 'bg-green-100 text-green-400' : 'bg-red-100 text-red-400'}`}>
                                                 {trade.side}
                                             </span>
                                         </td>
                                         <td className="p-4 font-mono text-[var(--text-primary)]">{trade.entryPrice}</td>
                                         <td className="p-4 text-sm">
-                                            <span className="text-red-600">{trade.stopLoss ?? '-'}</span>
+                                            <span className="text-red-400">{trade.stopLoss ?? '-'}</span>
                                             <span className="text-[var(--text-muted)]"> / </span>
-                                            <span className="text-green-600">{trade.takeProfit ?? '-'}</span>
+                                            <span className="text-green-400">{trade.takeProfit ?? '-'}</span>
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${trade.outcome === 'TP'
-                                                ? 'bg-green-100 text-green-700'
+                                                ? 'bg-green-100 text-green-400'
                                                 : trade.outcome === 'SL'
-                                                    ? 'bg-red-100 text-red-700'
+                                                    ? 'bg-red-100 text-red-400'
                                                     : trade.outcome === 'MANUAL'
                                                         ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                                         : trade.outcome === 'ERROR'
-                                                            ? 'bg-amber-100 text-amber-700'
-                                                            : 'bg-blue-100 text-blue-700'
+                                                            ? 'bg-amber-100 text-amber-400'
+                                                            : 'bg-blue-100 text-blue-400'
                                                 }`}>
                                                 {trade.outcome}
                                             </span>
                                         </td>
-                                        <td className={`p-4 font-medium ${(trade.pnlValue || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        <td className={`p-4 font-medium ${(trade.pnlValue || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                             {trade.pnlValue != null ? `$${Number(trade.pnlValue).toFixed(2)}` : '-'}
                                         </td>
                                         <td className="p-4 text-sm text-[var(--text-secondary)]">
@@ -514,7 +514,7 @@ export default function JournalPage() {
                                             step="0.00001"
                                             value={formStopLoss}
                                             onChange={e => setFormStopLoss(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-red-600"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-red-400"
                                         />
                                     </div>
                                     <div>
@@ -524,7 +524,7 @@ export default function JournalPage() {
                                             step="0.00001"
                                             value={formTakeProfit}
                                             onChange={e => setFormTakeProfit(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-green-600"
+                                            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-green-400"
                                         />
                                     </div>
                                 </div>
