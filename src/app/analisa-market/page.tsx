@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1381,10 +1381,10 @@ export default function AnalisaMarketPage() {
                                 transition={{ delay: 0.18 }}
                                 className="mb-5 space-y-4"
                             >
-                                <div className="rounded-3xl border border-[var(--border-light)] bg-gradient-to-br from-white via-sky-50/35 to-amber-50/45 p-5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                                <div className="rounded-3xl border border-sky-500/20 bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-[var(--bg-secondary)] p-5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-700 font-semibold">VVIP Exclusive Desk</p>
+                                            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-400 font-semibold">VVIP Exclusive Desk</p>
                                             <h3 className="text-2xl font-semibold text-[var(--text-primary)]">Deep Analyst Room</h3>
                                             <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)] max-w-2xl">
                                                 {deepSections.executiveSummary}
@@ -1529,8 +1529,8 @@ export default function AnalisaMarketPage() {
 
                                                 {/* PREMIUM OVERLAY CARD */}
                                                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[var(--bg-primary)]/60 backdrop-blur-sm">
-                                                    <div className="bg-gradient-to-br from-white to-red-50 border border-red-500/20 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
-                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
+                                                    <div className="bg-gradient-to-br from-red-500/10 to-[var(--bg-secondary)] border border-red-500/20 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
+                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500/20 to-red-500/5 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-[var(--bg-primary)]">
                                                             <LockIcon size="xl" className="text-red-400" />
                                                         </div>
 

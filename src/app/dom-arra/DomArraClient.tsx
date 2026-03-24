@@ -307,7 +307,7 @@ function ComingSoonView() {
                         </div>
 
                         <div className="p-8 opacity-30 blur-sm">
-                            <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-4"></div>
+                            <div className="h-64 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-tertiary)] rounded-2xl mb-4 animate-pulse"></div>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="h-20 bg-[var(--bg-secondary)] rounded-xl"></div>
                                 <div className="h-20 bg-[var(--bg-secondary)] rounded-xl"></div>

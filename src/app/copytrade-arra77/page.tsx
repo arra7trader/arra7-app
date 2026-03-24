@@ -390,7 +390,8 @@ export default function CopytradeArra77Page() {
   return (
     <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
       <div className="max-w-7xl mx-auto space-y-4">
-        <div className="rounded-3xl bg-gradient-to-br from-white to-blue-50 border border-blue-500/20 p-6">
+          {/* Card Performance AI - Redesigned as Premium Dark Glass */}
+        <div className="rounded-3xl bg-gradient-to-br from-blue-500/10 to-[var(--bg-secondary)] border border-blue-500/20 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
           <p className="text-xs font-semibold tracking-widest uppercase text-blue-400">Copytrade ARRA77</p>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-2">AI Signal + EA MT5 + Credit Wallet</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-2">1 signal = 3 credits, 1 credit = Rp1.000, one-trade lock aktif by default.</p>

@@ -107,11 +107,11 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                             {/* Zone Rung */}
                             <div
                                 className={`relative overflow-hidden rounded-2xl transition-all duration-300 ${isActive
-                                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-4 border-green-500/20 shadow-xl shadow-green-200'
+                                        ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/10 border-4 border-green-500/40 shadow-[0_8px_32px_rgba(34,197,94,0.2)]'
                                         : isNear
-                                            ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-4 border-orange-400 shadow-lg shadow-orange-200'
+                                            ? 'bg-gradient-to-r from-orange-500/20 to-yellow-500/10 border-4 border-orange-500/40 shadow-[0_4px_16px_rgba(249,115,22,0.2)]'
                                             : isCurrentZone
-                                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-500/20 shadow-lg'
+                                                ? 'bg-gradient-to-r from-blue-500/20 to-indigo-500/10 border-2 border-blue-500/20 shadow-[0_8px_32px_rgba(37,99,235,0.2)]'
                                                 : 'bg-[var(--bg-primary)] border-2 border-[var(--border-light)] hover:border-[var(--border-medium)] shadow-md'
                                     }`}
                             >
