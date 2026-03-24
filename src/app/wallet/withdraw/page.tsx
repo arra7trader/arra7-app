@@ -95,7 +95,7 @@ export default function WithdrawPage() {
                 <Navbar />
                 <div className="pt-32 pb-20 container mx-auto px-4 flex justify-center">
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg text-center">
-                        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+                        <div className="w-20 h-20 rounded-full bg-green-500/10 border-green-500/20 flex items-center justify-center mx-auto mb-6">
                             <span className="text-4xl">💸</span>
                         </div>
                         <h1 className="text-2xl font-bold mb-2">Pencairan Koin Diproses!</h1>
@@ -130,7 +130,7 @@ export default function WithdrawPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl">
 
                     <div className="flex items-center gap-4 mb-8">
-                        <Link href="/wallet" className="text-gray-400 hover:text-white transition-colors">
+                        <Link href="/wallet" className="text-slate-400 hover:text-white transition-colors">
                             ← Kembali
                         </Link>
                         <h1 className="text-2xl font-bold">Pencairan Koin</h1>
@@ -138,7 +138,7 @@ export default function WithdrawPage() {
 
                     <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-3xl p-6 mb-8 flex justify-between items-center shadow-lg">
                         <div>
-                            <p className="text-gray-400 text-sm mb-1">Saldo Koin Saat Ini</p>
+                            <p className="text-slate-400 text-sm mb-1">Saldo Koin Saat Ini</p>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-4xl font-black text-amber-500">{balance.toLocaleString('id-ID')}</span>
                                 <span className="text-amber-200/50 font-semibold">Koin</span>
@@ -151,7 +151,7 @@ export default function WithdrawPage() {
 
                     <div className="bg-[var(--bg-primary)] rounded-3xl p-8 shadow-sm">
                         {error && (
-                            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm">
+                            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border-red-500/20 border border-red-100 text-red-400 text-sm">
                                 {error}
                             </div>
                         )}
@@ -166,16 +166,16 @@ export default function WithdrawPage() {
                                         max={Math.max(200, balance)}
                                         value={formData.koinAmount}
                                         onChange={(e) => setFormData({ ...formData, koinAmount: Number(e.target.value) })}
-                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl pl-4 pr-16 py-4 text-[var(--text-primary)] text-xl font-bold focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
+                                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl pl-4 pr-16 py-4 text-[var(--text-primary)] text-xl font-bold focus:outline-none focus:border-amber-500/20 focus:bg-[var(--bg-primary)] transition-colors"
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">Koin</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">Koin</span>
                                 </div>
                                 <div className="flex justify-between items-center mt-2">
                                     <p className="text-xs text-[var(--text-secondary)]">Minimal 200 Koin</p>
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, koinAmount: balance })}
-                                        className="text-xs font-bold text-amber-600 hover:text-amber-700"
+                                        className="text-xs font-bold text-amber-400 hover:text-amber-400"
                                     >
                                         Tarik Semua
                                     </button>
@@ -190,7 +190,7 @@ export default function WithdrawPage() {
                                         <select
                                             value={formData.bankName}
                                             onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-500/20 focus:bg-[var(--bg-primary)] transition-colors"
                                         >
                                             <option>BCA</option>
                                             <option>Bank Mandiri</option>
@@ -209,7 +209,7 @@ export default function WithdrawPage() {
                                             type="text" required
                                             value={formData.accountNumber}
                                             onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-500/20 focus:bg-[var(--bg-primary)] transition-colors"
                                             placeholder="Misal: 0812345678"
                                         />
                                     </div>
@@ -219,14 +219,14 @@ export default function WithdrawPage() {
                                             type="text" required
                                             value={formData.accountName}
                                             onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
-                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-400 focus:bg-[var(--bg-primary)] transition-colors"
+                                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-amber-500/20 focus:bg-[var(--bg-primary)] transition-colors"
                                             placeholder="Sesuai buku tabungan"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-amber-50 rounded-xl p-4 flex gap-3 text-amber-800 text-sm border border-amber-100 items-start">
+                            <div className="bg-amber-500/10 border-amber-500/20 rounded-xl p-4 flex gap-3 text-amber-400 text-sm border border-amber-100 items-start">
                                 <span className="text-xl">⚠️</span>
                                 <p>Setiap penarikan dikenakan biaya admin antar Bank/SKN sebesar <strong className="font-bold">Rp 5.000</strong> yang dipotong langsung dari total transfer Rupiah Anda.</p>
                             </div>

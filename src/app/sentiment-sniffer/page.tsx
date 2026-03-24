@@ -27,7 +27,7 @@ export default function SentimentSnifferPage() {
                                 </h1>
                                 <p className="text-[var(--text-secondary)]">{t('subtitle')}</p>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-green-500 bg-green-50 px-3 py-1 rounded-full">
+                            <div className="flex items-center gap-2 text-sm text-green-500 bg-green-500/10 border-green-500/20 px-3 py-1 rounded-full">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -41,8 +41,8 @@ export default function SentimentSnifferPage() {
                             {/* Gauge USD */}
                             <div className="bg-[var(--bg-primary)] dark:bg-gray-800 p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
                                 <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">{t('usdSentiment')}</h3>
-                                <div className="text-4xl font-bold text-green-600 mb-1">{t('strongBullish')}</div>
-                                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div className="text-4xl font-bold text-green-400 mb-1">{t('strongBullish')}</div>
+                                <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
                                     <div className="bg-green-500 h-2 rounded-full" style={{ width: '85%' }}></div>
                                 </div>
                                 <p className="text-xs text-[var(--text-secondary)]">{t('drivenBy')} <span className="font-semibold">NFP Expectation</span></p>
@@ -51,8 +51,8 @@ export default function SentimentSnifferPage() {
                             {/* Gauge GOLD */}
                             <div className="bg-[var(--bg-primary)] dark:bg-gray-800 p-6 rounded-2xl border border-[var(--border-light)] shadow-sm">
                                 <h3 className="text-sm font-bold text-[var(--text-muted)] mb-2">{t('goldSentiment')}</h3>
-                                <div className="text-4xl font-bold text-red-600 mb-1">{t('bearish')}</div>
-                                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div className="text-4xl font-bold text-red-400 mb-1">{t('bearish')}</div>
+                                <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
                                     <div className="bg-red-500 h-2 rounded-full" style={{ width: '65%' }}></div>
                                 </div>
                                 <p className="text-xs text-[var(--text-secondary)]">{t('drivenBy')} <span className="font-semibold">Strong Dollar</span></p>
@@ -73,7 +73,7 @@ export default function SentimentSnifferPage() {
                             <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center">
                                 <h3 className="font-bold">{t('newsFeed')}</h3>
                                 <div className="flex gap-2">
-                                    <button className="px-3 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded-lg">{t('all')}</button>
+                                    <button className="px-3 py-1 text-xs font-bold bg-blue-500/10 border-blue-500/20 text-blue-400 rounded-lg">{t('all')}</button>
                                     <button className="px-3 py-1 text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] rounded-lg">{t('highImpact')}</button>
                                 </div>
                             </div>
@@ -83,7 +83,7 @@ export default function SentimentSnifferPage() {
                                     <div className="w-16 text-xs text-[var(--text-muted)] font-mono pt-1">Just Now</div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase">USD High Impact</span>
+                                            <span className="px-2 py-0.5 bg-red-500/10 border-red-500/20 text-red-400 text-[10px] font-bold rounded uppercase">USD High Impact</span>
                                             <span className="font-semibold text-[var(--text-primary)]">Fed Chair Powell Hints at Rate Hikes</span>
                                         </div>
                                         <p className="text-sm text-[var(--text-secondary)]">
@@ -91,7 +91,7 @@ export default function SentimentSnifferPage() {
                                         </p>
                                         <div className="mt-2 flex gap-2">
                                             <span className="text-[10px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] px-2 py-1 rounded">Source: Bloomberg Terminal</span>
-                                            <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded">AI Sentiment: -0.8 (Negative)</span>
+                                            <span className="text-[10px] bg-blue-500/10 border-blue-500/20 text-blue-400 px-2 py-1 rounded">AI Sentiment: -0.8 (Negative)</span>
                                         </div>
                                     </div>
                                 </div>
@@ -101,7 +101,7 @@ export default function SentimentSnifferPage() {
                                     <div className="w-16 text-xs text-[var(--text-muted)] font-mono pt-1">2m ago</div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">BTC Bullish</span>
+                                            <span className="px-2 py-0.5 bg-green-500/10 border-green-500/20 text-green-400 text-[10px] font-bold rounded uppercase">BTC Bullish</span>
                                             <span className="font-semibold text-[var(--text-primary)]">Bitcoin Spot ETF Volumes Spike</span>
                                         </div>
                                         <p className="text-sm text-[var(--text-secondary)]">

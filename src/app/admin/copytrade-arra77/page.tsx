@@ -23,18 +23,18 @@ function fmtIdr(v: number) {
 function lockDiagBadge(diag: any): { label: string; className: string } {
   const reason = String(diag?.reasonCode || '').toUpperCase();
   if (reason === 'LOCK_EXPECTED_OPEN_POSITION') {
-    return { label: 'Lock Normal', className: 'bg-blue-100 text-blue-700' };
+    return { label: 'Lock Normal', className: 'bg-blue-500/15 text-blue-400' };
   }
   if (reason === 'STALE_LOCK_SUSPECT') {
-    return { label: 'Reset Recommended', className: 'bg-rose-100 text-rose-700' };
+    return { label: 'Reset Recommended', className: 'bg-rose-500/15 text-rose-400' };
   }
   if (reason === 'HEARTBEAT_STALE') {
     return { label: 'EA Offline', className: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]' };
   }
   if (reason === 'LOCK_OBSERVED_WAIT_SYNC') {
-    return { label: 'Wait Sync', className: 'bg-amber-100 text-amber-700' };
+    return { label: 'Wait Sync', className: 'bg-amber-500/15 text-amber-400' };
   }
-  return { label: 'Healthy', className: 'bg-emerald-100 text-emerald-700' };
+  return { label: 'Healthy', className: 'bg-emerald-500/15 text-emerald-400' };
 }
 
 export default function CopytradeArra77AdminPage() {
@@ -204,8 +204,9 @@ export default function CopytradeArra77AdminPage() {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="rounded-3xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
+
             <div>
-              <p className="text-xs font-semibold tracking-widest uppercase text-blue-700">Admin Panel</p>
+              <p className="text-xs font-semibold tracking-widest uppercase text-blue-500">Admin Panel</p>
               <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-1">Copytrade ARRA77 Operations</h1>
               <p className="text-sm text-[var(--text-secondary)] mt-1">Topup review, provider approval, follow monitoring, bridge monitoring.</p>
             </div>
@@ -216,8 +217,8 @@ export default function CopytradeArra77AdminPage() {
           </div>
         </div>
 
-        {message && <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">{message}</div>}
-        {error && <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>}
+        {message && <div className="rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-2 text-sm text-green-400">{message}</div>}
+        {error && <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">{error}</div>}
 
         <div className="flex gap-2 overflow-auto">
           {(['overview', 'topups', 'providers', 'follows', 'bridge'] as AdminTab[]).map((k) => (
@@ -261,9 +262,9 @@ export default function CopytradeArra77AdminPage() {
                 All
               </button>
             </div>
-            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 space-y-2 mb-2">
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 space-y-2 mb-2">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-[var(--text-primary)]">Manual Credit Adjustment</p>
+                <p className="text-sm font-semibold text-blue-400">Manual Credit Adjustment</p>
                 <span className="text-xs text-[var(--text-secondary)]">Untuk koreksi saldo tanpa topup order</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
@@ -435,7 +436,7 @@ export default function CopytradeArra77AdminPage() {
                   </button>
                 </div>
               </div>
-              <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+              <div className="mb-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] p-3">
                 <p className="text-sm font-semibold text-[var(--text-primary)]">Checklist Monitoring Lock</p>
                 <ol className="list-decimal ml-4 mt-2 space-y-1 text-xs text-[var(--text-secondary)]">
                   <li>Jika Open(Follower) {'>'} 0: lock normal, jangan reset.</li>

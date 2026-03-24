@@ -440,3 +440,270 @@ body {
   --border-light: #1F2937;
   --border-medium: #374151;
 }
+
+/* ===== PREMIUM DARK DASHBOARD & SITE-WIDE DESIGN SYSTEM ===== */
+
+/* Glassmorphism Card (also aliased for generic use) */
+.admin-card, .glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Admin / Generic Input - Dark Themed */
+.admin-input, .arra-input {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.admin-input::placeholder, .arra-input::placeholder {
+  color: var(--text-muted);
+}
+
+.admin-input:focus, .arra-input:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-input:disabled, .arra-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Admin / Generic Select - Dark Themed */
+.admin-select, .arra-select {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-select:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.admin-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Admin Textarea / Generic */
+.admin-textarea, .arra-textarea {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-mono);
+}
+
+.admin-textarea::placeholder, .arra-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.admin-textarea:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Pill Tabs */
+.admin-pill-tab {
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.admin-pill-tab:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-pill-tab.active {
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Info Box - Dark */
+.admin-info-box, .glass-info-box {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  color: #93C5FD;
+  font-size: 0.875rem;
+}
+
+.admin-info-box b,
+.admin-info-box strong,
+.glass-info-box b,
+.glass-info-box strong {
+  color: #BFDBFE;
+}
+
+/* Warning Box - Dark */
+.admin-warning-box, .glass-warning-box {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  color: #FCD34D;
+  font-size: 0.75rem;
+}
+
+/* Error Box - Dark */
+.admin-error-box, .glass-error-box {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #FCA5A5;
+  font-size: 0.875rem;
+}
+
+/* Success Box - Dark */
+.admin-success-box, .glass-success-box {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  color: #86EFAC;
+  font-size: 0.875rem;
+}
+
+/* Quick Access Link Card */
+.admin-quick-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.admin-quick-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.admin-quick-link .icon-container {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Stat Card Glow Border Variants */
+.glow-blue { box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.05); }
+.glow-cyan { box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.15), 0 0 20px rgba(6, 182, 212, 0.05); }
+.glow-purple { box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.15), 0 0 20px rgba(168, 85, 247, 0.05); }
+.glow-amber { box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.15), 0 0 20px rgba(245, 158, 11, 0.05); }
+
+/* Membership Badge - Dark */
+.badge-basic {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94A3B8;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-pro {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60A5FA;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-vvip {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(234, 179, 8, 0.15));
+  color: #FBBF24;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.1);
+}
+
+/* Admin Action Button */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.admin-btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.admin-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+/* Animated counter keyframe */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-count-up {
+  animation: countUp 0.5s ease-out forwards;
+}

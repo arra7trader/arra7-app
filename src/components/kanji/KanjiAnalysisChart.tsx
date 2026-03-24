@@ -207,7 +207,7 @@ const KanjiAnalysisChart = forwardRef(({ pair, levels, onPriceClick, showAllLeve
             {isLoading && (
                 <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center backdrop-blur-sm">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <div className="text-gray-400 font-medium animate-pulse">Fetching Fresh Data...</div>
+                    <div className="text-slate-400 font-medium animate-pulse">Fetching Fresh Data...</div>
                 </div>
             )}
             <div ref={chartContainerRef} className="w-full h-full cursor-crosshair" />
@@ -216,7 +216,7 @@ const KanjiAnalysisChart = forwardRef(({ pair, levels, onPriceClick, showAllLeve
             {activeZones.length > 0 && (
                 <div className="absolute top-4 left-4 flex flex-col gap-1 pointer-events-none">
                     <div className="bg-black/80 backdrop-blur rounded-lg p-2 border border-gray-700 text-[10px]">
-                        <div className="text-gray-400 font-bold mb-1 uppercase tracking-wider">Zone Guide</div>
+                        <div className="text-slate-400 font-bold mb-1 uppercase tracking-wider">Zone Guide</div>
                         {activeZones.map((zone: any, i) => (
                             <div key={i} className="flex items-center gap-2 text-gray-300">
                                 <div className="w-3 h-3 rounded" style={{ backgroundColor: zone.borderColor }}></div>

@@ -47,7 +47,7 @@ function OrderBookVisualization({ orderBook, maxLevels = 15, statusMessage }: { 
                 <div className="space-y-1">
                     {asks.map((level, i) => (
                         <div key={`ask-${i}`} className="flex items-center gap-2 text-sm">
-                            <div className="w-24 text-right font-mono text-red-600">
+                            <div className="w-24 text-right font-mono text-red-400">
                                 {level.price.toFixed(2)}
                             </div>
                             <div className="flex-1 h-6 bg-[var(--bg-secondary)] rounded overflow-hidden relative">
@@ -69,7 +69,7 @@ function OrderBookVisualization({ orderBook, maxLevels = 15, statusMessage }: { 
             <div className="col-span-2 py-3 px-4 bg-[var(--bg-secondary)] rounded-xl flex items-center justify-between">
                 <div className="text-center">
                     <span className="text-xs text-[var(--text-muted)]">Best Bid</span>
-                    <p className="text-lg font-bold text-green-600">{orderBook.bids[0]?.price.toFixed(2) || '-'}</p>
+                    <p className="text-lg font-bold text-green-400">{orderBook.bids[0]?.price.toFixed(2) || '-'}</p>
                 </div>
                 <div className="text-center px-4">
                     <span className="text-xs text-[var(--text-muted)]">Spread</span>
@@ -78,7 +78,7 @@ function OrderBookVisualization({ orderBook, maxLevels = 15, statusMessage }: { 
                 </div>
                 <div className="text-center">
                     <span className="text-xs text-[var(--text-muted)]">Best Ask</span>
-                    <p className="text-lg font-bold text-red-600">{orderBook.asks[0]?.price.toFixed(2) || '-'}</p>
+                    <p className="text-lg font-bold text-red-400">{orderBook.asks[0]?.price.toFixed(2) || '-'}</p>
                 </div>
             </div>
 
@@ -91,7 +91,7 @@ function OrderBookVisualization({ orderBook, maxLevels = 15, statusMessage }: { 
                 <div className="space-y-1">
                     {bids.map((level, i) => (
                         <div key={`bid-${i}`} className="flex items-center gap-2 text-sm">
-                            <div className="w-24 text-right font-mono text-green-600">
+                            <div className="w-24 text-right font-mono text-green-400">
                                 {level.price.toFixed(2)}
                             </div>
                             <div className="flex-1 h-6 bg-[var(--bg-secondary)] rounded overflow-hidden relative">
@@ -119,9 +119,9 @@ function ImbalanceMeter({ imbalance }: { imbalance: number }) {
     const percentage = (value + 100) / 2; // Convert to 0-100 scale
 
     const getColor = () => {
-        if (value > 30) return 'text-green-600';
-        if (value < -30) return 'text-red-600';
-        return 'text-amber-600';
+        if (value > 30) return 'text-green-400';
+        if (value < -30) return 'text-red-400';
+        return 'text-amber-400';
     };
 
     const getLabel = () => {
@@ -216,8 +216,8 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
                 </div>
                 <div className="bg-[var(--bg-secondary)] rounded-xl p-3 text-center">
                     <p className="text-xs text-[var(--text-muted)]">Whale Activity</p>
-                    <p className={`text-lg font-bold ${prediction.whaleActivity === 'HIGH' ? 'text-purple-600' :
-                        prediction.whaleActivity === 'MEDIUM' ? 'text-blue-600' : 'text-[var(--text-secondary)]'
+                    <p className={`text-lg font-bold ${prediction.whaleActivity === 'HIGH' ? 'text-purple-400' :
+                        prediction.whaleActivity === 'MEDIUM' ? 'text-blue-400' : 'text-[var(--text-secondary)]'
                         }`}>
                         {prediction.whaleActivity === 'HIGH' ? '🐋 High' :
                             prediction.whaleActivity === 'MEDIUM' ? '🐬 Medium' : '🐟 Low'}
@@ -226,8 +226,8 @@ function PredictionPanel({ prediction }: { prediction: DOMPrediction | null }) {
             </div>
 
             {/* Recommendation */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                <p className="text-sm text-blue-800">{prediction.recommendation}</p>
+            <div className="bg-blue-500/10 border-blue-500/20 border border-blue-500/20 rounded-xl p-4 mb-4">
+                <p className="text-sm text-blue-400">{prediction.recommendation}</p>
             </div>
 
             {/* Signals */}
@@ -378,7 +378,7 @@ function BlockedView({ reason }: { reason: string }) {
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-[var(--bg-primary)] p-8 rounded-3xl border border-[var(--border-light)] shadow-xl"
                     >
-                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${isExpired ? 'bg-red-100' : 'bg-[var(--bg-secondary)]'}`}>
+                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${isExpired ? 'bg-red-500/10 border-red-500/20' : 'bg-[var(--bg-secondary)]'}`}>
                             <LockIcon className={isExpired ? 'text-red-500' : 'text-[var(--text-secondary)]'} size="xl" />
                         </div>
 
@@ -401,9 +401,9 @@ function BlockedView({ reason }: { reason: string }) {
                                     <li className="flex items-center gap-2">❌ Whale Alerts</li>
                                 </ul>
                             </div>
-                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-left">
-                                <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">Recommended</span></h4>
-                                <ul className="text-sm space-y-2 text-blue-800">
+                            <div className="p-4 bg-blue-500/10 border-blue-500/20 border border-blue-500/20 rounded-xl text-left">
+                                <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-400 px-2 py-0.5 rounded-full">Recommended</span></h4>
+                                <ul className="text-sm space-y-2 text-blue-400">
                                     <li className="flex items-center gap-2">✅ Analisa Market Premium</li>
                                     <li className="flex items-center gap-2">✅ Bookmap ARRA7 Unlimited</li>
                                     <li className="flex items-center gap-2">✅ Whale Alerts Real-time</li>
@@ -783,15 +783,15 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                 >
                     <div>
                         <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-3">
-                            <ChartIcon size="lg" className="text-blue-600" />
+                            <ChartIcon size="lg" className="text-blue-400" />
                             Bookmap ARRA7
-                            <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">BETA</span>
+                            <span className="text-xs px-2 py-1 bg-amber-500/10 border-amber-500/20 text-amber-400 rounded-full">BETA</span>
                         </h1>
                         <p className="text-[var(--text-secondary)]">Real-time Depth of Market Analysis</p>
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Connection Status */}
-                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isConnected ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isConnected ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
                             }`}>
                             <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
                             {isConnected ? 'Connected' : 'Disconnected'}
@@ -842,7 +842,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                     <button
                         onClick={() => setActiveTab('orderbook')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'orderbook'
-                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 border border-blue-500/20'
                             : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                     >
@@ -852,7 +852,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                     <button
                         onClick={() => setActiveTab('heatmap')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'heatmap'
-                            ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                            ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 border border-purple-500/20'
                             : 'bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                     >
@@ -886,7 +886,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                                     </button>
                                 ))}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-slate-400">
                                 Showing last {heatmapTimeframe}m • {flowHistory.length} data points
                                 {flowHistory.length > 0 && (
                                     <span className="ml-1">
@@ -954,7 +954,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                             <div className="bg-[var(--bg-primary)] rounded-2xl p-6 border border-[var(--border-light)]">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                                        <CircleStackIcon size="md" className="text-blue-600" />
+                                        <CircleStackIcon size="md" className="text-blue-400" />
                                         Order Book - {symbolConfig.name}
                                     </h2>
                                     {lastUpdate && (
@@ -997,15 +997,15 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Bid Volume</p>
-                            <p className="text-xl font-bold text-green-600">{orderBook.totalBidVolume.toFixed(4)}</p>
+                            <p className="text-xl font-bold text-green-400">{orderBook.totalBidVolume.toFixed(4)}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Ask Volume</p>
-                            <p className="text-xl font-bold text-red-600">{orderBook.totalAskVolume.toFixed(4)}</p>
+                            <p className="text-xl font-bold text-red-400">{orderBook.totalAskVolume.toFixed(4)}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Data Source</p>
-                            <p className={`text-xl font-bold ${orderBook.dataSource === 'REAL' ? 'text-green-600' : 'text-amber-600'}`}>
+                            <p className={`text-xl font-bold ${orderBook.dataSource === 'REAL' ? 'text-green-400' : 'text-amber-400'}`}>
                                 {orderBook.dataSource === 'REAL' ? '🔴 Live' : '🟡 Simulated'}
                             </p>
                         </div>

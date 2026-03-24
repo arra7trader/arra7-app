@@ -46,7 +46,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
                 <SparklesIcon size="sm" className="text-purple-500" />
                 ML Prediction
                 <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${prediction.source === 'ml-backend'
-                        ? 'bg-purple-100 text-purple-700'
+                        ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
                         : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                     }`}>
                     {prediction.source === 'ml-backend' ? '🤖 AI' : '📊 Heuristic'}
@@ -104,7 +104,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
             {/* Probability bars */}
             <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs w-16 text-green-600">↑ UP</span>
+                    <span className="text-xs w-16 text-green-400">↑ UP</span>
                     <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-green-500 rounded-full"
@@ -118,7 +118,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs w-16 text-amber-600">→ NEU</span>
+                    <span className="text-xs w-16 text-amber-400">→ NEU</span>
                     <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-amber-500 rounded-full"
@@ -132,7 +132,7 @@ export default function MLPredictionPanel({ prediction, isLoading = false }: MLP
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs w-16 text-red-600">↓ DOWN</span>
+                    <span className="text-xs w-16 text-red-400">↓ DOWN</span>
                     <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-red-500 rounded-full"

@@ -49,7 +49,7 @@ export default function GoldHeatmapPage() {
                                 🎯 How to Read
                             </h3>
                             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                                Area <span className="text-green-600 font-bold">Hijau</span> menunjukkan potensi support kuat. Area <span className="text-red-600 font-bold">Merah</span> menunjukkan potensi resistance kuat. Semakin terang warnanya, semakin tinggi probabilitasnya.
+                                Area <span className="text-green-400 font-bold">Hijau</span> menunjukkan potensi support kuat. Area <span className="text-red-400 font-bold">Merah</span> menunjukkan potensi resistance kuat. Semakin terang warnanya, semakin tinggi probabilitasnya.
                             </p>
                         </div>
                     </div>

@@ -46,10 +46,10 @@ function getStrengthLabel(probability: number): string {
 }
 
 function getStrengthColor(probability: number): string {
-    if (probability >= 0.85) return 'text-purple-600 font-black animate-pulse'; // Special VVIP color
-    if (probability >= 0.75) return 'text-emerald-600 font-bold';
-    if (probability >= 0.65) return 'text-green-600 font-semibold';
-    if (probability >= 0.55) return 'text-amber-600';
+    if (probability >= 0.85) return 'text-purple-400 font-black animate-pulse'; // Special VVIP color
+    if (probability >= 0.75) return 'text-emerald-400 font-bold';
+    if (probability >= 0.65) return 'text-green-400 font-semibold';
+    if (probability >= 0.55) return 'text-amber-400';
     return 'text-[var(--text-secondary)]';
 }
 
@@ -125,7 +125,7 @@ export default function GoldHeatmap() {
             <div className="w-full min-h-[400px] flex items-center justify-center bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)]">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-gray-400 font-medium">Loading heatmap data…</span>
+                    <span className="text-sm text-slate-400 font-medium">Loading heatmap data…</span>
                 </div>
             </div>
         );
@@ -133,7 +133,7 @@ export default function GoldHeatmap() {
 
     if (error && !data) {
         return (
-            <div className="w-full min-h-[200px] flex items-center justify-center bg-[var(--bg-primary)] rounded-2xl border border-red-200">
+            <div className="w-full min-h-[200px] flex items-center justify-center bg-[var(--bg-primary)] rounded-2xl border border-red-500/20">
                 <p className="text-red-500 text-sm">⚠️ {error}</p>
             </div>
         );
@@ -185,7 +185,7 @@ export default function GoldHeatmap() {
                         <h1 className="text-4xl font-black tracking-tighter">
                             ${data.currentPrice.toFixed(2)}
                         </h1>
-                        <p className="text-xs text-gray-400 mt-2 font-mono">
+                        <p className="text-xs text-slate-400 mt-2 font-mono">
                             LIQUIDITY SCAN: {secondsAgo}s AGO • SESSION: {data.session.toUpperCase()}
                         </p>
                     </div>
@@ -193,7 +193,7 @@ export default function GoldHeatmap() {
                     {/* Sentiment Gauge */}
                     <div className="flex items-center gap-6 bg-[var(--bg-primary)]/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm">
                         <div className="text-center">
-                            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Smart Money Bias</div>
+                            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Smart Money Bias</div>
                             <div className={`text-xl font-black ${bias === 'NET LONG' ? 'text-green-400' : bias === 'NET SHORT' ? 'text-red-400' : 'text-gray-200'}`}>
                                 {bias}
                             </div>
@@ -220,7 +220,7 @@ export default function GoldHeatmap() {
                 </h3>
                 <button
                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isVoiceEnabled ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-500/20' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200'
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isVoiceEnabled ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 ring-2 ring-amber-500/20' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-slate-800'
                         }`}
                 >
                     {isVoiceEnabled ? '🎙️ VOICE ALERT: ON' : '🔇 VOICE ALERT: OFF'}
@@ -234,7 +234,7 @@ export default function GoldHeatmap() {
                 <div className="bg-[var(--bg-primary)] rounded-2xl border border-green-100 shadow-lg shadow-green-900/5 overflow-hidden">
                     <div className="bg-[var(--bg-secondary)] px-5 py-3 border-b border-[var(--border-light)] flex justify-between items-center">
                         <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Demand Zones (Bids)</span>
-                        <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                        <span className="text-xs font-bold text-green-400 bg-green-500/10 border-green-500/20 px-2 py-0.5 rounded">
                             Total: {buyZones.length}
                         </span>
                     </div>
@@ -249,7 +249,7 @@ export default function GoldHeatmap() {
                 <div className="bg-[var(--bg-primary)] rounded-2xl border border-red-100 shadow-lg shadow-red-900/5 overflow-hidden">
                     <div className="bg-[var(--bg-secondary)] px-5 py-3 border-b border-[var(--border-light)] flex justify-between items-center">
                         <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Supply Zones (Asks)</span>
-                        <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">
+                        <span className="text-xs font-bold text-red-400 bg-red-500/10 border-red-500/20 px-2 py-0.5 rounded">
                             Total: {sellZones.length}
                         </span>
                     </div>
@@ -266,7 +266,7 @@ export default function GoldHeatmap() {
                 <div className="border-t border-[var(--border-light)] pt-4">
                     <button
                         onClick={() => setShowNeutral(!showNeutral)}
-                        className="text-xs font-medium text-gray-400 hover:text-[var(--text-secondary)] flex items-center gap-1 mx-auto"
+                        className="text-xs font-medium text-slate-400 hover:text-[var(--text-secondary)] flex items-center gap-1 mx-auto"
                     >
                         {showNeutral ? 'Hide Neutral Zones' : `Show ${neutralZones.length} Neutral Zones`}
                     </button>
@@ -307,10 +307,10 @@ function OrderBookRow({ zone, type, currentPrice }: {
     const isWhale = zone.probability >= 0.8;
 
     return (
-        <div className={`relative px-4 py-2.5 flex items-center justify-between group ${isNear ? 'bg-amber-50' : 'hover:bg-[var(--bg-secondary)]'}`}>
+        <div className={`relative px-4 py-2.5 flex items-center justify-between group ${isNear ? 'bg-amber-500/10 border-amber-500/20' : 'hover:bg-[var(--bg-secondary)]'}`}>
             {/* Volume Bar Background */}
             <div
-                className={`absolute inset-y-0 ${type === 'buy' ? 'left-0 bg-green-100' : 'right-0 bg-red-100'} transition-all duration-1000 ease-out`}
+                className={`absolute inset-y-0 ${type === 'buy' ? 'left-0 bg-green-500/10 border-green-500/20' : 'right-0 bg-red-500/10 border-red-500/20'} transition-all duration-1000 ease-out`}
                 style={{
                     width: `${pct * 0.8}%`, // Max 80% width
                     opacity: 0.3
@@ -319,11 +319,11 @@ function OrderBookRow({ zone, type, currentPrice }: {
 
             {/* Price */}
             <div className="relative z-10 flex items-center gap-3">
-                <span className={`font-mono font-bold text-sm ${type === 'buy' ? 'text-green-700' : 'text-red-700'}`}>
+                <span className={`font-mono font-bold text-sm ${type === 'buy' ? 'text-green-400' : 'text-red-400'}`}>
                     {zone.price.toFixed(2)}
                 </span>
                 {isWhale && (
-                    <span className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-600 rounded border border-purple-200 animate-pulse">
+                    <span className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-purple-500/10 border-purple-500/20 text-purple-400 rounded border border-purple-500/20 animate-pulse">
                         Whale
                     </span>
                 )}
@@ -333,7 +333,7 @@ function OrderBookRow({ zone, type, currentPrice }: {
             <div className="relative z-10 flex items-center gap-2">
                 <div className="text-right">
                     <div className="text-xs font-bold text-[var(--text-secondary)]">{pct}% Interest</div>
-                    <div className="text-[10px] text-gray-400">{isNear ? '⚠️ APPROACHING' : 'Pending'}</div>
+                    <div className="text-[10px] text-slate-400">{isNear ? '⚠️ APPROACHING' : 'Pending'}</div>
                 </div>
             </div>
         </div>

@@ -810,8 +810,8 @@ export default function AnalisaMarketPage() {
     const lastChargeClass = lastQuotaCharged === null
         ? 'text-[var(--text-muted)]'
         : lastQuotaCharged
-            ? 'text-amber-600'
-            : 'text-emerald-600';
+            ? 'text-amber-400'
+            : 'text-emerald-400';
     const isVvipUser = (quotaStatus?.membership || '').toUpperCase() === 'VVIP';
     const isSessionVvip = (session?.user?.tier || '').toUpperCase() === 'VVIP';
     const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
@@ -880,9 +880,9 @@ export default function AnalisaMarketPage() {
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">Status akses analisa market</p>
                                     </div>
                                     <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${quotaStatus?.membership === 'VVIP'
-                                        ? 'bg-amber-100 text-amber-700'
+                                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                         : quotaStatus?.membership === 'PRO'
-                                            ? 'bg-blue-100 text-blue-700'
+                                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                         }`}>
                                         {quotaStatus?.membership || 'BASIC'}
@@ -951,7 +951,7 @@ export default function AnalisaMarketPage() {
                                             <p className="text-sm font-semibold text-[var(--text-primary)]">Chat langsung untuk signal dan analisa</p>
                                         </div>
                                         <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold ${telegramStatus?.linked
-                                            ? 'bg-emerald-100 text-emerald-700'
+                                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                             }`}>
                                             {telegramStatus?.linked ? 'Linked' : 'Not Linked'}
@@ -963,7 +963,7 @@ export default function AnalisaMarketPage() {
                                     ) : (
                                         <div className="mt-2 space-y-2">
                                             {!isSessionVvip || !telegramStatus?.isVvipActive ? (
-                                                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                                                <p className="text-xs text-amber-400 bg-amber-500/10 border-amber-500/20 border border-amber-500/20 rounded-md px-2 py-1.5">
                                                     Fitur ini khusus VVIP aktif. Upgrade/aktifkan VVIP untuk menghubungkan bot.
                                                 </p>
                                             ) : (
@@ -1028,7 +1028,7 @@ export default function AnalisaMarketPage() {
                                                         onClick={handleGenerateTelegramCode}
                                                         disabled={telegramGenerating}
                                                         className={`w-full py-2 rounded-md text-xs font-semibold transition-colors ${telegramGenerating
-                                                            ? 'bg-gray-200 text-[var(--text-secondary)] cursor-not-allowed'
+                                                            ? 'bg-slate-800 text-[var(--text-secondary)] cursor-not-allowed'
                                                             : 'bg-[var(--accent-blue)] text-white hover:bg-blue-600'
                                                             }`}
                                                     >
@@ -1042,7 +1042,7 @@ export default function AnalisaMarketPage() {
                                             )}
 
                                             {telegramError && (
-                                                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">
+                                                <p className="text-xs text-red-400 bg-red-500/10 border-red-500/20 border border-red-500/20 rounded-md px-2 py-1.5">
                                                     {telegramError}
                                                 </p>
                                             )}
@@ -1159,24 +1159,24 @@ export default function AnalisaMarketPage() {
                         {/* Quota Status */}
                         {quotaStatus && (
                             <div className={`rounded-2xl p-4 border ${quotaStatus.membership === 'VVIP'
-                                ? 'bg-amber-50 border-amber-200'
+                                ? 'bg-amber-500/10 border-amber-500/20 border-amber-500/20'
                                 : quotaStatus.membership === 'PRO'
-                                    ? 'bg-blue-50 border-blue-200'
+                                    ? 'bg-blue-500/10 border-blue-500/20 border-blue-500/20'
                                     : 'bg-[var(--bg-primary)] border-[var(--border-light)]'
                                 }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-[var(--text-secondary)] flex items-center gap-1"><ChartIcon size="sm" /> Quota Hari Ini</span>
                                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus.membership === 'VVIP'
-                                        ? 'bg-amber-100 text-amber-700'
+                                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                         : quotaStatus.membership === 'PRO'
-                                            ? 'bg-blue-100 text-blue-700'
+                                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                         }`}>
                                         {quotaStatus.membership}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
                                         <div
                                             className={`h-full transition-all ${quotaStatus.remaining === 0
                                                 ? 'bg-red-500'
@@ -1239,14 +1239,14 @@ export default function AnalisaMarketPage() {
                             className={`
                                 w-full py-4 rounded-xl font-semibold text-lg transition-all
                                 ${isAnalyzing || cooldownSeconds > 0
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
                                     : 'btn-primary'
                                 }
                             `}
                         >
                             {isAnalyzing ? (
                                 <span className="flex items-center justify-center gap-3">
-                                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-5 h-5 border-2 border-slate-700 border-t-transparent rounded-full animate-spin" />
                                     Analyzing...
                                 </span>
                             ) : cooldownSeconds > 0 ? (
@@ -1261,7 +1261,7 @@ export default function AnalisaMarketPage() {
                             )}
                         </motion.button>
                         {journalAutoSaved === true && (
-                            <p className="mt-2 text-xs text-emerald-700">
+                            <p className="mt-2 text-xs text-emerald-400">
                                 Sinyal BUY/SELL otomatis tersimpan ke jurnal.
                             </p>
                         )}
@@ -1277,12 +1277,12 @@ export default function AnalisaMarketPage() {
 
                                 {/* Simulated Data Warning */}
                                 {marketInfo.isSimulated && (
-                                    <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-3 rounded">
+                                    <div className="bg-red-500/10 border-red-500/20 border-l-4 border-red-500 p-3 mb-3 rounded">
                                         <div className="flex items-start gap-2">
-                                            <WarningIcon size="sm" className="text-red-600 mt-0.5 shrink-0" />
+                                            <WarningIcon size="sm" className="text-red-400 mt-0.5 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-semibold text-red-800">Data Simulasi</p>
-                                                <p className="text-xs text-red-600 mt-1">API gagal. Data ini adalah simulasi untuk demo saja. Jangan gunakan untuk trading!</p>
+                                                <p className="text-xs font-semibold text-red-400">Data Simulasi</p>
+                                                <p className="text-xs text-red-400 mt-1">API gagal. Data ini adalah simulasi untuk demo saja. Jangan gunakan untuk trading!</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1290,12 +1290,12 @@ export default function AnalisaMarketPage() {
 
                                 {/* Delayed Data Warning */}
                                 {!marketInfo.isRealtime && !marketInfo.isSimulated && (
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-3 rounded">
+                                    <div className="bg-yellow-500/10 border-yellow-500/20 border-l-4 border-yellow-500 p-3 mb-3 rounded">
                                         <div className="flex items-start gap-2">
-                                            <ClockIcon size="sm" className="text-yellow-600 mt-0.5 shrink-0" />
+                                            <ClockIcon size="sm" className="text-yellow-400 mt-0.5 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-semibold text-yellow-800">Data Delayed</p>
-                                                <p className="text-xs text-yellow-700 mt-1">
+                                                <p className="text-xs font-semibold text-yellow-400">Data Delayed</p>
+                                                <p className="text-xs text-yellow-400 mt-1">
                                                     Data sudah {marketInfo.freshnessSeconds ? Math.floor(marketInfo.freshnessSeconds / 60) : '?'} menit yang lalu.
                                                     {' '}Gunakan dengan hati-hati untuk trading.
                                                 </p>
@@ -1315,17 +1315,17 @@ export default function AnalisaMarketPage() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-[var(--text-secondary)]">Change</span>
-                                        <span className={`font-medium ${marketInfo.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        <span className={`font-medium ${marketInfo.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                             {marketInfo.change >= 0 ? '+' : ''}{marketInfo.change.toFixed(4)}%
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-[var(--text-secondary)]">Status</span>
                                         <span className={`text-xs px-2 py-0.5 rounded font-semibold ${marketInfo.isSimulated
-                                            ? 'bg-red-100 text-red-700'
+                                            ? 'bg-red-500/10 border-red-500/20 text-red-400'
                                             : marketInfo.isRealtime
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-yellow-100 text-yellow-700'
+                                                ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                                                : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
                                             }`}>
                                             {marketInfo.isSimulated ? 'SIMULATED' : marketInfo.isRealtime ? 'LIVE' : 'DELAYED'}
                                         </span>
@@ -1394,16 +1394,16 @@ export default function AnalisaMarketPage() {
                                             </p>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-700 font-semibold">
+                                            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/10 border-amber-500/20 border border-amber-500/20 text-amber-400 font-semibold">
                                                 LSTM Core
                                             </span>
                                             <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-secondary)] font-semibold">
                                                 {selectedPair} / {selectedTimeframe.toUpperCase()}
                                             </span>
                                             <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold border ${directionBadge === 'BUY'
-                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 border-emerald-500/20'
                                                 : directionBadge === 'SELL'
-                                                    ? 'bg-rose-100 text-rose-700 border-rose-200'
+                                                    ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 border-rose-500/20'
                                                     : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-light)]'
                                                 }`}>
                                                 {directionBadge}
@@ -1435,12 +1435,12 @@ export default function AnalisaMarketPage() {
                                             <p className="text-[10px] uppercase tracking-wider text-sky-700">Zona Entry</p>
                                             <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.entry}</p>
                                         </div>
-                                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-rose-700">Invalidasi</p>
+                                        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 border-rose-500/20 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-rose-400">Invalidasi</p>
                                             <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.stop}</p>
                                         </div>
-                                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wider text-emerald-700">Target 1</p>
+                                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 border-emerald-500/20 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-emerald-400">Target 1</p>
                                             <p className="text-sm font-semibold text-[var(--text-primary)]">{deskSnapshot.target}</p>
                                         </div>
                                     </div>
@@ -1479,9 +1479,9 @@ export default function AnalisaMarketPage() {
                                             <div
                                                 key={scenario.name}
                                                 className={`rounded-xl border px-3 py-3 shadow-sm ${scenario.tone === 'bull'
-                                                    ? 'border-emerald-200 bg-emerald-50/80'
+                                                    ? 'border-emerald-500/20 bg-emerald-500/10 border-emerald-500/20/80'
                                                     : scenario.tone === 'bear'
-                                                        ? 'border-rose-200 bg-rose-50/80'
+                                                        ? 'border-rose-500/20 bg-rose-500/10 border-rose-500/20/80'
                                                         : 'border-[var(--border-light)] bg-[var(--bg-secondary)]/90'
                                                     }`}
                                             >
@@ -1512,9 +1512,9 @@ export default function AnalisaMarketPage() {
                                             <>
                                                 {/* BLURRED MOCKUP BACKGROUND */}
                                                 <div className="absolute inset-0 filter blur-md opacity-50 select-none pointer-events-none bg-[var(--bg-primary)] p-6 overflow-hidden">
-                                                    <div className="h-8 w-3/4 bg-gray-200 rounded mb-4"></div>
+                                                    <div className="h-8 w-3/4 bg-slate-800 rounded mb-4"></div>
                                                     <div className="flex gap-2 mb-6">
-                                                        <div className="h-6 w-20 bg-blue-100 rounded-full"></div>
+                                                        <div className="h-6 w-20 bg-blue-500/10 border-blue-500/20 rounded-full"></div>
                                                         <div className="h-6 w-16 bg-[var(--bg-secondary)] rounded-full"></div>
                                                     </div>
                                                     <div className="space-y-3">
@@ -1531,7 +1531,7 @@ export default function AnalisaMarketPage() {
                                                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[var(--bg-primary)]/60 backdrop-blur-sm">
                                                     <div className="bg-gradient-to-br from-white to-red-50 border border-red-100 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center transform transition-all hover:scale-105 duration-300">
                                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
-                                                            <LockIcon size="xl" className="text-red-600" />
+                                                            <LockIcon size="xl" className="text-red-400" />
                                                         </div>
 
                                                         {/* Dynamic Title & Message */}
@@ -1563,7 +1563,7 @@ export default function AnalisaMarketPage() {
                                                             </button>
                                                             <button
                                                                 onClick={() => setError(null)}
-                                                                className="text-sm font-medium text-gray-400 hover:text-[var(--text-secondary)] transition-colors"
+                                                                className="text-sm font-medium text-slate-400 hover:text-[var(--text-secondary)] transition-colors"
                                                             >
                                                                 Kembali
                                                             </button>
@@ -1573,10 +1573,10 @@ export default function AnalisaMarketPage() {
                                             </>
                                         ) : (
                                             <>
-                                                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                                                <div className="w-16 h-16 rounded-full bg-red-500/10 border-red-500/20 flex items-center justify-center mb-4">
                                                     <XCircleIcon size="lg" className="text-red-500" />
                                                 </div>
-                                                <p className="text-red-600 text-center mb-4">{error}</p>
+                                                <p className="text-red-400 text-center mb-4">{error}</p>
                                                 <button
                                                     onClick={() => setError(null)}
                                                     className="px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-sm hover:bg-[var(--bg-tertiary)] transition-colors"

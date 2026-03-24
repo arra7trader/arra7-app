@@ -166,7 +166,7 @@ export default function PricingPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm mb-6 border border-blue-200">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 font-semibold text-sm mb-6 border border-blue-500/20">
                         <SparklesIcon size="sm" className="text-blue-500" />
                         Diskon Spesial Terbatas
                     </div>
@@ -209,7 +209,7 @@ export default function PricingPage() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.15, duration: 0.5 }}
-                            className={`bg-[var(--bg-primary)] rounded-[2.5rem] border ${plan.id === 'PRO' ? 'border-blue-200 ring-2 ring-blue-100 shadow-2xl shadow-blue-900/10' : 'border-[var(--border-light)] shadow-xl'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
+                            className={`bg-[var(--bg-primary)] rounded-[2.5rem] border ${plan.id === 'PRO' ? 'border-blue-500/20 ring-2 ring-blue-100 shadow-2xl shadow-blue-900/10' : 'border-[var(--border-light)] shadow-xl'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
                         >
                             {/* Left Pane (Details & Features) */}
                             <div className={`w-full md:w-3/5 p-8 md:p-14 ${leftBg} h-full flex flex-col justify-center border-b md:border-b-0 ${isReversed ? 'md:border-l' : 'md:border-r'} border-[var(--border-light)]`}>
@@ -277,7 +277,7 @@ export default function PricingPage() {
 
                                 <div className="flex flex-col items-center justify-center mb-8">
                                     {pricing.badge && (
-                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${pricing.badge.includes('HABIS') ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${pricing.badge.includes('HABIS') ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
                                             {pricing.badge}
                                         </span>
                                     )}
@@ -286,7 +286,7 @@ export default function PricingPage() {
                                         <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
                                             <span className="text-slate-400 line-through decoration-slate-300 font-medium">{pricing.originalPrice}</span>
                                             {pricing.savingsText && (
-                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                                                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                                                     {pricing.savingsText}
                                                 </span>
                                             )}

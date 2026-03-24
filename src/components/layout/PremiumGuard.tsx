@@ -63,7 +63,7 @@ export default function PremiumGuard({
                     className="max-w-md bg-[var(--bg-primary)] dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-[var(--border-light)]"
                 >
                     <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mb-6">
-                        <LockIconFallback className="w-8 h-8 text-amber-600" />
+                        <LockIconFallback className="w-8 h-8 text-amber-400" />
                     </div>
 
                     <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-3">

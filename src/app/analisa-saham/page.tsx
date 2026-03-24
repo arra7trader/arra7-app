@@ -208,9 +208,9 @@ export default function AnalisaSahamPage() {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <div className={`px-3 py-1 rounded-full text-xs font-semibold ${quota.membership === 'VVIP'
-                                    ? 'bg-amber-100 text-amber-700'
+                                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                     : quota.membership === 'PRO'
-                                        ? 'bg-blue-100 text-blue-700'
+                                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                         : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                     }`}>
                                     {quota.membership}
@@ -221,10 +221,10 @@ export default function AnalisaSahamPage() {
                                 <div className="text-right">
                                     <div className="text-lg font-bold">
                                         {typeof quota.remaining === 'string' ? (
-                                            <span className="text-amber-600">∞ Unlimited</span>
+                                            <span className="text-amber-400">∞ Unlimited</span>
                                         ) : (
                                             <>
-                                                <span className={quota.remaining > 0 ? 'text-green-600' : 'text-red-600'}>
+                                                <span className={quota.remaining > 0 ? 'text-green-400' : 'text-red-400'}>
                                                     {quota.remaining}
                                                 </span>
                                                 <span className="text-[var(--text-muted)]">/{quota.dailyLimit}</span>
@@ -312,7 +312,7 @@ export default function AnalisaSahamPage() {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 max-w-2xl mx-auto"
+                            className="mb-6 p-4 rounded-xl bg-red-500/10 border-red-500/20 border border-red-500/20 text-red-400 max-w-2xl mx-auto"
                         >
                             {error}
                         </motion.div>
@@ -336,7 +336,7 @@ export default function AnalisaSahamPage() {
                                     <p className="text-3xl font-bold text-[var(--text-primary)]">
                                         Rp {stockData.currentPrice?.toLocaleString('id-ID')}
                                     </p>
-                                    <p className={`text-lg font-semibold ${stockData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    <p className={`text-lg font-semibold ${stockData.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {stockData.change >= 0 ? '+' : ''}{stockData.change?.toFixed(0)} ({stockData.changePercent >= 0 ? '+' : ''}{stockData.changePercent?.toFixed(2)}%)
                                     </p>
                                 </div>
@@ -369,13 +369,13 @@ export default function AnalisaSahamPage() {
                                 onClick={analyzeStock}
                                 disabled={analyzing || cooldownSeconds > 0}
                                 className={`w-full py-4 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ${analyzing || cooldownSeconds > 0
-                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
                                         : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/25'
                                     }`}
                             >
                                 {analyzing ? (
                                     <>
-                                        <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                        <div className="w-5 h-5 border-2 border-slate-700 border-t-transparent rounded-full animate-spin" />
                                         AI Sedang Menganalisa...
                                     </>
                                 ) : cooldownSeconds > 0 ? (
@@ -403,7 +403,7 @@ export default function AnalisaSahamPage() {
                         >
                             <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-[var(--border-light)]">
                                 <h3 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                                    <CpuChipIcon className="text-green-600" size="lg" />
+                                    <CpuChipIcon className="text-green-400" size="lg" />
                                     ARRA Institutional Research
                                 </h3>
                             </div>

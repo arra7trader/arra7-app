@@ -127,7 +127,7 @@ export default function CRMDashboard() {
                     <div className="flex gap-2">
                         <button
                             onClick={fetchCRMData}
-                            className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium transition-all"
+                            className="px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg text-sm font-medium transition-all"
                         >
                             🔄 Refresh
                         </button>
@@ -219,39 +219,39 @@ export default function CRMDashboard() {
                             ⚠️ Attention Needed
                         </h2>
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">⏰</span>
                                     <div>
-                                        <p className="font-semibold text-amber-700">Expiring Soon</p>
-                                        <p className="text-sm text-amber-600">Member akan expired 7 hari</p>
+                                        <p className="font-semibold text-amber-500">Expiring Soon</p>
+                                        <p className="text-sm text-amber-400">Member akan expired 7 hari</p>
                                     </div>
                                 </div>
-                                <span className="text-2xl font-bold text-amber-700">
+                                <span className="text-2xl font-bold text-amber-500">
                                     {data?.retentionAlerts.counts.expiring || 0}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">😴</span>
                                     <div>
-                                        <p className="font-semibold text-red-700">Inactive Members</p>
-                                        <p className="text-sm text-red-600">Tidak login 7+ hari</p>
+                                        <p className="font-semibold text-red-500">Inactive Members</p>
+                                        <p className="text-sm text-red-400">Tidak login 7+ hari</p>
                                     </div>
                                 </div>
-                                <span className="text-2xl font-bold text-red-700">
+                                <span className="text-2xl font-bold text-red-500">
                                     {data?.retentionAlerts.counts.inactive || 0}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">🆕</span>
                                     <div>
-                                        <p className="font-semibold text-green-700">New Signups</p>
-                                        <p className="text-sm text-green-600">7 hari terakhir</p>
+                                        <p className="font-semibold text-green-500">New Signups</p>
+                                        <p className="text-sm text-green-400">7 hari terakhir</p>
                                     </div>
                                 </div>
-                                <span className="text-2xl font-bold text-green-700">
+                                <span className="text-2xl font-bold text-green-500">
                                     {data?.metrics.recentSignups || 0}
                                 </span>
                             </div>
@@ -265,16 +265,16 @@ export default function CRMDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="bg-[var(--bg-primary)] rounded-2xl border border-amber-200 p-6 mb-8"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-amber-500/20 p-6 mb-8"
                     >
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-amber-700">
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-amber-500">
                             🔔 Members Expiring Soon
                         </h2>
                         <div className="space-y-2">
                             {data.retentionAlerts.expiringSoon.map((user) => (
                                 <div key={user.id} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
+                                        <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold">
                                             {(user.name || user.email)?.[0]?.toUpperCase() || '?'}
                                         </div>
                                         <div>
@@ -284,12 +284,12 @@ export default function CRMDashboard() {
                                     </div>
                                     <div className="text-right">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${user.membership === 'VVIP'
-                                            ? 'bg-amber-100 text-amber-700'
-                                            : 'bg-blue-100 text-blue-700'
+                                            ? 'bg-amber-500/15 text-amber-400'
+                                            : 'bg-blue-500/15 text-blue-400'
                                             }`}>
                                             {user.membership}
                                         </span>
-                                        <p className="text-sm text-amber-600 mt-1">
+                                        <p className="text-sm text-amber-500 mt-1">
                                             Expires: {formatDate(user.expiresAt)}
                                         </p>
                                     </div>
@@ -305,16 +305,16 @@ export default function CRMDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="bg-[var(--bg-primary)] rounded-2xl border border-red-200 p-6"
+                        className="bg-[var(--bg-primary)] rounded-2xl border border-red-500/20 p-6"
                     >
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-700">
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-500">
                             😴 Inactive Members (7+ days)
                         </h2>
                         <div className="space-y-2">
                             {data.retentionAlerts.inactive.slice(0, 5).map((user) => (
                                 <div key={user.id} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-700 font-bold">
+                                        <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 font-bold">
                                             {(user.name || user.email)?.[0]?.toUpperCase() || '?'}
                                         </div>
                                         <div>
@@ -324,12 +324,12 @@ export default function CRMDashboard() {
                                     </div>
                                     <div className="text-right">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${user.membership === 'VVIP'
-                                            ? 'bg-amber-100 text-amber-700'
-                                            : 'bg-blue-100 text-blue-700'
+                                            ? 'bg-amber-500/15 text-amber-400'
+                                            : 'bg-blue-500/15 text-blue-400'
                                             }`}>
                                             {user.membership}
                                         </span>
-                                        <p className="text-sm text-red-600 mt-1">
+                                        <p className="text-sm text-red-500 mt-1">
                                             Last: {formatDate(user.lastLoginAt)}
                                         </p>
                                     </div>

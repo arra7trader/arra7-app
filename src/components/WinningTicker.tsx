@@ -141,7 +141,7 @@ export default function WinningTicker() {
 
                             {/* PAIR for USER (if exists) */}
                             {win.user && win.pair && (
-                                <span className="text-xs text-gray-400">({win.pair})</span>
+                                <span className="text-xs text-slate-400">({win.pair})</span>
                             )}
 
                             {/* ACTION TEXT */}

@@ -58,7 +58,7 @@ export default function AIStockPicks() {
     if (loading) {
         return (
             <div className="mb-10 animate-pulse">
-                <div className="h-8 w-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-8 w-48 bg-slate-800 rounded-lg mb-4"></div>
                 <div className="flex gap-4 overflow-x-auto pb-4">
                     {[1, 2, 3].map(i => (
                         <div key={i} className="min-w-[280px] h-40 bg-[var(--bg-secondary)] rounded-xl"></div>
@@ -81,11 +81,11 @@ export default function AIStockPicks() {
                         {t('title')}
                     </h2>
                     <p className="text-[var(--text-secondary)] text-sm mt-1">
-                        {t('subtitle')} <span className="text-green-600 font-bold">{t('accuracy')}</span>.
+                        {t('subtitle')} <span className="text-green-400 font-bold">{t('accuracy')}</span>.
                     </p>
                 </div>
                 {!isPremium && (
-                    <div className="hidden md:flex items-center gap-2 text-xs font-semibold bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
+                    <div className="hidden md:flex items-center gap-2 text-xs font-semibold bg-amber-500/10 border-amber-500/20 text-amber-400 px-3 py-1 rounded-full">
                         <LockIcon size="sm" /> {t('premium')}
                     </div>
                 )}
@@ -123,7 +123,7 @@ export default function AIStockPicks() {
                                 </div>
                                 <div className="text-right">
                                     <div className="text-xs text-[var(--text-muted)]">{t('confidence')}</div>
-                                    <div className={`text-lg font-bold ${rec.confidence > 0.75 ? 'text-green-600' : 'text-amber-500'}`}>
+                                    <div className={`text-lg font-bold ${rec.confidence > 0.75 ? 'text-green-400' : 'text-amber-500'}`}>
                                         {(rec.confidence * 100).toFixed(1)}%
                                     </div>
                                 </div>
@@ -136,7 +136,7 @@ export default function AIStockPicks() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-[var(--text-muted)]">{t('target')}</span>
-                                    <span className="font-semibold text-green-600">
+                                    <span className="font-semibold text-green-400">
                                         Rp {rec.prediction.tradeSetup?.tp ? rec.prediction.tradeSetup.tp.toLocaleString('id-ID') : (rec.entryPrice * 1.05).toLocaleString('id-ID', { maximumFractionDigits: 0 })}
                                     </span>
                                 </div>
@@ -150,8 +150,8 @@ export default function AIStockPicks() {
 
                             <div className="mt-3 pt-3 border-t border-dashed border-[var(--border-light)]">
                                 <div className="flex justify-between text-xs">
-                                    <span className="text-gray-400">{t('direction')}</span>
-                                    <span className="font-bold text-green-600 flex items-center gap-1">
+                                    <span className="text-slate-400">{t('direction')}</span>
+                                    <span className="font-bold text-green-400 flex items-center gap-1">
                                         <ChartIcon size="sm" /> UP
                                     </span>
                                 </div>

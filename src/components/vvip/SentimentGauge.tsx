@@ -37,7 +37,7 @@ export default function SentimentGauge() {
         if (s <= 45) return 'text-orange-500';
         if (s <= 55) return 'text-[var(--text-secondary)]';
         if (s <= 75) return 'text-green-500';
-        return 'text-green-600';
+        return 'text-green-400';
     };
 
     return (
@@ -75,7 +75,7 @@ export default function SentimentGauge() {
                 </div>
             </div>
 
-            <p className="text-xs text-gray-400 text-center mt-2">
+            <p className="text-xs text-slate-400 text-center mt-2">
                 Combined RSI, Volatility & Volume Analysis
             </p>
         </div>

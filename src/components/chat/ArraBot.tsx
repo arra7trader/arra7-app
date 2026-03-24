@@ -180,7 +180,7 @@ export default function ArraBot() {
                                     <PaperAirplaneIcon className="w-4 h-4" />
                                 </button>
                             </div>
-                            <p className="text-[10px] text-center text-gray-400 mt-2">
+                            <p className="text-[10px] text-center text-slate-400 mt-2">
                                 AI bisa salah. Selalu cek ulang (DYOR).
                             </p>
                         </div>

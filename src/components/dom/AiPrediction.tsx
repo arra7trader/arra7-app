@@ -84,7 +84,7 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
             }
             if (error.includes("Failed to fetch") || error.includes("NetworkError")) {
                 return (
-                    <div className="text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100">
+                    <div className="text-xs text-red-500 bg-red-500/10 border-red-500/20 p-2 rounded border border-red-100">
                         <div className="font-semibold mb-1">Backend Offline</div>
                         Run <code>ml-backend/run_server.bat</code>
                     </div>
@@ -93,7 +93,7 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
             return <div className="text-xs text-red-500">Service Error: {error}</div>;
         }
 
-        if (!prediction) return <div className="text-sm text-gray-400">No prediction data</div>;
+        if (!prediction) return <div className="text-sm text-slate-400">No prediction data</div>;
 
         if (prediction.type === "regression" && prediction.value !== undefined) {
             // Logic to determine if predicted price > current price (using value vs close of last candle?)
@@ -105,12 +105,12 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Estimated Price</span>
-                        <span className={`text-xl font-bold flex items-center gap-2 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-xl font-bold flex items-center gap-2 ${isUp ? 'text-green-400' : 'text-red-400'}`}>
                             {prediction.value.toFixed(2)}
                             {isUp ? <TrendUpIcon size="md" /> : <TrendDownIcon size="md" />}
                         </span>
                     </div>
-                    <div className="text-[10px] text-gray-400 flex items-center justify-between">
+                    <div className="text-[10px] text-slate-400 flex items-center justify-between">
                         <span>Accuracy: ±0.0005%</span>
                         <span>{new Date(prediction.timestamp).toLocaleTimeString()}</span>
                     </div>
@@ -123,15 +123,15 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
             const predictedClass = classes[prediction.class_index || 0];
             const confidence = prediction.probabilities[prediction.class_index || 0] * 100;
 
-            let colorClass = "bg-yellow-100 text-yellow-700 border-yellow-200";
+            let colorClass = "bg-yellow-500/10 border-yellow-500/20 text-yellow-400 border-yellow-500/20";
             let Icon = SignalIcon;
 
             if (predictedClass === "UP") {
-                colorClass = "bg-green-100 text-green-700 border-green-200";
+                colorClass = "bg-green-500/10 border-green-500/20 text-green-400 border-green-500/20";
                 Icon = TrendUpIcon;
             }
             if (predictedClass === "DOWN") {
-                colorClass = "bg-red-100 text-red-700 border-red-200";
+                colorClass = "bg-red-500/10 border-red-500/20 text-red-400 border-red-500/20";
                 Icon = TrendDownIcon;
             }
 
@@ -162,7 +162,7 @@ export function AiPrediction({ symbol = "XAUUSD" }: AiPredictionProps) {
     return (
         <div className="bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-light)] shadow-sm">
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-50">
-                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                <div className="p-1.5 bg-blue-500/10 border-blue-500/20 text-blue-400 rounded-lg">
                     <ChartIcon size="sm" />
                 </div>
                 <h3 className="font-semibold text-[var(--text-primary)] text-sm">AI Market Prediction</h3>

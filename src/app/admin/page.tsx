@@ -13,7 +13,7 @@ import UserDetailModal from '@/components/admin/UserDetailModal';
 import UserFormModal from '@/components/admin/UserFormModal';
 import BroadcastModal from '@/components/admin/BroadcastModal';
 import MarketingBot from '@/components/admin/MarketingBot';
-import UpgradeDurationModal, { DurationOption } from '@/components/admin/UpgradeDurationModal';
+import UpgradeDurationModal from '@/components/admin/UpgradeDurationModal';
 
 interface UpgradeNotification {
     userName: string;
@@ -318,7 +318,7 @@ export default function AdminDashboard() {
         setIsDurationModalOpen(true);
     };
 
-    const handleDurationSelect = async (option: DurationOption) => {
+    const handleDurationSelect = async (option: any) => {
         if (!upgradeTargetUser) return;
 
         const userId = upgradeTargetUser.id;
@@ -524,6 +524,8 @@ Tim ARRA7`;
                 user={selectedUser}
                 onClose={() => setSelectedUser(null)}
                 onEdit={() => {
+
+
                     if (selectedUser) {
                         handleEditUser(selectedUser);
                         setSelectedUser(null);
@@ -545,66 +547,34 @@ Tim ARRA7`;
             />
 
             <div className="relative max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-[var(--text-primary)]">Admin Dashboard</h1>
-                        <p className="text-[var(--text-secondary)]">Kelola users dan membership</p>
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+                    <div className="flex flex-col gap-2">
+                        <h1 className="[letter-spacing:-1px] font-['Space_Grotesk',system-ui,sans-serif] font-bold text-4xl text-[#F8FAFC]">Admin Dashboard</h1>
+                        <p className="text-[#94A3B8] font-['Inter',system-ui,sans-serif] text-base">Kelola users dan kontrol sistem ARRA7</p>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                        <button
-                            onClick={() => setIsBroadcastOpen(true)}
-                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-1 shadow-lg shadow-purple-500/20"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                            </svg>
-                            Broadcast
-                        </button>
+                    
+                    <div className="flex flex-wrap items-center gap-3">
                         <button
                             onClick={handleAddUser}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-1 shadow-lg shadow-blue-500/20"
+                            className="flex items-center rounded-xl py-2.5 px-5 gap-2 bg-[#3B82F61A] hover:bg-[#3B82F633] transition-colors border border-solid border-[#3B82F633]"
                         >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            <svg className="text-[#60A5FA]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
-                            Add User
+                            <div className="inline-block text-[#60A5FA] font-['Inter',system-ui,sans-serif] font-semibold text-sm">Add User</div>
                         </button>
-                        <Link href="/admin/copytrade-arra77">
-                            <button className="px-4 py-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                📡 Copytrade ARRA77
-                            </button>
-                        </Link>
-                        <Link href="/admin/crm">
-                            <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/25 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <ChartIcon size="sm" /> CRM
-                            </button>
-                        </Link>
-                        <Link href="/admin/users-map">
-                            <button className="px-4 py-2 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <GlobeIcon size="sm" /> Users Map
-                            </button>
-                        </Link>
-                        <Link href="/admin/revenue">
-                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <CurrencyIcon size="sm" /> Revenue
-                            </button>
-                        </Link>
-                        <Link href="/admin/notifications">
-                            <button className="px-4 py-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <BellIcon size="sm" /> Notifikasi
-                            </button>
-                        </Link>
-                        <Link href="/admin/report">
-                            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg hover:shadow-blue-500/25 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <ChartIcon size="sm" /> Daily Report
-                            </button>
-                        </Link>
-                        <Link href="/performance">
-                            <button className="px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-sm font-medium transition-all flex items-center gap-1">
-                                <TrendUpIcon size="sm" /> Performance
-                            </button>
-                        </Link>
+                        
+                        <button
+                            onClick={() => setIsBroadcastOpen(true)}
+                            className="flex items-center rounded-xl py-2.5 px-5 gap-2 bg-[#A855F71A] hover:bg-[#A855F733] transition-colors border border-solid border-[#A855F733]"
+                        >
+                            <svg className="text-[#C084FC]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                            </svg>
+                            <div className="inline-block text-[#C084FC] font-['Inter',system-ui,sans-serif] font-semibold text-sm">Broadcast</div>
+                        </button>
+
                         <button
                             onClick={async () => {
                                 const btn = document.getElementById('verify-btn');
@@ -620,22 +590,55 @@ Tim ARRA7`;
                                     alert('Error verifying');
                                 } finally {
                                     if (btn) {
-                                        btn.innerHTML = '⚡ Verify Signals';
+                                        btn.innerHTML = 'Verify Signals';
                                         (btn as HTMLButtonElement).disabled = false;
                                     }
                                 }
                             }}
                             id="verify-btn"
-                            className="px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm font-medium transition-all"
+                            className="flex items-center rounded-xl py-2.5 px-5 gap-2 bg-[#FFFFFF0D] hover:bg-[#FFFFFF1A] transition-colors border border-solid border-[#FFFFFF1A]"
                         >
-                            <LightbulbIcon className="inline" size="sm" /> Verify Signals
+                            <div className="text-[#E2E8F0] font-['Inter',system-ui,sans-serif] font-semibold text-sm">Verify Signals</div>
                         </button>
+
                         <Link href="/">
-                            <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-light)] rounded-lg text-sm text-[var(--text-primary)]">
-                                ← Kembali
+                            <button className="flex items-center rounded-xl py-2.5 px-5 gap-2 bg-[#FFFFFF0D] hover:bg-[#FFFFFF1A] transition-colors border border-solid border-[#FFFFFF1A]">
+                                <div className="text-[#E2E8F0] font-['Inter',system-ui,sans-serif] font-semibold text-sm">Kembali</div>
                             </button>
                         </Link>
                     </div>
+                </div>
+
+                {/* Quick Access Grid Scrollable Menu */}
+                <div className="flex gap-3 mb-6 overflow-x-auto pb-3 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+                    <Link href="/admin/copytrade-arra77" className="admin-quick-link">
+                        <div className="icon-container bg-emerald-500/15">📡</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Copytrade ARRA77</div>
+                    </Link>
+                    <Link href="/admin/crm" className="admin-quick-link">
+                        <div className="icon-container bg-blue-500/15">📊</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">CRM Dashboard</div>
+                    </Link>
+                    <Link href="/admin/users-map" className="admin-quick-link">
+                        <div className="icon-container bg-cyan-500/15">🌍</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Users Map</div>
+                    </Link>
+                    <Link href="/admin/revenue" className="admin-quick-link">
+                        <div className="icon-container bg-amber-500/15">💰</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Revenue</div>
+                    </Link>
+                    <Link href="/admin/notifications" className="admin-quick-link">
+                        <div className="icon-container bg-rose-500/15">🔔</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Notifikasi Web</div>
+                    </Link>
+                    <Link href="/admin/report" className="admin-quick-link">
+                        <div className="icon-container bg-blue-500/15 text-blue-400"><ChartIcon size="sm" /></div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Daily Report</div>
+                    </Link>
+                    <Link href="/performance" className="admin-quick-link">
+                        <div className="icon-container bg-green-500/15 text-green-400"><TrendUpIcon size="sm" /></div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Performance Logs</div>
+                    </Link>
                 </div>
 
                 {/* Message */}
@@ -655,25 +658,22 @@ Tim ARRA7`;
                 <AdminStats stats={stats} />
 
                 {/* Tabs */}
-                <div className="flex gap-2 overflow-x-auto pb-2 mb-6 border-b border-[var(--border-light)]">
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-6 p-1 rounded-2xl bg-[#FFFFFF04]">
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'users' ? 'bg-[var(--bg-primary)] border-b-2 border-blue-600 text-blue-600' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                            }`}
+                        className={`admin-pill-tab ${activeTab === 'users' ? 'active' : ''}`}
                     >
                         👥 User Management
                     </button>
                     <button
                         onClick={() => setActiveTab('broadcast')}
-                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'broadcast' ? 'bg-[var(--bg-primary)] border-b-2 border-purple-600 text-purple-600' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                            }`}
+                        className={`admin-pill-tab ${activeTab === 'broadcast' ? 'active' : ''}`}
                     >
                         📢 Forecast & Broadcast
                     </button>
                     <button
                         onClick={() => setActiveTab('marketing')}
-                        className={`px-4 py-2 rounded-t-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'marketing' ? 'bg-[var(--bg-primary)] border-b-2 border-pink-600 text-pink-600' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                            }`}
+                        className={`admin-pill-tab ${activeTab === 'marketing' ? 'active' : ''}`}
                     >
                         🤖 Marketing Bot
                     </button>
@@ -735,9 +735,9 @@ Tim ARRA7`;
                         )}
 
                         {selectedUserIds.length > 0 && (
-                            <div className="bg-[var(--bg-primary)] rounded-xl shadow-lg border border-purple-100 p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                            <div className="admin-card p-4 mb-6 flex items-center justify-between" style={{ borderColor: 'rgba(168, 85, 247, 0.2)' }}>
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-medium">
+                                    <div className="bg-purple-500/15 text-purple-400 px-3 py-1 rounded-lg text-sm font-medium">
                                         {selectedUserIds.length} Selected
                                     </div>
                                     <button
@@ -750,13 +750,13 @@ Tim ARRA7`;
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleBulkUpgrade}
-                                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                        className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm font-medium transition-colors border border-blue-500/20"
                                     >
                                         Upgrade Selected
                                     </button>
                                     <button
                                         onClick={handleBulkDelete}
-                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors border border-red-500/20"
                                     >
                                         Delete Selected
                                     </button>
@@ -776,22 +776,9 @@ Tim ARRA7`;
                     </>
                 )}
             </div>
-
-            {/* Upgrade Duration Modal */}
-            <UpgradeDurationModal
-                isOpen={isDurationModalOpen}
-                membership={upgradeTargetMembership}
-                currentExpiresAt={upgradeTargetUser?.membershipExpires || null}
-                onSelect={handleDurationSelect}
-                onClose={() => {
-                    setIsDurationModalOpen(false);
-                    setUpgradeTargetUser(null);
-                }}
-            />
-        </div >
+        </div>
     );
 }
-
 
 
 

@@ -88,7 +88,7 @@ export default function CurrencyStrength() {
                 })}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-[var(--border-light)] flex justify-between text-xs text-gray-400">
+            <div className="mt-6 pt-4 border-t border-[var(--border-light)] flex justify-between text-xs text-slate-400">
                 <span>Weak</span>
                 <span>Strong</span>
             </div>

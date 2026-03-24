@@ -120,7 +120,7 @@ export default function PushNotificationToggle() {
             disabled={isLoading}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSubscribed
                     ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
-                    : 'bg-[#1F2937] text-gray-400 hover:bg-[#374151] hover:text-white border border-[#374151]'
+                    : 'bg-[#1F2937] text-slate-400 hover:bg-[#374151] hover:text-white border border-[#374151]'
                 }`}
         >
             {isLoading ? (

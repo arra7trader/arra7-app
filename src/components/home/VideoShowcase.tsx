@@ -225,7 +225,7 @@ export default function VideoShowcase() {
                                     }}
                                     className={`relative h-2 rounded-full transition-all duration-300 ${i === currentIndex
                                         ? 'w-10 bg-blue-500'
-                                        : 'w-2 bg-slate-300 hover:bg-slate-400'
+                                        : 'w-2 bg-slate-800 hover:bg-slate-400'
                                         }`}
                                     aria-label={`Go to video ${i + 1}`}
                                 />

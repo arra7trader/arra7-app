@@ -115,7 +115,7 @@ export default function RevenueDashboard() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-200"
+                        className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-500/20"
                     >
                         <p className="text-sm text-green-700 mb-1">Total Revenue</p>
                         <p className="text-2xl font-bold text-green-800">{formatCurrency(data?.totalRevenue || 0)}</p>

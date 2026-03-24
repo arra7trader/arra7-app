@@ -248,7 +248,7 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 📊 Accuracy Tracker
                 {pendingCount > 0 && (
-                    <span className="ml-auto text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                    <span className="ml-auto text-xs px-2 py-0.5 bg-blue-500/10 border-blue-500/20 text-blue-400 rounded-full">
                         {pendingCount} pending
                     </span>
                 )}
@@ -293,7 +293,7 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
                                 <span className="text-2xl font-bold" style={{ color: getColor(stats.accuracy) }}>
                                     {accuracyPct}%
                                 </span>
-                                <span className="text-xs text-gray-400">Overall</span>
+                                <span className="text-xs text-slate-400">Overall</span>
                             </div>
                         </div>
                     </div>
@@ -302,13 +302,13 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
                     <div className="grid grid-cols-2 gap-2 text-center">
                         <div className="bg-[var(--bg-secondary)] rounded-lg p-2">
                             <p className="text-lg font-bold text-[var(--text-primary)]">{stats.total}</p>
-                            <p className="text-xs text-gray-400">Total</p>
+                            <p className="text-xs text-slate-400">Total</p>
                         </div>
                         <div className="bg-[var(--bg-secondary)] rounded-lg p-2">
                             <p className="text-lg font-bold" style={{ color: getColor(stats.last20) }}>
                                 {last20Pct}%
                             </p>
-                            <p className="text-xs text-gray-400">Last 20</p>
+                            <p className="text-xs text-slate-400">Last 20</p>
                         </div>
                     </div>
 
@@ -332,7 +332,7 @@ export default function AccuracyTrackerPanel({ stats, pendingCount }: AccuracyTr
                                         transition={{ duration: 0.5 }}
                                     />
                                 </div>
-                                <span className="text-xs w-16 text-right text-gray-400">
+                                <span className="text-xs w-16 text-right text-slate-400">
                                     {dirStats.correct}/{dirStats.total}
                                 </span>
                             </div>

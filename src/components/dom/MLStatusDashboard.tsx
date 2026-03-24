@@ -85,8 +85,8 @@ export default function MLStatusDashboard() {
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 🤖 ML Model Status
                 <span className={`ml-auto text-xs px-2 py-1 rounded-full ${status.available
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                        : 'bg-red-500/10 border-red-500/20 text-red-400'
                     }`}>
                     {status.available ? '🟢 Online' : '🔴 Offline'}
                 </span>
@@ -95,11 +95,11 @@ export default function MLStatusDashboard() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-[var(--bg-secondary)] rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-purple-600">{status.models_loaded}</p>
+                    <p className="text-2xl font-bold text-purple-400">{status.models_loaded}</p>
                     <p className="text-xs text-[var(--text-muted)]">Models Loaded</p>
                 </div>
                 <div className="bg-[var(--bg-secondary)] rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-blue-600">{status.symbols.length}</p>
+                    <p className="text-2xl font-bold text-blue-400">{status.symbols.length}</p>
                     <p className="text-xs text-[var(--text-muted)]">Symbols</p>
                 </div>
             </div>

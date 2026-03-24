@@ -178,7 +178,7 @@ export default function PortfolioPage() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => fetchPortfolio(true)} className="px-4 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium text-[var(--accent-blue)] transition-all">
+                        <button onClick={() => fetchPortfolio(true)} className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 border border-blue-500/20 rounded-lg text-sm font-medium text-[var(--accent-blue)] transition-all">
                             Refresh
                         </button>
                         <button onClick={() => setShowAddModal(true)} className="btn-primary">+ Add Position</button>
@@ -197,19 +197,19 @@ export default function PortfolioPage() {
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Equity</p>
-                            <p className={`text-2xl font-bold ${summary.totalEquity >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.totalEquity.toFixed(2)}</p>
+                            <p className={`text-2xl font-bold ${summary.totalEquity >= 0 ? 'text-green-400' : 'text-red-400'}`}>${summary.totalEquity.toFixed(2)}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Unrealized P/L</p>
-                            <p className={`text-2xl font-bold ${summary.unrealizedPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.unrealizedPL.toFixed(2)}</p>
+                            <p className={`text-2xl font-bold ${summary.unrealizedPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>${summary.unrealizedPL.toFixed(2)}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Realized P/L</p>
-                            <p className={`text-2xl font-bold ${summary.realizedPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.realizedPL.toFixed(2)}</p>
+                            <p className={`text-2xl font-bold ${summary.realizedPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>${summary.realizedPL.toFixed(2)}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Margin Used</p>
-                            <p className="text-2xl font-bold text-amber-600">${summary.marginUsed.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-amber-400">${summary.marginUsed.toFixed(2)}</p>
                         </div>
                         <div className="bg-[var(--bg-primary)] rounded-xl p-4 border border-[var(--border-light)]">
                             <p className="text-xs text-[var(--text-muted)]">Total Trades</p>
@@ -226,12 +226,12 @@ export default function PortfolioPage() {
                             layout
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`bg-[var(--bg-primary)] rounded-2xl p-5 border ${(pos.profitLoss || 0) >= 0 ? 'border-green-200' : 'border-red-200'}`}
+                            className={`bg-[var(--bg-primary)] rounded-2xl p-5 border ${(pos.profitLoss || 0) >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}
                         >
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                     <span className="text-lg font-bold text-[var(--text-primary)]">{pos.symbol}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${pos.direction === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${pos.direction === 'BUY' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                                         {pos.direction}
                                     </span>
                                 </div>
@@ -248,18 +248,18 @@ export default function PortfolioPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-[var(--text-muted)]">P/L</p>
-                                    <p className={`font-bold ${(pos.profitLoss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>${pos.profitLoss?.toFixed(2) || '0.00'}</p>
+                                    <p className={`font-bold ${(pos.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>${pos.profitLoss?.toFixed(2) || '0.00'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-[var(--text-muted)]">Pips</p>
-                                    <p className={`font-mono ${(pos.profitLossPips || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{pos.profitLossPips?.toFixed(1) || '0'} pips</p>
+                                    <p className={`font-mono ${(pos.profitLossPips || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{pos.profitLossPips?.toFixed(1) || '0'} pips</p>
                                 </div>
                             </div>
                             {(pos.stopLoss || pos.takeProfit) && (
                                 <div className="mb-4">
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-red-600">SL: {pos.stopLoss || '-'}</span>
-                                        <span className="text-green-600">TP: {pos.takeProfit || '-'}</span>
+                                        <span className="text-red-400">SL: {pos.stopLoss || '-'}</span>
+                                        <span className="text-green-400">TP: {pos.takeProfit || '-'}</span>
                                     </div>
                                     <div className="h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                                         <div className={`h-full transition-all ${(pos.profitLoss || 0) >= 0 ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: '50%' }} />
@@ -267,9 +267,9 @@ export default function PortfolioPage() {
                                 </div>
                             )}
                             <div className="flex gap-2">
-                                <button onClick={() => setShowCloseModal(pos)} className="flex-1 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition-all">Close Trade</button>
-                                <button onClick={() => handleDeletePosition(pos.id)} className="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 transition-all">
-                                    <TrashIcon className="text-red-600" size="sm" />
+                                <button onClick={() => setShowCloseModal(pos)} className="flex-1 py-2 bg-green-500/10 border-green-500/20 text-green-400 rounded-lg text-sm hover:bg-green-200 transition-all">Close Trade</button>
+                                <button onClick={() => handleDeletePosition(pos.id)} className="px-3 py-2 bg-red-500/10 border-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-200 transition-all">
+                                    <TrashIcon className="text-red-400" size="sm" />
                                 </button>
                             </div>
                         </motion.div>
@@ -322,11 +322,11 @@ export default function PortfolioPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-sm text-[var(--text-muted)] block mb-1">Stop Loss</label>
-                                        <input type="number" step="0.00001" value={formStopLoss} onChange={e => setFormStopLoss(e.target.value)} className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-red-600" />
+                                        <input type="number" step="0.00001" value={formStopLoss} onChange={e => setFormStopLoss(e.target.value)} className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-red-400" />
                                     </div>
                                     <div>
                                         <label className="text-sm text-[var(--text-muted)] block mb-1">Take Profit</label>
-                                        <input type="number" step="0.00001" value={formTakeProfit} onChange={e => setFormTakeProfit(e.target.value)} className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-green-600" />
+                                        <input type="number" step="0.00001" value={formTakeProfit} onChange={e => setFormTakeProfit(e.target.value)} className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-lg text-green-400" />
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
@@ -347,10 +347,10 @@ export default function PortfolioPage() {
                             <h3 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Close Position</h3>
                             <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-4">
                                 <div className="flex justify-between mb-2"><span className="text-[var(--text-muted)]">Symbol</span><span className="font-bold text-[var(--text-primary)]">{showCloseModal.symbol}</span></div>
-                                <div className="flex justify-between mb-2"><span className="text-[var(--text-muted)]">Direction</span><span className={showCloseModal.direction === 'BUY' ? 'text-green-600' : 'text-red-600'}>{showCloseModal.direction}</span></div>
+                                <div className="flex justify-between mb-2"><span className="text-[var(--text-muted)]">Direction</span><span className={showCloseModal.direction === 'BUY' ? 'text-green-400' : 'text-red-400'}>{showCloseModal.direction}</span></div>
                                 <div className="flex justify-between mb-2"><span className="text-[var(--text-muted)]">Entry</span><span className="text-[var(--text-primary)]">{showCloseModal.entryPrice}</span></div>
                                 <div className="flex justify-between mb-2"><span className="text-[var(--text-muted)]">Current Price</span><span className="text-[var(--accent-blue)]">{showCloseModal.currentPrice?.toFixed(5)}</span></div>
-                                <div className="flex justify-between border-t border-[var(--border-light)] pt-2"><span className="text-[var(--text-muted)]">P/L</span><span className={`font-bold ${(showCloseModal.profitLoss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>${showCloseModal.profitLoss?.toFixed(2)}</span></div>
+                                <div className="flex justify-between border-t border-[var(--border-light)] pt-2"><span className="text-[var(--text-muted)]">P/L</span><span className={`font-bold ${(showCloseModal.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>${showCloseModal.profitLoss?.toFixed(2)}</span></div>
                             </div>
                             <div className="flex gap-3">
                                 <button onClick={handleClosePosition} disabled={submitting} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold disabled:opacity-50">{submitting ? 'Closing...' : 'Confirm Close'}</button>

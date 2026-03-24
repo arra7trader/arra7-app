@@ -79,9 +79,9 @@ export default function AdminMLDashboard() {
     }
 
     const getAccuracyColor = (acc: number) => {
-        if (acc >= 70) return 'text-green-600 bg-green-50';
-        if (acc >= 50) return 'text-amber-600 bg-amber-50';
-        return 'text-red-600 bg-red-50';
+        if (acc >= 70) return 'text-green-400 bg-green-500/10 border-green-500/20';
+        if (acc >= 50) return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+        return 'text-red-400 bg-red-500/10 border-red-500/20';
     };
 
     return (
@@ -134,7 +134,7 @@ export default function AdminMLDashboard() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-blue-50 text-blue-600 rounded-xl p-4"
+                        className="bg-blue-500/10 border-blue-500/20 text-blue-400 rounded-xl p-4"
                     >
                         <p className="text-3xl font-bold">{data.overview.avgConfidence}%</p>
                         <p className="text-sm opacity-80">Avg Confidence</p>
@@ -143,7 +143,7 @@ export default function AdminMLDashboard() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-green-50 text-green-600 rounded-xl p-4"
+                        className="bg-green-500/10 border-green-500/20 text-green-400 rounded-xl p-4"
                     >
                         <p className="text-3xl font-bold">{data.overview.maxWinStreak}</p>
                         <p className="text-sm opacity-80">Max Win Streak</p>
@@ -160,7 +160,7 @@ export default function AdminMLDashboard() {
                         {data.modelRanking.map((model, idx) => (
                             <div key={model.model} className="flex items-center gap-3">
                                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                    idx === 1 ? 'bg-gray-300 text-[var(--text-primary)]' :
+                                    idx === 1 ? 'bg-slate-800 text-[var(--text-primary)]' :
                                         idx === 2 ? 'bg-amber-600 text-white' :
                                             'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                     }`}>
@@ -176,13 +176,13 @@ export default function AdminMLDashboard() {
                                 <span className="w-16 text-right text-sm font-medium">
                                     {Math.round(model.accuracy * 100)}%
                                 </span>
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-slate-400">
                                     ({model.correct}/{model.total})
                                 </span>
                             </div>
                         ))}
                         {data.modelRanking.length === 0 && (
-                            <p className="text-gray-400 text-center py-4">No model data yet</p>
+                            <p className="text-slate-400 text-center py-4">No model data yet</p>
                         )}
                     </div>
                 </div>
@@ -213,7 +213,7 @@ export default function AdminMLDashboard() {
                                     <span className="w-12 text-right font-bold">
                                         {Math.round((perf.accuracy || 0) * 100)}%
                                     </span>
-                                    <span className="text-xs text-gray-400 w-16 text-right">
+                                    <span className="text-xs text-slate-400 w-16 text-right">
                                         {perf.correct}/{perf.total}
                                     </span>
                                 </div>
@@ -225,8 +225,8 @@ export default function AdminMLDashboard() {
                     <div className="mt-6 pt-4 border-t border-[var(--border-light)]">
                         <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-3">High Confidence Analysis (&gt;70%)</h4>
                         <div className="grid grid-cols-2 gap-3 text-center">
-                            <div className="bg-blue-50 rounded-lg p-3">
-                                <p className="text-2xl font-bold text-blue-600">
+                            <div className="bg-blue-500/10 border-blue-500/20 rounded-lg p-3">
+                                <p className="text-2xl font-bold text-blue-400">
                                     {data.confidenceAnalysis.highConfidenceAccuracy}%
                                 </p>
                                 <p className="text-xs text-blue-500">Accuracy</p>
@@ -260,9 +260,9 @@ export default function AdminMLDashboard() {
                             {data.recentPredictions.map((pred) => (
                                 <tr key={pred.id} className="border-b border-gray-50 hover:bg-[var(--bg-secondary)]">
                                     <td className="py-2">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${pred.direction === 'UP' ? 'bg-green-100 text-green-700' :
-                                            pred.direction === 'DOWN' ? 'bg-red-100 text-red-700' :
-                                                'bg-amber-100 text-amber-700'
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${pred.direction === 'UP' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                            pred.direction === 'DOWN' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                                'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                             }`}>
                                             {pred.direction}
                                         </span>
@@ -272,15 +272,15 @@ export default function AdminMLDashboard() {
                                     <td className="py-2">
                                         {pred.isCorrect !== undefined ? (
                                             pred.isCorrect ? (
-                                                <span className="text-green-600">✓ Correct</span>
+                                                <span className="text-green-400">✓ Correct</span>
                                             ) : (
-                                                <span className="text-red-600">✗ Wrong</span>
+                                                <span className="text-red-400">✗ Wrong</span>
                                             )
                                         ) : (
-                                            <span className="text-gray-400">Pending</span>
+                                            <span className="text-slate-400">Pending</span>
                                         )}
                                     </td>
-                                    <td className="py-2 text-gray-400 text-xs">
+                                    <td className="py-2 text-slate-400 text-xs">
                                         {new Date(pred.createdAt).toLocaleString()}
                                     </td>
                                 </tr>

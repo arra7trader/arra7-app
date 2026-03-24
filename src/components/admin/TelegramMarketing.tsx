@@ -1,3 +1,4 @@
+'use client';
 
 import React, { useState } from 'react';
 
@@ -20,39 +21,39 @@ export default function TelegramMarketing({
 }: TelegramMarketingProps) {
     // Template harian untuk Copytrade ARRA77 - 1 PANDUAN LENGKAP, 7 GAYA BERBEDA
     const dailyTemplates = [
-        { id: 'day1_story', label: 'Hari 1: Story', icon: '📖', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-        { id: 'day2_stepbystep', label: 'Hari 2: Tutorial', icon: '📚', color: 'bg-green-50 border-green-200 text-green-700' },
-        { id: 'day3_faq', label: 'Hari 3: FAQ', icon: '❓', color: 'bg-purple-50 border-purple-200 text-purple-700' },
-        { id: 'day4_checklist', label: 'Hari 4: Checklist', icon: '✅', color: 'bg-amber-50 border-amber-200 text-amber-700' },
-        { id: 'day5_visual', label: 'Hari 5: Visual', icon: '🎨', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-        { id: 'day6_mistakes', label: 'Hari 6: Mistakes', icon: '⚠️', color: 'bg-[var(--bg-secondary)] border-[var(--border-light)] text-[var(--text-secondary)]' },
-        { id: 'day7_blueprint', label: 'Hari 7: Blueprint', icon: '🗺️', color: 'bg-pink-50 border-pink-200 text-pink-700' },
+        { id: 'day1_story', label: 'Hari 1: Story', icon: '📖', color: 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20' },
+        { id: 'day2_stepbystep', label: 'Hari 2: Tutorial', icon: '📚', color: 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20' },
+        { id: 'day3_faq', label: 'Hari 3: FAQ', icon: '❓', color: 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20' },
+        { id: 'day4_checklist', label: 'Hari 4: Checklist', icon: '✅', color: 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20' },
+        { id: 'day5_visual', label: 'Hari 5: Visual', icon: '🎨', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' },
+        { id: 'day6_mistakes', label: 'Hari 6: Mistakes', icon: '⚠️', color: 'bg-[var(--bg-secondary)] border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]' },
+        { id: 'day7_blueprint', label: 'Hari 7: Blueprint', icon: '🗺️', color: 'bg-pink-500/10 border-pink-500/20 text-pink-400 hover:bg-pink-500/20' },
     ];
 
     return (
-        <div className="mb-8 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="mb-8 glass-card p-6">
+            <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl">📢</span>
+                    <span className="text-3xl drop-shadow-md">📢</span>
                     <div>
-                        <h3 className="text-lg font-semibold text-[var(--text-primary)]">Telegram Marketing - Copytrade ARRA77</h3>
-                        <p className="text-sm text-[var(--text-secondary)]">
-                            1 Panduan Lengkap • 7 Gaya Penyampaian • Berubah setiap hari
+                        <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Telegram Marketing</h3>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1">
+                            Copytrade ARRA77 • 1 Core Message • 7 Delivery Styles
                             {telegramConfigured ? (
-                                <span className="ml-2 text-green-400">● Connected</span>
+                                <span className="ml-2 inline-flex items-center gap-1 text-green-400"><span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> Connected</span>
                             ) : (
-                                <span className="ml-2 text-red-400">● Not configured</span>
+                                <span className="ml-2 inline-flex items-center gap-1 text-red-400"><span className="w-1.5 h-1.5 rounded-full bg-red-400"></span> Not configured</span>
                             )}
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     {autoPostEnabled ? (
-                        <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
-                            ✅ Auto-posting Active
+                        <span className="px-3 py-1.5 rounded-full bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-semibold uppercase tracking-wider shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                            ⚡ Auto-posting Active
                         </span>
                     ) : (
-                        <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-medium">
+                        <span className="px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold uppercase tracking-wider">
                             ⏸️ Auto-posting Paused
                         </span>
                     )}
@@ -60,35 +61,35 @@ export default function TelegramMarketing({
             </div>
 
             {telegramMessage && (
-                <div className={`mb-4 p-3 rounded-lg ${telegramMessage.includes('✅') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                <div className={`mb-6 p-4 rounded-xl border ${telegramMessage.includes('✅') ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                     {telegramMessage}
                 </div>
             )}
 
             {/* Start/Stop Auto-Post Toggle */}
-            <div className="mb-6 p-4 bg-[var(--bg-secondary)] rounded-xl flex items-center justify-between">
+            <div className="mb-6 p-5 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl flex items-center justify-between">
                 <div>
-                    <p className="font-medium text-[var(--text-primary)]">Auto-Posting Control</p>
-                    <p className="text-sm text-[var(--text-secondary)]">Kirim template harian otomatis ke Telegram</p>
+                    <h4 className="font-semibold text-[var(--text-primary)]">Auto-Posting Control</h4>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">Kirim template harian otomatis ke channel Telegram setiap hari.</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => onToggleAutoPost('start')}
                         disabled={sendingTelegram || !telegramConfigured || autoPostEnabled}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${autoPostEnabled
-                            ? 'bg-green-500/20 text-green-400 cursor-default'
-                            : 'bg-green-500 hover:bg-green-600 text-white'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`admin-btn ${autoPostEnabled
+                            ? 'bg-green-500/10 text-green-500 opacity-50 cursor-default'
+                            : 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]'
+                            } disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5`}
                     >
                         ▶️ Start
                     </button>
                     <button
                         onClick={() => onToggleAutoPost('stop')}
                         disabled={sendingTelegram || !telegramConfigured || !autoPostEnabled}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${!autoPostEnabled
-                            ? 'bg-red-500/20 text-red-400 cursor-default'
-                            : 'bg-red-500 hover:bg-red-600 text-white'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`admin-btn ${!autoPostEnabled
+                            ? 'bg-red-500/10 text-red-500 opacity-50 cursor-default'
+                            : 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]'
+                            } disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5`}
                     >
                         ⏹️ Stop
                     </button>
@@ -96,46 +97,53 @@ export default function TelegramMarketing({
             </div>
 
             {/* Info Box */}
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <p className="text-sm text-blue-800">
-                    <b>📋 Konsep Template:</b>
-                </p>
-                <p className="text-xs text-blue-700 mt-1">
-                    <b>1 Panduan Lengkap - 7 Gaya Berbeda.</b> Setiap hari template yang sama disampaikan dengan cara berbeda agar tidak bosan. 
-                    <br/><br/>
-                    <b>Cycle 7 Hari:</b> Story → Tutorial → FAQ → Checklist → Visual → Mistakes → Blueprint
-                </p>
+            <div className="admin-info-box mb-8 shadow-inner">
+                <p className="font-semibold flex items-center gap-2 mb-2"><span className="text-lg">💡</span> Information</p>
+                <ul className="list-disc list-inside space-y-1 text-[var(--text-secondary)]">
+                    <li>Sistem otomatis merotasi 1 dari 7 gaya template setiap hari untuk menjaga engagement.</li>
+                    <li>Notifikasi upgrade VVIP/PRO dikirim otomatis <i>realtime</i> tanpa menunggu jadwal.</li>
+                    <li>Pastikan Bot berada di Channel sebagai Admin dengan hak akses memposting pesan.</li>
+                </ul>
             </div>
 
             {/* 7 Daily Templates - Manual Send */}
             <div>
-                <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
-                    📅 Template Harian (Klik untuk Kirim Manual)
+                <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2">
+                    📅 Template Harian <span className="text-[10px] bg-[var(--bg-secondary)] px-2 py-0.5 rounded text-[var(--text-muted)]">Kirim Manual</span>
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {dailyTemplates.map((template) => (
                         <button
                             key={template.id}
                             onClick={() => onSendPromo(template.id)}
                             disabled={sendingTelegram || !telegramConfigured}
-                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed ${template.color}`}
+                            className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border transition-all hover:-translate-y-1 disabled:opacity-50 disabled:-translate-y-0 disabled:cursor-not-allowed ${template.color}`}
                         >
-                            <span className="text-3xl">{template.icon}</span>
-                            <span className="text-sm font-bold text-center">{template.label}</span>
+                            <span className="text-4xl drop-shadow-sm">{template.icon}</span>
+                            <span className="text-sm font-bold text-center tracking-wide">{template.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            <p className="mt-4 text-xs text-[var(--text-muted)] text-center">
-                {sendingTelegram ? '⏳ Mengirim...' : '👆 Klik template untuk kirim manual • Auto-post aktif = kirim otomatis setiap hari'}
-            </p>
-
-            {!telegramConfigured && (
-                <p className="mt-2 text-sm text-red-400 text-center">
-                    ⚠️ Tambahkan TELEGRAM_BOT_TOKEN dan TELEGRAM_CHANNEL_ID di Vercel Environment Variables
+            <div className="mt-8 pt-6 border-t border-[var(--border-light)] text-center">
+                <p className="text-sm text-[var(--text-muted)] font-medium">
+                    {sendingTelegram ? (
+                        <span className="inline-flex items-center gap-2 text-[var(--text-primary)]">
+                            <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                            Memproses pengiriman ke Telegram...
+                        </span>
+                    ) : (
+                        '👆 Klik salah satu template di atas untuk memicu pengiriman bypass jadwal hari ini.'
+                    )}
                 </p>
-            )}
+
+                {!telegramConfigured && (
+                    <div className="mt-4 p-3 inline-block bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 font-medium">
+                        ⚠️ Konfigurasi TELEGRAM_BOT_TOKEN dan TELEGRAM_CHANNEL_ID hilang di sistem.
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

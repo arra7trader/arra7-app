@@ -58,7 +58,7 @@ export default function MLSettingsPanel({
                 <motion.span
                     animate={{ rotate: expanded ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
-                    className="text-gray-400"
+                    className="text-slate-400"
                 >
                     ▼
                 </motion.span>
@@ -88,7 +88,7 @@ export default function MLSettingsPanel({
                                             onClick={() => updateSetting('horizon', h as 5 | 10 | 30)}
                                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${settings.horizon === h
                                                 ? 'bg-purple-600 text-white'
-                                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200'
+                                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-slate-800'
                                                 }`}
                                         >
                                             {h}s
@@ -106,7 +106,7 @@ export default function MLSettingsPanel({
                                     <label className="text-xs font-medium text-[var(--text-secondary)]">
                                         Min Confidence
                                     </label>
-                                    <span className="text-xs text-purple-600 font-medium">
+                                    <span className="text-xs text-purple-400 font-medium">
                                         {Math.round(settings.confidenceThreshold * 100)}%
                                     </span>
                                 </div>
@@ -116,9 +116,9 @@ export default function MLSettingsPanel({
                                     max="100"
                                     value={settings.confidenceThreshold * 100}
                                     onChange={(e) => updateSetting('confidenceThreshold', parseInt(e.target.value) / 100)}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-600"
                                 />
-                                <p className="text-[10px] text-gray-400 mt-1">
+                                <p className="text-[10px] text-slate-400 mt-1">
                                     Hanya tampilkan prediksi dengan confidence di atas threshold ini
                                 </p>
                             </div>
@@ -135,7 +135,7 @@ export default function MLSettingsPanel({
                                             onClick={() => updateSetting('refreshInterval', s)}
                                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${settings.refreshInterval === s
                                                 ? 'bg-blue-600 text-white'
-                                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200'
+                                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-slate-800'
                                                 }`}
                                         >
                                             {s}s
@@ -150,13 +150,13 @@ export default function MLSettingsPanel({
                                     <p className="text-sm font-medium text-[var(--text-primary)]">
                                         Show on Heatmap
                                     </p>
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-slate-400">
                                         Tampilkan prediction overlay di heatmap
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => updateSetting('showOverlay', !settings.showOverlay)}
-                                    className={`relative w-12 h-6 rounded-full transition-colors ${settings.showOverlay ? 'bg-purple-600' : 'bg-gray-200'
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${settings.showOverlay ? 'bg-purple-600' : 'bg-slate-800'
                                         }`}
                                 >
                                     <motion.div

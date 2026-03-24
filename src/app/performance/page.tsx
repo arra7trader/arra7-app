@@ -218,7 +218,7 @@ export default function PerformancePage() {
                 </div>
 
                 {/* Disclaimer */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="bg-amber-50 border border-amber-500/20 rounded-xl p-4 text-center">
                     <p className="text-sm text-amber-700">
                         <WarningIcon className="text-amber-600 inline mr-1" size="sm" /> <strong>Disclaimer:</strong> Performa masa lalu tidak menjamin hasil di masa depan. Selalu gunakan money management yang baik dan lakukan riset mandiri (DYOR).
                     </p>

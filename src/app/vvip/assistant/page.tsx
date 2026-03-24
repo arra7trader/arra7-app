@@ -36,7 +36,7 @@ export default function VvipAssistantPage() {
                                 <div className="bg-[var(--bg-secondary)] rounded-[20px] p-6 h-full flex flex-col">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="font-bold text-[var(--text-primary)]">Live Market Monitor</h3>
-                                        <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100">
+                                        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border-green-500/20 px-2 py-1 rounded-full border border-green-100">
                                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                                             REAL-TIME
                                         </div>
@@ -56,7 +56,7 @@ export default function VvipAssistantPage() {
                     </div>
 
                     {/* Bottom Disclaimer */}
-                    <div className="text-center text-xs text-gray-400 mt-12 max-w-2xl mx-auto">
+                    <div className="text-center text-xs text-slate-400 mt-12 max-w-2xl mx-auto">
                         Disclaimer: Tools provided are for educational purposes only. Market data may be delayed.
                         Trading carries high risk.
                     </div>

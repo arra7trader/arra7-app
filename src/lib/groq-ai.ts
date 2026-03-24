@@ -487,7 +487,7 @@ function formatAnalysisToHtml(text: string): string {
                     const label = tpNum === '1' ? 'Conservative' : tpNum === '2' ? 'Standard' : 'Aggressive';
 
                     output += `
-                        <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-500/30 p-4 shadow-lg hover:border-emerald-400/50 transition-all group">
+                        <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-500/30 p-4 shadow-lg hover:border-emerald-500/20/50 transition-all group">
                             <div class="absolute top-0 right-0 p-2 opacity-5">
                                 <svg class="w-16 h-16 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
                             </div>

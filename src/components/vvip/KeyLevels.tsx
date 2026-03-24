@@ -54,15 +54,15 @@ export default function KeyLevels() {
                 <h3 className="font-semibold text-[var(--text-primary)] flex items-center gap-2">
                     <span>🔑</span> Key Levels (Live)
                 </h3>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold">Today</span>
+                <span className="text-xs bg-green-500/10 border-green-500/20 text-green-400 px-2 py-1 rounded font-bold">Today</span>
             </div>
 
             <div className="space-y-3">
                 {levels.length > 0 ? levels.map((level) => (
                     <div
                         key={level.label}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${level.type === 'res' ? 'bg-red-50 border-red-100 text-red-700' :
-                            level.type === 'sup' ? 'bg-green-50 border-green-100 text-green-700' :
+                        className={`flex items-center justify-between p-3 rounded-lg border ${level.type === 'res' ? 'bg-red-500/10 border-red-500/20 border-red-100 text-red-400' :
+                            level.type === 'sup' ? 'bg-green-500/10 border-green-500/20 border-green-100 text-green-400' :
                                 'bg-[var(--bg-secondary)] border-[var(--border-light)] text-[var(--text-primary)] font-bold'
                             }`}
                     >
@@ -70,11 +70,11 @@ export default function KeyLevels() {
                         <span className="font-mono font-bold tracking-tight">{level.price}</span>
                     </div>
                 )) : (
-                    <div className="text-center text-gray-400 py-4">Data Unavailable</div>
+                    <div className="text-center text-slate-400 py-4">Data Unavailable</div>
                 )}
             </div>
 
-            <div className="mt-6 p-3 bg-blue-50 rounded-lg text-xs text-blue-700 leading-relaxed border border-blue-100">
+            <div className="mt-6 p-3 bg-blue-500/10 border-blue-500/20 rounded-lg text-xs text-blue-400 leading-relaxed border border-blue-100">
                 <strong>Strategy:</strong> Watch for reversals at S1/R1. Breakout above R2 suggests strong bullish trend.
             </div>
         </div>

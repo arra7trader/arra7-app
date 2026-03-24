@@ -119,7 +119,7 @@ export default function UserTable({
                                     type="checkbox"
                                     checked={users.length > 0 && selectedIds.length === users.length}
                                     onChange={handleSelectAll}
-                                    className="w-4 h-4 rounded border-[var(--border-medium)] text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    className="w-4 h-4 rounded border-[var(--border-medium)] text-blue-400 focus:ring-blue-500 cursor-pointer"
                                 />
                             </th>
                             {[
@@ -155,7 +155,7 @@ export default function UserTable({
                                         checked={selectedIds.includes(user.id)}
                                         onChange={() => handleSelectOne(user.id)}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="w-4 h-4 rounded border-[var(--border-medium)] text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                        className="w-4 h-4 rounded border-[var(--border-medium)] text-blue-400 focus:ring-blue-500 cursor-pointer"
                                     />
                                 </td>
                                 <td className="p-4">
@@ -235,7 +235,7 @@ export default function UserTable({
                                                 e.stopPropagation();
                                                 onUserClick?.(user); // Or handleEdit(user)
                                             }}
-                                            className="px-3 py-1 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-secondary)] rounded text-xs transition-colors"
+                                            className="px-3 py-1 bg-[var(--bg-secondary)] hover:bg-slate-800 text-[var(--text-secondary)] rounded text-xs transition-colors"
                                         >
                                             View/Edit
                                         </button>

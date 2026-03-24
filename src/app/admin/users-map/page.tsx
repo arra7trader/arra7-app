@@ -248,8 +248,8 @@ export default function UsersMapPage() {
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 className={`w-full text-left p-3 rounded-lg border transition-all ${trackedUser?.id === user.id
-                                                    ? 'bg-green-50 border-green-300'
-                                                    : 'bg-[var(--bg-secondary)] border-[var(--border-light)] hover:border-blue-300'
+                                                    ? 'bg-green-500/10 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.15)]'
+                                                    : 'bg-[var(--bg-secondary)] border-[var(--border-light)] hover:border-blue-500/40'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-2">
@@ -273,8 +273,8 @@ export default function UsersMapPage() {
                                                         </div>
                                                         <div className="text-xs text-[var(--text-muted)] truncate">{user.city}, {user.country}</div>
                                                     </div>
-                                                    <span className={`text-xs px-1.5 py-0.5 rounded ${user.membership === 'VVIP' ? 'bg-amber-100 text-amber-700' :
-                                                        user.membership === 'PRO' ? 'bg-blue-100 text-blue-700' :
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded ${user.membership === 'VVIP' ? 'bg-amber-500/15 text-amber-400' :
+                                                        user.membership === 'PRO' ? 'bg-blue-500/15 text-blue-400' :
                                                             'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                                         }`}>
                                                         {user.membership}
@@ -437,7 +437,7 @@ export default function UsersMapPage() {
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                    <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
                         {error}
                     </div>
                 )}

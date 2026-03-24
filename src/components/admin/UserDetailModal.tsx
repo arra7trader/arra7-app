@@ -66,11 +66,11 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                 <h3 className="text-lg font-bold text-[var(--text-primary)]">{user.name || 'No Name'}</h3>
                                 <p className="text-[var(--text-secondary)]">{user.email}</p>
                                 <div className="flex gap-2 mt-2">
-                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${user.membership === 'VVIP' ? 'bg-amber-100 text-amber-700' : user.membership === 'PRO' ? 'bg-blue-100 text-blue-700' : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'}`}>
+                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${user.membership === 'VVIP' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : user.membership === 'PRO' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'}`}>
                                         {user.membership}
                                     </span>
                                     {user.downloadedApk && (
-                                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">
+                                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500/10 border-green-500/20 text-green-400">
                                             APK User
                                         </span>
                                     )}
@@ -79,7 +79,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                         </div>
 
                         {/* Subscription Manager */}
-                        <div className="bg-slate-900/5 p-4 rounded-xl border border-[var(--border-light)]">
+                        <div className="bg-[var(--bg-secondary)] p-4 rounded-xl border border-[var(--border-light)]">
                             <SubscriptionManager
                                 userId={user.id}
                                 initialStatus={user.subscriptionStatus || 'free'}
@@ -116,10 +116,10 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                                 {user.lastLoginCity}, {user.lastLoginCountry}
                                             </>
                                         ) : (
-                                            <span className="text-gray-400">Unknown Location</span>
+                                            <span className="text-[var(--text-muted)]">Unknown Location</span>
                                         )}
                                     </p>
-                                    {user.lastLoginIp && <p className="text-xs text-gray-400 font-mono mt-1">{user.lastLoginIp}</p>}
+                                    {user.lastLoginIp && <p className="text-xs text-[var(--text-muted)] font-mono mt-1">{user.lastLoginIp}</p>}
                                 </div>
                                 <div className="bg-[var(--bg-secondary)] p-4 rounded-xl">
                                     <p className="text-xs text-[var(--text-secondary)] mb-1">Telegram Chat ID</p>
@@ -145,7 +145,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                             <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Activity Logs</h4>
 
                             {loadingLogs ? (
-                                <div className="text-center py-8 text-gray-400">Loading activity...</div>
+                                <div className="text-center py-8 text-[var(--text-muted)]">Loading activity...</div>
                             ) : logs.length > 0 ? (
                                 <div className="bg-[var(--bg-secondary)] rounded-xl overflow-hidden border border-[var(--border-light)]">
                                     <table className="w-full text-sm">
@@ -156,7 +156,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                                 <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Details</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-100">
+                                        <tbody className="divide-y divide-[var(--border-light)]">
                                             {logs.map((log) => (
                                                 <tr key={log.id} className="hover:bg-[var(--bg-secondary)]/50 transition-colors">
                                                     <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">
@@ -165,8 +165,8 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                                         })}
                                                     </td>
                                                     <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
-                                                        <span className={`px-2 py-1 rounded text-xs ${log.action === 'REGISTER_ADMIN' ? 'bg-green-100 text-green-700' :
-                                                            log.action === 'UPDATE_ADMIN' ? 'bg-blue-100 text-blue-700' :
+                                                        <span className={`px-2 py-1 rounded text-xs ${log.action === 'REGISTER_ADMIN' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                                            log.action === 'UPDATE_ADMIN' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
                                                                 log.action === 'LOGIN' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)]' :
                                                                     'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                                             }`}>
@@ -185,7 +185,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                                 </div>
                             ) : (
                                 <div className="bg-[var(--bg-secondary)] rounded-xl p-8 text-center border-dashed border-[var(--border-light)]">
-                                    <p className="text-gray-400">No activity logs found.</p>
+                                    <p className="text-[var(--text-muted)]">No activity logs found.</p>
                                 </div>
                             )}
                         </div>
@@ -205,7 +205,7 @@ export default function UserDetailModal({ user, onClose, onEdit }: UserDetailMod
                             </button>
                             <button
                                 onClick={onClose}
-                                className="px-6 py-2 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-lg font-medium transition-colors"
+                                className="px-6 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-lg font-medium transition-colors"
                             >
                                 Close
                             </button>

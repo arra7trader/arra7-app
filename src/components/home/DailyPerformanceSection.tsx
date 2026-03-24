@@ -97,9 +97,9 @@ export default function DailyPerformanceSection() {
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.today.total ?? 0} label="Total Sinyal" />
-                        <StatCard value={data?.today.tpHit ?? 0} label="TP Hit" color="text-green-600" />
-                        <StatCard value={data?.today.slHit ?? 0} label="SL Hit" color="text-red-600" />
-                        <StatCard value={data?.today.pending ?? 0} label="Pending" color="text-amber-600" />
+                        <StatCard value={data?.today.tpHit ?? 0} label="TP Hit" color="text-green-400" />
+                        <StatCard value={data?.today.slHit ?? 0} label="SL Hit" color="text-red-400" />
+                        <StatCard value={data?.today.pending ?? 0} label="Pending" color="text-amber-400" />
                         <StatCard
                             value={`${data?.today.accuracy ?? '0'}%`}
                             label="Win Rate"
@@ -115,9 +115,9 @@ export default function DailyPerformanceSection() {
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.overall?.total ?? 0} label="Total Sinyal" />
-                        <StatCard value={data?.overall?.tpHit ?? 0} label="TP Hit" color="text-green-600" />
-                        <StatCard value={data?.overall?.slHit ?? 0} label="SL Hit" color="text-red-600" />
-                        <StatCard value={data?.overall?.pending ?? 0} label="Pending" color="text-amber-600" />
+                        <StatCard value={data?.overall?.tpHit ?? 0} label="TP Hit" color="text-green-400" />
+                        <StatCard value={data?.overall?.slHit ?? 0} label="SL Hit" color="text-red-400" />
+                        <StatCard value={data?.overall?.pending ?? 0} label="Pending" color="text-amber-400" />
                         <StatCard
                             value={`${data?.overall?.accuracy ?? '0'}%`}
                             label="Win Rate"

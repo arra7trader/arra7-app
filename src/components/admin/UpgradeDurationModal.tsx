@@ -1,167 +1,176 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export interface DurationOption {
-    duration: string;
-    days: number;
-    price: string;
-    priceValue: number;
-    promoSlots?: number;
-    usedSlots?: number;
-    label: string;
-    icon: string;
-    customExpiresAt?: string;
-}
+// Durasi & Harga (bisa disesuaikan dengan DB/Konfigurasi nantinya)
+export const PROMO_SLOTS = {
+    '1_MONTH': { total: 50, used: 25 }, // Dummy data, sebaiknya di-fetch dari API
+    '3_MONTHS': { total: 200, used: 198 },
+    '6_MONTHS': { total: 100, used: 45 },
+};
+
+export const UPGRADE_OPTIONS = [
+    {
+        id: '1_MONTH',
+        duration: 1, // in months
+        label: '1 Bulan',
+        price: 'Rp 149.000',
+        icon: '🥉',
+        popular: false,
+        promoSlots: PROMO_SLOTS['1_MONTH'].total,
+        usedSlots: PROMO_SLOTS['1_MONTH'].used,
+    },
+    {
+        id: '3_MONTHS',
+        duration: 3,
+        label: '3 Bulan',
+        price: 'Rp 299.000',
+        icon: '🥈',
+        isPopular: true,
+        promoSlots: PROMO_SLOTS['3_MONTHS'].total,
+        usedSlots: PROMO_SLOTS['3_MONTHS'].used,
+    },
+    {
+        id: '6_MONTHS',
+        duration: 6,
+        label: '6 Bulan',
+        price: 'Rp 499.000',
+        icon: '🥇',
+        popular: false,
+        promoSlots: PROMO_SLOTS['6_MONTHS'].total,
+        usedSlots: PROMO_SLOTS['6_MONTHS'].used,
+    },
+    {
+        id: '12_MONTHS',
+        duration: 12,
+        label: '1 Tahun',
+        price: 'Rp 899.000',
+        icon: '💎',
+        popular: false,
+        // Promo slot untuk 1 tahun unlimited (atau undefined)
+    },
+];
 
 interface UpgradeDurationModalProps {
     isOpen: boolean;
-    membership: 'PRO' | 'VVIP';
-    currentExpiresAt?: string | null;
-    onSelect: (option: DurationOption) => void;
     onClose: () => void;
+    membership: 'PRO' | 'VVIP';
+    userId: string;
+    onSuccess?: () => void;
 }
 
-const DURATION_OPTIONS: Record<'PRO' | 'VVIP', DurationOption[]> = {
-    PRO: [
-        {
-            duration: '1month',
-            days: 30,
-            price: 'Rp 99K',
-            priceValue: 99000,
-            label: '1 Bulan',
-            icon: '⚡',
-        },
-        {
-            duration: '3months',
-            days: 90,
-            price: 'Rp 290K',
-            priceValue: 290000,
-            promoSlots: 15,
-            label: '3 Bulan',
-            icon: '🔥',
-        },
-        {
-            duration: '6months',
-            days: 180,
-            price: 'Rp 590K',
-            priceValue: 590000,
-            promoSlots: 15,
-            label: '6 Bulan',
-            icon: '💎',
-        },
-        {
-            duration: '1year',
-            days: 365,
-            price: 'Rp 1,000K',
-            priceValue: 1000000,
-            promoSlots: 15,
-            label: '1 Tahun',
-            icon: '👑',
-        },
-    ],
-    VVIP: [
-        {
-            duration: '1month',
-            days: 30,
-            price: 'Rp 249K',
-            priceValue: 249000,
-            label: '1 Bulan',
-            icon: '⚡',
-        },
-        {
-            duration: '3months',
-            days: 90,
-            price: 'Rp 740K',
-            priceValue: 740000,
-            promoSlots: 15,
-            label: '3 Bulan',
-            icon: '🔥',
-        },
-        {
-            duration: '6months',
-            days: 180,
-            price: 'Rp 1,490K',
-            priceValue: 1490000,
-            promoSlots: 15,
-            label: '6 Bulan',
-            icon: '💎',
-        },
-        {
-            duration: '1year',
-            days: 365,
-            price: 'Rp 2,800K',
-            priceValue: 2800000,
-            promoSlots: 15,
-            label: '1 Tahun',
-            icon: '👑',
-        },
-    ],
-};
+export default function UpgradeDurationModal({
+    isOpen,
+    onClose,
+    membership,
+    userId,
+    onSuccess
+}: UpgradeDurationModalProps) {
+    const [selectedDuration, setSelectedDuration] = useState<(typeof UPGRADE_OPTIONS)[0] | null>(null);
+    const [customDate, setCustomDate] = useState<string>('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-export default function UpgradeDurationModal({ isOpen, membership, currentExpiresAt, onSelect, onClose }: UpgradeDurationModalProps) {
-    const [slots, setSlots] = useState<Record<string, { used: number; remaining: number; max: number }>>({});
-    const [loading, setLoading] = useState(true);
-    const [customDate, setCustomDate] = useState('');
+    // Fetch live slot data whenever modal opens
+    const [options, setOptions] = useState(UPGRADE_OPTIONS);
 
     useEffect(() => {
         if (isOpen) {
-            setLoading(true);
-            fetchSlots();
-            const base = new Date();
-            base.setDate(base.getDate() + 30);
-            setCustomDate(base.toISOString().split('T')[0]);
+            fetchPromoSlots();
         }
     }, [isOpen]);
 
-    const fetchSlots = async () => {
+    const fetchPromoSlots = async () => {
         try {
-            const response = await fetch('/api/pricing/slots');
-            const data = await response.json();
-            if (data.status === 'success') {
-                setSlots(data.slots[membership] || {});
+            const res = await fetch('/api/public/promo-slots');
+            const data = await res.json();
+            if (data.slots) {
+                // Update options with live slot data
+                const updatedOptions = UPGRADE_OPTIONS.map(opt => {
+                    if (data.slots[opt.id]) {
+                        return {
+                            ...opt,
+                            promoSlots: data.slots[opt.id].total,
+                            usedSlots: data.slots[opt.id].used
+                        };
+                    }
+                    return opt;
+                });
+                setOptions(updatedOptions);
             }
         } catch (error) {
-            console.error('Fetch slots error:', error);
-        } finally {
-            setLoading(false);
+            console.error('Failed to fetch promo slots:', error);
+            // Fallback to initial options
         }
     };
 
-    const options = DURATION_OPTIONS[membership].map((opt) => {
-        const slotInfo = slots[opt.duration];
-        return {
-            ...opt,
-            usedSlots: slotInfo?.used || 0,
-            promoSlots: opt.promoSlots || undefined,
-        };
-    });
-
-    const handleSelect = (option: DurationOption) => {
-        // Admin can upgrade regardless of slot availability
-        onSelect(option);
+    const handleSelect = (option: typeof UPGRADE_OPTIONS[0]) => {
+        setSelectedDuration(option);
+        setCustomDate(''); // Reset custom date if pre-defined duration is selected
+        setError(null);
     };
 
     const handleSelectCustomDate = () => {
-        if (!customDate) return;
-        const selected = new Date(`${customDate}T23:59:59`);
-        if (Number.isNaN(selected.getTime())) return;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (selected < today) return;
+        if (!customDate) {
+            setError('Pilih tanggal kadaluwarsa terlebih dahulu');
+            return;
+        }
 
+        const selected = new Date(customDate);
         const now = new Date();
-        const diffMs = selected.getTime() - now.getTime();
-        const diffDays = Math.max(1, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
 
-        onSelect({
-            duration: 'custom_date',
-            days: diffDays,
-            price: 'Manual Date',
-            priceValue: 0,
-            label: `Sampai ${selected.toLocaleDateString('id-ID')}`,
-            icon: '📅',
-            customExpiresAt: selected.toISOString(),
-        });
+        if (selected <= now) {
+            setError('Tanggal harus lebih dari hari ini');
+            return;
+        }
+
+        setSelectedDuration(null); // Clear predefined selection
+        setError(null);
+        handleUpgrade(customDate); // Pass the raw date string (YYYY-MM-DD)
+    };
+
+    const confirmSelection = () => {
+        if (!selectedDuration) return;
+
+        // Calculate end date from duration
+        const end = new Date();
+        end.setMonth(end.getMonth() + selectedDuration.duration);
+
+        handleUpgrade(end.toISOString().split('T')[0]); // YYYY-MM-DD
+    };
+
+    const handleUpgrade = async (endDateStr: string) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/upgrade`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    membership,
+                    endDate: endDateStr,
+                    // If selected pre-defined duration, we tell backend we used a promo slot
+                    packageId: selectedDuration?.id, // e.g., "3_MONTHS"
+                    // Optionally pass transaction id or admin evidence here if needed
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to upgrade user');
+            }
+
+            if (onSuccess) onSuccess();
+            onClose();
+
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -176,7 +185,7 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
+                    className="glass-card w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
@@ -186,10 +195,9 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                 <h2 className="text-xl font-bold text-[var(--text-primary)]">
                                     Pilih Durasi Upgrade - {membership}
                                 </h2>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1">Pilih paket durasi untuk user</p>
-                                {currentExpiresAt && (
-                                    <p className="text-xs text-emerald-600 mt-2">
-                                        Expiry saat ini: {new Date(currentExpiresAt).toLocaleDateString('id-ID')}
+                                {userId && (
+                                    <p className="text-sm text-[var(--text-secondary)] mt-1 truncate max-w-[200px] sm:max-w-xs">
+                                        ID: {userId}
                                     </p>
                                 )}
                             </div>
@@ -205,15 +213,16 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                     </div>
 
                     {/* Options */}
-                    <div className="p-6 space-y-3">
+                    <div className="p-6 space-y-3 overflow-y-auto">
                         {loading ? (
-                            <div className="text-center py-8 text-gray-400">Loading slot data...</div>
+                            <div className="text-center py-8 text-[var(--text-muted)]">Loading slot data...</div>
                         ) : (
                             options.map((option, index) => {
                                 const isRecommended = index === 1; // 3 months is recommended
                                 const isPromo = option.promoSlots !== undefined;
                                 const isSoldOut = isPromo && option.usedSlots >= (option.promoSlots || 0);
                                 const remaining = isPromo ? (option.promoSlots || 0) - option.usedSlots : null;
+                                const slotsRemaining = (option.promoSlots || 0) - (option.usedSlots || 0);
 
                                 return (
                                     <motion.button
@@ -222,13 +231,13 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.05 }}
                                         onClick={() => handleSelect(option)}
-                                        className={`
-                                            w-full p-4 rounded-xl border-2 text-left transition-all
-                                            ${isRecommended
-                                                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                                                : 'border-[var(--border-light)] hover:border-blue-300 hover:bg-[var(--bg-secondary)]'
-                                            }
-                                        `}
+                                        className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-all w-full
+                                            ${selectedDuration?.id === option.id
+                                                ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
+                                                : isRecommended
+                                                    ? 'border-blue-500/30 bg-[var(--bg-secondary)] hover:border-blue-500/50'
+                                                    : 'border-[var(--border-medium)] bg-[var(--bg-secondary)] hover:border-[var(--border-light)]'
+                                            }`}
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
@@ -236,7 +245,7 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                                     <span className="text-2xl">{option.icon}</span>
                                                     <span className="font-bold text-[var(--text-primary)]">{option.label}</span>
                                                     {isRecommended && (
-                                                        <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs font-bold">
+                                                        <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs font-bold shadow-[0_0_8px_rgba(59,130,246,0.4)]">
                                                             REKOMENDASI
                                                         </span>
                                                     )}
@@ -245,11 +254,11 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                                 {isPromo && (
                                                     <div className="mt-2 flex items-center gap-2">
                                                         {isSoldOut ? (
-                                                            <span className="px-2 py-1 rounded bg-red-100 text-red-700 text-xs font-semibold">
+                                                            <span className="px-2.5 py-1 rounded bg-red-500/15 text-red-400 text-xs font-semibold">
                                                                 🔴 SOLD OUT ({option.usedSlots}/{option.promoSlots})
                                                             </span>
                                                         ) : (
-                                                            <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
+                                                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${slotsRemaining > 0 ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
                                                                 ✅ Promo: Sisa {remaining}/{option.promoSlots} slot
                                                             </span>
                                                         )}
@@ -265,10 +274,27 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                             })
                         )}
 
+                        {error && (
+                            <div className="admin-error-box mt-4">
+                                {error}
+                            </div>
+                        )}
+
+                        {selectedDuration && !loading && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                onClick={confirmSelection}
+                                className="w-full mt-4 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:bg-blue-700 transition-colors flex justify-center items-center gap-2"
+                            >
+                                Konfirmasi Upgrade {selectedDuration.label}
+                            </motion.button>
+                        )}
+
                         {!loading && (
-                            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                                <p className="text-sm font-semibold text-blue-900">Atur Expiry Manual</p>
-                                <p className="mt-1 text-xs text-blue-700">
+                            <div className="mt-6 admin-info-box border border-blue-500/30">
+                                <p className="text-sm font-semibold flex items-center gap-2"><span>📅</span> Atur Expiry Manual</p>
+                                <p className="mt-1 text-xs opacity-80 text-[var(--text-secondary)]">
                                     Gunakan ini jika user upgrade di tengah jalan dan kamu ingin set tanggal akhir spesifik.
                                 </p>
                                 <div className="mt-3 flex items-center gap-2">
@@ -277,11 +303,11 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                                         value={customDate}
                                         min={new Date().toISOString().split('T')[0]}
                                         onChange={(event) => setCustomDate(event.target.value)}
-                                        className="flex-1 rounded-lg border border-blue-200 bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        className="arra-input flex-1 py-1.5"
                                     />
                                     <button
                                         onClick={handleSelectCustomDate}
-                                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 shadow-[0_0_10px_rgba(37,99,235,0.2)] transition-colors"
                                     >
                                         Set Tanggal
                                     </button>
@@ -291,22 +317,13 @@ export default function UpgradeDurationModal({ isOpen, membership, currentExpire
                     </div>
 
                     {/* Note */}
-                    <div className="px-6 pb-6">
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                            <p className="text-xs text-amber-800">
-                                <strong>Note:</strong> Admin dapat upgrade tanpa batasan slot promo. Slot count hanya untuk customer payment via pricing page.
+                    <div className="px-6 pb-6 pt-2 border-t border-[var(--border-light)]">
+                        <div className="admin-warning-box mt-4 bg-amber-500/10 border-amber-500/20 text-amber-500/90 text-xs">
+                            <p className="font-medium flex items-start gap-2">
+                                <span className="shrink-0 mt-0.5">⚠️</span> 
+                                <span><strong>Note:</strong> Admin dapat melakukan upgrade tanpa mengurangi slot promo payment gateway. Slot count hanya untuk customer payment via pricing page.</span>
                             </p>
                         </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="p-6 border-t border-[var(--border-light)] bg-[var(--bg-secondary)] sticky bottom-0">
-                        <button
-                            onClick={onClose}
-                            className="w-full py-3 rounded-xl border border-[var(--border-medium)] text-[var(--text-primary)] font-medium hover:bg-[var(--bg-secondary)] transition-colors"
-                        >
-                            Batal
-                        </button>
                     </div>
                 </motion.div>
             </div>

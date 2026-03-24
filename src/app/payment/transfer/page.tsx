@@ -106,7 +106,7 @@ function TransferContent() {
                         </div>
                     </div>
 
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                    <div className="bg-amber-50 border border-amber-500/20 rounded-xl p-4 mb-6">
                         <div className="flex gap-3">
                             <span className="text-xl">⚠️</span>
                             <div className="text-sm">

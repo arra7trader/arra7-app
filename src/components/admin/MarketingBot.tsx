@@ -111,14 +111,14 @@ export default function MarketingBot() {
                 <h2 className="text-xl font-bold text-[var(--text-primary)]">Marketing Bot Automation 🤖</h2>
                 <button
                     onClick={() => { setEditing(null); resetForm(); setShowForm(true); }}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"
+                    className="admin-btn bg-purple-600 hover:bg-purple-700 text-white"
                 >
                     + New Campaign
                 </button>
             </div>
 
             {showForm && (
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl p-6 animate-in fade-in">
+                <div className="glass-card p-6 animate-in fade-in border-purple-500/30">
                     <h3 className="text-lg font-semibold mb-4">{editing ? 'Edit Campaign' : 'Create Campaign'}</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
@@ -127,7 +127,7 @@ export default function MarketingBot() {
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500"
+                                className="arra-input"
                                 required
                             />
                         </div>
@@ -138,7 +138,7 @@ export default function MarketingBot() {
                                 <select
                                     value={type}
                                     onChange={e => setType(e.target.value as any)}
-                                    className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500"
+                                    className="arra-select"
                                 >
                                     <option value="INACTIVITY">User Inactivity (Retention)</option>
                                     <option value="NEW_USER">New User (Onboarding)</option>
@@ -151,7 +151,7 @@ export default function MarketingBot() {
                                         type="number"
                                         value={daysInactive}
                                         onChange={e => setDaysInactive(Number(e.target.value))}
-                                        className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500"
+                                        className="arra-input"
                                         min={1}
                                     />
                                 </div>
@@ -163,7 +163,7 @@ export default function MarketingBot() {
                             <textarea
                                 value={message}
                                 onChange={e => setMessage(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-[var(--border-medium)] focus:ring-2 focus:ring-purple-500 h-32 font-mono text-sm"
+                                className="arra-textarea h-32 font-mono text-sm"
                                 required
                             />
                             <p className="text-xs text-[var(--text-secondary)] mt-1">Available variables: {'{name}'}</p>
@@ -177,7 +177,7 @@ export default function MarketingBot() {
                                         type="checkbox"
                                         checked={channelEmail}
                                         onChange={e => setChannelEmail(e.target.checked)}
-                                        className="w-4 h-4 text-purple-600 rounded"
+                                        className="w-4 h-4 text-purple-400 rounded"
                                     />
                                     Email (Resend)
                                 </label>
@@ -186,7 +186,7 @@ export default function MarketingBot() {
                                         type="checkbox"
                                         checked={channelTelegram}
                                         onChange={e => setChannelTelegram(e.target.checked)}
-                                        className="w-4 h-4 text-purple-600 rounded"
+                                        className="w-4 h-4 text-purple-400 rounded"
                                     />
                                     Telegram
                                 </label>
@@ -194,17 +194,10 @@ export default function MarketingBot() {
                         </div>
 
                         <div className="flex justify-end gap-2 pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowForm(false)}
-                                className="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] rounded-lg"
-                            >
+                            <button type="button" onClick={() => setShowForm(false)} className="admin-btn-ghost px-4 py-2 flex-1 justify-center">
                                 Cancel
                             </button>
-                            <button
-                                type="submit"
-                                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-md"
-                            >
+                            <button type="submit" className="admin-btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 flex-1 justify-center">
                                 Save Campaign
                             </button>
                         </div>
@@ -218,9 +211,11 @@ export default function MarketingBot() {
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-semibold text-[var(--text-primary)]">{campaign.name}</h4>
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
-                                    {campaign.status}
-                                </span>
+                                {campaign.status === 'ACTIVE' ? (
+                                    <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-500/15 text-green-400">Active</span>
+                                ) : (
+                                    <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">Draft</span>
+                                )}
                             </div>
                             <p className="text-sm text-[var(--text-secondary)]">
                                 {campaign.type === 'INACTIVITY' ? `Inactive for ${campaign.trigger_rule.daysInactive} days` : 'New User Signup'}
@@ -231,13 +226,13 @@ export default function MarketingBot() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleEdit(campaign)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                className="p-2 text-blue-400 hover:bg-blue-500/10 border-blue-500/20 rounded-lg"
                             >
                                 Edit
                             </button>
                             <button
                                 onClick={() => handleDelete(campaign.id!)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                className="p-2 text-red-400 hover:bg-red-500/10 border-red-500/20 rounded-lg"
                             >
                                 Delete
                             </button>
@@ -251,7 +246,7 @@ export default function MarketingBot() {
                 )}
             </div>
 
-            <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-100 text-sm text-blue-800">
+            <div className="admin-info-box">
                 <h4 className="font-semibold mb-1">💡 How it works</h4>
                 <p>This bot runs automatically every hour (via Vercel Cron). it checks for users matching your rules and sends them your configured message via Email or Telegram.</p>
                 <div className="mt-2 text-xs opacity-75">

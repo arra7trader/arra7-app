@@ -33,11 +33,11 @@ export default function TermsPage() {
                         className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-8 prose max-w-none"
                     >
                         {/* Warning Box */}
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                            <p className="text-amber-800 font-semibold mb-2 flex items-center gap-2">
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
+                            <p className="text-amber-500 font-semibold mb-2 flex items-center gap-2">
                                 ⚠️ PERINGATAN RISIKO
                             </p>
-                            <p className="text-amber-700 text-sm leading-relaxed">
+                            <p className="text-amber-400 text-sm leading-relaxed">
                                 Trading Forex dan Saham melibatkan risiko tinggi. Analisa ARRA7 bersifat edukatif, BUKAN saran investasi. Keputusan trading sepenuhnya tanggung jawab Anda.
                             </p>
                         </div>

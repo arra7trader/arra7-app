@@ -46,7 +46,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                     animate={{ scale: 1, opacity: 1 }}
                     className="sticky top-4 z-20 mb-6"
                 >
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-4 shadow-2xl border-2 border-blue-400">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-4 shadow-2xl border-2 border-blue-500/20">
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="text-xs font-bold opacity-80 mb-1">💰 CURRENT PRICE</div>
@@ -75,7 +75,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
 
                     if (isActive) {
                         statusBadge = '⚡ ACTIVE';
-                        statusColor = 'bg-green-100 text-green-700 border-2 border-green-400';
+                        statusColor = 'bg-green-500/10 border-green-500/20 text-green-400 border-2 border-green-500/20';
                     } else if (isNear) {
                         statusBadge = '🔥 NEAR';
                         statusColor = 'bg-orange-100 text-orange-700 border-2 border-orange-400';
@@ -84,7 +84,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                         (trend === 'DOWN' && currentPrice && currentPrice < levelPrice)
                     ) {
                         statusBadge = '🔴 BREACHED';
-                        statusColor = 'bg-red-100 text-red-700';
+                        statusColor = 'bg-red-500/10 border-red-500/20 text-red-400';
                     } else {
                         statusBadge = '⚪ PENDING';
                     }
@@ -107,11 +107,11 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                             {/* Zone Rung */}
                             <div
                                 className={`relative overflow-hidden rounded-2xl transition-all duration-300 ${isActive
-                                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-4 border-green-400 shadow-xl shadow-green-200'
+                                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-4 border-green-500/20 shadow-xl shadow-green-200'
                                         : isNear
                                             ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-4 border-orange-400 shadow-lg shadow-orange-200'
                                             : isCurrentZone
-                                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 shadow-lg'
+                                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-500/20 shadow-lg'
                                                 : 'bg-[var(--bg-primary)] border-2 border-[var(--border-light)] hover:border-[var(--border-medium)] shadow-md'
                                     }`}
                             >
@@ -141,7 +141,7 @@ export default function PriceLadder({ levels, currentPrice, trend }: PriceLadder
                                                     {level.price}
                                                 </span>
                                                 {distance !== null && (
-                                                    <span className={`text-sm font-bold ${isAbove ? 'text-blue-600' : 'text-purple-600'}`}>
+                                                    <span className={`text-sm font-bold ${isAbove ? 'text-blue-400' : 'text-purple-400'}`}>
                                                         {isAbove ? '↑' : '↓'} {distance.toFixed(2)} pips ({percentDiff.toFixed(2)}%)
                                                     </span>
                                                 )}

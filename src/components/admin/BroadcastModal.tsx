@@ -71,7 +71,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-4">
                         {error && (
-                            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                            <div className="admin-error-box">
                                 {error}
                             </div>
                         )}
@@ -121,7 +121,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                                             type="checkbox"
                                             checked={channels.includes('IN_APP')}
                                             onChange={() => toggleChannel('IN_APP')}
-                                            className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                            className="w-4 h-4 text-purple-400 rounded focus:ring-purple-500"
                                         />
                                         <span className="text-sm text-[var(--text-primary)]">In-App Notification</span>
                                     </label>
@@ -130,7 +130,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                                             type="checkbox"
                                             checked={channels.includes('TELEGRAM')}
                                             onChange={() => toggleChannel('TELEGRAM')}
-                                            className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                            className="w-4 h-4 text-purple-400 rounded focus:ring-purple-500"
                                         />
                                         <span className="text-sm text-[var(--text-primary)]">Telegram Channel</span>
                                     </label>
@@ -142,7 +142,7 @@ export default function BroadcastModal({ isOpen, onClose, onSend }: BroadcastMod
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-xl font-medium transition-colors"
+                                className="flex-1 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl font-medium transition-colors"
                             >
                                 Cancel
                             </button>

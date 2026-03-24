@@ -123,9 +123,9 @@ export default function AdminReportPage() {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`p-4 rounded-xl mb-6 ${message.type === 'success'
-                            ? 'bg-green-50 border border-green-200 text-green-700'
-                            : 'bg-red-50 border border-red-200 text-red-700'
+                        className={`p-4 rounded-xl mb-6 border ${message.type === 'success'
+                            ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                            : 'bg-red-500/10 border-red-500/20 text-red-400'
                             }`}
                     >
                         {message.text}
@@ -260,10 +260,10 @@ export default function AdminReportPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl"
+                    className="mt-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl"
                 >
-                    <h3 className="font-semibold text-blue-700 mb-2">ℹ️ Setup Telegram Bot</h3>
-                    <ol className="list-decimal list-inside text-sm text-blue-600 space-y-1">
+                    <h3 className="font-semibold text-blue-400 mb-2">ℹ️ Setup Telegram Bot</h3>
+                    <ol className="list-decimal list-inside text-sm text-[var(--text-secondary)] space-y-1">
                         <li>Buat bot di @BotFather di Telegram</li>
                         <li>Dapatkan Bot Token</li>
                         <li>Add bot ke channel sebagai Admin</li>

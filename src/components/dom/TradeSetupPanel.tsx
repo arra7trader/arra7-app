@@ -58,14 +58,14 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
     if (!stableSetup || stableSetup.action === 'WAIT') {
         const currentConfidence = prediction?.confidence ? Math.round(prediction.confidence * 100) : 0;
         const currentDirection = prediction?.direction || 'NEUTRAL';
-        const dirColor = currentDirection === 'UP' ? 'text-green-600' : currentDirection === 'DOWN' ? 'text-red-600' : 'text-[var(--text-secondary)]';
+        const dirColor = currentDirection === 'UP' ? 'text-green-400' : currentDirection === 'DOWN' ? 'text-red-400' : 'text-[var(--text-secondary)]';
 
         return (
             <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-light)] p-4">
                 <div className="text-center text-[var(--text-secondary)] mb-3">
                     <div className="text-2xl mb-1">⏳</div>
                     <p className="text-sm font-medium">Scanning for High Confidence Setup...</p>
-                    <p className="text-xs text-gray-400">Signal appears when AI &gt; 75%</p>
+                    <p className="text-xs text-slate-400">Signal appears when AI &gt; 75%</p>
                 </div>
 
                 {/* Live ML Confidence Display */}
@@ -75,7 +75,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                         <span className={`text-xs font-bold ${dirColor}`}>{currentDirection}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
                             <div
                                 className={`h-full transition-all duration-500 ${currentConfidence >= 75 ? 'bg-green-500' : currentConfidence >= 50 ? 'bg-yellow-500' : 'bg-red-400'}`}
                                 style={{ width: `${currentConfidence}%` }}
@@ -83,7 +83,7 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                         </div>
                         <span className="text-sm font-bold text-[var(--text-primary)]">{currentConfidence}%</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-1 text-center">Threshold: 75% for signal</p>
+                    <p className="text-[10px] text-slate-400 mt-1 text-center">Threshold: 75% for signal</p>
                 </div>
             </div>
         );
@@ -92,19 +92,19 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
     const isLong = stableSetup.action === 'LONG';
 
     return (
-        <div className={`rounded-xl border p-4 ${isLong ? 'border-green-100 bg-green-50/30' : 'border-red-100 bg-red-50/30'}`}>
+        <div className={`rounded-xl border p-4 ${isLong ? 'border-green-100 bg-green-500/10 border-green-500/20/30' : 'border-red-100 bg-red-500/10 border-red-500/20/30'}`}>
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg text-xl ${isLong ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <div className={`p-2 rounded-lg text-xl ${isLong ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                         {isLong ? '📈' : '📉'}
                     </div>
                     <div>
-                        <h3 className={`text-lg font-bold ${isLong ? 'text-green-700' : 'text-red-700'}`}>
+                        <h3 className={`text-lg font-bold ${isLong ? 'text-green-400' : 'text-red-400'}`}>
                             {stableSetup.action} SIGNAL
                         </h3>
                         <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="text-xs font-semibold text-[var(--text-secondary)]">Quality:</span>
-                            <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${stableSetup.quality === 'HIGH' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${stableSetup.quality === 'HIGH' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
                                 }`}>
                                 {stableSetup.quality}
                             </span>
@@ -122,19 +122,19 @@ export default function TradeSetupPanel({ prediction, isLoading }: TradeSetupPan
                     <div className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1">
                         🎯 Take Profit (TP)
                     </div>
-                    <div className="text-lg font-bold text-green-600">{stableSetup.tp.toLocaleString()}</div>
-                    <div className="text-[10px] text-gray-400">Risk/Reward {stableSetup.riskRewardRatio}</div>
+                    <div className="text-lg font-bold text-green-400">{stableSetup.tp.toLocaleString()}</div>
+                    <div className="text-[10px] text-slate-400">Risk/Reward {stableSetup.riskRewardRatio}</div>
                 </div>
                 <div className="bg-[var(--bg-primary)] rounded-lg border border-[var(--border-light)] p-2.5 shadow-sm">
                     <div className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1">
                         🛡️ Stop Loss (SL)
                     </div>
-                    <div className="text-lg font-bold text-red-600">{stableSetup.sl.toLocaleString()}</div>
-                    <div className="text-[10px] text-gray-400">Strict Exit</div>
+                    <div className="text-lg font-bold text-red-400">{stableSetup.sl.toLocaleString()}</div>
+                    <div className="text-[10px] text-slate-400">Strict Exit</div>
                 </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+            <div className="flex items-center justify-between text-xs text-slate-400 px-1">
                 <div className="flex items-center gap-1">
                     <span>🤖</span>
                     <span>AI Validated Strategy</span>

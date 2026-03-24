@@ -103,14 +103,14 @@ export default function AutoTradingDashboard() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-400">Loading accounts...</div>;
+    if (loading) return <div className="p-8 text-center text-slate-400">Loading accounts...</div>;
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-xl font-semibold text-white">Auto Trading Bots</h2>
-                    <p className="text-sm text-gray-400">Manage your connected MT4/MT5 accounts</p>
+                    <p className="text-sm text-slate-400">Manage your connected MT4/MT5 accounts</p>
                 </div>
                 <button
                     onClick={() => setIsAddModalOpen(true)}
@@ -124,10 +124,10 @@ export default function AutoTradingDashboard() {
             {accounts.length === 0 ? (
                 <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-12 text-center">
                     <div className="bg-gray-700/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CogIcon className="w-8 h-8 text-gray-400" />
+                        <CogIcon className="w-8 h-8 text-slate-400" />
                     </div>
                     <h3 className="text-lg font-medium text-white mb-2">No Trading Accounts</h3>
-                    <p className="text-gray-400 max-w-sm mx-auto mb-6">
+                    <p className="text-slate-400 max-w-sm mx-auto mb-6">
                         Connect your Exness or FBS account to start auto-trading with our AI signals.
                     </p>
                     <button
@@ -145,7 +145,7 @@ export default function AutoTradingDashboard() {
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <h3 className="font-semibold text-white text-lg">{account.name}</h3>
-                                        <div className="flex items-center space-x-2 text-sm text-gray-400 mt-1">
+                                        <div className="flex items-center space-x-2 text-sm text-slate-400 mt-1">
                                             <span className="bg-gray-700 px-2 py-0.5 rounded text-xs">{account.broker}</span>
                                             <span className="bg-gray-700 px-2 py-0.5 rounded text-xs">{account.platform}</span>
                                         </div>
@@ -176,7 +176,7 @@ export default function AutoTradingDashboard() {
                                                 <code className="text-xs text-blue-400 font-mono flex-1 truncate">{account.id}</code>
                                                 <button
                                                     onClick={() => navigator.clipboard.writeText(account.id)}
-                                                    className="text-gray-400 hover:text-white"
+                                                    className="text-slate-400 hover:text-white"
                                                     title="Copy Key"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -214,7 +214,7 @@ export default function AutoTradingDashboard() {
                                     </button>
                                     <button
                                         onClick={() => handleDelete(account.id)}
-                                        className="p-2 bg-gray-700 text-gray-400 hover:text-red-400 hover:bg-gray-700/80 rounded-lg transition"
+                                        className="p-2 bg-gray-700 text-slate-400 hover:text-red-400 hover:bg-gray-700/80 rounded-lg transition"
                                         title="Remove Account"
                                     >
                                         <TrashIcon className="w-5 h-5" />
@@ -242,11 +242,11 @@ export default function AutoTradingDashboard() {
                     <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
                         <div className="p-6">
                             <h3 className="text-xl font-bold text-white mb-1">Connect Broker</h3>
-                            <p className="text-sm text-gray-400 mb-6">Enter your MT4/MT5 trading credentials.</p>
+                            <p className="text-sm text-slate-400 mb-6">Enter your MT4/MT5 trading credentials.</p>
 
                             <form onSubmit={handleAddAccount} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Account Label</label>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Account Label</label>
                                     <input
                                         type="text"
                                         value={newAccount.name}
@@ -258,7 +258,7 @@ export default function AutoTradingDashboard() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1">Broker</label>
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">Broker</label>
                                         <select
                                             value={newAccount.broker}
                                             onChange={e => setNewAccount({ ...newAccount, broker: e.target.value })}
@@ -271,7 +271,7 @@ export default function AutoTradingDashboard() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1">Platform</label>
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">Platform</label>
                                         <select
                                             value={newAccount.platform}
                                             onChange={e => setNewAccount({ ...newAccount, platform: e.target.value })}
@@ -283,7 +283,7 @@ export default function AutoTradingDashboard() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Login ID</label>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Login ID</label>
                                     <input
                                         type="text"
                                         value={newAccount.login}
@@ -293,7 +293,7 @@ export default function AutoTradingDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Server Name</label>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Server Name</label>
                                     <input
                                         type="text"
                                         value={newAccount.server}

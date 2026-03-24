@@ -317,8 +317,8 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                     </span>
                     {activeAlerts.length > 0 && (
                         <span className={`text-xs px-2 py-0.5 rounded-full ${highPriorityCount > 0
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-blue-100 text-blue-700'
+                                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                                : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                             }`}>
                             {activeAlerts.length}
                         </span>
@@ -327,7 +327,7 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                 <motion.span
                     animate={{ rotate: expanded ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
-                    className="text-gray-400"
+                    className="text-slate-400"
                 >
                     ▼
                 </motion.span>
@@ -345,7 +345,7 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                     >
                         <div className="px-4 pb-4 border-t border-[var(--border-light)] pt-2">
                             {activeAlerts.length === 0 ? (
-                                <p className="text-center text-gray-400 text-sm py-4">
+                                <p className="text-center text-slate-400 text-sm py-4">
                                     No active alerts
                                 </p>
                             ) : (
@@ -353,7 +353,7 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                                     <div className="flex justify-end mb-2">
                                         <button
                                             onClick={onClear}
-                                            className="text-xs text-gray-400 hover:text-[var(--text-secondary)]"
+                                            className="text-xs text-slate-400 hover:text-[var(--text-secondary)]"
                                         >
                                             Clear All
                                         </button>
@@ -377,7 +377,7 @@ export function AlertPanel({ alerts, onDismiss, onClear }: AlertPanelProps) {
                                                     </div>
                                                     <button
                                                         onClick={() => onDismiss(alert.id)}
-                                                        className="text-gray-400 hover:text-[var(--text-secondary)] text-xs"
+                                                        className="text-slate-400 hover:text-[var(--text-secondary)] text-xs"
                                                     >
                                                         ✕
                                                     </button>

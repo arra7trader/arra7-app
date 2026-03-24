@@ -1,3 +1,4 @@
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { User } from './UserTable';
@@ -69,7 +70,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden glass-card !border !border-[var(--border-[var(--border-light)])]"
                 >
                     <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center">
                         <h2 className="text-xl font-bold text-[var(--text-primary)]">
@@ -84,7 +85,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-4">
                         {error && (
-                            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                            <div className="admin-error-box">
                                 {error}
                             </div>
                         )}
@@ -95,7 +96,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                 type="text"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="arra-input"
                                 placeholder="Full Name"
                             />
                         </div>
@@ -107,7 +108,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                 value={formData.email}
                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 disabled={!!user} // Cannot change email for existing users usually
-                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-[var(--bg-secondary)] disabled:text-[var(--text-secondary)]"
+                                className="arra-input disabled:opacity-50"
                                 placeholder="user@example.com"
                                 required
                             />
@@ -119,7 +120,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                 type="text"
                                 value={formData.telegramChatId}
                                 onChange={e => setFormData({ ...formData, telegramChatId: e.target.value })}
-                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="arra-input"
                                 placeholder="Contoh: 123456789"
                             />
                             <p className="text-xs text-[var(--text-secondary)] mt-1">Kosongkan jika user belum menghubungkan Telegram.</p>
@@ -132,7 +133,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                     type="password"
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    className="arra-input"
                                     placeholder="••••••••"
                                     required={!user}
                                 />
@@ -145,7 +146,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                             <select
                                 value={formData.membership}
                                 onChange={e => setFormData({ ...formData, membership: e.target.value })}
-                                className="w-full px-4 py-2 border border-[var(--border-medium)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="arra-select"
                             >
                                 <option value="BASIC">BASIC</option>
                                 <option value="PRO">PRO</option>
@@ -157,14 +158,14 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-gray-200 text-[var(--text-primary)] rounded-xl font-medium transition-colors"
+                                className="flex-1 px-4 py-2 admin-btn-ghost rounded-xl font-medium transition-colors justify-center"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
                             >
                                 {saving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                                 {user ? 'Save Changes' : 'Create User'}

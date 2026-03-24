@@ -41,7 +41,7 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
                             VVIP Access Only
                         </h1>
 
-                        <p className="text-gray-400 leading-relaxed">
+                        <p className="text-slate-400 leading-relaxed">
                             This AI Companion is an exclusive private intelligence tool for our VVIP members. Upgrade your tier to unlock the ultimate trading assistant.
                         </p>
                     </div>

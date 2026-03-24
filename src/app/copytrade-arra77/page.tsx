@@ -65,24 +65,24 @@ function fmtProviderWinrate(provider: any) {
 
 function riskBadgeClass(riskLevel: string | undefined) {
   const risk = String(riskLevel || 'MEDIUM').toUpperCase();
-  if (risk === 'LOW') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-  if (risk === 'HIGH') return 'bg-rose-50 text-rose-700 border border-rose-200';
-  return 'bg-amber-50 text-amber-700 border border-amber-200';
+  if (risk === 'LOW') return 'bg-emerald-50 text-emerald-700 border border-emerald-500/20';
+  if (risk === 'HIGH') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
+  return 'bg-amber-50 text-amber-700 border border-amber-500/20';
 }
 
 function followBadgeClass(followStatus: string | undefined) {
   const status = String(followStatus || '').toUpperCase();
-  if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-  if (status === 'PAUSED') return 'bg-amber-50 text-amber-700 border border-amber-200';
-  if (status === 'STOPPED') return 'bg-rose-50 text-rose-700 border border-rose-200';
+  if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-500/20';
+  if (status === 'PAUSED') return 'bg-amber-50 text-amber-700 border border-amber-500/20';
+  if (status === 'STOPPED') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
   return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
 function providerStatusBadgeClass(providerStatus: string | undefined) {
   const status = String(providerStatus || '').toUpperCase();
-  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-  if (status === 'PENDING') return 'bg-amber-50 text-amber-700 border border-amber-200';
-  if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-50 text-rose-700 border border-rose-200';
+  if (status === 'APPROVED' || status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-500/20';
+  if (status === 'PENDING') return 'bg-amber-50 text-amber-700 border border-amber-500/20';
+  if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-rose-50 text-rose-700 border border-rose-500/20';
   return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)]';
 }
 
@@ -422,8 +422,8 @@ export default function CopytradeArra77Page() {
           </div>
         </div>
 
-        {msg && <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">{msg}</div>}
-        {error && <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>}
+        {msg && <div className="rounded-xl bg-green-50 border border-green-500/20 px-4 py-2 text-sm text-green-700">{msg}</div>}
+        {error && <div className="rounded-xl bg-red-50 border border-red-500/20 px-4 py-2 text-sm text-red-700">{error}</div>}
 
         <div className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-light)] p-3 sm:p-4">
           <p className="text-xs font-semibold tracking-widest uppercase text-[var(--text-secondary)]">Menu Fitur Copytrade</p>
@@ -492,7 +492,7 @@ export default function CopytradeArra77Page() {
                       key={item.key}
                       onClick={() => setDashboardPanel(item.key)}
                       className={`rounded-xl border p-3 text-left transition ${
-                        active ? 'border-blue-200 bg-blue-50' : 'border-[var(--border-light)] bg-[var(--bg-primary)] hover:border-[var(--border-medium)]'
+                        active ? 'border-blue-500/20 bg-blue-50' : 'border-[var(--border-light)] bg-[var(--bg-primary)] hover:border-[var(--border-medium)]'
                       }`}
                     >
                       <div className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold ${active ? 'bg-blue-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
@@ -982,7 +982,7 @@ export default function CopytradeArra77Page() {
                 Generate Key & Secret
               </button>
               {newCreds && (
-                <div className="rounded-xl bg-amber-50 border border-amber-200 p-2 text-xs break-all">
+                <div className="rounded-xl bg-amber-50 border border-amber-500/20 p-2 text-xs break-all">
                   Key: {newCreds.key}
                   <br />
                   Secret: {newCreds.secret}
