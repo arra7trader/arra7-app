@@ -14,7 +14,8 @@ import {
     NewspaperIcon,
     HeartIcon,
     CurrencyYenIcon,
-    WifiIcon
+    WifiIcon,
+    BeakerIcon
 } from '@heroicons/react/24/solid';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
@@ -99,6 +100,14 @@ export default function AppGrid() {
             icon: <UserGroupIcon className="w-8 h-8 text-teal-500" />,
             href: '/social',
             color: 'bg-teal-500/10 group-hover:bg-teal-500/10',
+        },
+        {
+            id: 'neural-lab',
+            label: 'Neural Lab',
+            icon: <BeakerIcon className="w-8 h-8 text-amber-400" />,
+            href: '/xauusd-neural-lab',
+            color: 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500/10 border-amber-500/20',
+            isNew: true,
         },
     ];
 
