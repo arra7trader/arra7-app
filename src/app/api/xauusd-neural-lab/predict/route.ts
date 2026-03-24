@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json().catch(() => ({}));
         const timeframe = body.timeframe || '1h';
 
-        // 1. Fetch XAUUSD data from Swissquote
+        // 1. Fetch live price from Swissquote & historical candles from Yahoo
         let currentPrice = 0;
         let change = 0;
         let high = 0;
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
         let dataSource = 'swissquote';
 
         try {
+            // Get live price stream from Swissquote
             const brokerData = await getBrokerPrice('XAUUSD' as any, timeframe as any, 'swissquote');
             currentPrice = brokerData.current_price;
             change = brokerData.change_percent;
@@ -44,8 +45,25 @@ export async function POST(req: NextRequest) {
             low = brokerData.low;
             candles = brokerData.candles || [];
             dataSource = brokerData.timestampSource || 'swissquote';
+
+            // Swissquote BBO only returns 1 candle. We ALWAYS need historical data for the LSTM.
+            if (candles.length < 60) {
+                const yahooData = await getMarketData('XAUUSD' as any, timeframe as any);
+                if (yahooData.candles && yahooData.candles.length >= 10) {
+                    // Use Yahoo candles but overwrite the last candle's close with Swissquote live price
+                    candles = yahooData.candles;
+                    const lastIdx = candles.length - 1;
+                    candles[lastIdx].close = currentPrice;
+                    
+                    // If high/low from Yahoo are missing or outdated, update them too
+                    if (high > 0) candles[lastIdx].high = Math.max(candles[lastIdx].high || 0, high);
+                    if (low > 0) candles[lastIdx].low = Math.min(candles[lastIdx].low || 999999, low);
+                    
+                    dataSource = 'swissquote+yahoo';
+                }
+            }
         } catch {
-            // Fallback to Yahoo
+            // Absolute Fallback: Yahoo Finance everything
             try {
                 const marketData = await getMarketData('XAUUSD' as any, timeframe as any);
                 currentPrice = marketData.current_price;
@@ -64,19 +82,9 @@ export async function POST(req: NextRequest) {
 
         if (currentPrice <= 0 || candles.length < 10) {
             return NextResponse.json(
-                { error: 'Insufficient market data for prediction' },
+                { error: 'Insufficient market data for prediction. Need minimum 10 candles.' },
                 { status: 503 }
             );
-        }
-
-        // Supplement with more candles if needed
-        if (candles.length < 60) {
-            try {
-                const yahooData = await getMarketData('XAUUSD' as any, timeframe as any);
-                if (yahooData.candles && yahooData.candles.length > candles.length) {
-                    candles = yahooData.candles;
-                }
-            } catch { /* Continue with available data */ }
         }
 
         // 2. Convert candle format
