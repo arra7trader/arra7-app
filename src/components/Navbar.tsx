@@ -26,6 +26,15 @@ export default function Navbar() {
     const navItems = [
         { label: t('home'), href: '/' },
         { label: 'Copytrade', href: '/copytrade-arra77' },
+        { 
+            label: (
+                <div className="flex items-center gap-1.5">
+                    <span>Neural Lab</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-[#F59E0B] border border-amber-500/20">VVIP</span>
+                </div>
+            ), 
+            href: '/xauusd-neural-lab' 
+        },
         { label: t('pricing'), href: '/pricing' },
         { label: 'FAQ', href: '/faq' },
         {
@@ -89,14 +98,7 @@ export default function Navbar() {
                             href={item.href}
                             className={`font-['Inter'] text-[14px] font-medium transition-colors ${item.href === '/' ? 'text-[#F8FAFC]' : 'text-[#94A3B8] hover:text-[#F8FAFC]'}`}
                         >
-                            {typeof item.label === 'string' ? item.label : (
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center justify-center rounded-[4px] w-5 h-5 shrink-0" style={{ backgroundImage: 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)' }}>
-                                        <span className="text-white font-['Space_Grotesk'] font-bold text-[9px]">A7</span>
-                                    </div>
-                                    <span>App</span>
-                                </div>
-                            )}
+                            {item.label}
                         </Link>
                     ))}
                 </div>
@@ -266,7 +268,7 @@ export default function Navbar() {
                                     className="block px-6 py-4 text-[#F8FAFC] font-['Inter'] font-medium border-b border-[#FFFFFF0A] hover:bg-[#FFFFFF05] transition-colors"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    {typeof item.label === 'string' ? item.label : 'App'}
+                                    {item.label}
                                 </Link>
                             ))}
 
