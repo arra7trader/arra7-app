@@ -631,6 +631,10 @@ Tim ARRA7`;
                         <div className="icon-container bg-rose-500/15">🔔</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Notifikasi Web</div>
                     </Link>
+                    <Link href="/admin/bot-private" className="admin-quick-link">
+                        <div className="icon-container bg-emerald-500/15">BOT</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">Private Bot</div>
+                    </Link>
                     <Link href="/admin/report" className="admin-quick-link">
                         <div className="icon-container bg-blue-500/15 text-blue-400"><ChartIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Daily Report</div>
