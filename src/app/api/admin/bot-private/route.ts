@@ -11,6 +11,105 @@ function generateLinkCode() {
   return randomBytes(4).toString('hex').toUpperCase();
 }
 
+async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) {
+  if (!turso) return;
+
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS bot_memberships (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL UNIQUE,
+      plan_code TEXT NOT NULL DEFAULT 'TELEBOT',
+      status TEXT NOT NULL DEFAULT 'invited',
+      source TEXT NOT NULL DEFAULT 'ARRA7',
+      telegram_username TEXT,
+      telegram_chat_id TEXT,
+      invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      activated_at DATETIME,
+      expires_at DATETIME,
+      metadata_json TEXT
+    )
+  `);
+
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS bot_link_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      code_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await turso.execute(`CREATE INDEX IF NOT EXISTS idx_bot_memberships_status ON bot_memberships(status)`);
+  await turso.execute(`CREATE INDEX IF NOT EXISTS idx_bot_memberships_telegram_chat_id ON bot_memberships(telegram_chat_id)`);
+
+  try {
+    await turso.execute(`ALTER TABLE bot_memberships ADD COLUMN telegram_username TEXT`);
+  } catch (error: any) {
+    if (!String(error?.message || '').includes('duplicate column name')) {
+      console.error('[ADMIN_BOT_PRIVATE] Failed to add telegram_username column:', error);
+    }
+  }
+
+  try {
+    await turso.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_memberships_telegram_username ON bot_memberships(telegram_username)`);
+  } catch (error) {
+    console.error('[ADMIN_BOT_PRIVATE] Failed to ensure telegram_username index:', error);
+  }
+}
+
+async function fetchMembershipRows(turso: ReturnType<typeof getTursoClient>) {
+  if (!turso) return [];
+
+  try {
+    const result = await turso.execute(`
+      SELECT
+        bm.user_id,
+        COALESCE(u.email, '') AS email,
+        COALESCE(u.name, '') AS name,
+        bm.plan_code,
+        bm.status,
+        bm.telegram_username,
+        bm.telegram_chat_id,
+        bm.source,
+        bm.invited_at,
+        bm.activated_at,
+        bm.expires_at
+      FROM bot_memberships bm
+      LEFT JOIN users u ON u.id = bm.user_id
+      ORDER BY
+        CASE bm.status
+          WHEN 'active' THEN 1
+          WHEN 'invited' THEN 2
+          WHEN 'expired' THEN 3
+          ELSE 4
+        END,
+        bm.id DESC
+    `);
+    return result.rows;
+  } catch (primaryError) {
+    console.error('[ADMIN_BOT_PRIVATE] Primary membership query failed, using fallback:', primaryError);
+    const fallback = await turso.execute(`
+      SELECT
+        user_id,
+        '' AS email,
+        '' AS name,
+        plan_code,
+        status,
+        telegram_username,
+        telegram_chat_id,
+        source,
+        invited_at,
+        activated_at,
+        expires_at
+      FROM bot_memberships
+      ORDER BY id DESC
+    `);
+    return fallback.rows;
+  }
+}
+
 async function resolveUserId(turso: ReturnType<typeof getTursoClient>, userId?: string, email?: string) {
   if (!turso) return null;
 
@@ -51,35 +150,12 @@ export async function GET() {
     }
 
     await initDatabase();
-
-    const result = await turso.execute(`
-      SELECT
-        bm.user_id,
-        u.email,
-        u.name,
-        bm.plan_code,
-        bm.status,
-        bm.telegram_username,
-        bm.telegram_chat_id,
-        bm.source,
-        bm.invited_at,
-        bm.activated_at,
-        bm.expires_at
-      FROM bot_memberships bm
-      LEFT JOIN users u ON u.id = bm.user_id
-      ORDER BY
-        CASE bm.status
-          WHEN 'active' THEN 1
-          WHEN 'invited' THEN 2
-          WHEN 'expired' THEN 3
-          ELSE 4
-        END,
-        bm.id DESC
-    `);
+    await ensureBotPrivateSchema(turso);
+    const rows = await fetchMembershipRows(turso);
 
     return NextResponse.json({
       status: 'success',
-      memberships: result.rows.map((row) => ({
+      memberships: rows.map((row) => ({
         userId: row.user_id,
         email: row.email,
         name: row.name,
@@ -95,7 +171,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error('[ADMIN_BOT_PRIVATE] GET error:', error);
-    return NextResponse.json({ status: 'error', message: 'Failed to fetch bot memberships' }, { status: 500 });
+    return NextResponse.json({
+      status: 'error',
+      message: error instanceof Error ? `Failed to fetch bot memberships: ${error.message}` : 'Failed to fetch bot memberships'
+    }, { status: 500 });
   }
 }
 
@@ -112,6 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     await initDatabase();
+    await ensureBotPrivateSchema(turso);
 
     const body = await request.json();
     const action = String(body?.action || '').trim();
