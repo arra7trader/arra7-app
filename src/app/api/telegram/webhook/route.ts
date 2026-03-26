@@ -16,9 +16,15 @@ import {
 } from '@/lib/turso';
 import { consumeTelegramVvipQuota, getTelegramVvipQuotaStatus } from '@/lib/telegram-vvip-quota';
 import {
+  buildActiveWelcomeMessage,
+  buildApprovedWelcomeMessage,
+  buildHelpMessage,
+  buildIntroMessage,
+  buildLockedAccessMessage,
   buildMainMenuKeyboard,
   buildPairKeyboard,
   buildSignalCategoryKeyboard,
+  buildStatusMessage,
   buildTelegramResultsSummary,
   buildTimeframeKeyboard,
   findSignalPairCategory,
@@ -126,22 +132,25 @@ export async function POST(request: Request) {
       if (!parsed) return NextResponse.json({ ok: true });
 
       if (parsed.type === 'categories') {
-        await reply(chatId, 'Pilih kategori pair:', {
+        await reply(chatId, '<b>Signal Desk</b>\nPilih kategori market yang ingin Anda analisa.', {
           replyMarkup: buildSignalCategoryKeyboard(),
+          allowHtml: true,
         });
         return NextResponse.json({ ok: true });
       }
 
       if (parsed.type === 'category') {
-        await reply(chatId, `Pilih pair dari kategori ${parsed.categoryId.toUpperCase()}:`, {
+        await reply(chatId, `<b>Signal Desk</b>\nKategori <b>${escapeHtml(parsed.categoryId.toUpperCase())}</b> dipilih. Sekarang tentukan pair yang ingin dianalisa.`, {
           replyMarkup: buildPairKeyboard(parsed.categoryId),
+          allowHtml: true,
         });
         return NextResponse.json({ ok: true });
       }
 
       if (parsed.type === 'pair') {
-        await reply(chatId, `Pilih timeframe untuk ${parsed.symbol}:`, {
+        await reply(chatId, `<b>Signal Desk</b>\nPair <b>${escapeHtml(parsed.symbol)}</b> dipilih. Silakan tentukan timeframe.`, {
           replyMarkup: buildTimeframeKeyboard(parsed.categoryId, parsed.symbol),
+          allowHtml: true,
         });
         return NextResponse.json({ ok: true });
       }
@@ -161,11 +170,13 @@ export async function POST(request: Request) {
           await reply(
             chatId,
             [
-              'Kuota signal bot hari ini sudah habis.',
+              '<b>ARRA7 TELEBOT</b>',
+              '',
+              'Kuota signal harian Anda sudah habis.',
               `Limit: ${quota.limit}/hari`,
               `Reset: ${quota.resetText}`,
             ].join('\n'),
-            { replyMarkup: buildMainMenuKeyboard() }
+            { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
           );
           return NextResponse.json({ ok: true });
         }
@@ -223,12 +234,8 @@ export async function POST(request: Request) {
 
             await reply(
               chatId,
-              [
-                `Halo ${firstName}, username Telegram Anda sudah di-approve.`,
-                'Akses TELEBOT aktif dan akun berhasil terhubung otomatis.',
-                'Gunakan menu di bawah untuk memilih Signal atau Hasil.',
-              ].join('\n'),
-              { replyMarkup: buildMainMenuKeyboard() }
+              buildApprovedWelcomeMessage(firstName),
+              { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
             );
             return NextResponse.json({ ok: true });
           }
@@ -236,13 +243,8 @@ export async function POST(request: Request) {
 
         await reply(
           chatId,
-          [
-            `Halo ${firstName}, selamat datang di ARRA7 Telegram Bot.`,
-            '',
-            'Akses bot ini untuk member yang sudah aktif.',
-            'Hubungkan akun Anda dari web ARRA7 lalu kirim:',
-            '/link KODE_OTP',
-          ].join('\n')
+          buildIntroMessage(firstName),
+          { allowHtml: true }
         );
         return NextResponse.json({ ok: true });
       }
@@ -252,22 +254,16 @@ export async function POST(request: Request) {
         const { membership } = await getUserMembership(linked.userId);
         await reply(
           chatId,
-          [
-            'Akun Anda terhubung, tetapi akses bot terkunci.',
-            `Status membership saat ini: ${membership}.`,
-            'Bot hanya untuk akses aktif yang valid.',
-          ].join('\n')
+          buildLockedAccessMessage(membership),
+          { allowHtml: true }
         );
         return NextResponse.json({ ok: true });
       }
 
       await reply(
         chatId,
-        [
-          `Halo ${firstName}, akses ${access.label} Anda aktif.`,
-          'Gunakan menu di bawah untuk memilih Signal atau Hasil.',
-        ].join('\n')
-        , { replyMarkup: buildMainMenuKeyboard() }
+        buildActiveWelcomeMessage(firstName, access.label),
+        { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
@@ -275,17 +271,8 @@ export async function POST(request: Request) {
     if (cmd === '/help') {
       await reply(
         chatId,
-        [
-          'Menu bot:',
-          'Signal - pilih pair dan timeframe',
-          'Hasil - lihat progress TP/SL signal terakhir',
-          '',
-          'Perintah:',
-          '/start - tampilkan menu',
-          '/link KODE - hubungkan akun',
-          '/status - cek status akses',
-        ].join('\n'),
-        { replyMarkup: buildMainMenuKeyboard() }
+        buildHelpMessage(),
+        { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
@@ -301,7 +288,11 @@ export async function POST(request: Request) {
       if (privateBotLinkCode) {
         const privateBotMembership = await getPrivateBotMembershipByUserId(privateBotLinkCode.userId);
         if (!privateBotMembership || privateBotMembership.status !== 'active') {
-          await reply(chatId, 'Kode valid, tetapi akses TELEBOT belum aktif.');
+          await reply(
+            chatId,
+            '<b>ARRA7 TELEBOT</b>\n\nKode link valid, namun akses TELEBOT Anda belum aktif. Silakan tunggu approval admin.',
+            { allowHtml: true }
+          );
           return NextResponse.json({ ok: true });
         }
 
@@ -311,7 +302,9 @@ export async function POST(request: Request) {
           firstName,
         });
         if (!linked) {
-          await reply(chatId, 'Gagal menghubungkan akun TELEBOT. Silakan coba lagi.');
+          await reply(chatId, '<b>ARRA7 TELEBOT</b>\n\nAkun belum berhasil dihubungkan. Silakan coba lagi beberapa saat lagi.', {
+            allowHtml: true,
+          });
           return NextResponse.json({ ok: true });
         }
 
@@ -322,11 +315,13 @@ export async function POST(request: Request) {
         await reply(
           chatId,
           [
+            '<b>ARRA7 TELEBOT</b>',
+            '',
             'Akun berhasil terhubung.',
-            'Akses TELEBOT aktif.',
-            'Gunakan menu Signal atau Hasil untuk mulai.',
+            'Akses TELEBOT Anda sudah aktif.',
+            'Silakan gunakan menu utama untuk membuka Signal atau Hasil.',
           ].join('\n'),
-          { replyMarkup: buildMainMenuKeyboard() }
+          { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
         );
         return NextResponse.json({ ok: true });
       }
@@ -359,11 +354,13 @@ export async function POST(request: Request) {
       await reply(
         chatId,
         [
+          '<b>ARRA7 TELEBOT</b>',
+          '',
           'Akun berhasil terhubung.',
           'Akses VVIP aktif.',
-          'Gunakan menu Signal atau Hasil untuk mulai.',
+          'Silakan gunakan menu utama untuk membuka Signal atau Hasil.',
         ].join('\n'),
-        { replyMarkup: buildMainMenuKeyboard() }
+        { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
@@ -379,7 +376,8 @@ export async function POST(request: Request) {
       const { membership } = await getUserMembership(linkedUser.userId);
       await reply(
         chatId,
-        `Akses bot ditolak. Status membership Anda saat ini: ${membership}. Bot hanya untuk akses aktif yang valid.`
+        buildLockedAccessMessage(membership),
+        { allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
@@ -388,21 +386,22 @@ export async function POST(request: Request) {
       const usage = await getTelegramVvipQuotaStatus(linkedUser.userId);
       await reply(
         chatId,
-        [
-          'Status bot:',
-          `Membership: ${access.label}`,
-          `Linked chat: ${chatId}`,
-          `Sisa kuota chat hari ini: ${usage.remaining}/${usage.limit}`,
-          `Reset kuota: ${usage.resetText}`,
-        ].join('\n'),
-        { replyMarkup: buildMainMenuKeyboard() }
+        buildStatusMessage({
+          accessLabel: access.label,
+          chatId,
+          remaining: usage.remaining,
+          limit: usage.limit,
+          resetText: usage.resetText,
+        }),
+        { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
 
     if (text.toLowerCase() === 'signal' || cmd === '/signal') {
-      await reply(chatId, 'Pilih kategori pair:', {
+      await reply(chatId, '<b>Signal Desk</b>\nPilih kategori market yang ingin Anda analisa.', {
         replyMarkup: buildSignalCategoryKeyboard(),
+        allowHtml: true,
       });
       return NextResponse.json({ ok: true });
     }
@@ -416,11 +415,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (text.toLowerCase() === 'status') {
+      const usage = await getTelegramVvipQuotaStatus(linkedUser.userId);
+      await reply(
+        chatId,
+        buildStatusMessage({
+          accessLabel: access.label,
+          chatId,
+          remaining: usage.remaining,
+          limit: usage.limit,
+          resetText: usage.resetText,
+        }),
+        { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    if (text.toLowerCase() === 'bantuan' || text.toLowerCase() === 'help') {
+      await reply(chatId, buildHelpMessage(), {
+        replyMarkup: buildMainMenuKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     if (isSupportedSignalPair(text.toUpperCase())) {
       const symbol = text.toUpperCase();
       const categoryId = findSignalPairCategory(symbol) || 'major';
-      await reply(chatId, `Pilih timeframe untuk ${symbol}:`, {
+      await reply(chatId, `<b>Signal Desk</b>\nPair <b>${escapeHtml(symbol)}</b> dipilih. Silakan tentukan timeframe.`, {
         replyMarkup: buildTimeframeKeyboard(categoryId, symbol),
+        allowHtml: true,
       });
       return NextResponse.json({ ok: true });
     }
@@ -428,10 +452,12 @@ export async function POST(request: Request) {
     await reply(
       chatId,
       [
-        'Chat bebas sudah dinonaktifkan.',
-        'Gunakan menu Signal untuk pilih pair dan timeframe, atau menu Hasil untuk melihat progres TP/SL.',
+        '<b>ARRA7 TELEBOT</b>',
+        '',
+        'Chat bebas saat ini dinonaktifkan agar alur tetap fokus dan profesional.',
+        'Silakan gunakan menu Signal, Hasil, Status, atau Bantuan di bawah.',
       ].join('\n'),
-      { replyMarkup: buildMainMenuKeyboard() }
+      { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
     );
 
     return NextResponse.json({ ok: true });

@@ -25,9 +25,16 @@ function escapeHtml(input: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function formatQuota(limit: number) {
+  return Number.isFinite(limit) ? String(limit) : 'Unlimited';
+}
+
 export function buildMainMenuKeyboard() {
   return {
-    keyboard: [[{ text: 'Signal' }, { text: 'Hasil' }]],
+    keyboard: [
+      [{ text: 'Signal' }, { text: 'Hasil' }],
+      [{ text: 'Status' }, { text: 'Bantuan' }],
+    ],
     resize_keyboard: true,
     persistent: true,
   };
@@ -57,7 +64,8 @@ export function buildPairKeyboard(categoryId: PairCategoryId) {
       }))
     );
   }
-  rows.push([{ text: '⬅️ Kategori', callback_data: 'sigmenu:categories' }]);
+
+  rows.push([{ text: 'Back to Category', callback_data: 'sigmenu:categories' }]);
   return { inline_keyboard: rows };
 }
 
@@ -74,15 +82,103 @@ export function buildTimeframeKeyboard(categoryId: PairCategoryId, symbol: strin
         { text: 'H1', callback_data: `sigtf:${categoryId}:${symbol}:1h` },
         { text: 'H4', callback_data: `sigtf:${categoryId}:${symbol}:4h` },
       ],
+      [{ text: 'D1', callback_data: `sigtf:${categoryId}:${symbol}:1d` }],
       [
-        { text: 'D1', callback_data: `sigtf:${categoryId}:${symbol}:1d` },
-      ],
-      [
-        { text: '⬅️ Pair', callback_data: `sigcat:${categoryId}` },
-        { text: '📊 Hasil', callback_data: 'sigmenu:results' },
+        { text: 'Back to Pair', callback_data: `sigcat:${categoryId}` },
+        { text: 'View Hasil', callback_data: 'sigmenu:results' },
       ],
     ],
   };
+}
+
+export function buildIntroMessage(firstName: string) {
+  return [
+    '<b>ARRA7 TELEBOT</b>',
+    '<i>Professional AI signal desk</i>',
+    '',
+    `Halo <b>${escapeHtml(firstName)}</b>, selamat datang.`,
+    'Akses bot ini hanya terbuka untuk member yang sudah aktif dan telah di-approve.',
+    '',
+    '<b>Cara mulai</b>',
+    '1. Aktifkan paket TELEBOT di web ARRA7',
+    '2. Pastikan username Telegram Anda sudah di-approve admin',
+    '3. Jika diminta, kirim <code>/link KODE_OTP</code>',
+  ].join('\n');
+}
+
+export function buildApprovedWelcomeMessage(firstName: string) {
+  return [
+    '<b>ARRA7 TELEBOT</b>',
+    '<i>Access granted</i>',
+    '',
+    `Halo <b>${escapeHtml(firstName)}</b>, akun Anda berhasil dikenali.`,
+    'Akses TELEBOT sudah aktif dan akun Telegram Anda terhubung otomatis.',
+    '',
+    '<b>Menu Utama</b>',
+    '- Signal: pilih pair dan timeframe',
+    '- Hasil: pantau progres TP / SL',
+    '- Status: cek akses dan kuota',
+  ].join('\n');
+}
+
+export function buildActiveWelcomeMessage(firstName: string, accessLabel: string) {
+  return [
+    '<b>ARRA7 TELEBOT</b>',
+    '<i>Professional AI signal desk</i>',
+    '',
+    `Halo <b>${escapeHtml(firstName)}</b>.`,
+    `Status akses: <b>${escapeHtml(accessLabel)}</b>`,
+    '',
+    '<b>Menu Utama</b>',
+    '- Signal: buka trade setup baru',
+    '- Hasil: monitor outcome signal',
+    '- Status: cek akses dan limit harian',
+  ].join('\n');
+}
+
+export function buildLockedAccessMessage(membership: string) {
+  return [
+    '<b>ARRA7 TELEBOT</b>',
+    '<i>Access pending</i>',
+    '',
+    'Akun Anda sudah terhubung, namun akses TELEBOT belum aktif.',
+    `Membership saat ini: <b>${escapeHtml(membership)}</b>`,
+    'Silakan tunggu approval admin atau aktifkan paket TELEBOT di web ARRA7.',
+  ].join('\n');
+}
+
+export function buildHelpMessage() {
+  return [
+    '<b>ARRA7 TELEBOT - Bantuan</b>',
+    '',
+    '<b>Navigasi</b>',
+    '- Signal: pilih kategori, pair, lalu timeframe',
+    '- Hasil: lihat progres signal terbaru',
+    '- Status: cek akses dan kuota',
+    '',
+    '<b>Perintah</b>',
+    '<code>/start</code> tampilkan menu utama',
+    '<code>/status</code> cek status akses',
+    '<code>/help</code> tampilkan bantuan',
+    '<code>/link KODE</code> hubungkan akun jika diperlukan',
+  ].join('\n');
+}
+
+export function buildStatusMessage(params: {
+  accessLabel: string;
+  chatId: string;
+  remaining: number;
+  limit: number;
+  resetText: string;
+}) {
+  return [
+    '<b>ARRA7 TELEBOT - Status</b>',
+    '',
+    `Akses      : <b>${escapeHtml(params.accessLabel)}</b>`,
+    `Chat ID    : <code>${escapeHtml(params.chatId)}</code>`,
+    `Kuota Hari : <b>${escapeHtml(String(params.remaining))}/${escapeHtml(formatQuota(params.limit))}</b>`,
+    `Reset      : <b>${escapeHtml(params.resetText)}</b>`,
+  ].join('\n');
 }
 
 function cleanSummary(analysis: string | null | undefined): string {
@@ -93,7 +189,7 @@ function cleanSummary(analysis: string | null | undefined): string {
     .map((item) => item.trim())
     .find((item) => item.length > 0 && !item.startsWith('#'));
 
-  return line ? line.slice(0, 200) : '-';
+  return line ? line.slice(0, 220) : '-';
 }
 
 function formatPrice(symbol: string, value: number): string {
@@ -107,6 +203,18 @@ function formatPrice(symbol: string, value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: digits,
   });
+}
+
+function formatTimestamp(value: string) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function inferOrderType(direction: 'BUY' | 'SELL' | 'HOLD', currentPrice: number, entryPrice: number): string {
@@ -130,6 +238,13 @@ function calculateRR(entry: number, stopLoss: number, takeProfit: number) {
   return reward / risk;
 }
 
+function buildProgressBar(progress: number | null) {
+  if (progress === null) return '[--------]';
+  const normalized = Math.max(0, Math.min(100, Math.round(Math.abs(progress))));
+  const filled = Math.max(0, Math.min(8, Math.round(normalized / 12.5)));
+  return `[${'#'.repeat(filled)}${'-'.repeat(8 - filled)}]`;
+}
+
 export async function generateTelegramSignal(params: {
   userId: string;
   chatId: string;
@@ -146,7 +261,7 @@ export async function generateTelegramSignal(params: {
   if (!ai.success || !ai.analysis) {
     return {
       ok: false as const,
-      message: `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.`
+      message: `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.`,
     };
   }
 
@@ -154,7 +269,7 @@ export async function generateTelegramSignal(params: {
   if (!parsed || parsed.direction === 'HOLD') {
     return {
       ok: false as const,
-      message: `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`
+      message: `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`,
     };
   }
 
@@ -184,19 +299,25 @@ export async function generateTelegramSignal(params: {
   }
 
   const text = [
-    `📡 <b>SIGNAL ${escapeHtml(symbol)} ${escapeHtml(timeframe.toUpperCase())}</b>`,
+    '<b>ARRA7 TELEBOT | Trade Setup</b>',
     '',
-    `Bias: <b>${escapeHtml(parsed.direction)}</b>`,
-    `Eksekusi: <b>${escapeHtml(orderType)}</b>`,
-    `Harga sekarang: <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
-    `Area entry: <code>${escapeHtml(formatPrice(symbol, entry))}</code>`,
-    `Stop loss: <code>${escapeHtml(formatPrice(symbol, stopLoss))}</code>`,
-    `Take profit: <code>${escapeHtml(formatPrice(symbol, takeProfit1))}</code>`,
-    `Confidence: <b>${escapeHtml(String(confidence))}%</b>`,
-    rr ? `Risk/Reward: <b>1:${escapeHtml(rr.toFixed(2))}</b>` : `Risk/Reward: <b>-</b>`,
+    `Instrument : <b>${escapeHtml(symbol)}</b>`,
+    `Timeframe  : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
+    `Bias       : <b>${escapeHtml(parsed.direction)}</b>`,
+    `Execution  : <b>${escapeHtml(orderType)}</b>`,
     '',
-    `Alasan: ${escapeHtml(thesis)}`,
-    signalId ? `ID Signal: <code>#${signalId}</code>` : '',
+    '<b>Execution Plan</b>',
+    `Current Price : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
+    `Entry         : <code>${escapeHtml(formatPrice(symbol, entry))}</code>`,
+    `Stop Loss     : <code>${escapeHtml(formatPrice(symbol, stopLoss))}</code>`,
+    `Take Profit   : <code>${escapeHtml(formatPrice(symbol, takeProfit1))}</code>`,
+    `Confidence    : <b>${escapeHtml(String(confidence))}%</b>`,
+    rr ? `Risk/Reward  : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk/Reward  : <b>-</b>',
+    '',
+    '<b>Market Thesis</b>',
+    `${escapeHtml(thesis)}`,
+    '',
+    signalId ? `Reference ID : <code>#${signalId}</code>` : '',
   ].filter(Boolean).join('\n');
 
   return {
@@ -242,21 +363,33 @@ function calculateProgressPercent(signal: {
 export async function buildTelegramResultsSummary(userId: string) {
   const rows = await getTelegramTrackedSignals(userId, 8);
   if (rows.length === 0) {
-    return 'Belum ada hasil signal. Tekan menu Signal lalu pilih pair dan timeframe terlebih dahulu.';
+    return [
+      '<b>ARRA7 TELEBOT | Hasil</b>',
+      '',
+      'Belum ada signal yang tercatat.',
+      'Silakan buka menu Signal lalu pilih pair dan timeframe untuk memulai.',
+    ].join('\n');
   }
 
-  const lines = ['📈 <b>HASIL SIGNAL TERBARU</b>', ''];
+  const lines = [
+    '<b>ARRA7 TELEBOT | Signal Results</b>',
+    '<i>Ringkasan performa signal terbaru</i>',
+    '',
+  ];
 
   for (const row of rows) {
     let statusLabel = row.status;
+    let progressValue: number | null = null;
+
     if (row.status === 'PENDING') {
       try {
         const live = await getMarketData(row.symbol as ForexPair, (row.timeframe || '1h') as Timeframe);
         const progress = calculateProgressPercent(row, live.current_price || 0);
+        progressValue = progress;
         if (progress !== null) {
           statusLabel = progress >= 0
-            ? `ACTIVE +${progress.toFixed(0)}% ke TP`
-            : `ACTIVE ${progress.toFixed(0)}% ke SL`;
+            ? `ACTIVE | ${progress.toFixed(0)}% to TP`
+            : `ACTIVE | ${Math.abs(progress).toFixed(0)}% to SL`;
         } else {
           statusLabel = 'ACTIVE';
         }
@@ -264,15 +397,21 @@ export async function buildTelegramResultsSummary(userId: string) {
         statusLabel = 'ACTIVE';
       }
     } else if (row.status === 'TP_HIT') {
-      statusLabel = `TP HIT ${row.pipsResult != null ? `(+${row.pipsResult.toFixed(1)} pips)` : ''}`;
+      statusLabel = row.pipsResult != null ? `TP HIT | +${row.pipsResult.toFixed(1)} pips` : 'TP HIT';
+      progressValue = 100;
     } else if (row.status === 'SL_HIT') {
-      statusLabel = `SL HIT ${row.pipsResult != null ? `(${row.pipsResult.toFixed(1)} pips)` : ''}`;
+      statusLabel = row.pipsResult != null ? `SL HIT | ${row.pipsResult.toFixed(1)} pips` : 'SL HIT';
+      progressValue = 100;
     }
 
     lines.push(
-      `#${row.signalId} ${escapeHtml(row.symbol)} ${escapeHtml(String(row.timeframe || '-').toUpperCase())}`,
-      `${escapeHtml(row.direction)} | ${escapeHtml(statusLabel)}`,
-      `Entry <code>${escapeHtml(formatPrice(row.symbol, row.entryPrice))}</code> | TP <code>${escapeHtml(formatPrice(row.symbol, row.takeProfit1))}</code> | SL <code>${escapeHtml(formatPrice(row.symbol, row.stopLoss))}</code>`,
+      `<b>#${row.signalId} | ${escapeHtml(row.symbol)} ${escapeHtml(String(row.timeframe || '-').toUpperCase())}</b>`,
+      `Direction : <b>${escapeHtml(row.direction)}</b>`,
+      `Status    : <b>${escapeHtml(statusLabel)}</b>`,
+      `Progress  : <code>${escapeHtml(buildProgressBar(progressValue))}</code>`,
+      `Entry     : <code>${escapeHtml(formatPrice(row.symbol, row.entryPrice))}</code>`,
+      `TP / SL   : <code>${escapeHtml(formatPrice(row.symbol, row.takeProfit1))}</code> / <code>${escapeHtml(formatPrice(row.symbol, row.stopLoss))}</code>`,
+      `Issued At : <b>${escapeHtml(formatTimestamp(row.createdAt))}</b>`,
       ''
     );
   }
