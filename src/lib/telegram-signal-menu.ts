@@ -29,6 +29,11 @@ function formatQuota(limit: number) {
   return Number.isFinite(limit) ? String(limit) : 'Unlimited';
 }
 
+function getTelebotShortUrl() {
+  const baseUrl = (process.env.NEXTAUTH_URL || 'https://arra7-app.vercel.app').replace(/\/$/, '');
+  return `${baseUrl}/telebot`;
+}
+
 export function buildMainMenuKeyboard() {
   return {
     keyboard: [
@@ -92,6 +97,7 @@ export function buildTimeframeKeyboard(categoryId: PairCategoryId, symbol: strin
 }
 
 export function buildIntroMessage(firstName: string) {
+  const telebotUrl = getTelebotShortUrl();
   return [
     '<b>ARRA7 TELEBOT</b>',
     '<i>Professional AI signal desk</i>',
@@ -100,10 +106,20 @@ export function buildIntroMessage(firstName: string) {
     'Akses bot ini hanya terbuka untuk member yang sudah aktif dan telah di-approve.',
     '',
     '<b>Cara mulai</b>',
-    '1. Aktifkan paket TELEBOT di web ARRA7',
+    `1. Aktivasi TELEBOT di <a href="${escapeHtml(telebotUrl)}">halaman pembayaran resmi</a>`,
     '2. Pastikan username Telegram Anda sudah di-approve admin',
     '3. Jika diminta, kirim <code>/link KODE_OTP</code>',
   ].join('\n');
+}
+
+export function buildGuestIntroKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: 'Aktivasi TELEBOT', url: getTelebotShortUrl() },
+      ],
+    ],
+  };
 }
 
 export function buildApprovedWelcomeMessage(firstName: string) {

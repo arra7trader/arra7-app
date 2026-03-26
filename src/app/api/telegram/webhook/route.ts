@@ -18,6 +18,7 @@ import { consumeTelegramVvipQuota, getTelegramVvipQuotaStatus } from '@/lib/tele
 import {
   buildActiveWelcomeMessage,
   buildApprovedWelcomeMessage,
+  buildGuestIntroKeyboard,
   buildHelpMessage,
   buildIntroMessage,
   buildLockedAccessMessage,
@@ -244,7 +245,7 @@ export async function POST(request: Request) {
         await reply(
           chatId,
           buildIntroMessage(firstName),
-          { allowHtml: true }
+          { allowHtml: true, replyMarkup: buildGuestIntroKeyboard() }
         );
         return NextResponse.json({ ok: true });
       }
