@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import getTursoClient, { createPrivateBotLinkCode, upsertPrivateBotMembership } from '@/lib/turso';
+import getTursoClient, { createPrivateBotLinkCode, initDatabase, upsertPrivateBotMembership } from '@/lib/turso';
 import { isAdminEmail } from '@/lib/admin-access';
 import { randomBytes } from 'crypto';
 
@@ -50,6 +50,8 @@ export async function GET() {
       return NextResponse.json({ status: 'error', message: 'Database not configured' }, { status: 500 });
     }
 
+    await initDatabase();
+
     const result = await turso.execute(`
       SELECT
         bm.user_id,
@@ -64,7 +66,7 @@ export async function GET() {
         bm.activated_at,
         bm.expires_at
       FROM bot_memberships bm
-      JOIN users u ON u.id = bm.user_id
+      LEFT JOIN users u ON u.id = bm.user_id
       ORDER BY
         CASE bm.status
           WHEN 'active' THEN 1
@@ -108,6 +110,8 @@ export async function POST(request: NextRequest) {
     if (!turso) {
       return NextResponse.json({ status: 'error', message: 'Database not configured' }, { status: 500 });
     }
+
+    await initDatabase();
 
     const body = await request.json();
     const action = String(body?.action || '').trim();
