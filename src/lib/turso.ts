@@ -314,9 +314,10 @@ export async function initDatabase(): Promise<boolean> {
       CREATE TABLE IF NOT EXISTS bot_memberships (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL UNIQUE,
-        plan_code TEXT NOT NULL DEFAULT 'BOT_PRIVATE',
+        plan_code TEXT NOT NULL DEFAULT 'TELEBOT',
         status TEXT NOT NULL DEFAULT 'invited', -- invited | active | expired | revoked
         source TEXT NOT NULL DEFAULT 'ARRA7',
+        telegram_username TEXT,
         telegram_chat_id TEXT,
         invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         activated_at DATETIME,
@@ -334,6 +335,11 @@ export async function initDatabase(): Promise<boolean> {
     await turso.execute(`
       CREATE INDEX IF NOT EXISTS idx_bot_memberships_telegram_chat_id
       ON bot_memberships(telegram_chat_id)
+    `);
+
+    await turso.execute(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_memberships_telegram_username
+      ON bot_memberships(telegram_username)
     `);
 
     await turso.execute(`
@@ -670,6 +676,43 @@ export async function initDatabase(): Promise<boolean> {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telegram_signal_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        chat_id TEXT NOT NULL,
+        signal_id INTEGER NOT NULL,
+        symbol TEXT NOT NULL,
+        timeframe TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (signal_id) REFERENCES ai_signals(id)
+      )
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telegram_signal_requests_user_created
+      ON telegram_signal_requests(user_id, id DESC)
+    `);
+
+    try {
+      await turso.execute(`ALTER TABLE bot_memberships ADD COLUMN telegram_username TEXT`);
+      console.log('Added telegram_username column to bot_memberships');
+    } catch (e: any) {
+      if (!e.message?.includes('duplicate column name')) {
+        console.error('[MIGRATION] Failed to add bot_memberships.telegram_username:', e);
+      }
+    }
+
+    try {
+      await turso.execute(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_memberships_telegram_username
+        ON bot_memberships(telegram_username)
+      `);
+    } catch (e) {
+      console.error('[MIGRATION] Failed to ensure bot_memberships.telegram_username index:', e);
+    }
 
     // VVIP BEST SIGNAL ALERT LOGS: dedupe + cooldown for Telegram alerts
     await turso.execute(`
@@ -1536,6 +1579,7 @@ export interface PrivateBotMembership {
   displayName: string | null;
   planCode: string;
   status: 'invited' | 'active' | 'expired' | 'revoked';
+  telegramUsername: string | null;
   telegramChatId: string | null;
   source: string;
   expiresAt: string | null;
@@ -1547,7 +1591,7 @@ export async function getPrivateBotMembershipByChatId(chatId: string): Promise<P
 
   try {
     const result = await turso.execute({
-      sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_chat_id, bm.source, bm.expires_at
+      sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_username, bm.telegram_chat_id, bm.source, bm.expires_at
             FROM bot_memberships bm
             JOIN users u ON u.id = bm.user_id
             WHERE bm.telegram_chat_id = ?
@@ -1560,8 +1604,9 @@ export async function getPrivateBotMembershipByChatId(chatId: string): Promise<P
       userId: String(result.rows[0].user_id),
       email: result.rows[0].email ? String(result.rows[0].email) : null,
       displayName: result.rows[0].name ? String(result.rows[0].name) : null,
-      planCode: String(result.rows[0].plan_code || 'BOT_PRIVATE'),
+      planCode: String(result.rows[0].plan_code || 'TELEBOT'),
       status: String(result.rows[0].status || 'invited') as PrivateBotMembership['status'],
+      telegramUsername: result.rows[0].telegram_username ? String(result.rows[0].telegram_username) : null,
       telegramChatId: result.rows[0].telegram_chat_id ? String(result.rows[0].telegram_chat_id) : null,
       source: String(result.rows[0].source || 'ARRA7'),
       expiresAt: result.rows[0].expires_at ? String(result.rows[0].expires_at) : null
@@ -1578,7 +1623,7 @@ export async function getPrivateBotMembershipByUserId(userId: string): Promise<P
 
   try {
     const result = await turso.execute({
-      sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_chat_id, bm.source, bm.expires_at
+      sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_username, bm.telegram_chat_id, bm.source, bm.expires_at
             FROM bot_memberships bm
             JOIN users u ON u.id = bm.user_id
             WHERE bm.user_id = ?
@@ -1591,8 +1636,9 @@ export async function getPrivateBotMembershipByUserId(userId: string): Promise<P
       userId: String(result.rows[0].user_id),
       email: result.rows[0].email ? String(result.rows[0].email) : null,
       displayName: result.rows[0].name ? String(result.rows[0].name) : null,
-      planCode: String(result.rows[0].plan_code || 'BOT_PRIVATE'),
+      planCode: String(result.rows[0].plan_code || 'TELEBOT'),
       status: String(result.rows[0].status || 'invited') as PrivateBotMembership['status'],
+      telegramUsername: result.rows[0].telegram_username ? String(result.rows[0].telegram_username) : null,
       telegramChatId: result.rows[0].telegram_chat_id ? String(result.rows[0].telegram_chat_id) : null,
       source: String(result.rows[0].source || 'ARRA7'),
       expiresAt: result.rows[0].expires_at ? String(result.rows[0].expires_at) : null
@@ -1603,11 +1649,52 @@ export async function getPrivateBotMembershipByUserId(userId: string): Promise<P
   }
 }
 
+function normalizeTelegramUsername(username?: string | null): string | null {
+  const value = String(username || '').trim().replace(/^@+/, '').toLowerCase();
+  return value || null;
+}
+
+export async function getPrivateBotMembershipByTelegramUsername(username: string): Promise<PrivateBotMembership | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+
+  const normalized = normalizeTelegramUsername(username);
+  if (!normalized) return null;
+
+  try {
+    const result = await turso.execute({
+      sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_username, bm.telegram_chat_id, bm.source, bm.expires_at
+            FROM bot_memberships bm
+            JOIN users u ON u.id = bm.user_id
+            WHERE lower(trim(bm.telegram_username)) = ?
+            LIMIT 1`,
+      args: [normalized]
+    });
+
+    if (result.rows.length === 0) return null;
+    return {
+      userId: String(result.rows[0].user_id),
+      email: result.rows[0].email ? String(result.rows[0].email) : null,
+      displayName: result.rows[0].name ? String(result.rows[0].name) : null,
+      planCode: String(result.rows[0].plan_code || 'TELEBOT'),
+      status: String(result.rows[0].status || 'invited') as PrivateBotMembership['status'],
+      telegramUsername: result.rows[0].telegram_username ? String(result.rows[0].telegram_username) : null,
+      telegramChatId: result.rows[0].telegram_chat_id ? String(result.rows[0].telegram_chat_id) : null,
+      source: String(result.rows[0].source || 'ARRA7'),
+      expiresAt: result.rows[0].expires_at ? String(result.rows[0].expires_at) : null
+    };
+  } catch (error) {
+    console.error('Get private bot membership by telegram username error:', error);
+    return null;
+  }
+}
+
 export async function upsertPrivateBotMembership(params: {
   userId: string;
   planCode?: string;
   status: 'invited' | 'active' | 'expired' | 'revoked';
   expiresAt?: string | null;
+  telegramUsername?: string | null;
   telegramChatId?: string | null;
   metadataJson?: string | null;
 }): Promise<boolean> {
@@ -1616,19 +1703,21 @@ export async function upsertPrivateBotMembership(params: {
 
   try {
     await turso.execute({
-      sql: `INSERT INTO bot_memberships (user_id, plan_code, status, telegram_chat_id, expires_at, metadata_json, activated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+      sql: `INSERT INTO bot_memberships (user_id, plan_code, status, telegram_username, telegram_chat_id, expires_at, metadata_json, activated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id) DO UPDATE SET
               plan_code = excluded.plan_code,
               status = excluded.status,
+              telegram_username = COALESCE(excluded.telegram_username, bot_memberships.telegram_username),
               telegram_chat_id = COALESCE(excluded.telegram_chat_id, bot_memberships.telegram_chat_id),
               expires_at = excluded.expires_at,
               metadata_json = COALESCE(excluded.metadata_json, bot_memberships.metadata_json),
               activated_at = CASE WHEN excluded.status = 'active' THEN COALESCE(bot_memberships.activated_at, CURRENT_TIMESTAMP) ELSE bot_memberships.activated_at END`,
       args: [
         params.userId,
-        params.planCode || 'BOT_PRIVATE',
+          params.planCode || 'TELEBOT',
         params.status,
+        normalizeTelegramUsername(params.telegramUsername),
         params.telegramChatId ?? null,
         params.expiresAt ?? null,
         params.metadataJson ?? null,
@@ -1724,7 +1813,11 @@ export async function markPrivateBotLinkCodeUsed(linkCodeId: number): Promise<bo
   }
 }
 
-export async function attachPrivateBotTelegramChatId(userId: string, chatId: string): Promise<boolean> {
+export async function attachPrivateBotTelegramIdentity(
+  userId: string,
+  chatId: string,
+  telegramUsername?: string | null
+): Promise<boolean> {
   const turso = getTursoClient();
   if (!turso) return false;
 
@@ -1739,15 +1832,20 @@ export async function attachPrivateBotTelegramChatId(userId: string, chatId: str
 
     await turso.execute({
       sql: `UPDATE bot_memberships
-            SET telegram_chat_id = ?
+            SET telegram_chat_id = ?,
+                telegram_username = COALESCE(?, telegram_username)
             WHERE user_id = ?`,
-      args: [chatId.trim(), userId]
+      args: [chatId.trim(), normalizeTelegramUsername(telegramUsername), userId]
     });
     return true;
   } catch (error) {
     console.error('Attach private bot telegram chat id error:', error);
     return false;
   }
+}
+
+export async function attachPrivateBotTelegramChatId(userId: string, chatId: string): Promise<boolean> {
+  return attachPrivateBotTelegramIdentity(userId, chatId);
 }
 
 export interface TelegramChatMessage {

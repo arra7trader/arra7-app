@@ -32,6 +32,9 @@ const PRICING_OPTIONS: Record<string, Record<string, { durationLabel: string; pr
         '6months': { durationLabel: '6 Bulan', price: 499000, priceDisplay: 'Rp 499.000', originalPrice: 'Rp 594.000', period: '/6 bulan' },
         '1year': { durationLabel: '1 Tahun', price: 899000, priceDisplay: 'Rp 899.000', originalPrice: 'Rp 1.188.000', period: '/tahun' },
     },
+    TELEBOT: {
+        '1month': { durationLabel: '1 Bulan', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 249.000', period: '/bulan' },
+    },
 };
 
 function TransferContent() {
@@ -40,18 +43,23 @@ function TransferContent() {
     const searchParams = useSearchParams();
     const planId = searchParams.get('plan');
     const duration = searchParams.get('duration') || '1month';
+    const [telegramUsername, setTelegramUsername] = useState('');
 
     const plan = useMemo(() => {
         if (!planId || !PRICING_OPTIONS[planId] || !PRICING_OPTIONS[planId][duration]) return null;
 
         const details = PRICING_OPTIONS[planId][duration];
-        const nameMap: Record<string, string> = { PRO: 'Pro', VVIP: 'VVIP', CT_FOLLOWER: 'CT Follower', CT_PROVIDER: 'CT Provider' };
+        const nameMap: Record<string, string> = { PRO: 'Pro', VVIP: 'VVIP', CT_FOLLOWER: 'CT Follower', CT_PROVIDER: 'CT Provider', TELEBOT: 'TELEBOT' };
         return {
             id: planId,
             name: nameMap[planId] || planId,
             ...details
         };
     }, [planId, duration]);
+
+    const normalizedTelegramUsername = telegramUsername.trim().replace(/^@+/, '');
+    const requiresTelegramUsername = plan?.id === 'TELEBOT';
+    const canConfirmPayment = !requiresTelegramUsername || normalizedTelegramUsername.length > 0;
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -62,7 +70,23 @@ function TransferContent() {
     if (status === 'loading') return (<div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]"><div className="w-10 h-10 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" /></div>);
     if (!planId || !plan) return (<div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]"><div className="text-center"><h1 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Paket tidak ditemukan</h1><Link href="/pricing" className="text-[var(--accent-blue)] hover:underline">Kembali ke Pricing</Link></div></div>);
 
-    const telegramText = `Halo Admin ARRA7!\n\nSaya sudah melakukan pembayaran via QRIS untuk paket *${plan.name} ${plan.durationLabel}*:\n\n📧 Email: ${session?.user?.email}\n👤 Nama: ${session?.user?.name}\n📦 Paket: ${plan.name} (${plan.durationLabel})\n💰 Nominal: ${plan.priceDisplay}\n\nMohon diproses. Berikut bukti pembayarannya: (Lampirkan Screenshot)`;
+    const telegramText = [
+        'Halo Admin ARRA7!',
+        '',
+        `Saya sudah melakukan pembayaran via QRIS untuk paket *${plan.name} ${plan.durationLabel}*:`,
+        '',
+        `Email: ${session?.user?.email}`,
+        `Nama: ${session?.user?.name}`,
+        `Paket: ${plan.name} (${plan.durationLabel})`,
+        `Nominal: ${plan.priceDisplay}`,
+        requiresTelegramUsername ? `Username Telegram: @${normalizedTelegramUsername}` : null,
+        '',
+        requiresTelegramUsername
+            ? 'Mohon approve akses TELEBOT saya. Berikut bukti pembayarannya: (Lampirkan Screenshot)'
+            : 'Mohon diproses. Berikut bukti pembayarannya: (Lampirkan Screenshot)',
+    ]
+        .filter(Boolean)
+        .join('\n');
     const telegramLink = `https://t.me/arra7trader?text=${encodeURIComponent(telegramText)}`;
 
     return (
@@ -97,6 +121,22 @@ function TransferContent() {
                             <p className="text-[var(--text-muted)] text-xs font-mono">NMID: ID1025468752486</p>
                         </div>
                     </div>
+                    {requiresTelegramUsername && (
+                        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6">
+                            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+                                Username Telegram untuk approval TELEBOT
+                            </label>
+                            <input
+                                value={telegramUsername}
+                                onChange={(e) => setTelegramUsername(e.target.value)}
+                                placeholder="@username_telegram"
+                                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
+                            />
+                            <p className="text-xs text-[var(--text-muted)] mt-2">
+                                Setelah bayar, admin akan approve akses TELEBOT berdasarkan username ini.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6">
                         <p className="text-sm text-[var(--text-muted)] mb-2">Akun Anda</p>
@@ -115,17 +155,32 @@ function TransferContent() {
                                     <li>Scan QRIS di atas dengan aplikasi e-wallet/banking apapun</li>
                                     <li>Masukan nominal sesuai total pembayaran: <strong className="text-[var(--text-primary)]">{plan.priceDisplay}</strong></li>
                                     <li>Setelah berhasil, SCREENSHOT bukti pembayaran</li>
+                                    {requiresTelegramUsername && <li>Masukkan username Telegram Anda di form atas</li>}
                                     <li>Klik tombol konfirmasi di bawah untuk kirim bukti ke Admin</li>
-                                    <li>Tunggu aktivasi (maks 1x24 jam)</li>
+                                    <li>Tunggu approval admin dan aktivasi akses (maks 1x24 jam)</li>
                                 </ol>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <a href={telegramLink} target="_blank" rel="noopener noreferrer" className="block w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl text-center hover:shadow-lg hover:shadow-blue-500/25 transition-all">
+                        <a
+                            href={canConfirmPayment ? telegramLink : '#'}
+                            target={canConfirmPayment ? '_blank' : undefined}
+                            rel={canConfirmPayment ? 'noopener noreferrer' : undefined}
+                            aria-disabled={!canConfirmPayment}
+                            className={`block w-full py-4 text-white font-semibold rounded-xl text-center transition-all ${canConfirmPayment
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/25'
+                                : 'bg-slate-600 cursor-not-allowed opacity-60'
+                                }`}
+                        >
                             <span className="flex items-center justify-center gap-2">📨 Konfirmasi & Kirim Bukti Transfer</span>
                         </a>
+                        {requiresTelegramUsername && !canConfirmPayment && (
+                            <p className="text-center text-xs text-amber-400">
+                                Isi username Telegram dulu sebelum kirim konfirmasi pembayaran.
+                            </p>
+                        )}
                         <Link href="/pricing" className="block w-full py-3 border border-[var(--border-light)] text-[var(--text-secondary)] font-semibold rounded-xl text-center hover:bg-[var(--bg-secondary)] transition-colors">Kembali ke Pricing</Link>
                     </div>
                 </motion.div>

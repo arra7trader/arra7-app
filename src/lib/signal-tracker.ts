@@ -12,17 +12,29 @@ export interface SignalData {
     confidence?: number;
 }
 
-// Save a new signal for tracking
-export async function saveSignal(data: SignalData): Promise<boolean> {
+export interface TrackedTelegramSignal {
+    signalId: number;
+    symbol: string;
+    timeframe: string | null;
+    direction: 'BUY' | 'SELL' | 'HOLD';
+    entryPrice: number;
+    stopLoss: number;
+    takeProfit1: number;
+    status: string;
+    pipsResult: number | null;
+    createdAt: string;
+}
+
+export async function saveSignalWithId(data: SignalData): Promise<number | null> {
     const turso = getTursoClient();
     if (!turso) {
         console.log('[SignalTracker] No Turso client, skipping save');
-        return false;
+        return null;
     }
 
     try {
         console.log('[SignalTracker] Saving signal:', JSON.stringify(data));
-        await turso.execute({
+        const result = await turso.execute({
             sql: `INSERT INTO ai_signals 
                 (type, symbol, timeframe, direction, entry_price, stop_loss, take_profit_1, take_profit_2, confidence, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
@@ -39,10 +51,84 @@ export async function saveSignal(data: SignalData): Promise<boolean> {
             ],
         });
         console.log('[SignalTracker] Signal saved successfully');
-        return true;
+        return Number(result.lastInsertRowid || 0) || null;
     } catch (error) {
         console.error('[SignalTracker] Save signal error:', error);
+        return null;
+    }
+}
+
+// Save a new signal for tracking
+export async function saveSignal(data: SignalData): Promise<boolean> {
+    const signalId = await saveSignalWithId(data);
+    return !!signalId;
+}
+
+export async function recordTelegramSignalRequest(
+    userId: string,
+    chatId: string,
+    signalId: number,
+    symbol: string,
+    timeframe?: string
+): Promise<boolean> {
+    const turso = getTursoClient();
+    if (!turso) return false;
+
+    try {
+        await turso.execute({
+            sql: `INSERT INTO telegram_signal_requests (user_id, chat_id, signal_id, symbol, timeframe)
+                  VALUES (?, ?, ?, ?, ?)`,
+            args: [userId, chatId, signalId, symbol, timeframe || null]
+        });
+        return true;
+    } catch (error) {
+        console.error('[SignalTracker] Record telegram signal request error:', error);
         return false;
+    }
+}
+
+export async function getTelegramTrackedSignals(userId: string, limit = 8): Promise<TrackedTelegramSignal[]> {
+    const turso = getTursoClient();
+    if (!turso) return [];
+
+    const safeLimit = Math.max(1, Math.min(20, Math.floor(limit)));
+
+    try {
+        const result = await turso.execute({
+            sql: `SELECT
+                    a.id as signal_id,
+                    a.symbol,
+                    a.timeframe,
+                    a.direction,
+                    a.entry_price,
+                    a.stop_loss,
+                    a.take_profit_1,
+                    a.status,
+                    a.pips_result,
+                    a.created_at
+                  FROM telegram_signal_requests tsr
+                  JOIN ai_signals a ON a.id = tsr.signal_id
+                  WHERE tsr.user_id = ?
+                  ORDER BY tsr.id DESC
+                  LIMIT ?`,
+            args: [userId, safeLimit]
+        });
+
+        return result.rows.map((row) => ({
+            signalId: Number(row.signal_id),
+            symbol: String(row.symbol),
+            timeframe: row.timeframe ? String(row.timeframe) : null,
+            direction: String(row.direction || 'HOLD') as TrackedTelegramSignal['direction'],
+            entryPrice: Number(row.entry_price || 0),
+            stopLoss: Number(row.stop_loss || 0),
+            takeProfit1: Number(row.take_profit_1 || 0),
+            status: String(row.status || 'PENDING'),
+            pipsResult: row.pips_result != null ? Number(row.pips_result) : null,
+            createdAt: String(row.created_at || '')
+        }));
+    } catch (error) {
+        console.error('[SignalTracker] Get telegram tracked signals error:', error);
+        return [];
     }
 }
 

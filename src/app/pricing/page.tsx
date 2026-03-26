@@ -20,6 +20,9 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
         { duration: '6months', days: 180, label: '6 Bulan', price: 'Rp 1.490.000', originalPrice: 'Rp 2.394.000', savingsText: 'Hemat Rp 904Rb', promoSlots: 15 },
         { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', savingsText: 'Hemat Rp 1.98M', promoSlots: 15 },
     ],
+    TELEBOT: [
+        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch' },
+    ],
 };
 
 const PRICING_PLANS = [
@@ -80,6 +83,25 @@ const PRICING_PLANS = [
         cta: 'Daftar VVIP',
         popular: false,
     },
+    {
+        id: 'TELEBOT',
+        name: 'TELEBOT',
+        description: 'Bot Telegram premium untuk signal praktis, hasil live, dan approval via username Telegram.',
+        icon: 'T',
+        theme: 'emerald',
+        features: [
+            { text: 'Akses bot Telegram khusus member approved', included: true, highlight: true },
+            { text: 'Menu Signal untuk semua pair dan timeframe', included: true, highlight: false },
+            { text: 'Menu Hasil untuk progress TP / SL signal', included: true, highlight: false },
+            { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },
+            { text: 'Approval by username Telegram setelah bayar', included: true, highlight: false },
+            { text: 'Chat bebas dimatikan agar fokus ke signal', included: true, highlight: false },
+            { text: 'Akses penuh semua fitur dashboard VVIP', included: false, highlight: false },
+            { text: 'AI web chat dan lab premium lengkap', included: false, highlight: false },
+        ],
+        cta: 'Langganan TELEBOT',
+        popular: false,
+    },
 ];
 
 export default function PricingPage() {
@@ -90,6 +112,7 @@ export default function PricingPage() {
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
         PRO: '3months',
         VVIP: '3months',
+        TELEBOT: '1month',
     });
 
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
@@ -201,6 +224,11 @@ export default function PricingPage() {
                         titleColor = 'text-amber-400';
                         ctaStyle = 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20';
                         checkStyle = 'bg-amber-500/10 text-amber-400';
+                    } else if (plan.theme === 'emerald') {
+                        leftBg = 'bg-emerald-500/5';
+                        titleColor = 'text-emerald-400';
+                        ctaStyle = 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20';
+                        checkStyle = 'bg-emerald-500/10 text-emerald-400';
                     }
 
                     return (
@@ -251,7 +279,7 @@ export default function PricingPage() {
 
                             {/* Right Pane (Pricing & CTA) */}
                             <div className="w-full md:w-2/5 p-8 md:p-14 text-center bg-[var(--bg-primary)] flex flex-col justify-center items-center">
-                                {(plan.id === 'PRO' || plan.id === 'VVIP') && DURATION_OPTIONS[plan.id] && (
+                                {DURATION_OPTIONS[plan.id] && DURATION_OPTIONS[plan.id].length > 1 && (
                                     <div className="mb-8 w-full">
                                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Durasi</label>
                                         <div className="flex bg-[var(--bg-secondary)] p-1 rounded-xl border border-[var(--border-light)]/50">

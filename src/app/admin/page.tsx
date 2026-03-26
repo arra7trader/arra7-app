@@ -633,7 +633,7 @@ Tim ARRA7`;
                     </Link>
                     <Link href="/admin/bot-private" className="admin-quick-link">
                         <div className="icon-container bg-emerald-500/15">BOT</div>
-                        <div className="text-[#CBD5E1] font-medium text-sm">Private Bot</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">TELEBOT</div>
                     </Link>
                     <Link href="/admin/report" className="admin-quick-link">
                         <div className="icon-container bg-blue-500/15 text-blue-400"><ChartIcon size="sm" /></div>

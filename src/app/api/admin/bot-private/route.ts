@@ -33,6 +33,11 @@ async function resolveUserId(turso: ReturnType<typeof getTursoClient>, userId?: 
   return null;
 }
 
+function normalizeTelegramUsername(username?: string | null) {
+  const value = String(username || '').trim().replace(/^@+/, '').toLowerCase();
+  return value || null;
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -52,6 +57,7 @@ export async function GET() {
         u.name,
         bm.plan_code,
         bm.status,
+        bm.telegram_username,
         bm.telegram_chat_id,
         bm.source,
         bm.invited_at,
@@ -77,6 +83,7 @@ export async function GET() {
         name: row.name,
         planCode: row.plan_code,
         status: row.status,
+        telegramUsername: row.telegram_username,
         telegramChatId: row.telegram_chat_id,
         source: row.source,
         invitedAt: row.invited_at,
@@ -105,6 +112,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const action = String(body?.action || '').trim();
     const userRow = await resolveUserId(turso, body?.userId, body?.email);
+    const telegramUsername = normalizeTelegramUsername(body?.telegramUsername);
 
     if (!userRow) {
       return NextResponse.json({ status: 'error', message: 'User tidak ditemukan' }, { status: 404 });
@@ -118,11 +126,12 @@ export async function POST(request: NextRequest) {
       const ok = await upsertPrivateBotMembership({
         userId,
         status: 'invited',
-        planCode: 'BOT_PRIVATE'
+        planCode: 'TELEBOT',
+        telegramUsername
       });
       return NextResponse.json({
         status: ok ? 'success' : 'error',
-        message: ok ? 'User berhasil diundang ke bot private.' : 'Gagal membuat invite.'
+        message: ok ? 'User TELEBOT berhasil ditandai pending approval.' : 'Gagal membuat status pending.'
       });
     }
 
@@ -130,12 +139,13 @@ export async function POST(request: NextRequest) {
       const ok = await upsertPrivateBotMembership({
         userId,
         status: 'active',
-        planCode: 'BOT_PRIVATE',
-        expiresAt
+        planCode: 'TELEBOT',
+        expiresAt,
+        telegramUsername
       });
       return NextResponse.json({
         status: ok ? 'success' : 'error',
-        message: ok ? `Akses bot aktif ${days} hari.` : 'Gagal mengaktifkan akses.',
+        message: ok ? `Akses TELEBOT aktif ${days} hari.` : 'Gagal mengaktifkan akses TELEBOT.',
         expiresAt
       });
     }
@@ -144,11 +154,12 @@ export async function POST(request: NextRequest) {
       const ok = await upsertPrivateBotMembership({
         userId,
         status: 'revoked',
-        planCode: 'BOT_PRIVATE'
+        planCode: 'TELEBOT',
+        telegramUsername
       });
       return NextResponse.json({
         status: ok ? 'success' : 'error',
-        message: ok ? 'Akses bot berhasil dicabut.' : 'Gagal mencabut akses.'
+        message: ok ? 'Akses TELEBOT berhasil dicabut.' : 'Gagal mencabut akses TELEBOT.'
       });
     }
 
@@ -166,6 +177,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message: 'Unknown action' }, { status: 400 });
   } catch (error) {
     console.error('[ADMIN_BOT_PRIVATE] POST error:', error);
-    return NextResponse.json({ status: 'error', message: 'Failed to update bot private membership' }, { status: 500 });
+    return NextResponse.json({ status: 'error', message: 'Failed to update TELEBOT membership' }, { status: 500 });
   }
 }

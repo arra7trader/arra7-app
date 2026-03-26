@@ -10,6 +10,7 @@ interface BotMembership {
   name: string;
   planCode: string;
   status: 'invited' | 'active' | 'expired' | 'revoked';
+  telegramUsername: string | null;
   telegramChatId: string | null;
   source: string;
   invitedAt: string | null;
@@ -26,6 +27,7 @@ export default function PrivateBotAdminPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [memberships, setMemberships] = useState<BotMembership[]>([]);
   const [email, setEmail] = useState('');
+  const [telegramUsername, setTelegramUsername] = useState('');
   const [days, setDays] = useState(30);
   const [latestCode, setLatestCode] = useState<{ userId: string; code: string } | null>(null);
   const [query, setQuery] = useState('');
@@ -45,10 +47,10 @@ export default function PrivateBotAdminPage() {
       if (data.status === 'success') {
         setMemberships(data.memberships || []);
       } else {
-        setMessage({ type: 'error', text: data.message || 'Gagal memuat data bot private.' });
+        setMessage({ type: 'error', text: data.message || 'Gagal memuat data TELEBOT.' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Network error saat memuat data bot private.' });
+      setMessage({ type: 'error', text: 'Network error saat memuat data TELEBOT.' });
     } finally {
       setLoading(false);
     }
@@ -66,7 +68,8 @@ export default function PrivateBotAdminPage() {
           action,
           email: targetEmail,
           userId,
-          days
+          days,
+          telegramUsername
         })
       });
       const data = await res.json();
@@ -90,7 +93,7 @@ export default function PrivateBotAdminPage() {
     const needle = query.trim().toLowerCase();
     if (!needle) return memberships;
     return memberships.filter((item) =>
-      [item.email, item.name, item.userId, item.telegramChatId || '', item.status]
+      [item.email, item.name, item.userId, item.telegramUsername || '', item.telegramChatId || '', item.status]
         .join(' ')
         .toLowerCase()
         .includes(needle)
@@ -121,8 +124,8 @@ export default function PrivateBotAdminPage() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Private Bot Control</h1>
-            <p className="text-sm text-[var(--text-secondary)]">Kelola invite-only access, aktivasi, dan link code bot Telegram AI.</p>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">TELEBOT Control</h1>
+            <p className="text-sm text-[var(--text-secondary)]">User bayar di web, kirim username Telegram, lalu admin approve akses TELEBOT dari sini.</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -139,7 +142,7 @@ export default function PrivateBotAdminPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-[380px,1fr] gap-6">
           <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Aktivasi Cepat</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Approve TELEBOT</h2>
             <label className="block text-sm text-[var(--text-secondary)] mb-2">Email user ARRA</label>
             <input
               value={email}
@@ -147,6 +150,17 @@ export default function PrivateBotAdminPage() {
               placeholder="user@email.com"
               className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
             />
+
+            <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Username Telegram</label>
+            <input
+              value={telegramUsername}
+              onChange={(e) => setTelegramUsername(e.target.value)}
+              placeholder="@username_telegram"
+              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-2">
+              Username ini akan di-whitelist. Saat user chat <code>/start</code>, bot akan auto-link jika username cocok.
+            </p>
 
             <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Durasi aktif (hari)</label>
             <input
@@ -164,14 +178,14 @@ export default function PrivateBotAdminPage() {
                 onClick={() => void runAction('invite', email)}
                 className="px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-50"
               >
-                Invite
+                Tandai Pending
               </button>
               <button
                 disabled={saving || !email.trim()}
                 onClick={() => void runAction('activate', email)}
                 className="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
               >
-                Activate
+                Approve
               </button>
             </div>
 
@@ -196,7 +210,8 @@ export default function PrivateBotAdminPage() {
           <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
               <div>
-                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Member Bot Private</h2>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Member TELEBOT</h2>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Approve user setelah pembayaran TELEBOT terverifikasi.</p>
                 <p className="text-sm text-[var(--text-secondary)]">{filteredMemberships.length} record</p>
               </div>
               <input
@@ -213,6 +228,7 @@ export default function PrivateBotAdminPage() {
                   <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
                     <th className="py-3 pr-3">User</th>
                     <th className="py-3 pr-3">Status</th>
+                    <th className="py-3 pr-3">Username</th>
                     <th className="py-3 pr-3">Telegram</th>
                     <th className="py-3 pr-3">Expired</th>
                     <th className="py-3 pr-3">Actions</th>
@@ -238,6 +254,9 @@ export default function PrivateBotAdminPage() {
                           {item.status}
                         </span>
                         <div className="text-xs text-[var(--text-muted)] mt-2">{item.planCode}</div>
+                      </td>
+                      <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                        {item.telegramUsername ? `@${item.telegramUsername}` : 'Belum diisi'}
                       </td>
                       <td className="py-4 pr-3 text-[var(--text-secondary)]">
                         {item.telegramChatId || 'Belum link'}

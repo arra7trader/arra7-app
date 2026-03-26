@@ -20,7 +20,10 @@ function getTelegramConfig() {
 export async function sendTelegramMessage(
     message: string,
     parseMode: 'HTML' | 'Markdown' = 'HTML',
-    destChatId?: string
+    destChatId?: string,
+    options?: {
+        replyMarkup?: Record<string, unknown>;
+    }
 ): Promise<{
     success: boolean;
     error?: string;
@@ -49,6 +52,7 @@ export async function sendTelegramMessage(
                 text: message,
                 parse_mode: parseMode,
                 disable_web_page_preview: true,
+                reply_markup: options?.replyMarkup,
             }),
         });
 
@@ -64,6 +68,34 @@ export async function sendTelegramMessage(
     } catch (error) {
         console.error('[TELEGRAM] Error sending message:', error);
         return { success: false, error: 'Network error' };
+    }
+}
+
+export async function answerTelegramCallbackQuery(
+    callbackQueryId: string,
+    text?: string
+): Promise<boolean> {
+    const config = getTelegramConfig();
+    if (!config) return false;
+
+    try {
+        const response = await fetch(`${TELEGRAM_API_BASE}${config.botToken}/answerCallbackQuery`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                callback_query_id: callbackQueryId,
+                text,
+                show_alert: false,
+            }),
+        });
+
+        const data = await response.json();
+        return !!data.ok;
+    } catch (error) {
+        console.error('[TELEGRAM] Error answering callback query:', error);
+        return false;
     }
 }
 
@@ -695,4 +727,3 @@ export async function broadcastSignalToSubscribers(message: string): Promise<{ s
         return { sent: 0, failed: 0 };
     }
 }
-
