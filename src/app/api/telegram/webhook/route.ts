@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/lib/telegram';
 import {
+  attachPrivateBotTelegramChatId,
+  findValidPrivateBotLinkCode,
+  getPrivateBotMembershipByUserId,
   findValidTelegramLinkCode,
   getTelegramUser,
   getUserMembership,
   isVvipActive,
   linkTelegramUser,
+  markPrivateBotLinkCodeUsed,
   markTelegramLinkCodeUsed,
   setUserTelegramChatId,
 } from '@/lib/turso';
@@ -46,6 +50,20 @@ function extractCommand(text: string): { cmd: string; arg: string } {
   return { cmd, arg };
 }
 
+async function getBotAccess(userId: string): Promise<{ kind: 'vvip' | 'private_bot'; label: string } | null> {
+  const { membership } = await getUserMembership(userId);
+  if (membership === 'VVIP') {
+    return { kind: 'vvip', label: 'VVIP aktif' };
+  }
+
+  const privateBot = await getPrivateBotMembershipByUserId(userId);
+  if (!privateBot) return null;
+  if (privateBot.status !== 'active') return null;
+  if (privateBot.expiresAt && new Date(privateBot.expiresAt).getTime() <= Date.now()) return null;
+
+  return { kind: 'private_bot', label: 'Private Bot aktif' };
+}
+
 export async function POST(request: Request) {
   try {
     const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -76,9 +94,9 @@ export async function POST(request: Request) {
         await reply(
           chatId,
           [
-            `Halo ${firstName}, selamat datang di ARRA7 VVIP Bot.`,
+            `Halo ${firstName}, selamat datang di ARRA7 Telegram Bot.`,
             '',
-            'Akses bot ini khusus VVIP aktif.',
+            'Akses bot ini untuk member yang sudah aktif.',
             'Hubungkan akun Anda dari web ARRA7 lalu kirim:',
             '/link KODE_OTP',
           ].join('\n')
@@ -86,14 +104,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
-      const { membership } = await getUserMembership(linked.userId);
-      if (membership !== 'VVIP') {
+      const access = await getBotAccess(linked.userId);
+      if (!access) {
+        const { membership } = await getUserMembership(linked.userId);
         await reply(
           chatId,
           [
             'Akun Anda terhubung, tetapi akses bot terkunci.',
             `Status membership saat ini: ${membership}.`,
-            'Bot hanya untuk VVIP aktif.',
+            'Bot hanya untuk akses aktif yang valid.',
           ].join('\n')
         );
         return NextResponse.json({ ok: true });
@@ -102,7 +121,7 @@ export async function POST(request: Request) {
       await reply(
         chatId,
         [
-          `Halo ${firstName}, akses VVIP Anda aktif.`,
+          `Halo ${firstName}, akses ${access.label} Anda aktif.`,
           'Anda bisa chat natural, contoh:',
           'Aku minta signal XAUUSD di TF M5 dong',
           '',
@@ -134,6 +153,39 @@ export async function POST(request: Request) {
       const code = arg.replace(/\s+/g, '').toUpperCase();
       if (!code) {
         await reply(chatId, 'Format salah. Gunakan: /link KODE_OTP');
+        return NextResponse.json({ ok: true });
+      }
+
+      const privateBotLinkCode = await findValidPrivateBotLinkCode(code);
+      if (privateBotLinkCode) {
+        const privateBotMembership = await getPrivateBotMembershipByUserId(privateBotLinkCode.userId);
+        if (!privateBotMembership || privateBotMembership.status !== 'active') {
+          await reply(chatId, 'Kode valid, tetapi akses Private Bot belum aktif.');
+          return NextResponse.json({ ok: true });
+        }
+
+        const linked = await linkTelegramUser(privateBotLinkCode.userId, {
+          chatId,
+          username,
+          firstName,
+        });
+        if (!linked) {
+          await reply(chatId, 'Gagal menghubungkan akun Private Bot. Silakan coba lagi.');
+          return NextResponse.json({ ok: true });
+        }
+
+        await setUserTelegramChatId(privateBotLinkCode.userId, chatId);
+        await attachPrivateBotTelegramChatId(privateBotLinkCode.userId, chatId);
+        await markPrivateBotLinkCodeUsed(privateBotLinkCode.id);
+
+        await reply(
+          chatId,
+          [
+            'Akun berhasil terhubung.',
+            'Akses Private Bot aktif.',
+            'Sekarang Anda bisa minta signal atau analisa langsung lewat chat.',
+          ].join('\n')
+        );
         return NextResponse.json({ ok: true });
       }
 
@@ -179,11 +231,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const { membership } = await getUserMembership(linkedUser.userId);
-    if (membership !== 'VVIP') {
+    const access = await getBotAccess(linkedUser.userId);
+    if (!access) {
+      const { membership } = await getUserMembership(linkedUser.userId);
       await reply(
         chatId,
-        `Akses bot ditolak. Status membership Anda saat ini: ${membership}. Bot hanya untuk VVIP aktif.`
+        `Akses bot ditolak. Status membership Anda saat ini: ${membership}. Bot hanya untuk akses aktif yang valid.`
       );
       return NextResponse.json({ ok: true });
     }
@@ -194,7 +247,7 @@ export async function POST(request: Request) {
         chatId,
         [
           'Status bot:',
-          'Membership: VVIP aktif',
+          `Membership: ${access.label}`,
           `Linked chat: ${chatId}`,
           `Sisa kuota chat hari ini: ${usage.remaining}/${usage.limit}`,
           `Reset kuota: ${usage.resetText}`,

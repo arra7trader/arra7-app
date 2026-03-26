@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { randomBytes } from 'crypto';
 import { authOptions } from '@/lib/auth';
-import { createTelegramLinkCode, getUserMembership } from '@/lib/turso';
+import {
+  createPrivateBotLinkCode,
+  createTelegramLinkCode,
+  getPrivateBotMembershipByUserId,
+  getUserMembership
+} from '@/lib/turso';
 
 function getTtlMinutes(): number {
   const value = Number(process.env.TELEGRAM_LINK_CODE_TTL_MINUTES ?? 10);
@@ -23,9 +28,15 @@ export async function POST() {
     }
 
     const { membership } = await getUserMembership(userId);
-    if (membership !== 'VVIP') {
+    const privateBot = await getPrivateBotMembershipByUserId(userId);
+    const privateBotActive =
+      !!privateBot &&
+      privateBot.status === 'active' &&
+      (!privateBot.expiresAt || new Date(privateBot.expiresAt).getTime() > Date.now());
+
+    if (membership !== 'VVIP' && !privateBotActive) {
       return NextResponse.json(
-        { ok: false, message: 'Fitur Telegram bot khusus VVIP aktif.' },
+        { ok: false, message: 'Fitur Telegram bot hanya untuk akses aktif yang valid.' },
         { status: 403 }
       );
     }
@@ -36,7 +47,9 @@ export async function POST() {
 
     for (let i = 0; i < 3; i++) {
       code = generateLinkCode();
-      saved = await createTelegramLinkCode(userId, code, ttlMinutes);
+      saved = membership === 'VVIP'
+        ? await createTelegramLinkCode(userId, code, ttlMinutes)
+        : await createPrivateBotLinkCode(userId, code, ttlMinutes);
       if (saved) break;
     }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getUserMembership, getUserSubscription } from '@/lib/turso';
+import { getPrivateBotMembershipByUserId, getUserMembership, getUserSubscription } from '@/lib/turso';
 
 export async function GET() {
   try {
@@ -12,14 +12,22 @@ export async function GET() {
     }
 
     const { membership, expiresAt } = await getUserMembership(userId);
+    const privateBot = await getPrivateBotMembershipByUserId(userId);
     const subscription = await getUserSubscription(userId);
     const telegramChatId = subscription.telegramChatId || null;
     const isVvipActive = membership === 'VVIP';
+    const isPrivateBotActive =
+      !!privateBot &&
+      privateBot.status === 'active' &&
+      (!privateBot.expiresAt || new Date(privateBot.expiresAt).getTime() > Date.now());
 
     return NextResponse.json({
       ok: true,
       membership,
       isVvipActive,
+      isPrivateBotActive,
+      privateBotStatus: privateBot?.status || null,
+      privateBotExpiresAt: privateBot?.expiresAt || null,
       membershipExpiresAt: expiresAt ? expiresAt.toISOString() : null,
       linked: !!telegramChatId,
       telegramChatId,
