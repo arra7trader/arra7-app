@@ -5,17 +5,13 @@ import {
   findValidPrivateBotLinkCode,
   getPrivateBotMembershipByUserId,
   getPrivateBotMembershipByTelegramUsername,
-  findValidTelegramLinkCode,
   getTelegramUser,
   getUserMembership,
-  isVvipActive,
   linkTelegramUser,
   markPrivateBotLinkCodeUsed,
-  markTelegramLinkCodeUsed,
   setUserTelegramChatId,
   upsertPrivateBotMembership,
 } from '@/lib/turso';
-import { consumeTelegramVvipQuota, getTelegramVvipQuotaStatus } from '@/lib/telegram-vvip-quota';
 import {
   buildActiveWelcomeMessage,
   buildApprovedWelcomeMessage,
@@ -120,12 +116,7 @@ async function getEffectivePrivateBotMembership(userId: string) {
   return privateBot;
 }
 
-async function getBotAccess(userId: string): Promise<{ kind: 'vvip' | 'private_bot'; label: string } | null> {
-  const { membership } = await getUserMembership(userId);
-  if (membership === 'VVIP') {
-    return { kind: 'vvip', label: 'VVIP aktif' };
-  }
-
+async function getBotAccess(userId: string): Promise<{ kind: 'private_bot'; label: string } | null> {
   const privateBot = await getEffectivePrivateBotMembership(userId);
   if (!privateBot) return null;
   if (privateBot.status !== 'active') return null;
@@ -133,20 +124,12 @@ async function getBotAccess(userId: string): Promise<{ kind: 'vvip' | 'private_b
   return { kind: 'private_bot', label: 'TELEBOT aktif' };
 }
 
-async function consumeQuotaForAccess(userId: string, kind: 'vvip' | 'private_bot') {
-  if (kind === 'private_bot') {
-    return getUnlimitedQuota();
-  }
-
-  return consumeTelegramVvipQuota(userId);
+async function consumeQuotaForAccess(_userId: string, _kind: 'private_bot') {
+  return getUnlimitedQuota();
 }
 
-async function getQuotaStatusForAccess(userId: string, kind: 'vvip' | 'private_bot') {
-  if (kind === 'private_bot') {
-    return getUnlimitedQuota();
-  }
-
-  return getTelegramVvipQuotaStatus(userId);
+async function getQuotaStatusForAccess(_userId: string, _kind: 'private_bot') {
+  return getUnlimitedQuota();
 }
 
 export async function POST(request: Request) {
@@ -388,41 +371,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
-      const linkCode = await findValidTelegramLinkCode(code);
-      if (!linkCode) {
-        await reply(chatId, 'Kode tidak valid atau sudah expired. Generate ulang dari web ARRA7.');
-        return NextResponse.json({ ok: true });
-      }
-
-      const active = await isVvipActive(linkCode.userId);
-      if (!active) {
-        await reply(chatId, 'Kode valid, tetapi akun bukan VVIP aktif. Bot hanya untuk VVIP aktif.');
-        return NextResponse.json({ ok: true });
-      }
-
-      const linked = await linkTelegramUser(linkCode.userId, {
-        chatId,
-        username,
-        firstName,
-      });
-      if (!linked) {
-        await reply(chatId, 'Gagal menghubungkan akun. Silakan coba lagi.');
-        return NextResponse.json({ ok: true });
-      }
-
-      await setUserTelegramChatId(linkCode.userId, chatId);
-      await markTelegramLinkCodeUsed(linkCode.id);
-
       await reply(
         chatId,
-        [
-          '<b>ARRA7 TELEBOT</b>',
-          '',
-          'Akun berhasil terhubung.',
-          'Akses VVIP aktif.',
-          'Silakan gunakan menu utama untuk membuka Signal atau Hasil.',
-        ].join('\n'),
-        { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
+        '<b>ARRA7 TELEBOT</b>\n\nKode tidak valid atau tidak berlaku untuk TELEBOT. Silakan gunakan akses TELEBOT yang aktif.',
+        { allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }

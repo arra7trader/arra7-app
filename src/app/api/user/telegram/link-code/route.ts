@@ -4,9 +4,7 @@ import { randomBytes } from 'crypto';
 import { authOptions } from '@/lib/auth';
 import {
   createPrivateBotLinkCode,
-  createTelegramLinkCode,
   getPrivateBotMembershipByUserId,
-  getUserMembership
 } from '@/lib/turso';
 
 function getTtlMinutes(): number {
@@ -27,16 +25,15 @@ export async function POST() {
       return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { membership } = await getUserMembership(userId);
     const privateBot = await getPrivateBotMembershipByUserId(userId);
     const privateBotActive =
       !!privateBot &&
       privateBot.status === 'active' &&
       (!privateBot.expiresAt || new Date(privateBot.expiresAt).getTime() > Date.now());
 
-    if (membership !== 'VVIP' && !privateBotActive) {
+    if (!privateBotActive) {
       return NextResponse.json(
-        { ok: false, message: 'Fitur Telegram bot hanya untuk akses aktif yang valid.' },
+        { ok: false, message: 'Fitur Telegram bot hanya untuk member TELEBOT aktif.' },
         { status: 403 }
       );
     }
@@ -47,9 +44,7 @@ export async function POST() {
 
     for (let i = 0; i < 3; i++) {
       code = generateLinkCode();
-      saved = membership === 'VVIP'
-        ? await createTelegramLinkCode(userId, code, ttlMinutes)
-        : await createPrivateBotLinkCode(userId, code, ttlMinutes);
+      saved = await createPrivateBotLinkCode(userId, code, ttlMinutes);
       if (saved) break;
     }
 
