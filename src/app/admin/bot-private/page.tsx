@@ -385,10 +385,10 @@ export default function PrivateBotAdminPage() {
                           </button>
                           <button
                             disabled={saving}
-                            onClick={() => void runAction('revoke', undefined, item.userId)}
+                            onClick={() => void runAction('deactivate', undefined, item.userId)}
                             className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs disabled:opacity-50"
                           >
-                            Revoke
+                            Nonaktifkan
                           </button>
                         </div>
                       </td>

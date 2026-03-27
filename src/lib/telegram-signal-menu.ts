@@ -152,12 +152,12 @@ export function buildActiveWelcomeMessage(firstName: string, accessLabel: string
   ].join('\n');
 }
 
-export function buildLockedAccessMessage(membership: string) {
+export function buildLockedAccessMessage(membership: string, detail?: string) {
   return [
     '<b>ARRA7 TELEBOT</b>',
     '<i>Access pending</i>',
     '',
-    'Akun Anda sudah terhubung, namun akses TELEBOT belum aktif.',
+    detail || 'Akun Anda sudah terhubung, namun akses TELEBOT belum aktif.',
     `Membership saat ini: <b>${escapeHtml(membership)}</b>`,
     'Silakan tunggu approval admin atau aktifkan paket TELEBOT di web ARRA7.',
   ].join('\n');
@@ -192,7 +192,7 @@ export function buildStatusMessage(params: {
     '',
     `Akses      : <b>${escapeHtml(params.accessLabel)}</b>`,
     `Chat ID    : <code>${escapeHtml(params.chatId)}</code>`,
-    `Kuota Hari : <b>${escapeHtml(String(params.remaining))}/${escapeHtml(formatQuota(params.limit))}</b>`,
+    `Kuota Hari : <b>${escapeHtml(formatQuota(params.remaining))}/${escapeHtml(formatQuota(params.limit))}</b>`,
     `Reset      : <b>${escapeHtml(params.resetText)}</b>`,
   ].join('\n');
 }

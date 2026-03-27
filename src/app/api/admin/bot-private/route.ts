@@ -131,6 +131,18 @@ async function fetchMembershipRows(turso: ReturnType<typeof getTursoClient>) {
   }
 }
 
+async function syncExpiredMemberships(turso: ReturnType<typeof getTursoClient>) {
+  if (!turso) return;
+
+  await turso.execute(`
+    UPDATE bot_memberships
+    SET status = 'expired'
+    WHERE status = 'active'
+      AND expires_at IS NOT NULL
+      AND datetime(expires_at) <= datetime('now')
+  `);
+}
+
 async function fetchPaymentConfirmationRows(turso: ReturnType<typeof getTursoClient>) {
   if (!turso) return [];
 
@@ -223,6 +235,7 @@ export async function GET() {
 
     await initDatabase();
     await ensureBotPrivateSchema(turso);
+    await syncExpiredMemberships(turso);
     const [rows, paymentRows] = await Promise.all([
       fetchMembershipRows(turso),
       fetchPaymentConfirmationRows(turso)
@@ -327,7 +340,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (action === 'revoke') {
+    if (action === 'deactivate' || action === 'revoke') {
       const ok = await upsertPrivateBotMembership({
         userId,
         status: 'revoked',

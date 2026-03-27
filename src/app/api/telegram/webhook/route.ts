@@ -13,6 +13,7 @@ import {
   markPrivateBotLinkCodeUsed,
   markTelegramLinkCodeUsed,
   setUserTelegramChatId,
+  upsertPrivateBotMembership,
 } from '@/lib/turso';
 import { consumeTelegramVvipQuota, getTelegramVvipQuotaStatus } from '@/lib/telegram-vvip-quota';
 import {
@@ -85,18 +86,67 @@ function extractCommand(text: string): { cmd: string; arg: string } {
   return { cmd, arg };
 }
 
+function getUnlimitedQuota() {
+  return {
+    allowed: true,
+    limit: Number.POSITIVE_INFINITY,
+    used: 0,
+    remaining: Number.POSITIVE_INFINITY,
+    usageDate: '',
+    resetText: 'Tidak ada batas harian',
+  };
+}
+
+function isExpiredAt(expiresAt?: string | null): boolean {
+  return !!expiresAt && new Date(expiresAt).getTime() <= Date.now();
+}
+
+async function getEffectivePrivateBotMembership(userId: string) {
+  const privateBot = await getPrivateBotMembershipByUserId(userId);
+  if (!privateBot) return null;
+
+  if (privateBot.status === 'active' && isExpiredAt(privateBot.expiresAt)) {
+    await upsertPrivateBotMembership({
+      userId: privateBot.userId,
+      planCode: privateBot.planCode,
+      status: 'expired',
+      expiresAt: privateBot.expiresAt,
+      telegramUsername: privateBot.telegramUsername,
+      telegramChatId: privateBot.telegramChatId
+    });
+    return { ...privateBot, status: 'expired' as const };
+  }
+
+  return privateBot;
+}
+
 async function getBotAccess(userId: string): Promise<{ kind: 'vvip' | 'private_bot'; label: string } | null> {
   const { membership } = await getUserMembership(userId);
   if (membership === 'VVIP') {
     return { kind: 'vvip', label: 'VVIP aktif' };
   }
 
-  const privateBot = await getPrivateBotMembershipByUserId(userId);
+  const privateBot = await getEffectivePrivateBotMembership(userId);
   if (!privateBot) return null;
   if (privateBot.status !== 'active') return null;
-  if (privateBot.expiresAt && new Date(privateBot.expiresAt).getTime() <= Date.now()) return null;
 
   return { kind: 'private_bot', label: 'TELEBOT aktif' };
+}
+
+async function consumeQuotaForAccess(userId: string, kind: 'vvip' | 'private_bot') {
+  if (kind === 'private_bot') {
+    return getUnlimitedQuota();
+  }
+
+  return consumeTelegramVvipQuota(userId);
+}
+
+async function getQuotaStatusForAccess(userId: string, kind: 'vvip' | 'private_bot') {
+  if (kind === 'private_bot') {
+    return getUnlimitedQuota();
+  }
+
+  return getTelegramVvipQuotaStatus(userId);
 }
 
 export async function POST(request: Request) {
@@ -166,7 +216,7 @@ export async function POST(request: Request) {
       }
 
       if (parsed.type === 'timeframe') {
-        const quota = await consumeTelegramVvipQuota(linkedUser.userId);
+        const quota = await consumeQuotaForAccess(linkedUser.userId, access.kind);
         if (!quota.allowed) {
           await reply(
             chatId,
@@ -217,21 +267,22 @@ export async function POST(request: Request) {
         const preapprovedPrivateBot = username
           ? await getPrivateBotMembershipByTelegramUsername(username)
           : null;
+        const effectivePreapprovedPrivateBot =
+          preapprovedPrivateBot ? await getEffectivePrivateBotMembership(preapprovedPrivateBot.userId) : null;
 
         if (
-          preapprovedPrivateBot &&
-          preapprovedPrivateBot.status === 'active' &&
-          (!preapprovedPrivateBot.expiresAt || new Date(preapprovedPrivateBot.expiresAt).getTime() > Date.now())
+          effectivePreapprovedPrivateBot &&
+          effectivePreapprovedPrivateBot.status === 'active'
         ) {
-          const linkedOk = await linkTelegramUser(preapprovedPrivateBot.userId, {
+          const linkedOk = await linkTelegramUser(effectivePreapprovedPrivateBot.userId, {
             chatId,
             username,
             firstName,
           });
 
           if (linkedOk) {
-            await setUserTelegramChatId(preapprovedPrivateBot.userId, chatId);
-            await attachPrivateBotTelegramIdentity(preapprovedPrivateBot.userId, chatId, username);
+            await setUserTelegramChatId(effectivePreapprovedPrivateBot.userId, chatId);
+            await attachPrivateBotTelegramIdentity(effectivePreapprovedPrivateBot.userId, chatId, username);
 
             await reply(
               chatId,
@@ -253,9 +304,17 @@ export async function POST(request: Request) {
       const access = await getBotAccess(linked.userId);
       if (!access) {
         const { membership } = await getUserMembership(linked.userId);
+        const privateBot = await getEffectivePrivateBotMembership(linked.userId);
         await reply(
           chatId,
-          buildLockedAccessMessage(membership),
+          buildLockedAccessMessage(
+            membership,
+            privateBot?.status === 'expired'
+              ? 'Masa aktif TELEBOT Anda sudah berakhir. Silakan perpanjang paket untuk menggunakan bot kembali.'
+              : privateBot?.status === 'revoked'
+                ? 'Akses TELEBOT Anda sedang dinonaktifkan admin.'
+                : undefined
+          ),
           { allowHtml: true }
         );
         return NextResponse.json({ ok: true });
@@ -287,11 +346,13 @@ export async function POST(request: Request) {
 
       const privateBotLinkCode = await findValidPrivateBotLinkCode(code);
       if (privateBotLinkCode) {
-        const privateBotMembership = await getPrivateBotMembershipByUserId(privateBotLinkCode.userId);
+        const privateBotMembership = await getEffectivePrivateBotMembership(privateBotLinkCode.userId);
         if (!privateBotMembership || privateBotMembership.status !== 'active') {
           await reply(
             chatId,
-            '<b>ARRA7 TELEBOT</b>\n\nKode link valid, namun akses TELEBOT Anda belum aktif. Silakan tunggu approval admin.',
+            privateBotMembership?.status === 'expired'
+              ? '<b>ARRA7 TELEBOT</b>\n\nKode link valid, namun masa aktif TELEBOT Anda sudah berakhir. Silakan perpanjang paket Anda.'
+              : '<b>ARRA7 TELEBOT</b>\n\nKode link valid, namun akses TELEBOT Anda belum aktif. Silakan tunggu approval admin.',
             { allowHtml: true }
           );
           return NextResponse.json({ ok: true });
@@ -375,16 +436,24 @@ export async function POST(request: Request) {
     const access = await getBotAccess(linkedUser.userId);
     if (!access) {
       const { membership } = await getUserMembership(linkedUser.userId);
+      const privateBot = await getEffectivePrivateBotMembership(linkedUser.userId);
       await reply(
         chatId,
-        buildLockedAccessMessage(membership),
+        buildLockedAccessMessage(
+          membership,
+          privateBot?.status === 'expired'
+            ? 'Masa aktif TELEBOT Anda sudah berakhir. Silakan perpanjang paket untuk membuka akses kembali.'
+            : privateBot?.status === 'revoked'
+              ? 'Akses TELEBOT Anda sedang dinonaktifkan admin.'
+              : undefined
+        ),
         { allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
 
     if (cmd === '/status') {
-      const usage = await getTelegramVvipQuotaStatus(linkedUser.userId);
+      const usage = await getQuotaStatusForAccess(linkedUser.userId, access.kind);
       await reply(
         chatId,
         buildStatusMessage({
@@ -417,7 +486,7 @@ export async function POST(request: Request) {
     }
 
     if (text.toLowerCase() === 'status') {
-      const usage = await getTelegramVvipQuotaStatus(linkedUser.userId);
+      const usage = await getQuotaStatusForAccess(linkedUser.userId, access.kind);
       await reply(
         chatId,
         buildStatusMessage({
