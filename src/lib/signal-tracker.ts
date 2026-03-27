@@ -25,6 +25,21 @@ export interface TrackedTelegramSignal {
     createdAt: string;
 }
 
+export interface TelebotLiveExecution {
+    executionId: number;
+    signalId: number;
+    symbol: string;
+    timeframe: string | null;
+    direction: 'BUY' | 'SELL' | 'HOLD';
+    recommendedEntry: number;
+    actualEntry: number | null;
+    stopLoss: number;
+    takeProfit1: number;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export async function saveSignalWithId(data: SignalData): Promise<number | null> {
     const turso = getTursoClient();
     if (!turso) {
@@ -83,6 +98,139 @@ export async function recordTelegramSignalRequest(
         return true;
     } catch (error) {
         console.error('[SignalTracker] Record telegram signal request error:', error);
+        return false;
+    }
+}
+
+export async function saveTelebotSignalExecution(params: {
+    userId: string;
+    chatId: string;
+    signalId: number;
+    symbol: string;
+    timeframe?: string;
+    recommendedEntry: number;
+}): Promise<boolean> {
+    const turso = getTursoClient();
+    if (!turso) return false;
+
+    try {
+        await turso.execute({
+            sql: `INSERT INTO telebot_signal_executions (user_id, chat_id, signal_id, symbol, timeframe, recommended_entry, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                  ON CONFLICT(user_id, signal_id) DO UPDATE SET
+                    chat_id = excluded.chat_id,
+                    symbol = excluded.symbol,
+                    timeframe = excluded.timeframe,
+                    recommended_entry = excluded.recommended_entry,
+                    updated_at = CURRENT_TIMESTAMP`,
+            args: [
+                params.userId,
+                params.chatId,
+                params.signalId,
+                params.symbol,
+                params.timeframe || null,
+                params.recommendedEntry,
+            ]
+        });
+        return true;
+    } catch (error) {
+        console.error('[SignalTracker] Save telebot signal execution error:', error);
+        return false;
+    }
+}
+
+export async function getLatestTelebotSignalExecution(userId: string): Promise<TelebotLiveExecution | null> {
+    const turso = getTursoClient();
+    if (!turso) return null;
+
+    try {
+        const result = await turso.execute({
+            sql: `SELECT
+                    tse.id AS execution_id,
+                    tse.signal_id,
+                    tse.symbol,
+                    tse.timeframe,
+                    tse.recommended_entry,
+                    tse.actual_entry,
+                    tse.updated_at,
+                    a.direction,
+                    a.stop_loss,
+                    a.take_profit_1,
+                    a.status,
+                    a.created_at
+                  FROM telebot_signal_executions tse
+                  JOIN ai_signals a ON a.id = tse.signal_id
+                  WHERE tse.user_id = ?
+                  ORDER BY tse.id DESC
+                  LIMIT 1`,
+            args: [userId]
+        });
+
+        if (result.rows.length === 0) return null;
+        return {
+            executionId: Number(result.rows[0].execution_id),
+            signalId: Number(result.rows[0].signal_id),
+            symbol: String(result.rows[0].symbol),
+            timeframe: result.rows[0].timeframe ? String(result.rows[0].timeframe) : null,
+            direction: String(result.rows[0].direction || 'HOLD') as TelebotLiveExecution['direction'],
+            recommendedEntry: Number(result.rows[0].recommended_entry || 0),
+            actualEntry: result.rows[0].actual_entry != null ? Number(result.rows[0].actual_entry) : null,
+            stopLoss: Number(result.rows[0].stop_loss || 0),
+            takeProfit1: Number(result.rows[0].take_profit_1 || 0),
+            status: String(result.rows[0].status || 'PENDING'),
+            createdAt: String(result.rows[0].created_at || ''),
+            updatedAt: String(result.rows[0].updated_at || result.rows[0].created_at || '')
+        };
+    } catch (error) {
+        console.error('[SignalTracker] Get latest telebot signal execution error:', error);
+        return null;
+    }
+}
+
+export async function setLatestTelebotActualEntry(
+    userId: string,
+    actualEntry: number | null,
+    useRecommended = false
+): Promise<boolean> {
+    const turso = getTursoClient();
+    if (!turso) return false;
+
+    try {
+        if (useRecommended) {
+            await turso.execute({
+                sql: `UPDATE telebot_signal_executions
+                      SET actual_entry = recommended_entry,
+                          updated_at = CURRENT_TIMESTAMP
+                      WHERE id = (
+                        SELECT id
+                        FROM telebot_signal_executions
+                        WHERE user_id = ?
+                        ORDER BY id DESC
+                        LIMIT 1
+                      )`,
+                args: [userId]
+            });
+            return true;
+        }
+
+        if (!(actualEntry && actualEntry > 0)) return false;
+
+        await turso.execute({
+            sql: `UPDATE telebot_signal_executions
+                  SET actual_entry = ?,
+                      updated_at = CURRENT_TIMESTAMP
+                  WHERE id = (
+                    SELECT id
+                    FROM telebot_signal_executions
+                    WHERE user_id = ?
+                    ORDER BY id DESC
+                    LIMIT 1
+                  )`,
+            args: [actualEntry, userId]
+        });
+        return true;
+    } catch (error) {
+        console.error('[SignalTracker] Set latest telebot actual entry error:', error);
         return false;
     }
 }

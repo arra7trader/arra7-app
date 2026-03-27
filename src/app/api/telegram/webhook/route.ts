@@ -5,22 +5,31 @@ import {
   findValidPrivateBotLinkCode,
   getPrivateBotMembershipByUserId,
   getPrivateBotMembershipByTelegramUsername,
+  getTelebotUserProfile,
   getTelegramUser,
   getUserMembership,
   linkTelegramUser,
   markPrivateBotLinkCodeUsed,
+  resetTelebotUserBalance,
   setUserTelegramChatId,
+  upsertTelebotUserProfile,
   upsertPrivateBotMembership,
 } from '@/lib/turso';
 import {
   buildActiveWelcomeMessage,
+  buildBalanceKeyboard,
+  buildBalanceMessage,
   buildApprovedWelcomeMessage,
   buildGuestIntroKeyboard,
   buildHelpMessage,
   buildIntroMessage,
+  buildLiveStatusKeyboard,
+  buildLiveStatusMessage,
   buildLockedAccessMessage,
   buildMainMenuKeyboard,
   buildPairKeyboard,
+  buildRiskSetupKeyboard,
+  buildRiskSetupMessage,
   buildSignalCategoryKeyboard,
   buildStatusMessage,
   buildTelegramResultsSummary,
@@ -30,6 +39,8 @@ import {
   isSupportedSignalPair,
   parseSignalCallback,
 } from '@/lib/telegram-signal-menu';
+import { formatTelebotSetupStyle } from '@/lib/telebot-trade-plan';
+import { setLatestTelebotActualEntry } from '@/lib/signal-tracker';
 
 type TelegramUpdate = {
   message?: {
@@ -97,6 +108,13 @@ function isExpiredAt(expiresAt?: string | null): boolean {
   return !!expiresAt && new Date(expiresAt).getTime() <= Date.now();
 }
 
+function parseNumericArg(value: string): number | null {
+  const cleaned = value.replace(/[^0-9.]/g, '').trim();
+  if (!cleaned) return null;
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 async function getEffectivePrivateBotMembership(userId: string) {
   const privateBot = await getPrivateBotMembershipByUserId(userId);
   if (!privateBot) return null;
@@ -162,6 +180,71 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      if (callback.data === 'tele:live') {
+        await reply(chatId, await buildLiveStatusMessage(linkedUser.userId), {
+          replyMarkup: buildLiveStatusKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      if (callback.data === 'tele:useentry') {
+        const ok = await setLatestTelebotActualEntry(linkedUser.userId, null, true);
+        await reply(
+          chatId,
+          await buildLiveStatusMessage(
+            linkedUser.userId,
+            ok ? 'Actual entry disamakan dengan recommended entry.' : 'Belum ada setup untuk disamakan actual entry-nya.'
+          ),
+          {
+            replyMarkup: buildLiveStatusKeyboard(),
+            allowHtml: true,
+          }
+        );
+        return NextResponse.json({ ok: true });
+      }
+
+      const balanceMatch = callback.data.match(/^tele:balance:(\d+(?:\.\d+)?)$/i);
+      if (balanceMatch) {
+        const amount = Number(balanceMatch[1]);
+        await upsertTelebotUserProfile({ userId: linkedUser.userId, balanceAmount: amount });
+        await reply(chatId, await buildBalanceMessage(linkedUser.userId, `Balance berhasil diatur ke USD ${amount.toLocaleString('en-US')}.`), {
+          replyMarkup: buildBalanceKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      const riskMatch = callback.data.match(/^tele:risk:(\d+(?:\.\d+)?)$/i);
+      if (riskMatch) {
+        const riskPercent = Number(riskMatch[1]);
+        await upsertTelebotUserProfile({ userId: linkedUser.userId, riskPercent });
+        await reply(chatId, await buildRiskSetupMessage(linkedUser.userId, `Risk per trade diatur ke ${riskPercent}%.`), {
+          replyMarkup: buildRiskSetupKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      const setupMatch = callback.data.match(/^tele:setup:(conservative|standard|aggressive)$/i);
+      if (setupMatch) {
+        await upsertTelebotUserProfile({ userId: linkedUser.userId, setupStyle: setupMatch[1].toLowerCase() });
+        await reply(chatId, await buildRiskSetupMessage(linkedUser.userId, `Setup mode diatur ke ${setupMatch[1].toLowerCase()}.`), {
+          replyMarkup: buildRiskSetupKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      if (callback.data === 'tele:resetbalance') {
+        const ok = await resetTelebotUserBalance(linkedUser.userId);
+        await reply(chatId, await buildBalanceMessage(linkedUser.userId, ok ? 'Balance berhasil di-reset. Anda bisa mulai dari modal baru.' : 'Reset balance gagal dijalankan.'), {
+          replyMarkup: buildBalanceKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
       const parsed = parseSignalCallback(callback.data);
       if (!parsed) return NextResponse.json({ ok: true });
 
@@ -224,7 +307,9 @@ export async function POST(request: Request) {
 
         await reply(
           chatId,
-          signal.ok ? `${signal.text}\n\nSisa kuota hari ini: ${quota.remaining}/${quota.limit}` : signal.message,
+          signal.ok
+            ? `${signal.text}${Number.isFinite(quota.limit) ? `\n\nSisa kuota hari ini: ${quota.remaining}/${quota.limit}` : ''}`
+            : signal.message,
           { replyMarkup: buildMainMenuKeyboard(), allowHtml: signal.ok }
         );
         return NextResponse.json({ ok: true });
@@ -404,13 +489,110 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (cmd === '/balance' || text.toLowerCase() === 'balance') {
+      if (arg) {
+        const balanceAmount = parseNumericArg(arg);
+        if (!balanceAmount) {
+          await reply(chatId, 'Format salah. Gunakan contoh: /balance 1000');
+          return NextResponse.json({ ok: true });
+        }
+
+        const ok = await upsertTelebotUserProfile({ userId: linkedUser.userId, balanceAmount });
+        await reply(chatId, await buildBalanceMessage(linkedUser.userId, ok ? `Balance berhasil diatur ke USD ${balanceAmount.toLocaleString('en-US')}.` : 'Gagal menyimpan balance.'), {
+          replyMarkup: buildBalanceKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      await reply(chatId, await buildBalanceMessage(linkedUser.userId), {
+        replyMarkup: buildBalanceKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (cmd === '/resetbalance' || text.toLowerCase() === 'reset balance') {
+      const ok = await resetTelebotUserBalance(linkedUser.userId);
+      await reply(chatId, await buildBalanceMessage(linkedUser.userId, ok ? 'Balance berhasil di-reset. Anda bisa mulai dari modal baru.' : 'Reset balance gagal dijalankan.'), {
+        replyMarkup: buildBalanceKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (cmd === '/risk' || text.toLowerCase() === 'risk setup') {
+      if (arg) {
+        const riskPercent = parseNumericArg(arg);
+        if (!riskPercent) {
+          await reply(chatId, 'Format salah. Gunakan contoh: /risk 1');
+          return NextResponse.json({ ok: true });
+        }
+
+        const ok = await upsertTelebotUserProfile({ userId: linkedUser.userId, riskPercent });
+        await reply(chatId, await buildRiskSetupMessage(linkedUser.userId, ok ? `Risk per trade diatur ke ${riskPercent}%.` : 'Gagal menyimpan risk profile.'), {
+          replyMarkup: buildRiskSetupKeyboard(),
+          allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      await reply(chatId, await buildRiskSetupMessage(linkedUser.userId), {
+        replyMarkup: buildRiskSetupKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (cmd === '/setup') {
+      const value = arg.trim().toLowerCase();
+      if (!['conservative', 'standard', 'aggressive'].includes(value)) {
+        await reply(chatId, 'Gunakan: /setup conservative, /setup standard, atau /setup aggressive');
+        return NextResponse.json({ ok: true });
+      }
+
+      const ok = await upsertTelebotUserProfile({ userId: linkedUser.userId, setupStyle: value });
+      await reply(chatId, await buildRiskSetupMessage(linkedUser.userId, ok ? `Setup mode diatur ke ${value}.` : 'Gagal menyimpan setup mode.'), {
+        replyMarkup: buildRiskSetupKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (cmd === '/entry') {
+      const actualEntry = parseNumericArg(arg);
+      if (!actualEntry) {
+        await reply(chatId, 'Format salah. Gunakan contoh: /entry 1932.50');
+        return NextResponse.json({ ok: true });
+      }
+
+      const ok = await setLatestTelebotActualEntry(linkedUser.userId, actualEntry);
+      await reply(chatId, await buildLiveStatusMessage(linkedUser.userId, ok ? `Actual entry disimpan di ${actualEntry}.` : 'Belum ada setup untuk diberi actual entry.'), {
+        replyMarkup: buildLiveStatusKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (cmd === '/live' || cmd === '/livestatus' || text.toLowerCase() === 'live status') {
+      await reply(chatId, await buildLiveStatusMessage(linkedUser.userId), {
+        replyMarkup: buildLiveStatusKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     if (cmd === '/status') {
+      const profile = await getTelebotUserProfile(linkedUser.userId);
       const usage = await getQuotaStatusForAccess(linkedUser.userId, access.kind);
       await reply(
         chatId,
         buildStatusMessage({
           accessLabel: access.label,
           chatId,
+          balanceText: profile ? `${profile.balanceCurrency} ${Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : undefined,
+          riskText: profile ? `${profile.riskPercent}%` : undefined,
+          setupText: profile ? formatTelebotSetupStyle(profile.setupStyle) : undefined,
           remaining: usage.remaining,
           limit: usage.limit,
           resetText: usage.resetText,
@@ -438,12 +620,16 @@ export async function POST(request: Request) {
     }
 
     if (text.toLowerCase() === 'status') {
+      const profile = await getTelebotUserProfile(linkedUser.userId);
       const usage = await getQuotaStatusForAccess(linkedUser.userId, access.kind);
       await reply(
         chatId,
         buildStatusMessage({
           accessLabel: access.label,
           chatId,
+          balanceText: profile ? `${profile.balanceCurrency} ${Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : undefined,
+          riskText: profile ? `${profile.riskPercent}%` : undefined,
+          setupText: profile ? formatTelebotSetupStyle(profile.setupStyle) : undefined,
           remaining: usage.remaining,
           limit: usage.limit,
           resetText: usage.resetText,

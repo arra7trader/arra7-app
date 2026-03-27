@@ -393,6 +393,49 @@ export async function initDatabase(): Promise<boolean> {
       ON telebot_payment_confirmations(status)
     `);
 
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telebot_user_profiles (
+        user_id TEXT PRIMARY KEY,
+        balance_amount REAL DEFAULT 0,
+        balance_currency TEXT DEFAULT 'USD',
+        risk_percent REAL DEFAULT 1.0,
+        setup_style TEXT DEFAULT 'standard',
+        reset_count INTEGER DEFAULT 0,
+        last_reset_at DATETIME,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telebot_signal_executions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        chat_id TEXT NOT NULL,
+        signal_id INTEGER NOT NULL,
+        symbol TEXT NOT NULL,
+        timeframe TEXT,
+        recommended_entry REAL,
+        actual_entry REAL,
+        status TEXT DEFAULT 'watching',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, signal_id),
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (signal_id) REFERENCES ai_signals(id)
+      )
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telebot_signal_executions_user_id
+      ON telebot_signal_executions(user_id)
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telebot_signal_executions_signal_id
+      ON telebot_signal_executions(signal_id)
+    `);
+
     // TELEGRAM DAILY USAGE (separate quota from web analysis)
     await turso.execute(`
       CREATE TABLE IF NOT EXISTS telegram_vvip_daily_usage (
@@ -1612,6 +1655,132 @@ export interface PrivateBotMembership {
   telegramChatId: string | null;
   source: string;
   expiresAt: string | null;
+}
+
+export interface TelebotUserProfile {
+  userId: string;
+  balanceAmount: number;
+  balanceCurrency: string;
+  riskPercent: number;
+  setupStyle: 'conservative' | 'standard' | 'aggressive';
+  resetCount: number;
+  lastResetAt: string | null;
+  updatedAt: string | null;
+}
+
+function normalizeTelebotSetupStyle(style?: string | null): TelebotUserProfile['setupStyle'] {
+  const value = String(style || '').trim().toLowerCase();
+  if (value === 'conservative' || value === 'aggressive') return value;
+  return 'standard';
+}
+
+async function ensureTelebotUserProfileRow(userId: string): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await turso.execute({
+      sql: `INSERT OR IGNORE INTO telebot_user_profiles (user_id)
+            VALUES (?)`,
+      args: [userId]
+    });
+    return true;
+  } catch (error) {
+    console.error('Ensure telebot user profile error:', error);
+    return false;
+  }
+}
+
+export async function getTelebotUserProfile(userId: string): Promise<TelebotUserProfile | null> {
+  const turso = getTursoClient();
+  if (!turso) return null;
+
+  try {
+    await ensureTelebotUserProfileRow(userId);
+    const result = await turso.execute({
+      sql: `SELECT user_id, balance_amount, balance_currency, risk_percent, setup_style, reset_count, last_reset_at, updated_at
+            FROM telebot_user_profiles
+            WHERE user_id = ?
+            LIMIT 1`,
+      args: [userId]
+    });
+
+    if (result.rows.length === 0) return null;
+    return {
+      userId: String(result.rows[0].user_id),
+      balanceAmount: Number(result.rows[0].balance_amount || 0),
+      balanceCurrency: String(result.rows[0].balance_currency || 'USD'),
+      riskPercent: Number(result.rows[0].risk_percent || 1),
+      setupStyle: normalizeTelebotSetupStyle(String(result.rows[0].setup_style || 'standard')),
+      resetCount: Number(result.rows[0].reset_count || 0),
+      lastResetAt: result.rows[0].last_reset_at ? String(result.rows[0].last_reset_at) : null,
+      updatedAt: result.rows[0].updated_at ? String(result.rows[0].updated_at) : null
+    };
+  } catch (error) {
+    console.error('Get telebot user profile error:', error);
+    return null;
+  }
+}
+
+export async function upsertTelebotUserProfile(params: {
+  userId: string;
+  balanceAmount?: number | null;
+  riskPercent?: number | null;
+  setupStyle?: string | null;
+  balanceCurrency?: string | null;
+}): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    const existing = await getTelebotUserProfile(params.userId);
+    const nextBalance = params.balanceAmount != null
+      ? Math.max(0, Number(params.balanceAmount) || 0)
+      : (existing?.balanceAmount ?? 0);
+    const nextRiskPercent = params.riskPercent != null
+      ? Math.min(5, Math.max(0.1, Number(params.riskPercent) || 1))
+      : (existing?.riskPercent ?? 1);
+    const nextSetupStyle = normalizeTelebotSetupStyle(params.setupStyle || existing?.setupStyle || 'standard');
+    const nextCurrency = String(params.balanceCurrency || existing?.balanceCurrency || 'USD').toUpperCase();
+
+    await turso.execute({
+      sql: `INSERT INTO telebot_user_profiles (user_id, balance_amount, balance_currency, risk_percent, setup_style, updated_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id) DO UPDATE SET
+              balance_amount = excluded.balance_amount,
+              balance_currency = excluded.balance_currency,
+              risk_percent = excluded.risk_percent,
+              setup_style = excluded.setup_style,
+              updated_at = CURRENT_TIMESTAMP`,
+      args: [params.userId, nextBalance, nextCurrency, nextRiskPercent, nextSetupStyle]
+    });
+    return true;
+  } catch (error) {
+    console.error('Upsert telebot user profile error:', error);
+    return false;
+  }
+}
+
+export async function resetTelebotUserBalance(userId: string): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await ensureTelebotUserProfileRow(userId);
+    await turso.execute({
+      sql: `UPDATE telebot_user_profiles
+            SET balance_amount = 0,
+                reset_count = COALESCE(reset_count, 0) + 1,
+                last_reset_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?`,
+      args: [userId]
+    });
+    return true;
+  } catch (error) {
+    console.error('Reset telebot user balance error:', error);
+    return false;
+  }
 }
 
 export async function getPrivateBotMembershipByChatId(chatId: string): Promise<PrivateBotMembership | null> {
