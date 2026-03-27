@@ -124,6 +124,8 @@ function TransferContent() {
 
         setTelegramProfileMessage(null);
 
+        window.open(telegramLink, '_blank', 'noopener,noreferrer');
+
         if (requiresTelegramUsername) {
             try {
                 setSavingTelegramProfile(true);
@@ -162,8 +164,6 @@ function TransferContent() {
                 setSavingTelegramProfile(false);
             }
         }
-
-        window.open(telegramLink, '_blank', 'noopener,noreferrer');
     }
 
     return (
@@ -225,7 +225,9 @@ function TransferContent() {
                                 Setelah bayar, admin akan approve akses TELEBOT berdasarkan username ini.
                             </p>
                             {telegramProfileMessage && (
-                                <p className="text-xs text-red-400 mt-2">{telegramProfileMessage}</p>
+                                <p className="text-xs text-amber-400 mt-2">
+                                    {telegramProfileMessage} Telegram admin sudah dibuka, jadi Anda tetap bisa kirim bukti pembayaran secara manual.
+                                </p>
                             )}
                         </div>
                     )}
