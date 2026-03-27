@@ -44,6 +44,27 @@ async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) 
   await turso.execute(`CREATE INDEX IF NOT EXISTS idx_bot_memberships_status ON bot_memberships(status)`);
   await turso.execute(`CREATE INDEX IF NOT EXISTS idx_bot_memberships_telegram_chat_id ON bot_memberships(telegram_chat_id)`);
 
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS telebot_payment_confirmations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      email TEXT,
+      display_name TEXT,
+      plan_code TEXT NOT NULL DEFAULT 'TELEBOT',
+      duration_code TEXT NOT NULL DEFAULT '1month',
+      amount_idr INTEGER NOT NULL DEFAULT 175000,
+      telegram_username TEXT,
+      payment_channel TEXT NOT NULL DEFAULT 'QRIS_MANUAL',
+      status TEXT NOT NULL DEFAULT 'submitted',
+      admin_note TEXT,
+      submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      verified_at DATETIME
+    )
+  `);
+
+  await turso.execute(`CREATE INDEX IF NOT EXISTS idx_telebot_payment_confirmations_user_id ON telebot_payment_confirmations(user_id)`);
+  await turso.execute(`CREATE INDEX IF NOT EXISTS idx_telebot_payment_confirmations_status ON telebot_payment_confirmations(status)`);
+
   try {
     await turso.execute(`ALTER TABLE bot_memberships ADD COLUMN telegram_username TEXT`);
   } catch (error: any) {
@@ -110,6 +131,57 @@ async function fetchMembershipRows(turso: ReturnType<typeof getTursoClient>) {
   }
 }
 
+async function fetchPaymentConfirmationRows(turso: ReturnType<typeof getTursoClient>) {
+  if (!turso) return [];
+
+  const result = await turso.execute(`
+    SELECT
+      id,
+      user_id,
+      COALESCE(email, '') AS email,
+      COALESCE(display_name, '') AS display_name,
+      plan_code,
+      duration_code,
+      amount_idr,
+      telegram_username,
+      payment_channel,
+      status,
+      admin_note,
+      submitted_at,
+      verified_at
+    FROM telebot_payment_confirmations
+    ORDER BY id DESC
+    LIMIT 100
+  `);
+
+  return result.rows;
+}
+
+async function markLatestPaymentConfirmation(
+  turso: ReturnType<typeof getTursoClient>,
+  userId: string,
+  status: 'approved' | 'rejected',
+  adminNote?: string | null
+) {
+  if (!turso) return;
+
+  await turso.execute({
+    sql: `UPDATE telebot_payment_confirmations
+          SET status = ?,
+              admin_note = COALESCE(?, admin_note),
+              verified_at = CURRENT_TIMESTAMP
+          WHERE id = (
+            SELECT id
+            FROM telebot_payment_confirmations
+            WHERE user_id = ?
+              AND status = 'submitted'
+            ORDER BY id DESC
+            LIMIT 1
+          )`,
+    args: [status, adminNote ?? null, userId]
+  });
+}
+
 async function resolveUserId(turso: ReturnType<typeof getTursoClient>, userId?: string, email?: string) {
   if (!turso) return null;
 
@@ -151,7 +223,10 @@ export async function GET() {
 
     await initDatabase();
     await ensureBotPrivateSchema(turso);
-    const rows = await fetchMembershipRows(turso);
+    const [rows, paymentRows] = await Promise.all([
+      fetchMembershipRows(turso),
+      fetchPaymentConfirmationRows(turso)
+    ]);
 
     return NextResponse.json({
       status: 'success',
@@ -167,6 +242,21 @@ export async function GET() {
         invitedAt: row.invited_at,
         activatedAt: row.activated_at,
         expiresAt: row.expires_at
+      })),
+      paymentConfirmations: paymentRows.map((row) => ({
+        id: Number(row.id),
+        userId: String(row.user_id),
+        email: String(row.email || ''),
+        displayName: String(row.display_name || ''),
+        planCode: String(row.plan_code || 'TELEBOT'),
+        durationCode: String(row.duration_code || '1month'),
+        amountIdr: Number(row.amount_idr || 0),
+        telegramUsername: row.telegram_username ? String(row.telegram_username) : null,
+        paymentChannel: String(row.payment_channel || 'QRIS_MANUAL'),
+        status: String(row.status || 'submitted'),
+        adminNote: row.admin_note ? String(row.admin_note) : null,
+        submittedAt: row.submitted_at ? String(row.submitted_at) : null,
+        verifiedAt: row.verified_at ? String(row.verified_at) : null
       }))
     });
   } catch (error) {
@@ -227,6 +317,9 @@ export async function POST(request: NextRequest) {
         expiresAt,
         telegramUsername
       });
+      if (ok) {
+        await markLatestPaymentConfirmation(turso, userId, 'approved', 'TELEBOT di-approve admin.');
+      }
       return NextResponse.json({
         status: ok ? 'success' : 'error',
         message: ok ? `Akses TELEBOT aktif ${days} hari.` : 'Gagal mengaktifkan akses TELEBOT.',
@@ -241,6 +334,9 @@ export async function POST(request: NextRequest) {
         planCode: 'TELEBOT',
         telegramUsername
       });
+      if (ok) {
+        await markLatestPaymentConfirmation(turso, userId, 'rejected', 'Akses TELEBOT dicabut admin.');
+      }
       return NextResponse.json({
         status: ok ? 'success' : 'error',
         message: ok ? 'Akses TELEBOT berhasil dicabut.' : 'Gagal mencabut akses TELEBOT.'

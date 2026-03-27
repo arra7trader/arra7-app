@@ -364,6 +364,35 @@ export async function initDatabase(): Promise<boolean> {
       ON bot_link_codes(expires_at)
     `);
 
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS telebot_payment_confirmations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        email TEXT,
+        display_name TEXT,
+        plan_code TEXT NOT NULL DEFAULT 'TELEBOT',
+        duration_code TEXT NOT NULL DEFAULT '1month',
+        amount_idr INTEGER NOT NULL DEFAULT 175000,
+        telegram_username TEXT,
+        payment_channel TEXT NOT NULL DEFAULT 'QRIS_MANUAL',
+        status TEXT NOT NULL DEFAULT 'submitted', -- submitted | approved | rejected
+        admin_note TEXT,
+        submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        verified_at DATETIME,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telebot_payment_confirmations_user_id
+      ON telebot_payment_confirmations(user_id)
+    `);
+
+    await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_telebot_payment_confirmations_status
+      ON telebot_payment_confirmations(status)
+    `);
+
     // TELEGRAM DAILY USAGE (separate quota from web analysis)
     await turso.execute(`
       CREATE TABLE IF NOT EXISTS telegram_vvip_daily_usage (

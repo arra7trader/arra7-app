@@ -127,19 +127,36 @@ function TransferContent() {
         if (requiresTelegramUsername) {
             try {
                 setSavingTelegramProfile(true);
-                const response = await fetch('/api/user/telebot/profile', {
+                const profileResponse = await fetch('/api/user/telebot/profile', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ telegramUsername: normalizedTelegramUsername })
                 });
-                const data = await response.json();
+                const profileData = await profileResponse.json();
 
-                if (!response.ok || !data?.ok) {
-                    setTelegramProfileMessage(data?.message || 'Gagal menyimpan username Telegram.');
+                if (!profileResponse.ok || !profileData?.ok) {
+                    setTelegramProfileMessage(profileData?.message || 'Gagal menyimpan username Telegram.');
+                    return;
+                }
+
+                const confirmationResponse = await fetch('/api/user/telebot/payment-confirmation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        planCode: plan.id,
+                        durationCode: duration,
+                        amountIdr: plan.price,
+                        telegramUsername: normalizedTelegramUsername
+                    })
+                });
+                const confirmationData = await confirmationResponse.json();
+
+                if (!confirmationResponse.ok || !confirmationData?.ok) {
+                    setTelegramProfileMessage(confirmationData?.message || 'Gagal menyimpan konfirmasi pembayaran.');
                     return;
                 }
             } catch {
-                setTelegramProfileMessage('Network error saat menyimpan username Telegram.');
+                setTelegramProfileMessage('Network error saat menyimpan data pembayaran TELEBOT.');
                 return;
             } finally {
                 setSavingTelegramProfile(false);

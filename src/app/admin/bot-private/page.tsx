@@ -18,6 +18,22 @@ interface BotMembership {
   expiresAt: string | null;
 }
 
+interface TelebotPaymentConfirmation {
+  id: number;
+  userId: string;
+  email: string;
+  displayName: string;
+  planCode: string;
+  durationCode: string;
+  amountIdr: number;
+  telegramUsername: string | null;
+  paymentChannel: string;
+  status: 'submitted' | 'approved' | 'rejected';
+  adminNote: string | null;
+  submittedAt: string | null;
+  verifiedAt: string | null;
+}
+
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 
 export default function PrivateBotAdminPage() {
@@ -26,6 +42,7 @@ export default function PrivateBotAdminPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [memberships, setMemberships] = useState<BotMembership[]>([]);
+  const [paymentConfirmations, setPaymentConfirmations] = useState<TelebotPaymentConfirmation[]>([]);
   const [email, setEmail] = useState('');
   const [telegramUsername, setTelegramUsername] = useState('');
   const [days, setDays] = useState(30);
@@ -46,6 +63,7 @@ export default function PrivateBotAdminPage() {
       const data = await res.json();
       if (data.status === 'success') {
         setMemberships(data.memberships || []);
+        setPaymentConfirmations(data.paymentConfirmations || []);
       } else {
         setMessage({ type: 'error', text: data.message || 'Gagal memuat data TELEBOT.' });
       }
@@ -99,6 +117,11 @@ export default function PrivateBotAdminPage() {
         .includes(needle)
     );
   }, [memberships, query]);
+
+  const pendingPaymentConfirmations = useMemo(
+    () => paymentConfirmations.filter((item) => item.status === 'submitted'),
+    [paymentConfirmations]
+  );
 
   if (status === 'loading' || loading) {
     return (
@@ -207,7 +230,87 @@ export default function PrivateBotAdminPage() {
             )}
           </div>
 
-          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
+          <div className="space-y-6">
+            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)]">Konfirmasi Pembayaran TELEBOT</h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Daftar submit pembayaran dari web sebelum admin approve akses.</p>
+                  <p className="text-sm text-[var(--text-secondary)]">{pendingPaymentConfirmations.length} pending</p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
+                      <th className="py-3 pr-3">User</th>
+                      <th className="py-3 pr-3">Username</th>
+                      <th className="py-3 pr-3">Paket</th>
+                      <th className="py-3 pr-3">Nominal</th>
+                      <th className="py-3 pr-3">Status</th>
+                      <th className="py-3 pr-3">Submitted</th>
+                      <th className="py-3 pr-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentConfirmations.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-6 text-center text-[var(--text-muted)]">
+                          Belum ada konfirmasi pembayaran TELEBOT dari web.
+                        </td>
+                      </tr>
+                    )}
+                    {paymentConfirmations.map((item) => (
+                      <tr key={item.id} className="border-b border-[var(--border-light)]/60 align-top">
+                        <td className="py-4 pr-3">
+                          <div className="font-medium text-[var(--text-primary)]">{item.displayName || '-'}</div>
+                          <div className="text-[var(--text-secondary)]">{item.email}</div>
+                          <div className="text-xs text-[var(--text-muted)] font-mono mt-1">{item.userId}</div>
+                        </td>
+                        <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                          {item.telegramUsername ? `@${item.telegramUsername}` : 'Belum diisi'}
+                        </td>
+                        <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                          <div>{item.planCode}</div>
+                          <div className="text-xs text-[var(--text-muted)] mt-1">{item.durationCode}</div>
+                        </td>
+                        <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                          Rp {item.amountIdr.toLocaleString('id-ID')}
+                        </td>
+                        <td className="py-4 pr-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'approved'
+                            ? 'bg-emerald-500/15 text-emerald-300'
+                            : item.status === 'rejected'
+                              ? 'bg-red-500/15 text-red-300'
+                              : 'bg-blue-500/15 text-blue-300'
+                            }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                          {item.submittedAt ? new Date(item.submittedAt).toLocaleString('id-ID') : '-'}
+                        </td>
+                        <td className="py-4 pr-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEmail(item.email);
+                              setTelegramUsername(item.telegramUsername || '');
+                            }}
+                            className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs"
+                          >
+                            Pakai Data Ini
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
               <div>
                 <h2 className="text-lg font-semibold text-[var(--text-primary)]">Member TELEBOT</h2>
@@ -294,6 +397,7 @@ export default function PrivateBotAdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
           </div>
         </div>
       </div>
