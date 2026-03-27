@@ -194,8 +194,42 @@ async function markLatestPaymentConfirmation(
   });
 }
 
-async function resolveUserId(turso: ReturnType<typeof getTursoClient>, userId?: string, email?: string) {
+async function resolveUserId(
+  turso: ReturnType<typeof getTursoClient>,
+  userId?: string,
+  email?: string,
+  telegramUsername?: string | null
+) {
   if (!turso) return null;
+
+  const normalizedTelegramUsername = normalizeTelegramUsername(telegramUsername);
+
+  if (normalizedTelegramUsername) {
+    const fromMembership = await turso.execute({
+      sql: `SELECT u.id, u.email, u.name
+            FROM bot_memberships bm
+            LEFT JOIN users u ON u.id = bm.user_id
+            WHERE lower(trim(bm.telegram_username)) = ?
+            LIMIT 1`,
+      args: [normalizedTelegramUsername]
+    });
+    if (fromMembership.rows[0]) {
+      return fromMembership.rows[0];
+    }
+
+    const fromPaymentConfirmation = await turso.execute({
+      sql: `SELECT u.id, u.email, u.name
+            FROM telebot_payment_confirmations pc
+            LEFT JOIN users u ON u.id = pc.user_id
+            WHERE lower(trim(pc.telegram_username)) = ?
+            ORDER BY pc.id DESC
+            LIMIT 1`,
+      args: [normalizedTelegramUsername]
+    });
+    if (fromPaymentConfirmation.rows[0]) {
+      return fromPaymentConfirmation.rows[0];
+    }
+  }
 
   if (userId?.trim()) {
     const res = await turso.execute({
@@ -298,11 +332,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const action = String(body?.action || '').trim();
-    const userRow = await resolveUserId(turso, body?.userId, body?.email);
     const telegramUsername = normalizeTelegramUsername(body?.telegramUsername);
+    const userRow = await resolveUserId(turso, body?.userId, body?.email, telegramUsername);
 
     if (!userRow) {
-      return NextResponse.json({ status: 'error', message: 'User tidak ditemukan' }, { status: 404 });
+      return NextResponse.json({ status: 'error', message: 'User tidak ditemukan dari username Telegram ini.' }, { status: 404 });
     }
 
     const userId = String(userRow.id);

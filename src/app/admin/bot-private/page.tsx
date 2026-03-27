@@ -48,6 +48,7 @@ export default function PrivateBotAdminPage() {
   const [days, setDays] = useState(30);
   const [latestCode, setLatestCode] = useState<{ userId: string; code: string } | null>(null);
   const [query, setQuery] = useState('');
+  const canRunManualAction = telegramUsername.trim().length > 0 || email.trim().length > 0;
 
   const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -166,15 +167,7 @@ export default function PrivateBotAdminPage() {
         <div className="grid grid-cols-1 xl:grid-cols-[380px,1fr] gap-6">
           <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Approve TELEBOT</h2>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">Email user ARRA</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@email.com"
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
-            />
-
-            <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Username Telegram</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">Username Telegram</label>
             <input
               value={telegramUsername}
               onChange={(e) => setTelegramUsername(e.target.value)}
@@ -182,7 +175,18 @@ export default function PrivateBotAdminPage() {
               className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
             />
             <p className="text-xs text-[var(--text-muted)] mt-2">
-              Username ini akan di-whitelist. Saat user chat <code>/start</code>, bot akan auto-link jika username cocok.
+              Akses TELEBOT dipetakan dari username Telegram. Ini menjadi kunci utama approve bot.
+            </p>
+
+            <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Email user ARRA</label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="user@email.com"
+              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-2">
+              Email sekarang hanya referensi tambahan, bukan penentu akses bot.
             </p>
 
             <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Durasi aktif (hari)</label>
@@ -197,14 +201,14 @@ export default function PrivateBotAdminPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
               <button
-                disabled={saving || !email.trim()}
+                disabled={saving || !canRunManualAction}
                 onClick={() => void runAction('invite', email)}
                 className="px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-50"
               >
                 Tandai Pending
               </button>
               <button
-                disabled={saving || !email.trim()}
+                disabled={saving || !canRunManualAction}
                 onClick={() => void runAction('activate', email)}
                 className="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
               >
@@ -295,8 +299,8 @@ export default function PrivateBotAdminPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setEmail(item.email);
                               setTelegramUsername(item.telegramUsername || '');
+                              setEmail(item.email);
                             }}
                             className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs"
                           >
