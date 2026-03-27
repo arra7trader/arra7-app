@@ -394,6 +394,13 @@ export default function PrivateBotAdminPage() {
                           >
                             Nonaktifkan
                           </button>
+                          <button
+                            disabled={saving}
+                            onClick={() => void runAction('delete', undefined, item.userId)}
+                            className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>

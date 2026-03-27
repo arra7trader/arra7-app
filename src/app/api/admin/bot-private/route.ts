@@ -194,6 +194,42 @@ async function markLatestPaymentConfirmation(
   });
 }
 
+async function deleteTelebotAccount(turso: ReturnType<typeof getTursoClient>, userId: string) {
+  if (!turso) return false;
+
+  try {
+    await turso.execute({
+      sql: `DELETE FROM bot_memberships WHERE user_id = ?`,
+      args: [userId]
+    });
+
+    await turso.execute({
+      sql: `DELETE FROM bot_link_codes WHERE user_id = ?`,
+      args: [userId]
+    });
+
+    await turso.execute({
+      sql: `DELETE FROM telebot_payment_confirmations WHERE user_id = ?`,
+      args: [userId]
+    });
+
+    await turso.execute({
+      sql: `DELETE FROM telegram_users WHERE user_id = ?`,
+      args: [userId]
+    });
+
+    await turso.execute({
+      sql: `UPDATE users SET telegram_chat_id = NULL WHERE id = ?`,
+      args: [userId]
+    });
+
+    return true;
+  } catch (error) {
+    console.error('[ADMIN_BOT_PRIVATE] deleteTelebotAccount error:', error);
+    return false;
+  }
+}
+
 async function resolveUserId(
   turso: ReturnType<typeof getTursoClient>,
   userId?: string,
@@ -398,6 +434,14 @@ export async function POST(request: NextRequest) {
         message: saved ? 'Link code berhasil dibuat.' : 'Gagal membuat link code.',
         code: saved ? code : null,
         userId
+      });
+    }
+
+    if (action === 'delete') {
+      const ok = await deleteTelebotAccount(turso, userId);
+      return NextResponse.json({
+        status: ok ? 'success' : 'error',
+        message: ok ? 'Akun TELEBOT berhasil dihapus dan Telegram di-unlink.' : 'Gagal menghapus akun TELEBOT.'
       });
     }
 
