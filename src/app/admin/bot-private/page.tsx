@@ -46,7 +46,6 @@ export default function PrivateBotAdminPage() {
   const [email, setEmail] = useState('');
   const [telegramUsername, setTelegramUsername] = useState('');
   const [days, setDays] = useState(30);
-  const [latestCode, setLatestCode] = useState<{ userId: string; code: string } | null>(null);
   const [query, setQuery] = useState('');
   const canRunManualAction = telegramUsername.trim().length > 0 || email.trim().length > 0;
 
@@ -78,7 +77,6 @@ export default function PrivateBotAdminPage() {
   async function runAction(action: string, targetEmail?: string, userId?: string) {
     setSaving(true);
     setMessage(null);
-    setLatestCode(null);
     try {
       const res = await fetch('/api/admin/bot-private', {
         method: 'POST',
@@ -94,9 +92,6 @@ export default function PrivateBotAdminPage() {
       const data = await res.json();
       if (data.status === 'success') {
         setMessage({ type: 'success', text: data.message });
-        if (data.code) {
-          setLatestCode({ userId: data.userId, code: data.code });
-        }
         await fetchData();
       } else {
         setMessage({ type: 'error', text: data.message || 'Aksi gagal dijalankan.' });
@@ -215,14 +210,6 @@ export default function PrivateBotAdminPage() {
                 Approve
               </button>
             </div>
-
-            {latestCode && (
-              <div className="mt-5 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
-                <p className="text-xs text-blue-300 mb-1">Link code terakhir</p>
-                <p className="text-2xl font-bold tracking-[0.2em] text-blue-200">{latestCode.code}</p>
-                <p className="text-xs text-blue-200/80 mt-2">User ID: {latestCode.userId}</p>
-              </div>
-            )}
 
             {message && (
               <div className={`mt-5 rounded-xl border p-4 text-sm ${message.type === 'success'
@@ -379,13 +366,6 @@ export default function PrivateBotAdminPage() {
                             className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs disabled:opacity-50"
                           >
                             Activate
-                          </button>
-                          <button
-                            disabled={saving}
-                            onClick={() => void runAction('create_link', undefined, item.userId)}
-                            className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs disabled:opacity-50"
-                          >
-                            Link Code
                           </button>
                           <button
                             disabled={saving}

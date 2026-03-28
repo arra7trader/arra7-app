@@ -1,21 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { randomBytes } from 'crypto';
 import { authOptions } from '@/lib/auth';
-import {
-  createPrivateBotLinkCode,
-  getPrivateBotMembershipByUserId,
-} from '@/lib/turso';
-
-function getTtlMinutes(): number {
-  const value = Number(process.env.TELEGRAM_LINK_CODE_TTL_MINUTES ?? 10);
-  if (!Number.isFinite(value) || value <= 0) return 10;
-  return Math.max(5, Math.min(30, Math.floor(value)));
-}
-
-function generateLinkCode(): string {
-  return randomBytes(4).toString('hex').toUpperCase();
-}
+import { getPrivateBotMembershipByUserId } from '@/lib/turso';
 
 export async function POST() {
   try {
@@ -38,30 +24,10 @@ export async function POST() {
       );
     }
 
-    const ttlMinutes = getTtlMinutes();
-    let code = '';
-    let saved = false;
-
-    for (let i = 0; i < 3; i++) {
-      code = generateLinkCode();
-      saved = await createPrivateBotLinkCode(userId, code, ttlMinutes);
-      if (saved) break;
-    }
-
-    if (!saved || !code) {
-      return NextResponse.json(
-        { ok: false, message: 'Gagal membuat kode link. Coba lagi.' },
-        { status: 500 }
-      );
-    }
-
-    const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString();
     return NextResponse.json({
-      ok: true,
-      code,
-      expiresAt,
+      ok: false,
       botUsername: process.env.TELEGRAM_BOT_USERNAME || 'arra7trader_bot',
-      command: `/link ${code}`,
+      message: 'TELEBOT tidak lagi memakai kode link. Akses bot sekarang otomatis mengikuti username Telegram yang sudah di-approve admin.',
     });
   } catch (error) {
     console.error('[TELEGRAM_LINK_CODE] POST error:', error);

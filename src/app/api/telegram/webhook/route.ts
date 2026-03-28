@@ -2,14 +2,12 @@ import { NextResponse } from 'next/server';
 import { answerTelegramCallbackQuery, sendTelegramMessage } from '@/lib/telegram';
 import {
   attachPrivateBotTelegramIdentity,
-  findValidPrivateBotLinkCode,
   getPrivateBotMembershipByUserId,
   getPrivateBotMembershipByTelegramUsername,
   getTelebotUserProfile,
   getTelegramUser,
   getUserMembership,
   linkTelegramUser,
-  markPrivateBotLinkCodeUsed,
   resetTelebotUserBalance,
   setUserTelegramChatId,
   upsertTelebotUserProfile,
@@ -150,6 +148,27 @@ async function getQuotaStatusForAccess(_userId: string, _kind: 'private_bot') {
   return getUnlimitedQuota();
 }
 
+async function autoLinkTelebotByUsername(chatId: string, username?: string, firstName?: string) {
+  if (!username) return null;
+
+  const membershipByUsername = await getPrivateBotMembershipByTelegramUsername(username);
+  if (!membershipByUsername) return null;
+
+  const effectiveMembership = await getEffectivePrivateBotMembership(membershipByUsername.userId);
+  if (!effectiveMembership || effectiveMembership.status !== 'active') return null;
+
+  const linkedOk = await linkTelegramUser(effectiveMembership.userId, {
+    chatId,
+    username,
+    firstName: firstName || 'Trader',
+  });
+  if (!linkedOk) return null;
+
+  await setUserTelegramChatId(effectiveMembership.userId, chatId);
+  await attachPrivateBotTelegramIdentity(effectiveMembership.userId, chatId, username);
+  return getTelegramUser(chatId);
+}
+
 export async function POST(request: Request) {
   try {
     const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -168,9 +187,11 @@ export async function POST(request: Request) {
 
     if (callback?.message?.chat?.id && typeof callback.data === 'string') {
       const chatId = String(callback.message.chat.id);
-      const linkedUser = await getTelegramUser(chatId);
+      const linkedUser =
+        (await getTelegramUser(chatId)) ||
+        (await autoLinkTelebotByUsername(chatId, callback.from?.username || '', callback.from?.first_name || 'Trader'));
       if (!linkedUser) {
-        await reply(chatId, 'Akun belum terhubung. Silakan kirim /link KODE_OTP dari web ARRA7.');
+        await reply(chatId, 'Username Telegram Anda belum terdaftar sebagai member TELEBOT aktif. Silakan pastikan username Anda sudah di-approve admin.');
         return NextResponse.json({ ok: true });
       }
 
@@ -406,67 +427,19 @@ export async function POST(request: Request) {
     }
 
     if (cmd === '/link') {
-      const code = arg.replace(/\s+/g, '').toUpperCase();
-      if (!code) {
-        await reply(chatId, 'Format salah. Gunakan: /link KODE_OTP');
-        return NextResponse.json({ ok: true });
-      }
-
-      const privateBotLinkCode = await findValidPrivateBotLinkCode(code);
-      if (privateBotLinkCode) {
-        const privateBotMembership = await getEffectivePrivateBotMembership(privateBotLinkCode.userId);
-        if (!privateBotMembership || privateBotMembership.status !== 'active') {
-          await reply(
-            chatId,
-            privateBotMembership?.status === 'expired'
-              ? '<b>ARRA7 TELEBOT</b>\n\nKode link valid, namun masa aktif TELEBOT Anda sudah berakhir. Silakan perpanjang paket Anda.'
-              : '<b>ARRA7 TELEBOT</b>\n\nKode link valid, namun akses TELEBOT Anda belum aktif. Silakan tunggu approval admin.',
-            { allowHtml: true }
-          );
-          return NextResponse.json({ ok: true });
-        }
-
-        const linked = await linkTelegramUser(privateBotLinkCode.userId, {
-          chatId,
-          username,
-          firstName,
-        });
-        if (!linked) {
-          await reply(chatId, '<b>ARRA7 TELEBOT</b>\n\nAkun belum berhasil dihubungkan. Silakan coba lagi beberapa saat lagi.', {
-            allowHtml: true,
-          });
-          return NextResponse.json({ ok: true });
-        }
-
-        await setUserTelegramChatId(privateBotLinkCode.userId, chatId);
-        await attachPrivateBotTelegramIdentity(privateBotLinkCode.userId, chatId, username);
-        await markPrivateBotLinkCodeUsed(privateBotLinkCode.id);
-
-        await reply(
-          chatId,
-          [
-            '<b>ARRA7 TELEBOT</b>',
-            '',
-            'Akun berhasil terhubung.',
-            'Akses TELEBOT Anda sudah aktif.',
-            'Silakan gunakan menu utama untuk membuka Signal atau Hasil.',
-          ].join('\n'),
-          { replyMarkup: buildMainMenuKeyboard(), allowHtml: true }
-        );
-        return NextResponse.json({ ok: true });
-      }
-
       await reply(
         chatId,
-        '<b>ARRA7 TELEBOT</b>\n\nKode tidak valid atau tidak berlaku untuk TELEBOT. Silakan gunakan akses TELEBOT yang aktif.',
+        '<b>ARRA7 TELEBOT</b>\n\nTELEBOT tidak lagi memakai kode link. Akses bot sekarang otomatis mengikuti username Telegram yang sudah di-approve admin.',
         { allowHtml: true }
       );
       return NextResponse.json({ ok: true });
     }
 
-    const linkedUser = await getTelegramUser(chatId);
+    const linkedUser =
+      (await getTelegramUser(chatId)) ||
+      (await autoLinkTelebotByUsername(chatId, username, firstName));
     if (!linkedUser) {
-      await reply(chatId, 'Akun belum terhubung. Silakan kirim /link KODE_OTP dari web ARRA7.');
+      await reply(chatId, 'Username Telegram Anda belum terdaftar sebagai member TELEBOT aktif. Silakan pastikan username yang Anda kirim saat pembayaran sudah di-approve admin.');
       return NextResponse.json({ ok: true });
     }
 

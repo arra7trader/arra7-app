@@ -114,7 +114,7 @@ export function buildIntroMessage(firstName: string) {
     '<b>Cara mulai</b>',
     `1. Aktivasi TELEBOT di <a href="${escapeHtml(telebotUrl)}">halaman pembayaran resmi</a>`,
     '2. Pastikan username Telegram Anda sudah di-approve admin',
-    '3. Jika diminta, kirim <code>/link KODE_OTP</code>',
+    '3. Setelah approved, cukup kirim <code>/start</code> dan bot akan terhubung otomatis',
   ].join('\n');
 }
 
@@ -190,7 +190,8 @@ export function buildHelpMessage() {
     '<code>/live</code> tampilkan live status setup terakhir',
     '<code>/status</code> cek status akses',
     '<code>/help</code> tampilkan bantuan',
-    '<code>/link KODE</code> hubungkan akun jika diperlukan',
+    '',
+    'Akun TELEBOT akan terhubung otomatis berdasarkan username Telegram yang sudah di-approve admin.',
   ].join('\n');
 }
 

@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import getTursoClient, { createPrivateBotLinkCode, initDatabase, upsertPrivateBotMembership } from '@/lib/turso';
+import getTursoClient, { initDatabase, upsertPrivateBotMembership } from '@/lib/turso';
 import { isAdminEmail } from '@/lib/admin-access';
-import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
-
-function generateLinkCode() {
-  return randomBytes(4).toString('hex').toUpperCase();
-}
 
 async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) {
   if (!turso) return;
@@ -427,14 +422,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'create_link') {
-      const code = generateLinkCode();
-      const saved = await createPrivateBotLinkCode(userId, code, 15);
       return NextResponse.json({
-        status: saved ? 'success' : 'error',
-        message: saved ? 'Link code berhasil dibuat.' : 'Gagal membuat link code.',
-        code: saved ? code : null,
-        userId
-      });
+        status: 'error',
+        message: 'TELEBOT tidak lagi memakai link code. Akses bot sekarang mengikuti username Telegram yang sudah di-approve admin.'
+      }, { status: 400 });
     }
 
     if (action === 'delete') {
