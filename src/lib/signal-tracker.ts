@@ -5,6 +5,7 @@ export interface SignalData {
     symbol: string;
     timeframe?: string;
     direction: 'BUY' | 'SELL' | 'HOLD';
+    executionType?: 'INSTANT' | 'LIMIT' | 'STOP';
     entryPrice: number;
     stopLoss: number;
     takeProfit1: number;
@@ -31,6 +32,7 @@ export interface TelebotLiveExecution {
     symbol: string;
     timeframe: string | null;
     direction: 'BUY' | 'SELL' | 'HOLD';
+    executionType: string | null;
     recommendedEntry: number;
     actualEntry: number | null;
     stopLoss: number;
@@ -108,6 +110,7 @@ export async function saveTelebotSignalExecution(params: {
     signalId: number;
     symbol: string;
     timeframe?: string;
+    executionType?: string | null;
     recommendedEntry: number;
 }): Promise<boolean> {
     const turso = getTursoClient();
@@ -115,12 +118,13 @@ export async function saveTelebotSignalExecution(params: {
 
     try {
         await turso.execute({
-            sql: `INSERT INTO telebot_signal_executions (user_id, chat_id, signal_id, symbol, timeframe, recommended_entry, updated_at)
-                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            sql: `INSERT INTO telebot_signal_executions (user_id, chat_id, signal_id, symbol, timeframe, execution_type, recommended_entry, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                   ON CONFLICT(user_id, signal_id) DO UPDATE SET
                     chat_id = excluded.chat_id,
                     symbol = excluded.symbol,
                     timeframe = excluded.timeframe,
+                    execution_type = excluded.execution_type,
                     recommended_entry = excluded.recommended_entry,
                     updated_at = CURRENT_TIMESTAMP`,
             args: [
@@ -129,6 +133,7 @@ export async function saveTelebotSignalExecution(params: {
                 params.signalId,
                 params.symbol,
                 params.timeframe || null,
+                params.executionType || null,
                 params.recommendedEntry,
             ]
         });
@@ -150,6 +155,7 @@ export async function getLatestTelebotSignalExecution(userId: string): Promise<T
                     tse.signal_id,
                     tse.symbol,
                     tse.timeframe,
+                    tse.execution_type,
                     tse.recommended_entry,
                     tse.actual_entry,
                     tse.updated_at,
@@ -173,6 +179,7 @@ export async function getLatestTelebotSignalExecution(userId: string): Promise<T
             symbol: String(result.rows[0].symbol),
             timeframe: result.rows[0].timeframe ? String(result.rows[0].timeframe) : null,
             direction: String(result.rows[0].direction || 'HOLD') as TelebotLiveExecution['direction'],
+            executionType: result.rows[0].execution_type ? String(result.rows[0].execution_type) : null,
             recommendedEntry: Number(result.rows[0].recommended_entry || 0),
             actualEntry: result.rows[0].actual_entry != null ? Number(result.rows[0].actual_entry) : null,
             stopLoss: Number(result.rows[0].stop_loss || 0),
@@ -288,6 +295,12 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
 
         // Determine direction - check multiple patterns
         let direction: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
+        let executionType: SignalData['executionType'];
+
+        const strategyMatch = analysis.match(/EXECUTION STRATEGY:\s*(?:MOMENTUM\s+|RETRACEMENT\s+|BREAKOUT\s+)?(INSTANT|LIMIT|STOP)/i);
+        if (strategyMatch) {
+            executionType = strategyMatch[1].toUpperCase() as SignalData['executionType'];
+        }
 
         // Check for explicit recommendations (New Format v2.0)
         // Look for 🚀 followed by direction

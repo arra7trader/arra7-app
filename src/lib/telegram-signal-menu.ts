@@ -329,18 +329,55 @@ function formatTimestamp(value: string) {
   }).format(date);
 }
 
-function inferOrderType(direction: 'BUY' | 'SELL' | 'HOLD', currentPrice: number, entryPrice: number): string {
+function inferOrderType(
+  direction: 'BUY' | 'SELL' | 'HOLD',
+  currentPrice: number,
+  entryPrice: number,
+  preferredExecutionType?: 'INSTANT' | 'LIMIT' | 'STOP'
+): string {
   if (!(currentPrice > 0) || !(entryPrice > 0) || direction === 'HOLD') return 'WAIT';
-  const diffRatio = Math.abs(currentPrice - entryPrice) / entryPrice;
-  const isInstant = diffRatio <= 0.0008;
+
+  if (preferredExecutionType === 'INSTANT') {
+    return direction === 'BUY' ? 'BUY NOW' : 'SELL NOW';
+  }
+
+  if (preferredExecutionType === 'LIMIT') {
+    return direction === 'BUY' ? 'BUY LIMIT' : 'SELL LIMIT';
+  }
+
+  if (preferredExecutionType === 'STOP') {
+    return direction === 'BUY' ? 'BUY STOP' : 'SELL STOP';
+  }
 
   if (direction === 'BUY') {
-    if (isInstant) return 'BUY NOW';
     return entryPrice > currentPrice ? 'BUY STOP' : 'BUY LIMIT';
   }
 
-  if (isInstant) return 'SELL NOW';
   return entryPrice < currentPrice ? 'SELL STOP' : 'SELL LIMIT';
+}
+
+function hasValidSignalStructure(signal: {
+  direction: 'BUY' | 'SELL' | 'HOLD';
+  entryPrice: number;
+  stopLoss: number;
+  takeProfit1: number;
+}) {
+  if (signal.direction === 'HOLD') return false;
+  if (!(signal.entryPrice > 0) || !(signal.stopLoss > 0) || !(signal.takeProfit1 > 0)) return false;
+
+  if (signal.direction === 'BUY' && !(signal.stopLoss < signal.entryPrice && signal.takeProfit1 > signal.entryPrice)) {
+    return false;
+  }
+
+  if (signal.direction === 'SELL' && !(signal.stopLoss > signal.entryPrice && signal.takeProfit1 < signal.entryPrice)) {
+    return false;
+  }
+
+  const risk = Math.abs(signal.entryPrice - signal.stopLoss);
+  const reward = Math.abs(signal.takeProfit1 - signal.entryPrice);
+  if (!(risk > 0) || !(reward > 0)) return false;
+
+  return reward / risk >= 1.2;
 }
 
 function calculateRR(entry: number, stopLoss: number, takeProfit: number) {
@@ -386,10 +423,17 @@ export async function generateTelegramSignal(params: {
   }
 
   const currentPrice = marketData.current_price || 0;
-  const entry = parsed.entryPrice || currentPrice;
+  if (!(currentPrice > 0) || !hasValidSignalStructure(parsed)) {
+    return {
+      ok: false as const,
+      message: `Setup ${symbol} ${timeframe.toUpperCase()} ditolak karena entry/SL/TP belum cukup valid. Coba pair atau timeframe lain.`,
+    };
+  }
+
+  const entry = parsed.entryPrice;
   const stopLoss = parsed.stopLoss || 0;
   const takeProfit1 = parsed.takeProfit1 || 0;
-  const orderType = inferOrderType(parsed.direction, currentPrice, entry);
+  const orderType = inferOrderType(parsed.direction, currentPrice, entry, parsed.executionType);
   const rr = calculateRR(entry, stopLoss, takeProfit1);
   const confidence = typeof parsed.confidence === 'number' ? Math.round(parsed.confidence) : 72;
   const thesis = cleanSummary(ai.analysis);
@@ -426,6 +470,7 @@ export async function generateTelegramSignal(params: {
       signalId,
       symbol,
       timeframe,
+      executionType: orderType,
       recommendedEntry: entry,
     });
   }
@@ -508,8 +553,9 @@ function evaluateExecutionLiveState(params: {
   entryPrice: number;
   stopLoss: number;
   takeProfit1: number;
+  executionType?: string | null;
 }) {
-  const orderType = inferOrderType(params.direction, params.currentPrice, params.entryPrice);
+  const orderType = params.executionType || inferOrderType(params.direction, params.currentPrice, params.entryPrice);
 
   if (params.direction === 'BUY') {
     if (params.currentPrice <= params.stopLoss) return { label: 'SL HIT', orderType };
@@ -561,6 +607,7 @@ export async function buildLiveStatusMessage(userId: string, note?: string) {
       entryPrice: referenceEntry,
       stopLoss: latest.stopLoss,
       takeProfit1: latest.takeProfit1,
+      executionType: latest.executionType,
     });
     const progress = calculateProgressPercent({
       direction: latest.direction,

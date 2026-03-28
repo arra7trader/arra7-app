@@ -415,6 +415,7 @@ export async function initDatabase(): Promise<boolean> {
         signal_id INTEGER NOT NULL,
         symbol TEXT NOT NULL,
         timeframe TEXT,
+        execution_type TEXT,
         recommended_entry REAL,
         actual_entry REAL,
         status TEXT DEFAULT 'watching',
@@ -784,6 +785,15 @@ export async function initDatabase(): Promise<boolean> {
       `);
     } catch (e) {
       console.error('[MIGRATION] Failed to ensure bot_memberships.telegram_username index:', e);
+    }
+
+    try {
+      await turso.execute(`ALTER TABLE telebot_signal_executions ADD COLUMN execution_type TEXT`);
+      console.log('Added execution_type column to telebot_signal_executions');
+    } catch (e: any) {
+      if (!e.message?.includes('duplicate column name')) {
+        console.error('[MIGRATION] Failed to add telebot_signal_executions.execution_type:', e);
+      }
     }
 
     // VVIP BEST SIGNAL ALERT LOGS: dedupe + cooldown for Telegram alerts
