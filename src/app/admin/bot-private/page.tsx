@@ -170,6 +170,13 @@ export default function PrivateBotAdminPage() {
             >
               Refresh
             </button>
+            <button
+              onClick={() => void runAction('backfill_bonus')}
+              disabled={saving}
+              className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-sm text-emerald-300 hover:bg-emerald-500/15 disabled:opacity-50"
+            >
+              Backfill Bonus PRO
+            </button>
             <Link href="/admin" className="px-4 py-2 rounded-xl border border-[var(--border-light)] text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">
               ← Admin Home
             </Link>

@@ -24,6 +24,7 @@ export async function GET() {
         const slots: Record<string, Record<string, { used: number; remaining: number; max: number }>> = {
             PRO: {},
             VVIP: {},
+            TELEBOT: {},
         };
 
         // Populate with existing data
@@ -56,6 +57,14 @@ export async function GET() {
                     };
                 }
             }
+        }
+
+        if (!slots.TELEBOT['1month']) {
+            slots.TELEBOT['1month'] = {
+                used: 0,
+                remaining: 50,
+                max: 50,
+            };
         }
 
         return NextResponse.json({

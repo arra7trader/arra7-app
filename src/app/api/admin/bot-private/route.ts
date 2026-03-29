@@ -6,6 +6,11 @@ import { isAdminEmail } from '@/lib/admin-access';
 
 export const dynamic = 'force-dynamic';
 
+const TELEBOT_PRO_BONUS_SLOT_KEY = 'TELEBOT';
+const TELEBOT_PRO_BONUS_DURATION = '1month';
+const TELEBOT_PRO_BONUS_MAX = 50;
+const TELEBOT_PRO_BONUS_DAYS = 30;
+
 async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) {
   if (!turso) return;
 
@@ -187,6 +192,148 @@ async function markLatestPaymentConfirmation(
           )`,
     args: [status, adminNote ?? null, userId]
   });
+}
+
+function parseMetadataJson(raw: unknown): Record<string, any> {
+  if (typeof raw !== 'string' || !raw.trim()) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+async function grantTelebotWebsiteProBonus(
+  turso: ReturnType<typeof getTursoClient>,
+  userId: string
+): Promise<{ granted: boolean; expiresAt?: string | null; reason?: string; remaining?: number }> {
+  if (!turso) return { granted: false, reason: 'db_unavailable' };
+
+  const userResult = await turso.execute({
+    sql: `SELECT membership, membership_expires FROM users WHERE id = ? LIMIT 1`,
+    args: [userId]
+  });
+  const userRow = userResult.rows[0];
+  if (!userRow) {
+    return { granted: false, reason: 'user_not_found' };
+  }
+
+  const currentMembership = String(userRow.membership || 'BASIC').toUpperCase();
+  if (currentMembership === 'ADMIN' || currentMembership === 'VVIP') {
+    return { granted: false, reason: 'higher_tier' };
+  }
+
+  const membershipResult = await turso.execute({
+    sql: `SELECT metadata_json FROM bot_memberships WHERE user_id = ? LIMIT 1`,
+    args: [userId]
+  });
+  const metadata = parseMetadataJson(membershipResult.rows[0]?.metadata_json);
+  const existingBonus = metadata?.websiteProBonus;
+  if (existingBonus?.grantedAt) {
+    return {
+      granted: false,
+      reason: 'already_granted',
+      expiresAt: typeof existingBonus.expiresAt === 'string' ? existingBonus.expiresAt : null
+    };
+  }
+
+  const slotResult = await turso.execute({
+    sql: `SELECT used_count, max_count FROM promo_slots WHERE membership = ? AND duration = ? LIMIT 1`,
+    args: [TELEBOT_PRO_BONUS_SLOT_KEY, TELEBOT_PRO_BONUS_DURATION]
+  });
+  const usedCount = Number(slotResult.rows[0]?.used_count || 0);
+  const maxCount = Number(slotResult.rows[0]?.max_count || TELEBOT_PRO_BONUS_MAX);
+  if (usedCount >= maxCount) {
+    return { granted: false, reason: 'slots_full', remaining: 0 };
+  }
+
+  const now = new Date();
+  const currentExpiryRaw = userRow.membership_expires ? String(userRow.membership_expires) : null;
+  const currentExpiry = currentExpiryRaw ? new Date(currentExpiryRaw) : null;
+  const baseDate = currentMembership === 'PRO' && currentExpiry && currentExpiry > now ? currentExpiry : now;
+  const nextExpiry = new Date(baseDate);
+  nextExpiry.setDate(nextExpiry.getDate() + TELEBOT_PRO_BONUS_DAYS);
+  const nextExpiryIso = nextExpiry.toISOString();
+
+  await turso.execute({
+    sql: `UPDATE users
+          SET membership = 'PRO',
+              membership_expires = ?
+          WHERE id = ?`,
+    args: [nextExpiryIso, userId]
+  });
+
+  await turso.execute({
+    sql: `INSERT INTO promo_slots (membership, duration, used_count, max_count)
+          VALUES (?, ?, 1, ?)
+          ON CONFLICT(membership, duration)
+          DO UPDATE SET used_count = used_count + 1, max_count = excluded.max_count, updated_at = CURRENT_TIMESTAMP`,
+    args: [TELEBOT_PRO_BONUS_SLOT_KEY, TELEBOT_PRO_BONUS_DURATION, TELEBOT_PRO_BONUS_MAX]
+  });
+
+  const nextMetadata = {
+    ...metadata,
+    websiteProBonus: {
+      grantedAt: now.toISOString(),
+      expiresAt: nextExpiryIso,
+      durationDays: TELEBOT_PRO_BONUS_DAYS,
+      source: 'TELEBOT_LAUNCH_50'
+    }
+  };
+
+  await turso.execute({
+    sql: `UPDATE bot_memberships
+          SET metadata_json = ?
+          WHERE user_id = ?`,
+    args: [JSON.stringify(nextMetadata), userId]
+  });
+
+  return {
+    granted: true,
+    expiresAt: nextExpiryIso,
+    remaining: Math.max(0, maxCount - (usedCount + 1))
+  };
+}
+
+async function backfillActiveTelebotWebsiteProBonuses(
+  turso: ReturnType<typeof getTursoClient>
+): Promise<{ processed: number; granted: number; skipped: number; exhausted: boolean }> {
+  if (!turso) return { processed: 0, granted: 0, skipped: 0, exhausted: false };
+
+  const activeMembers = await turso.execute(`
+    SELECT user_id
+    FROM bot_memberships
+    WHERE plan_code = 'TELEBOT'
+      AND status = 'active'
+      AND (expires_at IS NULL OR datetime(expires_at) > datetime('now'))
+    ORDER BY COALESCE(activated_at, invited_at, expires_at) ASC, id ASC
+  `);
+
+  let processed = 0;
+  let granted = 0;
+  let skipped = 0;
+  let exhausted = false;
+
+  for (const row of activeMembers.rows) {
+    const userId = String(row.user_id || '');
+    if (!userId) continue;
+    processed += 1;
+
+    const result = await grantTelebotWebsiteProBonus(turso, userId);
+    if (result.granted) {
+      granted += 1;
+      continue;
+    }
+
+    skipped += 1;
+    if (result.reason === 'slots_full') {
+      exhausted = true;
+      break;
+    }
+  }
+
+  return { processed, granted, skipped, exhausted };
 }
 
 async function deleteTelebotAccount(turso: ReturnType<typeof getTursoClient>, userId: string) {
@@ -395,6 +542,7 @@ export async function POST(request: NextRequest) {
         expiresAt,
         telegramUsername
       });
+      const bonusResult = ok ? await grantTelebotWebsiteProBonus(turso, userId) : { granted: false, reason: 'activation_failed' as const };
       if (ok) {
         await markLatestPaymentConfirmation(turso, userId, 'approved', 'TELEBOT di-approve admin.');
       }
@@ -404,9 +552,25 @@ export async function POST(request: NextRequest) {
         month: 'long',
         year: 'numeric'
       });
+      const websiteProLabel = bonusResult.expiresAt
+        ? new Date(bonusResult.expiresAt).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+          })
+        : null;
+      const bonusMessage = bonusResult.granted
+        ? ` Bonus akun PRO website 1 bulan juga aktif sampai ${websiteProLabel}.`
+        : bonusResult.reason === 'already_granted'
+          ? ' Bonus akun PRO website sudah pernah diberikan sebelumnya.'
+          : bonusResult.reason === 'higher_tier'
+            ? ' Akun website user sudah berada di tier lebih tinggi, jadi bonus PRO tidak perlu ditambahkan.'
+            : bonusResult.reason === 'slots_full'
+              ? ' Kuota bonus akun PRO 1 bulan untuk 50 user pertama sudah habis.'
+              : '';
       return NextResponse.json({
         status: ok ? 'success' : 'error',
-        message: ok ? `Akses TELEBOT aktif ${days} hari.` : 'Gagal mengaktifkan akses TELEBOT.',
+        message: ok ? `Akses TELEBOT aktif ${days} hari.${bonusMessage}` : 'Gagal mengaktifkan akses TELEBOT.',
         expiresAt,
         approvalMessage: ok
           ? [
@@ -415,6 +579,8 @@ export async function POST(request: NextRequest) {
             '',
             `Halo, akses Anda sudah aktif untuk ${usernameForMessage}.`,
             `Masa aktif: ${expiryLabel}`,
+            bonusResult.granted && websiteProLabel ? `Bonus website: akun PRO aktif sampai ${websiteProLabel}` : null,
+            bonusResult.reason === 'slots_full' ? 'Bonus akun PRO 1 bulan hanya berlaku untuk 50 user pertama dan saat ini kuotanya sudah habis.' : null,
             '',
             'Mulai dengan 3 langkah berikut:',
             '1. Buka bot dan kirim /start',
@@ -422,7 +588,7 @@ export async function POST(request: NextRequest) {
             '3. Buka Signal dan pantau Live Status untuk monitoring setup',
             '',
             'Selamat datang di private execution desk ARRA7.',
-          ].join('\n')
+          ].filter(Boolean).join('\n')
           : null
       });
     }
@@ -455,6 +621,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         status: ok ? 'success' : 'error',
         message: ok ? 'Akun TELEBOT berhasil dihapus dan Telegram di-unlink.' : 'Gagal menghapus akun TELEBOT.'
+      });
+    }
+
+    if (action === 'backfill_bonus') {
+      const result = await backfillActiveTelebotWebsiteProBonuses(turso);
+      return NextResponse.json({
+        status: 'success',
+        message: `Backfill bonus PRO selesai. Diproses ${result.processed} member, berhasil grant ${result.granted}, skip ${result.skipped}${result.exhausted ? '. Kuota bonus 50 user pertama sudah habis.' : '.'}`,
+        result
       });
     }
 

@@ -21,7 +21,7 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
         { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', savingsText: 'Hemat Rp 1.98M', promoSlots: 15 },
     ],
     TELEBOT: [
-        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch' },
+        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch + Bonus PRO', promoSlots: 50 },
     ],
 };
 
@@ -86,11 +86,12 @@ const PRICING_PLANS = [
     {
         id: 'TELEBOT',
         name: 'TELEBOT',
-        description: 'Bot Telegram premium untuk signal praktis, hasil live, dan approval via username Telegram.',
+        description: 'Bot Telegram premium untuk signal praktis, hasil live, dan approval via username Telegram. 50 user pertama juga dapat bonus akun PRO website 1 bulan.',
         icon: 'T',
         theme: 'emerald',
         features: [
             { text: 'Akses bot Telegram khusus member approved', included: true, highlight: true },
+            { text: 'Bonus akun PRO website 1 bulan untuk 50 member pertama', included: true, highlight: true },
             { text: 'Menu Signal untuk semua pair dan timeframe', included: true, highlight: false },
             { text: 'Menu Hasil untuk progress TP / SL signal', included: true, highlight: false },
             { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },
