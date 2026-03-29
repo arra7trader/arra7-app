@@ -18,6 +18,8 @@ export interface TrackedTelegramSignal {
     symbol: string;
     timeframe: string | null;
     direction: 'BUY' | 'SELL' | 'HOLD';
+    executionType: string | null;
+    setupGrade: string | null;
     entryPrice: number;
     stopLoss: number;
     takeProfit1: number;
@@ -33,6 +35,8 @@ export interface TelebotLiveExecution {
     timeframe: string | null;
     direction: 'BUY' | 'SELL' | 'HOLD';
     executionType: string | null;
+    setupGrade: string | null;
+    invalidationNote: string | null;
     recommendedEntry: number;
     actualEntry: number | null;
     stopLoss: number;
@@ -111,6 +115,8 @@ export async function saveTelebotSignalExecution(params: {
     symbol: string;
     timeframe?: string;
     executionType?: string | null;
+    setupGrade?: string | null;
+    invalidationNote?: string | null;
     recommendedEntry: number;
 }): Promise<boolean> {
     const turso = getTursoClient();
@@ -118,13 +124,15 @@ export async function saveTelebotSignalExecution(params: {
 
     try {
         await turso.execute({
-            sql: `INSERT INTO telebot_signal_executions (user_id, chat_id, signal_id, symbol, timeframe, execution_type, recommended_entry, updated_at)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            sql: `INSERT INTO telebot_signal_executions (user_id, chat_id, signal_id, symbol, timeframe, execution_type, setup_grade, invalidation_note, recommended_entry, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                   ON CONFLICT(user_id, signal_id) DO UPDATE SET
                     chat_id = excluded.chat_id,
                     symbol = excluded.symbol,
                     timeframe = excluded.timeframe,
                     execution_type = excluded.execution_type,
+                    setup_grade = excluded.setup_grade,
+                    invalidation_note = excluded.invalidation_note,
                     recommended_entry = excluded.recommended_entry,
                     updated_at = CURRENT_TIMESTAMP`,
             args: [
@@ -134,6 +142,8 @@ export async function saveTelebotSignalExecution(params: {
                 params.symbol,
                 params.timeframe || null,
                 params.executionType || null,
+                params.setupGrade || null,
+                params.invalidationNote || null,
                 params.recommendedEntry,
             ]
         });
@@ -156,6 +166,8 @@ export async function getLatestTelebotSignalExecution(userId: string): Promise<T
                     tse.symbol,
                     tse.timeframe,
                     tse.execution_type,
+                    tse.setup_grade,
+                    tse.invalidation_note,
                     tse.recommended_entry,
                     tse.actual_entry,
                     tse.updated_at,
@@ -180,6 +192,8 @@ export async function getLatestTelebotSignalExecution(userId: string): Promise<T
             timeframe: result.rows[0].timeframe ? String(result.rows[0].timeframe) : null,
             direction: String(result.rows[0].direction || 'HOLD') as TelebotLiveExecution['direction'],
             executionType: result.rows[0].execution_type ? String(result.rows[0].execution_type) : null,
+            setupGrade: result.rows[0].setup_grade ? String(result.rows[0].setup_grade) : null,
+            invalidationNote: result.rows[0].invalidation_note ? String(result.rows[0].invalidation_note) : null,
             recommendedEntry: Number(result.rows[0].recommended_entry || 0),
             actualEntry: result.rows[0].actual_entry != null ? Number(result.rows[0].actual_entry) : null,
             stopLoss: Number(result.rows[0].stop_loss || 0),
@@ -255,6 +269,8 @@ export async function getTelegramTrackedSignals(userId: string, limit = 8): Prom
                     a.symbol,
                     a.timeframe,
                     a.direction,
+                    tse.execution_type,
+                    tse.setup_grade,
                     a.entry_price,
                     a.stop_loss,
                     a.take_profit_1,
@@ -263,6 +279,8 @@ export async function getTelegramTrackedSignals(userId: string, limit = 8): Prom
                     a.created_at
                   FROM telegram_signal_requests tsr
                   JOIN ai_signals a ON a.id = tsr.signal_id
+                  LEFT JOIN telebot_signal_executions tse
+                    ON tse.signal_id = a.id AND tse.user_id = tsr.user_id
                   WHERE tsr.user_id = ?
                   ORDER BY tsr.id DESC
                   LIMIT ?`,
@@ -274,6 +292,8 @@ export async function getTelegramTrackedSignals(userId: string, limit = 8): Prom
             symbol: String(row.symbol),
             timeframe: row.timeframe ? String(row.timeframe) : null,
             direction: String(row.direction || 'HOLD') as TrackedTelegramSignal['direction'],
+            executionType: row.execution_type ? String(row.execution_type) : null,
+            setupGrade: row.setup_grade ? String(row.setup_grade) : null,
             entryPrice: Number(row.entry_price || 0),
             stopLoss: Number(row.stop_loss || 0),
             takeProfit1: Number(row.take_profit_1 || 0),

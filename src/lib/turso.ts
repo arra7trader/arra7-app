@@ -416,6 +416,8 @@ export async function initDatabase(): Promise<boolean> {
         symbol TEXT NOT NULL,
         timeframe TEXT,
         execution_type TEXT,
+        setup_grade TEXT,
+        invalidation_note TEXT,
         recommended_entry REAL,
         actual_entry REAL,
         status TEXT DEFAULT 'watching',
@@ -793,6 +795,24 @@ export async function initDatabase(): Promise<boolean> {
     } catch (e: any) {
       if (!e.message?.includes('duplicate column name')) {
         console.error('[MIGRATION] Failed to add telebot_signal_executions.execution_type:', e);
+      }
+    }
+
+    try {
+      await turso.execute(`ALTER TABLE telebot_signal_executions ADD COLUMN setup_grade TEXT`);
+      console.log('Added setup_grade column to telebot_signal_executions');
+    } catch (e: any) {
+      if (!e.message?.includes('duplicate column name')) {
+        console.error('[MIGRATION] Failed to add telebot_signal_executions.setup_grade:', e);
+      }
+    }
+
+    try {
+      await turso.execute(`ALTER TABLE telebot_signal_executions ADD COLUMN invalidation_note TEXT`);
+      console.log('Added invalidation_note column to telebot_signal_executions');
+    } catch (e: any) {
+      if (!e.message?.includes('duplicate column name')) {
+        console.error('[MIGRATION] Failed to add telebot_signal_executions.invalidation_note:', e);
       }
     }
 

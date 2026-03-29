@@ -106,15 +106,16 @@ export function buildIntroMessage(firstName: string) {
   const telebotUrl = getTelebotShortUrl();
   return [
     '<b>ARRA7 TELEBOT</b>',
-    '<i>Professional AI signal desk</i>',
+    '<i>Private AI Execution Desk</i>',
     '',
     `Halo <b>${escapeHtml(firstName)}</b>, selamat datang.`,
-    'Akses bot ini hanya terbuka untuk member yang sudah aktif dan telah di-approve.',
+    'Bot ini dirancang untuk trader yang ingin setup siap eksekusi, risk plan yang jelas, dan monitoring yang lebih rapi.',
+    'Akses hanya terbuka untuk member aktif yang sudah di-approve.',
     '',
-    '<b>Cara mulai</b>',
+    '<b>Cara bergabung</b>',
     `1. Aktivasi TELEBOT di <a href="${escapeHtml(telebotUrl)}">halaman pembayaran resmi</a>`,
     '2. Pastikan username Telegram Anda sudah di-approve admin',
-    '3. Setelah approved, cukup kirim <code>/start</code> dan bot akan terhubung otomatis',
+    '3. Setelah approved, cukup kirim <code>/start</code> dan desk Anda akan terhubung otomatis',
   ].join('\n');
 }
 
@@ -131,65 +132,60 @@ export function buildGuestIntroKeyboard() {
 export function buildApprovedWelcomeMessage(firstName: string) {
   return [
     '<b>ARRA7 TELEBOT</b>',
-    '<i>Access granted</i>',
+    '<i>Private AI Execution Desk</i>',
     '',
-    `Halo <b>${escapeHtml(firstName)}</b>, akun Anda berhasil dikenali.`,
-    'Akses TELEBOT sudah aktif dan akun Telegram Anda terhubung otomatis.',
+    `Selamat datang <b>${escapeHtml(firstName)}</b>.`,
+    'Akses Anda sudah aktif dan private desk Anda siap digunakan.',
     '',
-    '<b>Menu Utama</b>',
-    '- Signal: pilih pair dan timeframe',
-    '- Live Status: pantau actual entry dan status setup',
-    '- Balance: isi modal untuk sizing otomatis',
+    '<b>Mulai dalam 3 langkah</b>',
+    '1. Isi <b>Balance</b> agar sizing dan risk plan sesuai modal Anda.',
+    '2. Buka <b>Signal</b> lalu pilih pair dan timeframe.',
+    '3. Pantau <b>Live Status</b> untuk memonitor actual entry dan lifecycle setup.',
   ].join('\n');
 }
 
 export function buildActiveWelcomeMessage(firstName: string, accessLabel: string) {
   return [
     '<b>ARRA7 TELEBOT</b>',
-    '<i>Professional AI signal desk</i>',
+    '<i>Private AI Execution Desk</i>',
     '',
     `Halo <b>${escapeHtml(firstName)}</b>.`,
     `Status akses: <b>${escapeHtml(accessLabel)}</b>`,
     '',
-    '<b>Menu Utama</b>',
-    '- Signal: buka trade setup baru',
-    '- Live Status: pantau actual entry dan progres setup',
-    '- Balance / Risk Setup: atur modal dan risk profile',
+    '<b>Desk Workflow</b>',
+    '- Signal: ambil setup siap eksekusi',
+    '- Balance / Risk Setup: sesuaikan plan dengan modal Anda',
+    '- Live Status: monitor lifecycle setup secara real-time',
   ].join('\n');
 }
 
 export function buildLockedAccessMessage(membership: string, detail?: string) {
   return [
     '<b>ARRA7 TELEBOT</b>',
-    '<i>Access pending</i>',
+    '<i>Private desk access pending</i>',
     '',
-    detail || 'Akun Anda sudah terhubung, namun akses TELEBOT belum aktif.',
+    detail || 'Akun Anda sudah terhubung, namun akses private desk Anda belum aktif.',
     `Membership saat ini: <b>${escapeHtml(membership)}</b>`,
-    'Silakan tunggu approval admin atau aktifkan paket TELEBOT di web ARRA7.',
+    'Silakan tunggu approval admin atau aktifkan paket TELEBOT di web ARRA7 untuk membuka akses.',
   ].join('\n');
 }
 
 export function buildHelpMessage() {
   return [
-    '<b>ARRA7 TELEBOT - Bantuan</b>',
+    '<b>ARRA7 TELEBOT - Desk Guide</b>',
     '',
-    '<b>Navigasi</b>',
-    '- Signal: pilih kategori, pair, lalu timeframe',
-    '- Live Status: lihat status setup terakhir dan actual entry',
-    '- Balance: isi modal untuk rekomendasi size',
-    '- Risk Setup: atur risk % dan gaya setup',
-    '- Hasil: lihat progres signal terbaru',
-    '- Status: cek akses dan profil eksekusi',
+    '<b>Core Menu</b>',
+    '- Signal: pilih kategori, pair, dan timeframe untuk membuka setup.',
+    '- Balance: isi modal agar lot recommendation dan risk amount lebih relevan.',
+    '- Live Status: monitor status setup, actual entry, dan update desk terbaru.',
+    '- Hasil: lihat ringkasan track record desk Anda.',
     '',
-    '<b>Perintah</b>',
-    '<code>/start</code> tampilkan menu utama',
+    '<b>Quick Commands</b>',
     '<code>/balance 1000</code> set balance modal',
     '<code>/risk 1</code> set risk per trade (%)',
     '<code>/setup standard</code> pilih setup mode',
     '<code>/entry 1932.50</code> simpan actual entry terakhir',
     '<code>/live</code> tampilkan live status setup terakhir',
-    '<code>/status</code> cek status akses',
-    '<code>/help</code> tampilkan bantuan',
     '',
     'Akun TELEBOT akan terhubung otomatis berdasarkan username Telegram yang sudah di-approve admin.',
   ].join('\n');
@@ -207,15 +203,15 @@ export function buildStatusMessage(params: {
 }) {
   const showQuota = Number.isFinite(params.limit) && Number.isFinite(params.remaining);
   return [
-    '<b>ARRA7 TELEBOT - Status</b>',
+    '<b>ARRA7 TELEBOT - Desk Status</b>',
     '',
-    `Akses      : <b>${escapeHtml(params.accessLabel)}</b>`,
-    `Chat ID    : <code>${escapeHtml(params.chatId)}</code>`,
-    params.balanceText ? `Balance    : <b>${escapeHtml(params.balanceText)}</b>` : null,
-    params.riskText ? `Risk       : <b>${escapeHtml(params.riskText)}</b>` : null,
-    params.setupText ? `Setup      : <b>${escapeHtml(params.setupText)}</b>` : null,
-    showQuota ? `Kuota Hari : <b>${escapeHtml(formatQuota(params.remaining))}/${escapeHtml(formatQuota(params.limit))}</b>` : `Kuota Hari : <b>Unlimited</b>`,
-    showQuota ? `Reset      : <b>${escapeHtml(params.resetText)}</b>` : `Reset      : <b>Tidak ada batas harian</b>`,
+    `Desk Access   : <b>${escapeHtml(params.accessLabel)}</b>`,
+    `Desk ID       : <code>${escapeHtml(params.chatId)}</code>`,
+    params.balanceText ? `Capital      : <b>${escapeHtml(params.balanceText)}</b>` : null,
+    params.riskText ? `Risk Profile : <b>${escapeHtml(params.riskText)}</b>` : null,
+    params.setupText ? `Setup Style  : <b>${escapeHtml(params.setupText)}</b>` : null,
+    showQuota ? `Signal Flow   : <b>${escapeHtml(formatQuota(params.remaining))}/${escapeHtml(formatQuota(params.limit))}</b>` : `Signal Flow   : <b>Unlimited</b>`,
+    showQuota ? `Reset Window  : <b>${escapeHtml(params.resetText)}</b>` : `Reset Window  : <b>Tidak ada batas harian</b>`,
   ].filter(Boolean).join('\n');
 }
 
@@ -329,6 +325,62 @@ function formatTimestamp(value: string) {
   }).format(date);
 }
 
+function formatPremiumTimestamp(value: string) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function getSetupGrade(confidence: number, rr: number | null, orderType: string) {
+  if (confidence >= 86 && (rr ?? 0) >= 1.8) {
+    return 'A-Grade Setup | High Probability';
+  }
+  if (confidence >= 76 && (rr ?? 0) >= 1.4) {
+    return orderType.includes('STOP')
+      ? 'B-Grade Setup | Wait for Trigger'
+      : 'B-Grade Setup | Structured Opportunity';
+  }
+  return orderType.includes('STOP') || orderType.includes('LIMIT')
+    ? 'Selective Setup | Wait for Trigger'
+    : 'Selective Setup | Active Monitoring';
+}
+
+function buildInvalidationNote(params: {
+  direction: 'BUY' | 'SELL' | 'HOLD';
+  orderType: string;
+  stopLoss: number;
+  symbol: string;
+}) {
+  const sl = formatPrice(params.symbol, params.stopLoss);
+  if (params.orderType.includes('LIMIT') || params.orderType.includes('STOP')) {
+    return `Batalkan setup jika struktur patah sebelum trigger atau harga menembus area invalidasi ${sl}.`;
+  }
+  return `Setup batal bila harga menembus level invalidasi ${sl}. Disiplin exit tanpa averaging.`;
+}
+
+function formatExecutionStatus(orderType: string) {
+  if (orderType.includes('LIMIT') || orderType.includes('STOP')) return 'WAIT FOR TRIGGER';
+  return 'ACTIVE MONITORING';
+}
+
+function getTimeframeExpiryMs(timeframe: string | null | undefined) {
+  const value = String(timeframe || '').toLowerCase();
+  if (value === '1m') return 30 * 60 * 1000;
+  if (value === '5m') return 2 * 60 * 60 * 1000;
+  if (value === '15m') return 6 * 60 * 60 * 1000;
+  if (value === '30m') return 12 * 60 * 60 * 1000;
+  if (value === '1h') return 24 * 60 * 60 * 1000;
+  if (value === '4h') return 72 * 60 * 60 * 1000;
+  return 7 * 24 * 60 * 60 * 1000;
+}
+
 function inferOrderType(
   direction: 'BUY' | 'SELL' | 'HOLD',
   currentPrice: number,
@@ -436,6 +488,13 @@ export async function generateTelegramSignal(params: {
   const orderType = inferOrderType(parsed.direction, currentPrice, entry, parsed.executionType);
   const rr = calculateRR(entry, stopLoss, takeProfit1);
   const confidence = typeof parsed.confidence === 'number' ? Math.round(parsed.confidence) : 72;
+  const setupGrade = getSetupGrade(confidence, rr, orderType);
+  const invalidationNote = buildInvalidationNote({
+    direction: parsed.direction,
+    orderType,
+    stopLoss,
+    symbol,
+  });
   const thesis = cleanSummary(ai.analysis);
   const profile = await getTelebotUserProfile(params.userId);
   const tradePlan = profile
@@ -471,40 +530,45 @@ export async function generateTelegramSignal(params: {
       symbol,
       timeframe,
       executionType: orderType,
+      setupGrade,
+      invalidationNote,
       recommendedEntry: entry,
     });
   }
 
   const text = [
-    '<b>ARRA7 TELEBOT | Trade Setup</b>',
+    '<b>ARRA7 TELEBOT | Private AI Execution Desk</b>',
+    '<i>Decision-ready trade briefing</i>',
     '',
-    `Instrument : <b>${escapeHtml(symbol)}</b>`,
-    `Timeframe  : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
-    `Bias       : <b>${escapeHtml(parsed.direction)}</b>`,
-    `Execution  : <b>${escapeHtml(orderType)}</b>`,
+    '<b>Desk View</b>',
+    `Instrument      : <b>${escapeHtml(symbol)}</b>`,
+    `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
+    `Bias            : <b>${escapeHtml(parsed.direction)}</b>`,
+    `Execution Type  : <b>${escapeHtml(orderType)}</b>`,
+    `Setup Grade     : <b>${escapeHtml(setupGrade)}</b>`,
+    `Desk Status     : <b>${escapeHtml(formatExecutionStatus(orderType))}</b>`,
     '',
-    '<b>Execution Plan</b>',
-    `Current Price : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
-    `Entry         : <code>${escapeHtml(formatPrice(symbol, entry))}</code>`,
-    `Stop Loss     : <code>${escapeHtml(formatPrice(symbol, stopLoss))}</code>`,
-    `Take Profit   : <code>${escapeHtml(formatPrice(symbol, takeProfit1))}</code>`,
-    `Confidence    : <b>${escapeHtml(String(confidence))}%</b>`,
-    rr ? `Risk/Reward  : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk/Reward  : <b>-</b>',
+    '<b>Execution Brief</b>',
+    `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
+    `Entry            : <code>${escapeHtml(formatPrice(symbol, entry))}</code>`,
+    `Stop Loss        : <code>${escapeHtml(formatPrice(symbol, stopLoss))}</code>`,
+    `Take Profit      : <code>${escapeHtml(formatPrice(symbol, takeProfit1))}</code>`,
+    rr ? `Risk / Reward    : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk / Reward    : <b>-</b>',
+    `Confidence       : <b>${escapeHtml(String(confidence))}%</b>`,
+    `Invalidation     : <i>${escapeHtml(invalidationNote)}</i>`,
     '',
-    '<b>Trade Plan</b>',
-    profile ? `Balance       : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Balance       : <b>Belum diatur</b>',
-    profile ? `Risk Profile  : <b>${escapeHtml(String(profile.riskPercent))}% | ${escapeHtml(formatTelebotSetupStyle(profile.setupStyle))}</b>` : 'Risk Profile  : <b>Gunakan menu Balance / Risk Setup</b>',
-    tradePlan ? `Risk Amount   : <b>${escapeHtml(profile?.balanceCurrency || 'USD')} ${escapeHtml(tradePlan.riskAmount.toFixed(2))}</b>` : 'Risk Amount   : <b>-</b>',
-    tradePlan ? `Lot / Size    : <b>${escapeHtml(String(tradePlan.recommendedLot))}</b>` : 'Lot / Size    : <b>Set balance dulu untuk sizing</b>',
-    tradePlan && tradePlan.projectedProfit != null ? `Target Profit : <b>${escapeHtml(profile?.balanceCurrency || 'USD')} ${escapeHtml(tradePlan.projectedProfit.toFixed(2))}</b>` : 'Target Profit : <b>-</b>',
-    tradePlan ? `Setup Style   : <b>${escapeHtml(tradePlan.setupLabel)}</b>` : 'Setup Style   : <b>-</b>',
+    '<b>Risk Desk</b>',
+    profile ? `Capital          : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Capital          : <b>Belum diatur</b>',
+    profile ? `Risk Profile     : <b>${escapeHtml(String(profile.riskPercent))}% | ${escapeHtml(formatTelebotSetupStyle(profile.setupStyle))}</b>` : 'Risk Profile     : <b>Gunakan menu Balance / Risk Setup</b>',
+    tradePlan ? `Risk Amount      : <b>${escapeHtml(profile?.balanceCurrency || 'USD')} ${escapeHtml(tradePlan.riskAmount.toFixed(2))}</b>` : 'Risk Amount      : <b>-</b>',
+    tradePlan ? `Lot Recommendation: <b>${escapeHtml(String(tradePlan.recommendedLot))}</b>` : 'Lot Recommendation: <b>Isi balance untuk sizing</b>',
+    tradePlan && tradePlan.projectedProfit != null ? `Target Projection : <b>${escapeHtml(profile?.balanceCurrency || 'USD')} ${escapeHtml(tradePlan.projectedProfit.toFixed(2))}</b>` : 'Target Projection : <b>-</b>',
     '',
-    '<b>Market Thesis</b>',
+    '<b>Desk Thesis</b>',
     `${escapeHtml(thesis)}`,
-    tradePlan ? '' : 'Tip: isi menu Balance dulu agar bot bisa hitung sizing dan risk plan.',
-    tradePlan ? escapeHtml(tradePlan.sizingNote) : '',
+    tradePlan ? escapeHtml(tradePlan.sizingNote) : 'Isi menu Balance agar desk bisa menghitung sizing dan risk amount yang lebih presisi.',
     '',
-    signalId ? `Reference ID : <code>#${signalId}</code>` : '',
+    signalId ? `Reference ID    : <code>#${signalId}</code>` : '',
   ].filter(Boolean).join('\n');
 
   return {
@@ -554,22 +618,35 @@ function evaluateExecutionLiveState(params: {
   stopLoss: number;
   takeProfit1: number;
   executionType?: string | null;
+  timeframe?: string | null;
+  createdAt?: string | null;
 }) {
   const orderType = params.executionType || inferOrderType(params.direction, params.currentPrice, params.entryPrice);
+  const now = Date.now();
+  const createdAt = params.createdAt ? new Date(params.createdAt).getTime() : now;
+  const expired = Number.isFinite(createdAt) && now - createdAt > getTimeframeExpiryMs(params.timeframe);
+
+  const isTriggered = (() => {
+    if (orderType === 'BUY LIMIT') return params.currentPrice <= params.entryPrice;
+    if (orderType === 'BUY STOP') return params.currentPrice >= params.entryPrice;
+    if (orderType === 'SELL LIMIT') return params.currentPrice >= params.entryPrice;
+    if (orderType === 'SELL STOP') return params.currentPrice <= params.entryPrice;
+    return true;
+  })();
 
   if (params.direction === 'BUY') {
     if (params.currentPrice <= params.stopLoss) return { label: 'SL HIT', orderType };
     if (params.currentPrice >= params.takeProfit1) return { label: 'TP HIT', orderType };
-    if (orderType === 'BUY LIMIT') return { label: params.currentPrice <= params.entryPrice ? 'TRIGGERED' : 'WAITING ENTRY', orderType };
-    if (orderType === 'BUY STOP') return { label: params.currentPrice >= params.entryPrice ? 'TRIGGERED' : 'WAITING ENTRY', orderType };
+    if (!isTriggered) return { label: expired ? 'EXPIRED' : 'WAITING ENTRY', orderType };
+    if (params.currentPrice > params.entryPrice) return { label: 'IN PROFIT', orderType };
     return { label: 'TRIGGERED', orderType };
   }
 
   if (params.direction === 'SELL') {
     if (params.currentPrice >= params.stopLoss) return { label: 'SL HIT', orderType };
     if (params.currentPrice <= params.takeProfit1) return { label: 'TP HIT', orderType };
-    if (orderType === 'SELL LIMIT') return { label: params.currentPrice >= params.entryPrice ? 'TRIGGERED' : 'WAITING ENTRY', orderType };
-    if (orderType === 'SELL STOP') return { label: params.currentPrice <= params.entryPrice ? 'TRIGGERED' : 'WAITING ENTRY', orderType };
+    if (!isTriggered) return { label: expired ? 'EXPIRED' : 'WAITING ENTRY', orderType };
+    if (params.currentPrice < params.entryPrice) return { label: 'IN PROFIT', orderType };
     return { label: 'TRIGGERED', orderType };
   }
 
@@ -593,8 +670,8 @@ export async function buildLiveStatusMessage(userId: string, note?: string) {
     return [
       '<b>ARRA7 TELEBOT - Live Status</b>',
       '',
-      note || 'Belum ada setup yang dipantau.',
-      'Silakan generate signal dulu dari menu Signal.',
+      note || 'Belum ada setup yang sedang dipantau oleh desk Anda.',
+      'Buka menu Signal untuk membuat setup pertama Anda.',
     ].join('\n');
   }
 
@@ -608,6 +685,8 @@ export async function buildLiveStatusMessage(userId: string, note?: string) {
       stopLoss: latest.stopLoss,
       takeProfit1: latest.takeProfit1,
       executionType: latest.executionType,
+      timeframe: latest.timeframe,
+      createdAt: latest.createdAt,
     });
     const progress = calculateProgressPercent({
       direction: latest.direction,
@@ -616,90 +695,148 @@ export async function buildLiveStatusMessage(userId: string, note?: string) {
       takeProfit1: latest.takeProfit1,
     }, currentPrice);
 
+    const entrySource = latest.actualEntry ? 'Trader actual entry' : 'Desk recommended entry';
     return [
       '<b>ARRA7 TELEBOT - Live Status</b>',
+      '<i>Private desk monitoring</i>',
       '',
       note || 'Status live setup terbaru Anda.',
       '',
-      `Reference ID     : <code>#${latest.signalId}</code>`,
-      `Instrument       : <b>${escapeHtml(latest.symbol)}</b>`,
-      `Timeframe        : <b>${escapeHtml(String(latest.timeframe || '-').toUpperCase())}</b>`,
-      `Execution Type   : <b>${escapeHtml(state.orderType)}</b>`,
-      `Live Status      : <b>${escapeHtml(state.label)}</b>`,
-      `Current Price    : <code>${escapeHtml(formatPrice(latest.symbol, currentPrice))}</code>`,
-      `Recommended Entry: <code>${escapeHtml(formatPrice(latest.symbol, latest.recommendedEntry))}</code>`,
-      `Actual Entry     : <code>${escapeHtml(formatPrice(latest.symbol, latest.actualEntry || 0))}</code>`,
-      `SL / TP          : <code>${escapeHtml(formatPrice(latest.symbol, latest.stopLoss))}</code> / <code>${escapeHtml(formatPrice(latest.symbol, latest.takeProfit1))}</code>`,
-      `Progress         : <code>${escapeHtml(buildProgressBar(progress))}</code>`,
+      `Reference ID      : <code>#${latest.signalId}</code>`,
+      `Instrument        : <b>${escapeHtml(latest.symbol)}</b>`,
+      `Timeframe         : <b>${escapeHtml(String(latest.timeframe || '-').toUpperCase())}</b>`,
+      `Execution Type    : <b>${escapeHtml(state.orderType)}</b>`,
+      latest.setupGrade ? `Setup Grade       : <b>${escapeHtml(latest.setupGrade)}</b>` : null,
+      `Lifecycle Status  : <b>${escapeHtml(state.label)}</b>`,
+      `Current Price     : <code>${escapeHtml(formatPrice(latest.symbol, currentPrice))}</code>`,
+      `Recommended Entry : <code>${escapeHtml(formatPrice(latest.symbol, latest.recommendedEntry))}</code>`,
+      `Actual Entry      : <code>${escapeHtml(formatPrice(latest.symbol, latest.actualEntry || 0))}</code>`,
+      `Entry Source      : <b>${escapeHtml(entrySource)}</b>`,
+      `SL / TP           : <code>${escapeHtml(formatPrice(latest.symbol, latest.stopLoss))}</code> / <code>${escapeHtml(formatPrice(latest.symbol, latest.takeProfit1))}</code>`,
+      `Progress          : <code>${escapeHtml(buildProgressBar(progress))}</code>`,
+      latest.invalidationNote ? `Invalidation      : <i>${escapeHtml(latest.invalidationNote)}</i>` : null,
+      `Updated At        : <b>${escapeHtml(formatPremiumTimestamp(latest.updatedAt || new Date().toISOString()))}</b>`,
       '',
-      'Gunakan <code>/entry 1932.50</code> untuk menyimpan actual entry terbaru Anda.',
-    ].join('\n');
+      'Gunakan <code>/entry 1932.50</code> jika actual entry Anda berbeda dari desk recommendation.',
+    ].filter(Boolean).join('\n');
   } catch {
     return [
       '<b>ARRA7 TELEBOT - Live Status</b>',
       '',
       'Data market live belum bisa diambil sekarang.',
       `Setup terakhir: <b>${escapeHtml(latest.symbol)}</b> ${escapeHtml(String(latest.timeframe || '-').toUpperCase())}`,
+      latest.invalidationNote ? `Invalidation: <i>${escapeHtml(latest.invalidationNote)}</i>` : null,
       'Coba refresh lagi beberapa saat lagi.',
-    ].join('\n');
+    ].filter(Boolean).join('\n');
   }
 }
 
 export async function buildTelegramResultsSummary(userId: string) {
-  const rows = await getTelegramTrackedSignals(userId, 8);
+  const rows = await getTelegramTrackedSignals(userId, 5);
   if (rows.length === 0) {
     return [
-      '<b>ARRA7 TELEBOT | Hasil</b>',
+      '<b>ARRA7 TELEBOT | Desk Results</b>',
       '',
-      'Belum ada signal yang tercatat.',
-      'Silakan buka menu Signal lalu pilih pair dan timeframe untuk memulai.',
+      'Belum ada setup yang tercatat pada desk Anda.',
+      'Buka menu Signal lalu pilih pair dan timeframe untuk memulai track record pertama.',
     ].join('\n');
   }
 
+  let closedInProfit = 0;
+  let invalidated = 0;
+  let activeDesk = 0;
+  let waitingEntry = 0;
+
   const lines = [
-    '<b>ARRA7 TELEBOT | Signal Results</b>',
-    '<i>Ringkasan performa signal terbaru</i>',
+    '<b>ARRA7 TELEBOT | Desk Results</b>',
+    '<i>Private execution track record</i>',
     '',
   ];
 
   for (const row of rows) {
     let statusLabel = row.status;
     let progressValue: number | null = null;
+    let summaryBucket: 'profit' | 'invalidated' | 'active' | 'waiting' = 'active';
 
     if (row.status === 'PENDING') {
       try {
         const live = await getMarketData(row.symbol as ForexPair, (row.timeframe || '1h') as Timeframe);
+        const state = evaluateExecutionLiveState({
+          direction: row.direction,
+          currentPrice: live.current_price || 0,
+          entryPrice: row.entryPrice,
+          stopLoss: row.stopLoss,
+          takeProfit1: row.takeProfit1,
+          executionType: row.executionType,
+          timeframe: row.timeframe,
+          createdAt: row.createdAt,
+        });
         const progress = calculateProgressPercent(row, live.current_price || 0);
         progressValue = progress;
-        if (progress !== null) {
-          statusLabel = progress >= 0
-            ? `ACTIVE | ${progress.toFixed(0)}% to TP`
-            : `ACTIVE | ${Math.abs(progress).toFixed(0)}% to SL`;
+        if (state.label === 'WAITING ENTRY') {
+          statusLabel = 'WAITING ENTRY';
+          summaryBucket = 'waiting';
+        } else if (state.label === 'TP HIT') {
+          statusLabel = 'TARGET REACHED';
+          summaryBucket = 'profit';
+          progressValue = 100;
+        } else if (state.label === 'SL HIT') {
+          statusLabel = 'INVALIDATED';
+          summaryBucket = 'invalidated';
+          progressValue = 100;
+        } else if (state.label === 'EXPIRED') {
+          statusLabel = 'EXPIRED | setup invalidated';
+          summaryBucket = 'invalidated';
+        } else if (state.label === 'IN PROFIT') {
+          statusLabel = progress !== null ? `IN PROFIT | ${progress.toFixed(0)}% to target` : 'IN PROFIT';
+          summaryBucket = 'active';
+        } else if (state.label === 'TRIGGERED') {
+          statusLabel = 'TRIGGERED | desk monitoring';
+          summaryBucket = 'active';
         } else {
-          statusLabel = 'ACTIVE';
+          statusLabel = state.label;
         }
       } catch {
-        statusLabel = 'ACTIVE';
+        statusLabel = 'ACTIVE | desk monitoring';
       }
     } else if (row.status === 'TP_HIT') {
-      statusLabel = row.pipsResult != null ? `TP HIT | +${row.pipsResult.toFixed(1)} pips` : 'TP HIT';
+      statusLabel = row.pipsResult != null ? `TARGET REACHED | +${row.pipsResult.toFixed(1)} pips` : 'TARGET REACHED';
       progressValue = 100;
+      summaryBucket = 'profit';
     } else if (row.status === 'SL_HIT') {
-      statusLabel = row.pipsResult != null ? `SL HIT | ${row.pipsResult.toFixed(1)} pips` : 'SL HIT';
+      statusLabel = row.pipsResult != null ? `INVALIDATED | ${row.pipsResult.toFixed(1)} pips` : 'INVALIDATED';
       progressValue = 100;
+      summaryBucket = 'invalidated';
     }
 
-    lines.push(
+    if (summaryBucket === 'profit') closedInProfit += 1;
+    if (summaryBucket === 'invalidated') invalidated += 1;
+    if (summaryBucket === 'active') activeDesk += 1;
+    if (summaryBucket === 'waiting') waitingEntry += 1;
+
+    const rowLines = [
       `<b>#${row.signalId} | ${escapeHtml(row.symbol)} ${escapeHtml(String(row.timeframe || '-').toUpperCase())}</b>`,
-      `Direction : <b>${escapeHtml(row.direction)}</b>`,
-      `Status    : <b>${escapeHtml(statusLabel)}</b>`,
-      `Progress  : <code>${escapeHtml(buildProgressBar(progressValue))}</code>`,
-      `Entry     : <code>${escapeHtml(formatPrice(row.symbol, row.entryPrice))}</code>`,
-      `TP / SL   : <code>${escapeHtml(formatPrice(row.symbol, row.takeProfit1))}</code> / <code>${escapeHtml(formatPrice(row.symbol, row.stopLoss))}</code>`,
-      `Issued At : <b>${escapeHtml(formatTimestamp(row.createdAt))}</b>`,
+      row.setupGrade ? `Setup Grade : <b>${escapeHtml(row.setupGrade)}</b>` : null,
+      row.executionType ? `Execution   : <b>${escapeHtml(row.executionType)}</b>` : null,
+      `Status      : <b>${escapeHtml(statusLabel)}</b>`,
+      `Progress    : <code>${escapeHtml(buildProgressBar(progressValue))}</code>`,
+      `Entry       : <code>${escapeHtml(formatPrice(row.symbol, row.entryPrice))}</code>`,
+      `TP / SL     : <code>${escapeHtml(formatPrice(row.symbol, row.takeProfit1))}</code> / <code>${escapeHtml(formatPrice(row.symbol, row.stopLoss))}</code>`,
+      `Issued At   : <b>${escapeHtml(formatTimestamp(row.createdAt))}</b>`,
       ''
-    );
+    ].filter(Boolean) as string[];
+
+    lines.push(...rowLines);
   }
+
+  lines.splice(3, 0,
+    `<b>Desk Summary</b>`,
+    `Closed in profit : <b>${closedInProfit}</b>`,
+    `Invalidated      : <b>${invalidated}</b>`,
+    `Active desk      : <b>${activeDesk}</b>`,
+    `Waiting entry    : <b>${waitingEntry}</b>`,
+    ''
+  );
 
   return lines.join('\n');
 }

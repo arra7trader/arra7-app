@@ -410,12 +410,18 @@ export async function POST(request: NextRequest) {
         expiresAt,
         approvalMessage: ok
           ? [
-            'Halo, akses ARRA7 TELEBOT Anda sudah aktif.',
+            'ARRA7 TELEBOT',
+            'Private AI Execution Desk',
             '',
-            `Username Telegram: ${usernameForMessage}`,
-            `Masa aktif sampai: ${expiryLabel}`,
+            `Halo, akses Anda sudah aktif untuk ${usernameForMessage}.`,
+            `Masa aktif: ${expiryLabel}`,
             '',
-            'Silakan buka bot dan kirim /start untuk mulai menggunakan TELEBOT.',
+            'Mulai dengan 3 langkah berikut:',
+            '1. Buka bot dan kirim /start',
+            '2. Isi Balance agar risk plan sesuai modal Anda',
+            '3. Buka Signal dan pantau Live Status untuk monitoring setup',
+            '',
+            'Selamat datang di private execution desk ARRA7.',
           ].join('\n')
           : null
       });
