@@ -1,4 +1,5 @@
 import {
+  CRYPTO,
   FOREX_PAIRS,
   ForexPair,
   formatMarketDataForAI,
@@ -415,6 +416,7 @@ type SignalValidationResult = {
 
 function getTelebotPipProfile(symbol: string) {
   const normalized = symbol.toUpperCase();
+  const isCrypto = Object.prototype.hasOwnProperty.call(CRYPTO, normalized);
 
   if (normalized.includes('XAU') || normalized.includes('GOLD') || normalized.includes('XAG') || normalized.includes('SILVER')) {
     return {
@@ -432,15 +434,7 @@ function getTelebotPipProfile(symbol: string) {
     };
   }
 
-  if (/^[A-Z]{6}$/.test(normalized)) {
-    return {
-      distanceType: 'price' as const,
-      benchmarkDistance: 0.005,
-      label: '50 pips benchmark',
-    };
-  }
-
-  if (normalized.includes('BTC')) {
+  if (isCrypto || normalized.includes('BTC')) {
     return {
       distanceType: 'percent' as const,
       benchmarkDistance: 0.008,
@@ -453,6 +447,14 @@ function getTelebotPipProfile(symbol: string) {
       distanceType: 'percent' as const,
       benchmarkDistance: 0.012,
       label: '1.2% benchmark',
+    };
+  }
+
+  if (/^[A-Z]{6}$/.test(normalized)) {
+    return {
+      distanceType: 'price' as const,
+      benchmarkDistance: 0.005,
+      label: '50 pips benchmark',
     };
   }
 

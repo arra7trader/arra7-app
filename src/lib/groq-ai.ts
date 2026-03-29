@@ -2,6 +2,7 @@
 import { generateTextHybrid } from './ai-provider';
 
 import { ANALYSIS_PROMPT } from './analysis-prompt';
+import { CRYPTO } from './market-data';
 
 
 export interface AIAnalysisResult {
@@ -39,6 +40,7 @@ function normalizeSymbol(raw: string): string {
 
 function getStopLossRule(symbol: string, entryPrice: number): StopLossRule {
     const s = normalizeSymbol(symbol);
+    const isCrypto = Object.prototype.hasOwnProperty.call(CRYPTO, s);
 
     if (s.includes('XAU')) {
         return { minDistancePrice: 7.0 };
@@ -52,16 +54,16 @@ function getStopLossRule(symbol: string, entryPrice: number): StopLossRule {
         return { minDistancePrice: 0.5 };
     }
 
-    if (/^[A-Z]{6}$/.test(s)) {
-        return { minDistancePrice: 0.005 };
-    }
-
-    if (s.includes('BTC')) {
+    if (isCrypto || s.includes('BTC')) {
         return { minDistancePrice: Math.max(entryPrice * 0.008, 70) };
     }
 
     if (s.includes('ETH') || s.includes('SOL') || s.includes('CRYPTO')) {
         return { minDistancePrice: Math.max(entryPrice * 0.012, 20) };
+    }
+
+    if (/^[A-Z]{6}$/.test(s)) {
+        return { minDistancePrice: 0.005 };
     }
 
     if (s.includes('NAS')) {
