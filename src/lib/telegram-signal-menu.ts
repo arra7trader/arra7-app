@@ -409,6 +409,88 @@ function inferOrderType(
   return entryPrice < currentPrice ? 'SELL STOP' : 'SELL LIMIT';
 }
 
+function getExecutionValidationProfile(symbol: string, currentPrice: number) {
+  const profile = getTelebotPipProfile(symbol);
+  const benchmarkDistance = profile.distanceType === 'percent'
+    ? currentPrice * profile.benchmarkDistance
+    : profile.benchmarkDistance;
+
+  return {
+    benchmarkDistance,
+    instantTolerance: Math.max(benchmarkDistance * 0.15, currentPrice * 0.0005),
+    minPendingGap: Math.max(benchmarkDistance * 0.08, currentPrice * 0.0003),
+    maxPendingGap: Math.max(benchmarkDistance * 1.5, currentPrice * 0.02),
+  };
+}
+
+function resolveExecutionType(params: {
+  direction: 'BUY' | 'SELL' | 'HOLD';
+  currentPrice: number;
+  entryPrice: number;
+  symbol: string;
+  preferredExecutionType?: 'INSTANT' | 'LIMIT' | 'STOP';
+}): { ok: true; executionType: 'INSTANT' | 'LIMIT' | 'STOP'; orderType: string } | { ok: false; reason: string } {
+  if (!(params.currentPrice > 0) || !(params.entryPrice > 0) || params.direction === 'HOLD') {
+    return { ok: false, reason: 'harga market atau entry tidak valid untuk menentukan execution type' };
+  }
+
+  const gap = Math.abs(params.entryPrice - params.currentPrice);
+  const profile = getExecutionValidationProfile(params.symbol, params.currentPrice);
+  const inferredExecutionType = gap <= profile.instantTolerance
+    ? 'INSTANT'
+    : params.direction === 'BUY'
+      ? (params.entryPrice > params.currentPrice ? 'STOP' : 'LIMIT')
+      : (params.entryPrice < params.currentPrice ? 'STOP' : 'LIMIT');
+
+  const executionType = params.preferredExecutionType || inferredExecutionType;
+
+  if (executionType === 'INSTANT') {
+    if (gap > profile.instantTolerance) {
+      return { ok: false, reason: 'setup INSTANT tidak valid karena entry terlalu jauh dari current price' };
+    }
+    return {
+      ok: true,
+      executionType,
+      orderType: params.direction === 'BUY' ? 'BUY NOW' : 'SELL NOW',
+    };
+  }
+
+  if (gap < profile.minPendingGap) {
+    return { ok: false, reason: `${executionType} tidak valid karena entry terlalu dekat ke current price` };
+  }
+
+  if (gap > profile.maxPendingGap) {
+    return { ok: false, reason: `${executionType} tidak valid karena entry terlalu jauh dari current price` };
+  }
+
+  if (executionType === 'LIMIT') {
+    if (params.direction === 'BUY' && params.entryPrice > params.currentPrice) {
+      return { ok: false, reason: 'BUY LIMIT harus berada di bawah current price' };
+    }
+    if (params.direction === 'SELL' && params.entryPrice < params.currentPrice) {
+      return { ok: false, reason: 'SELL LIMIT harus berada di atas current price' };
+    }
+    return {
+      ok: true,
+      executionType,
+      orderType: params.direction === 'BUY' ? 'BUY LIMIT' : 'SELL LIMIT',
+    };
+  }
+
+  if (params.direction === 'BUY' && params.entryPrice < params.currentPrice) {
+    return { ok: false, reason: 'BUY STOP harus berada di atas current price' };
+  }
+  if (params.direction === 'SELL' && params.entryPrice > params.currentPrice) {
+    return { ok: false, reason: 'SELL STOP harus berada di bawah current price' };
+  }
+
+  return {
+    ok: true,
+    executionType,
+    orderType: params.direction === 'BUY' ? 'BUY STOP' : 'SELL STOP',
+  };
+}
+
 type SignalValidationResult = {
   ok: boolean;
   reason?: string;
@@ -551,6 +633,7 @@ function validateSignalStructure(params: {
   stopLoss: number;
   takeProfit1: number;
   currentPrice: number;
+  symbol: string;
   executionType?: 'INSTANT' | 'LIMIT' | 'STOP';
 }): SignalValidationResult {
   if (params.direction === 'HOLD') return { ok: false, reason: 'arah setup belum cukup jelas' };
@@ -566,22 +649,15 @@ function validateSignalStructure(params: {
     return { ok: false, reason: 'struktur SELL tidak valid' };
   }
 
-  if (params.executionType === 'LIMIT') {
-    if (params.direction === 'BUY' && params.entryPrice > params.currentPrice) {
-      return { ok: false, reason: 'BUY LIMIT harus di bawah harga sekarang' };
-    }
-    if (params.direction === 'SELL' && params.entryPrice < params.currentPrice) {
-      return { ok: false, reason: 'SELL LIMIT harus di atas harga sekarang' };
-    }
-  }
-
-  if (params.executionType === 'STOP') {
-    if (params.direction === 'BUY' && params.entryPrice < params.currentPrice) {
-      return { ok: false, reason: 'BUY STOP harus di atas harga sekarang' };
-    }
-    if (params.direction === 'SELL' && params.entryPrice > params.currentPrice) {
-      return { ok: false, reason: 'SELL STOP harus di bawah harga sekarang' };
-    }
+  const execution = resolveExecutionType({
+    direction: params.direction,
+    currentPrice: params.currentPrice,
+    entryPrice: params.entryPrice,
+    symbol: params.symbol,
+    preferredExecutionType: params.executionType,
+  });
+  if (!execution.ok) {
+    return { ok: false, reason: execution.reason };
   }
 
   return { ok: true };
@@ -656,6 +732,7 @@ export async function generateTelegramSignal(params: {
         stopLoss: parsed.stopLoss,
         takeProfit1: parsed.takeProfit1,
         currentPrice,
+        symbol,
         executionType: parsed.executionType,
       });
   if (!validation.ok) {
@@ -668,7 +745,21 @@ export async function generateTelegramSignal(params: {
   const entry = parsed.entryPrice;
   const stopLoss = parsed.stopLoss || 0;
   const takeProfit1 = parsed.takeProfit1 || 0;
-  const orderType = inferOrderType(parsed.direction, currentPrice, entry, parsed.executionType);
+  const executionDecision = resolveExecutionType({
+    direction: parsed.direction,
+    currentPrice,
+    entryPrice: entry,
+    symbol,
+    preferredExecutionType: parsed.executionType,
+  });
+  if (!executionDecision.ok) {
+    return {
+      ok: false as const,
+      message: `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${executionDecision.reason}.`,
+    };
+  }
+
+  const orderType = executionDecision.orderType;
   const rr = calculateRR(entry, stopLoss, takeProfit1);
   const confidence = typeof parsed.confidence === 'number' ? Math.round(parsed.confidence) : 72;
   const setupGrade = getSetupGrade(confidence, rr, orderType);

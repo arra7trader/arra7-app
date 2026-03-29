@@ -118,14 +118,6 @@ function extractSignalConfidence(analysis: string): number | undefined {
     return undefined;
 }
 
-function extractCurrentPrice(analysis: string): number {
-    return extractExplicitPrice(analysis, [
-        /CURRENT\s*PRICE[:\s]*[\$]?([\d,\.]+)/i,
-        /HARGA\s*SEKARANG[:\s]*[\$]?([\d,\.]+)/i,
-        /PRICE[:\s]*[\$]?([\d,\.]+)/i,
-    ]);
-}
-
 export function parseTelebotSignalFromAnalysis(
     analysis: string,
     type: 'forex' | 'stock',
@@ -136,8 +128,7 @@ export function parseTelebotSignalFromAnalysis(
         const strategyMatch = analysis.match(/EXECUTION STRATEGY:\s*(?:MOMENTUM\s+|RETRACEMENT\s+|BREAKOUT\s+)?(INSTANT|LIMIT|STOP)/i);
         const actionMatch =
             analysis.match(/ACTION(?:\s+CALL)?[\s\S]{0,120}?\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
-            analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
-            analysis.match(/\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i);
+            analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i);
 
         const direction = parseDirectionToken(actionMatch?.[1]);
         const executionType = parseExecutionToken(actionMatch?.[2]) || parseExecutionToken(strategyMatch?.[1]);
@@ -164,8 +155,7 @@ export function parseTelebotSignalFromAnalysis(
         ]);
         const confidence = extractSignalConfidence(analysis);
 
-        const fallbackEntry = entryPrice > 0 ? entryPrice : extractCurrentPrice(analysis);
-        if (!(fallbackEntry > 0)) {
+        if (!(entryPrice > 0)) {
             return null;
         }
 
@@ -175,7 +165,7 @@ export function parseTelebotSignalFromAnalysis(
             timeframe,
             direction,
             executionType,
-            entryPrice: fallbackEntry,
+            entryPrice,
             stopLoss,
             takeProfit1,
             takeProfit2: takeProfit2 > 0 ? takeProfit2 : undefined,
