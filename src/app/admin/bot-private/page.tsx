@@ -41,6 +41,7 @@ export default function PrivateBotAdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [approvalMessage, setApprovalMessage] = useState('');
   const [memberships, setMemberships] = useState<BotMembership[]>([]);
   const [paymentConfirmations, setPaymentConfirmations] = useState<TelebotPaymentConfirmation[]>([]);
   const [email, setEmail] = useState('');
@@ -77,6 +78,9 @@ export default function PrivateBotAdminPage() {
   async function runAction(action: string, targetEmail?: string, userId?: string) {
     setSaving(true);
     setMessage(null);
+    if (action !== 'activate') {
+      setApprovalMessage('');
+    }
     try {
       const res = await fetch('/api/admin/bot-private', {
         method: 'POST',
@@ -92,6 +96,9 @@ export default function PrivateBotAdminPage() {
       const data = await res.json();
       if (data.status === 'success') {
         setMessage({ type: 'success', text: data.message });
+        if (action === 'activate' && data.approvalMessage) {
+          setApprovalMessage(String(data.approvalMessage));
+        }
         await fetchData();
       } else {
         setMessage({ type: 'error', text: data.message || 'Aksi gagal dijalankan.' });
@@ -118,6 +125,16 @@ export default function PrivateBotAdminPage() {
     () => paymentConfirmations.filter((item) => item.status === 'submitted'),
     [paymentConfirmations]
   );
+
+  async function copyApprovalMessage() {
+    if (!approvalMessage) return;
+    try {
+      await navigator.clipboard.writeText(approvalMessage);
+      setMessage({ type: 'success', text: 'Pesan approval berhasil di-copy.' });
+    } catch {
+      setMessage({ type: 'error', text: 'Gagal copy pesan approval. Silakan copy manual.' });
+    }
+  }
 
   if (status === 'loading' || loading) {
     return (
@@ -217,6 +234,27 @@ export default function PrivateBotAdminPage() {
                 : 'border-red-500/30 bg-red-500/10 text-red-300'
                 }`}>
                 {message.text}
+              </div>
+            )}
+
+            {approvalMessage && (
+              <div className="mt-5 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <p className="text-sm font-semibold text-blue-200">Pesan untuk user Telegram</p>
+                  <button
+                    type="button"
+                    onClick={() => void copyApprovalMessage()}
+                    className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs"
+                  >
+                    Copy Pesan
+                  </button>
+                </div>
+                <textarea
+                  value={approvalMessage}
+                  readOnly
+                  rows={7}
+                  className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-blue-500/20 text-[var(--text-primary)] outline-none"
+                />
               </div>
             )}
           </div>

@@ -398,10 +398,26 @@ export async function POST(request: NextRequest) {
       if (ok) {
         await markLatestPaymentConfirmation(turso, userId, 'approved', 'TELEBOT di-approve admin.');
       }
+      const usernameForMessage = telegramUsername ? `@${telegramUsername}` : 'akun Telegram Anda';
+      const expiryLabel = new Date(expiresAt).toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
       return NextResponse.json({
         status: ok ? 'success' : 'error',
         message: ok ? `Akses TELEBOT aktif ${days} hari.` : 'Gagal mengaktifkan akses TELEBOT.',
-        expiresAt
+        expiresAt,
+        approvalMessage: ok
+          ? [
+            'Halo, akses ARRA7 TELEBOT Anda sudah aktif.',
+            '',
+            `Username Telegram: ${usernameForMessage}`,
+            `Masa aktif sampai: ${expiryLabel}`,
+            '',
+            'Silakan buka bot dan kirim /start untuk mulai menggunakan TELEBOT.',
+          ].join('\n')
+          : null
       });
     }
 
