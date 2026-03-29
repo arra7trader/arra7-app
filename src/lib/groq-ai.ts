@@ -30,48 +30,57 @@ export interface MarketContext {
 type TradeSide = 'BUY' | 'SELL' | 'WAIT';
 
 type StopLossRule = {
-    minPips: number;
-    pipSize: number;
+    minDistancePrice: number;
 };
-
-function getMinimumStopPips(timeframe: string | undefined, executionType: 'INSTANT' | 'LIMIT' | 'STOP' | null): number {
-    const value = String(timeframe || '').trim().toUpperCase();
-    let base =
-        value === '1M' ? 20 :
-            value === '5M' ? 30 :
-                value === '15M' ? 45 :
-                    value === '30M' ? 55 :
-                        value === '1H' ? 70 :
-                            value === '4H' ? 90 :
-                                value === '1D' ? 120 :
-                                    70;
-
-    if (executionType === 'INSTANT') {
-        base = Math.max(15, Math.round(base * 0.9));
-    } else if (executionType === 'STOP') {
-        base = Math.round(base * 1.15);
-    }
-
-    return base;
-}
 
 function normalizeSymbol(raw: string): string {
     return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function getStopLossRule(symbol: string, timeframe?: string, executionType: 'INSTANT' | 'LIMIT' | 'STOP' | null = null): StopLossRule {
+function getStopLossRule(symbol: string, entryPrice: number): StopLossRule {
     const s = normalizeSymbol(symbol);
-    const minPips = getMinimumStopPips(timeframe, executionType);
 
     if (s.includes('XAU')) {
-        return { minPips, pipSize: 0.1 };
+        return { minDistancePrice: 7.0 };
+    }
+
+    if (s.includes('XAG')) {
+        return { minDistancePrice: 0.7 };
     }
 
     if (s.endsWith('JPY')) {
-        return { minPips, pipSize: 0.01 };
+        return { minDistancePrice: 0.5 };
     }
 
-    return { minPips, pipSize: 0.0001 };
+    if (/^[A-Z]{6}$/.test(s)) {
+        return { minDistancePrice: 0.005 };
+    }
+
+    if (s.includes('BTC')) {
+        return { minDistancePrice: Math.max(entryPrice * 0.008, 70) };
+    }
+
+    if (s.includes('ETH') || s.includes('SOL') || s.includes('CRYPTO')) {
+        return { minDistancePrice: Math.max(entryPrice * 0.012, 20) };
+    }
+
+    if (s.includes('NAS')) {
+        return { minDistancePrice: 100 };
+    }
+
+    if (s.includes('US30')) {
+        return { minDistancePrice: 150 };
+    }
+
+    if (s.includes('SPX')) {
+        return { minDistancePrice: 15 };
+    }
+
+    if (s.includes('WTI') || s.includes('BRENT')) {
+        return { minDistancePrice: 1.5 };
+    }
+
+    return { minDistancePrice: Math.max(entryPrice * 0.01, 1) };
 }
 
 function countDecimals(raw: string): number {
@@ -128,10 +137,8 @@ function enforceSignalRiskRules(analysis: string, marketDataText: string): strin
     }
 
     const symbol = detectPair(analysis, marketDataText);
-    const timeframe = detectTimeframe(marketDataText);
-    const executionType = (actionMatch[2] ? actionMatch[2].toUpperCase() : null) as 'INSTANT' | 'LIMIT' | 'STOP' | null;
-    const rule = getStopLossRule(symbol, timeframe, executionType);
-    const minDistancePrice = rule.minPips * rule.pipSize;
+    const rule = getStopLossRule(symbol, entry);
+    const minDistancePrice = rule.minDistancePrice;
     const currentDistance = Math.abs(entry - sl);
 
     let correctedSl = sl;
@@ -150,7 +157,6 @@ function enforceSignalRiskRules(analysis: string, marketDataText: string): strin
     }
 
     const finalDistance = Math.abs(entry - correctedSl);
-    const actualPips = finalDistance / rule.pipSize;
     const decimals = Math.max(countDecimals(entryRaw), countDecimals(slRaw));
 
     let fixed = analysis;
@@ -161,12 +167,12 @@ function enforceSignalRiskRules(analysis: string, marketDataText: string): strin
 
     fixed = fixed.replace(
         /(Distance:\s*)([^\n]+)/i,
-        `$1${actualPips.toFixed(2)} pips`,
+        `$1${finalDistance.toFixed(Math.abs(finalDistance) >= 1 ? 2 : 5)} price distance`,
     );
 
     fixed = fixed.replace(
         /(Validation:\s*)([^\n]+)/i,
-        `$1Pass - Min required: ${rule.minPips} pips, Actual: ${actualPips.toFixed(2)} pips`,
+        `$1Pass - Min required: ${minDistancePrice.toFixed(Math.abs(minDistancePrice) >= 1 ? 2 : 5)}, Actual: ${finalDistance.toFixed(Math.abs(finalDistance) >= 1 ? 2 : 5)}`,
     );
 
     if (shouldCorrect) {

@@ -413,78 +413,133 @@ type SignalValidationResult = {
   reason?: string;
 };
 
-function getTimeframeRiskFactor(timeframe: string) {
-  const value = String(timeframe || '').toLowerCase();
-  if (value === '1m') return 0.4;
-  if (value === '5m') return 0.55;
-  if (value === '15m') return 0.7;
-  if (value === '30m') return 0.85;
-  if (value === '1h') return 1;
-  if (value === '4h') return 1.35;
-  if (value === '1d') return 1.8;
-  return 1;
-}
-
-function getSetupDistanceProfile(symbol: string, timeframe: string, currentPrice: number) {
+function getTelebotPipProfile(symbol: string) {
   const normalized = symbol.toUpperCase();
-  const factor = getTimeframeRiskFactor(timeframe);
 
-  if (normalized.includes('XAU') || normalized.includes('GOLD')) {
-    const minStop = 7 * factor;
+  if (normalized.includes('XAU') || normalized.includes('GOLD') || normalized.includes('XAG') || normalized.includes('SILVER')) {
     return {
-      minStop,
-      maxStop: minStop * 3.5,
-      instantTolerance: minStop * 0.25,
-      maxEntryGap: minStop * 1.6,
-      minRR: 1.5,
-      maxRR: 4.8 + (factor * 0.8),
+      distanceType: 'price' as const,
+      benchmarkDistance: 7,
+      label: '70 pips benchmark',
     };
   }
 
   if (normalized.endsWith('JPY') && normalized.length === 6) {
-    const minStop = 0.7 * factor;
     return {
-      minStop,
-      maxStop: minStop * 3.5,
-      instantTolerance: minStop * 0.2,
-      maxEntryGap: minStop * 1.6,
-      minRR: 1.5,
-      maxRR: 5 + (factor * 0.8),
+      distanceType: 'price' as const,
+      benchmarkDistance: 0.5,
+      label: '50 pips benchmark',
     };
   }
 
   if (/^[A-Z]{6}$/.test(normalized)) {
-    const minStop = 0.007 * factor;
     return {
-      minStop,
-      maxStop: minStop * 3.5,
-      instantTolerance: minStop * 0.2,
-      maxEntryGap: minStop * 1.6,
-      minRR: 1.5,
-      maxRR: 5 + (factor * 0.8),
+      distanceType: 'price' as const,
+      benchmarkDistance: 0.005,
+      label: '50 pips benchmark',
     };
   }
 
-  if (normalized.includes('BTC') || normalized.includes('ETH') || normalized.includes('SOL') || normalized.includes('CRYPTO')) {
-    const minStop = currentPrice * (0.008 * factor);
+  if (normalized.includes('BTC')) {
     return {
-      minStop,
-      maxStop: currentPrice * (0.04 * Math.max(1, factor)),
-      instantTolerance: currentPrice * 0.0025,
-      maxEntryGap: currentPrice * (0.012 * Math.max(1, factor)),
-      minRR: 1.6,
-      maxRR: 6 + factor,
+      distanceType: 'percent' as const,
+      benchmarkDistance: 0.008,
+      label: '0.8% benchmark',
     };
   }
 
-  const minStop = Math.max(currentPrice * (0.003 * factor), 1);
+  if (normalized.includes('ETH') || normalized.includes('SOL') || normalized.includes('CRYPTO')) {
+    return {
+      distanceType: 'percent' as const,
+      benchmarkDistance: 0.012,
+      label: '1.2% benchmark',
+    };
+  }
+
+  if (normalized.includes('NAS')) {
+    return {
+      distanceType: 'price' as const,
+      benchmarkDistance: 100,
+      label: '100 points benchmark',
+    };
+  }
+
+  if (normalized.includes('US30')) {
+    return {
+      distanceType: 'price' as const,
+      benchmarkDistance: 150,
+      label: '150 points benchmark',
+    };
+  }
+
+  if (normalized.includes('SPX')) {
+    return {
+      distanceType: 'price' as const,
+      benchmarkDistance: 15,
+      label: '15 points benchmark',
+    };
+  }
+
+  if (normalized.includes('WTI') || normalized.includes('BRENT')) {
+    return {
+      distanceType: 'price' as const,
+      benchmarkDistance: 1.5,
+      label: '1.5 points benchmark',
+    };
+  }
+
   return {
-    minStop,
-    maxStop: Math.max(currentPrice * (0.02 * Math.max(1, factor)), minStop * 3),
-    instantTolerance: Math.max(currentPrice * 0.0015, minStop * 0.2),
-    maxEntryGap: Math.max(currentPrice * 0.008, minStop * 1.6),
-    minRR: 1.5,
-    maxRR: 5.5 + factor,
+    distanceType: 'percent' as const,
+    benchmarkDistance: 0.01,
+    label: '1.0% benchmark',
+  };
+}
+
+function normalizeSignalToBenchmark(params: {
+  direction: 'BUY' | 'SELL' | 'HOLD';
+  entryPrice: number;
+  stopLoss: number;
+  takeProfit1: number;
+  symbol: string;
+  executionType?: 'INSTANT' | 'LIMIT' | 'STOP';
+}) {
+  if (params.direction === 'HOLD' || !(params.entryPrice > 0)) return null;
+
+  const profile = getTelebotPipProfile(params.symbol);
+  const benchmarkDistance = profile.distanceType === 'percent'
+    ? params.entryPrice * profile.benchmarkDistance
+    : profile.benchmarkDistance;
+
+  const isValidStop = params.direction === 'BUY'
+    ? params.stopLoss > 0 && params.stopLoss < params.entryPrice
+    : params.stopLoss > params.entryPrice;
+  const isValidTarget = params.direction === 'BUY'
+    ? params.takeProfit1 > params.entryPrice
+    : params.takeProfit1 > 0 && params.takeProfit1 < params.entryPrice;
+
+  const parsedRisk = isValidStop ? Math.abs(params.entryPrice - params.stopLoss) : 0;
+  const parsedReward = isValidTarget ? Math.abs(params.takeProfit1 - params.entryPrice) : 0;
+  const parsedRR = parsedRisk > 0 && parsedReward > 0 ? parsedReward / parsedRisk : null;
+
+  const shouldResetToBenchmark =
+    !(parsedRisk > 0) ||
+    !(parsedReward > 0) ||
+    parsedRisk < benchmarkDistance * 0.6 ||
+    parsedRisk > benchmarkDistance * 1.6 ||
+    parsedReward < benchmarkDistance * 0.6 ||
+    parsedReward > benchmarkDistance * 1.6 ||
+    (parsedRR !== null && (parsedRR < 0.85 || parsedRR > 1.2));
+
+  const finalDistance = shouldResetToBenchmark ? benchmarkDistance : parsedRisk;
+  return {
+    stopLoss: params.direction === 'BUY'
+      ? params.entryPrice - finalDistance
+      : params.entryPrice + finalDistance,
+    takeProfit1: params.direction === 'BUY'
+      ? params.entryPrice + finalDistance
+      : params.entryPrice - finalDistance,
+    benchmarkLabel: profile.label,
+    usedBenchmark: shouldResetToBenchmark,
   };
 }
 
@@ -494,8 +549,6 @@ function validateSignalStructure(params: {
   stopLoss: number;
   takeProfit1: number;
   currentPrice: number;
-  symbol: string;
-  timeframe: string;
   executionType?: 'INSTANT' | 'LIMIT' | 'STOP';
 }): SignalValidationResult {
   if (params.direction === 'HOLD') return { ok: false, reason: 'arah setup belum cukup jelas' };
@@ -504,62 +557,28 @@ function validateSignalStructure(params: {
   }
 
   if (params.direction === 'BUY' && !(params.stopLoss < params.entryPrice && params.takeProfit1 > params.entryPrice)) {
-    return { ok: false, reason: 'struktur BUY tidak valid karena SL/TP berada di sisi yang salah' };
+    return { ok: false, reason: 'struktur BUY tidak valid' };
   }
 
   if (params.direction === 'SELL' && !(params.stopLoss > params.entryPrice && params.takeProfit1 < params.entryPrice)) {
-    return { ok: false, reason: 'struktur SELL tidak valid karena SL/TP berada di sisi yang salah' };
-  }
-
-  const risk = Math.abs(params.entryPrice - params.stopLoss);
-  const reward = Math.abs(params.takeProfit1 - params.entryPrice);
-  if (!(risk > 0) || !(reward > 0)) {
-    return { ok: false, reason: 'jarak risk/reward tidak valid' };
-  }
-
-  const profile = getSetupDistanceProfile(params.symbol, params.timeframe, params.currentPrice);
-  if (risk < profile.minStop) {
-    return { ok: false, reason: 'stop loss terlalu dekat untuk simbol dan timeframe ini' };
-  }
-
-  if (risk > profile.maxStop) {
-    return { ok: false, reason: 'stop loss terlalu lebar untuk setup pada timeframe ini' };
-  }
-
-  const rr = reward / risk;
-  const minRR = params.executionType === 'STOP' ? Math.max(profile.minRR, 1.7) : profile.minRR;
-  if (rr < minRR) {
-    return { ok: false, reason: `reward terlalu dekat dari entry untuk setup ini (RR < ${minRR.toFixed(1)})` };
-  }
-
-  if (rr > profile.maxRR) {
-    return { ok: false, reason: 'take profit terlalu jauh dari struktur setup yang masuk akal' };
-  }
-
-  const entryGap = Math.abs(params.entryPrice - params.currentPrice);
-  if (params.executionType === 'INSTANT' && entryGap > profile.instantTolerance) {
-    return { ok: false, reason: 'entry instant terlalu jauh dari harga market saat ini' };
-  }
-
-  if ((params.executionType === 'LIMIT' || params.executionType === 'STOP') && entryGap > profile.maxEntryGap) {
-    return { ok: false, reason: 'entry pending terlalu jauh dari current price untuk setup ini' };
+    return { ok: false, reason: 'struktur SELL tidak valid' };
   }
 
   if (params.executionType === 'LIMIT') {
     if (params.direction === 'BUY' && params.entryPrice > params.currentPrice) {
-      return { ok: false, reason: 'BUY LIMIT harus berada di bawah atau dekat current price' };
+      return { ok: false, reason: 'BUY LIMIT harus di bawah harga sekarang' };
     }
     if (params.direction === 'SELL' && params.entryPrice < params.currentPrice) {
-      return { ok: false, reason: 'SELL LIMIT harus berada di atas atau dekat current price' };
+      return { ok: false, reason: 'SELL LIMIT harus di atas harga sekarang' };
     }
   }
 
   if (params.executionType === 'STOP') {
     if (params.direction === 'BUY' && params.entryPrice < params.currentPrice) {
-      return { ok: false, reason: 'BUY STOP harus berada di atas current price' };
+      return { ok: false, reason: 'BUY STOP harus di atas harga sekarang' };
     }
     if (params.direction === 'SELL' && params.entryPrice > params.currentPrice) {
-      return { ok: false, reason: 'SELL STOP harus berada di bawah current price' };
+      return { ok: false, reason: 'SELL STOP harus di bawah harga sekarang' };
     }
   }
 
@@ -609,6 +628,24 @@ export async function generateTelegramSignal(params: {
   }
 
   const currentPrice = marketData.current_price || 0;
+  const normalizedLevels = normalizeSignalToBenchmark({
+    direction: parsed.direction,
+    entryPrice: parsed.entryPrice,
+    stopLoss: parsed.stopLoss,
+    takeProfit1: parsed.takeProfit1,
+    symbol,
+    executionType: parsed.executionType,
+  });
+  if (!normalizedLevels) {
+    return {
+      ok: false as const,
+      message: `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`,
+    };
+  }
+
+  parsed.stopLoss = normalizedLevels.stopLoss;
+  parsed.takeProfit1 = normalizedLevels.takeProfit1;
+
   const validation = !(currentPrice > 0)
     ? { ok: false, reason: 'harga market tidak tersedia' }
     : validateSignalStructure({
@@ -617,8 +654,6 @@ export async function generateTelegramSignal(params: {
         stopLoss: parsed.stopLoss,
         takeProfit1: parsed.takeProfit1,
         currentPrice,
-        symbol,
-        timeframe,
         executionType: parsed.executionType,
       });
   if (!validation.ok) {

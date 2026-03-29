@@ -118,6 +118,14 @@ function extractSignalConfidence(analysis: string): number | undefined {
     return undefined;
 }
 
+function extractCurrentPrice(analysis: string): number {
+    return extractExplicitPrice(analysis, [
+        /CURRENT\s*PRICE[:\s]*[\$]?([\d,\.]+)/i,
+        /HARGA\s*SEKARANG[:\s]*[\$]?([\d,\.]+)/i,
+        /PRICE[:\s]*[\$]?([\d,\.]+)/i,
+    ]);
+}
+
 export function parseTelebotSignalFromAnalysis(
     analysis: string,
     type: 'forex' | 'stock',
@@ -156,15 +164,8 @@ export function parseTelebotSignalFromAnalysis(
         ]);
         const confidence = extractSignalConfidence(analysis);
 
-        if (!(entryPrice > 0) || !(stopLoss > 0) || !(takeProfit1 > 0)) {
-            return null;
-        }
-
-        if (direction === 'BUY' && !(stopLoss < entryPrice && takeProfit1 > entryPrice)) {
-            return null;
-        }
-
-        if (direction === 'SELL' && !(stopLoss > entryPrice && takeProfit1 < entryPrice)) {
+        const fallbackEntry = entryPrice > 0 ? entryPrice : extractCurrentPrice(analysis);
+        if (!(fallbackEntry > 0)) {
             return null;
         }
 
@@ -174,7 +175,7 @@ export function parseTelebotSignalFromAnalysis(
             timeframe,
             direction,
             executionType,
-            entryPrice,
+            entryPrice: fallbackEntry,
             stopLoss,
             takeProfit1,
             takeProfit2: takeProfit2 > 0 ? takeProfit2 : undefined,
