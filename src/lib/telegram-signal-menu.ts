@@ -12,7 +12,7 @@ import { calculateTelebotTradePlan, formatTelebotSetupStyle } from './telebot-tr
 import {
   getLatestTelebotSignalExecution,
   getTelegramTrackedSignals,
-  parseSignalFromAnalysis,
+  parseTelebotSignalFromAnalysis,
   recordTelegramSignalRequest,
   saveTelebotSignalExecution,
   saveSignalWithId,
@@ -408,28 +408,162 @@ function inferOrderType(
   return entryPrice < currentPrice ? 'SELL STOP' : 'SELL LIMIT';
 }
 
-function hasValidSignalStructure(signal: {
+type SignalValidationResult = {
+  ok: boolean;
+  reason?: string;
+};
+
+function getTimeframeRiskFactor(timeframe: string) {
+  const value = String(timeframe || '').toLowerCase();
+  if (value === '1m') return 0.4;
+  if (value === '5m') return 0.55;
+  if (value === '15m') return 0.7;
+  if (value === '30m') return 0.85;
+  if (value === '1h') return 1;
+  if (value === '4h') return 1.35;
+  if (value === '1d') return 1.8;
+  return 1;
+}
+
+function getSetupDistanceProfile(symbol: string, timeframe: string, currentPrice: number) {
+  const normalized = symbol.toUpperCase();
+  const factor = getTimeframeRiskFactor(timeframe);
+
+  if (normalized.includes('XAU') || normalized.includes('GOLD')) {
+    const minStop = 7 * factor;
+    return {
+      minStop,
+      maxStop: minStop * 3.5,
+      instantTolerance: minStop * 0.25,
+      maxEntryGap: minStop * 1.6,
+      minRR: 1.5,
+      maxRR: 4.8 + (factor * 0.8),
+    };
+  }
+
+  if (normalized.endsWith('JPY') && normalized.length === 6) {
+    const minStop = 0.7 * factor;
+    return {
+      minStop,
+      maxStop: minStop * 3.5,
+      instantTolerance: minStop * 0.2,
+      maxEntryGap: minStop * 1.6,
+      minRR: 1.5,
+      maxRR: 5 + (factor * 0.8),
+    };
+  }
+
+  if (/^[A-Z]{6}$/.test(normalized)) {
+    const minStop = 0.007 * factor;
+    return {
+      minStop,
+      maxStop: minStop * 3.5,
+      instantTolerance: minStop * 0.2,
+      maxEntryGap: minStop * 1.6,
+      minRR: 1.5,
+      maxRR: 5 + (factor * 0.8),
+    };
+  }
+
+  if (normalized.includes('BTC') || normalized.includes('ETH') || normalized.includes('SOL') || normalized.includes('CRYPTO')) {
+    const minStop = currentPrice * (0.008 * factor);
+    return {
+      minStop,
+      maxStop: currentPrice * (0.04 * Math.max(1, factor)),
+      instantTolerance: currentPrice * 0.0025,
+      maxEntryGap: currentPrice * (0.012 * Math.max(1, factor)),
+      minRR: 1.6,
+      maxRR: 6 + factor,
+    };
+  }
+
+  const minStop = Math.max(currentPrice * (0.003 * factor), 1);
+  return {
+    minStop,
+    maxStop: Math.max(currentPrice * (0.02 * Math.max(1, factor)), minStop * 3),
+    instantTolerance: Math.max(currentPrice * 0.0015, minStop * 0.2),
+    maxEntryGap: Math.max(currentPrice * 0.008, minStop * 1.6),
+    minRR: 1.5,
+    maxRR: 5.5 + factor,
+  };
+}
+
+function validateSignalStructure(params: {
   direction: 'BUY' | 'SELL' | 'HOLD';
   entryPrice: number;
   stopLoss: number;
   takeProfit1: number;
-}) {
-  if (signal.direction === 'HOLD') return false;
-  if (!(signal.entryPrice > 0) || !(signal.stopLoss > 0) || !(signal.takeProfit1 > 0)) return false;
-
-  if (signal.direction === 'BUY' && !(signal.stopLoss < signal.entryPrice && signal.takeProfit1 > signal.entryPrice)) {
-    return false;
+  currentPrice: number;
+  symbol: string;
+  timeframe: string;
+  executionType?: 'INSTANT' | 'LIMIT' | 'STOP';
+}): SignalValidationResult {
+  if (params.direction === 'HOLD') return { ok: false, reason: 'arah setup belum cukup jelas' };
+  if (!(params.entryPrice > 0) || !(params.stopLoss > 0) || !(params.takeProfit1 > 0)) {
+    return { ok: false, reason: 'entry, stop loss, atau take profit belum terbaca lengkap' };
   }
 
-  if (signal.direction === 'SELL' && !(signal.stopLoss > signal.entryPrice && signal.takeProfit1 < signal.entryPrice)) {
-    return false;
+  if (params.direction === 'BUY' && !(params.stopLoss < params.entryPrice && params.takeProfit1 > params.entryPrice)) {
+    return { ok: false, reason: 'struktur BUY tidak valid karena SL/TP berada di sisi yang salah' };
   }
 
-  const risk = Math.abs(signal.entryPrice - signal.stopLoss);
-  const reward = Math.abs(signal.takeProfit1 - signal.entryPrice);
-  if (!(risk > 0) || !(reward > 0)) return false;
+  if (params.direction === 'SELL' && !(params.stopLoss > params.entryPrice && params.takeProfit1 < params.entryPrice)) {
+    return { ok: false, reason: 'struktur SELL tidak valid karena SL/TP berada di sisi yang salah' };
+  }
 
-  return reward / risk >= 1.2;
+  const risk = Math.abs(params.entryPrice - params.stopLoss);
+  const reward = Math.abs(params.takeProfit1 - params.entryPrice);
+  if (!(risk > 0) || !(reward > 0)) {
+    return { ok: false, reason: 'jarak risk/reward tidak valid' };
+  }
+
+  const profile = getSetupDistanceProfile(params.symbol, params.timeframe, params.currentPrice);
+  if (risk < profile.minStop) {
+    return { ok: false, reason: 'stop loss terlalu dekat untuk simbol dan timeframe ini' };
+  }
+
+  if (risk > profile.maxStop) {
+    return { ok: false, reason: 'stop loss terlalu lebar untuk setup pada timeframe ini' };
+  }
+
+  const rr = reward / risk;
+  const minRR = params.executionType === 'STOP' ? Math.max(profile.minRR, 1.7) : profile.minRR;
+  if (rr < minRR) {
+    return { ok: false, reason: `reward terlalu dekat dari entry untuk setup ini (RR < ${minRR.toFixed(1)})` };
+  }
+
+  if (rr > profile.maxRR) {
+    return { ok: false, reason: 'take profit terlalu jauh dari struktur setup yang masuk akal' };
+  }
+
+  const entryGap = Math.abs(params.entryPrice - params.currentPrice);
+  if (params.executionType === 'INSTANT' && entryGap > profile.instantTolerance) {
+    return { ok: false, reason: 'entry instant terlalu jauh dari harga market saat ini' };
+  }
+
+  if ((params.executionType === 'LIMIT' || params.executionType === 'STOP') && entryGap > profile.maxEntryGap) {
+    return { ok: false, reason: 'entry pending terlalu jauh dari current price untuk setup ini' };
+  }
+
+  if (params.executionType === 'LIMIT') {
+    if (params.direction === 'BUY' && params.entryPrice > params.currentPrice) {
+      return { ok: false, reason: 'BUY LIMIT harus berada di bawah atau dekat current price' };
+    }
+    if (params.direction === 'SELL' && params.entryPrice < params.currentPrice) {
+      return { ok: false, reason: 'SELL LIMIT harus berada di atas atau dekat current price' };
+    }
+  }
+
+  if (params.executionType === 'STOP') {
+    if (params.direction === 'BUY' && params.entryPrice < params.currentPrice) {
+      return { ok: false, reason: 'BUY STOP harus berada di atas current price' };
+    }
+    if (params.direction === 'SELL' && params.entryPrice > params.currentPrice) {
+      return { ok: false, reason: 'SELL STOP harus berada di bawah current price' };
+    }
+  }
+
+  return { ok: true };
 }
 
 function calculateRR(entry: number, stopLoss: number, takeProfit: number) {
@@ -466,7 +600,7 @@ export async function generateTelegramSignal(params: {
     };
   }
 
-  const parsed = parseSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
+  const parsed = parseTelebotSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
   if (!parsed || parsed.direction === 'HOLD') {
     return {
       ok: false as const,
@@ -475,10 +609,22 @@ export async function generateTelegramSignal(params: {
   }
 
   const currentPrice = marketData.current_price || 0;
-  if (!(currentPrice > 0) || !hasValidSignalStructure(parsed)) {
+  const validation = !(currentPrice > 0)
+    ? { ok: false, reason: 'harga market tidak tersedia' }
+    : validateSignalStructure({
+        direction: parsed.direction,
+        entryPrice: parsed.entryPrice,
+        stopLoss: parsed.stopLoss,
+        takeProfit1: parsed.takeProfit1,
+        currentPrice,
+        symbol,
+        timeframe,
+        executionType: parsed.executionType,
+      });
+  if (!validation.ok) {
     return {
       ok: false as const,
-      message: `Setup ${symbol} ${timeframe.toUpperCase()} ditolak karena entry/SL/TP belum cukup valid. Coba pair atau timeframe lain.`,
+      message: `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${validation.reason || 'entry/SL/TP belum cukup valid'}.`,
     };
   }
 

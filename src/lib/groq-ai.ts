@@ -34,25 +34,44 @@ type StopLossRule = {
     pipSize: number;
 };
 
+function getMinimumStopPips(timeframe: string | undefined, executionType: 'INSTANT' | 'LIMIT' | 'STOP' | null): number {
+    const value = String(timeframe || '').trim().toUpperCase();
+    let base =
+        value === '1M' ? 20 :
+            value === '5M' ? 30 :
+                value === '15M' ? 45 :
+                    value === '30M' ? 55 :
+                        value === '1H' ? 70 :
+                            value === '4H' ? 90 :
+                                value === '1D' ? 120 :
+                                    70;
+
+    if (executionType === 'INSTANT') {
+        base = Math.max(15, Math.round(base * 0.9));
+    } else if (executionType === 'STOP') {
+        base = Math.round(base * 1.15);
+    }
+
+    return base;
+}
+
 function normalizeSymbol(raw: string): string {
     return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function getStopLossRule(symbol: string): StopLossRule {
+function getStopLossRule(symbol: string, timeframe?: string, executionType: 'INSTANT' | 'LIMIT' | 'STOP' | null = null): StopLossRule {
     const s = normalizeSymbol(symbol);
+    const minPips = getMinimumStopPips(timeframe, executionType);
 
-    // 70 pips = 7.00 points for XAUUSD (1 pip = 0.1)
     if (s.includes('XAU')) {
-        return { minPips: 70, pipSize: 0.1 };
+        return { minPips, pipSize: 0.1 };
     }
 
-    // JPY pairs (1 pip = 0.01)
     if (s.endsWith('JPY')) {
-        return { minPips: 70, pipSize: 0.01 };
+        return { minPips, pipSize: 0.01 };
     }
 
-    // Default forex-style pip size
-    return { minPips: 70, pipSize: 0.0001 };
+    return { minPips, pipSize: 0.0001 };
 }
 
 function countDecimals(raw: string): number {
@@ -81,6 +100,11 @@ function detectPair(analysis: string, marketDataText: string): string {
     return 'XAUUSD';
 }
 
+function detectTimeframe(marketDataText: string): string | undefined {
+    const match = marketDataText.match(/TIMEFRAME:\s*([A-Z0-9]+)/i);
+    return match?.[1]?.toUpperCase();
+}
+
 function enforceSignalRiskRules(analysis: string, marketDataText: string): string {
     const actionMatch = analysis.match(/\b(BUY|SELL|WAIT)\b(?:\s+(?:INSTANT|LIMIT|STOP))?/i);
     const entryMatch = analysis.match(/\bENTRY\b[^\n]*?([0-9]+(?:\.[0-9]+)?)/i);
@@ -104,7 +128,9 @@ function enforceSignalRiskRules(analysis: string, marketDataText: string): strin
     }
 
     const symbol = detectPair(analysis, marketDataText);
-    const rule = getStopLossRule(symbol);
+    const timeframe = detectTimeframe(marketDataText);
+    const executionType = (actionMatch[2] ? actionMatch[2].toUpperCase() : null) as 'INSTANT' | 'LIMIT' | 'STOP' | null;
+    const rule = getStopLossRule(symbol, timeframe, executionType);
     const minDistancePrice = rule.minPips * rule.pipSize;
     const currentDistance = Math.abs(entry - sl);
 

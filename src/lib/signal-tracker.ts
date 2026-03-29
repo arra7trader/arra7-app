@@ -46,6 +46,146 @@ export interface TelebotLiveExecution {
     updatedAt: string;
 }
 
+function parseDirectionToken(raw: string | undefined): SignalData['direction'] {
+    const value = String(raw || '').trim().toUpperCase();
+    if (['BUY', 'LONG', 'BELI'].includes(value)) return 'BUY';
+    if (['SELL', 'SHORT', 'JUAL'].includes(value)) return 'SELL';
+    return 'HOLD';
+}
+
+function parseExecutionToken(raw: string | undefined): SignalData['executionType'] {
+    const value = String(raw || '').trim().toUpperCase();
+    if (value === 'INSTANT' || value === 'LIMIT' || value === 'STOP') {
+        return value;
+    }
+    return undefined;
+}
+
+function extractExplicitPrice(analysis: string, patterns: RegExp[]): number {
+    for (const pattern of patterns) {
+        const match = analysis.match(pattern);
+        if (!match) continue;
+        const value = parseFloat(String(match[1] || '').replace(/,/g, ''));
+        if (Number.isFinite(value) && value > 0) {
+            return value;
+        }
+    }
+    return 0;
+}
+
+function extractEntryPrice(analysis: string): number {
+    const rangePatterns = [
+        /ENTRY[:\s]*(?:ZONE[:\s]*)?[\$]?([\d,\.]+)\s*(?:-|TO)\s*[\$]?([\d,\.]+)/i,
+        /ENTRY[:\s]*(?:AT[:\s]*)?[\$]?([\d,\.]+)\s*(?:-|TO)\s*[\$]?([\d,\.]+)/i,
+    ];
+
+    for (const pattern of rangePatterns) {
+        const match = analysis.match(pattern);
+        if (!match) continue;
+        const first = parseFloat(String(match[1] || '').replace(/,/g, ''));
+        const second = parseFloat(String(match[2] || '').replace(/,/g, ''));
+        if (Number.isFinite(first) && Number.isFinite(second) && first > 0 && second > 0) {
+            return (first + second) / 2;
+        }
+    }
+
+    return extractExplicitPrice(analysis, [
+        /ENTRY[:\s]*(?:ZONE[:\s]*)?(?:PRICE[:\s]*)?[\$]?([\d,\.]+)/i,
+        /HARGA\s*ENTRY[:\s]*[\$]?([\d,\.]+)/i,
+        /ENTRY\s*POINT[:\s]*[\$]?([\d,\.]+)/i,
+        /OPEN[:\s]*[\$]?([\d,\.]+)/i,
+        /BUY\s*AT[:\s]*[\$]?([\d,\.]+)/i,
+        /SELL\s*AT[:\s]*[\$]?([\d,\.]+)/i,
+    ]);
+}
+
+function extractSignalConfidence(analysis: string): number | undefined {
+    const patterns = [
+        /CONFIDENCE[:\s]*([\d]+)%?/i,
+        /KEYAKINAN[:\s]*([\d]+)%?/i,
+        /(\d+)\s*%?\s*(?:CONFIDENCE|YAKIN)/i,
+    ];
+
+    for (const pattern of patterns) {
+        const match = analysis.match(pattern);
+        if (!match) continue;
+        const value = parseInt(String(match[1] || ''), 10);
+        if (Number.isFinite(value) && value > 0) {
+            return value;
+        }
+    }
+
+    return undefined;
+}
+
+export function parseTelebotSignalFromAnalysis(
+    analysis: string,
+    type: 'forex' | 'stock',
+    symbol: string,
+    timeframe?: string,
+): SignalData | null {
+    try {
+        const strategyMatch = analysis.match(/EXECUTION STRATEGY:\s*(?:MOMENTUM\s+|RETRACEMENT\s+|BREAKOUT\s+)?(INSTANT|LIMIT|STOP)/i);
+        const actionMatch =
+            analysis.match(/ACTION(?:\s+CALL)?[\s\S]{0,120}?\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
+            analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
+            analysis.match(/\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i);
+
+        const direction = parseDirectionToken(actionMatch?.[1]);
+        const executionType = parseExecutionToken(actionMatch?.[2]) || parseExecutionToken(strategyMatch?.[1]);
+
+        if (direction === 'HOLD') {
+            return null;
+        }
+
+        const entryPrice = extractEntryPrice(analysis);
+        const stopLoss = extractExplicitPrice(analysis, [
+            /(?:STOP\s*LOSS|SL)[:\s]*[\$]?([\d,\.]+)/i,
+            /SL\s*[:=]\s*[\$]?([\d,\.]+)/i,
+        ]);
+        const takeProfit1 = extractExplicitPrice(analysis, [
+            /TP1[:\s]*[\$]?([\d,\.]+)/i,
+            /TAKE\s*PROFIT\s*1[:\s]*[\$]?([\d,\.]+)/i,
+            /TP[:\s]*[\$]?([\d,\.]+)/i,
+            /TARGET\s*1[:\s]*[\$]?([\d,\.]+)/i,
+        ]);
+        const takeProfit2 = extractExplicitPrice(analysis, [
+            /TP2[:\s]*[\$]?([\d,\.]+)/i,
+            /TAKE\s*PROFIT\s*2[:\s]*[\$]?([\d,\.]+)/i,
+            /TARGET\s*2[:\s]*[\$]?([\d,\.]+)/i,
+        ]);
+        const confidence = extractSignalConfidence(analysis);
+
+        if (!(entryPrice > 0) || !(stopLoss > 0) || !(takeProfit1 > 0)) {
+            return null;
+        }
+
+        if (direction === 'BUY' && !(stopLoss < entryPrice && takeProfit1 > entryPrice)) {
+            return null;
+        }
+
+        if (direction === 'SELL' && !(stopLoss > entryPrice && takeProfit1 < entryPrice)) {
+            return null;
+        }
+
+        return {
+            type,
+            symbol,
+            timeframe,
+            direction,
+            executionType,
+            entryPrice,
+            stopLoss,
+            takeProfit1,
+            takeProfit2: takeProfit2 > 0 ? takeProfit2 : undefined,
+            confidence,
+        };
+    } catch (error) {
+        console.error('[SignalTracker] Parse TELEBOT signal error:', error);
+        return null;
+    }
+}
+
 export async function saveSignalWithId(data: SignalData): Promise<number | null> {
     const turso = getTursoClient();
     if (!turso) {
