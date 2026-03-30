@@ -57,6 +57,7 @@ interface UpgradeDurationModalProps {
     onClose: () => void;
     membership: 'PRO' | 'VVIP';
     userId: string;
+    onSelect?: (option: { label: string; days: number; duration: string; customExpiresAt?: string }) => Promise<void> | void;
     onSuccess?: () => void;
 }
 
@@ -65,6 +66,7 @@ export default function UpgradeDurationModal({
     onClose,
     membership,
     userId,
+    onSelect,
     onSuccess
 }: UpgradeDurationModalProps) {
     const [selectedDuration, setSelectedDuration] = useState<(typeof UPGRADE_OPTIONS)[0] | null>(null);
@@ -127,7 +129,7 @@ export default function UpgradeDurationModal({
 
         setSelectedDuration(null); // Clear predefined selection
         setError(null);
-        handleUpgrade(customDate); // Pass the raw date string (YYYY-MM-DD)
+        void handleUpgrade(customDate); // Pass the raw date string (YYYY-MM-DD)
     };
 
     const confirmSelection = () => {
@@ -137,7 +139,7 @@ export default function UpgradeDurationModal({
         const end = new Date();
         end.setMonth(end.getMonth() + selectedDuration.duration);
 
-        handleUpgrade(end.toISOString().split('T')[0]); // YYYY-MM-DD
+        void handleUpgrade(end.toISOString().split('T')[0]); // YYYY-MM-DD
     };
 
     const handleUpgrade = async (endDateStr: string) => {
@@ -145,22 +147,43 @@ export default function UpgradeDurationModal({
         setError(null);
 
         try {
-            const res = await fetch(`/api/admin/users/${userId}/upgrade`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    membership,
-                    endDate: endDateStr,
-                    // If selected pre-defined duration, we tell backend we used a promo slot
-                    packageId: selectedDuration?.id, // e.g., "3_MONTHS"
-                    // Optionally pass transaction id or admin evidence here if needed
-                }),
-            });
+            if (onSelect) {
+                if (selectedDuration) {
+                    const durationCodeMap: Record<string, string> = {
+                        '1_MONTH': '1month',
+                        '3_MONTHS': '3months',
+                        '6_MONTHS': '6months',
+                        '12_MONTHS': '1year',
+                    };
+                    await onSelect({
+                        label: selectedDuration.label,
+                        days: selectedDuration.duration * 30,
+                        duration: durationCodeMap[selectedDuration.id] || '1month',
+                    });
+                } else {
+                    await onSelect({
+                        label: 'Tanggal Manual',
+                        days: 0,
+                        duration: 'custom_date',
+                        customExpiresAt: endDateStr,
+                    });
+                }
+            } else {
+                const res = await fetch(`/api/admin/users/${userId}/upgrade`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        membership,
+                        endDate: endDateStr,
+                        packageId: selectedDuration?.id,
+                    }),
+                });
 
-            const data = await res.json();
+                const data = await res.json();
 
-            if (!res.ok) {
-                throw new Error(data.error || 'Failed to upgrade user');
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to upgrade user');
+                }
             }
 
             if (onSuccess) onSuccess();

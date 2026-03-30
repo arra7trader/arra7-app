@@ -780,6 +780,20 @@ Tim ARRA7`;
                     </>
                 )}
             </div>
+
+            <UpgradeDurationModal
+                isOpen={isDurationModalOpen}
+                onClose={() => {
+                    setIsDurationModalOpen(false);
+                    setUpgradeTargetUser(null);
+                }}
+                membership={upgradeTargetMembership}
+                userId={upgradeTargetUser?.id || ''}
+                onSelect={handleDurationSelect}
+                onSuccess={() => {
+                    fetchUsers();
+                }}
+            />
         </div>
     );
 }
