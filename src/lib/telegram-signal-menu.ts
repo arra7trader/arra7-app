@@ -675,12 +675,23 @@ function buildProgressBar(progress: number | null) {
 const TELEBOT_RETRY_GUIDANCE = `
 === TELEBOT EXECUTION FILTER ===
 Return exactly one actionable setup that is still executable near current market structure.
+- Work harder to find the best clean setup before giving up.
 - Do not default to BUY NOW / SELL NOW unless the entry is genuinely near market.
 - If retracement setup is valid, prefer BUY LIMIT / SELL LIMIT.
 - If breakout setup is valid, prefer BUY STOP / SELL STOP.
 - If your first pending entry would be too far from current price, refine the setup and search again for a nearer valid entry.
-- Do not return WAIT unless there is truly no high-quality executable setup.
+- Do not hallucinate entry, SL, or TP. If no clean setup exists after checking momentum, retracement, and breakout, return WAIT with a short natural Indonesian reason.
 === END TELEBOT EXECUTION FILTER ===`;
+
+const TELEBOT_NO_SIGNAL_GUIDANCE = `
+=== TELEBOT NO SIGNAL RESPONSE ===
+If there is still no clean setup after checking momentum, retracement, and breakout:
+- return WAIT
+- explain it in natural everyday Indonesian
+- keep it short and clear
+- mention that market is still nanggung / belum enak / belum rapi if appropriate
+- do not force a fake signal
+=== END TELEBOT NO SIGNAL RESPONSE ===`;
 
 function shouldRetryTelebotSignal(reason: string) {
   const normalized = reason.toLowerCase();
@@ -691,6 +702,10 @@ function shouldRetryTelebotSignal(reason: string) {
     normalized.includes('terlalu jauh') ||
     normalized.includes('tidak valid')
   );
+}
+
+function buildTelebotNoSignalMessage(symbol: string, timeframe: string) {
+  return `Untuk ${symbol} ${timeframe.toUpperCase()} sekarang belum ada setup yang bener-bener enak. Marketnya masih nanggung, jadi lebih aman tunggu dulu sampai entry yang rapi muncul.`;
 }
 
 export async function generateTelegramSignal(params: {
@@ -705,7 +720,11 @@ export async function generateTelegramSignal(params: {
   const marketData = await getMarketData(symbol as ForexPair, timeframe);
   const formatted = formatMarketDataForAI(marketData, timeframe);
   const currentPrice = marketData.current_price || 0;
-  const analysisAttempts = [formatted, `${formatted}\n\n${TELEBOT_RETRY_GUIDANCE}`];
+  const analysisAttempts = [
+    formatted,
+    `${formatted}\n\n${TELEBOT_RETRY_GUIDANCE}`,
+    `${formatted}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
+  ];
   let selectedAnalysis: string | null = null;
   let parsed: ReturnType<typeof parseTelebotSignalFromAnalysis> = null;
   let entry = 0;
@@ -725,7 +744,7 @@ export async function generateTelegramSignal(params: {
 
     const attemptParsed = parseTelebotSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
     if (!attemptParsed || attemptParsed.direction === 'HOLD') {
-      lastFailureMessage = `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`;
+      lastFailureMessage = buildTelebotNoSignalMessage(symbol, timeframe);
       if (attemptIndex < analysisAttempts.length - 1) continue;
       return { ok: false as const, message: lastFailureMessage };
     }
@@ -739,7 +758,7 @@ export async function generateTelegramSignal(params: {
       executionType: attemptParsed.executionType,
     });
     if (!normalizedLevels) {
-      lastFailureMessage = `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`;
+      lastFailureMessage = buildTelebotNoSignalMessage(symbol, timeframe);
       if (attemptIndex < analysisAttempts.length - 1) continue;
       return { ok: false as const, message: lastFailureMessage };
     }
