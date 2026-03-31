@@ -436,13 +436,38 @@ function resolveExecutionType(params: {
 
   const gap = Math.abs(params.entryPrice - params.currentPrice);
   const profile = getExecutionValidationProfile(params.symbol, params.currentPrice);
-  const inferredExecutionType = gap <= profile.instantTolerance
+  const structuralExecutionType = gap <= profile.instantTolerance
     ? 'INSTANT'
     : params.direction === 'BUY'
       ? (params.entryPrice > params.currentPrice ? 'STOP' : 'LIMIT')
       : (params.entryPrice < params.currentPrice ? 'STOP' : 'LIMIT');
+  const preferredExecutionType = params.preferredExecutionType;
 
-  const executionType = params.preferredExecutionType || inferredExecutionType;
+  if (preferredExecutionType === 'INSTANT') {
+    if (gap > profile.instantTolerance) {
+      return { ok: false, reason: 'setup INSTANT tidak valid karena entry terlalu jauh dari current price' };
+    }
+    return {
+      ok: true,
+      executionType: 'INSTANT',
+      orderType: params.direction === 'BUY' ? 'BUY NOW' : 'SELL NOW',
+    };
+  }
+
+  if (gap <= profile.minPendingGap) {
+    return {
+      ok: true,
+      executionType: 'INSTANT',
+      orderType: params.direction === 'BUY' ? 'BUY NOW' : 'SELL NOW',
+    };
+  }
+
+  if (gap > profile.maxPendingGap) {
+    const invalidType = preferredExecutionType || structuralExecutionType;
+    return { ok: false, reason: `${invalidType} tidak valid karena entry terlalu jauh dari current price` };
+  }
+
+  const executionType = structuralExecutionType;
 
   if (executionType === 'INSTANT') {
     if (gap > profile.instantTolerance) {
@@ -455,33 +480,12 @@ function resolveExecutionType(params: {
     };
   }
 
-  if (gap < profile.minPendingGap) {
-    return { ok: false, reason: `${executionType} tidak valid karena entry terlalu dekat ke current price` };
-  }
-
-  if (gap > profile.maxPendingGap) {
-    return { ok: false, reason: `${executionType} tidak valid karena entry terlalu jauh dari current price` };
-  }
-
   if (executionType === 'LIMIT') {
-    if (params.direction === 'BUY' && params.entryPrice > params.currentPrice) {
-      return { ok: false, reason: 'BUY LIMIT harus berada di bawah current price' };
-    }
-    if (params.direction === 'SELL' && params.entryPrice < params.currentPrice) {
-      return { ok: false, reason: 'SELL LIMIT harus berada di atas current price' };
-    }
     return {
       ok: true,
       executionType,
       orderType: params.direction === 'BUY' ? 'BUY LIMIT' : 'SELL LIMIT',
     };
-  }
-
-  if (params.direction === 'BUY' && params.entryPrice < params.currentPrice) {
-    return { ok: false, reason: 'BUY STOP harus berada di atas current price' };
-  }
-  if (params.direction === 'SELL' && params.entryPrice > params.currentPrice) {
-    return { ok: false, reason: 'SELL STOP harus berada di bawah current price' };
   }
 
   return {

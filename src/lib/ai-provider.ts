@@ -32,6 +32,26 @@ function collectKeys(baseVars: string[], numberedUntil = 20): string[] {
     return Array.from(new Set(keys));
 }
 
+function uniqueModels(models: string[]): string[] {
+    return Array.from(new Set(models.map((model) => model.trim()).filter(Boolean)));
+}
+
+function getProviderModels(provider: ProviderName, preferredModel?: string): string[] {
+    if (provider === 'groq') {
+        return uniqueModels([
+            preferredModel || 'llama-3.1-8b-instant',
+            'llama-3.1-8b-instant',
+            'llama-3.3-70b-versatile',
+            'openai/gpt-oss-20b',
+        ]);
+    }
+
+    return uniqueModels([
+        preferredModel || 'llama3.1-8b',
+        'llama3.1-8b',
+    ]);
+}
+
 function ensureProvidersInitialized() {
     if (providerPool.length > 0) {
         return;
@@ -54,25 +74,33 @@ function ensureProvidersInitialized() {
     const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
 
     for (const apiKey of cerebrasKeys) {
-        providerPool.push({
-            provider: 'cerebras',
-            modelId: cerebrasModel,
-            modelFactory: createOpenAI({
-                baseURL: 'https://api.cerebras.ai/v1',
-                apiKey,
-            }),
+        const modelFactory = createOpenAI({
+            baseURL: 'https://api.cerebras.ai/v1',
+            apiKey,
         });
+
+        for (const modelId of getProviderModels('cerebras', cerebrasModel)) {
+            providerPool.push({
+                provider: 'cerebras',
+                modelId,
+                modelFactory,
+            });
+        }
     }
 
     for (const apiKey of groqKeys) {
-        providerPool.push({
-            provider: 'groq',
-            modelId: groqModel,
-            modelFactory: createOpenAI({
-                baseURL: 'https://api.groq.com/openai/v1',
-                apiKey,
-            }),
+        const modelFactory = createOpenAI({
+            baseURL: 'https://api.groq.com/openai/v1',
+            apiKey,
         });
+
+        for (const modelId of getProviderModels('groq', groqModel)) {
+            providerPool.push({
+                provider: 'groq',
+                modelId,
+                modelFactory,
+            });
+        }
     }
 
     if (providerPool.length === 0) {
@@ -124,8 +152,35 @@ function isPermanentProviderError(message: string): boolean {
         normalized.includes('organization_restricted') ||
         normalized.includes('organization has been restricted') ||
         normalized.includes('invalid api key') ||
-        normalized.includes('unauthorized')
+        normalized.includes('unauthorized') ||
+        normalized.includes('not found') ||
+        normalized.includes('404') ||
+        normalized.includes('model_not_found') ||
+        normalized.includes('does not exist')
     );
+}
+
+function toPublicProviderError(message: string): string {
+    const normalized = message.toLowerCase();
+
+    if (
+        normalized === 'not found' ||
+        normalized.includes('404') ||
+        normalized.includes('model_not_found') ||
+        normalized.includes('does not exist')
+    ) {
+        return 'AI model untuk analisa market tidak ditemukan di environment production. Periksa konfigurasi model AI di Vercel.';
+    }
+
+    if (normalized.includes('invalid api key') || normalized.includes('unauthorized')) {
+        return 'AI provider key tidak valid atau belum aktif di environment production.';
+    }
+
+    if (normalized.includes('no ai provider keys configured')) {
+        return 'AI provider belum dikonfigurasi di environment production.';
+    }
+
+    return message;
 }
 
 export function hasAnyAIProviderConfigured(): boolean {
@@ -202,9 +257,9 @@ export async function streamTextHybrid(params: {
     }
 
     if (lastError instanceof Error) {
-        throw lastError;
+        throw new Error(toPublicProviderError(lastError.message));
     }
-    throw new Error('All AI provider attempts failed');
+    throw new Error('Semua AI provider gagal memproses analisa.');
 }
 
 export async function generateTextHybrid(params: {
@@ -270,7 +325,7 @@ export async function generateTextHybrid(params: {
     }
 
     if (lastError instanceof Error) {
-        throw lastError;
+        throw new Error(toPublicProviderError(lastError.message));
     }
-    throw new Error('All AI provider attempts failed');
+    throw new Error('Semua AI provider gagal memproses analisa.');
 }

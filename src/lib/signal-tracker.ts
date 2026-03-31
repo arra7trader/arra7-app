@@ -128,7 +128,8 @@ export function parseTelebotSignalFromAnalysis(
         const strategyMatch = analysis.match(/EXECUTION STRATEGY:\s*(?:MOMENTUM\s+|RETRACEMENT\s+|BREAKOUT\s+)?(INSTANT|LIMIT|STOP)/i);
         const actionMatch =
             analysis.match(/ACTION(?:\s+CALL)?[\s\S]{0,120}?\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
-            analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i);
+            analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
+            analysis.match(/\b(BUY|SELL|LONG|SHORT|BELI|JUAL)\s+(INSTANT|LIMIT|STOP)\b/i);
 
         const direction = parseDirectionToken(actionMatch?.[1]);
         const executionType = parseExecutionToken(actionMatch?.[2]) || parseExecutionToken(strategyMatch?.[1]);
