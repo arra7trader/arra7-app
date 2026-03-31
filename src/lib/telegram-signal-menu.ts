@@ -444,22 +444,13 @@ function resolveExecutionType(params: {
   const preferredExecutionType = params.preferredExecutionType;
 
   if (preferredExecutionType === 'INSTANT') {
-    if (gap > profile.instantTolerance) {
-      return { ok: false, reason: 'setup INSTANT tidak valid karena entry terlalu jauh dari current price' };
+    if (gap <= profile.instantTolerance) {
+      return {
+        ok: true,
+        executionType: 'INSTANT',
+        orderType: params.direction === 'BUY' ? 'BUY NOW' : 'SELL NOW',
+      };
     }
-    return {
-      ok: true,
-      executionType: 'INSTANT',
-      orderType: params.direction === 'BUY' ? 'BUY NOW' : 'SELL NOW',
-    };
-  }
-
-  if (gap <= profile.minPendingGap) {
-    return {
-      ok: true,
-      executionType: 'INSTANT',
-      orderType: params.direction === 'BUY' ? 'BUY NOW' : 'SELL NOW',
-    };
   }
 
   if (gap > profile.maxPendingGap) {
@@ -681,6 +672,27 @@ function buildProgressBar(progress: number | null) {
   return `[${'#'.repeat(filled)}${'-'.repeat(8 - filled)}]`;
 }
 
+const TELEBOT_RETRY_GUIDANCE = `
+=== TELEBOT EXECUTION FILTER ===
+Return exactly one actionable setup that is still executable near current market structure.
+- Do not default to BUY NOW / SELL NOW unless the entry is genuinely near market.
+- If retracement setup is valid, prefer BUY LIMIT / SELL LIMIT.
+- If breakout setup is valid, prefer BUY STOP / SELL STOP.
+- If your first pending entry would be too far from current price, refine the setup and search again for a nearer valid entry.
+- Do not return WAIT unless there is truly no high-quality executable setup.
+=== END TELEBOT EXECUTION FILTER ===`;
+
+function shouldRetryTelebotSignal(reason: string) {
+  const normalized = reason.toLowerCase();
+  return (
+    normalized.includes('belum ada setup valid') ||
+    normalized.includes('belum cukup jelas') ||
+    normalized.includes('belum terbaca') ||
+    normalized.includes('terlalu jauh') ||
+    normalized.includes('tidak valid')
+  );
+}
+
 export async function generateTelegramSignal(params: {
   userId: string;
   chatId: string;
@@ -692,80 +704,101 @@ export async function generateTelegramSignal(params: {
 
   const marketData = await getMarketData(symbol as ForexPair, timeframe);
   const formatted = formatMarketDataForAI(marketData, timeframe);
-  const ai = await analyzeWithGroq(formatted);
-
-  if (!ai.success || !ai.analysis) {
-    return {
-      ok: false as const,
-      message: `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.`,
-    };
-  }
-
-  const parsed = parseTelebotSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
-  if (!parsed || parsed.direction === 'HOLD') {
-    return {
-      ok: false as const,
-      message: `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`,
-    };
-  }
-
   const currentPrice = marketData.current_price || 0;
-  const normalizedLevels = normalizeSignalToBenchmark({
-    direction: parsed.direction,
-    entryPrice: parsed.entryPrice,
-    stopLoss: parsed.stopLoss,
-    takeProfit1: parsed.takeProfit1,
-    symbol,
-    executionType: parsed.executionType,
-  });
-  if (!normalizedLevels) {
-    return {
-      ok: false as const,
-      message: `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`,
-    };
+  const analysisAttempts = [formatted, `${formatted}\n\n${TELEBOT_RETRY_GUIDANCE}`];
+  let selectedAnalysis: string | null = null;
+  let parsed: ReturnType<typeof parseTelebotSignalFromAnalysis> = null;
+  let entry = 0;
+  let stopLoss = 0;
+  let takeProfit1 = 0;
+  let confidence = 72;
+  let executionDecision: ReturnType<typeof resolveExecutionType> | null = null;
+  let lastFailureMessage = `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`;
+
+  for (let attemptIndex = 0; attemptIndex < analysisAttempts.length; attemptIndex++) {
+    const ai = await analyzeWithGroq(analysisAttempts[attemptIndex]);
+
+    if (!ai.success || !ai.analysis) {
+      lastFailureMessage = `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.`;
+      break;
+    }
+
+    const attemptParsed = parseTelebotSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
+    if (!attemptParsed || attemptParsed.direction === 'HOLD') {
+      lastFailureMessage = `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`;
+      if (attemptIndex < analysisAttempts.length - 1) continue;
+      return { ok: false as const, message: lastFailureMessage };
+    }
+
+    const normalizedLevels = normalizeSignalToBenchmark({
+      direction: attemptParsed.direction,
+      entryPrice: attemptParsed.entryPrice,
+      stopLoss: attemptParsed.stopLoss,
+      takeProfit1: attemptParsed.takeProfit1,
+      symbol,
+      executionType: attemptParsed.executionType,
+    });
+    if (!normalizedLevels) {
+      lastFailureMessage = `Belum ada setup valid untuk ${symbol} ${timeframe.toUpperCase()}. Coba pair atau timeframe lain.`;
+      if (attemptIndex < analysisAttempts.length - 1) continue;
+      return { ok: false as const, message: lastFailureMessage };
+    }
+
+    attemptParsed.stopLoss = normalizedLevels.stopLoss;
+    attemptParsed.takeProfit1 = normalizedLevels.takeProfit1;
+
+    const validation = !(currentPrice > 0)
+      ? { ok: false, reason: 'harga market tidak tersedia' }
+      : validateSignalStructure({
+          direction: attemptParsed.direction,
+          entryPrice: attemptParsed.entryPrice,
+          stopLoss: attemptParsed.stopLoss,
+          takeProfit1: attemptParsed.takeProfit1,
+          currentPrice,
+          symbol,
+          executionType: attemptParsed.executionType,
+        });
+    if (!validation.ok) {
+      lastFailureMessage = `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${validation.reason || 'entry/SL/TP belum cukup valid'}.`;
+      if (attemptIndex < analysisAttempts.length - 1 && shouldRetryTelebotSignal(validation.reason || '')) continue;
+      return { ok: false as const, message: lastFailureMessage };
+    }
+
+    const attemptEntry = attemptParsed.entryPrice;
+    const attemptStopLoss = attemptParsed.stopLoss || 0;
+    const attemptTakeProfit1 = attemptParsed.takeProfit1 || 0;
+    const attemptExecutionDecision = resolveExecutionType({
+      direction: attemptParsed.direction,
+      currentPrice,
+      entryPrice: attemptEntry,
+      symbol,
+      preferredExecutionType: attemptParsed.executionType,
+    });
+    if (!attemptExecutionDecision.ok) {
+      lastFailureMessage = `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${attemptExecutionDecision.reason}.`;
+      if (attemptIndex < analysisAttempts.length - 1 && shouldRetryTelebotSignal(attemptExecutionDecision.reason)) continue;
+      return { ok: false as const, message: lastFailureMessage };
+    }
+
+    selectedAnalysis = ai.analysis;
+    parsed = attemptParsed;
+    entry = attemptEntry;
+    stopLoss = attemptStopLoss;
+    takeProfit1 = attemptTakeProfit1;
+    confidence = typeof attemptParsed.confidence === 'number' ? Math.round(attemptParsed.confidence) : 72;
+    executionDecision = attemptExecutionDecision;
+    break;
   }
 
-  parsed.stopLoss = normalizedLevels.stopLoss;
-  parsed.takeProfit1 = normalizedLevels.takeProfit1;
-
-  const validation = !(currentPrice > 0)
-    ? { ok: false, reason: 'harga market tidak tersedia' }
-    : validateSignalStructure({
-        direction: parsed.direction,
-        entryPrice: parsed.entryPrice,
-        stopLoss: parsed.stopLoss,
-        takeProfit1: parsed.takeProfit1,
-        currentPrice,
-        symbol,
-        executionType: parsed.executionType,
-      });
-  if (!validation.ok) {
+  if (!selectedAnalysis || !parsed || !executionDecision || !executionDecision.ok) {
     return {
       ok: false as const,
-      message: `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${validation.reason || 'entry/SL/TP belum cukup valid'}.`,
-    };
-  }
-
-  const entry = parsed.entryPrice;
-  const stopLoss = parsed.stopLoss || 0;
-  const takeProfit1 = parsed.takeProfit1 || 0;
-  const executionDecision = resolveExecutionType({
-    direction: parsed.direction,
-    currentPrice,
-    entryPrice: entry,
-    symbol,
-    preferredExecutionType: parsed.executionType,
-  });
-  if (!executionDecision.ok) {
-    return {
-      ok: false as const,
-      message: `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${executionDecision.reason}.`,
+      message: lastFailureMessage,
     };
   }
 
   const orderType = executionDecision.orderType;
   const rr = calculateRR(entry, stopLoss, takeProfit1);
-  const confidence = typeof parsed.confidence === 'number' ? Math.round(parsed.confidence) : 72;
   const setupGrade = getSetupGrade(confidence, rr, orderType);
   const invalidationNote = buildInvalidationNote({
     direction: parsed.direction,
@@ -773,7 +806,7 @@ export async function generateTelegramSignal(params: {
     stopLoss,
     symbol,
   });
-  const thesis = cleanSummary(ai.analysis);
+  const thesis = cleanSummary(selectedAnalysis);
   const profile = await getTelebotUserProfile(params.userId);
   const tradePlan = profile
     ? calculateTelebotTradePlan({

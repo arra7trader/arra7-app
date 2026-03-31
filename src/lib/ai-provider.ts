@@ -52,6 +52,22 @@ function getProviderModels(provider: ProviderName, preferredModel?: string): str
     ]);
 }
 
+function interleaveProviders(groups: ProviderEntry[][]): ProviderEntry[] {
+    const result: ProviderEntry[] = [];
+    const queues = groups.map((group) => [...group]).filter((group) => group.length > 0);
+
+    while (queues.some((group) => group.length > 0)) {
+        for (const group of queues) {
+            const next = group.shift();
+            if (next) {
+                result.push(next);
+            }
+        }
+    }
+
+    return result;
+}
+
 function ensureProvidersInitialized() {
     if (providerPool.length > 0) {
         return;
@@ -72,6 +88,8 @@ function ensureProvidersInitialized() {
     ]);
 
     const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
+    const cerebrasEntries: ProviderEntry[] = [];
+    const groqEntries: ProviderEntry[] = [];
 
     for (const apiKey of cerebrasKeys) {
         const modelFactory = createOpenAI({
@@ -80,7 +98,7 @@ function ensureProvidersInitialized() {
         });
 
         for (const modelId of getProviderModels('cerebras', cerebrasModel)) {
-            providerPool.push({
+            cerebrasEntries.push({
                 provider: 'cerebras',
                 modelId,
                 modelFactory,
@@ -95,13 +113,15 @@ function ensureProvidersInitialized() {
         });
 
         for (const modelId of getProviderModels('groq', groqModel)) {
-            providerPool.push({
+            groqEntries.push({
                 provider: 'groq',
                 modelId,
                 modelFactory,
             });
         }
     }
+
+    providerPool.push(...interleaveProviders([cerebrasEntries, groqEntries]));
 
     if (providerPool.length === 0) {
         console.warn(
@@ -134,6 +154,25 @@ function getPrimaryModel(index?: number) {
 function getProviderInfo(index: number) {
     const selected = providerPool[index % providerPool.length];
     return `${selected.provider}:${selected.modelId}`;
+}
+
+function getBalancedStartIndex(): number {
+    const providers = Array.from(new Set(providerPool.map((entry) => entry.provider)));
+    if (providers.length === 0) {
+        return 0;
+    }
+
+    const chosenProvider = providers[Math.floor(Math.random() * providers.length)];
+    const matchingIndexes = providerPool
+        .map((entry, index) => ({ entry, index }))
+        .filter(({ entry }) => entry.provider === chosenProvider)
+        .map(({ index }) => index);
+
+    if (matchingIndexes.length === 0) {
+        return Math.floor(Math.random() * providerPool.length);
+    }
+
+    return matchingIndexes[Math.floor(Math.random() * matchingIndexes.length)];
 }
 
 function getErrorMessage(error: unknown): string {
@@ -222,7 +261,7 @@ export async function streamTextHybrid(params: {
 
     let lastError: unknown = null;
     const maxAttempts = providerPool.length;
-    const startIndex = Math.floor(Math.random() * providerPool.length);
+    const startIndex = getBalancedStartIndex();
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (providerPool.length === 0) {
@@ -280,7 +319,7 @@ export async function generateTextHybrid(params: {
 
     let lastError: unknown = null;
     const maxAttempts = providerPool.length;
-    const startIndex = Math.floor(Math.random() * providerPool.length);
+    const startIndex = getBalancedStartIndex();
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (providerPool.length === 0) {
