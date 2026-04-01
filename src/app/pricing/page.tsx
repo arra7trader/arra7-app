@@ -86,12 +86,13 @@ const PRICING_PLANS = [
     {
         id: 'TELEBOT',
         name: 'TELEBOT',
-        description: 'Bot Telegram premium untuk signal praktis, hasil live, dan approval via username Telegram. 50 user pertama juga dapat bonus akun PRO website 1 bulan.',
+        description: 'Bot Telegram premium untuk signal praktis, hasil live, approval via username Telegram, dan bonus video edukasi eksklusif dari ARRA7. 50 user pertama juga dapat bonus akun PRO website 1 bulan.',
         icon: 'T',
         theme: 'emerald',
         features: [
             { text: 'Akses bot Telegram khusus member approved', included: true, highlight: true },
             { text: 'Bonus akun PRO website 1 bulan untuk 50 member pertama', included: true, highlight: true },
+            { text: 'Bonus video edukasi eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
             { text: 'Menu Signal untuk semua pair dan timeframe', included: true, highlight: false },
             { text: 'Menu Hasil untuk progress TP / SL signal', included: true, highlight: false },
             { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },

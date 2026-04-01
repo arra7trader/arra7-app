@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient, { initDatabase, upsertPrivateBotMembership } from '@/lib/turso';
 import { isAdminEmail } from '@/lib/admin-access';
+import { getTelebotBonusPageUrl } from '@/lib/telebot-bonus';
 
 export const dynamic = 'force-dynamic';
 
@@ -559,6 +560,7 @@ export async function POST(request: NextRequest) {
             year: 'numeric'
           })
         : null;
+      const bonusVideoUrl = getTelebotBonusPageUrl();
       const bonusMessage = bonusResult.granted
         ? ` Bonus akun PRO website 1 bulan juga aktif sampai ${websiteProLabel}.`
         : bonusResult.reason === 'already_granted'
@@ -580,12 +582,14 @@ export async function POST(request: NextRequest) {
             `Halo, akses Anda sudah aktif untuk ${usernameForMessage}.`,
             `Masa aktif: ${expiryLabel}`,
             bonusResult.granted && websiteProLabel ? `Bonus website: akun PRO aktif sampai ${websiteProLabel}` : null,
+            `Bonus edukasi: video eksklusif Sniper Entry tersedia di ${bonusVideoUrl}`,
             bonusResult.reason === 'slots_full' ? 'Bonus akun PRO 1 bulan hanya berlaku untuk 50 user pertama dan saat ini kuotanya sudah habis.' : null,
             '',
             'Mulai dengan 3 langkah berikut:',
             '1. Buka bot dan kirim /start',
             '2. Isi Balance agar risk plan sesuai modal Anda',
             '3. Buka Signal dan pantau Live Status untuk monitoring setup',
+            '4. Buka bonus video eksklusif untuk materi Edukasi Sniper Entry',
             '',
             'Selamat datang di private execution desk ARRA7.',
           ].filter(Boolean).join('\n')
