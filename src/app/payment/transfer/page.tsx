@@ -71,6 +71,7 @@ function TransferContent() {
     const normalizedTelegramUsername = telegramUsername.trim().replace(/^@+/, '');
     const requiresTelegramUsername = plan?.id === 'TELEBOT';
     const canConfirmPayment = !requiresTelegramUsername || normalizedTelegramUsername.length > 0;
+    const telebotBonusPageUrl = 'https://arra7-app.vercel.app/telebot-bonus';
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -109,6 +110,7 @@ function TransferContent() {
         `Paket: ${plan.name} (${plan.durationLabel})`,
         `Nominal: ${plan.priceDisplay}`,
         requiresTelegramUsername ? `Username Telegram: @${normalizedTelegramUsername}` : null,
+        plan.id === 'TELEBOT' ? `Bonus member: akun PRO website + video eksklusif di ${telebotBonusPageUrl}` : null,
         '',
         requiresTelegramUsername
             ? 'Mohon approve akses TELEBOT saya. Berikut bukti pembayarannya: (Lampirkan Screenshot)'

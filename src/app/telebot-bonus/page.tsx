@@ -72,18 +72,6 @@ export default async function TelebotBonusPage() {
                   <p className="text-sm text-[var(--text-muted)]">
                     Video ini bersifat eksklusif untuk member TELEBOT aktif. Akses akan mengikuti status membership Anda.
                   </p>
-                  {config.externalUrl ? (
-                    <div className="flex flex-wrap gap-3">
-                      <a
-                        href={config.externalUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors"
-                      >
-                        Buka Video di Tab Baru
-                      </a>
-                    </div>
-                  ) : null}
                 </div>
               ) : (
                 <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-6">

@@ -24,7 +24,20 @@ export async function GET(request: NextRequest) {
   const config = getTelebotBonusVideoConfig();
 
   if (config.externalUrl) {
-    return NextResponse.redirect(config.externalUrl);
+    return NextResponse.json(
+      {
+        status: 'ok',
+        mode: 'embedded',
+        message: 'Video bonus TELEBOT hanya diakses dari halaman website ARRA.',
+        pageUrl: '/telebot-bonus',
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'private, no-store, max-age=0',
+        },
+      }
+    );
   }
 
   if (!config.localFileExists) {
