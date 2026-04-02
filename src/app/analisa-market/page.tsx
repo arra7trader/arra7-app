@@ -774,10 +774,6 @@ export default function AnalisaMarketPage() {
                     // Check for Quota or Feature Limits (Status 403)
                     if (response.status === 403) {
                         openPopup();
-                        // If it's a specific quota message, we can override to be cleaner
-                        if (message.includes('Quota') || message.includes('Limit') || message.includes('habis')) {
-                            setError("Daily Limit Reached");
-                        }
                     }
                 }
 
@@ -837,6 +833,21 @@ export default function AnalisaMarketPage() {
     const vvipAlias = session?.user?.name
         ? session.user.name.split(' ')[0]
         : 'VVIP Member';
+    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || 'BASIC').toUpperCase();
+    const isPremiumMember = uppercaseMembership === 'PRO' || uppercaseMembership === 'VVIP';
+    const isQuotaOrLockError = Boolean(
+        error && (error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") || error.includes("habis"))
+    );
+    const lockTitle = error?.includes("Timeframe")
+        ? 'Timeframe Terkunci'
+        : isPremiumMember
+            ? 'Akses Premium Tertahan'
+            : 'Daily Quota Reached';
+    const lockBody = error?.includes("Timeframe")
+        ? 'Timeframe ini khusus untuk member PRO/VVIP. Upgrade sekarang untuk akses ke semua timeframe.'
+        : isPremiumMember
+            ? (error || 'Akses akun premium Anda sedang tertahan. Silakan coba lagi atau hubungi admin jika ini berlanjut.')
+            : 'Anda telah mencapai batas 1x Analisa Harian. Upgrade ke PRO untuk membuka akses premium dan analisa AI yang lebih luas.';
 
     if (status === 'loading') {
         return (
@@ -1508,7 +1519,7 @@ export default function AnalisaMarketPage() {
                                         className="flex flex-col items-center justify-center h-full py-10 px-4"
                                     >
                                         {/* Trigger Premium UI for Limits, Quota, or Locks/Upgrades */}
-                                        {error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") ? (
+                                        {isQuotaOrLockError ? (
                                             <>
                                                 {/* BLURRED MOCKUP BACKGROUND */}
                                                 <div className="absolute inset-0 filter blur-md opacity-50 select-none pointer-events-none bg-[var(--bg-primary)] p-6 overflow-hidden">
@@ -1537,30 +1548,41 @@ export default function AnalisaMarketPage() {
                                                         {/* Dynamic Title & Message */}
                                                         {error.includes("Timeframe") ? (
                                                             <>
-                                                                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Timeframe Locked</h3>
+                                                                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{lockTitle}</h3>
                                                                 <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
-                                                                    Timeframe ini khusus untuk member PRO/VVIP.
-                                                                    <br />Upgrade sekarang untuk akses ke semua timeframe.
+                                                                    {lockBody}
                                                                 </p>
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Daily Quota Reached</h3>
+                                                                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{lockTitle}</h3>
                                                                 <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
-                                                                    Anda telah mencapai batas <span className="font-semibold text-red-500">1x Analisa Harian</span>.
-                                                                    <br />Upgrade ke PRO untuk membuka akses unlimited dan sinyal AI akurasi tinggi.
+                                                                    {lockBody}
                                                                 </p>
                                                             </>
                                                         )}
 
                                                         <div className="space-y-4">
-                                                            <button
-                                                                onClick={() => router.push('/pricing')}
-                                                                className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 group"
-                                                            >
-                                                                <span>Buka Akses Premium</span>
-                                                                <ArrowRightIcon size="sm" className="group-hover:translate-x-1 transition-transform" />
-                                                            </button>
+                                                            {isPremiumMember ? (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setError(null);
+                                                                        void fetchQuota();
+                                                                    }}
+                                                                    className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2 group"
+                                                                >
+                                                                    <span>Coba Lagi</span>
+                                                                    <ArrowRightIcon size="sm" className="group-hover:translate-x-1 transition-transform" />
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => router.push('/pricing')}
+                                                                    className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 group"
+                                                                >
+                                                                    <span>Buka Akses Premium</span>
+                                                                    <ArrowRightIcon size="sm" className="group-hover:translate-x-1 transition-transform" />
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={() => setError(null)}
                                                                 className="text-sm font-medium text-slate-400 hover:text-[var(--text-secondary)] transition-colors"

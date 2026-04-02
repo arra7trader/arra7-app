@@ -216,9 +216,12 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
 
     // Check quota
     if (!status.canAnalyze) {
+        const membershipLabel = String(status.membership || 'BASIC').toUpperCase();
         return {
             allowed: false,
-            message: `Quota Harian Basic Anda sudah habis (1x per Hari). Upgrade ke Pro atau VVIP untuk akses unlimited.`,
+            message: membershipLabel === 'BASIC'
+                ? 'Kuota harian Basic Anda sudah habis (1x per hari). Upgrade ke Pro atau VVIP untuk akses penuh.'
+                : `Kuota harian paket ${membershipLabel} Anda sudah habis. Coba lagi besok atau hubungi admin jika ini tidak semestinya.`,
             quotaStatus: status,
         };
     }
@@ -411,9 +414,12 @@ export async function checkStockQuota(userId: string): Promise<{
     }
 
     if (!status.canAnalyze) {
+        const membershipLabel = String(status.membership || 'BASIC').toUpperCase();
         return {
             allowed: false,
-            message: `Quota Trial Saham Basic Anda sudah habis (1x Lifetime). Upgrade ke Pro atau VVIP untuk akses unlimited.`,
+            message: membershipLabel === 'BASIC'
+                ? 'Kuota trial saham Basic Anda sudah habis. Upgrade ke Pro atau VVIP untuk akses penuh.'
+                : `Kuota analisa saham paket ${membershipLabel} Anda sudah habis. Coba lagi besok atau hubungi admin jika ini tidak semestinya.`,
             quotaStatus: status,
         };
     }
