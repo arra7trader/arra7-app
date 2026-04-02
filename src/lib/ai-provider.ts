@@ -6,7 +6,8 @@ type ProviderName = 'cerebras' | 'groq';
 type ProviderEntry = {
     provider: ProviderName;
     modelId: string;
-    modelFactory: ReturnType<typeof createOpenAI>;
+    apiKey: string;
+    modelFactory?: ReturnType<typeof createOpenAI>;
 };
 
 const providerPool: ProviderEntry[] = [];
@@ -101,6 +102,7 @@ function ensureProvidersInitialized() {
             cerebrasEntries.push({
                 provider: 'cerebras',
                 modelId,
+                apiKey,
                 modelFactory,
             });
         }
@@ -116,6 +118,7 @@ function ensureProvidersInitialized() {
             groqEntries.push({
                 provider: 'groq',
                 modelId,
+                apiKey,
                 modelFactory,
             });
         }
@@ -148,6 +151,9 @@ function getPrimaryModel(index?: number) {
             ? index % providerPool.length
             : Math.floor(Math.random() * providerPool.length);
     const selected = providerPool[selectedIndex];
+    if (!selected.modelFactory) {
+        throw new Error(`Model factory is not available for provider ${selected.provider}`);
+    }
     return selected.modelFactory(selected.modelId);
 }
 
@@ -183,6 +189,106 @@ function getErrorMessage(error: unknown): string {
         return error;
     }
     return 'unknown error';
+}
+
+function normalizeMessageContent(content: unknown): string {
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    if (Array.isArray(content)) {
+        return content
+            .map((part) => {
+                if (typeof part === 'string') return part;
+                if (part && typeof part === 'object' && 'text' in part && typeof (part as { text?: unknown }).text === 'string') {
+                    return String((part as { text: string }).text);
+                }
+                return '';
+            })
+            .filter(Boolean)
+            .join('\n');
+    }
+
+    if (content && typeof content === 'object' && 'text' in content && typeof (content as { text?: unknown }).text === 'string') {
+        return String((content as { text: string }).text);
+    }
+
+    return '';
+}
+
+function toOpenAICompatibleMessages(system: string | undefined, messages?: ModelMessage[]) {
+    const normalized = (messages || [])
+        .map((message) => {
+            const role = String(message.role || 'user');
+            const content = normalizeMessageContent(message.content);
+            if (!content) return null;
+            return {
+                role,
+                content,
+            };
+        })
+        .filter(Boolean) as Array<{ role: string; content: string }>;
+
+    if (system?.trim()) {
+        normalized.unshift({
+            role: 'system',
+            content: system.trim(),
+        });
+    }
+
+    return normalized;
+}
+
+async function generateTextWithCerebras(params: {
+    apiKey: string;
+    modelId: string;
+    system?: string;
+    messages?: ModelMessage[];
+    prompt?: string;
+    maxTokens?: number;
+    temperature?: number;
+}) {
+    const messages = params.prompt
+        ? toOpenAICompatibleMessages(params.system, [{ role: 'user', content: params.prompt } as ModelMessage])
+        : toOpenAICompatibleMessages(params.system, params.messages);
+
+    const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${params.apiKey}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            model: params.modelId,
+            messages,
+            temperature: params.temperature,
+            max_completion_tokens: params.maxTokens,
+        }),
+    });
+
+    const raw = await response.text();
+    let parsed: any = null;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        parsed = null;
+    }
+
+    if (!response.ok) {
+        const detail =
+            parsed?.message ||
+            parsed?.error?.message ||
+            raw ||
+            `Cerebras request failed with status ${response.status}`;
+        throw new Error(String(detail));
+    }
+
+    const text = parsed?.choices?.[0]?.message?.content;
+    if (typeof text !== 'string' || text.trim().length === 0) {
+        throw new Error('No analysis returned from Cerebras');
+    }
+
+    return { text };
 }
 
 function isPermanentProviderError(message: string): boolean {
@@ -274,6 +380,10 @@ export async function streamTextHybrid(params: {
             console.log(
                 `[AI Provider] Stream attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
             );
+            const entry = providerPool[providerIndex % providerPool.length];
+            if (entry.provider === 'cerebras') {
+                throw new Error('Cerebras streaming is not supported by the current adapter');
+            }
             return await streamText({
                 model: getPrimaryModel(providerIndex),
                 system: params.system,
@@ -332,6 +442,18 @@ export async function generateTextHybrid(params: {
             console.log(
                 `[AI Provider] Generate attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
             );
+            const entry = providerPool[providerIndex % providerPool.length];
+            if (entry.provider === 'cerebras') {
+                return await generateTextWithCerebras({
+                    apiKey: entry.apiKey,
+                    modelId: entry.modelId,
+                    system: params.system,
+                    messages: params.messages,
+                    prompt: params.prompt,
+                    maxTokens: params.maxTokens,
+                    temperature: params.temperature,
+                });
+            }
             if (params.prompt) {
                 return await generateText({
                     model: getPrimaryModel(providerIndex),
