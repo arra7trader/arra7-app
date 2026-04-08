@@ -85,62 +85,42 @@ const PRICING_PLANS = [
         popular: false,
     },
     {
-        id: 'TELEBOT',
-        name: 'TELEBOT',
-        description: 'Bot Telegram premium untuk signal praktis, hasil live, approval via username Telegram, dan bonus video edukasi eksklusif dari ARRA7. Tersedia promo 1 bulan dan promo lifetime 100 orang pertama.',
+        id: 'TELEBOT_MONTHLY',
+        name: 'TELEBOT 1 Bulan',
+        description: 'Private AI execution desk untuk trader yang ingin langsung pakai signal Telegram premium dengan live status, bonus akun PRO website 1 bulan, dan video Edukasi Sniper Entry.',
         icon: 'T',
         theme: 'emerald',
         features: [
-            { text: 'Akses bot Telegram khusus member approved', included: true, highlight: true },
-            { text: 'Bonus akun PRO website 1 bulan untuk 50 member pertama', included: true, highlight: true },
-            { text: 'Promo lifetime Rp 375.000 hanya untuk 100 orang pertama', included: true, highlight: true },
-            { text: 'Bonus video edukasi eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
-            { text: 'Menu Signal untuk semua pair dan timeframe', included: true, highlight: false },
-            { text: 'Menu Hasil untuk progress TP / SL signal', included: true, highlight: false },
+            { text: 'Akses TELEBOT khusus member approved selama 1 bulan', included: true, highlight: true },
+            { text: 'Bonus akun PRO website 1 bulan', included: true, highlight: true },
+            { text: 'Bonus video eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
+            { text: 'Menu Signal semua pair dan timeframe', included: true, highlight: false },
+            { text: 'Menu Hasil + Live Status signal', included: true, highlight: false },
             { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },
-            { text: 'Approval by username Telegram setelah bayar', included: true, highlight: false },
-            { text: 'Chat bebas dimatikan agar fokus ke signal', included: true, highlight: false },
-            { text: 'Akses penuh semua fitur dashboard VVIP', included: false, highlight: false },
-            { text: 'AI web chat dan lab premium lengkap', included: false, highlight: false },
+            { text: 'Approval by username Telegram', included: true, highlight: false },
+            { text: 'Fokus penuh ke signal, tanpa chat bebas', included: true, highlight: false },
         ],
-        cta: 'Langganan TELEBOT',
+        cta: 'Ambil TELEBOT 1 Bulan',
         popular: false,
     },
-];
-
-const TELEBOT_PROMO_CARDS: Array<{
-    duration: string;
-    title: string;
-    subtitle: string;
-    accentClass: string;
-    borderClass: string;
-    benefits: string[];
-}> = [
     {
-        duration: '1month',
-        title: 'TELEBOT 1 Bulan',
-        subtitle: 'Untuk trader yang ingin langsung coba private execution desk.',
-        accentClass: 'from-emerald-500/20 to-cyan-500/10 text-emerald-300',
-        borderClass: 'border-emerald-500/20',
-        benefits: [
-            'Akses TELEBOT 1 bulan penuh',
-            'Bonus akun PRO website 1 bulan',
-            'Bonus video Edukasi Sniper Entry',
-            'Signal multi-market + live status',
+        id: 'TELEBOT_LIFETIME',
+        name: 'TELEBOT Lifetime',
+        description: 'Promo gila sekali bayar untuk 100 orang tercepat. Dapat akses TELEBOT lifetime, bonus akun PRO website 1 bulan, dan bonus video Edukasi Sniper Entry.',
+        icon: 'T',
+        theme: 'amber',
+        features: [
+            { text: 'Akses TELEBOT lifetime', included: true, highlight: true },
+            { text: 'Bonus akun PRO website 1 bulan', included: true, highlight: true },
+            { text: 'Bonus video eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
+            { text: 'Signal multi-market + live monitoring', included: true, highlight: false },
+            { text: 'Menu Hasil untuk progress TP / SL', included: true, highlight: false },
+            { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },
+            { text: 'Hanya 100 slot lifetime, rebutan tercepat', included: true, highlight: true },
+            { text: 'Approval by username Telegram', included: true, highlight: false },
         ],
-    },
-    {
-        duration: 'lifetime',
-        title: 'TELEBOT Lifetime',
-        subtitle: 'Promo gila sekali bayar untuk 100 orang tercepat.',
-        accentClass: 'from-amber-500/20 to-orange-500/10 text-amber-200',
-        borderClass: 'border-amber-500/25',
-        benefits: [
-            'Akses TELEBOT lifetime',
-            'Bonus akun PRO website 1 bulan',
-            'Bonus video Edukasi Sniper Entry',
-            'Hanya 100 slot seumur hidup',
-        ],
+        cta: 'Ambil TELEBOT Lifetime',
+        popular: false,
     },
 ];
 
@@ -152,7 +132,6 @@ export default function PricingPage() {
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
         PRO: '3months',
         VVIP: '3months',
-        TELEBOT: '1month',
     });
 
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
@@ -179,12 +158,15 @@ export default function PricingPage() {
             return;
         }
 
+        const catalogPlanId = planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME' ? 'TELEBOT' : planId;
+        const duration =
+            durationOverride ||
+            (planId === 'TELEBOT_MONTHLY' ? '1month' : planId === 'TELEBOT_LIFETIME' ? 'lifetime' : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
-        const duration = durationOverride || selectedDuration[planId] || '1month';
-        const durationOption = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
+        const durationOption = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
         const days = durationOption?.days ?? 30;
 
-        router.push(`/payment/transfer?plan=${planId}&duration=${duration}&days=${days}`);
+        router.push(`/payment/transfer?plan=${catalogPlanId}&duration=${duration}&days=${days}`);
     };
 
     const getPlanPricing = (planId: string) => {
@@ -192,8 +174,14 @@ export default function PricingPage() {
             return { price: 'Gratis', originalPrice: null, period: '', badge: null };
         }
 
-        const duration = selectedDuration[planId] || '1month';
-        const option = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
+        const catalogPlanId = planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME' ? 'TELEBOT' : planId;
+        const duration =
+            planId === 'TELEBOT_MONTHLY'
+                ? '1month'
+                : planId === 'TELEBOT_LIFETIME'
+                    ? 'lifetime'
+                    : selectedDuration[planId] || '1month';
+        const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
 
         if (!option) {
             return { price: 'Rp 99.000', originalPrice: 'Rp 149.000', period: '/ bulan', badge: null };
@@ -201,7 +189,7 @@ export default function PricingPage() {
 
         let badge = null;
         if (option.promoSlots && promoSlots) {
-            const slotInfo = promoSlots[planId]?.[duration];
+            const slotInfo = promoSlots[catalogPlanId]?.[duration];
             if (slotInfo) {
                 if (slotInfo.remaining > 0) {
                     badge = `Tersisa ${slotInfo.remaining} Slot Promo`;
@@ -274,7 +262,7 @@ export default function PricingPage() {
                     return (
                         <motion.div
                             key={plan.id}
-                            id={plan.id === 'TELEBOT' ? 'telebot-plan' : undefined}
+                            id={plan.id === 'TELEBOT_MONTHLY' ? 'telebot-plan' : undefined}
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.15, duration: 0.5 }}
@@ -320,86 +308,6 @@ export default function PricingPage() {
 
                             {/* Right Pane (Pricing & CTA) */}
                             <div className="w-full md:w-2/5 p-8 md:p-14 text-center bg-[var(--bg-primary)] flex flex-col justify-center items-center">
-                                {plan.id === 'TELEBOT' ? (
-                                    <div className="w-full space-y-4">
-                                        {TELEBOT_PROMO_CARDS.map((offer) => {
-                                            const option = DURATION_OPTIONS.TELEBOT.find((item) => item.duration === offer.duration);
-                                            const slotInfo = promoSlots?.TELEBOT?.[offer.duration];
-                                            const isSoldOut = !!(option?.promoSlots && slotInfo && slotInfo.remaining <= 0);
-                                            const price = option?.price || '-';
-                                            const originalPrice = option?.originalPrice || null;
-                                            const period = option?.period || '';
-                                            const savingsText = option?.savingsText || null;
-                                            const badge = slotInfo
-                                                ? slotInfo.remaining > 0
-                                                    ? `Tersisa ${slotInfo.remaining} Slot`
-                                                    : 'SLOT HABIS'
-                                                : null;
-
-                                            return (
-                                                <div
-                                                    key={offer.duration}
-                                                    className={`rounded-3xl border ${offer.borderClass} bg-gradient-to-br ${offer.accentClass} p-5 text-left shadow-xl`}
-                                                >
-                                                    <div className="flex items-start justify-between gap-3 mb-3">
-                                                        <div>
-                                                            <p className="text-xs uppercase tracking-[0.2em] text-white/60 mb-2">Promo TELEBOT</p>
-                                                            <h3 className="text-2xl font-bold text-white">{offer.title}</h3>
-                                                            <p className="text-sm text-white/75 mt-2">{offer.subtitle}</p>
-                                                        </div>
-                                                        {badge && (
-                                                            <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold ${badge.includes('HABIS')
-                                                                ? 'bg-rose-500/15 text-rose-200 border border-rose-500/30'
-                                                                : 'bg-white/10 text-white border border-white/15'
-                                                                }`}>
-                                                                {badge}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {originalPrice && (
-                                                        <p className="text-sm text-white/45 line-through mb-1">{originalPrice}</p>
-                                                    )}
-                                                    <div className="flex items-end gap-2 mb-3">
-                                                        <span className="text-4xl font-black text-white">{price}</span>
-                                                        {period && <span className="text-sm font-medium text-white/70">{period}</span>}
-                                                    </div>
-
-                                                    {savingsText && (
-                                                        <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 mb-4">
-                                                            {savingsText}
-                                                        </div>
-                                                    )}
-
-                                                    <div className="space-y-2 mb-5">
-                                                        {offer.benefits.map((benefit) => (
-                                                            <div key={benefit} className="flex items-start gap-2 text-sm text-white/90">
-                                                                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
-                                                                    <CheckIcon size="xs" />
-                                                                </span>
-                                                                <span>{benefit}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    <button
-                                                        onClick={() => handleSubscribe('TELEBOT', offer.duration)}
-                                                        disabled={isProcessing === plan.id || isSoldOut}
-                                                        className={`w-full rounded-2xl py-3 font-bold transition-all ${isSoldOut
-                                                            ? 'cursor-not-allowed bg-white/10 text-white/50'
-                                                            : offer.duration === 'lifetime'
-                                                                ? 'bg-white text-slate-900 hover:bg-amber-50'
-                                                                : 'bg-emerald-500 text-white hover:bg-emerald-400'
-                                                            }`}
-                                                    >
-                                                        {isSoldOut ? 'Promo Habis' : offer.duration === 'lifetime' ? 'Ambil Promo Lifetime' : 'Ambil Promo 1 Bulan'}
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <>
                                 {DURATION_OPTIONS[plan.id] && DURATION_OPTIONS[plan.id].length > 1 && (
                                     <div className="mb-8 w-full">
                                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Durasi</label>
@@ -467,8 +375,6 @@ export default function PricingPage() {
                                         </>
                                     )}
                                 </button>
-                                    </>
-                                )}
                             </div>
                         </motion.div>
                     );
