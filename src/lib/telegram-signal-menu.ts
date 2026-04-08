@@ -725,6 +725,17 @@ Return exactly one actionable setup that is still executable near current market
 - Do not hallucinate entry, SL, or TP. If no clean setup exists after checking momentum, retracement, and breakout, return WAIT with a short natural Indonesian reason.
 === END TELEBOT EXECUTION FILTER ===`;
 
+const TELEBOT_PENDING_PRIORITY_GUIDANCE = `
+=== TELEBOT PENDING PRIORITY ===
+Before returning WAIT, you must check these in order:
+1. nearest valid retracement setup -> LIMIT
+2. nearest valid breakout setup -> STOP
+3. only if both are not clean, then consider INSTANT
+4. only if all three are not clean, return WAIT
+
+Do not give up early. If the first idea is too far, search again for a closer pending setup that still has valid structure.
+=== END TELEBOT PENDING PRIORITY ===`;
+
 const TELEBOT_PRIMARY_GUIDANCE = `
 === TELEBOT PRIMARY SIGNAL RULES ===
 You are preparing a private execution-desk setup, not a generic bullish opinion.
@@ -775,7 +786,8 @@ export async function generateTelegramSignal(params: {
   const analysisAttempts = [
     `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}`,
     `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}`,
-    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
+    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_PENDING_PRIORITY_GUIDANCE}`,
+    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_PENDING_PRIORITY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
   ];
   let selectedAnalysis: string | null = null;
   let parsed: ReturnType<typeof parseTelebotSignalFromAnalysis> = null;
@@ -790,8 +802,9 @@ export async function generateTelegramSignal(params: {
     const ai = await analyzeWithGroq(analysisAttempts[attemptIndex]);
 
     if (!ai.success || !ai.analysis) {
-      lastFailureMessage = `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.`;
-      break;
+      lastFailureMessage = `Analisa ${symbol} ${timeframe.toUpperCase()} sedang dicoba ulang untuk cari setup yang lebih valid.`;
+      if (attemptIndex < analysisAttempts.length - 1) continue;
+      return { ok: false as const, message: `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.` };
     }
 
     const attemptParsed = parseTelebotSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
