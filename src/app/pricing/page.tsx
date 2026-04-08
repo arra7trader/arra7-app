@@ -108,6 +108,42 @@ const PRICING_PLANS = [
     },
 ];
 
+const TELEBOT_PROMO_CARDS: Array<{
+    duration: string;
+    title: string;
+    subtitle: string;
+    accentClass: string;
+    borderClass: string;
+    benefits: string[];
+}> = [
+    {
+        duration: '1month',
+        title: 'TELEBOT 1 Bulan',
+        subtitle: 'Untuk trader yang ingin langsung coba private execution desk.',
+        accentClass: 'from-emerald-500/20 to-cyan-500/10 text-emerald-300',
+        borderClass: 'border-emerald-500/20',
+        benefits: [
+            'Akses TELEBOT 1 bulan penuh',
+            'Bonus akun PRO website 1 bulan',
+            'Bonus video Edukasi Sniper Entry',
+            'Signal multi-market + live status',
+        ],
+    },
+    {
+        duration: 'lifetime',
+        title: 'TELEBOT Lifetime',
+        subtitle: 'Promo gila sekali bayar untuk 100 orang tercepat.',
+        accentClass: 'from-amber-500/20 to-orange-500/10 text-amber-200',
+        borderClass: 'border-amber-500/25',
+        benefits: [
+            'Akses TELEBOT lifetime',
+            'Bonus akun PRO website 1 bulan',
+            'Bonus video Edukasi Sniper Entry',
+            'Hanya 100 slot seumur hidup',
+        ],
+    },
+];
+
 export default function PricingPage() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -132,7 +168,7 @@ export default function PricingPage() {
             .catch(err => console.error('Failed to fetch promo slots', err));
     }, []);
 
-    const handleSubscribe = async (planId: string) => {
+    const handleSubscribe = async (planId: string, durationOverride?: string) => {
         if (!session) {
             signIn('google', { callbackUrl: `/pricing?plan=${planId}` });
             return;
@@ -144,7 +180,7 @@ export default function PricingPage() {
         }
 
         setIsProcessing(planId);
-        const duration = selectedDuration[planId] || '1month';
+        const duration = durationOverride || selectedDuration[planId] || '1month';
         const durationOption = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
         const days = durationOption?.days ?? 30;
 
@@ -284,6 +320,86 @@ export default function PricingPage() {
 
                             {/* Right Pane (Pricing & CTA) */}
                             <div className="w-full md:w-2/5 p-8 md:p-14 text-center bg-[var(--bg-primary)] flex flex-col justify-center items-center">
+                                {plan.id === 'TELEBOT' ? (
+                                    <div className="w-full space-y-4">
+                                        {TELEBOT_PROMO_CARDS.map((offer) => {
+                                            const option = DURATION_OPTIONS.TELEBOT.find((item) => item.duration === offer.duration);
+                                            const slotInfo = promoSlots?.TELEBOT?.[offer.duration];
+                                            const isSoldOut = !!(option?.promoSlots && slotInfo && slotInfo.remaining <= 0);
+                                            const price = option?.price || '-';
+                                            const originalPrice = option?.originalPrice || null;
+                                            const period = option?.period || '';
+                                            const savingsText = option?.savingsText || null;
+                                            const badge = slotInfo
+                                                ? slotInfo.remaining > 0
+                                                    ? `Tersisa ${slotInfo.remaining} Slot`
+                                                    : 'SLOT HABIS'
+                                                : null;
+
+                                            return (
+                                                <div
+                                                    key={offer.duration}
+                                                    className={`rounded-3xl border ${offer.borderClass} bg-gradient-to-br ${offer.accentClass} p-5 text-left shadow-xl`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                                        <div>
+                                                            <p className="text-xs uppercase tracking-[0.2em] text-white/60 mb-2">Promo TELEBOT</p>
+                                                            <h3 className="text-2xl font-bold text-white">{offer.title}</h3>
+                                                            <p className="text-sm text-white/75 mt-2">{offer.subtitle}</p>
+                                                        </div>
+                                                        {badge && (
+                                                            <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold ${badge.includes('HABIS')
+                                                                ? 'bg-rose-500/15 text-rose-200 border border-rose-500/30'
+                                                                : 'bg-white/10 text-white border border-white/15'
+                                                                }`}>
+                                                                {badge}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {originalPrice && (
+                                                        <p className="text-sm text-white/45 line-through mb-1">{originalPrice}</p>
+                                                    )}
+                                                    <div className="flex items-end gap-2 mb-3">
+                                                        <span className="text-4xl font-black text-white">{price}</span>
+                                                        {period && <span className="text-sm font-medium text-white/70">{period}</span>}
+                                                    </div>
+
+                                                    {savingsText && (
+                                                        <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 mb-4">
+                                                            {savingsText}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="space-y-2 mb-5">
+                                                        {offer.benefits.map((benefit) => (
+                                                            <div key={benefit} className="flex items-start gap-2 text-sm text-white/90">
+                                                                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
+                                                                    <CheckIcon size="xs" />
+                                                                </span>
+                                                                <span>{benefit}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleSubscribe('TELEBOT', offer.duration)}
+                                                        disabled={isProcessing === plan.id || isSoldOut}
+                                                        className={`w-full rounded-2xl py-3 font-bold transition-all ${isSoldOut
+                                                            ? 'cursor-not-allowed bg-white/10 text-white/50'
+                                                            : offer.duration === 'lifetime'
+                                                                ? 'bg-white text-slate-900 hover:bg-amber-50'
+                                                                : 'bg-emerald-500 text-white hover:bg-emerald-400'
+                                                            }`}
+                                                    >
+                                                        {isSoldOut ? 'Promo Habis' : offer.duration === 'lifetime' ? 'Ambil Promo Lifetime' : 'Ambil Promo 1 Bulan'}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <>
                                 {DURATION_OPTIONS[plan.id] && DURATION_OPTIONS[plan.id].length > 1 && (
                                     <div className="mb-8 w-full">
                                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Durasi</label>
@@ -351,6 +467,8 @@ export default function PricingPage() {
                                         </>
                                     )}
                                 </button>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     );
