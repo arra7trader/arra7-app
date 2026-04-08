@@ -168,12 +168,12 @@ SL dan TP BUKAN hanya berdasarkan ATR! Gunakan **MULTI-METHOD APPROACH** yang me
 - **News Event Imminent:** Widen SL atau WAIT (jangan trade)
 - **Counter-Trend Setup:** Minimal 1.5x normal SL distance untuk safety
 
-⚠️ **ORDER TYPE** (Pilih 1 tipe):
-- **INSTANT:** Momentum kuat + harga di entry zone
-- **LIMIT:** Trend stabil + tunggu retracement ke Order Block
-- **STOP:** Market sideways + tunggu breakout confirmation
+⚠️ **ORDER TYPE** (Pilih 1 tipe dengan disiplin):
+- **INSTANT:** HANYA jika harga saat ini benar-benar sangat dekat dengan entry dan tidak ada pending setup yang lebih bersih
+- **LIMIT:** Gunakan jika setup terbaik adalah retracement ke area value / Order Block / support-resistance
+- **STOP:** Gunakan jika setup terbaik adalah breakout confirmation di atas / bawah struktur penting
 
-**RULES:** Stocks=LONG only. Strong momentum=INSTANT only. Sideways=STOP/LIMIT only.
+**RULES:** Stocks=LONG only. Jangan default ke INSTANT. Cari dulu apakah LIMIT atau STOP lebih rapi dan lebih masuk akal. INSTANT hanya boleh dipilih jika pending setup tidak lebih baik.
 
 **STATUS POSISI:**
 Jika harga saat ini sudah mencapai atau melewati TP1/TP2/TP3, berikan saran: **"CLOSE NOW"** (Ambil Profit).
@@ -184,6 +184,7 @@ FORMAT OUTPUT (WAJIB IKUTI PERSIS):
 🔮 *ARRA QUANTUM STRATEGIC v2.0*
 ━━━━━━━━━━━━━━━━━━━━━━
 ⚡ *EXECUTION STRATEGY:* [pilih SATU: MOMENTUM INSTANT atau RETRACEMENT LIMIT atau BREAKOUT STOP]
+Execution Reason: [jelaskan singkat kenapa order type ini paling valid dibanding alternatif lain]
 
 🔥 *ACTION CALL*
 🚀 [tulis contoh fleksibel: BUY INSTANT atau SELL LIMIT atau WAIT]

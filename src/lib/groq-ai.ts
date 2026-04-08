@@ -117,7 +117,9 @@ function detectTimeframe(marketDataText: string): string | undefined {
 }
 
 function enforceSignalRiskRules(analysis: string, marketDataText: string): string {
-    const actionMatch = analysis.match(/\b(BUY|SELL|WAIT)\b(?:\s+(?:INSTANT|LIMIT|STOP))?/i);
+    const actionMatch =
+        analysis.match(/ACTION(?:\s+CALL)?[\s\S]{0,160}?\b(BUY|SELL|WAIT)\b(?:\s+(?:INSTANT|LIMIT|STOP))?/i) ||
+        analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|WAIT)\b(?:\s+(?:INSTANT|LIMIT|STOP))?/i);
     const entryMatch = analysis.match(/\bENTRY\b[^\n]*?([0-9]+(?:\.[0-9]+)?)/i);
     const slMatch = analysis.match(/\bSL\b[^\n]*?([0-9]+(?:\.[0-9]+)?)/i);
 

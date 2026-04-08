@@ -417,8 +417,8 @@ function getExecutionValidationProfile(symbol: string, currentPrice: number) {
 
   return {
     benchmarkDistance,
-    instantTolerance: Math.max(benchmarkDistance * 0.15, currentPrice * 0.0005),
-    minPendingGap: Math.max(benchmarkDistance * 0.08, currentPrice * 0.0003),
+    instantTolerance: Math.max(benchmarkDistance * 0.04, currentPrice * 0.00015),
+    minPendingGap: Math.max(benchmarkDistance * 0.06, currentPrice * 0.0002),
     maxPendingGap: Math.max(benchmarkDistance * 1.5, currentPrice * 0.02),
   };
 }
@@ -442,6 +442,48 @@ function resolveExecutionType(params: {
       ? (params.entryPrice > params.currentPrice ? 'STOP' : 'LIMIT')
       : (params.entryPrice < params.currentPrice ? 'STOP' : 'LIMIT');
   const preferredExecutionType = params.preferredExecutionType;
+
+  if (preferredExecutionType === 'LIMIT') {
+    const limitIsStructurallyValid =
+      params.direction === 'BUY'
+        ? params.entryPrice <= params.currentPrice
+        : params.entryPrice >= params.currentPrice;
+
+    if (!limitIsStructurallyValid) {
+      return { ok: false, reason: 'LIMIT tidak valid karena posisi entry tidak sesuai struktur retracement' };
+    }
+
+    if (gap > profile.maxPendingGap) {
+      return { ok: false, reason: 'LIMIT tidak valid karena entry terlalu jauh dari current price' };
+    }
+
+    return {
+      ok: true,
+      executionType: 'LIMIT',
+      orderType: params.direction === 'BUY' ? 'BUY LIMIT' : 'SELL LIMIT',
+    };
+  }
+
+  if (preferredExecutionType === 'STOP') {
+    const stopIsStructurallyValid =
+      params.direction === 'BUY'
+        ? params.entryPrice >= params.currentPrice
+        : params.entryPrice <= params.currentPrice;
+
+    if (!stopIsStructurallyValid) {
+      return { ok: false, reason: 'STOP tidak valid karena posisi entry tidak sesuai struktur breakout' };
+    }
+
+    if (gap > profile.maxPendingGap) {
+      return { ok: false, reason: 'STOP tidak valid karena entry terlalu jauh dari current price' };
+    }
+
+    return {
+      ok: true,
+      executionType: 'STOP',
+      orderType: params.direction === 'BUY' ? 'BUY STOP' : 'SELL STOP',
+    };
+  }
 
   if (preferredExecutionType === 'INSTANT') {
     if (gap <= profile.instantTolerance) {
@@ -676,12 +718,22 @@ const TELEBOT_RETRY_GUIDANCE = `
 === TELEBOT EXECUTION FILTER ===
 Return exactly one actionable setup that is still executable near current market structure.
 - Work harder to find the best clean setup before giving up.
-- Do not default to BUY NOW / SELL NOW unless the entry is genuinely near market.
+- Do not default to BUY NOW / SELL NOW unless the entry is genuinely very near market and no cleaner pending setup exists.
 - If retracement setup is valid, prefer BUY LIMIT / SELL LIMIT.
 - If breakout setup is valid, prefer BUY STOP / SELL STOP.
 - If your first pending entry would be too far from current price, refine the setup and search again for a nearer valid entry.
 - Do not hallucinate entry, SL, or TP. If no clean setup exists after checking momentum, retracement, and breakout, return WAIT with a short natural Indonesian reason.
 === END TELEBOT EXECUTION FILTER ===`;
+
+const TELEBOT_PRIMARY_GUIDANCE = `
+=== TELEBOT PRIMARY SIGNAL RULES ===
+You are preparing a private execution-desk setup, not a generic bullish opinion.
+- Return BUY or SELL only if entry, SL, TP, and execution type are all explicit and consistent.
+- Prefer the cleanest executable setup near current structure.
+- INSTANT is allowed only when current price is already sitting very near the planned entry and pending setup is not cleaner.
+- If a LIMIT or STOP setup is cleaner, use that instead of forcing INSTANT.
+- Never invent a direction from general bullish / bearish commentary without an explicit action call.
+=== END TELEBOT PRIMARY SIGNAL RULES ===`;
 
 const TELEBOT_NO_SIGNAL_GUIDANCE = `
 === TELEBOT NO SIGNAL RESPONSE ===
@@ -721,9 +773,9 @@ export async function generateTelegramSignal(params: {
   const formatted = formatMarketDataForAI(marketData, timeframe);
   const currentPrice = marketData.current_price || 0;
   const analysisAttempts = [
-    formatted,
-    `${formatted}\n\n${TELEBOT_RETRY_GUIDANCE}`,
-    `${formatted}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
+    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}`,
+    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}`,
+    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
   ];
   let selectedAnalysis: string | null = null;
   let parsed: ReturnType<typeof parseTelebotSignalFromAnalysis> = null;

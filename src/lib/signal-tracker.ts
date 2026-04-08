@@ -118,6 +118,26 @@ function extractSignalConfidence(analysis: string): number | undefined {
     return undefined;
 }
 
+function extractExplicitActionSection(analysis: string): string {
+    const actionSectionMatch = analysis.match(
+        /ACTION(?:\s+CALL)?\s*([\s\S]{0,260}?)(?:\n\s*(?:ENTRY\b|REKOMENDASI\b|RECOMMENDATION\b|AKSI\b)|$)/i
+    );
+    return actionSectionMatch?.[1] || '';
+}
+
+function extractExplicitRecommendation(analysis: string) {
+    const actionSection = extractExplicitActionSection(analysis);
+    const scopedActionMatch =
+        actionSection.match(/\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
+        analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
+        analysis.match(/^(?:[-*>\s]*)\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?\b/im);
+
+    return {
+        direction: parseDirectionToken(scopedActionMatch?.[1]),
+        executionType: parseExecutionToken(scopedActionMatch?.[2]),
+    };
+}
+
 export function parseTelebotSignalFromAnalysis(
     analysis: string,
     type: 'forex' | 'stock',
@@ -126,13 +146,9 @@ export function parseTelebotSignalFromAnalysis(
 ): SignalData | null {
     try {
         const strategyMatch = analysis.match(/EXECUTION STRATEGY:\s*(?:MOMENTUM\s+|RETRACEMENT\s+|BREAKOUT\s+)?(INSTANT|LIMIT|STOP)/i);
-        const actionMatch =
-            analysis.match(/ACTION(?:\s+CALL)?[\s\S]{0,120}?\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
-            analysis.match(/(?:REKOMENDASI|RECOMMENDATION|AKSI)[:\s-]*\b(BUY|SELL|LONG|SHORT|BELI|JUAL|WAIT)\b(?:\s+(INSTANT|LIMIT|STOP))?/i) ||
-            analysis.match(/\b(BUY|SELL|LONG|SHORT|BELI|JUAL)\s+(INSTANT|LIMIT|STOP)\b/i);
-
-        const direction = parseDirectionToken(actionMatch?.[1]);
-        const executionType = parseExecutionToken(actionMatch?.[2]) || parseExecutionToken(strategyMatch?.[1]);
+        const explicitRecommendation = extractExplicitRecommendation(analysis);
+        const direction = explicitRecommendation.direction;
+        const executionType = explicitRecommendation.executionType || parseExecutionToken(strategyMatch?.[1]);
 
         if (direction === 'HOLD') {
             return null;
@@ -444,8 +460,6 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
     try {
         console.log('[SignalTracker] Parsing analysis for:', symbol);
         const lowerAnalysis = analysis.toLowerCase();
-
-        // Determine direction - check multiple patterns
         let direction: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
         let executionType: SignalData['executionType'];
 
@@ -453,6 +467,9 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
         if (strategyMatch) {
             executionType = strategyMatch[1].toUpperCase() as SignalData['executionType'];
         }
+        const explicitRecommendation = extractExplicitRecommendation(analysis);
+        direction = explicitRecommendation.direction;
+        executionType = explicitRecommendation.executionType || executionType;
 
         // Check for explicit recommendations (New Format v2.0)
         // Look for 🚀 followed by direction
@@ -483,6 +500,9 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
         } else if (lowerAnalysis.includes('bearish')) {
             direction = 'SELL';
         }
+
+        direction = explicitRecommendation.direction;
+        executionType = explicitRecommendation.executionType || executionType;
 
         // Extract prices using multiple regex patterns
         // Updated for v2.0 format which uses emojis
@@ -553,6 +573,27 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
 
         console.log('[SignalTracker] Parsed values:', { direction, entryPrice, stopLoss, takeProfit1, takeProfit2, confidence });
 
+        if (direction !== 'HOLD' && entryPrice > 0 && stopLoss > 0 && takeProfit1 > 0) {
+            const signalData: SignalData = {
+                type,
+                symbol,
+                timeframe,
+                direction,
+                executionType,
+                entryPrice,
+                stopLoss,
+                takeProfit1,
+                takeProfit2: takeProfit2 > 0 ? takeProfit2 : undefined,
+                confidence,
+            };
+
+            console.log('[SignalTracker] Signal data ready:', JSON.stringify(signalData));
+            return signalData;
+        }
+
+        console.log('[SignalTracker] Could not parse strict signal - direction:', direction, 'entry:', entryPrice);
+        return null;
+
         // RELAXED VALIDATION: Save if we have direction (not HOLD) and at least entry price
         // We can still track signals even without perfect SL/TP parsing
         if (direction !== 'HOLD') {
@@ -563,9 +604,9 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
 
             // Try to extract current price from analysis if entry is 0
             if (finalEntry === 0) {
-                const currentPriceMatch = analysis.match(/(?:current|harga\s*sekarang|price)[:\s]*[\$]?([\d,\.]+)/i);
-                if (currentPriceMatch) {
-                    finalEntry = parseFloat(currentPriceMatch[1].replace(/,/g, ''));
+                const currentPriceValue = analysis.match(/(?:current|harga\s*sekarang|price)[:\s]*[\$]?([\d,\.]+)/i)?.[1] ?? '';
+                if (currentPriceValue) {
+                    finalEntry = parseFloat(currentPriceValue.replace(/,/g, ''));
                 }
             }
 
@@ -573,16 +614,16 @@ export function parseSignalFromAnalysis(analysis: string, type: 'forex' | 'stock
             if (finalEntry === 0) {
                 // For gold, look for typical gold prices
                 if (symbol.toUpperCase().includes('XAU') || symbol.toUpperCase().includes('GOLD')) {
-                    const goldPriceMatch = analysis.match(/\$?(2[0-9]{3}(?:\.[0-9]+)?)/);
-                    if (goldPriceMatch) {
-                        finalEntry = parseFloat(goldPriceMatch[1]);
+                    const goldPriceValue = analysis.match(/\$?(2[0-9]{3}(?:\.[0-9]+)?)/)?.[1] ?? '';
+                    if (goldPriceValue) {
+                        finalEntry = parseFloat(goldPriceValue);
                     }
                 }
                 // For forex pairs, look for typical forex prices
                 else {
-                    const forexPriceMatch = analysis.match(/(\d+\.\d{4,5})/);
-                    if (forexPriceMatch) {
-                        finalEntry = parseFloat(forexPriceMatch[1]);
+                    const forexPriceValue = analysis.match(/(\d+\.\d{4,5})/)?.[1] ?? '';
+                    if (forexPriceValue) {
+                        finalEntry = parseFloat(forexPriceValue);
                     }
                 }
             }
