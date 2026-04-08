@@ -67,6 +67,14 @@ export async function GET() {
             };
         }
 
+        if (!slots.TELEBOT['lifetime']) {
+            slots.TELEBOT['lifetime'] = {
+                used: 0,
+                remaining: 100,
+                max: 100,
+            };
+        }
+
         return NextResponse.json({
             status: 'success',
             slots,
@@ -101,14 +109,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!['PRO', 'VVIP'].includes(membership)) {
+        if (!['PRO', 'VVIP', 'TELEBOT'].includes(membership)) {
             return NextResponse.json(
                 { status: 'error', message: 'Invalid membership' },
                 { status: 400 }
             );
         }
 
-        if (!['3months', '6months', '1year'].includes(duration)) {
+        const validDurations = membership === 'TELEBOT'
+            ? ['1month', 'lifetime']
+            : ['3months', '6months', '1year'];
+
+        if (!validDurations.includes(duration)) {
             return NextResponse.json(
                 { status: 'error', message: 'Invalid duration' },
                 { status: 400 }
@@ -122,7 +134,9 @@ export async function POST(request: NextRequest) {
         });
 
         let usedCount = 0;
-        let maxCount = 15;
+        let maxCount = membership === 'TELEBOT'
+            ? (duration === 'lifetime' ? 100 : 50)
+            : 15;
 
         if (current.rows.length > 0) {
             usedCount = current.rows[0].used_count as number;
@@ -140,10 +154,10 @@ export async function POST(request: NextRequest) {
         // Increment slot usage
         await turso.execute({
             sql: `INSERT INTO promo_slots (membership, duration, used_count, max_count)
-                  VALUES (?, ?, 1, 15)
+                  VALUES (?, ?, 1, ?)
                   ON CONFLICT(membership, duration) 
                   DO UPDATE SET used_count = used_count + 1, updated_at = CURRENT_TIMESTAMP`,
-            args: [membership, duration],
+            args: [membership, duration, maxCount],
         });
 
         return NextResponse.json({

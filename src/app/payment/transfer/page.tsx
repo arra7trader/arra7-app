@@ -36,6 +36,7 @@ const PRICING_OPTIONS: Record<
     },
     TELEBOT: {
         '1month': { durationLabel: '1 Bulan', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 249.000', period: '/bulan' },
+        'lifetime': { durationLabel: 'Lifetime', price: 375000, priceDisplay: 'Rp 375.000', originalPrice: null, period: '/sekali bayar' },
     },
 };
 
@@ -110,7 +111,7 @@ function TransferContent() {
         `Paket: ${plan.name} (${plan.durationLabel})`,
         `Nominal: ${plan.priceDisplay}`,
         requiresTelegramUsername ? `Username Telegram: @${normalizedTelegramUsername}` : null,
-        plan.id === 'TELEBOT' ? `Bonus member: akun PRO website + video eksklusif di ${telebotBonusPageUrl}` : null,
+        plan.id === 'TELEBOT' ? `Bonus member: akun PRO website 1 bulan + video eksklusif di ${telebotBonusPageUrl}` : null,
         '',
         requiresTelegramUsername
             ? 'Mohon approve akses TELEBOT saya. Berikut bukti pembayarannya: (Lampirkan Screenshot)'
@@ -257,6 +258,7 @@ function TransferContent() {
                                     <li>Masukkan nominal sesuai total pembayaran: <strong className="text-[var(--text-primary)]">{plan.priceDisplay}</strong></li>
                                     <li>Setelah berhasil, screenshot bukti pembayaran.</li>
                                     {requiresTelegramUsername && <li>Masukkan username Telegram Anda di form atas.</li>}
+                                    {plan.id === 'TELEBOT' && duration === 'lifetime' && <li>Promo lifetime TELEBOT ini hanya untuk 100 orang pertama.</li>}
                                     <li>Klik tombol konfirmasi di bawah untuk kirim bukti ke admin.</li>
                                     <li>Tunggu approval admin dan aktivasi akses maksimal 1x24 jam.</li>
                                 </ol>

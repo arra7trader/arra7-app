@@ -46,6 +46,7 @@ export default function PrivateBotAdminPage() {
   const [paymentConfirmations, setPaymentConfirmations] = useState<TelebotPaymentConfirmation[]>([]);
   const [email, setEmail] = useState('');
   const [telegramUsername, setTelegramUsername] = useState('');
+  const [durationCode, setDurationCode] = useState<'1month' | 'lifetime'>('1month');
   const [days, setDays] = useState(30);
   const [query, setQuery] = useState('');
   const canRunManualAction = telegramUsername.trim().length > 0 || email.trim().length > 0;
@@ -90,6 +91,7 @@ export default function PrivateBotAdminPage() {
           email: targetEmail,
           userId,
           days,
+          durationCode,
           telegramUsername
         })
       });
@@ -208,15 +210,50 @@ export default function PrivateBotAdminPage() {
               Email sekarang hanya referensi tambahan, bukan penentu akses bot.
             </p>
 
-            <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Durasi aktif (hari)</label>
-            <input
-              type="number"
-              min={1}
-              max={365}
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
-            />
+            <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Paket TELEBOT</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setDurationCode('1month');
+                  setDays(30);
+                }}
+                className={`px-4 py-3 rounded-xl border text-sm font-semibold ${durationCode === '1month'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                  : 'border-[var(--border-light)] bg-[var(--bg-secondary)] text-[var(--text-primary)]'
+                  }`}
+              >
+                1 Bulan
+              </button>
+              <button
+                type="button"
+                onClick={() => setDurationCode('lifetime')}
+                className={`px-4 py-3 rounded-xl border text-sm font-semibold ${durationCode === 'lifetime'
+                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                  : 'border-[var(--border-light)] bg-[var(--bg-secondary)] text-[var(--text-primary)]'
+                  }`}
+              >
+                Lifetime
+              </button>
+            </div>
+
+            {durationCode === '1month' ? (
+              <>
+                <label className="block text-sm text-[var(--text-secondary)] mt-4 mb-2">Durasi aktif (hari)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={3650}
+                  value={days}
+                  onChange={(e) => setDays(Number(e.target.value))}
+                  className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
+                />
+              </>
+            ) : (
+              <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-200">
+                Promo lifetime TELEBOT berlaku sekali bayar dan hanya untuk 100 orang pertama.
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
               <button
@@ -333,6 +370,12 @@ export default function PrivateBotAdminPage() {
                             onClick={() => {
                               setTelegramUsername(item.telegramUsername || '');
                               setEmail(item.email);
+                              if (item.durationCode === 'lifetime') {
+                                setDurationCode('lifetime');
+                              } else {
+                                setDurationCode('1month');
+                                setDays(30);
+                              }
                             }}
                             className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs"
                           >
@@ -401,7 +444,7 @@ export default function PrivateBotAdminPage() {
                         {item.telegramChatId || 'Belum link'}
                       </td>
                       <td className="py-4 pr-3 text-[var(--text-secondary)]">
-                        {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString('id-ID') : '-'}
+                        {item.status === 'active' && !item.expiresAt ? 'Lifetime' : item.expiresAt ? new Date(item.expiresAt).toLocaleDateString('id-ID') : '-'}
                       </td>
                       <td className="py-4 pr-3">
                         <div className="flex flex-wrap gap-2">

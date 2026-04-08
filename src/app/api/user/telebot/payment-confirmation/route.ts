@@ -10,6 +10,11 @@ function normalizeTelegramUsername(username?: string | null): string | null {
   return value || null;
 }
 
+const TELEBOT_PAYMENT_OPTIONS: Record<string, number> = {
+  '1month': 175000,
+  'lifetime': 375000,
+};
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,13 +26,20 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const planCode = String(body?.planCode || 'TELEBOT').trim().toUpperCase();
-    const durationCode = String(body?.durationCode || '1month').trim();
-    const amountIdr = Math.max(0, Number(body?.amountIdr || 175000));
+    const durationCode = String(body?.durationCode || '1month').trim().toLowerCase();
     const telegramUsername = normalizeTelegramUsername(body?.telegramUsername);
 
     if (planCode !== 'TELEBOT') {
       return NextResponse.json(
         { ok: false, message: 'Plan code tidak valid.' },
+        { status: 400 }
+      );
+    }
+
+    const expectedAmount = TELEBOT_PAYMENT_OPTIONS[durationCode];
+    if (!expectedAmount) {
+      return NextResponse.json(
+        { ok: false, message: 'Durasi TELEBOT tidak valid.' },
         { status: 400 }
       );
     }
@@ -59,7 +71,7 @@ export async function POST(request: NextRequest) {
         session.user.name || null,
         planCode,
         durationCode,
-        amountIdr,
+        expectedAmount,
         telegramUsername
       ]
     });

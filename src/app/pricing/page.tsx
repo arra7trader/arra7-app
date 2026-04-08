@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon } from '@/components/PremiumIcons';
 
-const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string; savingsText?: string; promoSlots?: number }>> = {
+const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
     PRO: [
         { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 99.000', originalPrice: 'Rp 149.000' },
         { duration: '3months', days: 90, label: '3 Bulan', price: 'Rp 290.000', originalPrice: 'Rp 447.000', savingsText: 'Hemat Rp 157Rb', promoSlots: 15 },
@@ -21,7 +21,8 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
         { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', savingsText: 'Hemat Rp 1.98M', promoSlots: 15 },
     ],
     TELEBOT: [
-        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch + Bonus PRO', promoSlots: 50 },
+        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch + Bonus PRO', promoSlots: 50, period: '/ bulan' },
+        { duration: 'lifetime', days: 0, label: 'Lifetime', price: 'Rp 375.000', originalPrice: null, savingsText: '100 Slot Saja + Bonus PRO', promoSlots: 100, period: '/ sekali bayar' },
     ],
 };
 
@@ -86,12 +87,13 @@ const PRICING_PLANS = [
     {
         id: 'TELEBOT',
         name: 'TELEBOT',
-        description: 'Bot Telegram premium untuk signal praktis, hasil live, approval via username Telegram, dan bonus video edukasi eksklusif dari ARRA7. 50 user pertama juga dapat bonus akun PRO website 1 bulan.',
+        description: 'Bot Telegram premium untuk signal praktis, hasil live, approval via username Telegram, dan bonus video edukasi eksklusif dari ARRA7. Tersedia promo 1 bulan dan promo lifetime 100 orang pertama.',
         icon: 'T',
         theme: 'emerald',
         features: [
             { text: 'Akses bot Telegram khusus member approved', included: true, highlight: true },
             { text: 'Bonus akun PRO website 1 bulan untuk 50 member pertama', included: true, highlight: true },
+            { text: 'Promo lifetime Rp 375.000 hanya untuk 100 orang pertama', included: true, highlight: true },
             { text: 'Bonus video edukasi eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
             { text: 'Menu Signal untuk semua pair dan timeframe', included: true, highlight: false },
             { text: 'Menu Hasil untuk progress TP / SL signal', included: true, highlight: false },
@@ -144,7 +146,7 @@ export default function PricingPage() {
         setIsProcessing(planId);
         const duration = selectedDuration[planId] || '1month';
         const durationOption = DURATION_OPTIONS[planId]?.find(d => d.duration === duration);
-        const days = durationOption?.days || 30;
+        const days = durationOption?.days ?? 30;
 
         router.push(`/payment/transfer?plan=${planId}&duration=${duration}&days=${days}`);
     };
@@ -176,7 +178,7 @@ export default function PricingPage() {
         return {
             price: option.price,
             originalPrice: option.originalPrice,
-            period: option.duration === '1month' ? '/ bulan' : '',
+            period: option.period || '',
             badge,
             savingsText: option.savingsText,
         };
@@ -236,6 +238,7 @@ export default function PricingPage() {
                     return (
                         <motion.div
                             key={plan.id}
+                            id={plan.id === 'TELEBOT' ? 'telebot-plan' : undefined}
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.15, duration: 0.5 }}

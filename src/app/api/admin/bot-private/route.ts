@@ -11,6 +11,13 @@ const TELEBOT_PRO_BONUS_SLOT_KEY = 'TELEBOT';
 const TELEBOT_PRO_BONUS_DURATION = '1month';
 const TELEBOT_PRO_BONUS_MAX = 50;
 const TELEBOT_PRO_BONUS_DAYS = 30;
+const TELEBOT_LIFETIME_DURATION = 'lifetime';
+const TELEBOT_LIFETIME_MAX = 100;
+
+const TELEBOT_DURATION_OPTIONS: Record<string, { days: number | null; label: string; amountIdr: number }> = {
+  '1month': { days: 30, label: '1 Bulan', amountIdr: 175000 },
+  'lifetime': { days: null, label: 'Lifetime', amountIdr: 375000 },
+};
 
 async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) {
   if (!turso) return;
@@ -203,6 +210,74 @@ function parseMetadataJson(raw: unknown): Record<string, any> {
   } catch {
     return {};
   }
+}
+
+async function getTelebotLifetimePromoState(
+  turso: ReturnType<typeof getTursoClient>,
+  userId: string
+): Promise<{ metadata: Record<string, any>; alreadyGranted: boolean; remaining: number; max: number; used: number; slotsFull: boolean }> {
+  if (!turso) {
+    return { metadata: {}, alreadyGranted: false, remaining: 0, max: TELEBOT_LIFETIME_MAX, used: 0, slotsFull: true };
+  }
+
+  const membershipResult = await turso.execute({
+    sql: `SELECT metadata_json FROM bot_memberships WHERE user_id = ? LIMIT 1`,
+    args: [userId]
+  });
+  const metadata = parseMetadataJson(membershipResult.rows[0]?.metadata_json);
+  const alreadyGranted = Boolean(metadata?.telebotLifetimePromo?.grantedAt);
+
+  const slotResult = await turso.execute({
+    sql: `SELECT used_count, max_count FROM promo_slots WHERE membership = ? AND duration = ? LIMIT 1`,
+    args: ['TELEBOT', TELEBOT_LIFETIME_DURATION]
+  });
+  const used = Number(slotResult.rows[0]?.used_count || 0);
+  const max = Number(slotResult.rows[0]?.max_count || TELEBOT_LIFETIME_MAX);
+  const remaining = Math.max(0, max - used);
+
+  return {
+    metadata,
+    alreadyGranted,
+    remaining,
+    max,
+    used,
+    slotsFull: !alreadyGranted && used >= max
+  };
+}
+
+async function finalizeTelebotLifetimePromoClaim(
+  turso: ReturnType<typeof getTursoClient>,
+  userId: string,
+  metadata: Record<string, any>
+) {
+  if (!turso) return false;
+
+  const nowIso = new Date().toISOString();
+
+  await turso.execute({
+    sql: `INSERT INTO promo_slots (membership, duration, used_count, max_count)
+          VALUES (?, ?, 1, ?)
+          ON CONFLICT(membership, duration)
+          DO UPDATE SET used_count = used_count + 1, max_count = excluded.max_count, updated_at = CURRENT_TIMESTAMP`,
+    args: ['TELEBOT', TELEBOT_LIFETIME_DURATION, TELEBOT_LIFETIME_MAX]
+  });
+
+  const nextMetadata = {
+    ...metadata,
+    telebotLifetimePromo: {
+      grantedAt: nowIso,
+      source: 'TELEBOT_LIFETIME_100'
+    }
+  };
+
+  await turso.execute({
+    sql: `UPDATE bot_memberships
+          SET metadata_json = ?
+          WHERE user_id = ?`,
+    args: [JSON.stringify(nextMetadata), userId]
+  });
+
+  return true;
 }
 
 async function grantTelebotWebsiteProBonus(
@@ -519,8 +594,14 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = String(userRow.id);
-    const days = Math.max(1, Math.min(365, Number(body?.days || 30)));
-    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    const requestedDurationCode = String(body?.durationCode || '1month').trim().toLowerCase();
+    const durationConfig = TELEBOT_DURATION_OPTIONS[requestedDurationCode] || TELEBOT_DURATION_OPTIONS['1month'];
+    const days = durationConfig.days === null
+      ? null
+      : Math.max(1, Math.min(3650, Number(body?.days || durationConfig.days)));
+    const expiresAt = days === null
+      ? null
+      : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
     if (action === 'invite') {
       const ok = await upsertPrivateBotMembership({
@@ -536,6 +617,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'activate') {
+      const lifetimeState = requestedDurationCode === TELEBOT_LIFETIME_DURATION
+        ? await getTelebotLifetimePromoState(turso, userId)
+        : null;
+
+      if (lifetimeState?.slotsFull) {
+        return NextResponse.json({
+          status: 'error',
+          message: 'Promo lifetime TELEBOT untuk 100 orang pertama sudah habis.'
+        }, { status: 400 });
+      }
+
       const ok = await upsertPrivateBotMembership({
         userId,
         status: 'active',
@@ -543,16 +635,21 @@ export async function POST(request: NextRequest) {
         expiresAt,
         telegramUsername
       });
+      if (ok && lifetimeState && !lifetimeState.alreadyGranted) {
+        await finalizeTelebotLifetimePromoClaim(turso, userId, lifetimeState.metadata);
+      }
       const bonusResult = ok ? await grantTelebotWebsiteProBonus(turso, userId) : { granted: false, reason: 'activation_failed' as const };
       if (ok) {
-        await markLatestPaymentConfirmation(turso, userId, 'approved', 'TELEBOT di-approve admin.');
+        await markLatestPaymentConfirmation(turso, userId, 'approved', `TELEBOT ${durationConfig.label} di-approve admin.`);
       }
       const usernameForMessage = telegramUsername ? `@${telegramUsername}` : 'akun Telegram Anda';
-      const expiryLabel = new Date(expiresAt).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
+      const expiryLabel = expiresAt
+        ? new Date(expiresAt).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+          })
+        : 'Lifetime';
       const websiteProLabel = bonusResult.expiresAt
         ? new Date(bonusResult.expiresAt).toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -572,14 +669,20 @@ export async function POST(request: NextRequest) {
               : '';
       return NextResponse.json({
         status: ok ? 'success' : 'error',
-        message: ok ? `Akses TELEBOT aktif ${days} hari.${bonusMessage}` : 'Gagal mengaktifkan akses TELEBOT.',
+        message: ok
+          ? requestedDurationCode === TELEBOT_LIFETIME_DURATION
+            ? `Akses TELEBOT lifetime berhasil aktif.${bonusMessage}`
+            : `Akses TELEBOT aktif ${days} hari.${bonusMessage}`
+          : 'Gagal mengaktifkan akses TELEBOT.',
         expiresAt,
+        durationCode: requestedDurationCode,
         approvalMessage: ok
           ? [
             'ARRA7 TELEBOT',
             'Private AI Execution Desk',
             '',
             `Halo, akses Anda sudah aktif untuk ${usernameForMessage}.`,
+            `Paket aktif: ${durationConfig.label}`,
             `Masa aktif: ${expiryLabel}`,
             bonusResult.granted && websiteProLabel ? `Bonus website: akun PRO aktif sampai ${websiteProLabel}` : null,
             `Bonus edukasi: video eksklusif Sniper Entry tersedia di ${bonusVideoUrl}`,
