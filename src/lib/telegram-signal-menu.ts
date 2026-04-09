@@ -798,17 +798,28 @@ function buildForcedPendingFallbackSignal(params: {
   analysis: string;
 } | null {
   const symbol = params.symbol.toUpperCase();
-  const candles = params.marketData.candles.slice(-5);
-  const currentPrice = params.marketData.current_price || 0;
-  if (!(currentPrice > 0) || candles.length < 3) return null;
+  const sourceCandles = params.marketData.candles.slice(-5);
+  const syntheticCandles = sourceCandles.length > 0
+    ? sourceCandles
+    : [{
+        time: params.marketData.timestamp || new Date().toISOString(),
+        open: params.marketData.open || params.marketData.close || params.marketData.current_price || 0,
+        high: params.marketData.high || params.marketData.current_price || params.marketData.close || 0,
+        low: params.marketData.low || params.marketData.current_price || params.marketData.close || 0,
+        close: params.marketData.close || params.marketData.current_price || params.marketData.open || 0,
+        volume: params.marketData.volume || 0,
+      }];
 
-  const recentHigh = Math.max(...candles.map((c) => c.high));
-  const recentLow = Math.min(...candles.map((c) => c.low));
+  const currentPrice = params.marketData.current_price || params.marketData.close || params.marketData.open || 0;
+  if (!(currentPrice > 0) || syntheticCandles.length === 0) return null;
+
+  const recentHigh = Math.max(...syntheticCandles.map((c) => c.high));
+  const recentLow = Math.min(...syntheticCandles.map((c) => c.low));
   const range = Math.max(recentHigh - recentLow, 0.8);
-  const firstOpen = candles[0]?.open || currentPrice;
-  const lastClose = candles[candles.length - 1]?.close || currentPrice;
-  const bullishCount = candles.filter((c) => c.close >= c.open).length;
-  const bearishCount = candles.length - bullishCount;
+  const firstOpen = syntheticCandles[0]?.open || currentPrice;
+  const lastClose = syntheticCandles[syntheticCandles.length - 1]?.close || currentPrice;
+  const bullishCount = syntheticCandles.filter((c) => c.close >= c.open).length;
+  const bearishCount = syntheticCandles.length - bullishCount;
   const direction: 'BUY' | 'SELL' =
     lastClose > firstOpen || bullishCount >= bearishCount ? 'BUY' : 'SELL';
 
