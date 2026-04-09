@@ -781,7 +781,7 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function buildGoldFallbackSignal(params: {
+function buildForcedPendingFallbackSignal(params: {
   symbol: string;
   timeframe: string;
   marketData: MarketData;
@@ -798,8 +798,6 @@ function buildGoldFallbackSignal(params: {
   analysis: string;
 } | null {
   const symbol = params.symbol.toUpperCase();
-  if (!isGoldSymbol(symbol)) return null;
-
   const candles = params.marketData.candles.slice(-5);
   const currentPrice = params.marketData.current_price || 0;
   if (!(currentPrice > 0) || candles.length < 3) return null;
@@ -814,8 +812,13 @@ function buildGoldFallbackSignal(params: {
   const direction: 'BUY' | 'SELL' =
     lastClose > firstOpen || bullishCount >= bearishCount ? 'BUY' : 'SELL';
 
-  const benchmarkDistance = 7.0;
-  const pendingOffset = clampNumber(range * 0.18, 0.8, 2.4);
+  const pipProfile = getTelebotPipProfile(symbol);
+  const benchmarkDistance = pipProfile.distanceType === 'percent'
+    ? currentPrice * pipProfile.benchmarkDistance
+    : pipProfile.benchmarkDistance;
+  const offsetFloor = isGoldSymbol(symbol) ? 0.8 : Math.max(benchmarkDistance * 0.12, currentPrice * 0.0002);
+  const offsetCeiling = isGoldSymbol(symbol) ? 2.4 : Math.max(benchmarkDistance * 0.45, currentPrice * 0.008);
+  const pendingOffset = clampNumber(range * 0.18, offsetFloor, offsetCeiling);
   const positionInRange = clampNumber((currentPrice - recentLow) / range, 0, 1);
 
   let executionType: 'LIMIT' | 'STOP';
@@ -842,7 +845,10 @@ function buildGoldFallbackSignal(params: {
       ? executionType === 'LIMIT' ? 'BUY LIMIT' : 'BUY STOP'
       : executionType === 'LIMIT' ? 'SELL LIMIT' : 'SELL STOP';
   const trendLabel = direction === 'BUY' ? 'bullish' : 'bearish';
-  const analysis = `Fallback gold setup digunakan karena AI belum memberi setup yang cukup rapi. Struktur 5 candle terakhir masih ${trendLabel}, sehingga desk menyiapkan ${orderType} terdekat dengan SL/TP 1:1 sebesar 70 pips agar tetap ada setup pending yang bisa dipantau.`;
+  const benchmarkText = isGoldSymbol(symbol)
+    ? 'SL/TP 1:1 sebesar 70 pips'
+    : `SL/TP 1:1 mengikuti benchmark ${pipProfile.label}`;
+  const analysis = `Fallback pending setup digunakan karena AI belum memberi setup utama yang cukup rapi. Struktur 5 candle terakhir masih ${trendLabel}, sehingga desk menyiapkan ${orderType} terdekat dengan ${benchmarkText} agar tetap ada order yang bisa dipantau.`;
 
   return {
     parsed: {
@@ -966,30 +972,30 @@ export async function generateTelegramSignal(params: {
   }
 
   if (!selectedAnalysis || !parsed || !executionDecision || !executionDecision.ok) {
-    const goldFallback = buildGoldFallbackSignal({
+    const forcedPendingFallback = buildForcedPendingFallbackSignal({
       symbol,
       timeframe,
       marketData,
     });
 
-    if (goldFallback) {
-      selectedAnalysis = goldFallback.analysis;
+    if (forcedPendingFallback) {
+      selectedAnalysis = forcedPendingFallback.analysis;
       parsed = {
         type: 'forex',
         symbol,
         timeframe,
-        direction: goldFallback.parsed.direction,
-        executionType: goldFallback.parsed.executionType,
-        entryPrice: goldFallback.parsed.entryPrice,
-        stopLoss: goldFallback.parsed.stopLoss,
-        takeProfit1: goldFallback.parsed.takeProfit1,
-        confidence: goldFallback.parsed.confidence,
+        direction: forcedPendingFallback.parsed.direction,
+        executionType: forcedPendingFallback.parsed.executionType,
+        entryPrice: forcedPendingFallback.parsed.entryPrice,
+        stopLoss: forcedPendingFallback.parsed.stopLoss,
+        takeProfit1: forcedPendingFallback.parsed.takeProfit1,
+        confidence: forcedPendingFallback.parsed.confidence,
       };
-      entry = goldFallback.parsed.entryPrice;
-      stopLoss = goldFallback.parsed.stopLoss;
-      takeProfit1 = goldFallback.parsed.takeProfit1;
-      confidence = goldFallback.parsed.confidence;
-      executionDecision = goldFallback.executionDecision;
+      entry = forcedPendingFallback.parsed.entryPrice;
+      stopLoss = forcedPendingFallback.parsed.stopLoss;
+      takeProfit1 = forcedPendingFallback.parsed.takeProfit1;
+      confidence = forcedPendingFallback.parsed.confidence;
+      executionDecision = forcedPendingFallback.executionDecision;
     }
   }
 
