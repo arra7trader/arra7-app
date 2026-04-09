@@ -4,6 +4,7 @@ import {
   ForexPair,
   formatMarketDataForAI,
   getMarketData,
+  MarketData,
   PAIR_CATEGORIES,
   Timeframe,
 } from './market-data';
@@ -771,6 +772,96 @@ function buildTelebotNoSignalMessage(symbol: string, timeframe: string) {
   return `Untuk ${symbol} ${timeframe.toUpperCase()} sekarang belum ada setup yang bener-bener enak. Marketnya masih nanggung, jadi lebih aman tunggu dulu sampai entry yang rapi muncul.`;
 }
 
+function isGoldSymbol(symbol: string) {
+  const normalized = symbol.toUpperCase();
+  return normalized.includes('XAU') || normalized.includes('GOLD');
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function buildGoldFallbackSignal(params: {
+  symbol: string;
+  timeframe: string;
+  marketData: MarketData;
+}): {
+  parsed: {
+    direction: 'BUY' | 'SELL';
+    executionType: 'LIMIT' | 'STOP';
+    entryPrice: number;
+    stopLoss: number;
+    takeProfit1: number;
+    confidence: number;
+  };
+  executionDecision: { ok: true; executionType: 'LIMIT' | 'STOP'; orderType: string };
+  analysis: string;
+} | null {
+  const symbol = params.symbol.toUpperCase();
+  if (!isGoldSymbol(symbol)) return null;
+
+  const candles = params.marketData.candles.slice(-5);
+  const currentPrice = params.marketData.current_price || 0;
+  if (!(currentPrice > 0) || candles.length < 3) return null;
+
+  const recentHigh = Math.max(...candles.map((c) => c.high));
+  const recentLow = Math.min(...candles.map((c) => c.low));
+  const range = Math.max(recentHigh - recentLow, 0.8);
+  const firstOpen = candles[0]?.open || currentPrice;
+  const lastClose = candles[candles.length - 1]?.close || currentPrice;
+  const bullishCount = candles.filter((c) => c.close >= c.open).length;
+  const bearishCount = candles.length - bullishCount;
+  const direction: 'BUY' | 'SELL' =
+    lastClose > firstOpen || bullishCount >= bearishCount ? 'BUY' : 'SELL';
+
+  const benchmarkDistance = 7.0;
+  const pendingOffset = clampNumber(range * 0.18, 0.8, 2.4);
+  const positionInRange = clampNumber((currentPrice - recentLow) / range, 0, 1);
+
+  let executionType: 'LIMIT' | 'STOP';
+  let entryPrice: number;
+
+  if (direction === 'BUY') {
+    const preferStop = positionInRange >= 0.62;
+    executionType = preferStop ? 'STOP' : 'LIMIT';
+    entryPrice = preferStop
+      ? Math.max(currentPrice + pendingOffset, recentHigh + 0.2)
+      : currentPrice - pendingOffset;
+  } else {
+    const preferStop = positionInRange <= 0.38;
+    executionType = preferStop ? 'STOP' : 'LIMIT';
+    entryPrice = preferStop
+      ? Math.min(currentPrice - pendingOffset, recentLow - 0.2)
+      : currentPrice + pendingOffset;
+  }
+
+  const stopLoss = direction === 'BUY' ? entryPrice - benchmarkDistance : entryPrice + benchmarkDistance;
+  const takeProfit1 = direction === 'BUY' ? entryPrice + benchmarkDistance : entryPrice - benchmarkDistance;
+  const orderType =
+    direction === 'BUY'
+      ? executionType === 'LIMIT' ? 'BUY LIMIT' : 'BUY STOP'
+      : executionType === 'LIMIT' ? 'SELL LIMIT' : 'SELL STOP';
+  const trendLabel = direction === 'BUY' ? 'bullish' : 'bearish';
+  const analysis = `Fallback gold setup digunakan karena AI belum memberi setup yang cukup rapi. Struktur 5 candle terakhir masih ${trendLabel}, sehingga desk menyiapkan ${orderType} terdekat dengan SL/TP 1:1 sebesar 70 pips agar tetap ada setup pending yang bisa dipantau.`;
+
+  return {
+    parsed: {
+      direction,
+      executionType,
+      entryPrice,
+      stopLoss,
+      takeProfit1,
+      confidence: 74,
+    },
+    executionDecision: {
+      ok: true,
+      executionType,
+      orderType,
+    },
+    analysis,
+  };
+}
+
 export async function generateTelegramSignal(params: {
   userId: string;
   chatId: string;
@@ -804,14 +895,14 @@ export async function generateTelegramSignal(params: {
     if (!ai.success || !ai.analysis) {
       lastFailureMessage = `Analisa ${symbol} ${timeframe.toUpperCase()} sedang dicoba ulang untuk cari setup yang lebih valid.`;
       if (attemptIndex < analysisAttempts.length - 1) continue;
-      return { ok: false as const, message: `Analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang.` };
+      break;
     }
 
     const attemptParsed = parseTelebotSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
     if (!attemptParsed || attemptParsed.direction === 'HOLD') {
       lastFailureMessage = buildTelebotNoSignalMessage(symbol, timeframe);
       if (attemptIndex < analysisAttempts.length - 1) continue;
-      return { ok: false as const, message: lastFailureMessage };
+      break;
     }
 
     const normalizedLevels = normalizeSignalToBenchmark({
@@ -825,7 +916,7 @@ export async function generateTelegramSignal(params: {
     if (!normalizedLevels) {
       lastFailureMessage = buildTelebotNoSignalMessage(symbol, timeframe);
       if (attemptIndex < analysisAttempts.length - 1) continue;
-      return { ok: false as const, message: lastFailureMessage };
+      break;
     }
 
     attemptParsed.stopLoss = normalizedLevels.stopLoss;
@@ -845,7 +936,7 @@ export async function generateTelegramSignal(params: {
     if (!validation.ok) {
       lastFailureMessage = `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${validation.reason || 'entry/SL/TP belum cukup valid'}.`;
       if (attemptIndex < analysisAttempts.length - 1 && shouldRetryTelebotSignal(validation.reason || '')) continue;
-      return { ok: false as const, message: lastFailureMessage };
+      break;
     }
 
     const attemptEntry = attemptParsed.entryPrice;
@@ -861,7 +952,7 @@ export async function generateTelegramSignal(params: {
     if (!attemptExecutionDecision.ok) {
       lastFailureMessage = `Setup ${symbol} ${timeframe.toUpperCase()} ditolak: ${attemptExecutionDecision.reason}.`;
       if (attemptIndex < analysisAttempts.length - 1 && shouldRetryTelebotSignal(attemptExecutionDecision.reason)) continue;
-      return { ok: false as const, message: lastFailureMessage };
+      break;
     }
 
     selectedAnalysis = ai.analysis;
@@ -872,6 +963,34 @@ export async function generateTelegramSignal(params: {
     confidence = typeof attemptParsed.confidence === 'number' ? Math.round(attemptParsed.confidence) : 72;
     executionDecision = attemptExecutionDecision;
     break;
+  }
+
+  if (!selectedAnalysis || !parsed || !executionDecision || !executionDecision.ok) {
+    const goldFallback = buildGoldFallbackSignal({
+      symbol,
+      timeframe,
+      marketData,
+    });
+
+    if (goldFallback) {
+      selectedAnalysis = goldFallback.analysis;
+      parsed = {
+        type: 'forex',
+        symbol,
+        timeframe,
+        direction: goldFallback.parsed.direction,
+        executionType: goldFallback.parsed.executionType,
+        entryPrice: goldFallback.parsed.entryPrice,
+        stopLoss: goldFallback.parsed.stopLoss,
+        takeProfit1: goldFallback.parsed.takeProfit1,
+        confidence: goldFallback.parsed.confidence,
+      };
+      entry = goldFallback.parsed.entryPrice;
+      stopLoss = goldFallback.parsed.stopLoss;
+      takeProfit1 = goldFallback.parsed.takeProfit1;
+      confidence = goldFallback.parsed.confidence;
+      executionDecision = goldFallback.executionDecision;
+    }
   }
 
   if (!selectedAnalysis || !parsed || !executionDecision || !executionDecision.ok) {
