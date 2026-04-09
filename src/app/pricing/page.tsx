@@ -191,9 +191,7 @@ export default function PricingPage() {
         if (option.promoSlots && promoSlots) {
             const slotInfo = promoSlots[catalogPlanId]?.[duration];
             if (slotInfo) {
-                if (slotInfo.remaining > 0) {
-                    badge = `Tersisa ${slotInfo.remaining} Slot Promo`;
-                } else {
+                if (slotInfo.remaining <= 0) {
                     badge = 'SLOT HABIS';
                 }
             }
