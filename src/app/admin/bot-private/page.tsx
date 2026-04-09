@@ -34,6 +34,12 @@ interface TelebotPaymentConfirmation {
   verifiedAt: string | null;
 }
 
+type ActivationTarget = {
+  userId: string;
+  name: string;
+  telegramUsername: string | null;
+} | null;
+
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 
 export default function PrivateBotAdminPage() {
@@ -49,6 +55,7 @@ export default function PrivateBotAdminPage() {
   const [durationCode, setDurationCode] = useState<'1month' | 'lifetime'>('1month');
   const [days, setDays] = useState(30);
   const [query, setQuery] = useState('');
+  const [activationTarget, setActivationTarget] = useState<ActivationTarget>(null);
   const canRunManualAction = telegramUsername.trim().length > 0 || email.trim().length > 0;
 
   const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
@@ -108,6 +115,49 @@ export default function PrivateBotAdminPage() {
     } catch {
       setMessage({ type: 'error', text: 'Network error saat menjalankan aksi.' });
     } finally {
+      setSaving(false);
+    }
+  }
+
+  async function runActivateMember(userId: string, selectedDurationCode: '1month' | 'lifetime') {
+    const previousDurationCode = durationCode;
+    const previousDays = days;
+    setDurationCode(selectedDurationCode);
+    if (selectedDurationCode === '1month') {
+      setDays(30);
+    }
+
+    setSaving(true);
+    setMessage(null);
+    setApprovalMessage('');
+    try {
+      const res = await fetch('/api/admin/bot-private', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'activate',
+          userId,
+          days: selectedDurationCode === '1month' ? 30 : previousDays,
+          durationCode: selectedDurationCode,
+          telegramUsername
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setMessage({ type: 'success', text: data.message });
+        if (data.approvalMessage) {
+          setApprovalMessage(String(data.approvalMessage));
+        }
+        setActivationTarget(null);
+        await fetchData();
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Aktivasi TELEBOT gagal.' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error saat mengaktifkan member TELEBOT.' });
+    } finally {
+      setDurationCode(previousDurationCode);
+      setDays(previousDays);
       setSaving(false);
     }
   }
@@ -450,7 +500,11 @@ export default function PrivateBotAdminPage() {
                         <div className="flex flex-wrap gap-2">
                           <button
                             disabled={saving}
-                            onClick={() => void runAction('activate', undefined, item.userId)}
+                            onClick={() => setActivationTarget({
+                              userId: item.userId,
+                              name: item.name || item.email || 'Member TELEBOT',
+                              telegramUsername: item.telegramUsername,
+                            })}
                             className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs disabled:opacity-50"
                           >
                             Activate
@@ -480,6 +534,51 @@ export default function PrivateBotAdminPage() {
           </div>
         </div>
       </div>
+
+      {activationTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border-light)] bg-[var(--bg-primary)] p-6 shadow-2xl">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)]">Aktifkan TELEBOT</h3>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              Pilih paket untuk <span className="font-semibold text-[var(--text-primary)]">{activationTarget.name}</span>
+              {activationTarget.telegramUsername ? ` (@${activationTarget.telegramUsername})` : ''}.
+            </p>
+
+            <div className="mt-5 grid grid-cols-1 gap-3">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => void runActivateMember(activationTarget.userId, '1month')}
+                className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-left text-emerald-200 hover:bg-emerald-500/15 disabled:opacity-50"
+              >
+                <div className="font-semibold">Aktifkan 1 Bulan</div>
+                <div className="mt-1 text-xs text-emerald-100/80">Rp 175.000 • bonus akun PRO 1 bulan • bonus video edukasi</div>
+              </button>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => void runActivateMember(activationTarget.userId, 'lifetime')}
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-left text-amber-200 hover:bg-amber-500/15 disabled:opacity-50"
+              >
+                <div className="font-semibold">Aktifkan Lifetime</div>
+                <div className="mt-1 text-xs text-amber-100/80">Rp 375.000 • akses tanpa expiry • promo hanya 100 orang pertama</div>
+              </button>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setActivationTarget(null)}
+                className="rounded-xl border border-[var(--border-light)] px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
