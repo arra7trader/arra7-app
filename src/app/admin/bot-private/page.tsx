@@ -57,6 +57,8 @@ type ActivationTarget = {
   telegramUsername: string | null;
 } | null;
 
+type AdminSection = 'payments' | 'tracking' | 'active' | 'members';
+
 const ADMIN_EMAILS = ['apmexplore@gmail.com'];
 
 export default function PrivateBotAdminPage() {
@@ -74,6 +76,7 @@ export default function PrivateBotAdminPage() {
   const [days, setDays] = useState(30);
   const [query, setQuery] = useState('');
   const [activationTarget, setActivationTarget] = useState<ActivationTarget>(null);
+  const [activeSection, setActiveSection] = useState<AdminSection>('payments');
   const canRunManualAction = telegramUsername.trim().length > 0 || email.trim().length > 0;
 
   const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
@@ -201,6 +204,43 @@ export default function PrivateBotAdminPage() {
     () => startedTelegramContacts.filter((item) => !item.isActive),
     [startedTelegramContacts]
   );
+
+  const activeMemberships = useMemo(
+    () => filteredMemberships.filter((item) => item.status === 'active'),
+    [filteredMemberships]
+  );
+
+  const sectionTabs: Array<{
+    key: AdminSection;
+    label: string;
+    count: number;
+    tone: string;
+  }> = [
+      {
+        key: 'payments',
+        label: 'Need Approve',
+        count: pendingPaymentConfirmations.length,
+        tone: 'text-blue-300',
+      },
+      {
+        key: 'tracking',
+        label: 'Tracking /start',
+        count: pendingStartedTelegramContacts.length,
+        tone: 'text-amber-300',
+      },
+      {
+        key: 'active',
+        label: 'Member Aktif',
+        count: activeMemberships.length,
+        tone: 'text-emerald-300',
+      },
+      {
+        key: 'members',
+        label: 'Semua Member',
+        count: filteredMemberships.length,
+        tone: 'text-[var(--text-primary)]',
+      },
+    ];
 
   async function copyApprovalMessage() {
     if (!approvalMessage) return;
@@ -379,6 +419,32 @@ export default function PrivateBotAdminPage() {
 
           <div className="space-y-6">
             <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)]">Workspace TELEBOT</h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Pilih sub menu agar approve, tracking, dan member aktif lebih cepat diakses tanpa scroll panjang.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {sectionTabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveSection(tab.key)}
+                      className={`px-4 py-2 rounded-xl border text-sm transition-colors ${activeSection === tab.key
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-white'
+                        : 'border-[var(--border-light)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        }`}
+                    >
+                      <span className="font-semibold">{tab.label}</span>
+                      <span className={`ml-2 text-xs ${activeSection === tab.key ? 'text-emerald-200' : tab.tone}`}>{tab.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {activeSection === 'tracking' && (
+            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                 <div>
                   <h2 className="text-lg font-semibold text-[var(--text-primary)]">Tracking /start Telegram</h2>
@@ -487,7 +553,9 @@ export default function PrivateBotAdminPage() {
                 </table>
               </div>
             </div>
+            )}
 
+            {activeSection === 'payments' && (
             <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                 <div>
@@ -572,99 +640,186 @@ export default function PrivateBotAdminPage() {
                 </table>
               </div>
             </div>
+            )}
 
-            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Member TELEBOT</h2>
-                <p className="text-xs text-[var(--text-muted)] mt-1">Approve user setelah pembayaran TELEBOT terverifikasi.</p>
-                <p className="text-sm text-[var(--text-secondary)]">{filteredMemberships.length} record</p>
+            {activeSection === 'active' && (
+              <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">Member TELEBOT Aktif</h2>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Fokus ke member yang akses TELEBOT-nya sedang aktif sekarang.</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{activeMemberships.length} active member</p>
+                  </div>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Cari email, user ID, status, telegram..."
+                    className="w-full md:w-80 px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
+                  />
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[900px] text-sm">
+                    <thead>
+                      <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
+                        <th className="py-3 pr-3">User</th>
+                        <th className="py-3 pr-3">Status</th>
+                        <th className="py-3 pr-3">Username</th>
+                        <th className="py-3 pr-3">Telegram</th>
+                        <th className="py-3 pr-3">Expired</th>
+                        <th className="py-3 pr-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeMemberships.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-[var(--text-muted)]">
+                            Belum ada member TELEBOT aktif yang cocok dengan filter saat ini.
+                          </td>
+                        </tr>
+                      )}
+                      {activeMemberships.map((item) => (
+                        <tr key={item.userId} className="border-b border-[var(--border-light)]/60 align-top">
+                          <td className="py-4 pr-3">
+                            <div className="font-medium text-[var(--text-primary)]">{item.name || '-'}</div>
+                            <div className="text-[var(--text-secondary)]">{item.email}</div>
+                            <div className="text-xs text-[var(--text-muted)] font-mono mt-1">{item.userId}</div>
+                          </td>
+                          <td className="py-4 pr-3">
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300">
+                              active
+                            </span>
+                            <div className="text-xs text-[var(--text-muted)] mt-2">{item.planCode}</div>
+                          </td>
+                          <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                            {item.telegramUsername ? `@${item.telegramUsername}` : 'Belum diisi'}
+                          </td>
+                          <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                            {item.telegramChatId || 'Belum link'}
+                          </td>
+                          <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                            {!item.expiresAt ? 'Lifetime' : new Date(item.expiresAt).toLocaleDateString('id-ID')}
+                          </td>
+                          <td className="py-4 pr-3">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                disabled={saving}
+                                onClick={() => void runAction('deactivate', undefined, item.userId)}
+                                className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs disabled:opacity-50"
+                              >
+                                Nonaktifkan
+                              </button>
+                              <button
+                                disabled={saving}
+                                onClick={() => void runAction('delete', undefined, item.userId)}
+                                className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs disabled:opacity-50"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Cari email, user ID, status, telegram..."
-                className="w-full md:w-80 px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
-              />
-            </div>
+            )}
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead>
-                  <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
-                    <th className="py-3 pr-3">User</th>
-                    <th className="py-3 pr-3">Status</th>
-                    <th className="py-3 pr-3">Username</th>
-                    <th className="py-3 pr-3">Telegram</th>
-                    <th className="py-3 pr-3">Expired</th>
-                    <th className="py-3 pr-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMemberships.map((item) => (
-                    <tr key={item.userId} className="border-b border-[var(--border-light)]/60 align-top">
-                      <td className="py-4 pr-3">
-                        <div className="font-medium text-[var(--text-primary)]">{item.name || '-'}</div>
-                        <div className="text-[var(--text-secondary)]">{item.email}</div>
-                        <div className="text-xs text-[var(--text-muted)] font-mono mt-1">{item.userId}</div>
-                      </td>
-                      <td className="py-4 pr-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'active'
-                          ? 'bg-emerald-500/15 text-emerald-300'
-                          : item.status === 'invited'
-                            ? 'bg-blue-500/15 text-blue-300'
-                            : item.status === 'expired'
-                              ? 'bg-amber-500/15 text-amber-300'
-                              : 'bg-red-500/15 text-red-300'
-                          }`}>
-                          {item.status}
-                        </span>
-                        <div className="text-xs text-[var(--text-muted)] mt-2">{item.planCode}</div>
-                      </td>
-                      <td className="py-4 pr-3 text-[var(--text-secondary)]">
-                        {item.telegramUsername ? `@${item.telegramUsername}` : 'Belum diisi'}
-                      </td>
-                      <td className="py-4 pr-3 text-[var(--text-secondary)]">
-                        {item.telegramChatId || 'Belum link'}
-                      </td>
-                      <td className="py-4 pr-3 text-[var(--text-secondary)]">
-                        {item.status === 'active' && !item.expiresAt ? 'Lifetime' : item.expiresAt ? new Date(item.expiresAt).toLocaleDateString('id-ID') : '-'}
-                      </td>
-                      <td className="py-4 pr-3">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            disabled={saving}
-                            onClick={() => setActivationTarget({
-                              userId: item.userId,
-                              name: item.name || item.email || 'Member TELEBOT',
-                              telegramUsername: item.telegramUsername,
-                            })}
-                            className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs disabled:opacity-50"
-                          >
-                            Activate
-                          </button>
-                          <button
-                            disabled={saving}
-                            onClick={() => void runAction('deactivate', undefined, item.userId)}
-                            className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs disabled:opacity-50"
-                          >
-                            Nonaktifkan
-                          </button>
-                          <button
-                            disabled={saving}
-                            onClick={() => void runAction('delete', undefined, item.userId)}
-                            className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs disabled:opacity-50"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            {activeSection === 'members' && (
+              <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">Semua Member TELEBOT</h2>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Lihat semua member untuk audit status, username Telegram, dan masa aktif.</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{filteredMemberships.length} record</p>
+                  </div>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Cari email, user ID, status, telegram..."
+                    className="w-full md:w-80 px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-primary)] outline-none"
+                  />
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[900px] text-sm">
+                    <thead>
+                      <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
+                        <th className="py-3 pr-3">User</th>
+                        <th className="py-3 pr-3">Status</th>
+                        <th className="py-3 pr-3">Username</th>
+                        <th className="py-3 pr-3">Telegram</th>
+                        <th className="py-3 pr-3">Expired</th>
+                        <th className="py-3 pr-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredMemberships.map((item) => (
+                        <tr key={item.userId} className="border-b border-[var(--border-light)]/60 align-top">
+                          <td className="py-4 pr-3">
+                            <div className="font-medium text-[var(--text-primary)]">{item.name || '-'}</div>
+                            <div className="text-[var(--text-secondary)]">{item.email}</div>
+                            <div className="text-xs text-[var(--text-muted)] font-mono mt-1">{item.userId}</div>
+                          </td>
+                          <td className="py-4 pr-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'active'
+                              ? 'bg-emerald-500/15 text-emerald-300'
+                              : item.status === 'invited'
+                                ? 'bg-blue-500/15 text-blue-300'
+                                : item.status === 'expired'
+                                  ? 'bg-amber-500/15 text-amber-300'
+                                  : 'bg-red-500/15 text-red-300'
+                              }`}>
+                              {item.status}
+                            </span>
+                            <div className="text-xs text-[var(--text-muted)] mt-2">{item.planCode}</div>
+                          </td>
+                          <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                            {item.telegramUsername ? `@${item.telegramUsername}` : 'Belum diisi'}
+                          </td>
+                          <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                            {item.telegramChatId || 'Belum link'}
+                          </td>
+                          <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                            {item.status === 'active' && !item.expiresAt ? 'Lifetime' : item.expiresAt ? new Date(item.expiresAt).toLocaleDateString('id-ID') : '-'}
+                          </td>
+                          <td className="py-4 pr-3">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                disabled={saving}
+                                onClick={() => setActivationTarget({
+                                  userId: item.userId,
+                                  name: item.name || item.email || 'Member TELEBOT',
+                                  telegramUsername: item.telegramUsername,
+                                })}
+                                className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs disabled:opacity-50"
+                              >
+                                Activate
+                              </button>
+                              <button
+                                disabled={saving}
+                                onClick={() => void runAction('deactivate', undefined, item.userId)}
+                                className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs disabled:opacity-50"
+                              >
+                                Nonaktifkan
+                              </button>
+                              <button
+                                disabled={saving}
+                                onClick={() => void runAction('delete', undefined, item.userId)}
+                                className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs disabled:opacity-50"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
