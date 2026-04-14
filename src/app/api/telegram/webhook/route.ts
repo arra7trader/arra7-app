@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { answerTelegramCallbackQuery, sendTelegramMessage } from '@/lib/telegram';
 import {
   attachPrivateBotTelegramIdentity,
+  ensureTelegramContactCampaignSchema,
   getPrivateBotMembershipByUserId,
   getPrivateBotMembershipByTelegramUsername,
   getTelebotUserProfile,
@@ -10,6 +11,7 @@ import {
   linkTelegramUser,
   resetTelebotUserBalance,
   setUserTelegramChatId,
+  upsertTelegramContact,
   upsertTelebotUserProfile,
   upsertPrivateBotMembership,
 } from '@/lib/turso';
@@ -39,6 +41,11 @@ import {
 } from '@/lib/telegram-signal-menu';
 import { formatTelebotSetupStyle } from '@/lib/telebot-trade-plan';
 import { setLatestTelebotActualEntry } from '@/lib/signal-tracker';
+import {
+  buildTelebotLifetimePriceNoticeKeyboard,
+  buildTelebotLifetimePriceNoticeMessage,
+  isTelebotLifetimePriceNoticeActive,
+} from '@/lib/telebot-price-notice';
 
 type TelegramUpdate = {
   message?: {
@@ -81,6 +88,15 @@ async function reply(
   options?: { replyMarkup?: Record<string, unknown>; allowHtml?: boolean }
 ): Promise<void> {
   await sendTelegramMessage(options?.allowHtml ? text : escapeHtml(text), 'HTML', chatId, options);
+}
+
+async function maybeSendTelebotPriceNotice(chatId: string): Promise<void> {
+  if (!isTelebotLifetimePriceNoticeActive()) return;
+
+  await reply(chatId, buildTelebotLifetimePriceNoticeMessage(), {
+    allowHtml: true,
+    replyMarkup: buildTelebotLifetimePriceNoticeKeyboard(),
+  });
 }
 
 function extractCommand(text: string): { cmd: string; arg: string } {
@@ -171,6 +187,8 @@ async function autoLinkTelebotByUsername(chatId: string, username?: string, firs
 
 export async function POST(request: Request) {
   try {
+    await ensureTelegramContactCampaignSchema();
+
     const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
     if (webhookSecret) {
       const incoming = request.headers.get('x-telegram-bot-api-secret-token');
@@ -187,6 +205,14 @@ export async function POST(request: Request) {
 
     if (callback?.message?.chat?.id && typeof callback.data === 'string') {
       const chatId = String(callback.message.chat.id);
+      await upsertTelegramContact({
+        chatId,
+        username: callback.from?.username || '',
+        firstName: callback.from?.first_name || 'Trader',
+        lastCommand: callback.data,
+        lastMessageText: callback.data,
+      });
+
       const linkedUser =
         (await getTelegramUser(chatId)) ||
         (await autoLinkTelebotByUsername(chatId, callback.from?.username || '', callback.from?.first_name || 'Trader'));
@@ -350,6 +376,14 @@ export async function POST(request: Request) {
 
     if (!text) return NextResponse.json({ ok: true });
 
+    await upsertTelegramContact({
+      chatId,
+      username,
+      firstName,
+      lastCommand: cmd || null,
+      lastMessageText: text,
+    });
+
     if (cmd === '/start') {
       const linked = await getTelegramUser(chatId);
       if (!linked) {
@@ -382,6 +416,7 @@ export async function POST(request: Request) {
           }
         }
 
+        await maybeSendTelebotPriceNotice(chatId);
         await reply(
           chatId,
           buildIntroMessage(firstName),
@@ -394,6 +429,7 @@ export async function POST(request: Request) {
       if (!access) {
         const { membership } = await getUserMembership(linked.userId);
         const privateBot = await getEffectivePrivateBotMembership(linked.userId);
+        await maybeSendTelebotPriceNotice(chatId);
         await reply(
           chatId,
           buildLockedAccessMessage(

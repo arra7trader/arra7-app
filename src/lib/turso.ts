@@ -26,6 +26,55 @@ function getTursoClient(): Client | null {
 
 export default getTursoClient;
 
+async function ensureTelegramContactCampaignSchemaInternal(turso: Client): Promise<void> {
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS telegram_contacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      chat_id TEXT NOT NULL UNIQUE,
+      username TEXT,
+      first_name TEXT,
+      last_command TEXT,
+      last_message_text TEXT,
+      first_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await turso.execute(`
+    CREATE INDEX IF NOT EXISTS idx_telegram_contacts_username
+    ON telegram_contacts(username)
+  `);
+
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS telegram_campaign_deliveries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_key TEXT NOT NULL,
+      chat_id TEXT NOT NULL,
+      message_id INTEGER,
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(campaign_key, chat_id)
+    )
+  `);
+
+  await turso.execute(`
+    CREATE INDEX IF NOT EXISTS idx_telegram_campaign_deliveries_campaign
+    ON telegram_campaign_deliveries(campaign_key, sent_at DESC)
+  `);
+}
+
+export async function ensureTelegramContactCampaignSchema(): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await ensureTelegramContactCampaignSchemaInternal(turso);
+    return true;
+  } catch (error) {
+    console.error('Ensure telegram contact/campaign schema error:', error);
+    return false;
+  }
+}
+
 // Initialize database tables
 export async function initDatabase(): Promise<boolean> {
   const turso = getTursoClient();
@@ -134,6 +183,8 @@ export async function initDatabase(): Promise<boolean> {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await ensureTelegramContactCampaignSchemaInternal(turso);
 
     // TIER 3 FEATURES: Trade Journal
     await turso.execute(`
@@ -1539,6 +1590,42 @@ export async function linkTelegramUser(userId: string, telegramData: {
   }
 }
 
+export async function upsertTelegramContact(params: {
+  chatId: string;
+  username?: string;
+  firstName?: string;
+  lastCommand?: string | null;
+  lastMessageText?: string | null;
+}): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await ensureTelegramContactCampaignSchemaInternal(turso);
+    await turso.execute({
+      sql: `INSERT INTO telegram_contacts (chat_id, username, first_name, last_command, last_message_text)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(chat_id) DO UPDATE SET
+              username = COALESCE(excluded.username, telegram_contacts.username),
+              first_name = COALESCE(excluded.first_name, telegram_contacts.first_name),
+              last_command = COALESCE(excluded.last_command, telegram_contacts.last_command),
+              last_message_text = COALESCE(excluded.last_message_text, telegram_contacts.last_message_text),
+              last_seen_at = CURRENT_TIMESTAMP`,
+      args: [
+        params.chatId.trim(),
+        params.username ? params.username.trim().replace(/^@+/, '') : null,
+        params.firstName?.trim() || null,
+        params.lastCommand?.trim() || null,
+        params.lastMessageText?.trim() || null,
+      ]
+    });
+    return true;
+  } catch (error) {
+    console.error('Upsert telegram contact error:', error);
+    return false;
+  }
+}
+
 export async function getTelegramUser(chatId: string): Promise<{ userId: string; email: string; membership: string } | null> {
   const turso = getTursoClient();
   if (!turso) return null;
@@ -2074,6 +2161,154 @@ export async function attachPrivateBotTelegramIdentity(
 
 export async function attachPrivateBotTelegramChatId(userId: string, chatId: string): Promise<boolean> {
   return attachPrivateBotTelegramIdentity(userId, chatId);
+}
+
+export interface TelegramCampaignRecipient {
+  chatId: string;
+  username: string | null;
+  firstName: string | null;
+  source: 'contact' | 'linked_user';
+  userId: string | null;
+  telebotStatus: string | null;
+  expiresAt: string | null;
+}
+
+function isActiveTelebotMembership(status?: string | null, expiresAt?: string | null): boolean {
+  if (String(status || '').toLowerCase() !== 'active') return false;
+  if (!expiresAt) return true;
+  const expiresTime = new Date(expiresAt).getTime();
+  return Number.isFinite(expiresTime) && expiresTime > Date.now();
+}
+
+export async function getTelebotPromoBroadcastRecipients(campaignKey: string): Promise<TelegramCampaignRecipient[]> {
+  const turso = getTursoClient();
+  if (!turso) return [];
+
+  try {
+    await ensureTelegramContactCampaignSchemaInternal(turso);
+
+    const [contactResult, linkedResult] = await Promise.all([
+      turso.execute({
+        sql: `SELECT
+                c.chat_id,
+                c.username,
+                c.first_name,
+                bm.user_id,
+                bm.status AS telebot_status,
+                bm.expires_at
+              FROM telegram_contacts c
+              LEFT JOIN bot_memberships bm
+                ON bm.telegram_chat_id = c.chat_id
+                OR (
+                  c.username IS NOT NULL
+                  AND lower(trim(replace(c.username, '@', ''))) = lower(trim(bm.telegram_username))
+                )
+              LEFT JOIN telegram_campaign_deliveries d
+                ON d.campaign_key = ?
+               AND d.chat_id = c.chat_id
+              WHERE d.chat_id IS NULL
+              ORDER BY c.last_seen_at DESC`,
+        args: [campaignKey]
+      }),
+      turso.execute({
+        sql: `SELECT
+                tu.chat_id,
+                tu.username,
+                tu.first_name,
+                tu.user_id,
+                bm.status AS telebot_status,
+                bm.expires_at
+              FROM telegram_users tu
+              LEFT JOIN bot_memberships bm
+                ON bm.user_id = tu.user_id
+              LEFT JOIN telegram_campaign_deliveries d
+                ON d.campaign_key = ?
+               AND d.chat_id = tu.chat_id
+              WHERE d.chat_id IS NULL
+              ORDER BY tu.last_active_at DESC`,
+        args: [campaignKey]
+      }),
+    ]);
+
+    const recipients = new Map<string, TelegramCampaignRecipient & { active: boolean }>();
+
+    const mergeRow = (row: Record<string, unknown>, source: TelegramCampaignRecipient['source']) => {
+      const chatId = String(row.chat_id || '').trim();
+      if (!chatId) return;
+
+      const candidate = {
+        chatId,
+        username: row.username ? String(row.username) : null,
+        firstName: row.first_name ? String(row.first_name) : null,
+        source,
+        userId: row.user_id ? String(row.user_id) : null,
+        telebotStatus: row.telebot_status ? String(row.telebot_status) : null,
+        expiresAt: row.expires_at ? String(row.expires_at) : null,
+        active: isActiveTelebotMembership(
+          row.telebot_status ? String(row.telebot_status) : null,
+          row.expires_at ? String(row.expires_at) : null
+        ),
+      };
+
+      const existing = recipients.get(chatId);
+      if (!existing) {
+        recipients.set(chatId, candidate);
+        return;
+      }
+
+      if (candidate.active) {
+        recipients.set(chatId, candidate);
+        return;
+      }
+
+      if (!existing.active && existing.source === 'contact' && source === 'linked_user') {
+        recipients.set(chatId, candidate);
+      }
+    };
+
+    contactResult.rows.forEach((row) => mergeRow(row as Record<string, unknown>, 'contact'));
+    linkedResult.rows.forEach((row) => mergeRow(row as Record<string, unknown>, 'linked_user'));
+
+    return Array.from(recipients.values())
+      .filter((row) => !row.active)
+      .map((row) => ({
+        chatId: row.chatId,
+        username: row.username,
+        firstName: row.firstName,
+        source: row.source,
+        userId: row.userId,
+        telebotStatus: row.telebotStatus,
+        expiresAt: row.expiresAt,
+      }));
+  } catch (error) {
+    console.error('Get telebot promo broadcast recipients error:', error);
+    return [];
+  }
+}
+
+export async function markTelegramCampaignDelivered(
+  campaignKey: string,
+  chatId: string,
+  messageId?: number | null
+): Promise<boolean> {
+  const turso = getTursoClient();
+  if (!turso) return false;
+
+  try {
+    await ensureTelegramContactCampaignSchemaInternal(turso);
+    await turso.execute({
+      sql: `INSERT INTO telegram_campaign_deliveries (campaign_key, chat_id, message_id)
+            VALUES (?, ?, ?)
+            ON CONFLICT(campaign_key, chat_id) DO UPDATE SET
+              message_id = COALESCE(excluded.message_id, telegram_campaign_deliveries.message_id),
+              sent_at = CURRENT_TIMESTAMP`,
+      args: [campaignKey, chatId.trim(), messageId ?? null]
+    });
+    return true;
+  } catch (error) {
+    console.error('Mark telegram campaign delivered error:', error);
+    return false;
+  }
 }
 
 export interface TelegramChatMessage {
