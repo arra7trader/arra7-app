@@ -19,6 +19,8 @@ const TELEBOT_DURATION_OPTIONS: Record<string, { days: number | null; label: str
   'lifetime': { days: null, label: 'Lifetime', amountIdr: 375000 },
 };
 
+type MetadataJson = Record<string, unknown>;
+
 async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) {
   if (!turso) return;
 
@@ -75,8 +77,8 @@ async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) 
 
   try {
     await turso.execute(`ALTER TABLE bot_memberships ADD COLUMN telegram_username TEXT`);
-  } catch (error: any) {
-    if (!String(error?.message || '').includes('duplicate column name')) {
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('duplicate column name')) {
       console.error('[ADMIN_BOT_PRIVATE] Failed to add telegram_username column:', error);
     }
   }
@@ -177,6 +179,46 @@ async function fetchPaymentConfirmationRows(turso: ReturnType<typeof getTursoCli
   return result.rows;
 }
 
+async function fetchStartedTelegramContacts(turso: ReturnType<typeof getTursoClient>) {
+  if (!turso) return [];
+
+  const result = await turso.execute(`
+    SELECT
+      c.chat_id,
+      c.username,
+      c.first_name,
+      c.started_at,
+      c.first_seen_at,
+      c.last_seen_at,
+      c.last_command,
+      c.last_message_text,
+      bm.user_id,
+      COALESCE(u.email, '') AS email,
+      COALESCE(u.name, '') AS name,
+      bm.status AS telebot_status,
+      bm.expires_at AS telebot_expires_at
+    FROM telegram_contacts c
+    LEFT JOIN bot_memberships bm
+      ON bm.telegram_chat_id = c.chat_id
+      OR (
+        c.username IS NOT NULL
+        AND lower(trim(replace(c.username, '@', ''))) = lower(trim(bm.telegram_username))
+      )
+    LEFT JOIN users u ON u.id = bm.user_id
+    WHERE c.started_at IS NOT NULL
+    ORDER BY c.started_at DESC, c.last_seen_at DESC
+  `);
+
+  return result.rows;
+}
+
+function isActiveTelebotStatus(status?: string | null, expiresAt?: string | null) {
+  if (String(status || '').toLowerCase() !== 'active') return false;
+  if (!expiresAt) return true;
+  const expiresTime = new Date(expiresAt).getTime();
+  return Number.isFinite(expiresTime) && expiresTime > Date.now();
+}
+
 async function markLatestPaymentConfirmation(
   turso: ReturnType<typeof getTursoClient>,
   userId: string,
@@ -202,7 +244,7 @@ async function markLatestPaymentConfirmation(
   });
 }
 
-function parseMetadataJson(raw: unknown): Record<string, any> {
+function parseMetadataJson(raw: unknown): MetadataJson {
   if (typeof raw !== 'string' || !raw.trim()) return {};
   try {
     const parsed = JSON.parse(raw);
@@ -215,7 +257,7 @@ function parseMetadataJson(raw: unknown): Record<string, any> {
 async function getTelebotLifetimePromoState(
   turso: ReturnType<typeof getTursoClient>,
   userId: string
-): Promise<{ metadata: Record<string, any>; alreadyGranted: boolean; remaining: number; max: number; used: number; slotsFull: boolean }> {
+): Promise<{ metadata: MetadataJson; alreadyGranted: boolean; remaining: number; max: number; used: number; slotsFull: boolean }> {
   if (!turso) {
     return { metadata: {}, alreadyGranted: false, remaining: 0, max: TELEBOT_LIFETIME_MAX, used: 0, slotsFull: true };
   }
@@ -248,7 +290,7 @@ async function getTelebotLifetimePromoState(
 async function finalizeTelebotLifetimePromoClaim(
   turso: ReturnType<typeof getTursoClient>,
   userId: string,
-  metadata: Record<string, any>
+  metadata: MetadataJson
 ) {
   if (!turso) return false;
 
@@ -524,10 +566,36 @@ export async function GET() {
     await initDatabase();
     await ensureBotPrivateSchema(turso);
     await syncExpiredMemberships(turso);
-    const [rows, paymentRows] = await Promise.all([
+    const [rows, paymentRows, startedContacts] = await Promise.all([
       fetchMembershipRows(turso),
-      fetchPaymentConfirmationRows(turso)
+      fetchPaymentConfirmationRows(turso),
+      fetchStartedTelegramContacts(turso)
     ]);
+
+    const startedTelegramContacts = startedContacts.map((row) => {
+      const telebotStatus = row.telebot_status ? String(row.telebot_status) : null;
+      const telebotExpiresAt = row.telebot_expires_at ? String(row.telebot_expires_at) : null;
+      const active = isActiveTelebotStatus(telebotStatus, telebotExpiresAt);
+
+      return {
+        chatId: String(row.chat_id || ''),
+        username: row.username ? String(row.username) : null,
+        firstName: row.first_name ? String(row.first_name) : null,
+        userId: row.user_id ? String(row.user_id) : null,
+        email: String(row.email || ''),
+        name: String(row.name || ''),
+        telebotStatus,
+        telebotExpiresAt,
+        isActive: active,
+        startedAt: row.started_at ? String(row.started_at) : null,
+        firstSeenAt: row.first_seen_at ? String(row.first_seen_at) : null,
+        lastSeenAt: row.last_seen_at ? String(row.last_seen_at) : null,
+        lastCommand: row.last_command ? String(row.last_command) : null,
+        lastMessageText: row.last_message_text ? String(row.last_message_text) : null,
+      };
+    });
+
+    const pendingStartedTelegramContacts = startedTelegramContacts.filter((item) => !item.isActive);
 
     return NextResponse.json({
       status: 'success',
@@ -558,7 +626,14 @@ export async function GET() {
         adminNote: row.admin_note ? String(row.admin_note) : null,
         submittedAt: row.submitted_at ? String(row.submitted_at) : null,
         verifiedAt: row.verified_at ? String(row.verified_at) : null
-      }))
+      })),
+      startedTelegramContacts,
+      pendingStartedTelegramContacts,
+      startedTelegramSummary: {
+        totalStarted: startedTelegramContacts.length,
+        pendingActivation: pendingStartedTelegramContacts.length,
+        active: startedTelegramContacts.length - pendingStartedTelegramContacts.length,
+      }
     });
   } catch (error) {
     console.error('[ADMIN_BOT_PRIVATE] GET error:', error);

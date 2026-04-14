@@ -34,6 +34,23 @@ interface TelebotPaymentConfirmation {
   verifiedAt: string | null;
 }
 
+interface StartedTelegramContact {
+  chatId: string;
+  username: string | null;
+  firstName: string | null;
+  userId: string | null;
+  email: string;
+  name: string;
+  telebotStatus: 'invited' | 'active' | 'expired' | 'revoked' | null;
+  telebotExpiresAt: string | null;
+  isActive: boolean;
+  startedAt: string | null;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  lastCommand: string | null;
+  lastMessageText: string | null;
+}
+
 type ActivationTarget = {
   userId: string;
   name: string;
@@ -50,6 +67,7 @@ export default function PrivateBotAdminPage() {
   const [approvalMessage, setApprovalMessage] = useState('');
   const [memberships, setMemberships] = useState<BotMembership[]>([]);
   const [paymentConfirmations, setPaymentConfirmations] = useState<TelebotPaymentConfirmation[]>([]);
+  const [startedTelegramContacts, setStartedTelegramContacts] = useState<StartedTelegramContact[]>([]);
   const [email, setEmail] = useState('');
   const [telegramUsername, setTelegramUsername] = useState('');
   const [durationCode, setDurationCode] = useState<'1month' | 'lifetime'>('1month');
@@ -73,6 +91,7 @@ export default function PrivateBotAdminPage() {
       if (data.status === 'success') {
         setMemberships(data.memberships || []);
         setPaymentConfirmations(data.paymentConfirmations || []);
+        setStartedTelegramContacts(data.startedTelegramContacts || []);
       } else {
         setMessage({ type: 'error', text: data.message || 'Gagal memuat data TELEBOT.' });
       }
@@ -176,6 +195,11 @@ export default function PrivateBotAdminPage() {
   const pendingPaymentConfirmations = useMemo(
     () => paymentConfirmations.filter((item) => item.status === 'submitted'),
     [paymentConfirmations]
+  );
+
+  const pendingStartedTelegramContacts = useMemo(
+    () => startedTelegramContacts.filter((item) => !item.isActive),
+    [startedTelegramContacts]
   );
 
   async function copyApprovalMessage() {
@@ -354,6 +378,116 @@ export default function PrivateBotAdminPage() {
           </div>
 
           <div className="space-y-6">
+            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)]">Tracking /start Telegram</h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Prospect yang pernah kirim /start ke bot dan status aktivasi TELEBOT-nya.</p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)] px-4 py-3">
+                    <div className="text-lg font-bold text-[var(--text-primary)]">{startedTelegramContacts.length}</div>
+                    <div className="text-[11px] text-[var(--text-muted)]">Total /start</div>
+                  </div>
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                    <div className="text-lg font-bold text-amber-300">{pendingStartedTelegramContacts.length}</div>
+                    <div className="text-[11px] text-amber-200/80">Belum aktif</div>
+                  </div>
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <div className="text-lg font-bold text-emerald-300">{startedTelegramContacts.length - pendingStartedTelegramContacts.length}</div>
+                    <div className="text-[11px] text-emerald-200/80">Sudah aktif</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[980px] text-sm">
+                  <thead>
+                    <tr className="text-left text-[var(--text-secondary)] border-b border-[var(--border-light)]">
+                      <th className="py-3 pr-3">Telegram</th>
+                      <th className="py-3 pr-3">User ARRA</th>
+                      <th className="py-3 pr-3">Status</th>
+                      <th className="py-3 pr-3">/start</th>
+                      <th className="py-3 pr-3">Aktivitas Terakhir</th>
+                      <th className="py-3 pr-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {startedTelegramContacts.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-[var(--text-muted)]">
+                          Belum ada data user yang kirim /start ke TELEBOT.
+                        </td>
+                      </tr>
+                    )}
+                    {startedTelegramContacts.map((item) => (
+                      <tr key={item.chatId} className="border-b border-[var(--border-light)]/60 align-top">
+                        <td className="py-4 pr-3">
+                          <div className="font-medium text-[var(--text-primary)]">
+                            {item.username ? `@${item.username}` : item.firstName || 'Tanpa username'}
+                          </div>
+                          <div className="text-[var(--text-secondary)]">{item.firstName || '-'}</div>
+                          <div className="text-xs text-[var(--text-muted)] font-mono mt-1">{item.chatId}</div>
+                        </td>
+                        <td className="py-4 pr-3">
+                          <div className="font-medium text-[var(--text-primary)]">{item.name || '-'}</div>
+                          <div className="text-[var(--text-secondary)]">{item.email || 'Belum terhubung ke user ARRA'}</div>
+                          <div className="text-xs text-[var(--text-muted)] font-mono mt-1">{item.userId || '-'}</div>
+                        </td>
+                        <td className="py-4 pr-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.isActive
+                            ? 'bg-emerald-500/15 text-emerald-300'
+                            : item.telebotStatus === 'invited'
+                              ? 'bg-blue-500/15 text-blue-300'
+                              : item.telebotStatus === 'expired'
+                                ? 'bg-amber-500/15 text-amber-300'
+                                : item.telebotStatus === 'revoked'
+                                  ? 'bg-red-500/15 text-red-300'
+                                  : 'bg-slate-700/70 text-slate-200'
+                            }`}>
+                            {item.isActive ? 'active' : item.telebotStatus || 'belum aktif'}
+                          </span>
+                          <div className="text-xs text-[var(--text-muted)] mt-2">
+                            {item.isActive
+                              ? item.telebotExpiresAt
+                                ? `Aktif sampai ${new Date(item.telebotExpiresAt).toLocaleDateString('id-ID')}`
+                                : 'Lifetime'
+                              : 'Belum ada akses TELEBOT aktif'}
+                          </div>
+                        </td>
+                        <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                          {item.startedAt ? new Date(item.startedAt).toLocaleString('id-ID') : '-'}
+                        </td>
+                        <td className="py-4 pr-3 text-[var(--text-secondary)]">
+                          <div>{item.lastSeenAt ? new Date(item.lastSeenAt).toLocaleString('id-ID') : '-'}</div>
+                          <div className="text-xs text-[var(--text-muted)] mt-1">
+                            {item.lastCommand || item.lastMessageText || '-'}
+                          </div>
+                        </td>
+                        <td className="py-4 pr-3">
+                          {!item.isActive ? (
+                            <button
+                              type="button"
+                              disabled={saving}
+                              onClick={() => {
+                                setTelegramUsername(item.username || '');
+                                setEmail(item.email || '');
+                              }}
+                              className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs disabled:opacity-50"
+                            >
+                              Pakai Data Ini
+                            </button>
+                          ) : (
+                            <span className="text-xs text-[var(--text-muted)]">Sudah aktif</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                 <div>

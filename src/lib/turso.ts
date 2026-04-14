@@ -33,11 +33,30 @@ async function ensureTelegramContactCampaignSchemaInternal(turso: Client): Promi
       chat_id TEXT NOT NULL UNIQUE,
       username TEXT,
       first_name TEXT,
+      started_at DATETIME,
       last_command TEXT,
       last_message_text TEXT,
       first_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
+  `);
+
+  try {
+    await turso.execute(`ALTER TABLE telegram_contacts ADD COLUMN started_at DATETIME`);
+  } catch (error) {
+    if (!String((error as Error)?.message || '').includes('duplicate column name')) {
+      console.error('Ensure telegram_contacts.started_at column error:', error);
+    }
+  }
+
+  await turso.execute(`
+    UPDATE telegram_contacts
+    SET started_at = COALESCE(started_at, first_seen_at)
+    WHERE started_at IS NULL
+      AND (
+        lower(trim(COALESCE(last_command, ''))) = '/start'
+        OR lower(trim(COALESCE(last_message_text, ''))) = '/start'
+      )
   `);
 
   await turso.execute(`
@@ -1602,12 +1621,14 @@ export async function upsertTelegramContact(params: {
 
   try {
     await ensureTelegramContactCampaignSchemaInternal(turso);
+    const normalizedCommand = params.lastCommand?.trim().toLowerCase() || null;
     await turso.execute({
-      sql: `INSERT INTO telegram_contacts (chat_id, username, first_name, last_command, last_message_text)
-            VALUES (?, ?, ?, ?, ?)
+      sql: `INSERT INTO telegram_contacts (chat_id, username, first_name, started_at, last_command, last_message_text)
+            VALUES (?, ?, ?, CASE WHEN ? = '/start' THEN CURRENT_TIMESTAMP ELSE NULL END, ?, ?)
             ON CONFLICT(chat_id) DO UPDATE SET
               username = COALESCE(excluded.username, telegram_contacts.username),
               first_name = COALESCE(excluded.first_name, telegram_contacts.first_name),
+              started_at = COALESCE(telegram_contacts.started_at, excluded.started_at),
               last_command = COALESCE(excluded.last_command, telegram_contacts.last_command),
               last_message_text = COALESCE(excluded.last_message_text, telegram_contacts.last_message_text),
               last_seen_at = CURRENT_TIMESTAMP`,
@@ -1615,7 +1636,8 @@ export async function upsertTelegramContact(params: {
         params.chatId.trim(),
         params.username ? params.username.trim().replace(/^@+/, '') : null,
         params.firstName?.trim() || null,
-        params.lastCommand?.trim() || null,
+        normalizedCommand,
+        normalizedCommand,
         params.lastMessageText?.trim() || null,
       ]
     });
