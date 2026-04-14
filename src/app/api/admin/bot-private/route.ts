@@ -20,6 +20,8 @@ const TELEBOT_DURATION_OPTIONS: Record<string, { days: number | null; label: str
 };
 
 type MetadataJson = Record<string, unknown>;
+type TelebotLifetimePromoMetadata = { grantedAt?: string; source?: string };
+type WebsiteProBonusMetadata = { grantedAt?: string; expiresAt?: string; durationDays?: number; source?: string };
 
 async function ensureBotPrivateSchema(turso: ReturnType<typeof getTursoClient>) {
   if (!turso) return;
@@ -254,6 +256,18 @@ function parseMetadataJson(raw: unknown): MetadataJson {
   }
 }
 
+function getTelebotLifetimePromoMetadata(metadata: MetadataJson): TelebotLifetimePromoMetadata | null {
+  const value = metadata.telebotLifetimePromo;
+  if (!value || typeof value !== 'object') return null;
+  return value as TelebotLifetimePromoMetadata;
+}
+
+function getWebsiteProBonusMetadata(metadata: MetadataJson): WebsiteProBonusMetadata | null {
+  const value = metadata.websiteProBonus;
+  if (!value || typeof value !== 'object') return null;
+  return value as WebsiteProBonusMetadata;
+}
+
 async function getTelebotLifetimePromoState(
   turso: ReturnType<typeof getTursoClient>,
   userId: string
@@ -267,7 +281,8 @@ async function getTelebotLifetimePromoState(
     args: [userId]
   });
   const metadata = parseMetadataJson(membershipResult.rows[0]?.metadata_json);
-  const alreadyGranted = Boolean(metadata?.telebotLifetimePromo?.grantedAt);
+  const telebotLifetimePromo = getTelebotLifetimePromoMetadata(metadata);
+  const alreadyGranted = Boolean(telebotLifetimePromo?.grantedAt);
 
   const slotResult = await turso.execute({
     sql: `SELECT used_count, max_count FROM promo_slots WHERE membership = ? AND duration = ? LIMIT 1`,
@@ -347,7 +362,7 @@ async function grantTelebotWebsiteProBonus(
     args: [userId]
   });
   const metadata = parseMetadataJson(membershipResult.rows[0]?.metadata_json);
-  const existingBonus = metadata?.websiteProBonus;
+  const existingBonus = getWebsiteProBonusMetadata(metadata);
   if (existingBonus?.grantedAt) {
     return {
       granted: false,
