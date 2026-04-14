@@ -6,14 +6,14 @@ import {
 import { sendTelegramMessage } from './telegram';
 
 const TELEBOT_NOTICE_START_AT = '2026-04-15T00:00:00+07:00';
-const TELEBOT_LIFETIME_PRICE_RISE_AT = '2026-04-18T00:00:00+07:00';
-const TELEBOT_LIFETIME_LAST_OLD_PRICE_DAY = '17 April 2026';
-const TELEBOT_LIFETIME_RISE_DATE_LABEL = '18 April 2026';
+const TELEBOT_LIFETIME_PRICE_RISE_AT = '2026-04-19T00:00:00+07:00';
+const TELEBOT_LIFETIME_LAST_OLD_PRICE_DAY = '18 April 2026';
+const TELEBOT_LIFETIME_RISE_DATE_LABEL = '19 April 2026';
 const TELEBOT_LIFETIME_NEW_PRICE_LABEL = 'Rp425.000';
 const TELEBOT_LIFETIME_CURRENT_PRICE_LABEL = 'Rp375.000';
 const TELEBOT_PAGE_URL = 'https://arra7-app.vercel.app/telebot';
 
-export const TELEBOT_LIFETIME_PRICE_NOTICE_CAMPAIGN_KEY = 'telebot_lifetime_price_notice_2026_04_18';
+export const TELEBOT_LIFETIME_PRICE_NOTICE_CAMPAIGN_KEY = 'telebot_lifetime_price_notice_2026_04_19';
 
 export function isTelebotLifetimePriceNoticeActive(now = new Date()): boolean {
   const startAt = new Date(TELEBOT_NOTICE_START_AT).getTime();
