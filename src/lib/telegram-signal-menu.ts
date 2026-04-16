@@ -790,10 +790,103 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+/**
+ * Programmatic structural direction detection from candle data.
+ * Uses Higher-Highs/Lower-Lows structure, momentum, and price position
+ * to determine market direction WITHOUT relying on AI.
+ */
+function detectStructuralDirection(candles: Array<{ open: number; high: number; low: number; close: number }>, currentPrice: number): {
+  direction: 'BUY' | 'SELL' | 'NEUTRAL';
+  confidence: number;
+  reason: string;
+} {
+  if (!candles || candles.length < 3) {
+    return { direction: 'NEUTRAL', confidence: 0, reason: 'insufficient candle data' };
+  }
+
+  const recent = candles.slice(-10);
+  let score = 0; // positive = bullish, negative = bearish
+  const reasons: string[] = [];
+
+  // 1. SWING STRUCTURE: Check Higher Highs/Lows vs Lower Highs/Lows
+  const swingPoints = recent.slice(-6);
+  if (swingPoints.length >= 4) {
+    const firstHalf = swingPoints.slice(0, Math.floor(swingPoints.length / 2));
+    const secondHalf = swingPoints.slice(Math.floor(swingPoints.length / 2));
+    const firstHighs = Math.max(...firstHalf.map(c => c.high));
+    const firstLows = Math.min(...firstHalf.map(c => c.low));
+    const secondHighs = Math.max(...secondHalf.map(c => c.high));
+    const secondLows = Math.min(...secondHalf.map(c => c.low));
+
+    if (secondHighs > firstHighs && secondLows > firstLows) {
+      score += 3; // HH + HL = strong bullish
+      reasons.push('HH+HL structure (bullish)');
+    } else if (secondHighs < firstHighs && secondLows < firstLows) {
+      score -= 3; // LH + LL = strong bearish
+      reasons.push('LH+LL structure (bearish)');
+    } else if (secondHighs < firstHighs && secondLows > firstLows) {
+      reasons.push('consolidation (neutral)');
+    } else if (secondHighs > firstHighs && secondLows < firstLows) {
+      reasons.push('expanding range (volatile)');
+    }
+  }
+
+  // 2. CANDLE MOMENTUM: Count consecutive bullish vs bearish candles
+  const last5 = recent.slice(-5);
+  let bullishStreak = 0;
+  let bearishStreak = 0;
+  for (const c of last5) {
+    if (c.close > c.open) bullishStreak++;
+    else if (c.close < c.open) bearishStreak++;
+  }
+  if (bullishStreak >= 4) { score += 2; reasons.push(`${bullishStreak}/5 bullish candles`); }
+  else if (bearishStreak >= 4) { score -= 2; reasons.push(`${bearishStreak}/5 bearish candles`); }
+  else if (bullishStreak >= 3) { score += 1; reasons.push(`${bullishStreak}/5 bullish candles`); }
+  else if (bearishStreak >= 3) { score -= 1; reasons.push(`${bearishStreak}/5 bearish candles`); }
+
+  // 3. CLOSE vs OPEN of total range (first candle open vs last candle close)
+  const firstOpen = recent[0].open;
+  const lastClose = recent[recent.length - 1].close;
+  const totalMove = lastClose - firstOpen;
+  const rangeHigh = Math.max(...recent.map(c => c.high));
+  const rangeLow = Math.min(...recent.map(c => c.low));
+  const totalRange = rangeHigh - rangeLow;
+  if (totalRange > 0) {
+    const moveRatio = totalMove / totalRange;
+    if (moveRatio > 0.3) { score += 2; reasons.push('strong upward move'); }
+    else if (moveRatio < -0.3) { score -= 2; reasons.push('strong downward move'); }
+  }
+
+  // 4. PRICE POSITION relative to range
+  if (totalRange > 0) {
+    const positionInRange = (currentPrice - rangeLow) / totalRange;
+    if (positionInRange < 0.3) { score -= 1; reasons.push('price near range low'); }
+    else if (positionInRange > 0.7) { score += 1; reasons.push('price near range high'); }
+  }
+
+  // 5. LAST CANDLE direction (recent momentum)
+  const lastCandle = recent[recent.length - 1];
+  if (lastCandle.close < lastCandle.open) {
+    const bodyRatio = totalRange > 0 ? Math.abs(lastCandle.close - lastCandle.open) / totalRange : 0;
+    if (bodyRatio > 0.15) { score -= 1; reasons.push('strong bearish last candle'); }
+  } else if (lastCandle.close > lastCandle.open) {
+    const bodyRatio = totalRange > 0 ? Math.abs(lastCandle.close - lastCandle.open) / totalRange : 0;
+    if (bodyRatio > 0.15) { score += 1; reasons.push('strong bullish last candle'); }
+  }
+
+  const absScore = Math.abs(score);
+  const confidence = Math.min(absScore * 15, 90);
+
+  if (score >= 2) return { direction: 'BUY', confidence, reason: reasons.join(', ') };
+  if (score <= -2) return { direction: 'SELL', confidence, reason: reasons.join(', ') };
+  return { direction: 'NEUTRAL', confidence, reason: reasons.join(', ') || 'no clear structure' };
+}
+
 function buildForcedPendingFallbackSignal(params: {
   symbol: string;
   timeframe: string;
   marketData: MarketData;
+  structuralDirection?: 'BUY' | 'SELL' | 'NEUTRAL';
 }): {
   parsed: {
     direction: 'BUY' | 'SELL';
@@ -827,18 +920,22 @@ function buildForcedPendingFallbackSignal(params: {
   const range = Math.max(recentHigh - recentLow, 0.8);
   const firstOpen = syntheticCandles[0]?.open || currentPrice;
   const lastClose = syntheticCandles[syntheticCandles.length - 1]?.close || currentPrice;
-  const bullishCount = syntheticCandles.filter((c) => c.close > c.open).length;
-  const bearishCount = syntheticCandles.filter((c) => c.close < c.open).length;
-  // Use price position in range for tie-breaking instead of always defaulting to BUY
-  const positionInRangeForDirection = range > 0 ? (currentPrice - recentLow) / range : 0.5;
+  // Use structural direction if provided (from programmatic analysis)
+  // This is the key fix: structural direction overrides simple candle counting
   let direction: 'BUY' | 'SELL';
-  if (bullishCount > bearishCount) {
-    direction = 'BUY';
-  } else if (bearishCount > bullishCount) {
-    direction = 'SELL';
+  if (params.structuralDirection === 'BUY' || params.structuralDirection === 'SELL') {
+    direction = params.structuralDirection;
   } else {
-    // Equal or all doji — use price position: below midpoint = BUY (expecting bounce), above = SELL
-    direction = positionInRangeForDirection <= 0.5 ? 'BUY' : 'SELL';
+    const bullishCount = syntheticCandles.filter((c) => c.close > c.open).length;
+    const bearishCount = syntheticCandles.filter((c) => c.close < c.open).length;
+    const positionInRangeForDirection = range > 0 ? (currentPrice - recentLow) / range : 0.5;
+    if (bullishCount > bearishCount) {
+      direction = 'BUY';
+    } else if (bearishCount > bullishCount) {
+      direction = 'SELL';
+    } else {
+      direction = positionInRangeForDirection <= 0.5 ? 'BUY' : 'SELL';
+    }
   }
 
   const pipProfile = getTelebotPipProfile(symbol);
@@ -909,11 +1006,19 @@ export async function generateTelegramSignal(params: {
   const marketData = await getMarketData(symbol as ForexPair, timeframe);
   const formatted = formatMarketDataForAI(marketData, timeframe);
   const currentPrice = marketData.current_price || 0;
+
+  // STRUCTURAL DIRECTION DETECTION — pre-analyze candle data programmatically
+  // This eliminates AI bullish bias by providing a hard directional constraint
+  const structural = detectStructuralDirection(marketData.candles, currentPrice);
+  const directionConstraint = structural.direction !== 'NEUTRAL'
+    ? `\n\n=== STRUCTURAL DIRECTION CONSTRAINT (MANDATORY) ===\nProgrammatic candle analysis detected: ${structural.direction} (confidence: ${structural.confidence}%, reason: ${structural.reason}).\nYou MUST follow this direction. If the structural direction is SELL, your signal MUST be SELL (SELL LIMIT / SELL STOP / SELL NOW). If BUY, your signal MUST be BUY.\nDo NOT contradict this structural direction. This is a hard constraint, not a suggestion.\n=== END STRUCTURAL DIRECTION CONSTRAINT ===`
+    : `\n\n=== STRUCTURAL DIRECTION NOTE ===\nNo clear structural direction detected (${structural.reason}). Use your own analysis to determine BUY or SELL based on market structure. Do NOT default to BUY — choose based on actual price action evidence.\n=== END STRUCTURAL DIRECTION NOTE ===`;
+
   const analysisAttempts = [
-    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}`,
-    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}`,
-    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_PENDING_PRIORITY_GUIDANCE}`,
-    `${formatted}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_PENDING_PRIORITY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
+    `${formatted}${directionConstraint}\n\n${TELEBOT_PRIMARY_GUIDANCE}`,
+    `${formatted}${directionConstraint}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}`,
+    `${formatted}${directionConstraint}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_PENDING_PRIORITY_GUIDANCE}`,
+    `${formatted}${directionConstraint}\n\n${TELEBOT_PRIMARY_GUIDANCE}\n\n${TELEBOT_RETRY_GUIDANCE}\n\n${TELEBOT_PENDING_PRIORITY_GUIDANCE}\n\n${TELEBOT_NO_SIGNAL_GUIDANCE}`,
   ];
   let selectedAnalysis: string | null = null;
   let parsed: ReturnType<typeof parseTelebotSignalFromAnalysis> = null;
@@ -1005,6 +1110,7 @@ export async function generateTelegramSignal(params: {
       symbol,
       timeframe,
       marketData,
+      structuralDirection: structural.direction !== 'NEUTRAL' ? structural.direction : undefined,
     });
 
     if (forcedPendingFallback) {
