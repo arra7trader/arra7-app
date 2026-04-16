@@ -175,6 +175,13 @@ SL dan TP BUKAN hanya berdasarkan ATR! Gunakan **MULTI-METHOD APPROACH** yang me
 
 **RULES:** Stocks=LONG only. Jangan default ke INSTANT. Cari dulu apakah LIMIT atau STOP lebih rapi dan lebih masuk akal. INSTANT hanya boleh dipilih jika pending setup tidak lebih baik.
 
+⚠️ **DIRECTION BALANCE (SANGAT PENTING):**
+- BUY dan SELL harus ditentukan MURNI dari struktur market, BUKAN dari bias umum.
+- Jika struktur menunjukkan lower highs, lower lows, BOS ke bawah → **WAJIB SELL**.
+- Jika struktur menunjukkan higher highs, higher lows, BOS ke atas → **WAJIB BUY**.
+- JANGAN default ke BUY jika struktur ambigu. Jika tidak jelas → **WAIT**.
+- SELL sama validnya dengan BUY. Distribusi sinyal harus seimbang sesuai kondisi market sesungguhnya.
+
 **STATUS POSISI:**
 Jika harga saat ini sudah mencapai atau melewati TP1/TP2/TP3, berikan saran: **"CLOSE NOW"** (Ambil Profit).
 Jika harga masih di antara Entry dan TP, berikan saran: **"HOLD"** (Biarkan profit berjalan).

@@ -720,20 +720,25 @@ const TELEBOT_RETRY_GUIDANCE = `
 Return exactly one actionable setup that is still executable near current market structure.
 - Work harder to find the best clean setup before giving up.
 - Do not default to BUY NOW / SELL NOW unless the entry is genuinely very near market and no cleaner pending setup exists.
-- If retracement setup is valid, prefer BUY LIMIT / SELL LIMIT.
-- If breakout setup is valid, prefer BUY STOP / SELL STOP.
+- BUY and SELL are equally valid. Choose direction strictly based on market structure, NOT general sentiment.
+- If structure is bearish (lower highs, BOS down, bearish OB), you MUST return SELL.
+- If structure is bullish (higher lows, BOS up, bullish OB), you MUST return BUY.
+- If retracement setup is valid, use LIMIT (BUY LIMIT or SELL LIMIT).
+- If breakout setup is valid, use STOP (BUY STOP or SELL STOP).
 - If your first pending entry would be too far from current price, refine the setup and search again for a nearer valid entry.
 - Do not hallucinate entry, SL, or TP. If no clean setup exists after checking momentum, retracement, and breakout, return WAIT with a short natural Indonesian reason.
 === END TELEBOT EXECUTION FILTER ===`;
 
 const TELEBOT_PENDING_PRIORITY_GUIDANCE = `
 === TELEBOT PENDING PRIORITY ===
-Before returning WAIT, you must check these in order:
-1. nearest valid retracement setup -> LIMIT
-2. nearest valid breakout setup -> STOP
-3. only if both are not clean, then consider INSTANT
-4. only if all three are not clean, return WAIT
+Before returning WAIT, you must check BOTH retracement and breakout setups equally:
+1. Check nearest valid retracement setup -> LIMIT (BUY LIMIT or SELL LIMIT)
+2. Check nearest valid breakout setup -> STOP (BUY STOP or SELL STOP)
+3. Pick whichever is cleaner and closer to current price - do NOT always default to LIMIT
+4. Only if both are not clean, then consider INSTANT
+5. Only if all three are not clean, return WAIT
 
+IMPORTANT: Do NOT bias toward BUY. If bearish structure is dominant, the setup MUST be SELL.
 Do not give up early. If the first idea is too far, search again for a closer pending setup that still has valid structure.
 === END TELEBOT PENDING PRIORITY ===`;
 
@@ -741,6 +746,10 @@ const TELEBOT_PRIMARY_GUIDANCE = `
 === TELEBOT PRIMARY SIGNAL RULES ===
 You are preparing a private execution-desk setup, not a generic bullish opinion.
 - Return BUY or SELL only if entry, SL, TP, and execution type are all explicit and consistent.
+- CRITICAL: BUY and SELL must be determined PURELY by market structure:
+  * If price is making lower highs and lower lows, or broke structure downward → SELL
+  * If price is making higher highs and higher lows, or broke structure upward → BUY
+  * Do NOT default to BUY when structure is unclear. If unclear, return WAIT.
 - Prefer the cleanest executable setup near current structure.
 - INSTANT is allowed only when current price is already sitting very near the planned entry and pending setup is not cleaner.
 - If a LIMIT or STOP setup is cleaner, use that instead of forcing INSTANT.
@@ -818,10 +827,19 @@ function buildForcedPendingFallbackSignal(params: {
   const range = Math.max(recentHigh - recentLow, 0.8);
   const firstOpen = syntheticCandles[0]?.open || currentPrice;
   const lastClose = syntheticCandles[syntheticCandles.length - 1]?.close || currentPrice;
-  const bullishCount = syntheticCandles.filter((c) => c.close >= c.open).length;
-  const bearishCount = syntheticCandles.length - bullishCount;
-  const direction: 'BUY' | 'SELL' =
-    lastClose > firstOpen || bullishCount >= bearishCount ? 'BUY' : 'SELL';
+  const bullishCount = syntheticCandles.filter((c) => c.close > c.open).length;
+  const bearishCount = syntheticCandles.filter((c) => c.close < c.open).length;
+  // Use price position in range for tie-breaking instead of always defaulting to BUY
+  const positionInRangeForDirection = range > 0 ? (currentPrice - recentLow) / range : 0.5;
+  let direction: 'BUY' | 'SELL';
+  if (bullishCount > bearishCount) {
+    direction = 'BUY';
+  } else if (bearishCount > bullishCount) {
+    direction = 'SELL';
+  } else {
+    // Equal or all doji — use price position: below midpoint = BUY (expecting bounce), above = SELL
+    direction = positionInRangeForDirection <= 0.5 ? 'BUY' : 'SELL';
+  }
 
   const pipProfile = getTelebotPipProfile(symbol);
   const benchmarkDistance = pipProfile.distanceType === 'percent'
@@ -836,13 +854,13 @@ function buildForcedPendingFallbackSignal(params: {
   let entryPrice: number;
 
   if (direction === 'BUY') {
-    const preferStop = positionInRange >= 0.62;
+    const preferStop = positionInRange >= 0.55;
     executionType = preferStop ? 'STOP' : 'LIMIT';
     entryPrice = preferStop
       ? Math.max(currentPrice + pendingOffset, recentHigh + 0.2)
       : currentPrice - pendingOffset;
   } else {
-    const preferStop = positionInRange <= 0.38;
+    const preferStop = positionInRange <= 0.45;
     executionType = preferStop ? 'STOP' : 'LIMIT';
     entryPrice = preferStop
       ? Math.min(currentPrice - pendingOffset, recentLow - 0.2)
