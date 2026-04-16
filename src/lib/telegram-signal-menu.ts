@@ -1003,7 +1003,23 @@ export async function generateTelegramSignal(params: {
   const symbol = params.symbol.toUpperCase();
   const timeframe = params.timeframe as Timeframe;
 
-  const marketData = await getMarketData(symbol as ForexPair, timeframe);
+  // CRITICAL FIX: Fetch candle-rich data from Yahoo (50 real candles) for analysis.
+  // Swissquote only returns 1 synthetic candle (open=close=price) which gives AI
+  // zero price action data, causing it to always fail → fallback → always BUY LIMIT.
+  // We use preferRealtimeBroker: false to skip Swissquote and get Yahoo's 50 candles.
+  const marketData = await getMarketData(symbol as ForexPair, timeframe, { preferRealtimeBroker: false });
+
+  // Optionally overlay real-time price from Swissquote for more accurate current price
+  // but keep Yahoo's rich candle data for analysis
+  try {
+    const realtimeData = await getMarketData(symbol as ForexPair, timeframe);
+    if (realtimeData.current_price > 0 && !realtimeData.is_simulated && realtimeData.freshnessSeconds !== undefined && realtimeData.freshnessSeconds < 60) {
+      marketData.current_price = realtimeData.current_price;
+    }
+  } catch {
+    // Swissquote overlay failed, Yahoo price is still fine
+  }
+
   const formatted = formatMarketDataForAI(marketData, timeframe);
   const currentPrice = marketData.current_price || 0;
 
