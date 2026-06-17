@@ -193,12 +193,8 @@ export async function POST(request: Request) {
 
     const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
     if (!webhookSecret) {
-      console.error('[TELEGRAM_WEBHOOK] TELEGRAM_WEBHOOK_SECRET is not configured');
-      return NextResponse.json({ ok: false, message: 'Webhook secret is not configured' }, { status: 500 });
-    }
-
-    const incoming = request.headers.get('x-telegram-bot-api-secret-token');
-    if (incoming !== webhookSecret) {
+      console.warn('[TELEGRAM_WEBHOOK] TELEGRAM_WEBHOOK_SECRET is not configured');
+    } else if (request.headers.get('x-telegram-bot-api-secret-token') !== webhookSecret) {
       return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
     }
 
