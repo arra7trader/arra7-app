@@ -153,6 +153,65 @@ function formatZone(symbol: string, priceA: number, priceB: number) {
   return `${formatPrice(symbol, zoneLow)} - ${formatPrice(symbol, zoneHigh)}`;
 }
 
+function buildFiboKanjiVisualMap(params: {
+  symbol: string;
+  direction: 'BUY' | 'SELL';
+  currentPrice: number;
+  swingHigh: number;
+  swingLow: number;
+  entryA: number;
+  entryB: number;
+  entry: number;
+  stopLoss: number;
+  takeProfit1: number;
+  takeProfit2: number;
+  takeProfit3: number;
+}) {
+  const rows = [
+    { label: 'TP3 2.618', price: params.takeProfit3 },
+    { label: 'TP2 2.000', price: params.takeProfit2 },
+    { label: 'TP1 1.618', price: params.takeProfit1 },
+    { label: 'CURRENT', price: params.currentPrice },
+    { label: 'ENTRY 0.559', price: params.entryA },
+    { label: 'ENTRY 0.619', price: params.entryB },
+    { label: 'SL / ANCHOR', price: params.stopLoss },
+    { label: 'SWING HIGH', price: params.swingHigh },
+    { label: 'SWING LOW', price: params.swingLow },
+  ]
+    .filter((row) => Number.isFinite(row.price) && row.price > 0)
+    .sort((a, b) => b.price - a.price);
+
+  const seen = new Set<string>();
+  const deduped = rows.filter((row) => {
+    const key = `${row.label}:${formatPrice(params.symbol, row.price)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const arrow = params.direction === 'BUY' ? 'UP' : 'DOWN';
+  const lines = [
+    `KANJI MAP ${params.symbol} ${arrow}`,
+    '------------------------------',
+    ...deduped.map((row) => {
+      const marker = row.label === 'CURRENT'
+        ? '>>'
+        : row.label.startsWith('ENTRY')
+          ? '[]'
+          : row.label.startsWith('TP')
+            ? 'T '
+            : row.label.startsWith('SL')
+              ? 'X '
+              : '  ';
+      return `${marker} ${row.label.padEnd(12)} ${formatPrice(params.symbol, row.price)}`;
+    }),
+    '------------------------------',
+    `ENTRY ZONE ${formatZone(params.symbol, params.entryA, params.entryB)}`,
+  ];
+
+  return lines.join('\n');
+}
+
 export type FiboKanjiCallback =
   | { type: 'categories' }
   | { type: 'category'; categoryId: PairCategoryId }
@@ -288,16 +347,33 @@ export async function generateFiboKanjiSignal(params: {
 
   const alreadyBeyondTp1 = direction === 'BUY' ? currentPrice >= takeProfit1 : currentPrice <= takeProfit1;
   if (alreadyBeyondTp1) {
+    const visualMap = buildFiboKanjiVisualMap({
+      symbol,
+      direction,
+      currentPrice,
+      swingHigh: swing.high,
+      swingLow: swing.low,
+      entryA,
+      entryB,
+      entry,
+      stopLoss,
+      takeProfit1,
+      takeProfit2,
+      takeProfit3,
+    });
     return {
       ok: true,
       text: [
-        '<b>SIGNAL Fibo Kanji</b>',
+        '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
         '',
         `Instrument      : <b>${escapeHtml(symbol)}</b>`,
         `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
         'Bias            : <b>WAIT</b>',
         `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
         `Reason          : Harga sudah melewati TP1 Fibo Kanji (${escapeHtml(formatPrice(symbol, takeProfit1))}). Jangan kejar market; tunggu swing baru.`,
+        '',
+        '<b>Visual Map</b>',
+        `<pre>${escapeHtml(visualMap)}</pre>`,
       ].join('\n'),
       signalId: null,
     };
@@ -314,6 +390,20 @@ export async function generateFiboKanjiSignal(params: {
   const setupGrade = getSetupGrade(confidence, rr, execution.orderType);
   const invalidationNote = buildInvalidationNote({ direction, orderType: execution.orderType, stopLoss, symbol });
   const profile = await getTelebotUserProfile(params.userId);
+  const visualMap = buildFiboKanjiVisualMap({
+    symbol,
+    direction,
+    currentPrice,
+    swingHigh: swing.high,
+    swingLow: swing.low,
+    entryA,
+    entryB,
+    entry,
+    stopLoss,
+    takeProfit1,
+    takeProfit2,
+    takeProfit3,
+  });
   const tradePlan = profile
     ? calculateTelebotTradePlan({
         symbol,
@@ -357,8 +447,8 @@ export async function generateFiboKanjiSignal(params: {
     ok: true,
     signalId,
     text: [
-      '<b>SIGNAL Fibo Kanji</b>',
-      '<i>Deterministic Fibonacci Kanji setup</i>',
+      '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
+      '<i>Deterministic Fibonacci Kanji setup with visual map</i>',
       '',
       `Instrument      : <b>${escapeHtml(symbol)}</b>`,
       `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
@@ -382,6 +472,9 @@ export async function generateFiboKanjiSignal(params: {
       `Invalidation     : <i>${escapeHtml(invalidationNote)}</i>`,
       `Price Source     : <b>${escapeHtml(livePriceSource)}</b>`,
       `Candle Source    : <b>${escapeHtml(candleSource)}</b> | ${escapeHtml(String(candles.length))} candles`,
+      '',
+      '<b>Visual Map</b>',
+      `<pre>${escapeHtml(visualMap)}</pre>`,
       '',
       '<b>Risk Desk</b>',
       profile ? `Capital          : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Capital          : <b>Belum diatur</b>',
