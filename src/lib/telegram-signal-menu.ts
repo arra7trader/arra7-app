@@ -43,13 +43,37 @@ function getTelebotShortUrl() {
 export function buildMainMenuKeyboard() {
   return {
     keyboard: [
-      [{ text: 'Signal' }, { text: 'Live Status' }],
+      [{ text: 'Signal' }, { text: 'SIGNAL Fibo Kanji' }],
+      [{ text: 'Live Status' }],
       [{ text: 'Balance' }, { text: 'Risk Setup' }],
       [{ text: 'Hasil' }, { text: 'Status' }],
       [{ text: 'Reset Balance' }, { text: 'Bantuan' }],
     ],
     resize_keyboard: true,
     persistent: true,
+  };
+}
+
+function getFibonacciKanjiUrl() {
+  const baseUrl = (process.env.NEXTAUTH_URL || 'https://arra7-app.vercel.app').replace(/\/$/, '');
+  return `${baseUrl}/fibonacci-kanji`;
+}
+
+export function buildFiboKanjiSignalMessage() {
+  return [
+    '<b>SIGNAL Fibo Kanji</b>',
+    '',
+    'Menu Fibo Kanji sudah aktif di TELEBOT.',
+    'Untuk tahap awal, buka panel Fibonacci Kanji dari tombol di bawah sambil engine signal khususnya disiapkan.',
+  ].join('\n');
+}
+
+export function buildFiboKanjiSignalKeyboard() {
+  return {
+    inline_keyboard: [
+      [{ text: 'Buka Fibonacci Kanji', url: getFibonacciKanjiUrl() }],
+      [{ text: 'Signal Reguler', callback_data: 'sigmenu:categories' }],
+    ],
   };
 }
 

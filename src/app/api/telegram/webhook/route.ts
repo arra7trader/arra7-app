@@ -19,6 +19,8 @@ import {
   buildActiveWelcomeMessage,
   buildBalanceKeyboard,
   buildBalanceMessage,
+  buildFiboKanjiSignalKeyboard,
+  buildFiboKanjiSignalMessage,
   buildApprovedWelcomeMessage,
   buildGuestIntroKeyboard,
   buildHelpMessage,
@@ -156,11 +158,11 @@ async function getBotAccess(userId: string): Promise<{ kind: 'private_bot'; labe
   return { kind: 'private_bot', label: 'TELEBOT aktif' };
 }
 
-async function consumeQuotaForAccess(_userId: string, _kind: 'private_bot') {
+async function consumeQuotaForAccess() {
   return getUnlimitedQuota();
 }
 
-async function getQuotaStatusForAccess(_userId: string, _kind: 'private_bot') {
+async function getQuotaStatusForAccess() {
   return getUnlimitedQuota();
 }
 
@@ -189,12 +191,15 @@ export async function POST(request: Request) {
   try {
     await ensureTelegramContactCampaignSchema();
 
-    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const incoming = request.headers.get('x-telegram-bot-api-secret-token');
-      if (incoming && incoming !== webhookSecret) {
-        return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
-      }
+    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
+    if (!webhookSecret) {
+      console.error('[TELEGRAM_WEBHOOK] TELEGRAM_WEBHOOK_SECRET is not configured');
+      return NextResponse.json({ ok: false, message: 'Webhook secret is not configured' }, { status: 500 });
+    }
+
+    const incoming = request.headers.get('x-telegram-bot-api-secret-token');
+    if (incoming !== webhookSecret) {
+      return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const update = (await request.json()) as TelegramUpdate;
@@ -329,7 +334,7 @@ export async function POST(request: Request) {
       }
 
       if (parsed.type === 'timeframe') {
-        const quota = await consumeQuotaForAccess(linkedUser.userId, access.kind);
+        const quota = await consumeQuotaForAccess();
         if (!quota.allowed) {
           await reply(
             chatId,
@@ -593,7 +598,7 @@ export async function POST(request: Request) {
 
     if (cmd === '/status') {
       const profile = await getTelebotUserProfile(linkedUser.userId);
-      const usage = await getQuotaStatusForAccess(linkedUser.userId, access.kind);
+      const usage = await getQuotaStatusForAccess();
       await reply(
         chatId,
         buildStatusMessage({
@@ -619,6 +624,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (text.toLowerCase() === 'signal fibo kanji' || cmd === '/fibokanji') {
+      await reply(chatId, buildFiboKanjiSignalMessage(), {
+        replyMarkup: buildFiboKanjiSignalKeyboard(),
+        allowHtml: true,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     if (text.toLowerCase() === 'hasil' || cmd === '/hasil' || cmd === '/results') {
       const resultsText = await buildTelegramResultsSummary(linkedUser.userId);
       await reply(chatId, resultsText, {
@@ -630,7 +643,7 @@ export async function POST(request: Request) {
 
     if (text.toLowerCase() === 'status') {
       const profile = await getTelebotUserProfile(linkedUser.userId);
-      const usage = await getQuotaStatusForAccess(linkedUser.userId, access.kind);
+      const usage = await getQuotaStatusForAccess();
       await reply(
         chatId,
         buildStatusMessage({
