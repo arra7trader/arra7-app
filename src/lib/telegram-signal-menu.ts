@@ -3,6 +3,7 @@ import {
   FOREX_PAIRS,
   ForexPair,
   formatMarketDataForAI,
+  getBrokerPrice,
   getMarketData,
   MarketData,
   PAIR_CATEGORIES,
@@ -197,11 +198,55 @@ export async function generateFiboKanjiSignal(params: {
   }
 
   let marketData: MarketData;
+  let livePriceSource = 'swissquote';
+  let candleSource = 'swissquote';
   try {
-    marketData = await getMarketData(symbol as ForexPair, timeframe, { preferRealtimeBroker: false });
+    const brokerData = await getBrokerPrice(symbol as ForexPair, timeframe, 'swissquote');
+    livePriceSource = brokerData.timestampSource || 'swissquote';
+    marketData = brokerData;
+
+    if ((brokerData.candles?.length || 0) < 5) {
+      const historyData = await getMarketData(symbol as ForexPair, timeframe, { preferRealtimeBroker: false });
+      if (historyData.is_simulated || historyData.timestampSource === 'simulated') {
+        return { ok: false, message: `Data candle real ${symbol} ${timeframe.toUpperCase()} belum tersedia. SIGNAL Fibo Kanji tidak memakai data dummy.` };
+      }
+
+      if (historyData.candles && historyData.candles.length >= 5) {
+        const candles = historyData.candles.map((candle) => ({ ...candle }));
+        const lastIdx = candles.length - 1;
+        candles[lastIdx].close = brokerData.current_price;
+        candles[lastIdx].high = Math.max(candles[lastIdx].high || 0, brokerData.high || brokerData.current_price);
+        candles[lastIdx].low = Math.min(candles[lastIdx].low || brokerData.current_price, brokerData.low || brokerData.current_price);
+
+        marketData = {
+          ...historyData,
+          current_price: brokerData.current_price,
+          close: brokerData.current_price,
+          high: brokerData.high || historyData.high,
+          low: brokerData.low || historyData.low,
+          open: brokerData.open || historyData.open,
+          change_percent: brokerData.change_percent ?? historyData.change_percent,
+          volume: brokerData.volume ?? historyData.volume,
+          timestamp: brokerData.timestamp || new Date().toISOString(),
+          candles,
+          is_realtime: true,
+          is_simulated: false,
+          timestampSource: brokerData.timestampSource || 'swissquote',
+          freshnessSeconds: brokerData.freshnessSeconds ?? 5,
+        };
+        candleSource = historyData.timestampSource || 'real-history';
+      }
+    }
   } catch (error) {
-    console.error('[FIBO_KANJI_SIGNAL] market data error:', error);
-    return { ok: false, message: `Data market ${symbol} ${timeframe.toUpperCase()} belum bisa diambil. Coba ulang 1-2 menit lagi.` };
+    console.error('[FIBO_KANJI_SIGNAL] Swissquote market data error:', error);
+    try {
+      marketData = await getMarketData(symbol as ForexPair, timeframe, { preferRealtimeBroker: false });
+      livePriceSource = `${marketData.timestampSource || 'real-market'} (Swissquote unavailable)`;
+      candleSource = marketData.timestampSource || 'real-history';
+    } catch (fallbackError) {
+      console.error('[FIBO_KANJI_SIGNAL] fallback market data error:', fallbackError);
+      return { ok: false, message: `Data real ${symbol} ${timeframe.toUpperCase()} belum bisa diambil. SIGNAL Fibo Kanji tidak memakai data dummy.` };
+    }
   }
   const candles = marketData?.candles || [];
   const currentPrice = marketData?.current_price || marketData?.close || 0;
@@ -335,7 +380,8 @@ export async function generateFiboKanjiSignal(params: {
       rr ? `Risk / Reward    : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk / Reward    : <b>-</b>',
       `Confidence       : <b>${escapeHtml(String(confidence))}%</b>`,
       `Invalidation     : <i>${escapeHtml(invalidationNote)}</i>`,
-      `Data Source      : <b>${escapeHtml(marketData.timestampSource || 'real-market')}</b> | ${escapeHtml(String(candles.length))} candles`,
+      `Price Source     : <b>${escapeHtml(livePriceSource)}</b>`,
+      `Candle Source    : <b>${escapeHtml(candleSource)}</b> | ${escapeHtml(String(candles.length))} candles`,
       '',
       '<b>Risk Desk</b>',
       profile ? `Capital          : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Capital          : <b>Belum diatur</b>',

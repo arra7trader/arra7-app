@@ -207,7 +207,7 @@ export interface MarketData {
     candles: Candle[];
     is_realtime: boolean;
     is_simulated?: boolean; // New flag for dummy data
-    timestampSource?: 'binance-rest' | 'yahoo-query1' | 'yahoo-query2' | 'simulated'; // Data source tracking
+    timestampSource?: 'binance-rest' | 'yahoo-query1' | 'yahoo-query2' | 'swissquote' | 'oanda' | 'simulated'; // Data source tracking
     freshnessSeconds?: number; // Age of data in seconds
 }
 
