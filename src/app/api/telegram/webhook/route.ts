@@ -20,7 +20,6 @@ import {
   buildBalanceKeyboard,
   buildBalanceMessage,
   buildFiboKanjiSignalKeyboard,
-  buildFiboKanjiSignalMessage,
   buildApprovedWelcomeMessage,
   buildGuestIntroKeyboard,
   buildHelpMessage,
@@ -37,8 +36,10 @@ import {
   buildTelegramResultsSummary,
   buildTimeframeKeyboard,
   findSignalPairCategory,
+  generateFiboKanjiSignal,
   generateTelegramSignal,
   isSupportedSignalPair,
+  parseFiboKanjiCallback,
   parseSignalCallback,
 } from '@/lib/telegram-signal-menu';
 import { formatTelebotSetupStyle } from '@/lib/telebot-trade-plan';
@@ -289,6 +290,21 @@ export async function POST(request: Request) {
         await reply(chatId, await buildBalanceMessage(linkedUser.userId, ok ? 'Balance berhasil di-reset. Anda bisa mulai dari modal baru.' : 'Reset balance gagal dijalankan.'), {
           replyMarkup: buildBalanceKeyboard(),
           allowHtml: true,
+        });
+        return NextResponse.json({ ok: true });
+      }
+
+      const fiboKanji = parseFiboKanjiCallback(callback.data);
+      if (fiboKanji) {
+        const signal = await generateFiboKanjiSignal({
+          userId: linkedUser.userId,
+          chatId,
+          symbol: fiboKanji.symbol,
+          timeframe: fiboKanji.timeframe,
+        });
+        await reply(chatId, signal.ok ? signal.text : signal.message, {
+          replyMarkup: buildFiboKanjiSignalKeyboard(fiboKanji.symbol),
+          allowHtml: signal.ok,
         });
         return NextResponse.json({ ok: true });
       }
@@ -621,9 +637,15 @@ export async function POST(request: Request) {
     }
 
     if (text.toLowerCase() === 'signal fibo kanji' || cmd === '/fibokanji') {
-      await reply(chatId, buildFiboKanjiSignalMessage(), {
-        replyMarkup: buildFiboKanjiSignalKeyboard(),
-        allowHtml: true,
+      const signal = await generateFiboKanjiSignal({
+        userId: linkedUser.userId,
+        chatId,
+        symbol: 'XAUUSD',
+        timeframe: '1h',
+      });
+      await reply(chatId, signal.ok ? signal.text : signal.message, {
+        replyMarkup: buildFiboKanjiSignalKeyboard('XAUUSD'),
+        allowHtml: signal.ok,
       });
       return NextResponse.json({ ok: true });
     }

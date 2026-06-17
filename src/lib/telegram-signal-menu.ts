@@ -8,6 +8,7 @@ import {
   PAIR_CATEGORIES,
   Timeframe,
 } from './market-data';
+import { detectSwingPoints } from './analysis';
 import { analyzeWithGroq } from './groq-ai';
 import { getTelebotUserProfile } from './turso';
 import { calculateTelebotTradePlan, formatTelebotSetupStyle } from './telebot-trade-plan';
@@ -59,21 +60,203 @@ function getFibonacciKanjiUrl() {
   return `${baseUrl}/fibonacci-kanji`;
 }
 
-export function buildFiboKanjiSignalMessage() {
-  return [
-    '<b>SIGNAL Fibo Kanji</b>',
-    '',
-    'Menu Fibo Kanji sudah aktif di TELEBOT.',
-    'Untuk tahap awal, buka panel Fibonacci Kanji dari tombol di bawah sambil engine signal khususnya disiapkan.',
-  ].join('\n');
-}
-
-export function buildFiboKanjiSignalKeyboard() {
+export function buildFiboKanjiSignalKeyboard(symbol = 'XAUUSD') {
   return {
     inline_keyboard: [
-      [{ text: 'Buka Fibonacci Kanji', url: getFibonacciKanjiUrl() }],
+      [
+        { text: 'Refresh H1', callback_data: `fibo:${symbol}:1h` },
+        { text: 'M15', callback_data: `fibo:${symbol}:15m` },
+        { text: 'H4', callback_data: `fibo:${symbol}:4h` },
+      ],
+      [{ text: 'Buka Chart Fibo Kanji', url: getFibonacciKanjiUrl() }],
       [{ text: 'Signal Reguler', callback_data: 'sigmenu:categories' }],
     ],
+  };
+}
+
+type FiboKanjiLevel = 0 | 0.559 | 0.619 | 0.786 | 0.882 | 1.124 | 1.272 | 1.618 | 2 | 2.618;
+
+const FIBO_KANJI_LEVELS: FiboKanjiLevel[] = [0, 0.559, 0.619, 0.786, 0.882, 1.124, 1.272, 1.618, 2, 2.618];
+
+function calculateFiboKanjiPrice(high: number, low: number, level: FiboKanjiLevel, trend: 'UP' | 'DOWN') {
+  const range = Math.abs(high - low);
+  return trend === 'DOWN'
+    ? high - (range * level)
+    : low + (range * level);
+}
+
+function distanceToZone(currentPrice: number, priceA: number, priceB: number) {
+  const zoneLow = Math.min(priceA, priceB);
+  const zoneHigh = Math.max(priceA, priceB);
+  if (currentPrice >= zoneLow && currentPrice <= zoneHigh) return 0;
+  return Math.min(Math.abs(currentPrice - zoneLow), Math.abs(currentPrice - zoneHigh));
+}
+
+function formatZone(symbol: string, priceA: number, priceB: number) {
+  const zoneLow = Math.min(priceA, priceB);
+  const zoneHigh = Math.max(priceA, priceB);
+  return `${formatPrice(symbol, zoneLow)} - ${formatPrice(symbol, zoneHigh)}`;
+}
+
+export function parseFiboKanjiCallback(value: string): { symbol: string; timeframe: Timeframe } | null {
+  const match = value.match(/^fibo:([A-Z0-9]+):(1m|5m|15m|30m|1h|4h|1d)$/i);
+  if (!match) return null;
+  const symbol = match[1].toUpperCase();
+  if (!isSupportedSignalPair(symbol)) return null;
+  return { symbol, timeframe: match[2].toLowerCase() as Timeframe };
+}
+
+export async function generateFiboKanjiSignal(params: {
+  userId: string;
+  chatId: string;
+  symbol?: string;
+  timeframe?: Timeframe;
+}): Promise<{ ok: true; text: string; signalId?: number | null } | { ok: false; message: string }> {
+  const symbol = (params.symbol || 'XAUUSD').toUpperCase();
+  const timeframe = params.timeframe || '1h';
+
+  if (!isSupportedSignalPair(symbol)) {
+    return { ok: false, message: `Pair ${symbol} belum didukung untuk SIGNAL Fibo Kanji.` };
+  }
+
+  const marketData = await getMarketData(symbol as ForexPair, timeframe);
+  const candles = marketData?.candles || [];
+  const currentPrice = marketData?.current_price || marketData?.close || 0;
+
+  if (!marketData || candles.length < 20 || !(currentPrice > 0)) {
+    return { ok: false, message: `Data market ${symbol} ${timeframe.toUpperCase()} belum cukup untuk SIGNAL Fibo Kanji.` };
+  }
+
+  const swing = detectSwingPoints(candles, 80);
+  if (!(swing.high > 0) || !(swing.low > 0) || swing.high <= swing.low) {
+    return { ok: false, message: `Swing ${symbol} ${timeframe.toUpperCase()} belum valid untuk Fibo Kanji. Tunggu struktur market lebih jelas.` };
+  }
+
+  const direction: 'BUY' | 'SELL' = swing.trend === 'UP' ? 'BUY' : 'SELL';
+  const levels = Object.fromEntries(
+    FIBO_KANJI_LEVELS.map((level) => [level, calculateFiboKanjiPrice(swing.high, swing.low, level, swing.trend)])
+  ) as Record<FiboKanjiLevel, number>;
+
+  const entryA = levels[0.559];
+  const entryB = levels[0.619];
+  const entry = Math.abs(currentPrice - entryA) <= Math.abs(currentPrice - entryB) ? entryA : entryB;
+  const stopLoss = levels[0];
+  const takeProfit1 = levels[1.618];
+  const takeProfit2 = levels[2];
+  const takeProfit3 = levels[2.618];
+  const reversalDistance = distanceToZone(currentPrice, levels[0.786], levels[0.882]);
+  const entryDistance = distanceToZone(currentPrice, entryA, entryB);
+  const breakoutDistance = distanceToZone(currentPrice, levels[1.124], levels[1.272]);
+  const range = Math.abs(swing.high - swing.low);
+  const nearestZone = [
+    { name: 'Entry Zone 0.559-0.619', distance: entryDistance },
+    { name: 'Reversal Zone 0.786-0.882', distance: reversalDistance },
+    { name: 'Breakout Zone 1.124-1.272', distance: breakoutDistance },
+  ].sort((a, b) => a.distance - b.distance)[0];
+
+  const alreadyBeyondTp1 = direction === 'BUY' ? currentPrice >= takeProfit1 : currentPrice <= takeProfit1;
+  if (alreadyBeyondTp1) {
+    return {
+      ok: true,
+      text: [
+        '<b>SIGNAL Fibo Kanji</b>',
+        '',
+        `Instrument      : <b>${escapeHtml(symbol)}</b>`,
+        `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
+        'Bias            : <b>WAIT</b>',
+        `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
+        `Reason          : Harga sudah melewati TP1 Fibo Kanji (${escapeHtml(formatPrice(symbol, takeProfit1))}). Jangan kejar market; tunggu swing baru.`,
+      ].join('\n'),
+      signalId: null,
+    };
+  }
+
+  const execution = resolveExecutionType({ direction, currentPrice, entryPrice: entry, symbol });
+  if (!execution.ok) {
+    return { ok: false, message: `SIGNAL Fibo Kanji ${symbol} ${timeframe.toUpperCase()} belum valid: ${execution.reason}.` };
+  }
+
+  const rr = calculateRR(entry, stopLoss, takeProfit1);
+  const zoneScore = nearestZone.distance === 0 ? 10 : Math.max(0, 10 - ((nearestZone.distance / Math.max(range, 0.0000001)) * 100));
+  const confidence = Math.max(62, Math.min(91, Math.round((swing.confidence * 70) + zoneScore + (rr ? Math.min(rr, 2) * 5 : 0))));
+  const setupGrade = getSetupGrade(confidence, rr, execution.orderType);
+  const invalidationNote = buildInvalidationNote({ direction, orderType: execution.orderType, stopLoss, symbol });
+  const profile = await getTelebotUserProfile(params.userId);
+  const tradePlan = profile
+    ? calculateTelebotTradePlan({
+        symbol,
+        entryPrice: entry,
+        stopLoss,
+        takeProfit1,
+        balanceAmount: profile.balanceAmount,
+        riskPercent: profile.riskPercent,
+        setupStyle: profile.setupStyle,
+      })
+    : null;
+
+  const signalId = await saveSignalWithId({
+    type: 'forex',
+    symbol,
+    timeframe,
+    direction,
+    entryPrice: entry,
+    stopLoss,
+    takeProfit1,
+    takeProfit2,
+    confidence,
+  });
+
+  if (signalId) {
+    await recordTelegramSignalRequest(params.userId, params.chatId, signalId, symbol, timeframe);
+    await saveTelebotSignalExecution({
+      userId: params.userId,
+      chatId: params.chatId,
+      signalId,
+      symbol,
+      timeframe,
+      executionType: execution.orderType,
+      setupGrade,
+      invalidationNote,
+      recommendedEntry: entry,
+    });
+  }
+
+  return {
+    ok: true,
+    signalId,
+    text: [
+      '<b>SIGNAL Fibo Kanji</b>',
+      '<i>Deterministic Fibonacci Kanji setup</i>',
+      '',
+      `Instrument      : <b>${escapeHtml(symbol)}</b>`,
+      `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
+      `Bias            : <b>${escapeHtml(direction)}</b>`,
+      `Execution Type  : <b>${escapeHtml(execution.orderType)}</b>`,
+      `Setup Grade     : <b>${escapeHtml(setupGrade)}</b>`,
+      `Nearest Zone    : <b>${escapeHtml(nearestZone.name)}</b>`,
+      '',
+      '<b>Kanji Levels</b>',
+      `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
+      `Swing High       : <code>${escapeHtml(formatPrice(symbol, swing.high))}</code>`,
+      `Swing Low        : <code>${escapeHtml(formatPrice(symbol, swing.low))}</code>`,
+      `Entry Zone       : <code>${escapeHtml(formatZone(symbol, entryA, entryB))}</code>`,
+      `Entry            : <code>${escapeHtml(formatPrice(symbol, entry))}</code>`,
+      `Stop Loss        : <code>${escapeHtml(formatPrice(symbol, stopLoss))}</code>`,
+      `TP1 1.618        : <code>${escapeHtml(formatPrice(symbol, takeProfit1))}</code>`,
+      `TP2 2.000        : <code>${escapeHtml(formatPrice(symbol, takeProfit2))}</code>`,
+      `TP3 2.618        : <code>${escapeHtml(formatPrice(symbol, takeProfit3))}</code>`,
+      rr ? `Risk / Reward    : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk / Reward    : <b>-</b>',
+      `Confidence       : <b>${escapeHtml(String(confidence))}%</b>`,
+      `Invalidation     : <i>${escapeHtml(invalidationNote)}</i>`,
+      '',
+      '<b>Risk Desk</b>',
+      profile ? `Capital          : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Capital          : <b>Belum diatur</b>',
+      profile ? `Risk Profile     : <b>${escapeHtml(String(profile.riskPercent))}% | ${escapeHtml(formatTelebotSetupStyle(profile.setupStyle))}</b>` : 'Risk Profile     : <b>Gunakan menu Balance / Risk Setup</b>',
+      tradePlan ? `Lot Recommendation: <b>${escapeHtml(String(tradePlan.recommendedLot))}</b>` : 'Lot Recommendation: <b>Isi balance untuk sizing</b>',
+      '',
+      'Rule source      : <b>Fibo Kanji 0.559/0.619 -> TP 1.618/2.000/2.618</b>',
+      signalId ? `Reference ID     : <code>#${signalId}</code>` : '',
+    ].filter(Boolean).join('\n'),
   };
 }
 
