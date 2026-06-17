@@ -4,16 +4,37 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 const WIDTH = 1080;
-const HEIGHT = 1780;
+const HEIGHT = 1500;
+const CHART_X = 54;
+const CHART_Y = 318;
+const CHART_W = 972;
+const CHART_H = 700;
+
+type Ohlc = {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+};
 
 function getParam(url: URL, key: string, fallback = '-') {
   const value = url.searchParams.get(key)?.trim();
-  return value ? value.slice(0, 180) : fallback;
+  return value ? value.slice(0, 220) : fallback;
 }
 
 function getNumber(url: URL, key: string) {
   const value = Number(url.searchParams.get(key));
   return Number.isFinite(value) ? value : 0;
+}
+
+function parseOhlc(value: string): Ohlc[] {
+  return value
+    .split(';')
+    .map((row) => row.split(',').map(Number))
+    .filter((row) => row.length === 4 && row.every((item) => Number.isFinite(item) && item > 0))
+    .map(([open, high, low, close]) => ({ open, high, low, close }))
+    .filter((candle) => candle.high >= Math.max(candle.open, candle.close) && candle.low <= Math.min(candle.open, candle.close))
+    .slice(-44);
 }
 
 function formatPrice(symbol: string, value: number) {
@@ -31,6 +52,30 @@ function formatPrice(symbol: string, value: number) {
 
 function truncate(value: string, length: number) {
   return value.length > length ? `${value.slice(0, length - 1)}...` : value;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function buildFallbackCandles(current: number, entry: number, swingHigh: number, swingLow: number): Ohlc[] {
+  if (!(current > 0) || !(swingHigh > swingLow)) return [];
+  const candles: Ohlc[] = [];
+  const start = entry > 0 ? entry : swingLow + (swingHigh - swingLow) * 0.45;
+  for (let i = 0; i < 28; i++) {
+    const t = i / 27;
+    const center = start + (current - start) * t;
+    const wave = Math.sin(i * 1.7) * (swingHigh - swingLow) * 0.035;
+    const open = center - wave;
+    const close = center + wave * 0.8;
+    candles.push({
+      open,
+      close,
+      high: Math.max(open, close) + (swingHigh - swingLow) * 0.018,
+      low: Math.min(open, close) - (swingHigh - swingLow) * 0.018,
+    });
+  }
+  return candles;
 }
 
 export async function GET(request: Request) {
@@ -54,30 +99,58 @@ export async function GET(request: Request) {
   const rr = getParam(url, 'rr', '-');
   const liveSource = getParam(url, 'liveSource', 'real-market');
   const candleSource = getParam(url, 'candleSource', 'real-history');
-  const candles = getParam(url, 'candles', '0');
+  const candlesCount = getParam(url, 'candles', '0');
   const zone = getParam(url, 'zone', '-');
   const invalidation = getParam(url, 'invalidation', '-');
   const signalId = getParam(url, 'signalId', '-');
+  const parsedCandles = parseOhlc(url.searchParams.get('ohlc') || '');
+  const chartCandles = parsedCandles.length >= 5
+    ? parsedCandles
+    : buildFallbackCandles(current, entry, swingHigh, swingLow);
 
   const isBuy = direction === 'BUY';
   const isSell = direction === 'SELL';
   const accent = isBuy ? '#20d68b' : isSell ? '#ff5e6c' : '#f8c247';
-  const accentSoft = isBuy ? 'rgba(32, 214, 139, 0.15)' : isSell ? 'rgba(255, 94, 108, 0.15)' : 'rgba(248, 194, 71, 0.16)';
-
-  const levelRows = [
-    { label: 'TP3', meta: '2.618', price: tp3, tone: '#73f0ff' },
-    { label: 'TP2', meta: '2.000', price: tp2, tone: '#73f0ff' },
-    { label: 'TP1', meta: '1.618', price: tp1, tone: '#73f0ff' },
-    { label: 'CURRENT', meta: 'LIVE', price: current, tone: '#ffffff' },
-    { label: 'ENTRY A', meta: '0.559', price: entryA, tone: accent },
-    { label: 'ENTRY B', meta: '0.619', price: entryB, tone: accent },
-    { label: 'SL', meta: '0.000', price: stopLoss, tone: '#ff8a8a' },
-    { label: 'SWING HIGH', meta: 'ANCHOR', price: swingHigh, tone: '#b8c2d8' },
-    { label: 'SWING LOW', meta: 'ANCHOR', price: swingLow, tone: '#b8c2d8' },
-  ].filter((item) => item.price > 0).sort((a, b) => b.price - a.price);
-
+  const accentSoft = isBuy ? 'rgba(32, 214, 139, 0.18)' : isSell ? 'rgba(255, 94, 108, 0.18)' : 'rgba(248, 194, 71, 0.18)';
   const entryLow = Math.min(entryA, entryB);
   const entryHigh = Math.max(entryA, entryB);
+
+  const allPrices = [
+    ...chartCandles.flatMap((candle) => [candle.high, candle.low]),
+    current,
+    entryA,
+    entryB,
+    entry,
+    stopLoss,
+    tp1,
+    tp2,
+    tp3,
+    swingHigh,
+    swingLow,
+  ].filter((price) => price > 0);
+  const minPrice = Math.min(...allPrices);
+  const maxPrice = Math.max(...allPrices);
+  const padding = Math.max((maxPrice - minPrice) * 0.08, maxPrice * 0.0002);
+  const scaleMin = minPrice - padding;
+  const scaleMax = maxPrice + padding;
+  const span = Math.max(scaleMax - scaleMin, 0.0000001);
+  const yFor = (price: number) => CHART_Y + ((scaleMax - price) / span) * CHART_H;
+  const candleSlot = CHART_W / Math.max(chartCandles.length, 1);
+  const candleBodyW = clamp(candleSlot * 0.55, 8, 18);
+
+  const levels = [
+    { key: 'TP3', label: 'TP3 2.618', value: tp3, color: '#73f0ff', width: 1 },
+    { key: 'TP2', label: 'TP2 2.000', value: tp2, color: '#73f0ff', width: 1 },
+    { key: 'TP1', label: 'TP1 1.618', value: tp1, color: '#73f0ff', width: 2 },
+    { key: 'CURRENT', label: 'CURRENT', value: current, color: '#ffffff', width: 2 },
+    { key: 'ENTRY A', label: 'ENTRY 0.559', value: entryA, color: accent, width: 2 },
+    { key: 'ENTRY B', label: 'ENTRY 0.619', value: entryB, color: accent, width: 2 },
+    { key: 'SL', label: 'SL / INVALID', value: stopLoss, color: '#ff8a8a', width: 2 },
+    { key: 'HIGH', label: 'SWING HIGH', value: swingHigh, color: '#9aa8c0', width: 1 },
+    { key: 'LOW', label: 'SWING LOW', value: swingLow, color: '#9aa8c0', width: 1 },
+  ].filter((level) => level.value > 0);
+
+  const gridPrices = Array.from({ length: 6 }, (_, index) => scaleMin + (span * index) / 5).reverse();
 
   return new ImageResponse(
     (
@@ -87,222 +160,209 @@ export async function GET(request: Request) {
           height: HEIGHT,
           display: 'flex',
           flexDirection: 'column',
-          padding: 54,
+          padding: 44,
           color: '#f7fbff',
-          background: 'linear-gradient(145deg, #07090f 0%, #10151e 48%, #071112 100%)',
+          background: 'linear-gradient(145deg, #06080d 0%, #10151d 48%, #071112 100%)',
           fontFamily: 'Arial, sans-serif',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', fontSize: 28, letterSpacing: 0, color: '#c9d4e8' }}>ARRA7 EXCLUSIVE</div>
-            <div style={{ display: 'flex', marginTop: 8, fontSize: 70, fontWeight: 800, letterSpacing: 0 }}>
-              SIGNAL Fibo Kanji
-            </div>
+            <div style={{ display: 'flex', color: '#9fb0ca', fontSize: 27 }}>ARRA7 EXCLUSIVE CHART</div>
+            <div style={{ display: 'flex', marginTop: 8, fontSize: 52, fontWeight: 800 }}>Fibo Kanji Signal</div>
           </div>
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
               justifyContent: 'center',
-              width: 228,
-              height: 92,
-              borderRadius: 30,
+              minWidth: 250,
+              height: 100,
+              borderRadius: 28,
               border: `3px solid ${accent}`,
               background: accentSoft,
-              color: accent,
-              fontSize: 42,
-              fontWeight: 800,
+              padding: '0 28px',
             }}
           >
-            {direction}
+            <div style={{ display: 'flex', color: accent, fontSize: 42, fontWeight: 800 }}>{direction}</div>
+            <div style={{ display: 'flex', color: '#d8dfec', fontSize: 21 }}>{orderType}</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', marginTop: 22, justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 23 }}>INSTRUMENT</div>
+            <div style={{ display: 'flex', marginTop: 2, fontSize: 70, fontWeight: 800 }}>{symbol}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 18 }}>
+            <MiniBox label="TIMEFRAME" value={timeframe} />
+            <MiniBox label="CONFIDENCE" value={`${confidence}%`} />
+            <MiniBox label="RR" value={`1:${rr}`} />
           </div>
         </div>
 
         <div
           style={{
             display: 'flex',
+            position: 'absolute',
+            left: CHART_X,
+            top: CHART_Y,
+            width: CHART_W,
+            height: CHART_H,
+            borderRadius: 28,
+            background: 'rgba(3,8,13,0.86)',
+            border: '1px solid rgba(255,255,255,0.14)',
+            overflow: 'hidden',
+          }}
+        >
+          {gridPrices.map((price) => {
+            const y = yFor(price) - CHART_Y;
+            return (
+              <div key={`grid-${price}`} style={{ display: 'flex', position: 'absolute', left: 0, right: 0, top: y }}>
+                <div style={{ display: 'flex', width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
+                <div style={{ display: 'flex', position: 'absolute', right: 18, top: -14, color: '#63718a', fontSize: 20 }}>
+                  {formatPrice(symbol, price)}
+                </div>
+              </div>
+            );
+          })}
+
+          {entryA > 0 && entryB > 0 ? (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: yFor(entryHigh) - CHART_Y,
+                height: Math.max(yFor(entryLow) - yFor(entryHigh), 8),
+                background: accentSoft,
+                borderTop: `2px solid ${accent}`,
+                borderBottom: `2px solid ${accent}`,
+              }}
+            />
+          ) : null}
+
+          {chartCandles.map((candle, index) => {
+            const x = index * candleSlot + candleSlot / 2;
+            const wickTop = yFor(candle.high) - CHART_Y;
+            const wickBottom = yFor(candle.low) - CHART_Y;
+            const openY = yFor(candle.open) - CHART_Y;
+            const closeY = yFor(candle.close) - CHART_Y;
+            const isUp = candle.close >= candle.open;
+            const color = isUp ? '#20d68b' : '#ff5e6c';
+            const bodyTop = Math.min(openY, closeY);
+            const bodyHeight = Math.max(Math.abs(openY - closeY), 4);
+            return (
+              <div key={`candle-${index}`} style={{ display: 'flex', position: 'absolute', left: x, top: 0 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    position: 'absolute',
+                    left: -1,
+                    top: wickTop,
+                    width: 2,
+                    height: Math.max(wickBottom - wickTop, 1),
+                    background: color,
+                    opacity: 0.85,
+                  }}
+                />
+                <div
+                  style={{
+                    display: 'flex',
+                    position: 'absolute',
+                    left: -candleBodyW / 2,
+                    top: bodyTop,
+                    width: candleBodyW,
+                    height: bodyHeight,
+                    borderRadius: 3,
+                    background: isUp ? color : 'rgba(255,94,108,0.18)',
+                    border: `2px solid ${color}`,
+                  }}
+                />
+              </div>
+            );
+          })}
+
+          {levels.map((level, index) => {
+            const y = yFor(level.value) - CHART_Y;
+            const labelTop = clamp(y - 18, 12, CHART_H - 42);
+            const labelLeft = index % 2 === 0 ? CHART_W - 302 : 18;
+            return (
+              <div key={level.key} style={{ display: 'flex', position: 'absolute', left: 0, right: 0, top: y }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    width: '100%',
+                    height: level.width,
+                    background: level.color,
+                    opacity: level.key === 'CURRENT' ? 0.92 : 0.68,
+                  }}
+                />
+                <div
+                  style={{
+                    display: 'flex',
+                    position: 'absolute',
+                    top: labelTop - y,
+                    left: labelLeft,
+                    width: 284,
+                    padding: '7px 11px',
+                    borderRadius: 12,
+                    background: 'rgba(3,8,13,0.82)',
+                    border: `1px solid ${level.color}`,
+                    color: level.color,
+                    fontSize: 20,
+                    fontWeight: 700,
+                  }}
+                >
+                  {level.label} {formatPrice(symbol, level.value)}
+                </div>
+              </div>
+            );
+          })}
+
+          <div style={{ display: 'flex', position: 'absolute', left: 22, bottom: 18, color: '#8fa0ba', fontSize: 20 }}>
+            {parsedCandles.length >= 5 ? 'REAL OHLC CANDLES FROM SIGNAL DATA' : 'PRICE PATH FALLBACK - CANDLE PAYLOAD MISSING'}
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            position: 'absolute',
+            left: 54,
+            top: 1046,
+            width: 972,
+            gap: 18,
+          }}
+        >
+          <Panel title="ENTRY ZONE" value={`${formatPrice(symbol, entryLow)} - ${formatPrice(symbol, entryHigh)}`} sub={`Entry ${formatPrice(symbol, entry)} | ${truncate(zone, 28)}`} accent={accent} />
+          <Panel title="STOP LOSS" value={formatPrice(symbol, stopLoss)} sub={truncate(invalidation, 54)} accent="#ff8a8a" />
+          <Panel title="TARGETS" value={`${formatPrice(symbol, tp1)} / ${formatPrice(symbol, tp2)}`} sub={`TP3 ${formatPrice(symbol, tp3)}`} accent="#73f0ff" />
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            position: 'absolute',
+            left: 54,
+            top: 1300,
+            width: 972,
             justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: 34,
-            padding: '26px 30px',
-            borderRadius: 30,
-            background: 'rgba(255,255,255,0.055)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            paddingTop: 22,
+            borderTop: '1px solid rgba(255,255,255,0.14)',
+            color: '#9fb0ca',
+            fontSize: 22,
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 24 }}>INSTRUMENT</div>
-            <div style={{ display: 'flex', marginTop: 6, fontSize: 66, fontWeight: 800 }}>{symbol}</div>
+            <div style={{ display: 'flex', color: '#f7fbff', fontSize: 28, fontWeight: 800 }}>{truncate(setupGrade, 42)}</div>
+            <div style={{ display: 'flex', marginTop: 10 }}>Source: {truncate(liveSource, 32)} | Candles: {truncate(candleSource, 28)} ({candlesCount})</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 24 }}>TIMEFRAME</div>
-            <div style={{ display: 'flex', marginTop: 6, fontSize: 54, fontWeight: 800 }}>{timeframe}</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 24, marginTop: 26 }}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              flex: 1,
-              padding: 28,
-              borderRadius: 26,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.12)',
-            }}
-          >
-            <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 23 }}>EXECUTION</div>
-            <div style={{ display: 'flex', marginTop: 10, color: accent, fontSize: 48, fontWeight: 800 }}>{orderType}</div>
-            <div style={{ display: 'flex', marginTop: 14, color: '#d8dfec', fontSize: 25 }}>{truncate(setupGrade, 48)}</div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: 300,
-              padding: 28,
-              borderRadius: 26,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.12)',
-            }}
-          >
-            <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 23 }}>CONFIDENCE</div>
-            <div style={{ display: 'flex', marginTop: 10, color: '#ffffff', fontSize: 52, fontWeight: 800 }}>
-              {confidence}%
-            </div>
-            <div style={{ display: 'flex', marginTop: 12, color: '#cbd6e8', fontSize: 24 }}>RR 1:{rr}</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 28, marginTop: 28, flex: 1 }}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: 420,
-              padding: 30,
-              borderRadius: 30,
-              background: 'rgba(4,8,14,0.78)',
-              border: '1px solid rgba(255,255,255,0.13)',
-            }}
-          >
-            <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 24 }}>KANJI LEVELS</div>
-            <div style={{ display: 'flex', position: 'relative', flex: 1, marginTop: 26 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  position: 'absolute',
-                  left: 16,
-                  top: 0,
-                  bottom: 0,
-                  width: 6,
-                  borderRadius: 4,
-                  background: 'linear-gradient(180deg, #73f0ff 0%, #20d68b 53%, #ff8a8a 100%)',
-                }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'space-between' }}>
-                {levelRows.map((row) => (
-                  <div key={`${row.label}-${row.meta}`} style={{ display: 'flex', alignItems: 'center', minHeight: 54 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        width: 40,
-                        height: 40,
-                        borderRadius: 20,
-                        background: row.tone,
-                        border: '4px solid #071017',
-                      }}
-                    />
-                    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 18, flex: 1 }}>
-                      <div style={{ display: 'flex', color: row.tone, fontSize: 25, fontWeight: 800 }}>{row.label}</div>
-                      <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 18 }}>{row.meta}</div>
-                    </div>
-                    <div style={{ display: 'flex', color: '#f7fbff', fontSize: 26, fontWeight: 700 }}>
-                      {formatPrice(symbol, row.price)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 20 }}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                padding: 30,
-                borderRadius: 30,
-                background: accentSoft,
-                border: `2px solid ${accent}`,
-              }}
-            >
-              <div style={{ display: 'flex', color: '#cbd6e8', fontSize: 24 }}>ENTRY ZONE 0.559 - 0.619</div>
-              <div style={{ display: 'flex', marginTop: 12, color: '#ffffff', fontSize: 48, fontWeight: 800 }}>
-                {formatPrice(symbol, entryLow)} - {formatPrice(symbol, entryHigh)}
-              </div>
-              <div style={{ display: 'flex', marginTop: 16, color: '#d8dfec', fontSize: 28 }}>
-                Recommended Entry: {formatPrice(symbol, entry)}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 18 }}>
-              <Metric label="CURRENT" value={formatPrice(symbol, current)} />
-              <Metric label="STOP LOSS" value={formatPrice(symbol, stopLoss)} danger />
-            </div>
-
-            <div style={{ display: 'flex', gap: 18 }}>
-              <Metric label="TP1 1.618" value={formatPrice(symbol, tp1)} />
-              <Metric label="TP2 2.000" value={formatPrice(symbol, tp2)} />
-              <Metric label="TP3 2.618" value={formatPrice(symbol, tp3)} />
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                padding: 26,
-                borderRadius: 26,
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.12)',
-              }}
-            >
-              <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 22 }}>NEAREST ZONE</div>
-              <div style={{ display: 'flex', marginTop: 8, color: '#ffffff', fontSize: 30, fontWeight: 800 }}>
-                {truncate(zone, 42)}
-              </div>
-              <div style={{ display: 'flex', marginTop: 18, color: '#8fa0ba', fontSize: 22 }}>INVALIDATION</div>
-              <div style={{ display: 'flex', marginTop: 8, color: '#d8dfec', fontSize: 25, lineHeight: 1.25 }}>
-                {truncate(invalidation, 116)}
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                padding: 26,
-                borderRadius: 26,
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.12)',
-              }}
-            >
-              <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 22 }}>DATA SOURCE</div>
-              <div style={{ display: 'flex', marginTop: 8, color: '#ffffff', fontSize: 27, fontWeight: 800 }}>
-                {truncate(liveSource, 36)}
-              </div>
-              <div style={{ display: 'flex', marginTop: 10, color: '#cbd6e8', fontSize: 22 }}>
-                Candles: {truncate(candleSource, 26)} | {candles} bars
-              </div>
-              <div style={{ display: 'flex', marginTop: 18, color: '#8fa0ba', fontSize: 21 }}>
-                {'Rule: 0.559/0.619 entry -> 1.618/2.000/2.618 TP'}
-              </div>
-              <div style={{ display: 'flex', marginTop: 10, color: '#8fa0ba', fontSize: 21 }}>
-                {signalId === '-' ? 'Private Execution Desk' : `Private Execution Desk | REF #${signalId}`}
-              </div>
-            </div>
+            <div style={{ display: 'flex' }}>Rule 0.559/0.619 to 1.618/2.000/2.618</div>
+            <div style={{ display: 'flex', marginTop: 10 }}>{signalId === '-' ? 'ARRA7 Private Execution Desk' : `REF #${signalId}`}</div>
           </div>
         </div>
       </div>
@@ -314,23 +374,42 @@ export async function GET(request: Request) {
   );
 }
 
-function Metric({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
+function MiniBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 150,
+        padding: '14px 18px',
+        borderRadius: 18,
+        background: 'rgba(255,255,255,0.055)',
+        border: '1px solid rgba(255,255,255,0.12)',
+      }}
+    >
+      <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 18 }}>{label}</div>
+      <div style={{ display: 'flex', marginTop: 6, color: '#ffffff', fontSize: 32, fontWeight: 800 }}>{value}</div>
+    </div>
+  );
+}
+
+function Panel({ title, value, sub, accent }: { title: string; value: string; sub: string; accent: string }) {
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
+        minHeight: 146,
         padding: 24,
         borderRadius: 24,
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.12)',
+        background: 'rgba(255,255,255,0.055)',
+        border: `1px solid ${accent}`,
       }}
     >
-      <div style={{ display: 'flex', color: '#8fa0ba', fontSize: 19 }}>{label}</div>
-      <div style={{ display: 'flex', marginTop: 10, color: danger ? '#ff8a8a' : '#ffffff', fontSize: 28, fontWeight: 800 }}>
-        {value}
-      </div>
+      <div style={{ display: 'flex', color: '#9fb0ca', fontSize: 20 }}>{title}</div>
+      <div style={{ display: 'flex', marginTop: 12, color: accent, fontSize: 34, fontWeight: 800 }}>{value}</div>
+      <div style={{ display: 'flex', marginTop: 12, color: '#d8dfec', fontSize: 20, lineHeight: 1.25 }}>{sub}</div>
     </div>
   );
 }

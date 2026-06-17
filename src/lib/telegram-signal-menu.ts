@@ -221,6 +221,25 @@ function getPublicBaseUrl() {
   return /^https?:\/\//i.test(raw) ? raw.replace(/^https?:\/\//i, (protocol) => protocol.toLowerCase()) : `https://${raw}`;
 }
 
+function getPriceDigits(symbol: string, value: number) {
+  if (symbol.endsWith('JPY')) return 3;
+  const abs = Math.abs(value);
+  if (abs < 1) return 5;
+  if (abs < 100) return 4;
+  return 2;
+}
+
+function buildCompactOhlc(symbol: string, candles: MarketData['candles']) {
+  const selected = candles
+    .slice(-44)
+    .filter((candle) => candle.open > 0 && candle.high > 0 && candle.low > 0 && candle.close > 0);
+  const samplePrice = selected[selected.length - 1]?.close || selected[0]?.close || 1;
+  const digits = getPriceDigits(symbol, samplePrice);
+  return selected
+    .map((candle) => [candle.open, candle.high, candle.low, candle.close].map((value) => value.toFixed(digits)).join(','))
+    .join(';');
+}
+
 function buildFiboKanjiCardUrl(params: {
   symbol: string;
   timeframe: Timeframe;
@@ -245,6 +264,7 @@ function buildFiboKanjiCardUrl(params: {
   nearestZone: string;
   invalidationNote: string;
   signalId?: number | null;
+  chartCandles?: string;
 }) {
   const query = new URLSearchParams({
     symbol: params.symbol,
@@ -271,6 +291,7 @@ function buildFiboKanjiCardUrl(params: {
     invalidation: params.invalidationNote,
     signalId: params.signalId ? String(params.signalId) : '-',
   });
+  if (params.chartCandles) query.set('ohlc', params.chartCandles);
 
   return `${getPublicBaseUrl()}/api/telegram/fibo-kanji-card?${query.toString()}`;
 }
@@ -479,6 +500,7 @@ export async function generateFiboKanjiSignal(params: {
       nearestZone: 'After TP1',
       invalidationNote,
       signalId: null,
+      chartCandles: buildCompactOhlc(symbol, candles),
     });
     return {
       ok: true,
@@ -603,6 +625,7 @@ export async function generateFiboKanjiSignal(params: {
     nearestZone: nearestZone.name,
     invalidationNote,
     signalId,
+    chartCandles: buildCompactOhlc(symbol, candles),
   });
 
   return {
