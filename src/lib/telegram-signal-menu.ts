@@ -198,7 +198,7 @@ export async function generateFiboKanjiSignal(params: {
 
   let marketData: MarketData;
   try {
-    marketData = await getMarketData(symbol as ForexPair, timeframe);
+    marketData = await getMarketData(symbol as ForexPair, timeframe, { preferRealtimeBroker: false });
   } catch (error) {
     console.error('[FIBO_KANJI_SIGNAL] market data error:', error);
     return { ok: false, message: `Data market ${symbol} ${timeframe.toUpperCase()} belum bisa diambil. Coba ulang 1-2 menit lagi.` };
@@ -206,11 +206,15 @@ export async function generateFiboKanjiSignal(params: {
   const candles = marketData?.candles || [];
   const currentPrice = marketData?.current_price || marketData?.close || 0;
 
-  if (!marketData || candles.length < 20 || !(currentPrice > 0)) {
-    return { ok: false, message: `Data market ${symbol} ${timeframe.toUpperCase()} belum cukup untuk SIGNAL Fibo Kanji.` };
+  if (marketData?.is_simulated || marketData?.timestampSource === 'simulated') {
+    return { ok: false, message: `Data real ${symbol} ${timeframe.toUpperCase()} belum tersedia. SIGNAL Fibo Kanji tidak memakai data dummy.` };
   }
 
-  const swing = detectSwingPoints(candles, 80);
+  if (!marketData || candles.length < 5 || !(currentPrice > 0)) {
+    return { ok: false, message: `Data candle real ${symbol} ${timeframe.toUpperCase()} belum cukup untuk SIGNAL Fibo Kanji. Minimal perlu 5 candle, tersedia ${candles.length}.` };
+  }
+
+  const swing = detectSwingPoints(candles, Math.min(80, candles.length));
   if (!(swing.high > 0) || !(swing.low > 0) || swing.high <= swing.low) {
     return { ok: false, message: `Swing ${symbol} ${timeframe.toUpperCase()} belum valid untuk Fibo Kanji. Tunggu struktur market lebih jelas.` };
   }
@@ -331,6 +335,7 @@ export async function generateFiboKanjiSignal(params: {
       rr ? `Risk / Reward    : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk / Reward    : <b>-</b>',
       `Confidence       : <b>${escapeHtml(String(confidence))}%</b>`,
       `Invalidation     : <i>${escapeHtml(invalidationNote)}</i>`,
+      `Data Source      : <b>${escapeHtml(marketData.timestampSource || 'real-market')}</b> | ${escapeHtml(String(candles.length))} candles`,
       '',
       '<b>Risk Desk</b>',
       profile ? `Capital          : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Capital          : <b>Belum diatur</b>',
