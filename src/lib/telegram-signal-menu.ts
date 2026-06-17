@@ -55,21 +55,75 @@ export function buildMainMenuKeyboard() {
   };
 }
 
-function getFibonacciKanjiUrl() {
-  const baseUrl = (process.env.NEXTAUTH_URL || 'https://arra7-app.vercel.app').replace(/\/$/, '');
-  return `${baseUrl}/fibonacci-kanji`;
-}
-
 export function buildFiboKanjiSignalKeyboard(symbol = 'XAUUSD') {
   return {
     inline_keyboard: [
       [
-        { text: 'Refresh H1', callback_data: `fibo:${symbol}:1h` },
+        { text: 'M1', callback_data: `fibo:${symbol}:1m` },
+        { text: 'M5', callback_data: `fibo:${symbol}:5m` },
         { text: 'M15', callback_data: `fibo:${symbol}:15m` },
+      ],
+      [
+        { text: 'M30', callback_data: `fibo:${symbol}:30m` },
+        { text: 'H1', callback_data: `fibo:${symbol}:1h` },
         { text: 'H4', callback_data: `fibo:${symbol}:4h` },
       ],
-      [{ text: 'Buka Chart Fibo Kanji', url: getFibonacciKanjiUrl() }],
+      [
+        { text: 'D1', callback_data: `fibo:${symbol}:1d` },
+        { text: 'Ganti Pair', callback_data: 'fibomenu:categories' },
+      ],
       [{ text: 'Signal Reguler', callback_data: 'sigmenu:categories' }],
+    ],
+  };
+}
+
+export function buildFiboKanjiCategoryKeyboard() {
+  return {
+    inline_keyboard: PAIR_CATEGORIES.map((category) => [
+      {
+        text: `${category.icon} ${category.name}`,
+        callback_data: `fibocat:${category.id}`,
+      },
+    ]),
+  };
+}
+
+export function buildFiboKanjiPairKeyboard(categoryId: PairCategoryId) {
+  const category = PAIR_CATEGORIES.find((item) => item.id === categoryId);
+  if (!category) return { inline_keyboard: [[{ text: 'Back to Category', callback_data: 'fibomenu:categories' }]] };
+
+  const rows: Array<Array<{ text: string; callback_data: string }>> = [];
+  for (let i = 0; i < category.pairs.length; i += 2) {
+    rows.push(
+      category.pairs.slice(i, i + 2).map((pair) => ({
+        text: pair,
+        callback_data: `fibopair:${categoryId}:${pair}`,
+      }))
+    );
+  }
+
+  rows.push([{ text: 'Back to Category', callback_data: 'fibomenu:categories' }]);
+  return { inline_keyboard: rows };
+}
+
+export function buildFiboKanjiTimeframeKeyboard(categoryId: PairCategoryId, symbol: string) {
+  return {
+    inline_keyboard: [
+      [
+        { text: 'M1', callback_data: `fibo:${symbol}:1m` },
+        { text: 'M5', callback_data: `fibo:${symbol}:5m` },
+        { text: 'M15', callback_data: `fibo:${symbol}:15m` },
+      ],
+      [
+        { text: 'M30', callback_data: `fibo:${symbol}:30m` },
+        { text: 'H1', callback_data: `fibo:${symbol}:1h` },
+        { text: 'H4', callback_data: `fibo:${symbol}:4h` },
+      ],
+      [{ text: 'D1', callback_data: `fibo:${symbol}:1d` }],
+      [
+        { text: 'Back to Pair', callback_data: `fibocat:${categoryId}` },
+        { text: 'Signal Reguler', callback_data: 'sigmenu:categories' },
+      ],
     ],
   };
 }
@@ -98,12 +152,35 @@ function formatZone(symbol: string, priceA: number, priceB: number) {
   return `${formatPrice(symbol, zoneLow)} - ${formatPrice(symbol, zoneHigh)}`;
 }
 
-export function parseFiboKanjiCallback(value: string): { symbol: string; timeframe: Timeframe } | null {
+export type FiboKanjiCallback =
+  | { type: 'categories' }
+  | { type: 'category'; categoryId: PairCategoryId }
+  | { type: 'pair'; categoryId: PairCategoryId; symbol: string }
+  | { type: 'timeframe'; symbol: string; timeframe: Timeframe };
+
+export function parseFiboKanjiCallback(value: string): FiboKanjiCallback | null {
+  if (value === 'fibomenu:categories') return { type: 'categories' };
+
+  const categoryMatch = value.match(/^fibocat:([a-z0-9_-]+)$/i);
+  if (categoryMatch) {
+    const categoryId = categoryMatch[1] as PairCategoryId;
+    if (PAIR_CATEGORIES.some((category) => category.id === categoryId)) return { type: 'category', categoryId };
+    return null;
+  }
+
+  const pairMatch = value.match(/^fibopair:([a-z0-9_-]+):([A-Z0-9]+)$/i);
+  if (pairMatch) {
+    const categoryId = pairMatch[1] as PairCategoryId;
+    const symbol = pairMatch[2].toUpperCase();
+    if (!PAIR_CATEGORIES.some((category) => category.id === categoryId && category.pairs.includes(symbol))) return null;
+    return { type: 'pair', categoryId, symbol };
+  }
+
   const match = value.match(/^fibo:([A-Z0-9]+):(1m|5m|15m|30m|1h|4h|1d)$/i);
   if (!match) return null;
   const symbol = match[1].toUpperCase();
   if (!isSupportedSignalPair(symbol)) return null;
-  return { symbol, timeframe: match[2].toLowerCase() as Timeframe };
+  return { type: 'timeframe', symbol, timeframe: match[2].toLowerCase() as Timeframe };
 }
 
 export async function generateFiboKanjiSignal(params: {
@@ -119,7 +196,13 @@ export async function generateFiboKanjiSignal(params: {
     return { ok: false, message: `Pair ${symbol} belum didukung untuk SIGNAL Fibo Kanji.` };
   }
 
-  const marketData = await getMarketData(symbol as ForexPair, timeframe);
+  let marketData: MarketData;
+  try {
+    marketData = await getMarketData(symbol as ForexPair, timeframe);
+  } catch (error) {
+    console.error('[FIBO_KANJI_SIGNAL] market data error:', error);
+    return { ok: false, message: `Data market ${symbol} ${timeframe.toUpperCase()} belum bisa diambil. Coba ulang 1-2 menit lagi.` };
+  }
   const candles = marketData?.candles || [];
   const currentPrice = marketData?.current_price || marketData?.close || 0;
 

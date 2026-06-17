@@ -19,7 +19,10 @@ import {
   buildActiveWelcomeMessage,
   buildBalanceKeyboard,
   buildBalanceMessage,
+  buildFiboKanjiCategoryKeyboard,
+  buildFiboKanjiPairKeyboard,
   buildFiboKanjiSignalKeyboard,
+  buildFiboKanjiTimeframeKeyboard,
   buildApprovedWelcomeMessage,
   buildGuestIntroKeyboard,
   buildHelpMessage,
@@ -296,6 +299,30 @@ export async function POST(request: Request) {
 
       const fiboKanji = parseFiboKanjiCallback(callback.data);
       if (fiboKanji) {
+        if (fiboKanji.type === 'categories') {
+          await reply(chatId, '<b>SIGNAL Fibo Kanji</b>\nPilih kategori market.', {
+            replyMarkup: buildFiboKanjiCategoryKeyboard(),
+            allowHtml: true,
+          });
+          return NextResponse.json({ ok: true });
+        }
+
+        if (fiboKanji.type === 'category') {
+          await reply(chatId, `<b>SIGNAL Fibo Kanji</b>\nKategori <b>${escapeHtml(fiboKanji.categoryId.toUpperCase())}</b> dipilih. Pilih pair.`, {
+            replyMarkup: buildFiboKanjiPairKeyboard(fiboKanji.categoryId),
+            allowHtml: true,
+          });
+          return NextResponse.json({ ok: true });
+        }
+
+        if (fiboKanji.type === 'pair') {
+          await reply(chatId, `<b>SIGNAL Fibo Kanji</b>\nPair <b>${escapeHtml(fiboKanji.symbol)}</b> dipilih. Pilih timeframe.`, {
+            replyMarkup: buildFiboKanjiTimeframeKeyboard(fiboKanji.categoryId, fiboKanji.symbol),
+            allowHtml: true,
+          });
+          return NextResponse.json({ ok: true });
+        }
+
         const signal = await generateFiboKanjiSignal({
           userId: linkedUser.userId,
           chatId,
@@ -637,15 +664,9 @@ export async function POST(request: Request) {
     }
 
     if (text.toLowerCase() === 'signal fibo kanji' || cmd === '/fibokanji') {
-      const signal = await generateFiboKanjiSignal({
-        userId: linkedUser.userId,
-        chatId,
-        symbol: 'XAUUSD',
-        timeframe: '1h',
-      });
-      await reply(chatId, signal.ok ? signal.text : signal.message, {
-        replyMarkup: buildFiboKanjiSignalKeyboard('XAUUSD'),
-        allowHtml: signal.ok,
+      await reply(chatId, '<b>SIGNAL Fibo Kanji</b>\nPilih kategori market.', {
+        replyMarkup: buildFiboKanjiCategoryKeyboard(),
+        allowHtml: true,
       });
       return NextResponse.json({ ok: true });
     }
