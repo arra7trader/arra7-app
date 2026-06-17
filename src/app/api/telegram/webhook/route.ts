@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { answerTelegramCallbackQuery, sendTelegramMessage } from '@/lib/telegram';
+import { answerTelegramCallbackQuery, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
 import {
   attachPrivateBotTelegramIdentity,
   ensureTelegramContactCampaignSchema,
@@ -94,6 +94,22 @@ async function reply(
   options?: { replyMarkup?: Record<string, unknown>; allowHtml?: boolean }
 ): Promise<void> {
   await sendTelegramMessage(options?.allowHtml ? text : escapeHtml(text), 'HTML', chatId, options);
+}
+
+async function replyPhoto(
+  chatId: string,
+  photoUrl: string,
+  caption: string,
+  options?: { replyMarkup?: Record<string, unknown>; allowHtml?: boolean }
+): Promise<boolean> {
+  const result = await sendTelegramPhoto(
+    photoUrl,
+    options?.allowHtml ? caption : escapeHtml(caption),
+    'HTML',
+    chatId,
+    { replyMarkup: options?.replyMarkup }
+  );
+  return result.success;
 }
 
 async function maybeSendTelebotPriceNotice(chatId: string): Promise<void> {
@@ -329,6 +345,15 @@ export async function POST(request: Request) {
           symbol: fiboKanji.symbol,
           timeframe: fiboKanji.timeframe,
         });
+
+        if (signal.ok && signal.photoUrl && signal.photoCaption) {
+          const photoSent = await replyPhoto(chatId, signal.photoUrl, signal.photoCaption, {
+            replyMarkup: buildFiboKanjiSignalKeyboard(fiboKanji.symbol),
+            allowHtml: true,
+          });
+          if (photoSent) return NextResponse.json({ ok: true });
+        }
+
         await reply(chatId, signal.ok ? signal.text : signal.message, {
           replyMarkup: buildFiboKanjiSignalKeyboard(fiboKanji.symbol),
           allowHtml: signal.ok,

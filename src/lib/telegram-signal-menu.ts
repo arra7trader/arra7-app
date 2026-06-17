@@ -133,6 +133,10 @@ type FiboKanjiLevel = 0 | 0.559 | 0.619 | 0.786 | 0.882 | 1.124 | 1.272 | 1.618 
 
 const FIBO_KANJI_LEVELS: FiboKanjiLevel[] = [0, 0.559, 0.619, 0.786, 0.882, 1.124, 1.272, 1.618, 2, 2.618];
 
+type FiboKanjiSignalResult =
+  | { ok: true; text: string; signalId?: number | null; photoUrl?: string; photoCaption?: string }
+  | { ok: false; message: string };
+
 function calculateFiboKanjiPrice(high: number, low: number, level: FiboKanjiLevel, trend: 'UP' | 'DOWN') {
   const range = Math.abs(high - low);
   return trend === 'DOWN'
@@ -212,6 +216,95 @@ function buildFiboKanjiVisualMap(params: {
   return lines.join('\n');
 }
 
+function getPublicBaseUrl() {
+  const raw = (process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://arra7-app.vercel.app').replace(/\/$/, '');
+  return /^https?:\/\//i.test(raw) ? raw.replace(/^https?:\/\//i, (protocol) => protocol.toLowerCase()) : `https://${raw}`;
+}
+
+function buildFiboKanjiCardUrl(params: {
+  symbol: string;
+  timeframe: Timeframe;
+  direction: 'BUY' | 'SELL' | 'WAIT';
+  orderType: string;
+  setupGrade: string;
+  currentPrice: number;
+  swingHigh: number;
+  swingLow: number;
+  entryA: number;
+  entryB: number;
+  entry: number;
+  stopLoss: number;
+  takeProfit1: number;
+  takeProfit2: number;
+  takeProfit3: number;
+  confidence: number;
+  rr?: number | null;
+  livePriceSource: string;
+  candleSource: string;
+  candlesCount: number;
+  nearestZone: string;
+  invalidationNote: string;
+  signalId?: number | null;
+}) {
+  const query = new URLSearchParams({
+    symbol: params.symbol,
+    timeframe: params.timeframe.toUpperCase(),
+    direction: params.direction,
+    orderType: params.orderType,
+    setupGrade: params.setupGrade,
+    current: String(params.currentPrice),
+    swingHigh: String(params.swingHigh),
+    swingLow: String(params.swingLow),
+    entryA: String(params.entryA),
+    entryB: String(params.entryB),
+    entry: String(params.entry),
+    sl: String(params.stopLoss),
+    tp1: String(params.takeProfit1),
+    tp2: String(params.takeProfit2),
+    tp3: String(params.takeProfit3),
+    confidence: String(params.confidence),
+    rr: params.rr ? params.rr.toFixed(2) : '-',
+    liveSource: params.livePriceSource,
+    candleSource: params.candleSource,
+    candles: String(params.candlesCount),
+    zone: params.nearestZone,
+    invalidation: params.invalidationNote,
+    signalId: params.signalId ? String(params.signalId) : '-',
+  });
+
+  return `${getPublicBaseUrl()}/api/telegram/fibo-kanji-card?${query.toString()}`;
+}
+
+function buildFiboKanjiPhotoCaption(params: {
+  symbol: string;
+  timeframe: Timeframe;
+  direction: 'BUY' | 'SELL' | 'WAIT';
+  orderType: string;
+  entryA: number;
+  entryB: number;
+  entry: number;
+  stopLoss: number;
+  takeProfit1: number;
+  takeProfit2: number;
+  takeProfit3: number;
+  confidence: number;
+  livePriceSource: string;
+  signalId?: number | null;
+}) {
+  return [
+    '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
+    `<b>${escapeHtml(params.symbol)}</b> ${escapeHtml(params.timeframe.toUpperCase())} | <b>${escapeHtml(params.direction)}</b> | <b>${escapeHtml(params.orderType)}</b>`,
+    '',
+    `Entry Zone: <code>${escapeHtml(formatZone(params.symbol, params.entryA, params.entryB))}</code>`,
+    `Entry: <code>${escapeHtml(formatPrice(params.symbol, params.entry))}</code>` ,
+    `SL: <code>${escapeHtml(formatPrice(params.symbol, params.stopLoss))}</code>`,
+    `TP: <code>${escapeHtml(formatPrice(params.symbol, params.takeProfit1))}</code> / <code>${escapeHtml(formatPrice(params.symbol, params.takeProfit2))}</code> / <code>${escapeHtml(formatPrice(params.symbol, params.takeProfit3))}</code>`,
+    `Confidence: <b>${escapeHtml(String(params.confidence))}%</b>`,
+    `Source: <b>${escapeHtml(params.livePriceSource)}</b>`,
+    params.signalId ? `Ref: <code>#${params.signalId}</code>` : '',
+  ].filter(Boolean).join('\n');
+}
+
 export type FiboKanjiCallback =
   | { type: 'categories' }
   | { type: 'category'; categoryId: PairCategoryId }
@@ -248,7 +341,7 @@ export async function generateFiboKanjiSignal(params: {
   chatId: string;
   symbol?: string;
   timeframe?: Timeframe;
-}): Promise<{ ok: true; text: string; signalId?: number | null } | { ok: false; message: string }> {
+}): Promise<FiboKanjiSignalResult> {
   const symbol = (params.symbol || 'XAUUSD').toUpperCase();
   const timeframe = params.timeframe || '1h';
 
@@ -361,6 +454,32 @@ export async function generateFiboKanjiSignal(params: {
       takeProfit2,
       takeProfit3,
     });
+    const invalidationNote = 'Harga sudah melewati TP1 Fibo Kanji. Tunggu swing baru sebelum ambil setup berikutnya.';
+    const photoUrl = buildFiboKanjiCardUrl({
+      symbol,
+      timeframe,
+      direction: 'WAIT',
+      orderType: 'WAIT NEW SWING',
+      setupGrade: 'No Chase | Wait Fresh Structure',
+      currentPrice,
+      swingHigh: swing.high,
+      swingLow: swing.low,
+      entryA,
+      entryB,
+      entry,
+      stopLoss,
+      takeProfit1,
+      takeProfit2,
+      takeProfit3,
+      confidence: 0,
+      rr: null,
+      livePriceSource,
+      candleSource,
+      candlesCount: candles.length,
+      nearestZone: 'After TP1',
+      invalidationNote,
+      signalId: null,
+    });
     return {
       ok: true,
       text: [
@@ -376,6 +495,23 @@ export async function generateFiboKanjiSignal(params: {
         `<pre>${escapeHtml(visualMap)}</pre>`,
       ].join('\n'),
       signalId: null,
+      photoUrl,
+      photoCaption: buildFiboKanjiPhotoCaption({
+        symbol,
+        timeframe,
+        direction: 'WAIT',
+        orderType: 'WAIT NEW SWING',
+        entryA,
+        entryB,
+        entry,
+        stopLoss,
+        takeProfit1,
+        takeProfit2,
+        takeProfit3,
+        confidence: 0,
+        livePriceSource,
+        signalId: null,
+      }),
     };
   }
 
@@ -443,9 +579,52 @@ export async function generateFiboKanjiSignal(params: {
     });
   }
 
+  const photoUrl = buildFiboKanjiCardUrl({
+    symbol,
+    timeframe,
+    direction,
+    orderType: execution.orderType,
+    setupGrade,
+    currentPrice,
+    swingHigh: swing.high,
+    swingLow: swing.low,
+    entryA,
+    entryB,
+    entry,
+    stopLoss,
+    takeProfit1,
+    takeProfit2,
+    takeProfit3,
+    confidence,
+    rr,
+    livePriceSource,
+    candleSource,
+    candlesCount: candles.length,
+    nearestZone: nearestZone.name,
+    invalidationNote,
+    signalId,
+  });
+
   return {
     ok: true,
     signalId,
+    photoUrl,
+    photoCaption: buildFiboKanjiPhotoCaption({
+      symbol,
+      timeframe,
+      direction,
+      orderType: execution.orderType,
+      entryA,
+      entryB,
+      entry,
+      stopLoss,
+      takeProfit1,
+      takeProfit2,
+      takeProfit3,
+      confidence,
+      livePriceSource,
+      signalId,
+    }),
     text: [
       '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
       '<i>Deterministic Fibonacci Kanji setup with visual map</i>',
@@ -1352,8 +1531,6 @@ function buildForcedPendingFallbackSignal(params: {
   const recentHigh = Math.max(...syntheticCandles.map((c) => c.high));
   const recentLow = Math.min(...syntheticCandles.map((c) => c.low));
   const range = Math.max(recentHigh - recentLow, 0.8);
-  const firstOpen = syntheticCandles[0]?.open || currentPrice;
-  const lastClose = syntheticCandles[syntheticCandles.length - 1]?.close || currentPrice;
   // Use structural direction if provided (from programmatic analysis)
   // This is the key fix: structural direction overrides simple candle counting
   let direction: 'BUY' | 'SELL';

@@ -71,6 +71,60 @@ export async function sendTelegramMessage(
     }
 }
 
+export async function sendTelegramPhoto(
+    photoUrl: string,
+    caption: string,
+    parseMode: 'HTML' | 'Markdown' = 'HTML',
+    destChatId?: string,
+    options?: {
+        replyMarkup?: Record<string, unknown>;
+    }
+): Promise<{
+    success: boolean;
+    error?: string;
+    messageId?: number;
+}> {
+    const config = getTelegramConfig();
+
+    if (!config) {
+        return { success: false, error: 'Telegram not configured' };
+    }
+
+    const targetChatId = destChatId || config.channelId;
+    if (!targetChatId) {
+        return { success: false, error: 'Telegram destination chat_id not configured' };
+    }
+
+    try {
+        const response = await fetch(`${TELEGRAM_API_BASE}${config.botToken}/sendPhoto`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: targetChatId,
+                photo: photoUrl,
+                caption,
+                parse_mode: parseMode,
+                reply_markup: options?.replyMarkup,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+            console.log(`[TELEGRAM] Photo sent to ${targetChatId}, ID:`, data.result.message_id);
+            return { success: true, messageId: data.result.message_id };
+        }
+
+        console.error('[TELEGRAM] Failed to send photo:', data.description);
+        return { success: false, error: data.description };
+    } catch (error) {
+        console.error('[TELEGRAM] Error sending photo:', error);
+        return { success: false, error: 'Network error' };
+    }
+}
+
 export async function answerTelegramCallbackQuery(
     callbackQueryId: string,
     text?: string
