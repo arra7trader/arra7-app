@@ -99,6 +99,10 @@ function approxSame(a: number, b: number) {
   return Math.abs(a - b) <= Math.max(Math.abs(a), Math.abs(b), 1) * 0.000001;
 }
 
+function isPriceVisible(price: number, min: number, max: number) {
+  return price > 0 && price >= min && price <= max;
+}
+
 function buildFallbackCandles(current: number, entry: number, swingHigh: number, swingLow: number): Ohlc[] {
   if (!(current > 0) || !(swingHigh > swingLow)) return [];
   const candles: Ohlc[] = [];
@@ -159,15 +163,30 @@ export async function GET(request: Request) {
   const accentSoft = isBuy ? 'rgba(32, 214, 139, 0.18)' : isSell ? 'rgba(255, 94, 108, 0.18)' : 'rgba(248, 194, 71, 0.18)';
   const entryLow = Math.min(entryA, entryB);
   const entryHigh = Math.max(entryA, entryB);
-  const setupPrices = hasSetup ? [entryA, entryB, entry, stopLoss, tp1, tp2, tp3].filter((price) => price > 0) : [];
+  const executionPrices = hasSetup ? [entryA, entryB, entry, stopLoss].filter((price) => price > 0) : [];
   const validSwing = swingHigh > swingLow && !approxSame(swingHigh, swingLow);
   const rrDisplay = hasSetup && rr !== '-' ? `1:${rr}` : 'WAIT';
+  const candlePrices = chartCandles.flatMap((candle) => [candle.high, candle.low]).filter((price) => price > 0);
+  const basePrices = [
+    ...candlePrices,
+    current,
+    ...executionPrices,
+    ...(validSwing ? [swingHigh, swingLow] : []),
+  ].filter((price) => price > 0);
+  const baseRange = basePrices.length > 0 ? basePrices : [current || 1];
+  const baseMin = Math.min(...baseRange);
+  const baseMax = Math.max(...baseRange);
+  const baseSpan = Math.max(baseMax - baseMin, Math.max(baseMax, 1) * 0.001);
+  const nearbyZoneWindowMin = baseMin - baseSpan * 0.35;
+  const nearbyZoneWindowMax = baseMax + baseSpan * 0.35;
+  const visibleChartZones = chartZones.filter((zone) => zone.bottom <= nearbyZoneWindowMax && zone.top >= nearbyZoneWindowMin);
+  const scaleZones = visibleChartZones.length > 0 ? visibleChartZones : chartZones.slice(-6);
 
   const allPrices = [
-    ...chartCandles.flatMap((candle) => [candle.high, candle.low]),
-    ...chartZones.flatMap((zone) => [zone.top, zone.bottom]),
+    ...candlePrices,
+    ...scaleZones.flatMap((zone) => [zone.top, zone.bottom]),
     current,
-    ...setupPrices,
+    ...executionPrices,
     ...(validSwing ? [swingHigh, swingLow] : []),
   ].filter((price) => price > 0);
   const priceRange = allPrices.length > 0 ? allPrices : [1];
@@ -179,7 +198,7 @@ export async function GET(request: Request) {
   const span = Math.max(scaleMax - scaleMin, 0.0000001);
   const yFor = (price: number) => CHART_Y + ((scaleMax - price) / span) * CHART_H;
   const currentBarIndex = Math.max(sourceCandleCount - 1, chartCandles.length - 1, 0);
-  const maxZoneIndex = chartZones.length > 0 ? Math.max(...chartZones.map((zone) => zone.rightIndex)) : currentBarIndex;
+  const maxZoneIndex = visibleChartZones.length > 0 ? Math.max(...visibleChartZones.map((zone) => zone.rightIndex)) : currentBarIndex;
   const futureBars = clamp(maxZoneIndex - currentBarIndex, 0, 10);
   const visibleStartIndex = Math.max(0, currentBarIndex - Math.max(chartCandles.length - 1, 1));
   const visibleEndIndex = currentBarIndex + futureBars;
@@ -193,10 +212,8 @@ export async function GET(request: Request) {
         { key: 'TP3', label: 'TP3 2.618', value: tp3, color: '#73f0ff', width: 1 },
         { key: 'TP2', label: 'TP2 2.000', value: tp2, color: '#73f0ff', width: 1 },
         { key: 'TP1', label: 'TP1 1.618', value: tp1, color: '#73f0ff', width: 2 },
-        { key: 'ENTRY A', label: 'ENTRY 0.559', value: entryA, color: accent, width: 2 },
-        { key: 'ENTRY B', label: 'ENTRY 0.667', value: entryB, color: accent, width: 2 },
         { key: 'SL', label: 'SL / INVALID', value: stopLoss, color: '#ff8a8a', width: 2 },
-      ].filter((level) => level.value > 0 && !approxSame(level.value, current))
+      ].filter((level) => level.value > 0 && !approxSame(level.value, current) && isPriceVisible(level.value, scaleMin, scaleMax))
     : [];
   const swingLevels = validSwing
     ? [
@@ -208,7 +225,22 @@ export async function GET(request: Request) {
     ...setupLevels,
     { key: 'CURRENT', label: 'CURRENT', value: current, color: '#ffffff', width: 2 },
     ...swingLevels,
-  ].filter((level) => level.value > 0);
+  ].filter((level) => level.value > 0 && isPriceVisible(level.value, scaleMin, scaleMax));
+  const labelLanes = { left: 10, right: 10 };
+  const levelRenderItems = levels
+    .map((level, index) => ({ ...level, index, y: yFor(level.value) - CHART_Y }))
+    .sort((a, b) => a.y - b.y)
+    .map((level) => {
+      const side = level.key === 'CURRENT' || level.key === 'SL' || level.key.startsWith('TP') ? 'right' : level.index % 2 === 0 ? 'right' : 'left';
+      const desiredTop = clamp(level.y - 18, 12, CHART_H - 42);
+      const labelTop = clamp(Math.max(desiredTop, labelLanes[side]), 12, CHART_H - 42);
+      labelLanes[side] = labelTop + 48;
+      return {
+        ...level,
+        labelTop,
+        labelLeft: side === 'right' ? CHART_W - 302 : 18,
+      };
+    });
 
   const gridPrices = Array.from({ length: 6 }, (_, index) => scaleMin + (span * index) / 5).reverse();
 
@@ -288,7 +320,7 @@ export async function GET(request: Request) {
             );
           })}
 
-          {chartZones.map((zone, index) => {
+          {visibleChartZones.map((zone, index) => {
             const style = zoneStyle(zone.kind);
             const left = xForBar(zone.leftIndex);
             const right = Math.max(xForBar(zone.rightIndex), left + 90);
@@ -374,10 +406,8 @@ export async function GET(request: Request) {
             );
           })}
 
-          {levels.map((level, index) => {
-            const y = yFor(level.value) - CHART_Y;
-            const labelTop = clamp(y - 18, 12, CHART_H - 42);
-            const labelLeft = index % 2 === 0 ? CHART_W - 302 : 18;
+          {levelRenderItems.map((level) => {
+            const y = level.y;
             return (
               <div key={level.key} style={{ display: 'flex', position: 'absolute', left: 0, right: 0, top: y }}>
                 <div
@@ -393,8 +423,8 @@ export async function GET(request: Request) {
                   style={{
                     display: 'flex',
                     position: 'absolute',
-                    top: labelTop - y,
-                    left: labelLeft,
+                    top: level.labelTop - y,
+                    left: level.labelLeft,
                     width: 284,
                     padding: '7px 11px',
                     borderRadius: 12,
