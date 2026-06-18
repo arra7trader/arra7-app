@@ -17,6 +17,14 @@ type Ohlc = {
   close: number;
 };
 
+type ChartZone = {
+  kind: string;
+  top: number;
+  bottom: number;
+  leftIndex: number;
+  rightIndex: number;
+};
+
 function getParam(url: URL, key: string, fallback = '-') {
   const value = url.searchParams.get(key)?.trim();
   return value ? value.slice(0, 220) : fallback;
@@ -35,6 +43,34 @@ function parseOhlc(value: string): Ohlc[] {
     .map(([open, high, low, close]) => ({ open, high, low, close }))
     .filter((candle) => candle.high >= Math.max(candle.open, candle.close) && candle.low <= Math.min(candle.open, candle.close))
     .slice(-44);
+}
+
+function parseZones(value: string): ChartZone[] {
+  return value
+    .split(';')
+    .map((row) => row.split(','))
+    .filter((row) => row.length === 5)
+    .map(([kind, top, bottom, leftIndex, rightIndex]) => ({
+      kind,
+      top: Number(top),
+      bottom: Number(bottom),
+      leftIndex: Number(leftIndex),
+      rightIndex: Number(rightIndex),
+    }))
+    .filter((zone) => Number.isFinite(zone.top) && Number.isFinite(zone.bottom) && Number.isFinite(zone.leftIndex) && Number.isFinite(zone.rightIndex) && zone.top > zone.bottom)
+    .slice(-18);
+}
+
+function zoneStyle(kind: string) {
+  if (kind === 'DEMAND') return { label: 'Demand Zone', fill: 'rgba(130,130,130,0.28)', border: 'rgba(220,220,220,0.28)', text: '#fff7ad' };
+  if (kind === 'SUPPLY') return { label: 'Supply Zone', fill: 'rgba(130,130,130,0.28)', border: 'rgba(220,220,220,0.28)', text: '#fff7ad' };
+  if (kind === 'KANJI_ENTRY') return { label: 'Kanji Entry', fill: 'rgba(95,107,255,0.26)', border: 'rgba(125,135,255,0.45)', text: '#fff7ad' };
+  if (kind === 'KANJI_SCALP') return { label: 'Kanji Scalp', fill: 'rgba(0,188,212,0.24)', border: 'rgba(0,218,245,0.45)', text: '#fff7ad' };
+  if (kind === 'KANJI_PULLBACK') return { label: 'Kanji Pullback', fill: 'rgba(255,193,7,0.24)', border: 'rgba(255,213,80,0.48)', text: '#fff7ad' };
+  if (kind === 'KANJI_ENTRY_2') return { label: 'Kanji Entry 2', fill: 'rgba(95,107,255,0.26)', border: 'rgba(125,135,255,0.45)', text: '#fff7ad' };
+  if (kind === 'KANJI_PULLBACK_2') return { label: 'Kanji Pullback 2', fill: 'rgba(255,193,7,0.24)', border: 'rgba(255,213,80,0.48)', text: '#fff7ad' };
+  if (kind === 'KANJI_ENTRY_3') return { label: 'Kanji Entry 3', fill: 'rgba(95,107,255,0.26)', border: 'rgba(125,135,255,0.45)', text: '#fff7ad' };
+  return { label: 'FVG', fill: 'rgba(184,184,184,0.20)', border: 'rgba(220,220,220,0.25)', text: '#fff7ad' };
 }
 
 function formatPrice(symbol: string, value: number) {
@@ -104,6 +140,7 @@ export async function GET(request: Request) {
   const invalidation = getParam(url, 'invalidation', '-');
   const signalId = getParam(url, 'signalId', '-');
   const parsedCandles = parseOhlc(url.searchParams.get('ohlc') || '');
+  const chartZones = parseZones(url.searchParams.get('zones') || '');
   const chartCandles = parsedCandles.length >= 5
     ? parsedCandles
     : buildFallbackCandles(current, entry, swingHigh, swingLow);
@@ -117,6 +154,7 @@ export async function GET(request: Request) {
 
   const allPrices = [
     ...chartCandles.flatMap((candle) => [candle.high, candle.low]),
+    ...chartZones.flatMap((zone) => [zone.top, zone.bottom]),
     current,
     entryA,
     entryB,
@@ -137,6 +175,9 @@ export async function GET(request: Request) {
   const yFor = (price: number) => CHART_Y + ((scaleMax - price) / span) * CHART_H;
   const candleSlot = CHART_W / Math.max(chartCandles.length, 1);
   const candleBodyW = clamp(candleSlot * 0.55, 8, 18);
+  const maxZoneIndex = chartZones.length > 0 ? Math.max(...chartZones.map((zone) => zone.rightIndex)) : chartCandles.length - 1;
+  const visibleStartIndex = Math.max(0, maxZoneIndex - Math.max(chartCandles.length - 1, 1));
+  const xForBar = (index: number) => clamp(((index - visibleStartIndex) / Math.max(chartCandles.length - 1, 1)) * CHART_W, 0, CHART_W);
 
   const levels = [
     { key: 'TP3', label: 'TP3 2.618', value: tp3, color: '#73f0ff', width: 1 },
@@ -169,7 +210,7 @@ export async function GET(request: Request) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', color: '#9fb0ca', fontSize: 27 }}>ARRA7 EXCLUSIVE CHART</div>
-            <div style={{ display: 'flex', marginTop: 8, fontSize: 52, fontWeight: 800 }}>Fibo Kanji Signal</div>
+            <div style={{ display: 'flex', marginTop: 8, fontSize: 52, fontWeight: 800 }}>SMC Kanji Signal</div>
           </div>
           <div
             style={{
@@ -285,6 +326,34 @@ export async function GET(request: Request) {
             );
           })}
 
+          {chartZones.map((zone, index) => {
+            const style = zoneStyle(zone.kind);
+            const left = xForBar(zone.leftIndex);
+            const right = Math.max(xForBar(zone.rightIndex), left + 90);
+            const top = yFor(zone.top) - CHART_Y;
+            const bottom = yFor(zone.bottom) - CHART_Y;
+            return (
+              <div
+                key={`zone-${zone.kind}-${index}`}
+                style={{
+                  display: 'flex',
+                  position: 'absolute',
+                  left,
+                  top,
+                  width: Math.max(right - left, 90),
+                  height: Math.max(bottom - top, 10),
+                  background: style.fill,
+                  borderTop: `1px solid ${style.border}`,
+                  borderBottom: `1px solid ${style.border}`,
+                }}
+              >
+                <div style={{ display: 'flex', marginLeft: 'auto', marginRight: 14, marginTop: 6, color: style.text, fontSize: 18, fontWeight: 700 }}>
+                  {style.label}
+                </div>
+              </div>
+            );
+          })}
+
           {levels.map((level, index) => {
             const y = yFor(level.value) - CHART_Y;
             const labelTop = clamp(y - 18, 12, CHART_H - 42);
@@ -361,7 +430,7 @@ export async function GET(request: Request) {
             <div style={{ display: 'flex', marginTop: 10 }}>Source: {truncate(liveSource, 32)} | Candles: {truncate(candleSource, 28)} ({candlesCount})</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex' }}>Rule 0.559/0.619 to 1.618/2.000/2.618</div>
+            <div style={{ display: 'flex' }}>Rule 0.559/0.667 + SMC zone retest</div>
             <div style={{ display: 'flex', marginTop: 10 }}>{signalId === '-' ? 'ARRA7 Private Execution Desk' : `REF #${signalId}`}</div>
           </div>
         </div>

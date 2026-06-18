@@ -9,10 +9,10 @@ import {
   PAIR_CATEGORIES,
   Timeframe,
 } from './market-data';
-import { detectSwingPoints } from './analysis';
 import { analyzeWithGroq } from './groq-ai';
 import { getTelebotUserProfile } from './turso';
 import { calculateTelebotTradePlan, formatTelebotSetupStyle } from './telebot-trade-plan';
+import { analyzeSmcKanji, encodeSmcKanjiZones } from './smc-kanji-engine';
 import {
   getLatestTelebotSignalExecution,
   getTelegramTrackedSignals,
@@ -129,91 +129,14 @@ export function buildFiboKanjiTimeframeKeyboard(categoryId: PairCategoryId, symb
   };
 }
 
-type FiboKanjiLevel = 0 | 0.559 | 0.619 | 0.786 | 0.882 | 1.124 | 1.272 | 1.618 | 2 | 2.618;
-
-const FIBO_KANJI_LEVELS: FiboKanjiLevel[] = [0, 0.559, 0.619, 0.786, 0.882, 1.124, 1.272, 1.618, 2, 2.618];
-
 type FiboKanjiSignalResult =
   | { ok: true; text: string; signalId?: number | null; photoUrl?: string; photoCaption?: string }
   | { ok: false; message: string };
-
-function calculateFiboKanjiPrice(high: number, low: number, level: FiboKanjiLevel, trend: 'UP' | 'DOWN') {
-  const range = Math.abs(high - low);
-  return trend === 'DOWN'
-    ? high - (range * level)
-    : low + (range * level);
-}
-
-function distanceToZone(currentPrice: number, priceA: number, priceB: number) {
-  const zoneLow = Math.min(priceA, priceB);
-  const zoneHigh = Math.max(priceA, priceB);
-  if (currentPrice >= zoneLow && currentPrice <= zoneHigh) return 0;
-  return Math.min(Math.abs(currentPrice - zoneLow), Math.abs(currentPrice - zoneHigh));
-}
 
 function formatZone(symbol: string, priceA: number, priceB: number) {
   const zoneLow = Math.min(priceA, priceB);
   const zoneHigh = Math.max(priceA, priceB);
   return `${formatPrice(symbol, zoneLow)} - ${formatPrice(symbol, zoneHigh)}`;
-}
-
-function buildFiboKanjiVisualMap(params: {
-  symbol: string;
-  direction: 'BUY' | 'SELL';
-  currentPrice: number;
-  swingHigh: number;
-  swingLow: number;
-  entryA: number;
-  entryB: number;
-  entry: number;
-  stopLoss: number;
-  takeProfit1: number;
-  takeProfit2: number;
-  takeProfit3: number;
-}) {
-  const rows = [
-    { label: 'TP3 2.618', price: params.takeProfit3 },
-    { label: 'TP2 2.000', price: params.takeProfit2 },
-    { label: 'TP1 1.618', price: params.takeProfit1 },
-    { label: 'CURRENT', price: params.currentPrice },
-    { label: 'ENTRY 0.559', price: params.entryA },
-    { label: 'ENTRY 0.619', price: params.entryB },
-    { label: 'SL / ANCHOR', price: params.stopLoss },
-    { label: 'SWING HIGH', price: params.swingHigh },
-    { label: 'SWING LOW', price: params.swingLow },
-  ]
-    .filter((row) => Number.isFinite(row.price) && row.price > 0)
-    .sort((a, b) => b.price - a.price);
-
-  const seen = new Set<string>();
-  const deduped = rows.filter((row) => {
-    const key = `${row.label}:${formatPrice(params.symbol, row.price)}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  const arrow = params.direction === 'BUY' ? 'UP' : 'DOWN';
-  const lines = [
-    `KANJI MAP ${params.symbol} ${arrow}`,
-    '------------------------------',
-    ...deduped.map((row) => {
-      const marker = row.label === 'CURRENT'
-        ? '>>'
-        : row.label.startsWith('ENTRY')
-          ? '[]'
-          : row.label.startsWith('TP')
-            ? 'T '
-            : row.label.startsWith('SL')
-              ? 'X '
-              : '  ';
-      return `${marker} ${row.label.padEnd(12)} ${formatPrice(params.symbol, row.price)}`;
-    }),
-    '------------------------------',
-    `ENTRY ZONE ${formatZone(params.symbol, params.entryA, params.entryB)}`,
-  ];
-
-  return lines.join('\n');
 }
 
 function getPublicBaseUrl() {
@@ -265,6 +188,7 @@ function buildFiboKanjiCardUrl(params: {
   invalidationNote: string;
   signalId?: number | null;
   chartCandles?: string;
+  smcZones?: string;
 }) {
   const query = new URLSearchParams({
     symbol: params.symbol,
@@ -292,6 +216,7 @@ function buildFiboKanjiCardUrl(params: {
     signalId: params.signalId ? String(params.signalId) : '-',
   });
   if (params.chartCandles) query.set('ohlc', params.chartCandles);
+  if (params.smcZones) query.set('zones', params.smcZones);
 
   return `${getPublicBaseUrl()}/api/telegram/fibo-kanji-card?${query.toString()}`;
 }
@@ -432,142 +357,106 @@ export async function generateFiboKanjiSignal(params: {
     return { ok: false, message: `Data candle real ${symbol} ${timeframe.toUpperCase()} belum cukup untuk SIGNAL Fibo Kanji. Minimal perlu 5 candle, tersedia ${candles.length}.` };
   }
 
-  const swing = detectSwingPoints(candles, Math.min(80, candles.length));
-  if (!(swing.high > 0) || !(swing.low > 0) || swing.high <= swing.low) {
-    return { ok: false, message: `Swing ${symbol} ${timeframe.toUpperCase()} belum valid untuk Fibo Kanji. Tunggu struktur market lebih jelas.` };
-  }
+  {
+  const smcAnalysis = analyzeSmcKanji(candles);
+  const smcZones = encodeSmcKanjiZones([
+    ...smcAnalysis.activeZones,
+    ...smcAnalysis.fvgZones,
+    ...smcAnalysis.fibZones,
+  ]);
+  const smcLevel = (key: string, fallback: number) => smcAnalysis.fibLevels[key] || fallback;
+  const smcEntryA = smcLevel('0.559', currentPrice);
+  const smcEntryB = smcLevel('0.667', smcEntryA);
+  const smcEntry = smcAnalysis.signal?.entryPrice || (Math.abs(currentPrice - smcEntryA) <= Math.abs(currentPrice - smcEntryB) ? smcEntryA : smcEntryB);
+  const smcStopLoss = smcAnalysis.signal?.stopLoss || smcLevel('0', smcAnalysis.fibStart || currentPrice);
+  const smcTp1 = smcAnalysis.signal?.takeProfit1 || smcLevel('1.618', currentPrice);
+  const smcTp2 = smcAnalysis.signal?.takeProfit2 || smcLevel('2', smcTp1);
+  const smcTp3 = smcAnalysis.signal?.takeProfit3 || smcLevel('2.618', smcTp2);
+  const smcSwingHigh = Math.max(smcAnalysis.fibStart || currentPrice, smcAnalysis.fibEnd || currentPrice);
+  const smcSwingLow = Math.min(smcAnalysis.fibStart || currentPrice, smcAnalysis.fibEnd || currentPrice);
+  const smcInvalidationNote = smcAnalysis.signal
+    ? `Setup batal jika harga menembus ${formatPrice(symbol, smcStopLoss)} atau retest zone gagal sesuai SMC Kanji.`
+    : smcAnalysis.reason;
+  const smcPhotoBase = {
+    symbol,
+    timeframe,
+    currentPrice,
+    swingHigh: smcSwingHigh,
+    swingLow: smcSwingLow,
+    entryA: smcEntryA,
+    entryB: smcEntryB,
+    entry: smcEntry,
+    stopLoss: smcStopLoss,
+    takeProfit1: smcTp1,
+    takeProfit2: smcTp2,
+    takeProfit3: smcTp3,
+    livePriceSource,
+    candleSource,
+    candlesCount: candles.length,
+    nearestZone: smcAnalysis.signal?.zone.label || smcAnalysis.latestStructure?.type || 'SMC Kanji watch',
+    invalidationNote: smcInvalidationNote,
+    chartCandles: buildCompactOhlc(symbol, candles),
+    smcZones,
+  };
 
-  const direction: 'BUY' | 'SELL' = swing.trend === 'UP' ? 'BUY' : 'SELL';
-  const levels = Object.fromEntries(
-    FIBO_KANJI_LEVELS.map((level) => [level, calculateFiboKanjiPrice(swing.high, swing.low, level, swing.trend)])
-  ) as Record<FiboKanjiLevel, number>;
-
-  const entryA = levels[0.559];
-  const entryB = levels[0.619];
-  const entry = Math.abs(currentPrice - entryA) <= Math.abs(currentPrice - entryB) ? entryA : entryB;
-  const stopLoss = levels[0];
-  const takeProfit1 = levels[1.618];
-  const takeProfit2 = levels[2];
-  const takeProfit3 = levels[2.618];
-  const reversalDistance = distanceToZone(currentPrice, levels[0.786], levels[0.882]);
-  const entryDistance = distanceToZone(currentPrice, entryA, entryB);
-  const breakoutDistance = distanceToZone(currentPrice, levels[1.124], levels[1.272]);
-  const range = Math.abs(swing.high - swing.low);
-  const nearestZone = [
-    { name: 'Entry Zone 0.559-0.619', distance: entryDistance },
-    { name: 'Reversal Zone 0.786-0.882', distance: reversalDistance },
-    { name: 'Breakout Zone 1.124-1.272', distance: breakoutDistance },
-  ].sort((a, b) => a.distance - b.distance)[0];
-
-  const alreadyBeyondTp1 = direction === 'BUY' ? currentPrice >= takeProfit1 : currentPrice <= takeProfit1;
-  if (alreadyBeyondTp1) {
-    const visualMap = buildFiboKanjiVisualMap({
-      symbol,
-      direction,
-      currentPrice,
-      swingHigh: swing.high,
-      swingLow: swing.low,
-      entryA,
-      entryB,
-      entry,
-      stopLoss,
-      takeProfit1,
-      takeProfit2,
-      takeProfit3,
-    });
-    const invalidationNote = 'Harga sudah melewati TP1 Fibo Kanji. Tunggu swing baru sebelum ambil setup berikutnya.';
+  if (!smcAnalysis.signal) {
     const photoUrl = buildFiboKanjiCardUrl({
-      symbol,
-      timeframe,
+      ...smcPhotoBase,
       direction: 'WAIT',
-      orderType: 'WAIT NEW SWING',
-      setupGrade: 'No Chase | Wait Fresh Structure',
-      currentPrice,
-      swingHigh: swing.high,
-      swingLow: swing.low,
-      entryA,
-      entryB,
-      entry,
-      stopLoss,
-      takeProfit1,
-      takeProfit2,
-      takeProfit3,
-      confidence: 0,
+      orderType: 'WAIT SMC RETEST',
+      setupGrade: smcAnalysis.kanjiOk ? 'SMC Kanji Zone Watch' : 'SMC Kanji Waiting Structure',
+      confidence: smcAnalysis.kanjiOk ? 58 : 0,
       rr: null,
-      livePriceSource,
-      candleSource,
-      candlesCount: candles.length,
-      nearestZone: 'After TP1',
-      invalidationNote,
       signalId: null,
-      chartCandles: buildCompactOhlc(symbol, candles),
     });
     return {
       ok: true,
-      text: [
-        '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
-        '',
-        `Instrument      : <b>${escapeHtml(symbol)}</b>`,
-        `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
-        'Bias            : <b>WAIT</b>',
-        `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
-        `Reason          : Harga sudah melewati TP1 Fibo Kanji (${escapeHtml(formatPrice(symbol, takeProfit1))}). Jangan kejar market; tunggu swing baru.`,
-        '',
-        '<b>Visual Map</b>',
-        `<pre>${escapeHtml(visualMap)}</pre>`,
-      ].join('\n'),
       signalId: null,
       photoUrl,
       photoCaption: buildFiboKanjiPhotoCaption({
         symbol,
         timeframe,
         direction: 'WAIT',
-        orderType: 'WAIT NEW SWING',
-        entryA,
-        entryB,
-        entry,
-        stopLoss,
-        takeProfit1,
-        takeProfit2,
-        takeProfit3,
-        confidence: 0,
+        orderType: 'WAIT SMC RETEST',
+        entryA: smcEntryA,
+        entryB: smcEntryB,
+        entry: smcEntry,
+        stopLoss: smcStopLoss,
+        takeProfit1: smcTp1,
+        takeProfit2: smcTp2,
+        takeProfit3: smcTp3,
+        confidence: smcAnalysis.kanjiOk ? 58 : 0,
         livePriceSource,
         signalId: null,
       }),
+      text: [
+        '<b>ARRA7 EXCLUSIVE | SMC Kanji</b>',
+        '<i>Logic source: Kanji.md / SMC ICT Kanji COMPAT</i>',
+        '',
+        `Instrument      : <b>${escapeHtml(symbol)}</b>`,
+        `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
+        'Bias            : <b>WAIT</b>',
+        `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
+        `Structure        : <b>${escapeHtml(smcAnalysis.latestStructure ? `${smcAnalysis.latestStructure.direction === 1 ? 'Bullish' : 'Bearish'} ${smcAnalysis.latestStructure.type}` : 'Belum valid')}</b>`,
+        `Kanji Filter     : <b>${smcAnalysis.kanjiOk ? 'PASS' : 'WAIT'}</b>`,
+        `EoF Filter       : <b>${smcAnalysis.eofOk ? 'PASS' : `WAIT (${smcAnalysis.eofScore})`}</b>`,
+        `Reason          : ${escapeHtml(smcAnalysis.reason)}`,
+        `Price Source     : <b>${escapeHtml(livePriceSource)}</b>`,
+        `Candle Source    : <b>${escapeHtml(candleSource)}</b> | ${escapeHtml(String(candles.length))} candles`,
+      ].join('\n'),
     };
   }
 
-  const execution = resolveExecutionType({ direction, currentPrice, entryPrice: entry, symbol });
-  if (!execution.ok) {
-    return { ok: false, message: `SIGNAL Fibo Kanji ${symbol} ${timeframe.toUpperCase()} belum valid: ${execution.reason}.` };
-  }
-
-  const rr = calculateRR(entry, stopLoss, takeProfit1);
-  const zoneScore = nearestZone.distance === 0 ? 10 : Math.max(0, 10 - ((nearestZone.distance / Math.max(range, 0.0000001)) * 100));
-  const confidence = Math.max(62, Math.min(91, Math.round((swing.confidence * 70) + zoneScore + (rr ? Math.min(rr, 2) * 5 : 0))));
-  const setupGrade = getSetupGrade(confidence, rr, execution.orderType);
-  const invalidationNote = buildInvalidationNote({ direction, orderType: execution.orderType, stopLoss, symbol });
+  const smcSignal = smcAnalysis.signal;
+  const smcConfidence = smcSignal.confidence;
+  const smcSetupGrade = getSetupGrade(smcConfidence, smcSignal.rr, smcSignal.orderType);
   const profile = await getTelebotUserProfile(params.userId);
-  const visualMap = buildFiboKanjiVisualMap({
-    symbol,
-    direction,
-    currentPrice,
-    swingHigh: swing.high,
-    swingLow: swing.low,
-    entryA,
-    entryB,
-    entry,
-    stopLoss,
-    takeProfit1,
-    takeProfit2,
-    takeProfit3,
-  });
   const tradePlan = profile
     ? calculateTelebotTradePlan({
         symbol,
-        entryPrice: entry,
-        stopLoss,
-        takeProfit1,
+        entryPrice: smcSignal.entryPrice,
+        stopLoss: smcSignal.stopLoss,
+        takeProfit1: smcSignal.takeProfit1,
         balanceAmount: profile.balanceAmount,
         riskPercent: profile.riskPercent,
         setupStyle: profile.setupStyle,
@@ -578,12 +467,12 @@ export async function generateFiboKanjiSignal(params: {
     type: 'forex',
     symbol,
     timeframe,
-    direction,
-    entryPrice: entry,
-    stopLoss,
-    takeProfit1,
-    takeProfit2,
-    confidence,
+    direction: smcSignal.direction,
+    entryPrice: smcSignal.entryPrice,
+    stopLoss: smcSignal.stopLoss,
+    takeProfit1: smcSignal.takeProfit1,
+    takeProfit2: smcSignal.takeProfit2,
+    confidence: smcConfidence,
   });
 
   if (signalId) {
@@ -594,38 +483,21 @@ export async function generateFiboKanjiSignal(params: {
       signalId,
       symbol,
       timeframe,
-      executionType: execution.orderType,
-      setupGrade,
-      invalidationNote,
-      recommendedEntry: entry,
+      executionType: smcSignal.orderType,
+      setupGrade: smcSetupGrade,
+      invalidationNote: smcInvalidationNote,
+      recommendedEntry: smcSignal.entryPrice,
     });
   }
 
   const photoUrl = buildFiboKanjiCardUrl({
-    symbol,
-    timeframe,
-    direction,
-    orderType: execution.orderType,
-    setupGrade,
-    currentPrice,
-    swingHigh: swing.high,
-    swingLow: swing.low,
-    entryA,
-    entryB,
-    entry,
-    stopLoss,
-    takeProfit1,
-    takeProfit2,
-    takeProfit3,
-    confidence,
-    rr,
-    livePriceSource,
-    candleSource,
-    candlesCount: candles.length,
-    nearestZone: nearestZone.name,
-    invalidationNote,
+    ...smcPhotoBase,
+    direction: smcSignal.direction,
+    orderType: smcSignal.orderType,
+    setupGrade: smcSetupGrade,
+    confidence: smcConfidence,
+    rr: smcSignal.rr,
     signalId,
-    chartCandles: buildCompactOhlc(symbol, candles),
   });
 
   return {
@@ -635,58 +507,51 @@ export async function generateFiboKanjiSignal(params: {
     photoCaption: buildFiboKanjiPhotoCaption({
       symbol,
       timeframe,
-      direction,
-      orderType: execution.orderType,
-      entryA,
-      entryB,
-      entry,
-      stopLoss,
-      takeProfit1,
-      takeProfit2,
-      takeProfit3,
-      confidence,
+      direction: smcSignal.direction,
+      orderType: smcSignal.orderType,
+      entryA: smcEntryA,
+      entryB: smcEntryB,
+      entry: smcSignal.entryPrice,
+      stopLoss: smcSignal.stopLoss,
+      takeProfit1: smcSignal.takeProfit1,
+      takeProfit2: smcSignal.takeProfit2,
+      takeProfit3: smcSignal.takeProfit3,
+      confidence: smcConfidence,
       livePriceSource,
       signalId,
     }),
     text: [
-      '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
-      '<i>Deterministic Fibonacci Kanji setup with visual map</i>',
+      '<b>ARRA7 EXCLUSIVE | SMC Kanji</b>',
+      '<i>Logic source: Kanji.md / SMC ICT Kanji COMPAT</i>',
       '',
       `Instrument      : <b>${escapeHtml(symbol)}</b>`,
       `Timeframe       : <b>${escapeHtml(timeframe.toUpperCase())}</b>`,
-      `Bias            : <b>${escapeHtml(direction)}</b>`,
-      `Execution Type  : <b>${escapeHtml(execution.orderType)}</b>`,
-      `Setup Grade     : <b>${escapeHtml(setupGrade)}</b>`,
-      `Nearest Zone    : <b>${escapeHtml(nearestZone.name)}</b>`,
+      `Bias            : <b>${escapeHtml(smcSignal.direction)}</b>`,
+      `Execution Type  : <b>${escapeHtml(smcSignal.orderType)}</b>`,
+      `Setup Grade     : <b>${escapeHtml(smcSetupGrade)}</b>`,
+      `Signal Source   : <b>${escapeHtml(smcSignal.source)}</b>`,
+      `Retest Zone     : <b>${escapeHtml(smcSignal.zone.label)}</b>`,
       '',
-      '<b>Kanji Levels</b>',
+      '<b>SMC Kanji Execution</b>',
       `Current Price    : <code>${escapeHtml(formatPrice(symbol, currentPrice))}</code>`,
-      `Swing High       : <code>${escapeHtml(formatPrice(symbol, swing.high))}</code>`,
-      `Swing Low        : <code>${escapeHtml(formatPrice(symbol, swing.low))}</code>`,
-      `Entry Zone       : <code>${escapeHtml(formatZone(symbol, entryA, entryB))}</code>`,
-      `Entry            : <code>${escapeHtml(formatPrice(symbol, entry))}</code>`,
-      `Stop Loss        : <code>${escapeHtml(formatPrice(symbol, stopLoss))}</code>`,
-      `TP1 1.618        : <code>${escapeHtml(formatPrice(symbol, takeProfit1))}</code>`,
-      `TP2 2.000        : <code>${escapeHtml(formatPrice(symbol, takeProfit2))}</code>`,
-      `TP3 2.618        : <code>${escapeHtml(formatPrice(symbol, takeProfit3))}</code>`,
-      rr ? `Risk / Reward    : <b>1:${escapeHtml(rr.toFixed(2))}</b>` : 'Risk / Reward    : <b>-</b>',
-      `Confidence       : <b>${escapeHtml(String(confidence))}%</b>`,
-      `Invalidation     : <i>${escapeHtml(invalidationNote)}</i>`,
+      `Entry            : <code>${escapeHtml(formatPrice(symbol, smcSignal.entryPrice))}</code>`,
+      `Stop Loss        : <code>${escapeHtml(formatPrice(symbol, smcSignal.stopLoss))}</code>`,
+      `Target RR 1:${escapeHtml(String(smcSignal.rr))} : <code>${escapeHtml(formatPrice(symbol, smcSignal.takeProfit1))}</code>`,
+      `Target 2         : <code>${escapeHtml(formatPrice(symbol, smcSignal.takeProfit2))}</code>`,
+      `Target 3         : <code>${escapeHtml(formatPrice(symbol, smcSignal.takeProfit3))}</code>`,
+      `Confidence       : <b>${escapeHtml(String(smcConfidence))}%</b>`,
+      `Invalidation     : <i>${escapeHtml(smcInvalidationNote)}</i>`,
       `Price Source     : <b>${escapeHtml(livePriceSource)}</b>`,
       `Candle Source    : <b>${escapeHtml(candleSource)}</b> | ${escapeHtml(String(candles.length))} candles`,
-      '',
-      '<b>Visual Map</b>',
-      `<pre>${escapeHtml(visualMap)}</pre>`,
       '',
       '<b>Risk Desk</b>',
       profile ? `Capital          : <b>${escapeHtml(profile.balanceCurrency)} ${escapeHtml(Number(profile.balanceAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }))}</b>` : 'Capital          : <b>Belum diatur</b>',
       profile ? `Risk Profile     : <b>${escapeHtml(String(profile.riskPercent))}% | ${escapeHtml(formatTelebotSetupStyle(profile.setupStyle))}</b>` : 'Risk Profile     : <b>Gunakan menu Balance / Risk Setup</b>',
       tradePlan ? `Lot Recommendation: <b>${escapeHtml(String(tradePlan.recommendedLot))}</b>` : 'Lot Recommendation: <b>Isi balance untuk sizing</b>',
-      '',
-      'Rule source      : <b>Fibo Kanji 0.559/0.619 -> TP 1.618/2.000/2.618</b>',
       signalId ? `Reference ID     : <code>#${signalId}</code>` : '',
     ].filter(Boolean).join('\n'),
   };
+  }
 }
 
 export function buildSignalCategoryKeyboard() {
