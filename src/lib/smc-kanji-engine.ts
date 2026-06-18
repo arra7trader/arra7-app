@@ -101,6 +101,8 @@ type EngineOptions = {
   confirmedOnly: boolean;
   showBreakSignals: boolean;
   showRetestSignals: boolean;
+  minStopPips: number;
+  minTargetPips: number;
 };
 
 const DEFAULT_OPTIONS: EngineOptions = {
@@ -142,6 +144,8 @@ const DEFAULT_OPTIONS: EngineOptions = {
   confirmedOnly: true,
   showBreakSignals: false,
   showRetestSignals: true,
+  minStopPips: 60,
+  minTargetPips: 70,
 };
 
 const MOON_CYCLE_DAYS = 29.530588853;
@@ -251,8 +255,21 @@ function calculateFibLevels(start: number | null, end: number | null) {
   return Object.fromEntries(levels.map((level) => [String(level), fibPrice(start, end, level)]));
 }
 
-export function analyzeSmcKanji(candlesInput: Candle[], overrides: Partial<EngineOptions> = {}): SmcKanjiAnalysis {
+function getPipSize(symbol: string) {
+  const normalized = symbol.toUpperCase();
+  if (normalized.includes('XAU') || normalized.includes('GOLD') || normalized.includes('XAG') || normalized.includes('SILVER')) return 0.1;
+  if (normalized.endsWith('JPY') && normalized.length === 6) return 0.01;
+  if (/^[A-Z]{6}$/.test(normalized)) return 0.0001;
+  if (normalized.includes('BTC')) return 10;
+  if (normalized.includes('ETH')) return 1;
+  return 1;
+}
+
+export function analyzeSmcKanji(candlesInput: Candle[], overrides: Partial<EngineOptions> = {}, symbol = 'XAUUSD'): SmcKanjiAnalysis {
   const options = { ...DEFAULT_OPTIONS, ...overrides };
+  const pipSize = getPipSize(symbol);
+  const minStopDistance = options.minStopPips * pipSize;
+  const minTargetDistance = options.minTargetPips * pipSize;
   const candles = candlesInput.filter((c) => c.open > 0 && c.high > 0 && c.low > 0 && c.close > 0);
   if (candles.length < Math.max(options.swingLen * 2 + 5, 40)) {
     return {
@@ -485,12 +502,15 @@ export function analyzeSmcKanji(candlesInput: Candle[], overrides: Partial<Engin
 
     const tryCreateSignal = (direction: 1 | -1, zone: SmcKanjiZone, source: SmcKanjiSignal['source']) => {
       const entryPrice = candle.close;
-      const stopLoss = direction === 1 ? zone.bottom : zone.top;
-      const risk = direction === 1 ? entryPrice - stopLoss : stopLoss - entryPrice;
-      if (!(risk > 0)) return null;
-      const tp1 = direction === 1 ? entryPrice + risk * options.rr : entryPrice - risk * options.rr;
-      const tp2 = direction === 1 ? entryPrice + risk * options.rr * 1.25 : entryPrice - risk * options.rr * 1.25;
-      const tp3 = direction === 1 ? entryPrice + risk * options.rr * 1.5 : entryPrice - risk * options.rr * 1.5;
+      const structuralStop = direction === 1 ? zone.bottom : zone.top;
+      const structuralRisk = direction === 1 ? entryPrice - structuralStop : structuralStop - entryPrice;
+      const enforcedRisk = Math.max(structuralRisk, minStopDistance);
+      if (!(enforcedRisk > 0)) return null;
+      const stopLoss = direction === 1 ? entryPrice - enforcedRisk : entryPrice + enforcedRisk;
+      const targetDistance = Math.max(enforcedRisk * options.rr, minTargetDistance);
+      const tp1 = direction === 1 ? entryPrice + targetDistance : entryPrice - targetDistance;
+      const tp2 = direction === 1 ? entryPrice + targetDistance * 1.25 : entryPrice - targetDistance * 1.25;
+      const tp3 = direction === 1 ? entryPrice + targetDistance * 1.5 : entryPrice - targetDistance * 1.5;
       const confidence = Math.max(62, Math.min(92, 68 + (kanjiOk ? 10 : 0) + (eof.ok ? 6 : 0) + (latestStructure?.type === 'CHOCH' ? 4 : 0) + (source === 'SMC_ZONE_RETEST' ? 4 : 0)));
       return {
         direction: direction === 1 ? 'BUY' : 'SELL',

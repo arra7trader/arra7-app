@@ -189,6 +189,7 @@ function buildFiboKanjiCardUrl(params: {
   signalId?: number | null;
   chartCandles?: string;
   smcZones?: string;
+  hasSetup?: boolean;
 }) {
   const query = new URLSearchParams({
     symbol: params.symbol,
@@ -217,6 +218,7 @@ function buildFiboKanjiCardUrl(params: {
   });
   if (params.chartCandles) query.set('ohlc', params.chartCandles);
   if (params.smcZones) query.set('zones', params.smcZones);
+  query.set('hasSetup', params.hasSetup === false ? '0' : '1');
 
   return `${getPublicBaseUrl()}/api/telegram/fibo-kanji-card?${query.toString()}`;
 }
@@ -226,6 +228,7 @@ function buildFiboKanjiPhotoCaption(params: {
   timeframe: Timeframe;
   direction: 'BUY' | 'SELL' | 'WAIT';
   orderType: string;
+  currentPrice?: number;
   entryA: number;
   entryB: number;
   entry: number;
@@ -236,7 +239,21 @@ function buildFiboKanjiPhotoCaption(params: {
   confidence: number;
   livePriceSource: string;
   signalId?: number | null;
+  reason?: string;
 }) {
+  if (params.direction === 'WAIT') {
+    return [
+      '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
+      `<b>${escapeHtml(params.symbol)}</b> ${escapeHtml(params.timeframe.toUpperCase())} | <b>WAIT</b> | <b>${escapeHtml(params.orderType)}</b>`,
+      '',
+      params.currentPrice ? `Current: <code>${escapeHtml(formatPrice(params.symbol, params.currentPrice))}</code>` : '',
+      `Status: <b>Belum ada retest SMC Kanji valid</b>`,
+      params.reason ? `Reason: ${escapeHtml(params.reason)}` : '',
+      `Confidence: <b>${escapeHtml(String(params.confidence))}%</b>`,
+      `Source: <b>${escapeHtml(params.livePriceSource)}</b>`,
+    ].filter(Boolean).join('\n');
+  }
+
   return [
     '<b>ARRA7 EXCLUSIVE | SIGNAL Fibo Kanji</b>',
     `<b>${escapeHtml(params.symbol)}</b> ${escapeHtml(params.timeframe.toUpperCase())} | <b>${escapeHtml(params.direction)}</b> | <b>${escapeHtml(params.orderType)}</b>`,
@@ -358,7 +375,7 @@ export async function generateFiboKanjiSignal(params: {
   }
 
   {
-  const smcAnalysis = analyzeSmcKanji(candles);
+  const smcAnalysis = analyzeSmcKanji(candles, {}, symbol);
   const smcZones = encodeSmcKanjiZones([
     ...smcAnalysis.activeZones,
     ...smcAnalysis.fvgZones,
@@ -397,6 +414,7 @@ export async function generateFiboKanjiSignal(params: {
     invalidationNote: smcInvalidationNote,
     chartCandles: buildCompactOhlc(symbol, candles),
     smcZones,
+    hasSetup: !!smcAnalysis.signal,
   };
 
   if (!smcAnalysis.signal) {
@@ -418,6 +436,7 @@ export async function generateFiboKanjiSignal(params: {
         timeframe,
         direction: 'WAIT',
         orderType: 'WAIT SMC RETEST',
+        currentPrice,
         entryA: smcEntryA,
         entryB: smcEntryB,
         entry: smcEntry,
@@ -428,6 +447,7 @@ export async function generateFiboKanjiSignal(params: {
         confidence: smcAnalysis.kanjiOk ? 58 : 0,
         livePriceSource,
         signalId: null,
+        reason: smcAnalysis.reason,
       }),
       text: [
         '<b>ARRA7 EXCLUSIVE | SMC Kanji</b>',
@@ -509,6 +529,7 @@ export async function generateFiboKanjiSignal(params: {
       timeframe,
       direction: smcSignal.direction,
       orderType: smcSignal.orderType,
+      currentPrice,
       entryA: smcEntryA,
       entryB: smcEntryB,
       entry: smcSignal.entryPrice,

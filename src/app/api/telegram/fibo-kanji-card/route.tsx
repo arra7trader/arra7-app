@@ -94,6 +94,11 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function approxSame(a: number, b: number) {
+  if (!(a > 0) || !(b > 0)) return false;
+  return Math.abs(a - b) <= Math.max(Math.abs(a), Math.abs(b), 1) * 0.000001;
+}
+
 function buildFallbackCandles(current: number, entry: number, swingHigh: number, swingLow: number): Ohlc[] {
   if (!(current > 0) || !(swingHigh > swingLow)) return [];
   const candles: Ohlc[] = [];
@@ -139,11 +144,14 @@ export async function GET(request: Request) {
   const zone = getParam(url, 'zone', '-');
   const invalidation = getParam(url, 'invalidation', '-');
   const signalId = getParam(url, 'signalId', '-');
+  const hasSetup = getParam(url, 'hasSetup', '1') !== '0';
   const parsedCandles = parseOhlc(url.searchParams.get('ohlc') || '');
   const chartZones = parseZones(url.searchParams.get('zones') || '');
   const chartCandles = parsedCandles.length >= 5
     ? parsedCandles
     : buildFallbackCandles(current, entry, swingHigh, swingLow);
+  const candlesCountNumber = Number(candlesCount);
+  const sourceCandleCount = Number.isFinite(candlesCountNumber) && candlesCountNumber > 0 ? candlesCountNumber : chartCandles.length;
 
   const isBuy = direction === 'BUY';
   const isSell = direction === 'SELL';
@@ -151,44 +159,55 @@ export async function GET(request: Request) {
   const accentSoft = isBuy ? 'rgba(32, 214, 139, 0.18)' : isSell ? 'rgba(255, 94, 108, 0.18)' : 'rgba(248, 194, 71, 0.18)';
   const entryLow = Math.min(entryA, entryB);
   const entryHigh = Math.max(entryA, entryB);
+  const setupPrices = hasSetup ? [entryA, entryB, entry, stopLoss, tp1, tp2, tp3].filter((price) => price > 0) : [];
+  const validSwing = swingHigh > swingLow && !approxSame(swingHigh, swingLow);
+  const rrDisplay = hasSetup && rr !== '-' ? `1:${rr}` : 'WAIT';
 
   const allPrices = [
     ...chartCandles.flatMap((candle) => [candle.high, candle.low]),
     ...chartZones.flatMap((zone) => [zone.top, zone.bottom]),
     current,
-    entryA,
-    entryB,
-    entry,
-    stopLoss,
-    tp1,
-    tp2,
-    tp3,
-    swingHigh,
-    swingLow,
+    ...setupPrices,
+    ...(validSwing ? [swingHigh, swingLow] : []),
   ].filter((price) => price > 0);
-  const minPrice = Math.min(...allPrices);
-  const maxPrice = Math.max(...allPrices);
+  const priceRange = allPrices.length > 0 ? allPrices : [1];
+  const minPrice = Math.min(...priceRange);
+  const maxPrice = Math.max(...priceRange);
   const padding = Math.max((maxPrice - minPrice) * 0.08, maxPrice * 0.0002);
   const scaleMin = minPrice - padding;
   const scaleMax = maxPrice + padding;
   const span = Math.max(scaleMax - scaleMin, 0.0000001);
   const yFor = (price: number) => CHART_Y + ((scaleMax - price) / span) * CHART_H;
-  const candleSlot = CHART_W / Math.max(chartCandles.length, 1);
+  const currentBarIndex = Math.max(sourceCandleCount - 1, chartCandles.length - 1, 0);
+  const maxZoneIndex = chartZones.length > 0 ? Math.max(...chartZones.map((zone) => zone.rightIndex)) : currentBarIndex;
+  const futureBars = clamp(maxZoneIndex - currentBarIndex, 0, 10);
+  const visibleStartIndex = Math.max(0, currentBarIndex - Math.max(chartCandles.length - 1, 1));
+  const visibleEndIndex = currentBarIndex + futureBars;
+  const visibleBars = Math.max(visibleEndIndex - visibleStartIndex + 1, 1);
+  const candleSlot = CHART_W / visibleBars;
   const candleBodyW = clamp(candleSlot * 0.55, 8, 18);
-  const maxZoneIndex = chartZones.length > 0 ? Math.max(...chartZones.map((zone) => zone.rightIndex)) : chartCandles.length - 1;
-  const visibleStartIndex = Math.max(0, maxZoneIndex - Math.max(chartCandles.length - 1, 1));
-  const xForBar = (index: number) => clamp(((index - visibleStartIndex) / Math.max(chartCandles.length - 1, 1)) * CHART_W, 0, CHART_W);
+  const xForBar = (index: number) => clamp(((index - visibleStartIndex) / Math.max(visibleEndIndex - visibleStartIndex, 1)) * CHART_W, 0, CHART_W);
 
+  const setupLevels = hasSetup
+    ? [
+        { key: 'TP3', label: 'TP3 2.618', value: tp3, color: '#73f0ff', width: 1 },
+        { key: 'TP2', label: 'TP2 2.000', value: tp2, color: '#73f0ff', width: 1 },
+        { key: 'TP1', label: 'TP1 1.618', value: tp1, color: '#73f0ff', width: 2 },
+        { key: 'ENTRY A', label: 'ENTRY 0.559', value: entryA, color: accent, width: 2 },
+        { key: 'ENTRY B', label: 'ENTRY 0.667', value: entryB, color: accent, width: 2 },
+        { key: 'SL', label: 'SL / INVALID', value: stopLoss, color: '#ff8a8a', width: 2 },
+      ].filter((level) => level.value > 0 && !approxSame(level.value, current))
+    : [];
+  const swingLevels = validSwing
+    ? [
+        { key: 'HIGH', label: 'SWING HIGH', value: swingHigh, color: '#9aa8c0', width: 1 },
+        { key: 'LOW', label: 'SWING LOW', value: swingLow, color: '#9aa8c0', width: 1 },
+      ]
+    : [];
   const levels = [
-    { key: 'TP3', label: 'TP3 2.618', value: tp3, color: '#73f0ff', width: 1 },
-    { key: 'TP2', label: 'TP2 2.000', value: tp2, color: '#73f0ff', width: 1 },
-    { key: 'TP1', label: 'TP1 1.618', value: tp1, color: '#73f0ff', width: 2 },
+    ...setupLevels,
     { key: 'CURRENT', label: 'CURRENT', value: current, color: '#ffffff', width: 2 },
-    { key: 'ENTRY A', label: 'ENTRY 0.559', value: entryA, color: accent, width: 2 },
-    { key: 'ENTRY B', label: 'ENTRY 0.619', value: entryB, color: accent, width: 2 },
-    { key: 'SL', label: 'SL / INVALID', value: stopLoss, color: '#ff8a8a', width: 2 },
-    { key: 'HIGH', label: 'SWING HIGH', value: swingHigh, color: '#9aa8c0', width: 1 },
-    { key: 'LOW', label: 'SWING LOW', value: swingLow, color: '#9aa8c0', width: 1 },
+    ...swingLevels,
   ].filter((level) => level.value > 0);
 
   const gridPrices = Array.from({ length: 6 }, (_, index) => scaleMin + (span * index) / 5).reverse();
@@ -239,7 +258,7 @@ export async function GET(request: Request) {
           <div style={{ display: 'flex', gap: 18 }}>
             <MiniBox label="TIMEFRAME" value={timeframe} />
             <MiniBox label="CONFIDENCE" value={`${confidence}%`} />
-            <MiniBox label="RR" value={`1:${rr}`} />
+            <MiniBox label="RR" value={rrDisplay} />
           </div>
         </div>
 
@@ -269,7 +288,36 @@ export async function GET(request: Request) {
             );
           })}
 
-          {entryA > 0 && entryB > 0 ? (
+          {chartZones.map((zone, index) => {
+            const style = zoneStyle(zone.kind);
+            const left = xForBar(zone.leftIndex);
+            const right = Math.max(xForBar(zone.rightIndex), left + 90);
+            const top = yFor(zone.top) - CHART_Y;
+            const bottom = yFor(zone.bottom) - CHART_Y;
+            return (
+              <div
+                key={`zone-${zone.kind}-${index}`}
+                style={{
+                  display: 'flex',
+                  position: 'absolute',
+                  left,
+                  top,
+                  width: Math.max(right - left, 90),
+                  height: Math.max(bottom - top, 10),
+                  background: style.fill,
+                  borderTop: `1px solid ${style.border}`,
+                  borderBottom: `1px solid ${style.border}`,
+                  opacity: 0.92,
+                }}
+              >
+                <div style={{ display: 'flex', marginLeft: 'auto', marginRight: 14, marginTop: 6, color: style.text, fontSize: 18, fontWeight: 700 }}>
+                  {style.label}
+                </div>
+              </div>
+            );
+          })}
+
+          {hasSetup && entryA > 0 && entryB > 0 ? (
             <div
               style={{
                 display: 'flex',
@@ -286,7 +334,7 @@ export async function GET(request: Request) {
           ) : null}
 
           {chartCandles.map((candle, index) => {
-            const x = index * candleSlot + candleSlot / 2;
+            const x = xForBar(visibleStartIndex + index);
             const wickTop = yFor(candle.high) - CHART_Y;
             const wickBottom = yFor(candle.low) - CHART_Y;
             const openY = yFor(candle.open) - CHART_Y;
@@ -322,34 +370,6 @@ export async function GET(request: Request) {
                     border: `2px solid ${color}`,
                   }}
                 />
-              </div>
-            );
-          })}
-
-          {chartZones.map((zone, index) => {
-            const style = zoneStyle(zone.kind);
-            const left = xForBar(zone.leftIndex);
-            const right = Math.max(xForBar(zone.rightIndex), left + 90);
-            const top = yFor(zone.top) - CHART_Y;
-            const bottom = yFor(zone.bottom) - CHART_Y;
-            return (
-              <div
-                key={`zone-${zone.kind}-${index}`}
-                style={{
-                  display: 'flex',
-                  position: 'absolute',
-                  left,
-                  top,
-                  width: Math.max(right - left, 90),
-                  height: Math.max(bottom - top, 10),
-                  background: style.fill,
-                  borderTop: `1px solid ${style.border}`,
-                  borderBottom: `1px solid ${style.border}`,
-                }}
-              >
-                <div style={{ display: 'flex', marginLeft: 'auto', marginRight: 14, marginTop: 6, color: style.text, fontSize: 18, fontWeight: 700 }}>
-                  {style.label}
-                </div>
               </div>
             );
           })}
@@ -406,9 +426,19 @@ export async function GET(request: Request) {
             gap: 18,
           }}
         >
-          <Panel title="ENTRY ZONE" value={`${formatPrice(symbol, entryLow)} - ${formatPrice(symbol, entryHigh)}`} sub={`Entry ${formatPrice(symbol, entry)} | ${truncate(zone, 28)}`} accent={accent} />
-          <Panel title="STOP LOSS" value={formatPrice(symbol, stopLoss)} sub={truncate(invalidation, 54)} accent="#ff8a8a" />
-          <Panel title="TARGETS" value={`${formatPrice(symbol, tp1)} / ${formatPrice(symbol, tp2)}`} sub={`TP3 ${formatPrice(symbol, tp3)}`} accent="#73f0ff" />
+          <Panel
+            title="ENTRY ZONE"
+            value={hasSetup ? `${formatPrice(symbol, entryLow)} - ${formatPrice(symbol, entryHigh)}` : 'WAIT SETUP'}
+            sub={hasSetup ? `Entry ${formatPrice(symbol, entry)} | ${truncate(zone, 28)}` : truncate(zone, 44)}
+            accent={accent}
+          />
+          <Panel title="STOP LOSS" value={hasSetup ? formatPrice(symbol, stopLoss) : 'WAIT'} sub={truncate(invalidation, 54)} accent="#ff8a8a" />
+          <Panel
+            title="TARGETS"
+            value={hasSetup ? `${formatPrice(symbol, tp1)} / ${formatPrice(symbol, tp2)}` : 'WAIT'}
+            sub={hasSetup ? `TP3 ${formatPrice(symbol, tp3)}` : 'Menunggu retest SMC Kanji valid'}
+            accent="#73f0ff"
+          />
         </div>
 
         <div
