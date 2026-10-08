@@ -23,12 +23,12 @@ function StatCard({ value, label, color }: { value: string | number; label: stri
     return (
         <motion.div
             variants={{ hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 } }}
-            className="bg-[var(--bg-primary)] rounded-xl p-3 md:p-4 border border-[var(--border-light)] text-center shadow-sm hover:shadow-md transition-all group"
+            className="bg-white rounded-2xl p-3 md:p-4 border border-slate-200/90 text-center shadow-xs hover:shadow-md transition-all group"
         >
-            <p className={`text-xl md:text-2xl font-bold ${color ?? 'text-[var(--text-primary)]'} group-hover:scale-110 transition-transform`}>
+            <p className={`text-xl md:text-2xl font-bold ${color ?? 'text-slate-900'} group-hover:scale-105 transition-transform`}>
                 {value}
             </p>
-            <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mt-1">{label}</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mt-1">{label}</p>
         </motion.div>
     );
 }
@@ -53,14 +53,12 @@ export default function DailyPerformanceSection() {
     };
 
     useEffect(() => {
-        // Format date on client to avoid hydration mismatch
         setDateStr(new Date().toLocaleDateString('id-ID', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
             timeZone: 'Asia/Jakarta'
         }));
 
         fetchData();
-        // Refresh every 5 minutes
         const interval = setInterval(fetchData, 5 * 60 * 1000);
         return () => clearInterval(interval);
     }, []);
@@ -73,55 +71,53 @@ export default function DailyPerformanceSection() {
     };
 
     return (
-        <section className="py-10 border-y border-[var(--border-light)] bg-[var(--bg-primary)]/50 backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #0071e3 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
+        <section className="py-8 border-y border-slate-200/80 bg-white/60 backdrop-blur-sm relative overflow-hidden rounded-3xl">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
 
                 {/* Section Header */}
                 <div className="flex items-center gap-3">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75" />
-                        <div className="relative w-3 h-3 bg-red-600 rounded-full border-2 border-white" />
+                        <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-75" />
+                        <div className="relative w-3 h-3 bg-emerald-600 rounded-full border-2 border-white" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-[var(--text-primary)] leading-tight">LAPORAN HARIAN</h2>
-                        <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">{dateStr}</p>
+                        <h2 className="text-lg font-bold text-slate-900 leading-tight">LIVE ENGINE PERFORMANCE</h2>
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{dateStr}</p>
                     </div>
                 </div>
 
-                {/* TODAY's Performance — exact match to Admin Report */}
+                {/* TODAY's Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
                         📈 Performa Hari Ini
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.today.total ?? 0} label="Total Sinyal" />
-                        <StatCard value={data?.today.tpHit ?? 0} label="TP Hit" color="text-green-400" />
-                        <StatCard value={data?.today.slHit ?? 0} label="SL Hit" color="text-red-400" />
-                        <StatCard value={data?.today.pending ?? 0} label="Pending" color="text-amber-400" />
+                        <StatCard value={data?.today.tpHit ?? 0} label="TP Hit" color="text-emerald-600 font-mono" />
+                        <StatCard value={data?.today.slHit ?? 0} label="SL Hit" color="text-rose-600 font-mono" />
+                        <StatCard value={data?.today.pending ?? 0} label="Pending" color="text-amber-600 font-mono" />
                         <StatCard
                             value={`${data?.today.accuracy ?? '0'}%`}
                             label="Win Rate"
-                            color="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                            color="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-black"
                         />
                     </div>
                 </motion.div>
 
-                {/* OVERALL Performance — exact match to Admin Report */}
+                {/* OVERALL Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
                         📊 Overall Performance
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.overall?.total ?? 0} label="Total Sinyal" />
-                        <StatCard value={data?.overall?.tpHit ?? 0} label="TP Hit" color="text-green-400" />
-                        <StatCard value={data?.overall?.slHit ?? 0} label="SL Hit" color="text-red-400" />
-                        <StatCard value={data?.overall?.pending ?? 0} label="Pending" color="text-amber-400" />
+                        <StatCard value={data?.overall?.tpHit ?? 0} label="TP Hit" color="text-emerald-600 font-mono" />
+                        <StatCard value={data?.overall?.slHit ?? 0} label="SL Hit" color="text-rose-600 font-mono" />
+                        <StatCard value={data?.overall?.pending ?? 0} label="Pending" color="text-amber-600 font-mono" />
                         <StatCard
                             value={`${data?.overall?.accuracy ?? '0'}%`}
                             label="Win Rate"
-                            color="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                            color="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-black"
                         />
                     </div>
                 </motion.div>

@@ -26,7 +26,7 @@ export async function POST() {
 
     return NextResponse.json({
       ok: false,
-      botUsername: process.env.TELEGRAM_BOT_USERNAME || 'arra7trader_bot',
+      botUsername: process.env.TELEGRAM_BOT_USERNAME || 'arra7chatassistant_bot',
       message: 'TELEBOT tidak lagi memakai kode link. Akses bot sekarang otomatis mengikuti username Telegram yang sudah di-approve admin.',
     });
   } catch (error) {

@@ -35,7 +35,7 @@ export default function PrivacyPage() {
                         {[
                             {
                                 title: '1. Pendahuluan',
-                                content: 'ARRA7 berkomitmen untuk melindungi privasi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi pribadi Anda.'
+                                content: 'PICA berkomitmen untuk melindungi privasi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi pribadi Anda.'
                             },
                             {
                                 title: '2. Informasi yang Kami Kumpulkan',

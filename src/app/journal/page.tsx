@@ -367,7 +367,7 @@ export default function JournalPage() {
                 <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] overflow-hidden mt-8">
                     <div className="px-4 py-3 border-b border-[var(--border-light)] bg-[var(--bg-secondary)]">
                         <p className="text-sm font-semibold text-[var(--text-primary)]">Trade Actual Per Akun</p>
-                        <p className="text-xs text-[var(--text-secondary)]">Data posisi real dari Copytrade ARRA77, termasuk TP/SL untuk tiap terminal.</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Histori transaksi otomatis dan sinyal eksekusi trading PICA AI.</p>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
@@ -435,7 +435,7 @@ export default function JournalPage() {
                     </div>
                     {actualTrades.length === 0 && (
                         <div className="p-10 text-center text-[var(--text-secondary)]">
-                            Belum ada trade actual dari akun copytrade.
+                            Belum ada trade otomatis yang tercatat.
                         </div>
                     )}
                 </div>

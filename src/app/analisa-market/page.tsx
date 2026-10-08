@@ -6,7 +6,6 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLowBalancePopup } from '@/components/LowBalancePopup';
 import {
     SparklesIcon,
     ChartIcon,
@@ -146,6 +145,9 @@ interface QuotaStatus {
 interface TelegramLinkStatus {
     membership: string;
     isVvipActive: boolean;
+    isPrivateBotActive: boolean;
+    privateBotStatus: string | null;
+    privateBotExpiresAt: string | null;
     linked: boolean;
     telegramChatId: string | null;
     botUsername: string;
@@ -527,9 +529,6 @@ export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
     const router = useRouter();
-    const telegramBotUsername = 'arra7trade_bot';
-
-    const { openPopup } = useLowBalancePopup();
 
     const [selectedCategory, setSelectedCategory] = useState('commodities');
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
@@ -547,12 +546,9 @@ export default function AnalisaMarketPage() {
     const [lastAnalyzeAt, setLastAnalyzeAt] = useState<string | null>(null);
     const [journalAutoSaved, setJournalAutoSaved] = useState<boolean | null>(null);
     const [telegramStatus, setTelegramStatus] = useState<TelegramLinkStatus | null>(null);
-    const [telegramLinkCode, setTelegramLinkCode] = useState<string | null>(null);
-    const [telegramCodeExpiresAt, setTelegramCodeExpiresAt] = useState<string | null>(null);
     const [telegramLoading, setTelegramLoading] = useState(false);
-    const [telegramGenerating, setTelegramGenerating] = useState(false);
     const [telegramError, setTelegramError] = useState<string | null>(null);
-    const [telegramCopiedTarget, setTelegramCopiedTarget] = useState<'chatId' | 'linkCode' | 'linkCommand' | null>(null);
+    const [telegramCopiedTarget, setTelegramCopiedTarget] = useState<'chatId' | null>(null);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -646,6 +642,9 @@ export default function AnalisaMarketPage() {
             setTelegramStatus({
                 membership: String(data.membership || 'BASIC'),
                 isVvipActive: Boolean(data.isVvipActive),
+                isPrivateBotActive: Boolean(data.isPrivateBotActive),
+                privateBotStatus: data.privateBotStatus || null,
+                privateBotExpiresAt: data.privateBotExpiresAt || null,
                 linked: Boolean(data.linked),
                 telegramChatId: data.telegramChatId || null,
                 botUsername: String(data.botUsername || 'arra7trader_bot'),
@@ -658,33 +657,9 @@ export default function AnalisaMarketPage() {
         }
     };
 
-    const handleGenerateTelegramCode = async () => {
-        setTelegramGenerating(true);
-        setTelegramError(null);
-        try {
-            const res = await fetch('/api/user/telegram/link-code', {
-                method: 'POST',
-            });
-            const data = await res.json();
-            if (!res.ok || !data?.ok) {
-                setTelegramError(data?.message || 'Gagal membuat kode link.');
-                return;
-            }
-
-            setTelegramLinkCode(String(data.code));
-            setTelegramCodeExpiresAt(String(data.expiresAt));
-            await fetchTelegramLinkStatus();
-        } catch (err) {
-            console.error('Generate telegram code error:', err);
-            setTelegramError('Gagal membuat kode link.');
-        } finally {
-            setTelegramGenerating(false);
-        }
-    };
-
     const handleCopyTelegramText = async (
         value: string,
-        target: 'chatId' | 'linkCode' | 'linkCommand'
+        target: 'chatId'
     ) => {
         if (!value) return;
         try {
@@ -701,6 +676,7 @@ export default function AnalisaMarketPage() {
 
     const currentCategory = PAIR_CATEGORIES.find(c => c.id === selectedCategory);
     const currentPairs = currentCategory?.pairs || [];
+    const telegramBotUsername = telegramStatus?.botUsername || 'arra7trader_bot';
 
     const fetchNews = async () => {
         try {
@@ -770,11 +746,6 @@ export default function AnalisaMarketPage() {
                 } else {
                     const message = data.message || 'Analysis failed';
                     setError(message);
-
-                    // Check for Quota or Feature Limits (Status 403)
-                    if (response.status === 403) {
-                        openPopup();
-                    }
                 }
 
                 if (data.quotaStatus) {
@@ -809,7 +780,6 @@ export default function AnalisaMarketPage() {
             ? 'text-amber-400'
             : 'text-emerald-400';
     const isVvipUser = (quotaStatus?.membership || '').toUpperCase() === 'VVIP';
-    const isSessionVvip = (session?.user?.tier || '').toUpperCase() === 'VVIP';
     const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
     const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
         ? `${Math.round(parsedSignal.confidence)}%`
@@ -835,19 +805,36 @@ export default function AnalisaMarketPage() {
         : 'VVIP Member';
     const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || 'BASIC').toUpperCase();
     const isPremiumMember = uppercaseMembership === 'PRO' || uppercaseMembership === 'VVIP';
+    const isProMember = uppercaseMembership === 'PRO';
+    const isVvipMember = uppercaseMembership === 'VVIP';
     const isQuotaOrLockError = Boolean(
         error && (error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") || error.includes("habis"))
     );
-    const lockTitle = error?.includes("Timeframe")
+    const isTimeframeLock = Boolean(error?.includes("Timeframe"));
+    const isQuotaExhausted = Boolean(
+        quotaStatus &&
+        quotaStatus.dailyLimit !== -1 &&
+        quotaStatus.dailyLimit !== null &&
+        quotaStatus.remaining <= 0
+    );
+    const lockTitle = isTimeframeLock
         ? 'Timeframe Terkunci'
-        : isPremiumMember
-            ? 'Akses Premium Tertahan'
-            : 'Daily Quota Reached';
-    const lockBody = error?.includes("Timeframe")
+        : isProMember && isQuotaExhausted
+            ? 'Kuota Harian PRO Habis'
+            : isVvipMember
+                ? 'Desk VVIP Sedang Tertahan'
+                : isPremiumMember
+                    ? 'Akses Premium Tertahan'
+                    : 'Daily Quota Reached';
+    const lockBody = isTimeframeLock
         ? 'Timeframe ini khusus untuk member PRO/VVIP. Upgrade sekarang untuk akses ke semua timeframe.'
-        : isPremiumMember
-            ? (error || 'Akses akun premium Anda sedang tertahan. Silakan coba lagi atau hubungi admin jika ini berlanjut.')
-            : 'Anda telah mencapai batas 1x Analisa Harian. Upgrade ke PRO untuk membuka akses premium dan analisa AI yang lebih luas.';
+        : isProMember && isQuotaExhausted
+            ? 'Kuota akun PRO Anda untuk hari ini sudah habis (25x analisa per hari). Coba lagi besok atau upgrade ke VVIP jika Anda ingin akses unlimited.'
+            : isVvipMember
+                ? (error || 'Akses desk VVIP Anda sedang tertahan. Silakan coba lagi sebentar atau hubungi admin jika ini berlanjut.')
+                : isPremiumMember
+                    ? (error || 'Akses akun premium Anda sedang tertahan. Silakan coba lagi atau hubungi admin jika ini berlanjut.')
+                    : 'Anda telah mencapai batas 1x Analisa Harian. Upgrade ke PRO untuk membuka akses premium dan analisa AI yang lebih luas.';
 
     if (status === 'loading') {
         return (
@@ -958,8 +945,8 @@ export default function AnalisaMarketPage() {
                                 <div className="mt-3 rounded-md border border-[var(--border-light)] px-3 py-3">
                                     <div className="flex items-center justify-between gap-2">
                                         <div>
-                                            <p className="text-xs text-[var(--text-muted)]">Telegram VVIP Bot</p>
-                                            <p className="text-sm font-semibold text-[var(--text-primary)]">Chat langsung untuk signal dan analisa</p>
+                                            <p className="text-xs text-[var(--text-muted)]">ARRA7 TELEBOT</p>
+                                            <p className="text-sm font-semibold text-[var(--text-primary)]">Private AI execution desk di Telegram</p>
                                         </div>
                                         <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold ${telegramStatus?.linked
                                             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
@@ -973,10 +960,30 @@ export default function AnalisaMarketPage() {
                                         <p className="mt-2 text-xs text-[var(--text-muted)]">Memuat status bot...</p>
                                     ) : (
                                         <div className="mt-2 space-y-2">
-                                            {!isSessionVvip || !telegramStatus?.isVvipActive ? (
-                                                <p className="text-xs text-amber-400 bg-amber-500/10 border-amber-500/20 border border-amber-500/20 rounded-md px-2 py-1.5">
-                                                    Fitur ini khusus VVIP aktif. Upgrade/aktifkan VVIP untuk menghubungkan bot.
-                                                </p>
+                                            {!telegramStatus?.isPrivateBotActive ? (
+                                                <div className="rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                                                    <p className="text-xs font-medium text-amber-300">
+                                                        {telegramStatus?.privateBotStatus === 'expired'
+                                                            ? 'Masa aktif TELEBOT Anda sudah berakhir. Silakan perpanjang paket untuk membuka akses kembali.'
+                                                            : telegramStatus?.privateBotStatus === 'revoked'
+                                                                ? 'Akses TELEBOT Anda sedang dinonaktifkan admin. Hubungi admin jika ini tidak sesuai.'
+                                                                : 'Fitur ini khusus member TELEBOT aktif. Aktivasi paket TELEBOT lalu pastikan username Telegram Anda sudah di-approve admin.'}
+                                                    </p>
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <Link
+                                                            href="/telebot"
+                                                            className="inline-flex px-2.5 py-1.5 rounded-md bg-[var(--accent-blue)] text-white text-[11px] font-semibold hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            Aktivasi TELEBOT
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => void fetchTelegramLinkStatus()}
+                                                            className="inline-flex px-2.5 py-1.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                                        >
+                                                            Refresh Status
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <>
                                                     <div className="flex items-center justify-between gap-2">
@@ -992,6 +999,12 @@ export default function AnalisaMarketPage() {
                                                             Buka Bot
                                                         </a>
                                                     </div>
+                                                    <div className="rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] px-2.5 py-2">
+                                                        <p className="text-xs text-[var(--text-muted)]">Cara connect</p>
+                                                        <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                                                            TELEBOT sekarang tidak memakai kode link. Setelah username Telegram Anda di-approve admin, cukup buka bot lalu kirim <span className="font-mono">/start</span>.
+                                                        </p>
+                                                    </div>
                                                     <div className="flex items-center justify-between gap-2">
                                                         <p className="text-xs text-[var(--text-secondary)] truncate">
                                                             Chat ID: {telegramStatus?.telegramChatId || 'Belum terhubung'}
@@ -1005,49 +1018,16 @@ export default function AnalisaMarketPage() {
                                                             </button>
                                                         )}
                                                     </div>
-                                                    {telegramLinkCode && (
-                                                        <div className="rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] px-2 py-2">
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <div>
-                                                                    <p className="text-xs text-[var(--text-muted)]">Kode Link Aktif</p>
-                                                                    <p className="text-sm font-mono font-semibold text-[var(--text-primary)]">{telegramLinkCode}</p>
-                                                                </div>
-                                                                <button
-                                                                    onClick={() => handleCopyTelegramText(telegramLinkCode, 'linkCode')}
-                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-primary)]/80 transition-colors"
-                                                                >
-                                                                    {telegramCopiedTarget === 'linkCode' ? 'Tersalin' : 'Copy Kode'}
-                                                                </button>
-                                                            </div>
-                                                            <div className="mt-1 flex items-center justify-between gap-2">
-                                                                <p className="text-xs text-[var(--text-secondary)]">
-                                                                    Kirim ke bot: <span className="font-mono">/link {telegramLinkCode}</span>
-                                                                </p>
-                                                                <button
-                                                                    onClick={() => handleCopyTelegramText(`/link ${telegramLinkCode}`, 'linkCommand')}
-                                                                    className="shrink-0 px-2 py-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-primary)] text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-primary)]/80 transition-colors"
-                                                                >
-                                                                    {telegramCopiedTarget === 'linkCommand' ? 'Tersalin' : 'Copy /link'}
-                                                                </button>
-                                                            </div>
-                                                            <p className="text-xs text-[var(--text-muted)] mt-1">
-                                                                Expired: {telegramCodeExpiresAt ? new Date(telegramCodeExpiresAt).toLocaleTimeString('id-ID') : '-'}
-                                                            </p>
-                                                        </div>
+                                                    {telegramStatus?.privateBotExpiresAt && (
+                                                        <p className="text-[11px] text-[var(--text-muted)]">
+                                                            Akses aktif sampai {new Date(telegramStatus.privateBotExpiresAt).toLocaleString('id-ID')}
+                                                        </p>
                                                     )}
                                                     <button
-                                                        onClick={handleGenerateTelegramCode}
-                                                        disabled={telegramGenerating}
-                                                        className={`w-full py-2 rounded-md text-xs font-semibold transition-colors ${telegramGenerating
-                                                            ? 'bg-slate-800 text-[var(--text-secondary)] cursor-not-allowed'
-                                                            : 'bg-[var(--accent-blue)] text-white hover:bg-blue-600'
-                                                            }`}
+                                                        onClick={() => void fetchTelegramLinkStatus()}
+                                                        className="w-full py-2 rounded-md text-xs font-semibold transition-colors bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]/80"
                                                     >
-                                                        {telegramGenerating
-                                                            ? 'Membuat kode...'
-                                                            : telegramStatus?.linked
-                                                                ? 'Regenerate Kode Link'
-                                                                : 'Generate Kode Link'}
+                                                        Refresh Status TELEBOT
                                                     </button>
                                                 </>
                                             )}
@@ -1235,10 +1215,10 @@ export default function AnalisaMarketPage() {
                                 Buka Trade Journal
                             </Link>
                             <Link
-                                href="/copytrade-arra77"
+                                href="/xauusd-neural-lab"
                                 className="inline-flex items-center justify-center rounded-lg border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                             >
-                                Trade Actual Per Akun
+                                ?? PICA Neural Lab
                             </Link>
                         </div>
 

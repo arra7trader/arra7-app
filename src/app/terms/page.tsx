@@ -38,18 +38,18 @@ export default function TermsPage() {
                                 ⚠️ PERINGATAN RISIKO
                             </p>
                             <p className="text-amber-400 text-sm leading-relaxed">
-                                Trading Forex dan Saham melibatkan risiko tinggi. Analisa ARRA7 bersifat edukatif, BUKAN saran investasi. Keputusan trading sepenuhnya tanggung jawab Anda.
+                                Trading Forex dan Saham melibatkan risiko tinggi. Analisa PICA bersifat edukatif, BUKAN saran investasi. Keputusan trading sepenuhnya tanggung jawab Anda.
                             </p>
                         </div>
 
                         {[
                             {
                                 title: '1. Penerimaan Ketentuan',
-                                content: 'Dengan menggunakan ARRA7, Anda menyetujui ketentuan ini. Jika tidak setuju, mohon untuk tidak menggunakan layanan kami.'
+                                content: 'Dengan menggunakan PICA, Anda menyetujui ketentuan ini. Jika tidak setuju, mohon untuk tidak menggunakan layanan kami.'
                             },
                             {
                                 title: '2. Deskripsi Layanan',
-                                content: 'ARRA7 menyediakan analisa pasar trading berbasis AI untuk Forex dan Saham Indonesia, termasuk rekomendasi entry, stop loss, take profit, dan confidence level.'
+                                content: 'PICA menyediakan analisa pasar trading berbasis AI untuk Forex dan Saham Indonesia, termasuk rekomendasi entry, stop loss, take profit, dan confidence level.'
                             },
                             {
                                 title: '3. Paket Berlangganan',
@@ -57,7 +57,7 @@ export default function TermsPage() {
                             },
                             {
                                 title: '4. Batasan Tanggung Jawab',
-                                content: 'ARRA7 tidak bertanggung jawab atas kerugian finansial dari keputusan trading, ketidakakuratan data, atau gangguan layanan teknis.'
+                                content: 'PICA tidak bertanggung jawab atas kerugian finansial dari keputusan trading, ketidakakuratan data, atau gangguan layanan teknis.'
                             },
                             {
                                 title: '5. Penggunaan yang Dilarang',

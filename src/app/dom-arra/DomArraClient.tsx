@@ -266,7 +266,7 @@ function ComingSoonView() {
                         🔮 Advanced Trading Tool
                     </span>
                     <h1 className="headline-lg mb-4">
-                        DOM <span className="gradient-text">ARRA</span>
+                        DOM <span className="gradient-text">PICA</span>
                     </h1>
                     <p className="body-lg max-w-2xl mx-auto">
                         Depth of Market visualization dengan AI-powered order flow analysis
@@ -291,7 +291,7 @@ function ComingSoonView() {
                             </motion.div>
                             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Coming Soon</h2>
                             <p className="text-[var(--text-secondary)] mb-6 text-center px-8">
-                                Fitur Bookmap ARRA7 sedang dalam pengembangan dan akan segera hadir
+                                Fitur Bookmap PICA sedang dalam pengembangan dan akan segera hadir
                             </p>
                             <div className="flex flex-wrap gap-3 justify-center">
                                 <span className="px-4 py-2 rounded-full bg-[var(--bg-secondary)] text-sm text-[var(--text-secondary)]">
@@ -323,7 +323,7 @@ function ComingSoonView() {
                     transition={{ delay: 0.3 }}
                     className="text-center mt-12"
                 >
-                    <p className="text-[var(--text-muted)] mb-4">Ingin notifikasi saat Bookmap ARRA7 tersedia?</p>
+                    <p className="text-[var(--text-muted)] mb-4">Ingin notifikasi saat Bookmap PICA tersedia?</p>
                     <Link href="https://t.me/arra7trader" target="_blank" rel="noopener noreferrer">
                         <button className="btn-primary">
                             Join Telegram untuk Update
@@ -388,8 +388,8 @@ function BlockedView({ reason }: { reason: string }) {
 
                         <p className="body-lg text-[var(--text-secondary)] mb-8">
                             {isExpired
-                                ? 'Masa trial 3 hari Anda telah habis. Upgrade ke akun PRO untuk melanjutkan akses ke Bookmap ARRA7 dan fitur premium lainnya.'
-                                : 'Fitur Bookmap ARRA7 hanya tersedia untuk pengguna PRO dan VVIP.'}
+                                ? 'Masa trial 3 hari Anda telah habis. Upgrade ke akun PRO untuk melanjutkan akses ke Bookmap PICA dan fitur premium lainnya.'
+                                : 'Fitur Bookmap PICA hanya tersedia untuk pengguna PRO dan VVIP.'}
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -397,7 +397,7 @@ function BlockedView({ reason }: { reason: string }) {
                                 <h4 className="font-semibold mb-2 flex items-center gap-2">Basic</h4>
                                 <ul className="text-sm space-y-2 text-[var(--text-muted)]">
                                     <li className="flex items-center gap-2">✅ Analisa Market Basic</li>
-                                    <li className="flex items-center gap-2">❌ Bookmap ARRA7</li>
+                                    <li className="flex items-center gap-2">❌ Bookmap PICA</li>
                                     <li className="flex items-center gap-2">❌ Whale Alerts</li>
                                 </ul>
                             </div>
@@ -405,7 +405,7 @@ function BlockedView({ reason }: { reason: string }) {
                                 <h4 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-400 px-2 py-0.5 rounded-full">Recommended</span></h4>
                                 <ul className="text-sm space-y-2 text-blue-400">
                                     <li className="flex items-center gap-2">✅ Analisa Market Premium</li>
-                                    <li className="flex items-center gap-2">✅ Bookmap ARRA7 Unlimited</li>
+                                    <li className="flex items-center gap-2">✅ Bookmap PICA Unlimited</li>
                                     <li className="flex items-center gap-2">✅ Whale Alerts Real-time</li>
                                 </ul>
                             </div>
@@ -784,7 +784,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
                     <div>
                         <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-3">
                             <ChartIcon size="lg" className="text-blue-400" />
-                            Bookmap ARRA7
+                            Bookmap PICA
                             <span className="text-xs px-2 py-1 bg-amber-500/10 border-amber-500/20 text-amber-400 rounded-full">BETA</span>
                         </h1>
                         <p className="text-[var(--text-secondary)]">Real-time Depth of Market Analysis</p>

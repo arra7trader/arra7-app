@@ -4,7 +4,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 import AuthProvider from "@/components/providers/AuthProvider";
 import Navbar from "@/components/Navbar";
 import TelegramWidget from "@/components/TelegramWidget";
-import ArraBot from "@/components/chat/ArraBot";
+import PicaBot from "@/components/chat/PicaBot";
 import LocationTracker from "@/components/LocationTracker";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import SubscriptionChecker from "@/components/SubscriptionChecker";
@@ -13,30 +13,29 @@ import LowBalancePopup from "@/components/LowBalancePopup";
 import AIEngineTrigger from "@/components/AIEngineTrigger";
 import "./globals.css";
 
-// Viewport configuration (separated from metadata in Next.js 16+)
+// Viewport configuration
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#3B82F6",
+  themeColor: "#2563EB",
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "ARRA7 - AI Trading Analysis Platform",
-    template: "%s | ARRA7"
+    default: "PICA - AI Quantitative Trading Platform",
+    template: "%s | PICA"
   },
-  description: "Platform trading Indonesia #1 dengan AI Neural Ensemble 90%+ akurasi. Bookmap Whale Order Flow, Analisa Forex & Saham IDX profesional. Entry, SL, TP otomatis.",
+  description: "Platform trading kuantitatif Indonesia #1 dengan PICA Neural Lab 90%+ akurasi. Bi-LSTM Multi-Layer, Bookmap Order Flow, Analisa Forex & Saham IDX profesional.",
   keywords: [
-    "trading indonesia", "analisa forex", "analisa saham", "AI trading",
-    "XAUUSD", "gold trading", "IDX saham", "bookmap", "order flow",
-    "whale tracking", "smart money concepts", "trading signals",
-    "forex indonesia", "crypto trading", "neural network trading"
+    "trading indonesia", "analisa forex", "analisa saham", "PICA AI", "PICA trading",
+    "XAUUSD", "gold trading", "neural lab", "IDX saham", "bookmap", "order flow",
+    "smart money concepts", "trading signals", "neural network trading"
   ],
-  authors: [{ name: "ARRA7", url: "https://arra7-app.vercel.app" }],
-  creator: "ARRA7",
-  publisher: "ARRA7",
+  authors: [{ name: "PICA", url: "https://arra7-app.vercel.app" }],
+  creator: "PICA",
+  publisher: "PICA",
   robots: {
     index: true,
     follow: true,
@@ -51,14 +50,14 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
-    title: "ARRA7",
+    statusBarStyle: "default",
+    title: "PICA",
   },
   openGraph: {
-    title: "ARRA7 - AI Trading Analysis Platform",
-    description: "Platform trading Indonesia dengan AI 90%+ akurasi. Bookmap Order Flow, Forex & Saham Analysis.",
+    title: "PICA - AI Quantitative Trading Platform",
+    description: "Platform trading kuantitatif Indonesia dengan PICA Neural Lab & Bi-LSTM 90%+ akurasi. Bookmap Order Flow, Forex & Saham Analysis.",
     type: "website",
-    siteName: "ARRA7",
+    siteName: "PICA",
     locale: "id_ID",
     url: "https://arra7-app.vercel.app",
     images: [
@@ -66,14 +65,14 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "ARRA7 AI Trading Platform",
+        alt: "PICA AI Trading Platform",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ARRA7 - AI Trading Analysis",
-    description: "Analisa Trading Forex & Saham Indonesia dengan AI 90%+ akurasi",
+    title: "PICA - AI Quantitative Trading",
+    description: "Analisa Trading Forex & Saham Indonesia dengan PICA Neural Lab 90%+ akurasi",
     images: ["/og-image.png"],
   },
   icons: {
@@ -84,9 +83,6 @@ export const metadata: Metadata = {
     apple: [
       { url: "/icons/icon-180x180.png", sizes: "180x180", type: "image/png" },
     ],
-  },
-  verification: {
-    google: "your-google-verification-code", // TODO: Add actual verification code
   },
   category: "Finance",
 };
@@ -100,9 +96,9 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="dark">
+    <html lang={locale} className="light">
       <body
-        className="antialiased bg-[#0B0C10] text-white min-h-screen"
+        className="antialiased bg-[#F8FAFC] text-slate-900 min-h-screen selection:bg-blue-100 selection:text-blue-900 font-sans"
       >
         <AuthProvider>
           <NextIntlClientProvider messages={messages}>
@@ -116,7 +112,7 @@ export default async function RootLayout({
               {children}
             </main>
             <TelegramWidget />
-            <ArraBot />
+            <PicaBot />
             <AIEngineTrigger />
           </NextIntlClientProvider>
         </AuthProvider>
@@ -124,4 +120,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

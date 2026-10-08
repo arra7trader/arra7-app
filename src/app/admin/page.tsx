@@ -405,7 +405,7 @@ Silakan refresh halaman atau login ulang untuk melihat perubahan.
 Selamat trading dan semoga profit! 💰🚀
 
 Best regards,
-Tim ARRA7`;
+Tim PICA`;
     };
 
     const copyToClipboard = async () => {
@@ -551,7 +551,7 @@ Tim ARRA7`;
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
                     <div className="flex flex-col gap-2">
                         <h1 className="[letter-spacing:-1px] font-['Space_Grotesk',system-ui,sans-serif] font-bold text-4xl text-[#F8FAFC]">Admin Dashboard</h1>
-                        <p className="text-[#94A3B8] font-['Inter',system-ui,sans-serif] text-base">Kelola users dan kontrol sistem ARRA7</p>
+                        <p className="text-[#94A3B8] font-['Inter',system-ui,sans-serif] text-base">Kelola users dan kontrol sistem PICA AI</p>
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-3">
@@ -611,9 +611,9 @@ Tim ARRA7`;
 
                 {/* Quick Access Grid Scrollable Menu */}
                 <div className="flex gap-3 mb-6 overflow-x-auto pb-3 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-                    <Link href="/admin/copytrade-arra77" className="admin-quick-link">
+                    <Link href="/xauusd-neural-lab" className="admin-quick-link">
                         <div className="icon-container bg-emerald-500/15">📡</div>
-                        <div className="text-[#CBD5E1] font-medium text-sm">Copytrade ARRA77</div>
+                        <div className="text-[#CBD5E1] font-medium text-sm">PICA Neural Lab</div>
                     </Link>
                     <Link href="/admin/crm" className="admin-quick-link">
                         <div className="icon-container bg-blue-500/15">📊</div>

@@ -9,10 +9,10 @@
     "logout": "Logout",
     "analisaMarket": "Market Analysis",
     "analisaSaham": "Stock Analysis",
-    "bookmap": "Bookmap ARRA7",
+    "bookmap": "Bookmap PICA",
+    "neuralLab": "Neural Lab",
     "tradeJournal": "Trade Journal",
-    "portfolio": "Portfolio",
-    "socialFeed": "Social Feed"
+    "portfolio": "Portfolio"
   },
   "maintenance": {
     "title": "Under Maintenance",
@@ -22,20 +22,21 @@
     "badge": "MAINTENANCE"
   },
   "hero": {
-    "badge": "Neural Engine v7.0 Live",
+    "badge": "PICA Neural Engine v8.2 Live",
     "headline": "Trading with the Power of",
     "headlineHighlight": "Neural Networks",
     "headlineEnd": "",
     "titleSuffix": "Neural Networks",
-    "subheadline": "Our AI analyzes millions of market data points per second, learning 'Whale' patterns, and delivering the highest probability of winning for you.",
-    "ctaBookmap": "Bookmap ARRA7",
+    "subheadline": "PICA AI analyzes millions of market data points per second, detecting institutional Whale liquidity footprints and delivering the highest probability edge for your trades.",
+    "ctaNeuralLab": "Launch PICA Neural Lab",
+    "ctaBookmap": "Bookmap PICA",
     "ctaStock": "Stock Analysis",
     "ctaForex": "Forex AI",
     "ctaPricing": "View Pricing"
   },
   "stats": {
     "activeTraders": "Active Traders",
-    "signalAccuracy": "Signal Accuracy"
+    "signalAccuracy": "Neural Core Accuracy"
   },
   "trust": {
     "freeBasic": "Free Forever for BASIC",
@@ -45,14 +46,33 @@
   },
   "howItWorks": {
     "badge": "Tutorial Guide",
-    "title": "How to Use ARRA7",
-    "desc": "Complete guide to using all ARRA7 features",
+    "title": "How to Use PICA",
+    "desc": "Complete walkthrough of PICA's flagship quantitative tools",
     "tabs": {
-      "bookmap": "🔥 Bookmap ARRA7",
+      "neural": "🧠 Neural Lab",
+      "bookmap": "🔥 Bookmap PICA",
       "forex": "📊 Forex Analysis",
       "stock": "🇮🇩 Stock Analysis",
       "doctor": "🩺 AI Doctor",
       "sentiment": "📡 Sentiment"
+    },
+    "neural": {
+      "step1": {
+        "title": "Select Timeframe",
+        "desc": "Choose M15, H1, H4, or D1 to scan multi-frequency XAUUSD market structure"
+      },
+      "step2": {
+        "title": "22 Multi-Factor Indicators",
+        "desc": "Model computes RSI, Bollinger Bands, ATR, VWAP, and volume flow in parallel"
+      },
+      "step3": {
+        "title": "Bi-LSTM Neural Inference",
+        "desc": "Deep Learning calculates probabilistic distribution for UP, DOWN, and NEUTRAL"
+      },
+      "step4": {
+        "title": "Precision Execution",
+        "desc": "Receive automated Entry Zone, Stop Loss & Take Profit with dynamic ATR offsets"
+      }
     },
     "bookmap": {
       "step1": {
@@ -61,15 +81,15 @@
       },
       "step2": {
         "title": "Read Heatmap",
-        "desc": "Green = Buy Pressure, Red = Sell Pressure. Darker = Stronger"
+        "desc": "Green = Buy Pressure, Red = Sell Pressure. Darker = Larger institutional resting orders"
       },
       "step3": {
         "title": "Whale Alerts",
-        "desc": "AI detects large institutional orders in real-time"
+        "desc": "AI detects large institutional block orders in real-time"
       },
       "step4": {
         "title": "Follow AI Signal",
-        "desc": "Get BUY/SELL recommendations with confidence level"
+        "desc": "Get BUY/SELL recommendations backed by quantitative confidence metrics"
       }
     },
     "forex": {
@@ -148,7 +168,7 @@
   "features": {
     "badge": "⚡ Institutional Edge",
     "title": "The Smart Money's Secret Weapon",
-    "subtitle": "Technology that gives you an 'Unfair Advantage' in the market.",
+    "subtitle": "Quantitative technology giving you an institutional edge in the market.",
     "items": {
       "heatmap": {
         "title": "Whale Radar System",
@@ -162,7 +182,7 @@
       },
       "ai": {
         "title": "Neural Predictive Core",
-        "desc": "Deep Learning models (LSTM & Transformer) that 'learn' from market validation daily. Getting smarter every single day.",
+        "desc": "Deep Learning models (Bi-LSTM & Transformer) that learn continuously from validated market dynamics.",
         "badge": "SELF-LEARNING"
       },
       "zones": {
@@ -183,24 +203,24 @@
     }
   },
   "testimonials": {
-    "title": "What They Say",
-    "desc": "Indonesian traders who have benefited from ARRA7",
+    "title": "What Traders Say",
+    "desc": "Indonesian traders accelerating their profitability with PICA AI",
     "items": [
       {
-        "text": "This AI is crazy. The entry points are very accurate, just yesterday verified 200 pips profit on XAUUSD. Totally worth it!"
+        "text": "PICA's Neural Lab is incredible. The entry points and probability metrics on Gold are remarkably sharp. 200 pips on XAUUSD!"
       },
       {
-        "text": "ARRA7 is different. The analysis is very detailed using SMC and Fibo. Trading is much more confident now."
+        "text": "PICA stands out from anything else. The analysis combines SMC order flow with deep learning predictions seamlessly."
       },
       {
-        "text": "Office work makes it hard to monitor charts. With ARRA7 just check AI analysis, simple but powerful."
+        "text": "Working full-time makes manual charting difficult. With PICA AI and Neural Lab, I check high-confidence signals with ease."
       }
     ]
   },
   "ctaSection": {
-    "promoBadge": "🔥 New Year Promo — Up to 50% Off!",
+    "promoBadge": "🔥 Special Promo — Next-Gen AI Access!",
     "title": "Ready to Upgrade Your Trading?",
-    "desc": "Join 100+ traders who are already profitable with ARRA7 AI analysis.",
+    "desc": "Join thousands of traders leveling up their performance with PICA AI.",
     "list": {
       "freeBasic": "BASIC account free forever",
       "noCreditCard": "No credit card needed",
@@ -210,15 +230,15 @@
     "btnPro": "View PRO Plans"
   },
   "footer": {
-    "subtitle": "AI-Powered Trading Analysis",
+    "subtitle": "Indonesia's Premier AI Quantitative Trading Platform",
     "privacy": "Privacy",
     "terms": "Terms",
     "faq": "FAQ",
-    "copyright": "© 2026 ARRA7. All rights reserved."
+    "copyright": "© 2026 PICA. All rights reserved."
   },
   "auth": {
-    "loginTitle": "Welcome to ARRA7",
-    "loginSubtitle": "Sign in to access premium trading tools",
+    "loginTitle": "Welcome to PICA",
+    "loginSubtitle": "Sign in to access premium neural trading tools",
     "continueWithGoogle": "Continue with Google",
     "redirecting": "Redirecting..."
   },
@@ -228,9 +248,9 @@
     "welcome": "Welcome back"
   },
   "bookmap": {
-    "title": "Bookmap ARRA7",
-    "comingSoon": "Bookmap ARRA7 feature is under development and will be available soon",
-    "notifyMe": "Want to be notified when Bookmap ARRA7 is available?",
+    "title": "Bookmap PICA",
+    "comingSoon": "Bookmap PICA feature is under development and will be available soon",
+    "notifyMe": "Want to be notified when Bookmap PICA is available?",
     "mlSettings": "ML Settings",
     "predictionHorizon": "Prediction Horizon",
     "minConfidence": "Min Confidence",
@@ -272,16 +292,6 @@
     "all": "All",
     "highImpact": "High Impact"
   },
-  "kanji": {
-    "title": "Fibonacci Kanji",
-    "subtitle": "Interactive Fibonacci Kanji",
-    "desc": "Draw your High, Low, and Breakdown (optional) points to reveal hidden market geometry.",
-    "start": "1. Click Swing High",
-    "end": "2. Click Swing Low",
-    "reset": "Reset Chart",
-    "levels": "Kanji Levels",
-    "instruction": "Usage: Select pair -> Chart loads -> Click High -> Click Low."
-  },
   "stockPicks": {
     "title": "Today's AI Picks",
     "subtitle": "AI-selected stocks with highest buying signals today.",
@@ -297,7 +307,7 @@
   },
   "videoShowcase": {
     "badge": "Video Showcase",
-    "title": "See ARRA7 in Action",
-    "description": "Watch how our AI technology detects profit opportunities in the market in real-time."
+    "title": "See PICA in Action",
+    "description": "Watch how our Neural AI technology detects profit opportunities in the market in real-time."
   }
 }

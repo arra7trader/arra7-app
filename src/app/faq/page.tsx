@@ -9,8 +9,8 @@ const FAQ_DATA = [
     {
         category: 'Umum',
         questions: [
-            { q: 'Apa itu ARRA7?', a: 'ARRA7 adalah platform analisa trading berbasis AI yang menyediakan analisa pasar Forex dan Saham Indonesia dengan metodologi institutional-grade.' },
-            { q: 'Apakah ARRA7 gratis?', a: 'Ya! Akun BASIC gratis selamanya dengan kuota 2x analisa Forex dan 2x analisa Saham per hari.' },
+            { q: 'Apa itu PICA?', a: 'PICA adalah platform analisa trading berbasis AI yang menyediakan analisa pasar Forex dan Saham Indonesia dengan metodologi institutional-grade.' },
+            { q: 'Apakah PICA gratis?', a: 'Ya! Akun BASIC gratis selamanya dengan kuota 2x analisa Forex dan 2x analisa Saham per hari.' },
             { q: 'Bagaimana cara mendaftar?', a: 'Cukup klik tombol "Login" dan pilih "Continue with Google". Akun Anda akan otomatis terdaftar.' },
         ]
     },
@@ -64,7 +64,7 @@ export default function FAQPage() {
                             Frequently Asked <span className="gradient-text">Questions</span>
                         </h1>
                         <p className="body-lg">
-                            Temukan jawaban untuk pertanyaan umum tentang ARRA7
+                            Temukan jawaban untuk pertanyaan umum tentang PICA
                         </p>
                     </motion.div>
                 </div>

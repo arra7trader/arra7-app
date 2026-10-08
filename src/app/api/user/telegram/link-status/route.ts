@@ -31,7 +31,7 @@ export async function GET() {
       membershipExpiresAt: expiresAt ? expiresAt.toISOString() : null,
       linked: !!telegramChatId,
       telegramChatId,
-      botUsername: process.env.TELEGRAM_BOT_USERNAME || 'arra7trader_bot',
+      botUsername: process.env.TELEGRAM_BOT_USERNAME || 'arra7chatassistant_bot',
     });
   } catch (error) {
     console.error('[TELEGRAM_LINK_STATUS] GET error:', error);

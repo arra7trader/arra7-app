@@ -1,0 +1,192 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="60" x2="980" y2="1020" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07111F"/>
+      <stop offset="0.52" stop-color="#0A1728"/>
+      <stop offset="1" stop-color="#050D18"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="92" y1="92" x2="658" y2="510" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22C55E"/>
+      <stop offset="0.52" stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="706" y1="154" x2="970" y2="644" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#132238"/>
+      <stop offset="1" stop-color="#091320"/>
+    </linearGradient>
+    <filter id="blur" x="-160" y="-160" width="1400" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="70"/>
+    </filter>
+    <filter id="shadow" x="0" y="0" width="1080" height="1080" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="34" flood-color="#020617" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+
+  <g opacity="0.78" filter="url(#blur)">
+    <circle cx="198" cy="164" r="116" fill="#22C55E" fill-opacity="0.14"/>
+    <circle cx="878" cy="166" r="148" fill="#0EA5E9" fill-opacity="0.16"/>
+    <circle cx="930" cy="906" r="134" fill="#F59E0B" fill-opacity="0.14"/>
+  </g>
+
+  <rect x="52" y="52" width="976" height="976" rx="40" fill="rgba(7,13,24,0.28)" stroke="rgba(148,163,184,0.12)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="82" y="84" width="584" height="418" rx="34" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>
+    <rect x="82" y="84" width="584" height="10" rx="5" fill="url(#brand)"/>
+  </g>
+
+  <rect x="108" y="120" width="186" height="38" rx="19" fill="rgba(34,197,94,0.14)" stroke="rgba(34,197,94,0.30)"/>
+  <text x="201" y="144" text-anchor="middle" fill="#A7F3D0" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="1">
+    PRIVATE AI DESK
+  </text>
+
+  <text x="108" y="230" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="78" font-weight="800" letter-spacing="-2">
+    TELEBOT
+  </text>
+  <text x="108" y="304" fill="url(#brand)" font-family="Arial, sans-serif" font-size="78" font-weight="800" letter-spacing="-2">
+    LIFETIME
+  </text>
+
+  <text x="108" y="372" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="34" font-weight="700">
+    Tanpa Limit Harian.
+  </text>
+  <text x="108" y="414" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="34" font-weight="700">
+    Sekali Bayar, Akses Selamanya.
+  </text>
+
+  <text x="108" y="456" fill="#93C5FD" font-family="Arial, sans-serif" font-size="19" font-weight="600">
+    Fokus ke signal siap entry, live monitoring, dan workflow cepat
+  </text>
+  <text x="108" y="484" fill="#93C5FD" font-family="Arial, sans-serif" font-size="19" font-weight="600">
+    tanpa ribet pindah-pindah dashboard saat market sedang jalan.
+  </text>
+
+  <rect x="108" y="520" width="154" height="36" rx="18" fill="rgba(14,165,233,0.10)" stroke="rgba(14,165,233,0.20)"/>
+  <text x="185" y="543" text-anchor="middle" fill="#E0F2FE" font-family="Arial, sans-serif" font-size="16" font-weight="700">
+    No Daily Limit
+  </text>
+  <rect x="276" y="520" width="136" height="36" rx="18" fill="rgba(34,197,94,0.10)" stroke="rgba(34,197,94,0.20)"/>
+  <text x="344" y="543" text-anchor="middle" fill="#DCFCE7" font-family="Arial, sans-serif" font-size="16" font-weight="700">
+    Live Status
+  </text>
+  <rect x="426" y="520" width="174" height="36" rx="18" fill="rgba(245,158,11,0.10)" stroke="rgba(245,158,11,0.20)"/>
+  <text x="513" y="543" text-anchor="middle" fill="#FEF3C7" font-family="Arial, sans-serif" font-size="16" font-weight="700">
+    All Pair &amp; Timeframe
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="700" y="116" width="300" height="548" rx="42" fill="url(#accent)" stroke="rgba(148,163,184,0.18)"/>
+    <rect x="724" y="142" width="252" height="496" rx="30" fill="#07111D"/>
+    <rect x="818" y="160" width="64" height="8" rx="4" fill="rgba(148,163,184,0.22)"/>
+  </g>
+
+  <rect x="742" y="194" width="216" height="46" rx="18" fill="rgba(14,165,233,0.10)" stroke="rgba(14,165,233,0.22)"/>
+  <text x="850" y="223" text-anchor="middle" fill="#E0F2FE" font-family="Arial, sans-serif" font-size="22" font-weight="700">
+    LIVE STATUS
+  </text>
+
+  <rect x="744" y="272" width="212" height="120" rx="22" fill="rgba(15,23,42,0.96)" stroke="rgba(34,197,94,0.22)"/>
+  <text x="764" y="305" fill="#BBF7D0" font-family="Arial, sans-serif" font-size="22" font-weight="700">
+    XAUUSD  M15
+  </text>
+  <text x="764" y="336" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="20" font-weight="700">
+    BUY NOW
+  </text>
+  <text x="764" y="364" fill="#94A3B8" font-family="Arial, sans-serif" font-size="18" font-weight="600">
+    Entry 3362.40
+  </text>
+  <text x="764" y="387" fill="#94A3B8" font-family="Arial, sans-serif" font-size="18" font-weight="600">
+    SL 3354.90
+  </text>
+
+  <text x="744" y="428" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="18" font-weight="700">
+    Progress to TP
+  </text>
+  <rect x="744" y="442" width="126" height="10" rx="5" fill="rgba(30,41,59,0.90)"/>
+  <rect x="744" y="442" width="90" height="10" rx="5" fill="url(#brand)"/>
+
+  <rect x="744" y="486" width="212" height="58" rx="18" fill="rgba(15,23,42,0.96)" stroke="rgba(245,158,11,0.22)"/>
+  <text x="764" y="511" fill="#FCD34D" font-family="Arial, sans-serif" font-size="18" font-weight="700">
+    Balance &amp; Risk Setup
+  </text>
+  <text x="764" y="534" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="17" font-weight="600">
+    Balance $1,000    Risk 1%
+  </text>
+
+  <rect x="744" y="562" width="212" height="58" rx="18" fill="rgba(15,23,42,0.96)" stroke="rgba(14,165,233,0.22)"/>
+  <text x="764" y="587" fill="#93C5FD" font-family="Arial, sans-serif" font-size="18" font-weight="700">
+    Multi Pair + Timeframe
+  </text>
+  <text x="764" y="610" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="16" font-weight="600">
+    XAUUSD, BTCUSD, EURUSD, NAS
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="82" y="594" width="274" height="146" rx="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>
+    <rect x="372" y="594" width="274" height="146" rx="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>
+  </g>
+
+  <circle cx="122" cy="640" r="22" fill="rgba(34,197,94,0.14)"/>
+  <path d="M112 640L120 648L133 630" stroke="#34D399" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="156" y="636" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="20" font-weight="700">
+    NO DAILY LIMIT
+  </text>
+  <text x="156" y="666" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="16" font-weight="600">
+    Tidak dibatasi kuota
+  </text>
+  <text x="156" y="690" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="16" font-weight="600">
+    signal per hari.
+  </text>
+
+  <circle cx="412" cy="640" r="22" fill="rgba(245,158,11,0.14)"/>
+  <circle cx="412" cy="640" r="10" stroke="#FBBF24" stroke-width="4"/>
+  <path d="M412 632V640L418 645" stroke="#FBBF24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="446" y="636" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="20" font-weight="700">
+    LIFETIME ACCESS
+  </text>
+  <text x="446" y="666" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="16" font-weight="600">
+    Sekali bayar, tidak perlu
+  </text>
+  <text x="446" y="690" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="16" font-weight="600">
+    perpanjang membership.
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="82" y="764" width="564" height="214" rx="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>
+    <rect x="700" y="688" width="300" height="290" rx="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>
+  </g>
+
+  <text x="112" y="812" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="28" font-weight="700">
+    Kelebihan Utama
+  </text>
+  <g fill="#CBD5E1" font-family="Arial, sans-serif" font-size="21" font-weight="600">
+    <text x="112" y="862">01  Semua pair &amp; timeframe</text>
+    <text x="112" y="902">02  Format signal NOW / LIMIT / STOP</text>
+    <text x="112" y="942">03  Live Status progres TP / SL</text>
+    <text x="112" y="982">04  Balance &amp; risk sesuai modal</text>
+  </g>
+
+  <text x="730" y="736" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="28" font-weight="700">
+    Bonus Member
+  </text>
+  <text x="730" y="772" fill="#CBD5E1" font-family="Arial, sans-serif" font-size="18" font-weight="600">
+    TELEBOT Lifetime juga dapat:
+  </text>
+
+  <rect x="730" y="802" width="164" height="42" rx="21" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.22)"/>
+  <text x="812" y="828" text-anchor="middle" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="17" font-weight="700">
+    Bonus PRO 1 Bulan
+  </text>
+
+  <rect x="730" y="860" width="234" height="42" rx="21" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.22)"/>
+  <text x="847" y="886" text-anchor="middle" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="17" font-weight="700">
+    Video Edukasi Sniper Entry
+  </text>
+
+  <rect x="730" y="918" width="182" height="42" rx="21" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.22)"/>
+  <text x="821" y="944" text-anchor="middle" fill="#FDE68A" font-family="Arial, sans-serif" font-size="17" font-weight="800">
+    Limited 100 Slot
+  </text>
+</svg>

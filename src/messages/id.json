@@ -9,10 +9,10 @@
         "logout": "Keluar",
         "analisaMarket": "Analisa Market",
         "analisaSaham": "Analisa Saham",
-        "bookmap": "Bookmap ARRA7",
+        "bookmap": "Bookmap PICA",
+        "neuralLab": "Neural Lab",
         "tradeJournal": "Jurnal Trading",
-        "portfolio": "Portfolio",
-        "socialFeed": "Feed Sosial"
+        "portfolio": "Portfolio"
     },
     "maintenance": {
         "title": "Sedang Maintenance",
@@ -22,20 +22,21 @@
         "badge": "MAINTENANCE"
     },
     "hero": {
-        "badge": "Neural Engine v7.0 Live",
+        "badge": "PICA Neural Engine v8.2 Live",
         "headline": "Trading dengan Kekuatan",
         "headlineHighlight": "Neural Network",
         "headlineEnd": "",
         "titleSuffix": "Neural Network AI",
-        "subheadline": "AI kami menganalisa jutaan data market setiap detik, mempelajari pola 'Whale', dan memberikan probabilitas kemenangan tertinggi untuk Anda.",
-        "ctaBookmap": "Bookmap ARRA7",
+        "subheadline": "PICA AI menganalisa jutaan data market setiap detik, mendeteksi jejak likuiditas institusional 'Whale', dan memberikan probabilitas kemenangan tertinggi untuk Anda.",
+        "ctaNeuralLab": "Buka PICA Neural Lab",
+        "ctaBookmap": "Bookmap PICA",
         "ctaStock": "Analisa Saham",
         "ctaForex": "Forex AI",
         "ctaPricing": "Lihat Harga"
     },
     "stats": {
         "activeTraders": "Active Traders",
-        "signalAccuracy": "Akurasi Sinyal"
+        "signalAccuracy": "Akurasi Neural Engine"
     },
     "trust": {
         "freeBasic": "Gratis Selamanya untuk BASIC",
@@ -45,14 +46,33 @@
     },
     "howItWorks": {
         "badge": "Panduan Tutorial",
-        "title": "Cara Menggunakan ARRA7",
-        "desc": "Panduan lengkap menggunakan semua fitur ARRA7",
+        "title": "Cara Menggunakan PICA",
+        "desc": "Panduan lengkap menggunakan fitur-fitur unggulan PICA AI",
         "tabs": {
-            "bookmap": "🔥 Bookmap ARRA7",
+            "neural": "🧠 Neural Lab",
+            "bookmap": "🔥 Bookmap PICA",
             "forex": "📊 Analisa Forex",
             "stock": "🇮🇩 Analisa Saham",
             "doctor": "🩺 AI Doctor",
             "sentiment": "📡 Sentiment"
+        },
+        "neural": {
+            "step1": {
+                "title": "Pilih Timeframe",
+                "desc": "Pilih M15, H1, H4, atau D1 untuk memindai struktur pergerakan XAUUSD"
+            },
+            "step2": {
+                "title": "22 Fitur Multi-Dimensi",
+                "desc": "Sistem mengekstrak RSI, Bollinger Bands, ATR, VWAP, hingga pola candlestick"
+            },
+            "step3": {
+                "title": "Bi-LSTM Neural Inference",
+                "desc": "Deep Learning menghitung distribusi probabilitas UP, DOWN, dan NEUTRAL"
+            },
+            "step4": {
+                "title": "Eksekusi Terukur",
+                "desc": "Dapatkan target Entry, Stop Loss & Take Profit otomatis dengan kalkulasi ATR"
+            }
         },
         "bookmap": {
             "step1": {
@@ -61,7 +81,7 @@
             },
             "step2": {
                 "title": "Baca Heatmap",
-                "desc": "Hijau = Tekanan Beli, Merah = Tekanan Jual. Makin gelap = Makin kuat"
+                "desc": "Hijau = Tekanan Beli, Merah = Tekanan Jual. Makin pekat = Order makin masif"
             },
             "step3": {
                 "title": "Whale Alerts",
@@ -69,7 +89,7 @@
             },
             "step4": {
                 "title": "Ikuti Sinyal AI",
-                "desc": "Dapatkan rekomendasi BUY/SELL dengan tingkat kepercayaan"
+                "desc": "Dapatkan rekomendasi BUY/SELL dengan tingkat kepercayaan kuantitatif"
             }
         },
         "forex": {
@@ -143,21 +163,12 @@
                 "title": "Entry Awal",
                 "desc": "Masuk pasar sebelum harga bergerak karena berita"
             }
-        },
-        "kanji": {
-            "title": "Fibonacci Kanji",
-            "subtitle": "Fibonacci Kanji Interaktif",
-            "desc": "Tentukan High dan Low untuk melihat geometri pasar tersembunyi.",
-            "start": "Klik untuk Set Swing High (Start)",
-            "end": "Klik untuk Set Swing Low (End)",
-            "reset": "Reset Chart",
-            "levels": "Level Kanji"
         }
     },
     "features": {
         "badge": "⚡ Institutional Edge",
         "title": "Senjata Rahasia Smart Money",
-        "subtitle": "Teknologi yang memberikan Anda 'Unfair Advantage' di market.",
+        "subtitle": "Teknologi kuantitatif yang memberikan Anda 'Unfair Advantage' di market.",
         "items": {
             "heatmap": {
                 "title": "Whale Radar System",
@@ -171,7 +182,7 @@
             },
             "ai": {
                 "title": "Neural Predictive Core",
-                "desc": "Model Deep Learning (LSTM & Transformer) yang 'belajar' dari validasi market setiap hari. Semakin lama, semakin pintar.",
+                "desc": "Model Deep Learning (Bi-LSTM & Transformer) yang 'belajar' dari validasi market setiap hari. Semakin lama, semakin pintar.",
                 "badge": "SELF-LEARNING"
             },
             "zones": {
@@ -193,23 +204,23 @@
     },
     "testimonials": {
         "title": "Apa Kata Mereka?",
-        "desc": "Trader Indonesia yang sudah merasakan manfaat ARRA7",
+        "desc": "Trader Indonesia yang sudah merasakan manfaat PICA AI",
         "items": [
             {
-                "text": "Gila sih ini AI nya. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah!"
+                "text": "Gila sih ini Neural Lab nya PICA. Entry point nya akurat banget, kemarin aja profit 200 pips di XAUUSD. Worth it lah!"
             },
             {
-                "text": "ARRA7 beda dari yang lain, analisanya detail banget pake SMC sama Fibo. Sekarang trading jadi lebih pede."
+                "text": "PICA beda dari yang lain, analisanya detail banget pake SMC sama Neural Network. Sekarang trading jadi lebih pede."
             },
             {
-                "text": "Kerja kantoran jadi gak bisa mantau chart terus. Pake ARRA7 tinggal cek analisa AI, simple tapi powerful."
+                "text": "Kerja kantoran jadi gak bisa mantau chart terus. Pake PICA tinggal cek analisa AI dan Neural Lab, simple tapi powerful."
             }
         ]
     },
     "ctaSection": {
-        "promoBadge": "🔥 Promo Tahun Baru — Diskon hingga 50%!",
+        "promoBadge": "🔥 Promo Spesial — Akses AI Terdepan!",
         "title": "Siap Meningkatkan Trading Anda?",
-        "desc": "Bergabung dengan 100+ trader Indonesia yang sudah profit dengan analisa AI ARRA7.",
+        "desc": "Bergabung dengan ribuan trader Indonesia yang sudah profit dengan analisa AI PICA.",
         "list": {
             "freeBasic": "Akun BASIC gratis selamanya",
             "noCreditCard": "Tidak perlu kartu kredit",
@@ -219,15 +230,15 @@
         "btnPro": "Lihat Paket PRO"
     },
     "footer": {
-        "subtitle": "AI-Powered Trading Analysis",
+        "subtitle": "Platform Trading Kuantitatif AI #1 di Indonesia",
         "privacy": "Privacy",
         "terms": "Terms",
         "faq": "FAQ",
-        "copyright": "© 2026 ARRA7. All rights reserved."
+        "copyright": "© 2026 PICA. All rights reserved."
     },
     "auth": {
-        "loginTitle": "Selamat Datang di ARRA7",
-        "loginSubtitle": "Masuk untuk mengakses alat trading premium",
+        "loginTitle": "Selamat Datang di PICA",
+        "loginSubtitle": "Masuk untuk mengakses alat trading neural premium",
         "continueWithGoogle": "Lanjutkan dengan Google",
         "redirecting": "Mengalihkan..."
     },
@@ -237,9 +248,9 @@
         "welcome": "Selamat datang kembali"
     },
     "bookmap": {
-        "title": "Bookmap ARRA7",
-        "comingSoon": "Fitur Bookmap ARRA7 sedang dalam pengembangan dan akan segera hadir",
-        "notifyMe": "Ingin notifikasi saat Bookmap ARRA7 tersedia?",
+        "title": "Bookmap PICA",
+        "comingSoon": "Fitur Bookmap PICA sedang dalam pengembangan dan akan segera hadir",
+        "notifyMe": "Ingin notifikasi saat Bookmap PICA tersedia?",
         "mlSettings": "Pengaturan ML",
         "predictionHorizon": "Horizon Prediksi",
         "minConfidence": "Kepercayaan Minimum",
@@ -281,16 +292,6 @@
         "all": "Semua",
         "highImpact": "Dampak Tinggi"
     },
-    "kanji": {
-        "title": "Fibonacci Kanji",
-        "subtitle": "Fibonacci Kanji Interaktif",
-        "desc": "Gambar High dan Low untuk melihat geometri pasar tersembunyi.",
-        "start": "1. Klik Swing High",
-        "end": "2. Klik Swing Low",
-        "reset": "Reset Chart",
-        "levels": "Level Kanji",
-        "instruction": "Cara Pakai: Pilih pair -> Tunggu Chart -> Klik High -> Klik Low."
-    },
     "stockPicks": {
         "title": "Pilihan AI Hari Ini",
         "subtitle": "Saham pilihan Artificial Intelligence dengan",
@@ -306,7 +307,7 @@
     },
     "videoShowcase": {
         "badge": "Video Peragaan",
-        "title": "Lihat ARRA7 Beraksi",
-        "description": "Tonton bagaimana teknologi AI kami mendeteksi peluang profit di pasar secara real-time."
+        "title": "Lihat PICA Beraksi",
+        "description": "Tonton bagaimana teknologi Neural AI kami mendeteksi peluang profit di pasar secara real-time."
     }
 }

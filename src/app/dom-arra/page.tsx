@@ -5,7 +5,7 @@ import DomArraClient from './DomArraClient';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-    title: 'Bookmap ARRA7 (BETA) - Whale Order Flow Analysis',
+    title: 'Bookmap PICA (BETA) - Whale Order Flow Analysis',
     description: 'Real-time DOM Heatmap and AI Market Analysis',
 };
 

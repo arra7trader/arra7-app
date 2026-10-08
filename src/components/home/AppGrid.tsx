@@ -8,13 +8,10 @@ import {
     ChartBarIcon,
     PresentationChartLineIcon,
     FireIcon,
-    UserGroupIcon,
     BookOpenIcon,
     BriefcaseIcon,
     NewspaperIcon,
     HeartIcon,
-    CurrencyYenIcon,
-    WifiIcon,
     BeakerIcon
 } from '@heroicons/react/24/solid';
 import MaintenanceModal from '@/components/MaintenanceModal';
@@ -28,86 +25,67 @@ export default function AppGrid() {
 
     const apps = [
         {
-            id: 'bookmap',
-            label: tNav('bookmap'),
-            icon: <FireIcon className="w-8 h-8 text-amber-500" />,
-            href: '/dom-arra',
-            color: 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500/10 border-amber-500/20',
+            id: 'neural-lab',
+            label: 'PICA Neural Lab',
+            badge: 'FLAGSHIP AI',
+            badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+            icon: <BeakerIcon className="w-8 h-8 text-blue-600" />,
+            href: '/xauusd-neural-lab',
+            color: 'bg-blue-100/80 border-blue-300/80',
+            highlight: true,
         },
         {
             id: 'forex',
             label: tNav('analisaMarket'),
-            icon: <PresentationChartLineIcon className="w-8 h-8 text-blue-500" />,
+            icon: <PresentationChartLineIcon className="w-8 h-8 text-blue-600" />,
             href: '/analisa-market',
-            color: 'bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500/10 border-blue-500/20',
+            color: 'bg-blue-50 border-blue-200',
+        },
+        {
+            id: 'bookmap',
+            label: 'Bookmap PICA',
+            badge: 'LIVE DOM',
+            badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300',
+            icon: <FireIcon className="w-8 h-8 text-amber-600" />,
+            href: '/dom-arra',
+            color: 'bg-amber-50 border-amber-200',
         },
         {
             id: 'stock',
             label: tNav('analisaSaham'),
-            icon: <ChartBarIcon className="w-8 h-8 text-green-500" />,
+            icon: <ChartBarIcon className="w-8 h-8 text-emerald-600" />,
             href: '/analisa-saham',
-            color: 'bg-green-500/10 border-green-500/20 group-hover:bg-green-500/10 border-green-500/20',
+            color: 'bg-emerald-50 border-emerald-200',
         },
         {
             id: 'doctor',
-            label: "AI Doctor",
+            label: "AI Trade Doctor",
             subLabel: tAI('title'),
             icon: <HeartIcon className="w-8 h-8 text-rose-500" />,
             href: '/ai-trade-doctor',
-            color: 'bg-rose-500/10 border-rose-500/20 group-hover:bg-rose-500/10 border-rose-500/20',
+            color: 'bg-rose-50 border-rose-200',
         },
         {
             id: 'sentiment',
-            label: "Sentiment",
+            label: "Sentiment AI",
             subLabel: tSent('title'),
-            icon: <NewspaperIcon className="w-8 h-8 text-purple-500" />,
+            icon: <NewspaperIcon className="w-8 h-8 text-purple-600" />,
             href: '/sentiment-sniffer',
-            color: 'bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500/10 border-purple-500/20',
-        },
-        {
-            id: 'kanji',
-            label: "Fibonacci Kanji",
-            icon: <CurrencyYenIcon className="w-8 h-8 text-red-400" />,
-            href: '/fibonacci-kanji',
-            color: 'bg-red-500/10 border-red-500/20 group-hover:bg-red-500/10 border-red-500/20',
-            isNew: true,
+            color: 'bg-purple-50 border-purple-200',
         },
         {
             id: 'journal',
             label: tNav('tradeJournal'),
-            icon: <BookOpenIcon className="w-8 h-8 text-cyan-500" />,
+            icon: <BookOpenIcon className="w-8 h-8 text-cyan-600" />,
             href: '/journal',
-            color: 'bg-cyan-500/10 group-hover:bg-cyan-500/10',
+            color: 'bg-cyan-50 border-cyan-200',
         },
         {
             id: 'portfolio',
             label: tNav('portfolio'),
-            icon: <BriefcaseIcon className="w-8 h-8 text-indigo-500" />,
+            icon: <BriefcaseIcon className="w-8 h-8 text-indigo-600" />,
             href: '/portfolio',
-            color: 'bg-indigo-500/10 border-indigo-500/20 group-hover:bg-indigo-500/10 border-indigo-500/20',
-        },
-        {
-            id: 'copytrade-arra77',
-            label: 'Copytrade ARRA77',
-            icon: <WifiIcon className="w-8 h-8 text-emerald-500" />,
-            href: '/copytrade-arra77',
-            color: 'bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500/10 border-emerald-500/20',
-            isNew: true,
-        },
-        {
-            id: 'social',
-            label: tNav('socialFeed'),
-            icon: <UserGroupIcon className="w-8 h-8 text-teal-500" />,
-            href: '/social',
-            color: 'bg-teal-500/10 group-hover:bg-teal-500/10',
-        },
-        {
-            id: 'neural-lab',
-            label: 'Neural Lab',
-            icon: <BeakerIcon className="w-8 h-8 text-amber-400" />,
-            href: '/xauusd-neural-lab',
-            color: 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500/10 border-amber-500/20',
-            isNew: true,
+            color: 'bg-indigo-50 border-indigo-200',
         },
     ];
 
@@ -117,25 +95,29 @@ export default function AppGrid() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="w-full max-w-4xl mx-auto mt-10"
+                className="w-full max-w-4xl mx-auto mt-6"
             >
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 p-6 bg-[var(--bg-primary)]/50 dark:bg-black/20 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-5 sm:p-6 bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/60">
                     {apps.map((app) => (
                         <Link key={app.id} href={app.href} className="group">
                             <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 relative"
+                                whileHover={{ scale: 1.03, y: -2 }}
+                                whileTap={{ scale: 0.97 }}
+                                className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 relative border ${
+                                    app.highlight
+                                        ? 'bg-blue-50/60 border-blue-300 shadow-sm'
+                                        : 'bg-slate-50/80 hover:bg-white border-slate-200/70 hover:border-slate-300 shadow-xs'
+                                }`}
                             >
-                                <div className={`w-16 h-16 rounded-2xl ${app.color} flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-all`}>
+                                <div className={`w-14 h-14 rounded-2xl ${app.color} border flex items-center justify-center mb-2.5 shadow-xs group-hover:scale-105 transition-transform`}>
                                     {app.icon}
                                 </div>
-                                <span className="text-sm font-semibold text-[var(--text-primary)] text-center line-clamp-1">
+                                <span className="text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-blue-600 text-center line-clamp-1 transition-colors">
                                     {app.label}
                                 </span>
-                                {app.isNew && (
-                                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
-                                        NEW
+                                {app.badge && (
+                                    <span className={`absolute -top-1.5 -right-1 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs ${app.badgeColor}`}>
+                                        {app.badge}
                                     </span>
                                 )}
                             </motion.div>
@@ -144,7 +126,7 @@ export default function AppGrid() {
                 </div>
             </motion.div>
 
-            {/* Maintenance Modal (kept for future use) */}
+            {/* Maintenance Modal */}
             <MaintenanceModal
                 isOpen={maintenanceModal.isOpen}
                 onClose={() => setMaintenanceModal({ isOpen: false, featureName: '' })}

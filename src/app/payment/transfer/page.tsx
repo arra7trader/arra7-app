@@ -102,7 +102,7 @@ function TransferContent() {
     }
 
     const telegramText = [
-        'Halo Admin ARRA7!',
+        'Halo Admin PICA!',
         '',
         `Saya sudah melakukan pembayaran via QRIS untuk paket *${plan.name} ${plan.durationLabel}*:`,
         '',
@@ -203,9 +203,9 @@ function TransferContent() {
                         <div className="bg-[var(--bg-primary)] p-4 rounded-xl text-center border border-[var(--border-light)]">
                             <p className="text-[var(--text-primary)] font-bold mb-3 text-lg">Scan QRIS untuk Bayar</p>
                             <div className="relative aspect-square w-full max-w-[280px] mx-auto border-2 border-[var(--border-light)] rounded-lg overflow-hidden">
-                                <img src="/qris-payment.jpg" alt="QRIS Payment ARRA7" className="w-full h-full object-contain" />
+                                <img src="/qris-payment.jpg" alt="QRIS Payment PICA" className="w-full h-full object-contain" />
                             </div>
-                            <p className="text-[var(--text-muted)] text-xs mt-2 font-mono">ARRA7 FULLSTACK DEVELOPER</p>
+                            <p className="text-[var(--text-muted)] text-xs mt-2 font-mono">PICA FULLSTACK DEVELOPER</p>
                             <p className="text-[var(--text-muted)] text-xs font-mono">NMID: ID1025468752486</p>
                         </div>
                     </div>

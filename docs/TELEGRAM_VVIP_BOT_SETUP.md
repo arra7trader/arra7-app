@@ -1,8 +1,8 @@
-# Telegram VVIP Bot Setup
+# Telegram TELEBOT Setup
 
-This guide configures the Telegram VVIP chatbot with strict access control:
-- Only active VVIP users can use bot features.
-- BASIC, PRO, and expired users are rejected.
+This guide configures the Telegram TELEBOT private desk with strict access control:
+- Only active TELEBOT members can use bot features.
+- Non-active, revoked, and expired users are rejected.
 
 ## 1) Required Environment Variables
 
@@ -13,7 +13,6 @@ Set these in Vercel Project Settings -> Environment Variables:
 - `TELEGRAM_WEBHOOK_SECRET`
 - `TELEGRAM_VVIP_DAILY_LIMIT` (default: `50`)
 - `TELEGRAM_VVIP_CHAT_MEMORY` (default: `12`)
-- `TELEGRAM_LINK_CODE_TTL_MINUTES` (default: `10`)
 
 Optional (already used by existing features):
 - `TELEGRAM_CHANNEL_ID`
@@ -44,27 +43,34 @@ curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getWebhookInfo"
 
 ## 4) User Flow
 
-1. User opens `/analisa-market`.
-2. VVIP active user clicks **Generate Kode Link**.
-3. User sends `/link <KODE>` to Telegram bot.
-4. Bot links `chat_id` to user and enables chat access.
+1. User activates TELEBOT from `/telebot` or the pricing page.
+2. User submits their Telegram username during payment/approval flow.
+3. Admin approves that Telegram username in TELEBOT admin.
+4. User opens Telegram bot and sends `/start`.
+5. Bot auto-links `chat_id` to the approved username and enables chat access.
 
 ## 5) Commands
 
 - `/start`
 - `/help`
-- `/link <KODE>`
 - `/status`
+- `/balance 1000`
+- `/risk 1`
+- `/setup standard`
 - Natural chat, e.g. `aku minta signal xauusd tf m5 dong`
+
+Deprecated:
+- `/link` now only returns an informational message because link codes are no longer used.
 
 ## 6) Validation Matrix
 
-- Unlinked user -> rejected, instructed to `/link`.
-- Linked BASIC/PRO -> rejected.
-- Linked expired VVIP -> rejected.
-- Linked active VVIP -> allowed.
+- Username not approved -> rejected, instructed to complete TELEBOT activation and wait for admin approval.
+- Approved username but inactive membership -> rejected.
+- Approved username with expired TELEBOT -> rejected.
+- Approved username with active TELEBOT -> allowed and auto-linked on `/start`.
 
 ## 7) Notes
 
+- TELEBOT no longer uses link codes; identity is resolved from approved Telegram usernames.
 - Telegram bot quota is separate from web analysis quota.
 - Existing VVIP best-signal alert pipeline remains active.
