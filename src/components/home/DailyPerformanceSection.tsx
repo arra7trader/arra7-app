@@ -100,7 +100,7 @@ export default function DailyPerformanceSection() {
                 {/* TODAY's Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
-                        ðŸ“ˆ Performa Hari Ini
+                        📈 Performa Hari Ini
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.today.total ?? 0} label="Total Sinyal" />
@@ -118,7 +118,7 @@ export default function DailyPerformanceSection() {
                 {/* OVERALL Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
-                        ðŸ“Š Overall Performance
+                        📊 Overall Performance
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.overall?.total ?? 0} label="Total Sinyal" />

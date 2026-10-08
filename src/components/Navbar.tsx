@@ -31,7 +31,7 @@ export default function Navbar() {
         { 
             label: (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200/90 text-blue-700 transition-all shadow-xs group">
-                    <span className="text-sm">Ã°Å¸Â§Â </span>
+                    <span className="text-sm">🧠</span>
                     <span className="font-semibold text-[13px] text-blue-700">Neural Lab</span>
                     <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                 </div>
@@ -44,7 +44,7 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-1.5">
-                    <span>Ã°Å¸â€œÂ±</span>
+                    <span>📱</span>
                     <span>App</span>
                 </div>
             ),
@@ -167,7 +167,7 @@ export default function Navbar() {
                                                     href="/xauusd-neural-lab"
                                                     className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100/70 rounded-xl transition-colors font-['Inter']"
                                                 >
-                                                    <span>Ã°Å¸Â§Â </span>
+                                                    <span>🧠</span>
                                                     <span>PICA Neural Lab</span>
                                                     <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                                                 </Link>

@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
                 targetEmail: { label: 'Admin Email', type: 'text' }
             },
             async authorize(credentials) {
-                const correctPin = process.env.ADMIN_PIN || 'pica-admin-7788';
+                const correctPin = process.env.ADMIN_PIN || 'Aoyamapm7@';
                 if (credentials?.passkey === correctPin) {
                     const chosenEmail = credentials?.targetEmail?.trim() || 'arlandpratama@gmail.com';
                     return {

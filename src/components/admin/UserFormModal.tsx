@@ -134,7 +134,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                     className="arra-input"
-                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                    placeholder="••••••••"
                                     required={!user}
                                 />
                                 <p className="text-xs text-[var(--text-secondary)] mt-1">Default password for new users.</p>

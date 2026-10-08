@@ -52,7 +52,7 @@ export default function AdminDashboard() {
     const [telegramConfigured, setTelegramConfigured] = useState(false);
 
     // Tabs
-    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing' | 'license'>('license');
+    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing' | 'license'>('users');
 
     // ... (rest of state)
 
@@ -199,12 +199,12 @@ export default function AdminDashboard() {
             const data = await response.json();
             if (data.status === 'success') {
                 setAutoPostEnabled(data.autoPostEnabled);
-                setTelegramMessage(action === 'start' ? 'âœ… Auto-posting diaktifkan!' : 'â¸ï¸ Auto-posting dihentikan.');
+                setTelegramMessage(action === 'start' ? '✅ Auto-posting diaktifkan!' : '⏸️ Auto-posting dihentikan.');
             } else {
-                setTelegramMessage(`âŒ Gagal: ${data.message}`);
+                setTelegramMessage(`❌ Gagal: ${data.message}`);
             }
         } catch (error) {
-            setTelegramMessage('âŒ Error mengubah status auto-post');
+            setTelegramMessage('❌ Error mengubah status auto-post');
         } finally {
             setSendingTelegram(false);
         }
@@ -221,12 +221,12 @@ export default function AdminDashboard() {
             });
             const data = await response.json();
             if (data.status === 'success') {
-                setTelegramMessage('âœ… Pesan berhasil dikirim ke @arrareborn!');
+                setTelegramMessage('✅ Pesan berhasil dikirim ke @arrareborn!');
             } else {
-                setTelegramMessage(`âŒ Gagal: ${data.message}`);
+                setTelegramMessage(`❌ Gagal: ${data.message}`);
             }
         } catch (error) {
-            setTelegramMessage('âŒ Error mengirim pesan');
+            setTelegramMessage('❌ Error mengirim pesan');
         } finally {
             setSendingTelegram(false);
         }
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    setMessage({ type: 'success', text: `âœ… ${user.name} berhasil di-downgrade ke BASIC` });
+                    setMessage({ type: 'success', text: `✅ ${user.name} berhasil di-downgrade ke BASIC` });
                     fetchUsers();
                 } else {
                     setMessage({ type: 'error', text: data.message });
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
             const data = await response.json();
 
             if (data.status === 'success') {
-                setMessage({ type: 'success', text: `âœ… ${userName} berhasil di-upgrade ke ${membership} untuk ${option.label}` });
+                setMessage({ type: 'success', text: `✅ ${userName} berhasil di-upgrade ke ${membership} untuk ${option.label}` });
                 fetchUsers();
 
                 // Show notification modal
@@ -392,18 +392,18 @@ export default function AdminDashboard() {
 
     const getNotificationMessage = () => {
         if (!notification) return '';
-        return `âœ… Akun Anda sudah diupgrade ke ${notification.membership}! ðŸŽ‰
+        return `✅ Akun Anda sudah diupgrade ke ${notification.membership}! 🎉
 
 Halo ${notification.userName || 'Kak'},
 
 Terima kasih telah melakukan pembayaran. Akun Anda (${notification.userEmail}) telah berhasil diupgrade.
 
-ðŸ“¦ Paket: ${notification.membership}
-ðŸ“… Berlaku hingga: ${notification.expiresDate}
+📦 Paket: ${notification.membership}
+📅 Berlaku hingga: ${notification.expiresDate}
 
 Silakan refresh halaman atau login ulang untuk melihat perubahan.
 
-Selamat trading dan semoga profit! ðŸ’°ðŸš€
+Selamat trading dan semoga profit! 💰🚀
 
 Best regards,
 Tim PICA`;
@@ -580,7 +580,7 @@ Tim PICA`;
                             onClick={async () => {
                                 const btn = document.getElementById('verify-btn');
                                 if (btn) {
-                                    btn.innerHTML = 'â³ Checking...';
+                                    btn.innerHTML = '⏳ Checking...';
                                     (btn as HTMLButtonElement).disabled = true;
                                 }
                                 try {
@@ -613,23 +613,23 @@ Tim PICA`;
                 {/* Quick Access Grid Scrollable Menu */}
                 <div className="flex gap-3 mb-6 overflow-x-auto pb-3 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                     <Link href="/xauusd-neural-lab" className="admin-quick-link">
-                        <div className="icon-container bg-emerald-500/15">ðŸ“¡</div>
+                        <div className="icon-container bg-emerald-500/15">📡</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">PICA Neural Lab</div>
                     </Link>
                     <Link href="/admin/crm" className="admin-quick-link">
-                        <div className="icon-container bg-blue-500/15">ðŸ“Š</div>
+                        <div className="icon-container bg-blue-500/15">📊</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">CRM Dashboard</div>
                     </Link>
                     <Link href="/admin/users-map" className="admin-quick-link">
-                        <div className="icon-container bg-cyan-500/15">ðŸŒ</div>
+                        <div className="icon-container bg-cyan-500/15">🌍</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Users Map</div>
                     </Link>
                     <Link href="/admin/revenue" className="admin-quick-link">
-                        <div className="icon-container bg-amber-500/15">ðŸ’°</div>
+                        <div className="icon-container bg-amber-500/15">💰</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Revenue</div>
                     </Link>
                     <Link href="/admin/notifications" className="admin-quick-link">
-                        <div className="icon-container bg-rose-500/15">ðŸ””</div>
+                        <div className="icon-container bg-rose-500/15">🔔</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Notifikasi Web</div>
                     </Link>
                     <Link href="/admin/bot-private" className="admin-quick-link">
@@ -668,19 +668,19 @@ Tim PICA`;
                         onClick={() => setActiveTab('users')}
                         className={`admin-pill-tab ${activeTab === 'users' ? 'active' : ''}`}
                     >
-                        ðŸ‘¥ User Management
+                        👥 User Management
                     </button>
                     <button
                         onClick={() => setActiveTab('broadcast')}
                         className={`admin-pill-tab ${activeTab === 'broadcast' ? 'active' : ''}`}
                     >
-                        ðŸ“¢ Forecast & Broadcast
+                        📢 Forecast & Broadcast
                     </button>
                     <button
                         onClick={() => setActiveTab('marketing')}
                         className={`admin-pill-tab ${activeTab === 'marketing' ? 'active' : ''}`}
                     >
-                        ðŸ¤– Marketing Bot
+                        🤖 Marketing Bot
                     </button>
                     <button
                         onClick={() => setActiveTab('license')}
