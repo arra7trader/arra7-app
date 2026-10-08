@@ -1,4 +1,4 @@
-const DEFAULT_ADMIN_EMAILS = ['apmexplore@gmail.com'];
+const DEFAULT_ADMIN_EMAILS = ['apmexplore@gmail.com', 'arlandpratama@gmail.com'];
 
 function parseCsvEmails(raw: string | undefined): string[] {
     if (!raw || !raw.trim()) return [];

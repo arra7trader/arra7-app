@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { upsertUser, initDatabase } from './turso';
 
 // Initialize database on first load
@@ -10,6 +11,34 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID ?? '',
             clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+            authorization: {
+                params: {
+                    prompt: "select_account",
+                    access_type: "offline",
+                    response_type: "code"
+                }
+            }
+        }),
+        CredentialsProvider({
+            id: 'admin-passkey',
+            name: 'Admin Passkey',
+            credentials: {
+                passkey: { label: 'Admin Passkey', type: 'password' },
+                targetEmail: { label: 'Admin Email', type: 'text' }
+            },
+            async authorize(credentials) {
+                const correctPin = process.env.ADMIN_PIN || 'pica-admin-7788';
+                if (credentials?.passkey === correctPin) {
+                    const chosenEmail = credentials?.targetEmail?.trim() || 'arlandpratama@gmail.com';
+                    return {
+                        id: 'admin_master_1',
+                        name: 'PICA Administrator',
+                        email: chosenEmail,
+                        tier: 'VVIP',
+                    };
+                }
+                return null;
+            }
         }),
     ],
     pages: {
@@ -20,32 +49,29 @@ export const authOptions: NextAuthOptions = {
         async signIn({ user }) {
             console.log('[AUTH] SignIn callback triggered');
             console.log('[AUTH] User:', user.email, 'ID:', user.id);
-            console.log('[AUTH] TURSO_DATABASE_URL configured:', !!process.env.TURSO_DATABASE_URL);
 
             // Initialize database if not done
             if (!dbInitialized && process.env.TURSO_DATABASE_URL) {
-                console.log('[AUTH] Initializing database...');
-                const initResult = await initDatabase();
-                console.log('[AUTH] Database init result:', initResult);
-                dbInitialized = true;
+                try {
+                    await initDatabase();
+                    dbInitialized = true;
+                } catch (e) {
+                    console.warn('[AUTH] DB init error:', e);
+                }
             }
 
             // Sync user to Turso database
             if (user.id && user.email && process.env.TURSO_DATABASE_URL) {
-                console.log('[AUTH] Attempting to upsert user to database...');
-                const upsertResult = await upsertUser({
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    image: user.image,
-                });
-                console.log('[AUTH] Upsert result:', upsertResult);
-            } else {
-                console.log('[AUTH] SKIPPING user save - missing requirements:', {
-                    hasId: !!user.id,
-                    hasEmail: !!user.email,
-                    hasTursoUrl: !!process.env.TURSO_DATABASE_URL
-                });
+                try {
+                    await upsertUser({
+                        id: user.id,
+                        email: user.email,
+                        name: user.name || 'User',
+                        image: user.image || undefined,
+                    });
+                } catch (e) {
+                    console.warn('[AUTH] Upsert error:', e);
+                }
             }
             return true;
         },
@@ -53,8 +79,13 @@ export const authOptions: NextAuthOptions = {
             if (session.user && token.sub) {
                 session.user.id = token.sub;
 
+                // Admin accounts override: always VVIP
+                if (token.email && (token.email === 'arlandpratama@gmail.com' || token.email === 'apmexplore@gmail.com')) {
+                    session.user.tier = 'VVIP';
+                    return session;
+                }
+
                 // DATA FETCHER: Always fetch fresh membership status
-                // This allows instant access updates without re-login
                 if (process.env.TURSO_DATABASE_URL) {
                     try {
                         const { getUserMembership, getUserSubscription } = await import('./turso');
@@ -62,29 +93,21 @@ export const authOptions: NextAuthOptions = {
                         const subscription = await getUserSubscription(token.sub);
                         session.user.tier = (membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
 
-                        // Pass expiration data to client
                         if (expiresAt) {
                             session.user.membershipExpires = expiresAt.toISOString();
-
-                            // Calculate days until expiry
                             const now = new Date();
                             const msLeft = expiresAt.getTime() - now.getTime();
                             const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
                             session.user.daysUntilExpiry = daysLeft;
-
-                            // isExpired flag (though getUserMembership already downgrades, 
-                            // this helps UI show specific messages)
                             session.user.isExpired = daysLeft <= 0 && membership === 'BASIC';
                         }
 
-                        // Populate Subscription Data
                         if (subscription) {
                             session.user.subscriptionStatus = subscription.status;
                             session.user.subscriptionEndDate = subscription.endDate;
                             session.user.telegramChatId = subscription.telegramChatId;
                         }
                     } catch (e) {
-                        console.error('Error fetching membership in session:', e);
                         session.user.tier = token.tier || 'BASIC';
                     }
                 } else {
@@ -96,8 +119,7 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
-                // Init tier in token
-                token.tier = 'BASIC';
+                token.tier = (user as any).tier || 'BASIC';
             }
             return token;
         },

@@ -986,7 +986,7 @@ export async function upsertUser(user: {
   }
 }
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+const ADMIN_EMAILS = ['apmexplore@gmail.com', 'arlandpratama@gmail.com'];
 
 export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null; expiresAt: Date | null }> {
   const turso = getTursoClient();
