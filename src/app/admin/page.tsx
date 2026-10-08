@@ -13,6 +13,7 @@ import UserDetailModal from '@/components/admin/UserDetailModal';
 import UserFormModal from '@/components/admin/UserFormModal';
 import BroadcastModal from '@/components/admin/BroadcastModal';
 import MarketingBot from '@/components/admin/MarketingBot';
+import LicenseKeyManager from '@/components/admin/LicenseKeyManager';
 import UpgradeDurationModal from '@/components/admin/UpgradeDurationModal';
 
 interface UpgradeNotification {
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
     const [telegramConfigured, setTelegramConfigured] = useState(false);
 
     // Tabs
-    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'broadcast' | 'marketing' | 'license'>('license');
 
     // ... (rest of state)
 
@@ -198,12 +199,12 @@ export default function AdminDashboard() {
             const data = await response.json();
             if (data.status === 'success') {
                 setAutoPostEnabled(data.autoPostEnabled);
-                setTelegramMessage(action === 'start' ? '✅ Auto-posting diaktifkan!' : '⏸️ Auto-posting dihentikan.');
+                setTelegramMessage(action === 'start' ? 'âœ… Auto-posting diaktifkan!' : 'â¸ï¸ Auto-posting dihentikan.');
             } else {
-                setTelegramMessage(`❌ Gagal: ${data.message}`);
+                setTelegramMessage(`âŒ Gagal: ${data.message}`);
             }
         } catch (error) {
-            setTelegramMessage('❌ Error mengubah status auto-post');
+            setTelegramMessage('âŒ Error mengubah status auto-post');
         } finally {
             setSendingTelegram(false);
         }
@@ -220,12 +221,12 @@ export default function AdminDashboard() {
             });
             const data = await response.json();
             if (data.status === 'success') {
-                setTelegramMessage('✅ Pesan berhasil dikirim ke @arrareborn!');
+                setTelegramMessage('âœ… Pesan berhasil dikirim ke @arrareborn!');
             } else {
-                setTelegramMessage(`❌ Gagal: ${data.message}`);
+                setTelegramMessage(`âŒ Gagal: ${data.message}`);
             }
         } catch (error) {
-            setTelegramMessage('❌ Error mengirim pesan');
+            setTelegramMessage('âŒ Error mengirim pesan');
         } finally {
             setSendingTelegram(false);
         }
@@ -299,7 +300,7 @@ export default function AdminDashboard() {
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    setMessage({ type: 'success', text: `✅ ${user.name} berhasil di-downgrade ke BASIC` });
+                    setMessage({ type: 'success', text: `âœ… ${user.name} berhasil di-downgrade ke BASIC` });
                     fetchUsers();
                 } else {
                     setMessage({ type: 'error', text: data.message });
@@ -354,7 +355,7 @@ export default function AdminDashboard() {
             const data = await response.json();
 
             if (data.status === 'success') {
-                setMessage({ type: 'success', text: `✅ ${userName} berhasil di-upgrade ke ${membership} untuk ${option.label}` });
+                setMessage({ type: 'success', text: `âœ… ${userName} berhasil di-upgrade ke ${membership} untuk ${option.label}` });
                 fetchUsers();
 
                 // Show notification modal
@@ -391,18 +392,18 @@ export default function AdminDashboard() {
 
     const getNotificationMessage = () => {
         if (!notification) return '';
-        return `✅ Akun Anda sudah diupgrade ke ${notification.membership}! 🎉
+        return `âœ… Akun Anda sudah diupgrade ke ${notification.membership}! ðŸŽ‰
 
 Halo ${notification.userName || 'Kak'},
 
 Terima kasih telah melakukan pembayaran. Akun Anda (${notification.userEmail}) telah berhasil diupgrade.
 
-📦 Paket: ${notification.membership}
-📅 Berlaku hingga: ${notification.expiresDate}
+ðŸ“¦ Paket: ${notification.membership}
+ðŸ“… Berlaku hingga: ${notification.expiresDate}
 
 Silakan refresh halaman atau login ulang untuk melihat perubahan.
 
-Selamat trading dan semoga profit! 💰🚀
+Selamat trading dan semoga profit! ðŸ’°ðŸš€
 
 Best regards,
 Tim PICA`;
@@ -579,7 +580,7 @@ Tim PICA`;
                             onClick={async () => {
                                 const btn = document.getElementById('verify-btn');
                                 if (btn) {
-                                    btn.innerHTML = '⏳ Checking...';
+                                    btn.innerHTML = 'â³ Checking...';
                                     (btn as HTMLButtonElement).disabled = true;
                                 }
                                 try {
@@ -612,23 +613,23 @@ Tim PICA`;
                 {/* Quick Access Grid Scrollable Menu */}
                 <div className="flex gap-3 mb-6 overflow-x-auto pb-3 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                     <Link href="/xauusd-neural-lab" className="admin-quick-link">
-                        <div className="icon-container bg-emerald-500/15">📡</div>
+                        <div className="icon-container bg-emerald-500/15">ðŸ“¡</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">PICA Neural Lab</div>
                     </Link>
                     <Link href="/admin/crm" className="admin-quick-link">
-                        <div className="icon-container bg-blue-500/15">📊</div>
+                        <div className="icon-container bg-blue-500/15">ðŸ“Š</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">CRM Dashboard</div>
                     </Link>
                     <Link href="/admin/users-map" className="admin-quick-link">
-                        <div className="icon-container bg-cyan-500/15">🌍</div>
+                        <div className="icon-container bg-cyan-500/15">ðŸŒ</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Users Map</div>
                     </Link>
                     <Link href="/admin/revenue" className="admin-quick-link">
-                        <div className="icon-container bg-amber-500/15">💰</div>
+                        <div className="icon-container bg-amber-500/15">ðŸ’°</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Revenue</div>
                     </Link>
                     <Link href="/admin/notifications" className="admin-quick-link">
-                        <div className="icon-container bg-rose-500/15">🔔</div>
+                        <div className="icon-container bg-rose-500/15">ðŸ””</div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Notifikasi Web</div>
                     </Link>
                     <Link href="/admin/bot-private" className="admin-quick-link">
@@ -667,23 +668,31 @@ Tim PICA`;
                         onClick={() => setActiveTab('users')}
                         className={`admin-pill-tab ${activeTab === 'users' ? 'active' : ''}`}
                     >
-                        👥 User Management
+                        ðŸ‘¥ User Management
                     </button>
                     <button
                         onClick={() => setActiveTab('broadcast')}
                         className={`admin-pill-tab ${activeTab === 'broadcast' ? 'active' : ''}`}
                     >
-                        📢 Forecast & Broadcast
+                        ðŸ“¢ Forecast & Broadcast
                     </button>
                     <button
                         onClick={() => setActiveTab('marketing')}
                         className={`admin-pill-tab ${activeTab === 'marketing' ? 'active' : ''}`}
                     >
-                        🤖 Marketing Bot
+                        ðŸ¤– Marketing Bot
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('license')}
+                        className={`admin-pill-tab ${activeTab === 'license' ? 'active' : ''}`}
+                    >
+                        🔑 Lisensi & Perangkat
                     </button>
                 </div>
 
                 {activeTab === 'marketing' && <MarketingBot />}
+
+                {activeTab === 'license' && <LicenseKeyManager />}
 
                 {activeTab === 'broadcast' && (
                     <TelegramMarketing

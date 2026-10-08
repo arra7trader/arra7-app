@@ -221,7 +221,7 @@ export default function AnalisaSahamPage() {
                                 <div className="text-right">
                                     <div className="text-lg font-bold">
                                         {typeof quota.remaining === 'string' ? (
-                                            <span className="text-amber-400">∞ Unlimited</span>
+                                            <span className="text-amber-400">âˆž Unlimited</span>
                                         ) : (
                                             <>
                                                 <span className={quota.remaining > 0 ? 'text-green-400' : 'text-red-400'}>
@@ -258,7 +258,7 @@ export default function AnalisaSahamPage() {
                                 : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                                 }`}
                         >
-                            🇮🇩 Saham Indonesia
+                            ðŸ‡®ðŸ‡© Saham Indonesia
                         </button>
                         <button
                             onClick={() => {
@@ -272,7 +272,7 @@ export default function AnalisaSahamPage() {
                                 : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                                 }`}
                         >
-                            🇺🇸 Saham Luar Negeri
+                            ðŸ‡ºðŸ‡¸ Saham Luar Negeri
                         </button>
                     </div>
                     <form onSubmit={handleSubmit} className="flex gap-4">
@@ -380,7 +380,7 @@ export default function AnalisaSahamPage() {
                                     </>
                                 ) : cooldownSeconds > 0 ? (
                                     <span className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
-                                        <div className="w-5 h-5 flex items-center justify-center">⏳</div>
+                                        <div className="w-5 h-5 flex items-center justify-center">â³</div>
                                         Cooldown: {formatCooldown(cooldownSeconds)}
                                     </span>
                                 ) : (
@@ -506,28 +506,28 @@ function formatStockAnalysis(text: string): string {
     html = html.replace(/\*/g, '');
     html = html.replace(/`/g, '');
 
-    html = html.replace(/📊 OVERALL SCORE:\s*(\d+)\/10/gi, '<div class="section"><div class="score-box">📊 OVERALL SCORE: $1/10</div></div>');
+    html = html.replace(/ðŸ“Š OVERALL SCORE:\s*(\d+)\/10/gi, '<div class="section"><div class="score-box">ðŸ“Š OVERALL SCORE: $1/10</div></div>');
 
     const isSell = /SELL/i.test(html) && !/BUY/i.test(html);
     const isHold = /HOLD/i.test(html) && !/BUY/i.test(html) && !/SELL/i.test(html);
     const verdictClass = isSell ? 'sell' : isHold ? 'hold' : '';
 
-    html = html.replace(/🚀\s*(STRONG BUY|BUY|HOLD|SELL|STRONG SELL)/gi, `<div class="verdict-box ${verdictClass}"><div class="verdict-text">🚀 $1</div></div>`);
+    html = html.replace(/ðŸš€\s*(STRONG BUY|BUY|HOLD|SELL|STRONG SELL)/gi, `<div class="verdict-box ${verdictClass}"><div class="verdict-text">ðŸš€ $1</div></div>`);
 
-    html = html.replace(/🏢 COMPANY SNAPSHOT/gi, '<div class="section"><div class="section-title">🏢 Company Snapshot</div>');
-    html = html.replace(/📊 FUNDAMENTAL SCORECARD/gi, '<div class="section"><div class="section-title">📊 Fundamental Scorecard</div>');
-    html = html.replace(/📈 TECHNICAL OUTLOOK/gi, '<div class="section"><div class="section-title">📈 Technical Outlook</div>');
-    html = html.replace(/🎯 VERDICT & ACTION/gi, '<div class="section"><div class="section-title">🎯 Verdict & Action</div>');
-    html = html.replace(/💡 INVESTMENT THESIS/gi, '<div class="section"><div class="section-title">💡 Investment Thesis</div>');
-    html = html.replace(/⚠️ KEY RISKS/gi, '<div class="section"><div class="section-title">⚠️ Key Risks</div>');
-    html = html.replace(/📌 BOTTOM LINE/gi, '<div class="section"><div class="section-title">📌 Bottom Line</div><div class="bottom-line">');
+    html = html.replace(/ðŸ¢ COMPANY SNAPSHOT/gi, '<div class="section"><div class="section-title">ðŸ¢ Company Snapshot</div>');
+    html = html.replace(/ðŸ“Š FUNDAMENTAL SCORECARD/gi, '<div class="section"><div class="section-title">ðŸ“Š Fundamental Scorecard</div>');
+    html = html.replace(/ðŸ“ˆ TECHNICAL OUTLOOK/gi, '<div class="section"><div class="section-title">ðŸ“ˆ Technical Outlook</div>');
+    html = html.replace(/ðŸŽ¯ VERDICT & ACTION/gi, '<div class="section"><div class="section-title">ðŸŽ¯ Verdict & Action</div>');
+    html = html.replace(/ðŸ’¡ INVESTMENT THESIS/gi, '<div class="section"><div class="section-title">ðŸ’¡ Investment Thesis</div>');
+    html = html.replace(/âš ï¸ KEY RISKS/gi, '<div class="section"><div class="section-title">âš ï¸ Key Risks</div>');
+    html = html.replace(/ðŸ“Œ BOTTOM LINE/gi, '<div class="section"><div class="section-title">ðŸ“Œ Bottom Line</div><div class="bottom-line">');
 
-    html = html.replace(/🟢\s*BULLISH/gi, '<span class="bullish">🟢 BULLISH</span>');
-    html = html.replace(/🔴\s*BEARISH/gi, '<span class="bearish">🔴 BEARISH</span>');
-    html = html.replace(/🟡\s*SIDEWAYS/gi, '<span class="neutral">🟡 SIDEWAYS</span>');
+    html = html.replace(/ðŸŸ¢\s*BULLISH/gi, '<span class="bullish">ðŸŸ¢ BULLISH</span>');
+    html = html.replace(/ðŸ”´\s*BEARISH/gi, '<span class="bearish">ðŸ”´ BEARISH</span>');
+    html = html.replace(/ðŸŸ¡\s*SIDEWAYS/gi, '<span class="neutral">ðŸŸ¡ SIDEWAYS</span>');
 
-    html = html.replace(/━+/g, '');
-    html = html.replace(/⚠️\s*_?Disclaimer:?\s*(.*?)_?$/gim, '</div><div class="disclaimer">⚠️ Disclaimer: $1</div>');
+    html = html.replace(/â”+/g, '');
+    html = html.replace(/âš ï¸\s*_?Disclaimer:?\s*(.*?)_?$/gim, '</div><div class="disclaimer">âš ï¸ Disclaimer: $1</div>');
     html = html.replace(/\n\n/g, '</div><div class="section">');
     html = html.replace(/\n/g, '<br>');
     html = html.replace(/<div class="section"><\/div>/g, '');

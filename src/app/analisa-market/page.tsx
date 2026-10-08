@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 import {
     SparklesIcon,
     ChartIcon,
@@ -529,6 +530,7 @@ export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
     const router = useRouter();
+    const { isVvip: isDeviceVvip, isPro: isDevicePro, openActivation } = usePicaDevice();
 
     const [selectedCategory, setSelectedCategory] = useState('commodities');
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
@@ -550,11 +552,7 @@ export default function AnalisaMarketPage() {
     const [telegramError, setTelegramError] = useState<string | null>(null);
     const [telegramCopiedTarget, setTelegramCopiedTarget] = useState<'chatId' | null>(null);
 
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/analisa-market');
-        }
-    }, [status, router]);
+    // Guest mode allowed without login
 
     useEffect(() => {
         fetchNews();
@@ -804,9 +802,9 @@ export default function AnalisaMarketPage() {
         ? session.user.name.split(' ')[0]
         : 'VVIP Member';
     const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || 'BASIC').toUpperCase();
-    const isPremiumMember = uppercaseMembership === 'PRO' || uppercaseMembership === 'VVIP';
-    const isProMember = uppercaseMembership === 'PRO';
-    const isVvipMember = uppercaseMembership === 'VVIP';
+    const isPremiumMember = uppercaseMembership === 'PRO' || uppercaseMembership === 'VVIP' || isDevicePro || isDeviceVvip;
+    const isProMember = uppercaseMembership === 'PRO' || isDevicePro;
+    const isVvipMember = uppercaseMembership === 'VVIP' || isDeviceVvip;
     const isQuotaOrLockError = Boolean(
         error && (error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") || error.includes("habis"))
     );
@@ -844,9 +842,7 @@ export default function AnalisaMarketPage() {
         );
     }
 
-    if (!session) {
-        return null;
-    }
+    // Public guest access permitted
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-36">
@@ -865,7 +861,7 @@ export default function AnalisaMarketPage() {
                             <div>
                                 <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
                                 <p className="text-sm text-[var(--text-secondary)]">
-                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session.user?.name}</span>
+                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session?.user?.name || 'Trader'}</span>
                                 </p>
                             </div>
                         </div>
@@ -919,11 +915,11 @@ export default function AnalisaMarketPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
                                     <div className="rounded-md border border-[var(--border-light)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Nama</p>
-                                        <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.name || '-'}</p>
+                                        <p className="font-medium text-[var(--text-primary)] truncate">{session?.user?.name || 'Trader'}</p>
                                     </div>
                                     <div className="rounded-md border border-[var(--border-light)] px-3 py-2">
                                         <p className="text-xs text-[var(--text-muted)]">Email</p>
-                                        <p className="font-medium text-[var(--text-primary)] truncate">{session.user?.email || '-'}</p>
+                                        <p className="font-medium text-[var(--text-primary)] truncate">{session?.user?.email || 'Akses Perangkat'}</p>
                                     </div>
                                 </div>
 

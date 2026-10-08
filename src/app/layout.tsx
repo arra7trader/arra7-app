@@ -11,6 +11,8 @@ import SubscriptionChecker from "@/components/SubscriptionChecker";
 import WinningTicker from "@/components/WinningTicker";
 import LowBalancePopup from "@/components/LowBalancePopup";
 import AIEngineTrigger from "@/components/AIEngineTrigger";
+import { PicaDeviceProvider } from "@/context/PicaDeviceContext";
+import ActivationModal from "@/components/license/ActivationModal";
 import "./globals.css";
 
 // Viewport configuration
@@ -102,18 +104,21 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <NextIntlClientProvider messages={messages}>
-            <Navbar />
-            <LocationTracker />
-            <ServiceWorkerRegistration />
-            <SubscriptionChecker />
-            <WinningTicker />
-            <LowBalancePopup />
-            <main className="relative">
-              {children}
-            </main>
-            <TelegramWidget />
-            <PicaBot />
-            <AIEngineTrigger />
+            <PicaDeviceProvider>
+              <Navbar />
+              <LocationTracker />
+              <ServiceWorkerRegistration />
+              <SubscriptionChecker />
+              <WinningTicker />
+              <LowBalancePopup />
+              <main className="relative">
+                {children}
+              </main>
+              <TelegramWidget />
+              <PicaBot />
+              <AIEngineTrigger />
+              <ActivationModal />
+            </PicaDeviceProvider>
           </NextIntlClientProvider>
         </AuthProvider>
       </body>

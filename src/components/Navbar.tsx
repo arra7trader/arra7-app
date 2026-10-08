@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import * as Popover from '@radix-ui/react-popover';
 import LanguageSwitcher from './LanguageSwitcher';
 import PicaLogo from './PicaLogo';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -15,6 +16,7 @@ export default function Navbar() {
     const t = useTranslations('nav');
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isVvip, isPro, daysLeft, openActivation } = usePicaDevice();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -29,7 +31,7 @@ export default function Navbar() {
         { 
             label: (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200/90 text-blue-700 transition-all shadow-xs group">
-                    <span className="text-sm">ðŸ§ </span>
+                    <span className="text-sm">Ã°Å¸Â§Â </span>
                     <span className="font-semibold text-[13px] text-blue-700">Neural Lab</span>
                     <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                 </div>
@@ -42,7 +44,7 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-1.5">
-                    <span>ðŸ“±</span>
+                    <span>Ã°Å¸â€œÂ±</span>
                     <span>App</span>
                 </div>
             ),
@@ -165,7 +167,7 @@ export default function Navbar() {
                                                     href="/xauusd-neural-lab"
                                                     className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100/70 rounded-xl transition-colors font-['Inter']"
                                                 >
-                                                    <span>ðŸ§ </span>
+                                                    <span>Ã°Å¸Â§Â </span>
                                                     <span>PICA Neural Lab</span>
                                                     <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                                                 </Link>
@@ -206,14 +208,51 @@ export default function Navbar() {
                             </Popover.Root>
                         </div>
                     ) : (
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => signIn('google')}
-                            className="rounded-full py-2 px-5 shadow-sm hover:shadow-md transition-all font-['Inter'] font-semibold text-[13px] text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                        >
-                            {t('login')}
-                        </motion.button>
+                        <div className="flex items-center gap-2">
+                            {isVvip ? (
+                                <button
+                                    onClick={openActivation}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                    title="Klik untuk melihat masa aktif lisensi"
+                                >
+                                    <span>🌟</span>
+                                    <span>VVIP MEMBER</span>
+                                    <span className="text-[10px] text-amber-700 font-medium">({daysLeft}h)</span>
+                                </button>
+                            ) : isPro ? (
+                                <button
+                                    onClick={openActivation}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                >
+                                    <span>⚡</span>
+                                    <span>PRO MEMBER</span>
+                                    <span className="text-[10px] text-blue-700 font-medium">({daysLeft}h)</span>
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <span className="hidden lg:inline-flex px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-[11px] font-semibold">
+                                        BASIC
+                                    </span>
+                                    <button
+                                        onClick={openActivation}
+                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95"
+                                    >
+                                        <span>🔑</span>
+                                        <span>Aktivasi Kode</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            <Link
+                                href="/login"
+                                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                                title="Login Akun (Opsional)"
+                            >
+                                <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                            </Link>
+                        </div>
                     )}
                 </div>
 

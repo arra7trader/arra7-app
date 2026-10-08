@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 
-// ═══════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // Types
-// ═══════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 interface Prediction {
     direction: 'BUY' | 'SELL' | 'HOLD';
@@ -163,15 +164,17 @@ export default function XauusdNeuralLabPage() {
     const [isVvip, setIsVvip] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
 
-    // Auth check
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/xauusd-neural-lab');
-        }
-    }, [status, router]);
+    const { isVvip: isDeviceVvip, openActivation, tier: deviceTier } = usePicaDevice();
 
-    // Check VVIP Status
+    // Check VVIP Status (Supports both Device License and Session)
     useEffect(() => {
+        if (isDeviceVvip) {
+            setIsVvip(true);
+            setIsDemoMode(false);
+            setIsCheckingVvip(false);
+            return;
+        }
+
         if (status === 'authenticated') {
             const checkMembership = async () => {
                 try {
@@ -182,7 +185,7 @@ export default function XauusdNeuralLabPage() {
                         const vvipStatus = membership === 'VVIP' || membership === 'ADMIN';
                         setIsVvip(vvipStatus);
                         if (!vvipStatus) {
-                            setIsDemoMode(true); // Default to simulation mode if not yet VVIP
+                            setIsDemoMode(true);
                         }
                     }
                 } catch {
@@ -192,10 +195,13 @@ export default function XauusdNeuralLabPage() {
                 }
             };
             checkMembership();
-        } else if (status === 'unauthenticated') {
+        } else {
+            // Guest access: freely available!
+            setIsVvip(false);
+            setIsDemoMode(true);
             setIsCheckingVvip(false);
         }
-    }, [status]);
+    }, [status, isDeviceVvip]);
 
     const fetchPrediction = useCallback(async (tf: string = selectedTimeframe) => {
         setIsLoading(true);
@@ -313,11 +319,11 @@ export default function XauusdNeuralLabPage() {
         <div className="min-h-screen bg-slate-50 text-slate-900 pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-100 selection:text-blue-900">
             <div className="max-w-7xl mx-auto space-y-6">
 
-                {/* ══════ DEMO MODE / VVIP NOTICE ══════ */}
+                {/* â•â•â•â•â•â• DEMO MODE / VVIP NOTICE â•â•â•â•â•â• */}
                 {!isVvip && (
                     <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-amber-50 border border-blue-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <span className="text-2xl">✨</span>
+                            <span className="text-2xl">âœ¨</span>
                             <div>
                                 <h3 className="text-sm font-bold text-slate-900">
                                     Simulasi PICA Neural Lab Aktif
@@ -331,12 +337,12 @@ export default function XauusdNeuralLabPage() {
                             href="/pricing"
                             className="shrink-0 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all"
                         >
-                            Upgrade ke VVIP →
+                            Upgrade ke VVIP â†’
                         </Link>
                     </div>
                 )}
 
-                {/* ══════ HERO HEADER ══════ */}
+                {/* â•â•â•â•â•â• HERO HEADER â•â•â•â•â•â• */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -345,7 +351,7 @@ export default function XauusdNeuralLabPage() {
                     <div>
                         <div className="flex items-center gap-3 mb-1.5">
                             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-md shadow-blue-500/20">
-                                🧠
+                                ðŸ§ 
                             </div>
                             <div>
                                 <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -355,7 +361,7 @@ export default function XauusdNeuralLabPage() {
                                     </span>
                                 </h1>
                                 <p className="text-xs text-slate-500">
-                                    XAU/USD Quantitative Neural Network • 22 Input Multi-Factor Indicators
+                                    XAU/USD Quantitative Neural Network â€¢ 22 Input Multi-Factor Indicators
                                 </p>
                             </div>
                         </div>
@@ -377,7 +383,7 @@ export default function XauusdNeuralLabPage() {
                     )}
                 </motion.div>
 
-                {/* ══════ CONTROLS BAR ══════ */}
+                {/* â•â•â•â•â•â• CONTROLS BAR â•â•â•â•â•â• */}
                 <div className="flex flex-wrap items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
                     {/* Timeframe Selector */}
                     <div className="flex gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200">
@@ -411,7 +417,7 @@ export default function XauusdNeuralLabPage() {
                             </>
                         ) : (
                             <>
-                                <span>🔬</span>
+                                <span>ðŸ”¬</span>
                                 <span>Run Neural Inference</span>
                             </>
                         )}
@@ -423,7 +429,7 @@ export default function XauusdNeuralLabPage() {
                         disabled={mtfLoading}
                         className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                     >
-                        <span>📡</span>
+                        <span>ðŸ“¡</span>
                         <span>{mtfLoading ? 'Scanning 4 TFs...' : 'Multi-TF Confluence'}</span>
                     </button>
 
@@ -446,7 +452,7 @@ export default function XauusdNeuralLabPage() {
                         }`}
                         title="Toggle Sound Alert"
                     >
-                        <span>{soundAlert ? '🔔' : '🔕'}</span>
+                        <span>{soundAlert ? 'ðŸ””' : 'ðŸ”•'}</span>
                         <span>Alert Sound</span>
                     </button>
 
@@ -458,7 +464,7 @@ export default function XauusdNeuralLabPage() {
                     )}
                 </div>
 
-                {/* ══════ ERROR NOTICE ══════ */}
+                {/* â•â•â•â•â•â• ERROR NOTICE â•â•â•â•â•â• */}
                 <AnimatePresence>
                     {error && (
                         <motion.div
@@ -472,14 +478,14 @@ export default function XauusdNeuralLabPage() {
                     )}
                 </AnimatePresence>
 
-                {/* ══════ MAIN GRID ══════ */}
+                {/* â•â•â•â•â•â• MAIN GRID â•â•â•â•â•â• */}
                 {pred && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="grid grid-cols-1 lg:grid-cols-3 gap-6"
                     >
-                        {/* ── LEFT COLUMN: Prediction, Setup & Probabilities ── */}
+                        {/* â”€â”€ LEFT COLUMN: Prediction, Setup & Probabilities â”€â”€ */}
                         <div className="space-y-6">
                             
                             {/* Neural Forecast Verdict Card */}
@@ -511,7 +517,7 @@ export default function XauusdNeuralLabPage() {
                                 <div className="space-y-2.5 pt-4 border-t border-slate-200/80">
                                     <div>
                                         <div className="flex justify-between text-xs font-bold mb-1 text-emerald-800">
-                                            <span>▲ UP (BUY)</span>
+                                            <span>â–² UP (BUY)</span>
                                             <span className="font-mono">{(pred.probabilities.up * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -523,7 +529,7 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                     <div>
                                         <div className="flex justify-between text-xs font-bold mb-1 text-rose-800">
-                                            <span>▼ DOWN (SELL)</span>
+                                            <span>â–¼ DOWN (SELL)</span>
                                             <span className="font-mono">{(pred.probabilities.down * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -535,7 +541,7 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                     <div>
                                         <div className="flex justify-between text-xs font-bold mb-1 text-amber-800">
-                                            <span>● NEUTRAL</span>
+                                            <span>â— NEUTRAL</span>
                                             <span className="font-mono">{(pred.probabilities.neutral * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -621,7 +627,7 @@ export default function XauusdNeuralLabPage() {
                                             return (
                                                 <div key={tf.value} className={`rounded-xl border p-2.5 text-center ${mtfBg}`}>
                                                     <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{tf.label.split(' ')[0]}</p>
-                                                    <p className="text-base font-black">{mtfPred?.direction || '—'}</p>
+                                                    <p className="text-base font-black">{mtfPred?.direction || 'â€”'}</p>
                                                     <p className="text-[11px] font-mono opacity-80">{mtfPred ? `${mtfPred.confidence.toFixed(0)}%` : ''}</p>
                                                 </div>
                                             );
@@ -632,14 +638,14 @@ export default function XauusdNeuralLabPage() {
 
                         </div>
 
-                        {/* ── CENTER + RIGHT: AI Synthesis, Interactive Chart & 22-Feature Engine ── */}
+                        {/* â”€â”€ CENTER + RIGHT: AI Synthesis, Interactive Chart & 22-Feature Engine â”€â”€ */}
                         <div className="lg:col-span-2 space-y-6">
 
                             {/* AI Qualitative Synthesis */}
                             {reasoning.length > 0 && (
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-lg">🤖</span>
+                                        <span className="text-lg">ðŸ¤–</span>
                                         <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
                                             PICA Neural Synthesis
                                         </h3>
@@ -650,7 +656,7 @@ export default function XauusdNeuralLabPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                         {reasoning.map((item, i) => (
                                             <div key={i} className="flex items-start gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed">
-                                                <span className="text-blue-600 font-bold mt-0.5">✦</span>
+                                                <span className="text-blue-600 font-bold mt-0.5">âœ¦</span>
                                                 <span>{item}</span>
                                             </div>
                                         ))}
@@ -750,7 +756,7 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                     <div className="flex flex-wrap gap-2 text-[10px]">
                                         {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
-                                            <span key={cat} className={`font-semibold ${color}`}>● {cat}</span>
+                                            <span key={cat} className={`font-semibold ${color}`}>â— {cat}</span>
                                         ))}
                                     </div>
                                 </div>
@@ -822,7 +828,7 @@ export default function XauusdNeuralLabPage() {
                                     </div>
 
                                     <div className="pt-2 text-[11px] text-slate-500 border-t border-slate-100 flex flex-col sm:flex-row justify-between gap-1">
-                                        <span>Inference Pipeline: Bi-LSTM 3-Layer (128→64→32) + Dense Attention (64→3)</span>
+                                        <span>Inference Pipeline: Bi-LSTM 3-Layer (128â†’64â†’32) + Dense Attention (64â†’3)</span>
                                         <span>Optimizer: Adam (lr=0.001) | Epochs: 200</span>
                                     </div>
                                 </div>
@@ -837,7 +843,7 @@ export default function XauusdNeuralLabPage() {
                 {!pred && !isLoading && !error && (
                     <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
                         <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-3xl">
-                            🧠
+                            ðŸ§ 
                         </div>
                         <h2 className="text-xl font-extrabold text-slate-900 mb-2">
                             PICA Neural Studio Siap Digunakan
@@ -849,7 +855,7 @@ export default function XauusdNeuralLabPage() {
                             onClick={() => fetchPrediction()}
                             className="px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
                         >
-                            🔬 Mulai Prediksi Neural
+                            ðŸ”¬ Mulai Prediksi Neural
                         </button>
                     </div>
                 )}
