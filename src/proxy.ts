@@ -3,7 +3,8 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { isAdminEmail } from '@/lib/admin-access';
 
-const protectedRoutes = ['/analisa-market'];
+// Frictionless access: no public tools force-redirected to login
+const protectedRoutes: string[] = [];
 const maintenanceBypassPrefixes = [
     '/maintenance',
     '/download-app',
@@ -54,4 +55,3 @@ export const config = {
         '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|public).*)',
     ],
 };
-
