@@ -6,6 +6,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import * as Popover from '@radix-ui/react-popover';
 import LanguageSwitcher from './LanguageSwitcher';
+import PicaLogo from './PicaLogo';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -28,7 +29,7 @@ export default function Navbar() {
         { 
             label: (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200/90 text-blue-700 transition-all shadow-xs group">
-                    <span className="text-sm">🧠</span>
+                    <span className="text-sm">ðŸ§ </span>
                     <span className="font-semibold text-[13px] text-blue-700">Neural Lab</span>
                     <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                 </div>
@@ -41,7 +42,7 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-1.5">
-                    <span>📱</span>
+                    <span>ðŸ“±</span>
                     <span>App</span>
                 </div>
             ),
@@ -75,18 +76,12 @@ export default function Navbar() {
         >
             <nav className="flex items-center justify-between h-16 w-full px-6 md:px-12 antialiased">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group">
+                <Link href="/" className="flex items-center group">
                     <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center gap-2"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                     >
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-500/20">
-                            P
-                        </div>
-                        <span className="tracking-tight bg-clip-text text-transparent font-['Space_Grotesk',system-ui,sans-serif] font-bold text-2xl" style={{ backgroundImage: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 50%, #4F46E5 100%)' }}>
-                            PICA
-                        </span>
+                        <PicaLogo size="sm" />
                     </motion.div>
                 </Link>
 
@@ -170,7 +165,7 @@ export default function Navbar() {
                                                     href="/xauusd-neural-lab"
                                                     className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100/70 rounded-xl transition-colors font-['Inter']"
                                                 >
-                                                    <span>🧠</span>
+                                                    <span>ðŸ§ </span>
                                                     <span>PICA Neural Lab</span>
                                                     <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                                                 </Link>

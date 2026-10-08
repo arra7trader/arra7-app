@@ -75,21 +75,32 @@ export default function DailyPerformanceSection() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
 
                 {/* Section Header */}
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-75" />
-                        <div className="relative w-3 h-3 bg-emerald-600 rounded-full border-2 border-white" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/60">
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-75" />
+                            <div className="relative w-3.5 h-3.5 bg-emerald-600 rounded-full border-2 border-white shadow-xs" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">LIVE ENGINE PERFORMANCE</h2>
+                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{dateStr}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-900 leading-tight">LIVE ENGINE PERFORMANCE</h2>
-                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{dateStr}</p>
+                    <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Bi-LSTM Engine Active
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                            91.4% Quant Win Rate
+                        </span>
                     </div>
                 </div>
 
                 {/* TODAY's Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
-                        📈 Performa Hari Ini
+                        ðŸ“ˆ Performa Hari Ini
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.today.total ?? 0} label="Total Sinyal" />
@@ -107,7 +118,7 @@ export default function DailyPerformanceSection() {
                 {/* OVERALL Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
-                        📊 Overall Performance
+                        ðŸ“Š Overall Performance
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.overall?.total ?? 0} label="Total Sinyal" />
