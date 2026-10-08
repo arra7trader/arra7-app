@@ -70,7 +70,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden glass-card !border !border-[var(--border-[var(--border-light)])]"
+                    className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden glass-card !border !border-[var(--border-light)]"
                 >
                     <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center">
                         <h2 className="text-xl font-bold text-[var(--text-primary)]">
@@ -134,7 +134,7 @@ export default function UserFormModal({ user, isOpen, onClose, onSave }: UserFor
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                     className="arra-input"
-                                    placeholder="••••••••"
+                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                     required={!user}
                                 />
                                 <p className="text-xs text-[var(--text-secondary)] mt-1">Default password for new users.</p>
