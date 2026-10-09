@@ -47,6 +47,19 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
+    // Strict Admin route protection
+    if (pathname.startsWith('/admin')) {
+        const isAdmin = isAdminEmail((token?.email as string | undefined) ?? undefined);
+        if (!token) {
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+        if (!isAdmin) {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+    }
+
     return NextResponse.next();
 }
 

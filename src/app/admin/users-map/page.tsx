@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { isAdminEmail } from '@/lib/admin-access';
 
 // Dynamic import for Leaflet (client-side only)
 const MapContainer = dynamic(
@@ -51,9 +52,7 @@ export default function UsersMapPage() {
     const [showTracker, setShowTracker] = useState(false);
     const mapRef = useRef<any>(null);
 
-    // Admin check
-    const adminEmails = ['apmexplore@gmail.com'];
-    const isAdmin = session?.user?.email && adminEmails.includes(session.user.email);
+    const isAdmin = isAdminEmail(session?.user?.email);
 
     useEffect(() => {
         // Load Leaflet CSS

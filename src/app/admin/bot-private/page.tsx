@@ -59,7 +59,7 @@ type ActivationTarget = {
 
 type AdminSection = 'payments' | 'tracking' | 'active' | 'members';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 export default function PrivateBotAdminPage() {
   const { data: session, status } = useSession();
@@ -79,7 +79,7 @@ export default function PrivateBotAdminPage() {
   const [activeSection, setActiveSection] = useState<AdminSection>('payments');
   const canRunManualAction = telegramUsername.trim().length > 0 || email.trim().length > 0;
 
-  const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+  const isAdmin = isAdminEmail(session?.user?.email);
 
   useEffect(() => {
     if (isAdmin) {

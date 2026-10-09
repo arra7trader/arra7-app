@@ -17,7 +17,8 @@ import {
     BoltIcon,
     ShieldCheckIcon,
     BookOpenIcon,
-    ChartIcon
+    ChartIcon,
+    CurrencyIcon
 } from './PremiumIcons';
 
 export default function Navbar() {
@@ -61,9 +62,15 @@ export default function Navbar() {
                 }`}
         >
             <nav className="relative flex items-center justify-between h-16 w-full px-4 sm:px-6 md:px-12 antialiased">
-                {/* Left Side: Empty spacer to balance header */}
+                {/* Left Side: Akses Harga */}
                 <div className="flex-1 flex items-center gap-3">
-                    {/* Header menu is completely removed as requested */}
+                    <Link
+                        href="/pricing"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
+                    >
+                        <CurrencyIcon size="xs" className="text-blue-600" />
+                        <span>Harga</span>
+                    </Link>
                 </div>
 
                 {/* Center: Logo PICA positioned dead center */}

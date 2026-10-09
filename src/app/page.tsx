@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRef } from 'react';
-import { ArrowRightIcon } from '@/components/PremiumIcons';
+import { ArrowRightIcon, BoltIcon, CrownIcon, TrendUpIcon, CheckIcon, CurrencyIcon } from '@/components/PremiumIcons';
 import DailyPerformanceSection from '@/components/home/DailyPerformanceSection';
 import AppGrid from '@/components/home/AppGrid';
 import NeuralBackground from '@/components/home/NeuralBackground';
@@ -123,6 +123,166 @@ export default function Home() {
           {/* Menu Tombol Aplikasi (4 Menu Utama) */}
           <div className="w-full">
             <AppGrid />
+          </div>
+
+          {/* Section Pilihan Paket & Harga */}
+          <div className="w-full max-w-5xl mx-auto mt-12 mb-6">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-semibold mb-2 shadow-2xs">
+                <CurrencyIcon size="xs" />
+                <span>PILIHAN PAKET & HARGA</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Pilihan Langganan & Kursus Digital
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto mt-1">
+                Akses sinyal AI berakurasi tinggi, indikator eksklusif, dan kursus masterclass Fibo Kyoko.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+              {/* Card PRO */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-lg shadow-slate-100 flex flex-col justify-between hover:border-blue-300 transition-all">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <BoltIcon size="sm" />
+                      </div>
+                      <span className="font-bold text-slate-900 text-base">PRO</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                      POPULER
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-slate-900">Rp 99.000</span>
+                      <span className="text-xs text-slate-500">/ bulan</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Untuk trader aktif yang ingin sinyal AI harian berakurasi tinggi.</p>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6 border-t border-slate-100 pt-3">
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-blue-600 shrink-0" />
+                      <span>25x Analisa Forex & Saham / hari</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-blue-600 shrink-0" />
+                      <span>Akses PICA Neural Lab (Prediksi Gold)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-blue-600 shrink-0" />
+                      <span>AI Neural Ensemble (90%+ Akurasi)</span>
+                    </li>
+                  </ul>
+                </div>
+                <Link href="/pricing">
+                  <button className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-800 font-bold text-xs transition-all shadow-2xs cursor-pointer">
+                    Pilih Paket PRO
+                  </button>
+                </Link>
+              </div>
+
+              {/* Card VVIP */}
+              <div className="bg-gradient-to-b from-amber-50/50 to-white rounded-3xl p-6 border-2 border-amber-400 shadow-xl shadow-amber-500/10 flex flex-col justify-between relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-3 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
+                  INSTITUTIONAL
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-3 mt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <CrownIcon size="sm" />
+                      </div>
+                      <span className="font-bold text-slate-900 text-base">VVIP</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                      UNLIMITED
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-slate-900">Rp 249.000</span>
+                      <span className="text-xs text-slate-500">/ bulan</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Akses tak terbatas seluruh algoritma neural kuantitatif real-time.</p>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-700 mb-6 border-t border-amber-100 pt-3">
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-amber-600 shrink-0" />
+                      <span className="font-semibold">UNLIMITED Analisa Semua Market</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-amber-600 shrink-0" />
+                      <span>Neural Lab Real-time UNLIMITED</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-amber-600 shrink-0" />
+                      <span>Multi-Timeframe Confluence (M15-D1)</span>
+                    </li>
+                  </ul>
+                </div>
+                <Link href="/pricing">
+                  <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer">
+                    Daftar Akses VVIP
+                  </button>
+                </Link>
+              </div>
+
+              {/* Card Kursus Fibo Kyoko */}
+              <div className="bg-gradient-to-b from-indigo-50/50 to-white rounded-3xl p-6 border border-indigo-200 shadow-lg shadow-indigo-100 flex flex-col justify-between hover:border-indigo-400 transition-all">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                        <TrendUpIcon size="sm" />
+                      </div>
+                      <span className="font-bold text-slate-900 text-base">Fibo Kyoko</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white">
+                      LIFETIME
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-slate-900">Rp 169.000</span>
+                      <span className="text-xs text-slate-500">sekali bayar</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">3 Video Masterclass + Indikator Auto MT5 & TradingView Script.</p>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6 border-t border-indigo-100 pt-3">
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-indigo-600 shrink-0" />
+                      <span>3 Video Kursus HD (Anti-Download)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-indigo-600 shrink-0" />
+                      <span>Indikator Auto FIBO KYOKO MT5 (.ex5)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-indigo-600 shrink-0" />
+                      <span>Script TradingView Pine Script v6</span>
+                    </li>
+                  </ul>
+                </div>
+                <Link href="/kursus-fibo-kyoko">
+                  <button className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-md shadow-indigo-500/20 cursor-pointer">
+                    Beli Kursus Digital
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex justify-center mt-5">
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+              >
+                <span>Lihat rincian lengkap semua paket dan opsi durasi</span>
+                <ArrowRightIcon size="xs" />
+              </Link>
+            </div>
           </div>
 
           {/* Live Engine Performance Section */}

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 interface CRMData {
     memberStats: {
@@ -57,7 +57,7 @@ export default function CRMDashboard() {
     const [data, setData] = useState<CRMData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const isAdmin = isAdminEmail(session?.user?.email);
 
     useEffect(() => {
         if (status === 'unauthenticated') {

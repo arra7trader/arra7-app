@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 export default function AdminReportPage() {
     const { data: session, status } = useSession();
@@ -24,7 +24,7 @@ export default function AdminReportPage() {
         return new Date(now.getTime() - offset).toISOString().split('T')[0];
     });
 
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const isAdmin = isAdminEmail(session?.user?.email);
 
     useEffect(() => {
         if (status === 'unauthenticated') {

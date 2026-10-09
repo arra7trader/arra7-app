@@ -14,7 +14,7 @@ interface NotificationLog {
     sent_at: string;
 }
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 // Quick notification templates
 const TEMPLATES = [
@@ -38,7 +38,7 @@ export default function AdminNotificationsPage() {
     const [sending, setSending] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const isAdmin = isAdminEmail(session?.user?.email);
 
     useEffect(() => {
         if (isAdmin) {

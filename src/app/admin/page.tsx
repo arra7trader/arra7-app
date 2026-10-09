@@ -23,7 +23,7 @@ interface UpgradeNotification {
     expiresDate: string;
 }
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
     const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
     const [autoPostEnabled, setAutoPostEnabled] = useState(false);
 
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const isAdmin = isAdminEmail(session?.user?.email);
 
     useEffect(() => {
         if (status === 'unauthenticated') {

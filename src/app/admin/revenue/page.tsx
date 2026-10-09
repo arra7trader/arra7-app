@@ -32,7 +32,7 @@ interface MonthStat {
     vvipCount: number;
 }
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+import { isAdminEmail } from '@/lib/admin-access';
 
 // Harga membership
 const PRICES = {
@@ -45,7 +45,7 @@ export default function RevenueDashboard() {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<RevenueData | null>(null);
 
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const isAdmin = isAdminEmail(session?.user?.email);
 
     useEffect(() => {
         if (isAdmin) {
