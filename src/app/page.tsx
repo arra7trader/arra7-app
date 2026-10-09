@@ -120,28 +120,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Primary Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-wrap items-center justify-center gap-3.5 mb-6"
-          >
-            <Link href="/xauusd-neural-lab">
-              <button className="px-7 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/20 hover:shadow-xl transition-all cursor-pointer flex items-center gap-2.5 active:scale-95">
-                <span>🧠</span>
-                <span>Buka PICA Neural Lab</span>
-                <ArrowRightIcon size="sm" />
-              </button>
-            </Link>
-            <Link href="/analisa-market">
-              <button className="px-7 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-semibold text-sm sm:text-base shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95">
-                Analisa Market
-              </button>
-            </Link>
-          </motion.div>
-
-          {/* Menu Tombol Aplikasi (App Grid Launcher) */}
+          {/* Menu Tombol Aplikasi (4 Menu Utama) */}
           <div className="w-full">
             <AppGrid />
           </div>

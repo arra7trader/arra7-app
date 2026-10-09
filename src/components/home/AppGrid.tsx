@@ -2,89 +2,49 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import {
-    ChartBarIcon,
-    PresentationChartLineIcon,
-    FireIcon,
-    BookOpenIcon,
-    BriefcaseIcon,
-    NewspaperIcon,
-    HeartIcon,
-    BeakerIcon
-} from '@heroicons/react/24/solid';
+import { BrainIcon, ChartIcon, FireIcon, TrendUpIcon } from '@/components/PremiumIcons';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
 export default function AppGrid() {
-    const tNav = useTranslations('nav');
-    const tAI = useTranslations('aiDoctor');
-    const tSent = useTranslations('sentiment');
-
     const [maintenanceModal, setMaintenanceModal] = useState({ isOpen: false, featureName: '' });
 
     const apps = [
         {
             id: 'neural-lab',
             label: 'PICA Neural Lab',
-            badge: 'FLAGSHIP AI',
+            badge: 'VVIP',
             badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
-            icon: <BeakerIcon className="w-8 h-8 text-blue-600" />,
+            icon: <BrainIcon size="lg" className="text-blue-600" />,
             href: '/xauusd-neural-lab',
             color: 'bg-blue-100/80 border-blue-300/80',
             highlight: true,
         },
         {
-            id: 'forex',
-            label: tNav('analisaMarket'),
-            icon: <PresentationChartLineIcon className="w-8 h-8 text-blue-600" />,
+            id: 'analisa-market',
+            label: 'Analisis Market',
+            badge: 'QUANT AI',
+            badgeColor: 'bg-blue-100 text-blue-700 border border-blue-200',
+            icon: <ChartIcon size="lg" className="text-blue-600" />,
             href: '/analisa-market',
             color: 'bg-blue-50 border-blue-200',
         },
         {
-            id: 'bookmap',
-            label: 'Bookmap PICA',
-            badge: 'LIVE DOM',
+            id: 'dom-pica',
+            label: 'DOM PICA',
+            badge: 'ORDER FLOW',
             badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300',
-            icon: <FireIcon className="w-8 h-8 text-amber-600" />,
+            icon: <FireIcon size="lg" className="text-amber-600" />,
             href: '/dom-arra',
             color: 'bg-amber-50 border-amber-200',
         },
         {
-            id: 'stock',
-            label: tNav('analisaSaham'),
-            icon: <ChartBarIcon className="w-8 h-8 text-emerald-600" />,
-            href: '/analisa-saham',
-            color: 'bg-emerald-50 border-emerald-200',
-        },
-        {
-            id: 'doctor',
-            label: "AI Trade Doctor",
-            subLabel: tAI('title'),
-            icon: <HeartIcon className="w-8 h-8 text-rose-500" />,
-            href: '/ai-trade-doctor',
-            color: 'bg-rose-50 border-rose-200',
-        },
-        {
-            id: 'sentiment',
-            label: "Sentiment AI",
-            subLabel: tSent('title'),
-            icon: <NewspaperIcon className="w-8 h-8 text-purple-600" />,
-            href: '/sentiment-sniffer',
-            color: 'bg-purple-50 border-purple-200',
-        },
-        {
-            id: 'journal',
-            label: tNav('tradeJournal'),
-            icon: <BookOpenIcon className="w-8 h-8 text-cyan-600" />,
-            href: '/journal',
-            color: 'bg-cyan-50 border-cyan-200',
-        },
-        {
-            id: 'portfolio',
-            label: tNav('portfolio'),
-            icon: <BriefcaseIcon className="w-8 h-8 text-indigo-600" />,
-            href: '/portfolio',
+            id: 'kursus-fibo',
+            label: 'Kursus Digital Fibo Kyoko',
+            badge: 'PRO',
+            badgeColor: 'bg-blue-600 text-white',
+            icon: <TrendUpIcon size="lg" className="text-indigo-600" />,
+            href: '/kursus-fibo-kyoko',
             color: 'bg-indigo-50 border-indigo-200',
         },
     ];
