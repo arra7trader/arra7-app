@@ -1,0 +1,404 @@
+//@version=6
+indicator("FIBO KYOKO AUTO", overlay = true, max_lines_count = 80, max_labels_count = 80)
+
+string manualGroup = "Manual Override"
+string anchorMode = input.string("Auto", "Anchor Mode", options = ["Auto", "Manual", "Hybrid"], group = manualGroup)
+int manualZeroTime = input.time(0, "Manual Point 0 Time", inline = "M0", confirm = true, group = manualGroup)
+float manualZeroPrice = input.price(0.0, "Price", inline = "M0", confirm = true, group = manualGroup)
+int manualOneTime = input.time(0, "Manual Point 1 Time", inline = "M1", confirm = true, group = manualGroup)
+float manualOnePrice = input.price(0.0, "Price", inline = "M1", confirm = true, group = manualGroup)
+
+string logicGroup = "Auto Anchor"
+int swingDepth = input.int(3, "Confirmed Swing Depth", minval = 1, maxval = 20, group = logicGroup)
+int minSwingPoints = input.int(50, "Minimum Swing Points", minval = 1, group = logicGroup)
+bool useAtrFilter = input.bool(true, "Use ATR Filter", group = logicGroup)
+int atrPeriod = input.int(14, "ATR Period", minval = 1, group = logicGroup)
+float atrMultiplier = input.float(3.00, "Minimum ATR Multiplier", minval = 0.0, step = 0.05, group = logicGroup)
+float minRangePercent = input.float(0.35, "Minimum Range %", minval = 0.0, step = 0.05, group = logicGroup)
+float noAnchorRangeFactor = input.float(0.65, "No Anchor Recovery Factor", minval = 0.10, maxval = 1.00, step = 0.05, group = logicGroup)
+float maxRangePercent = input.float(3.50, "Maximum Range %", minval = 0.1, step = 0.10, group = logicGroup)
+int maxAnchorAgeBars = input.int(260, "Maximum Anchor Age Bars", minval = 20, maxval = 5000, group = logicGroup)
+bool useLatestConfirmedLeg = input.bool(false, "Replace With New Major Swing", group = logicGroup)
+bool requireBosToFlipTrend = input.bool(true, "Require BOS To Flip Trend", group = logicGroup)
+bool invalidateAtZeroWick = input.bool(true, "Invalidate If Wick Breaks 0", group = logicGroup)
+bool invalidateAfterEntryBreak = input.bool(true, "Invalidate After Entry Zone Break", group = logicGroup)
+bool exhaustUsesClose = input.bool(true, "Zone Habis Uses Close 2.244", group = logicGroup)
+bool extendPointOneAfterExhaust = input.bool(true, "Move Point 1 After 2.244", group = logicGroup)
+
+string displayGroup = "Display"
+color lineColor = input.color(color.black, "Zone Line Color", group = displayGroup)
+color anchorColor = input.color(color.gray, "0 / 1 Line Color", group = displayGroup)
+int lineWidth = input.int(1, "Line Width", minval = 1, maxval = 4, group = displayGroup)
+int labelBarsRight = input.int(14, "Label Offset Bars", minval = 0, maxval = 500, group = displayGroup)
+bool showAnchorPoints = input.bool(true, "Show Anchor Points", group = displayGroup)
+bool showAnchorLine = input.bool(false, "Show Anchor Line", group = displayGroup)
+bool showStatus = input.bool(true, "Show Status", group = displayGroup)
+bool showZoneFill = input.bool(true, "Show Transparent Zone Fill", group = displayGroup)
+int fillTransparency = input.int(86, "Fill Transparency", minval = 0, maxval = 100, group = displayGroup)
+color entryFillColor = input.color(color.teal, "Entry Fill", group = displayGroup)
+color retraceFillColor = input.color(color.orange, "Retrace Fill", group = displayGroup)
+color tpFillColor = input.color(color.purple, "TP Fill", group = displayGroup)
+
+string calibrationGroup = "Calibration"
+bool showCalibration = input.bool(false, "Show Calibration Mode", group = calibrationGroup)
+int maxCalibrationLabels = input.int(24, "Max Swing Markers", minval = 0, maxval = 50, group = calibrationGroup)
+bool showRejectedSwings = input.bool(true, "Show Rejected Swings", group = calibrationGroup)
+
+var float[] ratios = array.from(
+     0.0, 0.557, 0.617, 0.667, 0.787, 0.837, 0.883, 1.0,
+     1.125, 1.177, 1.244, 1.557, 1.617, 1.667, 1.787,
+     1.837, 1.883, 2.125, 2.177, 2.244)
+
+var string[] names = array.from(
+     "", "Entry Zone B/S", "Entry Zone B/S", "Entry Zone B/S",
+     "Retrace Zone Valid", "Retrace Zone Valid", "Retrace Zone Valid",
+     "", "TP Zone / New Zone", "TP Zone / New Zone",
+     "TP Zone / New Zone", "Entry Zone B/S", "Entry Zone B/S",
+     "Entry Zone B/S", "Retrace Zone Valid", "Retrace Zone Valid",
+     "Retrace Zone Valid", "TP Zone / New Zone", "TP Zone / New Zone",
+     "TP Zone / New Zone")
+
+var line[] fibLines = array.new_line()
+var label[] fibLabels = array.new_label()
+var linefill[] zoneFills = array.new_linefill()
+var label[] calibrationLabels = array.new_label()
+var line anchorLine = na
+var label pointZeroLabel = na
+var label pointOneLabel = na
+var table statusTable = table.new(position.top_left, 1, 8, border_width = 1)
+
+var int lastPivotType = 0
+var int lastPivotIndex = na
+var int lastPivotTime = na
+var float lastPivotPrice = na
+
+var bool hasActiveAnchor = false
+var bool activeBuy = true
+var int zeroIndex = na
+var int zeroTime = na
+var float zeroPrice = na
+var int oneIndex = na
+var int oneTime = na
+var float onePrice = na
+var string statusText = "waiting for confirmed swing"
+var bool entryTouched = false
+var bool pendingReplacement = false
+var bool pendingExtension = false
+var int trendBias = 0
+var float bullishBosLevel = na
+var float bearishBosLevel = na
+var string lastDecision = "none"
+var bool lastDecisionAccepted = false
+var float lastCandidateRange = na
+var float lastEffectiveMinRange = na
+var float lastMaxRange = na
+
+levelPrice(float anchorZero, float anchorRange, float ratio) =>
+    anchorZero + anchorRange * ratio
+
+activeTarget2244() =>
+    levelPrice(zeroPrice, onePrice - zeroPrice, 2.244)
+
+zoneLow(float r1, float r2, float r3) =>
+    float activeRange = onePrice - zeroPrice
+    math.min(levelPrice(zeroPrice, activeRange, r1), math.min(levelPrice(zeroPrice, activeRange, r2), levelPrice(zeroPrice, activeRange, r3)))
+
+zoneHigh(float r1, float r2, float r3) =>
+    float activeRange = onePrice - zeroPrice
+    math.max(levelPrice(zeroPrice, activeRange, r1), math.max(levelPrice(zeroPrice, activeRange, r2), levelPrice(zeroPrice, activeRange, r3)))
+
+wickTouchesZone(float lowZone, float highZone) =>
+    high >= lowZone and low <= highZone
+
+minimumLegRange() =>
+    float pointRange = minSwingPoints * syminfo.mintick
+    float atrRange = useAtrFilter ? ta.atr(atrPeriod) * atrMultiplier : 0.0
+    float percentRange = close * minRangePercent * 0.01
+    math.max(math.max(pointRange, atrRange), percentRange)
+
+maximumLegRange() =>
+    close * maxRangePercent * 0.01
+
+isMoreExtreme(int pivotType, float pivotPrice, float referencePrice) =>
+    pivotType == 1 ? pivotPrice > referencePrice : pivotPrice < referencePrice
+
+candidatePassesTrendFilter(bool candidateBuy, float candidateEndPrice) =>
+    if not requireBosToFlipTrend or trendBias == 0 or not hasActiveAnchor
+        true
+    else if candidateBuy and trendBias == 1
+        true
+    else if not candidateBuy and trendBias == -1
+        true
+    else if candidateBuy
+        not na(bullishBosLevel) and candidateEndPrice > bullishBosLevel and close > bullishBosLevel
+    else
+        not na(bearishBosLevel) and candidateEndPrice < bearishBosLevel and close < bearishBosLevel
+
+manualReady = manualZeroTime != 0 and manualOneTime != 0 and manualZeroPrice != manualOnePrice
+useManualAnchor = manualReady and (anchorMode == "Manual" or anchorMode == "Hybrid")
+manualZeroIndex = ta.valuewhen(time >= manualZeroTime and nz(time[1], 0) < manualZeroTime, bar_index, 0)
+manualOneIndex = ta.valuewhen(time >= manualOneTime and nz(time[1], 0) < manualOneTime, bar_index, 0)
+
+if array.size(fibLines) == 0
+    for i = 0 to array.size(ratios) - 1
+        line newLine = line.new(bar_index, close, bar_index + 1, close, xloc = xloc.bar_index, extend = extend.right)
+        label newLabel = label.new(bar_index, close, "", xloc = xloc.bar_index, style = label.style_none, textcolor = lineColor, color = color.new(color.white, 100), size = size.normal, textalign = text.align_left)
+        array.push(fibLines, newLine)
+        array.push(fibLabels, newLabel)
+
+if array.size(zoneFills) == 0 and array.size(fibLines) == array.size(ratios)
+    array.push(zoneFills, linefill.new(array.get(fibLines, 1), array.get(fibLines, 3), color.new(entryFillColor, fillTransparency)))
+    array.push(zoneFills, linefill.new(array.get(fibLines, 4), array.get(fibLines, 6), color.new(retraceFillColor, fillTransparency)))
+    array.push(zoneFills, linefill.new(array.get(fibLines, 8), array.get(fibLines, 10), color.new(tpFillColor, fillTransparency)))
+    array.push(zoneFills, linefill.new(array.get(fibLines, 11), array.get(fibLines, 13), color.new(entryFillColor, fillTransparency)))
+    array.push(zoneFills, linefill.new(array.get(fibLines, 14), array.get(fibLines, 16), color.new(retraceFillColor, fillTransparency)))
+    array.push(zoneFills, linefill.new(array.get(fibLines, 17), array.get(fibLines, 19), color.new(tpFillColor, fillTransparency)))
+
+float minRange = minimumLegRange()
+float maxRange = maximumLegRange()
+float pivotHigh = ta.pivothigh(high, swingDepth, swingDepth)
+float pivotLow = ta.pivotlow(low, swingDepth, swingDepth)
+bool hasPivotHigh = not na(pivotHigh)
+bool hasPivotLow = not na(pivotLow)
+int pivotType = hasPivotHigh and not hasPivotLow ? 1 : hasPivotLow and not hasPivotHigh ? -1 : 0
+float pivotPrice = pivotType == 1 ? pivotHigh : pivotType == -1 ? pivotLow : na
+int pivotIndex = bar_index - swingDepth
+int pivotTime = time[swingDepth]
+
+if hasActiveAnchor
+    float target = activeTarget2244()
+    float activeEntryLow = zoneLow(0.557, 0.617, 0.667)
+    float activeEntryHigh = zoneHigh(0.557, 0.617, 0.667)
+    entryTouched := entryTouched or wickTouchesZone(activeEntryLow, activeEntryHigh)
+    bool exhausted = activeBuy ? (exhaustUsesClose ? close > target : high > target) : (exhaustUsesClose ? close < target : low < target)
+    bool zeroInvalidated = invalidateAtZeroWick and (activeBuy ? low < zeroPrice : high > zeroPrice)
+    bool entryBreakInvalidated = invalidateAfterEntryBreak and entryTouched and (activeBuy ? low < activeEntryLow : high > activeEntryHigh)
+    bool tooOld = bar_index - math.min(zeroIndex, oneIndex) > maxAnchorAgeBars
+    bool invalidated = zeroInvalidated or entryBreakInvalidated or tooOld
+    if exhausted or invalidated
+        entryTouched := false
+        if exhausted and extendPointOneAfterExhaust
+            pendingExtension := true
+            pendingReplacement := false
+            statusText := "zone exhausted: waiting new point 1"
+        else
+            pendingExtension := false
+            pendingReplacement := true
+            statusText := exhausted ? "zone exhausted: waiting replacement" : tooOld ? "anchor too old: waiting replacement" : entryBreakInvalidated ? "entry zone broken: waiting replacement" : "anchor invalid: waiting replacement"
+
+bool pivotConsumed = false
+if hasActiveAnchor and pendingReplacement and pivotType != 0
+    bool reversalPivot = activeBuy ? (pivotType == -1 and pivotPrice < zeroPrice) : (pivotType == 1 and pivotPrice > zeroPrice)
+    if reversalPivot
+        float reversalRange = pivotPrice - onePrice
+        float reversalAbsRange = math.abs(reversalRange)
+        lastCandidateRange := reversalAbsRange
+        lastEffectiveMinRange := minRange * noAnchorRangeFactor
+        lastMaxRange := maxRange
+        bool reversalEnough = reversalAbsRange >= minRange * noAnchorRangeFactor
+        bool reversalNotTooLarge = reversalAbsRange <= maxRange
+        if reversalEnough and reversalNotTooLarge
+            zeroIndex := oneIndex
+            zeroTime := oneTime
+            zeroPrice := onePrice
+            oneIndex := pivotIndex
+            oneTime := pivotTime
+            onePrice := pivotPrice
+            activeBuy := not activeBuy
+            hasActiveAnchor := true
+            entryTouched := false
+            pendingReplacement := false
+            pendingExtension := false
+            trendBias := activeBuy ? 1 : -1
+            bullishBosLevel := activeBuy ? onePrice : zeroPrice
+            bearishBosLevel := activeBuy ? zeroPrice : onePrice
+            statusText := "reversal anchor after 0 break"
+            lastDecision := "accepted reversal"
+            lastDecisionAccepted := true
+            lastPivotType := pivotType
+            lastPivotIndex := pivotIndex
+            lastPivotTime := pivotTime
+            lastPivotPrice := pivotPrice
+            pivotConsumed := true
+        else
+            statusText := reversalEnough ? "reversal swing too large" : "waiting reversal swing"
+            lastDecision := statusText
+            lastDecisionAccepted := false
+
+if hasActiveAnchor and pendingExtension and pivotType != 0
+    bool extensionPivot = activeBuy ? (pivotType == 1 and pivotPrice > onePrice) : (pivotType == -1 and pivotPrice < onePrice)
+    if extensionPivot
+        oneIndex := pivotIndex
+        oneTime := pivotTime
+        onePrice := pivotPrice
+        pendingExtension := false
+        pendingReplacement := false
+        entryTouched := false
+        bullishBosLevel := activeBuy ? onePrice : zeroPrice
+        bearishBosLevel := activeBuy ? zeroPrice : onePrice
+        statusText := "point 1 moved to new swing"
+        lastDecision := "accepted extension"
+        lastDecisionAccepted := true
+        lastPivotType := pivotType
+        lastPivotIndex := pivotIndex
+        lastPivotTime := pivotTime
+        lastPivotPrice := pivotPrice
+        pivotConsumed := true
+
+if pivotType != 0 and not pivotConsumed
+    if lastPivotType == 0
+        lastPivotType := pivotType
+        lastPivotIndex := pivotIndex
+        lastPivotTime := pivotTime
+        lastPivotPrice := pivotPrice
+    else if pivotType == lastPivotType
+        if isMoreExtreme(pivotType, pivotPrice, lastPivotPrice)
+            lastPivotIndex := pivotIndex
+            lastPivotTime := pivotTime
+            lastPivotPrice := pivotPrice
+    else
+        bool candidateBuy = lastPivotType == -1 and pivotType == 1
+        float candidateRange = pivotPrice - lastPivotPrice
+        float candidateAbsRange = math.abs(candidateRange)
+        float effectiveMinRange = hasActiveAnchor ? minRange : minRange * noAnchorRangeFactor
+        lastCandidateRange := candidateAbsRange
+        lastEffectiveMinRange := effectiveMinRange
+        lastMaxRange := maxRange
+        bool enoughRange = candidateAbsRange >= effectiveMinRange
+        bool notTooLarge = candidateAbsRange <= maxRange
+        bool mayReplaceAnchor = useLatestConfirmedLeg or pendingReplacement or not hasActiveAnchor
+        bool trendOk = candidatePassesTrendFilter(candidateBuy, pivotPrice)
+        if mayReplaceAnchor and enoughRange and notTooLarge and trendOk
+            zeroIndex := lastPivotIndex
+            zeroTime := lastPivotTime
+            zeroPrice := lastPivotPrice
+            oneIndex := pivotIndex
+            oneTime := pivotTime
+            onePrice := pivotPrice
+            activeBuy := candidateBuy
+            hasActiveAnchor := true
+            entryTouched := false
+            pendingReplacement := false
+            pendingExtension := false
+            trendBias := candidateBuy ? 1 : -1
+            bullishBosLevel := candidateBuy ? onePrice : zeroPrice
+            bearishBosLevel := candidateBuy ? zeroPrice : onePrice
+            statusText := "active confirmed swing"
+            lastDecision := "accepted " + (candidateBuy ? "BUY" : "SELL")
+            lastDecisionAccepted := true
+            lastPivotType := pivotType
+            lastPivotIndex := pivotIndex
+            lastPivotTime := pivotTime
+            lastPivotPrice := pivotPrice
+        else if not enoughRange
+            statusText := "minor swing ignored"
+            lastDecision := "rejected minor"
+            lastDecisionAccepted := false
+        else if notTooLarge == false
+            lastPivotType := pivotType
+            lastPivotIndex := pivotIndex
+            lastPivotTime := pivotTime
+            lastPivotPrice := pivotPrice
+            statusText := "oversized swing ignored"
+            lastDecision := "rejected oversized"
+            lastDecisionAccepted := false
+        else if not trendOk
+            lastPivotType := pivotType
+            lastPivotIndex := pivotIndex
+            lastPivotTime := pivotTime
+            lastPivotPrice := pivotPrice
+            statusText := "pullback ignored: no BOS"
+            lastDecision := "rejected no BOS"
+            lastDecisionAccepted := false
+
+int rightIndex = bar_index + labelBarsRight
+bool displayHasAnchor = useManualAnchor ? true : hasActiveAnchor
+bool displayBuy = useManualAnchor ? manualOnePrice > manualZeroPrice : activeBuy
+float displayZeroPrice = useManualAnchor ? manualZeroPrice : zeroPrice
+float displayOnePrice = useManualAnchor ? manualOnePrice : onePrice
+int displayZeroIndex = useManualAnchor ? int(nz(manualZeroIndex, bar_index)) : zeroIndex
+int displayOneIndex = useManualAnchor ? int(nz(manualOneIndex, bar_index)) : oneIndex
+int startIndex = displayHasAnchor ? math.min(displayZeroIndex, displayOneIndex) : bar_index
+
+for i = 0 to array.size(ratios) - 1
+    line fibLine = array.get(fibLines, i)
+    label fibLabel = array.get(fibLabels, i)
+    float ratio = array.get(ratios, i)
+    color drawColor = ratio == 0.0 or ratio == 1.0 ? anchorColor : lineColor
+    if displayHasAnchor
+        float price = levelPrice(displayZeroPrice, displayOnePrice - displayZeroPrice, ratio)
+        line.set_xy1(fibLine, startIndex, price)
+        line.set_xy2(fibLine, rightIndex, price)
+        line.set_extend(fibLine, extend.right)
+        line.set_color(fibLine, drawColor)
+        line.set_width(fibLine, lineWidth)
+        line.set_style(fibLine, line.style_solid)
+        label.set_xy(fibLabel, rightIndex, price)
+        string levelName = array.get(names, i)
+        label.set_text(fibLabel, levelName == "" ? "" : levelName + " - " + str.tostring(price, format.mintick))
+        label.set_textcolor(fibLabel, drawColor)
+    else
+        line.set_color(fibLine, color.new(lineColor, 100))
+        label.set_text(fibLabel, "")
+
+if array.size(zoneFills) == 6
+    color invisibleFill = color.new(lineColor, 100)
+    linefill.set_color(array.get(zoneFills, 0), displayHasAnchor and showZoneFill ? color.new(entryFillColor, fillTransparency) : invisibleFill)
+    linefill.set_color(array.get(zoneFills, 1), displayHasAnchor and showZoneFill ? color.new(retraceFillColor, fillTransparency) : invisibleFill)
+    linefill.set_color(array.get(zoneFills, 2), displayHasAnchor and showZoneFill ? color.new(tpFillColor, fillTransparency) : invisibleFill)
+    linefill.set_color(array.get(zoneFills, 3), displayHasAnchor and showZoneFill ? color.new(entryFillColor, fillTransparency) : invisibleFill)
+    linefill.set_color(array.get(zoneFills, 4), displayHasAnchor and showZoneFill ? color.new(retraceFillColor, fillTransparency) : invisibleFill)
+    linefill.set_color(array.get(zoneFills, 5), displayHasAnchor and showZoneFill ? color.new(tpFillColor, fillTransparency) : invisibleFill)
+
+if displayHasAnchor and showAnchorLine
+    if na(anchorLine)
+        anchorLine := line.new(displayZeroIndex, displayZeroPrice, displayOneIndex, displayOnePrice, xloc = xloc.bar_index, extend = extend.none, color = color.orange, width = 2)
+    line.set_xy1(anchorLine, displayZeroIndex, displayZeroPrice)
+    line.set_xy2(anchorLine, displayOneIndex, displayOnePrice)
+    line.set_color(anchorLine, color.orange)
+else if not na(anchorLine)
+    line.set_color(anchorLine, color.new(color.orange, 100))
+
+if displayHasAnchor and showAnchorPoints
+    if na(pointZeroLabel)
+        pointZeroLabel := label.new(displayZeroIndex, displayZeroPrice, "0", xloc = xloc.bar_index, style = label.style_circle, textcolor = color.white, color = color.blue, size = size.tiny)
+    if na(pointOneLabel)
+        pointOneLabel := label.new(displayOneIndex, displayOnePrice, "1", xloc = xloc.bar_index, style = label.style_circle, textcolor = color.white, color = color.red, size = size.tiny)
+    label.set_xy(pointZeroLabel, displayZeroIndex, displayZeroPrice)
+    label.set_text(pointZeroLabel, "0")
+    label.set_color(pointZeroLabel, color.blue)
+    label.set_xy(pointOneLabel, displayOneIndex, displayOnePrice)
+    label.set_text(pointOneLabel, "1")
+    label.set_color(pointOneLabel, color.red)
+else
+    if not na(pointZeroLabel)
+        label.set_text(pointZeroLabel, "")
+    if not na(pointOneLabel)
+        label.set_text(pointOneLabel, "")
+
+if showStatus
+    string directionText = displayHasAnchor ? (displayBuy ? "BUY" : "SELL") : "NONE"
+    string modeText = useManualAnchor ? "manual override" : anchorMode == "Manual" ? "manual anchor not set" : "auto"
+    string anchorText = displayHasAnchor ? ("0: " + str.tostring(displayZeroPrice, format.mintick) + " | 1: " + str.tostring(displayOnePrice, format.mintick)) : "no active anchor"
+    table.cell(statusTable, 0, 0, "FIBO KYOKO AUTO TV", text_color = color.white, bgcolor = color.black)
+    table.cell(statusTable, 0, 1, modeText + " | swing: " + directionText, text_color = color.white, bgcolor = displayHasAnchor ? color.new(color.blue, 0) : color.new(color.red, 0))
+    table.cell(statusTable, 0, 2, useManualAnchor ? "manual anchor active" : statusText, text_color = color.white, bgcolor = color.new(color.black, 15))
+    table.cell(statusTable, 0, 3, anchorText, text_color = color.white, bgcolor = color.new(color.black, 15))
+    if showCalibration
+        table.cell(statusTable, 0, 4, "decision: " + lastDecision, text_color = color.white, bgcolor = color.new(color.black, 20))
+        table.cell(statusTable, 0, 5, "range: " + str.tostring(lastCandidateRange, format.mintick) + " | min: " + str.tostring(lastEffectiveMinRange, format.mintick), text_color = color.white, bgcolor = color.new(color.black, 20))
+        table.cell(statusTable, 0, 6, "max: " + str.tostring(lastMaxRange, format.mintick) + " | bias: " + str.tostring(trendBias), text_color = color.white, bgcolor = color.new(color.black, 20))
+        table.cell(statusTable, 0, 7, "BOS up: " + str.tostring(bullishBosLevel, format.mintick) + " | down: " + str.tostring(bearishBosLevel, format.mintick), text_color = color.white, bgcolor = color.new(color.black, 20))
+
+if showCalibration and pivotType != 0 and maxCalibrationLabels > 0
+    bool showThisSwing = showRejectedSwings or lastDecisionAccepted
+    if showThisSwing
+        color markerColor = lastDecisionAccepted ? color.new(color.lime, 0) : color.new(color.red, 0)
+        string markerText = (pivotType == 1 ? "H" : "L") + "\n" + lastDecision
+        label marker = label.new(pivotIndex, pivotPrice, markerText, xloc = xloc.bar_index, style = pivotType == 1 ? label.style_label_down : label.style_label_up, textcolor = color.white, color = markerColor, size = size.tiny)
+        array.push(calibrationLabels, marker)
+        if array.size(calibrationLabels) > maxCalibrationLabels
+            label.delete(array.shift(calibrationLabels))
+
+alertcondition(hasActiveAnchor and activeBuy and close > activeTarget2244(), "FIBO KYOKO Zone Habis BUY", "Close has passed 2.244 on a BUY zone.")
+alertcondition(hasActiveAnchor and not activeBuy and close < activeTarget2244(), "FIBO KYOKO Zone Habis SELL", "Close has passed 2.244 on a SELL zone.")

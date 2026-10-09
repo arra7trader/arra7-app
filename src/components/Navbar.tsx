@@ -39,17 +39,17 @@ export default function Navbar() {
             href: '/xauusd-neural-lab' 
         },
         { label: t('analisaMarket'), href: '/analisa-market' },
-        { label: t('pricing'), href: '/pricing' },
-        { label: 'FAQ', href: '/faq' },
         {
             label: (
-                <div className="flex items-center gap-1.5">
-                    <span>📱</span>
-                    <span>App</span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5">
+                    <span>📈</span>
+                    <span>Kursus Fibo Kyoko</span>
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-700 border border-blue-500/30">PRO</span>
                 </div>
             ),
-            href: '/download-app'
+            href: '/kursus-fibo-kyoko'
         },
+        { label: t('pricing'), href: '/pricing' },
     ];
 
     const searchParams = useSearchParams();
@@ -242,16 +242,6 @@ export default function Navbar() {
                                     </button>
                                 </div>
                             )}
-
-                            <Link
-                                href="/login"
-                                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-                                title="Login Akun (Opsional)"
-                            >
-                                <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                </svg>
-                            </Link>
                         </div>
                     )}
                 </div>
@@ -330,10 +320,13 @@ export default function Navbar() {
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => signIn('google')}
-                                        className="rounded-full py-2 px-6 bg-blue-600 text-white font-['Inter'] font-semibold text-[13px] shadow-sm cursor-pointer"
+                                        onClick={() => {
+                                            setIsMobileMenuOpen(false);
+                                            openActivation();
+                                        }}
+                                        className="rounded-full py-2 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-['Inter'] font-semibold text-[13px] shadow-sm cursor-pointer"
                                     >
-                                        {t('login')}
+                                        🔑 Aktivasi Kode
                                     </button>
                                 )}
                             </div>

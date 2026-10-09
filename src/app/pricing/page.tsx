@@ -24,6 +24,9 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
         { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch + Bonus PRO', promoSlots: 50, period: '/ bulan' },
         { duration: 'lifetime', days: 0, label: 'Lifetime', price: 'Rp 375.000', originalPrice: null, savingsText: '100 Slot Saja + Bonus PRO', promoSlots: 100, period: '/ sekali bayar' },
     ],
+    FIBO_KYOKO: [
+        { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 169.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 330.000 • Akses Selamanya', period: '/ sekali bayar' },
+    ],
 };
 
 const PRICING_PLANS = [
@@ -122,6 +125,23 @@ const PRICING_PLANS = [
         cta: 'Ambil TELEBOT Lifetime',
         popular: false,
     },
+    {
+        id: 'FIBO_KYOKO',
+        name: 'Kursus Digital Fibo Kyoko',
+        description: 'Paket lengkap 3 video masterclass Fibo Kyoko + File Indikator Auto MT5 (.ex5) + Script TradingView Pine Script v6.',
+        icon: '📈',
+        theme: 'indigo',
+        features: [
+            { text: '3 Video Masterclass HD (Basic, Pola Trend, Tarik Garis)', included: true, highlight: true },
+            { text: 'File Indikator FIBO KYOKO AUTO MT5 (.ex5)', included: true, highlight: true },
+            { text: 'Script TradingView Pine Script v6 Full Akses', included: true, highlight: true },
+            { text: 'Bonus Akses PRO PICA Platform (Analisa AI)', included: true, highlight: true },
+            { text: 'Akses Selamanya (Sekali Bayar, Tanpa Iuran Bulanan)', included: true, highlight: true },
+            { text: 'Panduan Instalasi Lengkap MT5 & TradingView', included: true, highlight: false },
+        ],
+        cta: 'Beli Kursus Sekarang (Rp 169.000)',
+        popular: true,
+    },
 ];
 
 export default function PricingPage() {
@@ -148,23 +168,25 @@ export default function PricingPage() {
     }, []);
 
     const handleSubscribe = async (planId: string, durationOverride?: string) => {
-        if (!session) {
-            signIn('google', { callbackUrl: `/pricing?plan=${planId}` });
-            return;
-        }
-
         if (planId === 'BASIC') {
             router.push('/analisa-market');
             return;
         }
 
-        const catalogPlanId = planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME' ? 'TELEBOT' : planId;
+        const catalogPlanId =
+            planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME'
+                ? 'TELEBOT'
+                : planId;
         const duration =
             durationOverride ||
-            (planId === 'TELEBOT_MONTHLY' ? '1month' : planId === 'TELEBOT_LIFETIME' ? 'lifetime' : selectedDuration[planId] || '1month');
+            (planId === 'TELEBOT_MONTHLY'
+                ? '1month'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO'
+                    ? 'lifetime'
+                    : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
         const durationOption = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
-        const days = durationOption?.days ?? 30;
+        const days = durationOption?.days ?? (duration === 'lifetime' ? 0 : 30);
 
         router.push(`/payment/transfer?plan=${catalogPlanId}&duration=${duration}&days=${days}`);
     };
@@ -174,11 +196,14 @@ export default function PricingPage() {
             return { price: 'Gratis', originalPrice: null, period: '', badge: null };
         }
 
-        const catalogPlanId = planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME' ? 'TELEBOT' : planId;
+        const catalogPlanId =
+            planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME'
+                ? 'TELEBOT'
+                : planId;
         const duration =
             planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month';
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);

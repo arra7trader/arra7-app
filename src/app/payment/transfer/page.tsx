@@ -38,6 +38,9 @@ const PRICING_OPTIONS: Record<
         '1month': { durationLabel: '1 Bulan', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 249.000', period: '/bulan' },
         'lifetime': { durationLabel: 'Lifetime', price: 375000, priceDisplay: 'Rp 375.000', originalPrice: null, period: '/sekali bayar' },
     },
+    FIBO_KYOKO: {
+        'lifetime': { durationLabel: 'Sekali Bayar', price: 169000, priceDisplay: 'Rp 169.000', originalPrice: 'Rp 499.000', period: '/sekali bayar' },
+    },
 };
 
 function TransferContent() {
@@ -47,6 +50,8 @@ function TransferContent() {
     const planId = searchParams.get('plan');
     const duration = searchParams.get('duration') || '1month';
     const [telegramUsername, setTelegramUsername] = useState('');
+    const [guestName, setGuestName] = useState('');
+    const [guestContact, setGuestContact] = useState('');
     const [savingTelegramProfile, setSavingTelegramProfile] = useState(false);
     const [telegramProfileMessage, setTelegramProfileMessage] = useState<string | null>(null);
 
@@ -59,7 +64,8 @@ function TransferContent() {
             VVIP: 'VVIP',
             CT_FOLLOWER: 'CT Follower',
             CT_PROVIDER: 'CT Provider',
-            TELEBOT: 'TELEBOT'
+            TELEBOT: 'TELEBOT',
+            FIBO_KYOKO: 'Kursus Digital Fibo Kyoko'
         };
 
         return {
@@ -71,14 +77,12 @@ function TransferContent() {
 
     const normalizedTelegramUsername = telegramUsername.trim().replace(/^@+/, '');
     const requiresTelegramUsername = plan?.id === 'TELEBOT';
-    const canConfirmPayment = !requiresTelegramUsername || normalizedTelegramUsername.length > 0;
+    const hasBuyerInfo = Boolean(session) || (guestName.trim().length > 0 && guestContact.trim().length > 0);
+    const canConfirmPayment = (!requiresTelegramUsername || normalizedTelegramUsername.length > 0) && hasBuyerInfo;
     const telebotBonusPageUrl = 'https://arra7-app.vercel.app/telebot-bonus';
 
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push(`/login?callbackUrl=/payment/transfer?plan=${planId}&duration=${duration}`);
-        }
-    }, [status, router, planId, duration]);
+    const buyerName = session?.user?.name || guestName.trim() || 'Pembeli';
+    const buyerContact = session?.user?.email || guestContact.trim() || '-';
 
     if (status === 'loading') {
         return (
@@ -104,18 +108,19 @@ function TransferContent() {
     const telegramText = [
         'Halo Admin PICA!',
         '',
-        `Saya sudah melakukan pembayaran via QRIS untuk paket *${plan.name} ${plan.durationLabel}*:`,
+        `Saya sudah melakukan pembayaran via QRIS untuk paket *${plan.name} (${plan.durationLabel})*:`,
         '',
-        `Email: ${session?.user?.email}`,
-        `Nama: ${session?.user?.name}`,
+        `Nama: ${buyerName}`,
+        `Kontak / Email: ${buyerContact}`,
         `Paket: ${plan.name} (${plan.durationLabel})`,
         `Nominal: ${plan.priceDisplay}`,
         requiresTelegramUsername ? `Username Telegram: @${normalizedTelegramUsername}` : null,
         plan.id === 'TELEBOT' ? `Bonus member: akun PRO website 1 bulan + video eksklusif di ${telebotBonusPageUrl}` : null,
+        plan.id === 'FIBO_KYOKO' ? 'Mohon kirimkan Kode Lisensi aktivasi Kursus Fibo Kyoko saya.' : null,
         '',
         requiresTelegramUsername
             ? 'Mohon approve akses TELEBOT saya. Berikut bukti pembayarannya: (Lampirkan Screenshot)'
-            : 'Mohon diproses. Berikut bukti pembayarannya: (Lampirkan Screenshot)',
+            : 'Mohon diproses aktivasi lisensi saya. Berikut bukti pembayarannya: (Lampirkan Screenshot)',
     ]
         .filter(Boolean)
         .join('\n');
@@ -235,18 +240,49 @@ function TransferContent() {
                         </div>
                     )}
 
-                    <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6">
-                        <p className="text-sm text-[var(--text-muted)] mb-2">Akun Anda</p>
-                        <div className="flex items-center gap-3">
-                            {session?.user?.image && (
-                                <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" />
-                            )}
-                            <div>
-                                <p className="font-semibold text-[var(--text-primary)]">{session?.user?.name}</p>
-                                <p className="text-sm text-[var(--text-muted)]">{session?.user?.email}</p>
+                    {session ? (
+                        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6">
+                            <p className="text-sm text-[var(--text-muted)] mb-2">Akun Anda</p>
+                            <div className="flex items-center gap-3">
+                                {session.user?.image && (
+                                    <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" />
+                                )}
+                                <div>
+                                    <p className="font-semibold text-[var(--text-primary)]">{session.user?.name}</p>
+                                    <p className="text-sm text-[var(--text-muted)]">{session.user?.email}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6 space-y-3">
+                            <p className="text-sm font-bold text-[var(--text-primary)]">Data Pembeli (Tanpa Perlu Login)</p>
+                            <div>
+                                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                                    Nama Lengkap
+                                </label>
+                                <input
+                                    value={guestName}
+                                    onChange={(e) => setGuestName(e.target.value)}
+                                    placeholder="Contoh: Budi Santoso"
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] text-xs text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-blue-500/20"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                                    No. WhatsApp atau Email
+                                </label>
+                                <input
+                                    value={guestContact}
+                                    onChange={(e) => setGuestContact(e.target.value)}
+                                    placeholder="Contoh: 08123456789 atau email@gmail.com"
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-light)] text-xs text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-blue-500/20"
+                                />
+                                <p className="text-[11px] text-[var(--text-muted)] mt-1">
+                                    Admin akan mengirimkan Kode Lisensi aktivasi ke kontak ini.
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
                         <div className="flex gap-3">
@@ -260,7 +296,7 @@ function TransferContent() {
                                     {requiresTelegramUsername && <li>Masukkan username Telegram Anda di form atas.</li>}
                                     {plan.id === 'TELEBOT' && duration === 'lifetime' && <li>Promo lifetime TELEBOT ini hanya untuk 100 orang pertama.</li>}
                                     <li>Klik tombol konfirmasi di bawah untuk kirim bukti ke admin.</li>
-                                    <li>Tunggu approval admin dan aktivasi akses maksimal 1x24 jam.</li>
+                                    <li>Admin akan mengirimkan Kode Lisensi aktivasi atau approve akses Anda.</li>
                                 </ol>
                             </div>
                         </div>
@@ -272,7 +308,7 @@ function TransferContent() {
                             onClick={() => void handleConfirmPayment()}
                             disabled={!canConfirmPayment || savingTelegramProfile}
                             className={`block w-full py-4 text-white font-semibold rounded-xl text-center transition-all ${canConfirmPayment
-                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/25'
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/25 cursor-pointer'
                                 : 'bg-slate-600 cursor-not-allowed opacity-60'
                                 }`}
                         >
@@ -280,7 +316,12 @@ function TransferContent() {
                                 {savingTelegramProfile ? 'Menyimpan username...' : 'Konfirmasi & Kirim Bukti Transfer'}
                             </span>
                         </button>
-                        {requiresTelegramUsername && !canConfirmPayment && (
+                        {!hasBuyerInfo && (
+                            <p className="text-center text-xs text-amber-500">
+                                Lengkapi Nama dan No. WhatsApp/Email di atas untuk melanjutkan.
+                            </p>
+                        )}
+                        {requiresTelegramUsername && !normalizedTelegramUsername && (
                             <p className="text-center text-xs text-amber-400">
                                 Isi username Telegram dulu sebelum kirim konfirmasi pembayaran.
                             </p>
