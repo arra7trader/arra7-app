@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { isAdminEmail } from '@/lib/admin-access';
 import { FIBO_KYOKO_TRADINGVIEW_SCRIPT } from '@/lib/fibo-kyoko-script';
+import { KeyIcon, LockIcon, FilmIcon, BoltIcon, ChartIcon, TrendUpIcon, PlayIcon, FolderIcon, CheckIcon, DownloadIcon, ClipboardIcon, CheckCircleIcon } from '@/components/PremiumIcons';
 
 export default function KursusFiboKyokoPage() {
     const { data: session } = useSession();
@@ -80,7 +81,7 @@ export default function KursusFiboKyokoPage() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200/80 pb-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-xs mb-3 border border-blue-200">
-                            <span>📈</span>
+                            <TrendUpIcon size="xs" className="text-blue-600" />
                             <span>Masterclass Eksklusif PICA</span>
                             <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white">PRO</span>
                         </div>
@@ -102,9 +103,10 @@ export default function KursusFiboKyokoPage() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={openActivation}
-                                className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition-colors cursor-pointer"
                             >
-                                🔑 Aktivasi Kode
+                                <KeyIcon size="xs" className="text-slate-600" />
+                                <span>Aktivasi Kode</span>
                             </button>
                             <Link
                                 href="/payment/transfer?plan=FIBO_KYOKO&duration=lifetime&days=0"
@@ -123,8 +125,9 @@ export default function KursusFiboKyokoPage() {
                     <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xl overflow-hidden mb-12">
                         {/* Notice Banner */}
                         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 text-white text-center">
-                            <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold mb-2">
-                                🔒 Akses Terkunci
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold mb-2">
+                                <LockIcon size="xs" className="text-white" />
+                                <span>Akses Terkunci</span>
                             </span>
                             <h2 className="text-2xl sm:text-3xl font-extrabold">
                                 Kursus Khusus Member PRO / Pembeli Paket Fibo Kyoko
@@ -139,21 +142,27 @@ export default function KursusFiboKyokoPage() {
                             <h3 className="text-lg font-bold text-slate-900 mb-6">Materi &amp; Aset yang Anda Dapatkan:</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                                 <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                                    <div className="text-3xl mb-3">🎬</div>
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
+                                        <FilmIcon size="md" />
+                                    </div>
                                     <h4 className="font-bold text-slate-900 text-sm mb-1">3 Video Masterclass HD</h4>
                                     <p className="text-slate-600 text-xs leading-relaxed">
                                         Mulai dari dasar filosofi, pola trend BOS, hingga tutorial teknis cara menarik garis swing high-low yang benar.
                                     </p>
                                 </div>
                                 <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                                    <div className="text-3xl mb-3">⚡</div>
+                                    <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3">
+                                        <BoltIcon size="md" />
+                                    </div>
                                     <h4 className="font-bold text-slate-900 text-sm mb-1">Indikator Auto MT5 (.ex5)</h4>
                                     <p className="text-slate-600 text-xs leading-relaxed">
                                         File indikator siap pasang untuk MetaTrader 5 (PC &amp; VPS). Level Fibo Kyoko diplot secara otomatis tanpa repot.
                                     </p>
                                 </div>
                                 <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                                    <div className="text-3xl mb-3">📊</div>
+                                    <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3">
+                                        <ChartIcon size="md" />
+                                    </div>
                                     <h4 className="font-bold text-slate-900 text-sm mb-1">Script TradingView Pine Script v6</h4>
                                     <p className="text-slate-600 text-xs leading-relaxed">
                                         Script Pine v6 lengkap siap copy-paste ke Pine Editor TradingView. Mendukung multi-timeframe &amp; ATR dynamic zone.
@@ -204,7 +213,7 @@ export default function KursusFiboKyokoPage() {
                                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                             }`}
                         >
-                            <span>🎬</span>
+                            <FilmIcon size="sm" />
                             <span>Video Masterclass (3 Episode)</span>
                         </button>
                         <button
@@ -215,7 +224,7 @@ export default function KursusFiboKyokoPage() {
                                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                             }`}
                         >
-                            <span>⚡</span>
+                            <BoltIcon size="sm" />
                             <span>Indikator Auto MT5 (.ex5)</span>
                         </button>
                         <button
@@ -226,7 +235,7 @@ export default function KursusFiboKyokoPage() {
                                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                             }`}
                         >
-                            <span>📊</span>
+                            <ChartIcon size="sm" />
                             <span>Script TradingView Pine Script v6</span>
                         </button>
                     </div>
@@ -240,12 +249,13 @@ export default function KursusFiboKyokoPage() {
                                     <div className="relative aspect-video bg-slate-900 flex items-center justify-center p-6 text-center">
                                         <div className="max-w-md">
                                             <div className="w-16 h-16 rounded-full bg-blue-600/90 text-white flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg">
-                                                ▶
+                                                <PlayIcon size="lg" className="ml-1" />
                                             </div>
                                             <h3 className="text-white font-bold text-lg mb-1">{currentEp.title}</h3>
                                             <p className="text-slate-400 text-xs mb-4">{currentEp.subtitle}</p>
-                                            <p className="text-xs text-blue-300 font-mono bg-blue-950/70 border border-blue-800 rounded-lg p-2.5 inline-block">
-                                                📁 File Master: {currentEp.fileNote}
+                                            <p className="text-xs text-blue-300 font-mono bg-blue-950/70 border border-blue-800 rounded-lg p-2.5 inline-flex items-center gap-1.5">
+                                                <FolderIcon size="xs" className="text-blue-400" />
+                                                <span>File Master: {currentEp.fileNote}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -269,7 +279,7 @@ export default function KursusFiboKyokoPage() {
                                             <ul className="space-y-1.5 text-xs text-slate-600">
                                                 {currentEp.highlights.map((h, i) => (
                                                     <li key={i} className="flex items-start gap-2">
-                                                        <span className="text-blue-600 font-bold">✓</span>
+                                                        <CheckIcon size="xs" className="text-blue-600 mt-0.5 shrink-0" />
                                                         <span>{h}</span>
                                                     </li>
                                                 ))}
@@ -332,7 +342,7 @@ export default function KursusFiboKyokoPage() {
                                         download="FIBO_KYOKO_AUTO_MT5.ex5"
                                         className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap"
                                     >
-                                        <span>⬇️</span>
+                                        <DownloadIcon size="sm" />
                                         <span>Download File .EX5</span>
                                     </a>
                                 </div>
@@ -351,19 +361,19 @@ export default function KursusFiboKyokoPage() {
                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                                         <div className="font-bold text-blue-600 mb-1">Langkah 2: Buka MT5 Data Folder</div>
                                         <p className="text-slate-600">
-                                            Di MetaTrader 5, klik menu <strong>File</strong> di pojok kiri atas $\rightarrow$ pilih <strong>Open Data Folder</strong>.
+                                            Di MetaTrader 5, klik menu <strong>File</strong> di pojok kiri atas &rarr; pilih <strong>Open Data Folder</strong>.
                                         </p>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                                         <div className="font-bold text-blue-600 mb-1">Langkah 3: Paste ke Folder Indicators</div>
                                         <p className="text-slate-600">
-                                            Buka folder <strong>MQL5</strong> $\rightarrow$ buka folder <strong>Indicators</strong>. Paste file <code>FIBO_KYOKO_AUTO_MT5.ex5</code> di sini.
+                                            Buka folder <strong>MQL5</strong> &rarr; buka folder <strong>Indicators</strong>. Paste file <code>FIBO_KYOKO_AUTO_MT5.ex5</code> di sini.
                                         </p>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                                         <div className="font-bold text-blue-600 mb-1">Langkah 4: Refresh &amp; Pasang ke Chart</div>
                                         <p className="text-slate-600">
-                                            Di panel Navigator MT5, klik kanan pada Indicators $\rightarrow$ klik <strong>Refresh</strong>. Drag <code>FIBO_KYOKO_AUTO_MT5</code> ke chart XAUUSD atau pair pilihan Anda!
+                                            Di panel Navigator MT5, klik kanan pada Indicators &rarr; klik <strong>Refresh</strong>. Drag <code>FIBO_KYOKO_AUTO_MT5</code> ke chart XAUUSD atau pair pilihan Anda!
                                         </p>
                                     </div>
                                 </div>
@@ -398,9 +408,19 @@ export default function KursusFiboKyokoPage() {
                                         </a>
                                         <button
                                             onClick={handleCopyScript}
-                                            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+                                            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
                                         >
-                                            {copiedScript ? '✅ Script Tersalin!' : '📋 Salin Script (1-Click)'}
+                                            {copiedScript ? (
+                                                <>
+                                                    <CheckCircleIcon size="xs" />
+                                                    <span>Script Tersalin!</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ClipboardIcon size="xs" />
+                                                    <span>Salin Script (1-Click)</span>
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </div>

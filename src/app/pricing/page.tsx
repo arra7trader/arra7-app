@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon } from '@/components/PremiumIcons';
+import Link from 'next/link';
+import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon } from '@/components/PremiumIcons';
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
     PRO: [
@@ -29,20 +29,38 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
     ],
 };
 
+function PlanIcon({ planId }: { planId: string }) {
+    switch (planId) {
+        case 'BASIC':
+            return <SparklesIcon size="lg" className="text-slate-600" />;
+        case 'PRO':
+            return <BoltIcon size="lg" className="text-blue-600" />;
+        case 'VVIP':
+            return <CrownIcon size="lg" className="text-amber-500" />;
+        case 'TELEBOT_MONTHLY':
+            return <RobotIcon size="lg" className="text-emerald-600" />;
+        case 'TELEBOT_LIFETIME':
+            return <GemIcon size="lg" className="text-amber-500" />;
+        case 'FIBO_KYOKO':
+            return <TrendUpIcon size="lg" className="text-indigo-600" />;
+        default:
+            return <SparklesIcon size="lg" className="text-blue-600" />;
+    }
+}
+
 const PRICING_PLANS = [
     {
         id: 'BASIC',
         name: 'Basic',
         description: 'Untuk trader pemula yang ingin mencoba platform PICA AI.',
-        icon: '🆓',
         theme: 'slate',
         features: [
             { text: '1x Analisa per Hari', included: true, highlight: true },
             { text: 'Hanya Pair XAUUSD', included: true, highlight: true },
             { text: 'Timeframe M5 dan M15', included: true, highlight: false },
             { text: 'Akses Gold Only', included: true, highlight: false },
-            { text: '🔥 Bookmap PICA - Trial Terbatas', included: true, highlight: false },
-            { text: '🧠 PICA Neural Lab Demo Simulation', included: true, highlight: true },
+            { text: 'Bookmap PICA - Trial Terbatas', included: true, highlight: false },
+            { text: 'PICA Neural Lab Demo Simulation', included: true, highlight: true },
             { text: 'Analisa Saham IDX', included: false, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: false, highlight: false },
         ],
@@ -53,15 +71,14 @@ const PRICING_PLANS = [
         id: 'PRO',
         name: 'Pro',
         description: 'Untuk trader aktif yang serius meningkatkan profit harian dengan AI.',
-        icon: '⚡',
         theme: 'blue',
         features: [
             { text: '25x Analisa Forex per hari', included: true, highlight: false },
             { text: '25x Analisa Saham IDX per hari', included: true, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: true, highlight: false },
             { text: 'Akses Semua Pairs + Crypto', included: true, highlight: false },
-            { text: '🔥 Bookmap PICA - UNLIMITED', included: true, highlight: true },
-            { text: '🧠 PICA Neural Lab (Akses Prediksi Gold)', included: true, highlight: true },
+            { text: 'Bookmap PICA - UNLIMITED', included: true, highlight: true },
+            { text: 'PICA Neural Lab (Akses Prediksi Gold)', included: true, highlight: true },
             { text: 'AI Neural Ensemble (90%+ Accuracy)', included: true, highlight: true },
             { text: 'AI Trade Doctor (Review Jurnal)', included: true, highlight: false },
         ],
@@ -72,16 +89,15 @@ const PRICING_PLANS = [
         id: 'VVIP',
         name: 'VVIP',
         description: 'Untuk trader profesional & institusi tanpa batas analisa kuantitatif.',
-        icon: '👑',
         theme: 'amber',
         features: [
             { text: 'UNLIMITED Analisa Forex', included: true, highlight: false },
             { text: 'UNLIMITED Analisa Saham IDX', included: true, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: true, highlight: false },
             { text: 'Akses Semua Pairs + Crypto + Indices', included: true, highlight: false },
-            { text: '🔥 Bookmap PICA - UNLIMITED', included: true, highlight: true },
-            { text: '🧠 PICA Neural Lab UNLIMITED Real-time', included: true, highlight: true },
-            { text: '⚡ Multi-Timeframe Neural Confluence (M15-D1)', included: true, highlight: true },
+            { text: 'Bookmap PICA - UNLIMITED', included: true, highlight: true },
+            { text: 'PICA Neural Lab UNLIMITED Real-time', included: true, highlight: true },
+            { text: 'Multi-Timeframe Neural Confluence (M15-D1)', included: true, highlight: true },
             { text: 'AI Trade Doctor (Review Jurnal)', included: true, highlight: false },
         ],
         cta: 'Daftar VVIP',
@@ -91,7 +107,6 @@ const PRICING_PLANS = [
         id: 'TELEBOT_MONTHLY',
         name: 'TELEBOT 1 Bulan',
         description: 'Private AI execution desk untuk trader yang ingin langsung signal Telegram premium PICA dengan live status, bonus akun PRO website 1 bulan, dan video Edukasi Sniper Entry.',
-        icon: '📱',
         theme: 'emerald',
         features: [
             { text: 'Akses TELEBOT khusus member approved 1 bulan', included: true, highlight: true },
@@ -110,7 +125,6 @@ const PRICING_PLANS = [
         id: 'TELEBOT_LIFETIME',
         name: 'TELEBOT Lifetime',
         description: 'Promo eksklusif sekali bayar untuk 100 orang tercepat. Akses TELEBOT lifetime, bonus akun PRO website 1 bulan, dan bonus video Edukasi Sniper Entry.',
-        icon: '💎',
         theme: 'amber',
         features: [
             { text: 'Akses TELEBOT lifetime selamanya', included: true, highlight: true },
@@ -129,7 +143,6 @@ const PRICING_PLANS = [
         id: 'FIBO_KYOKO',
         name: 'Kursus Digital Fibo Kyoko',
         description: 'Paket lengkap 3 video masterclass Fibo Kyoko + File Indikator Auto MT5 (.ex5) + Script TradingView Pine Script v6.',
-        icon: '📈',
         theme: 'indigo',
         features: [
             { text: '3 Video Masterclass HD (Basic, Pola Trend, Tarik Garis)', included: true, highlight: true },
@@ -293,7 +306,9 @@ export default function PricingPage() {
                             {/* Left Pane (Details & Features) */}
                             <div className={`w-full md:w-3/5 p-8 md:p-12 ${leftBg} flex flex-col justify-center border-b md:border-b-0 ${isReversed ? 'md:border-l' : 'md:border-r'} border-slate-200`}>
                                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                                    <span className="text-3xl">{plan.icon}</span>
+                                    <div className="p-2.5 rounded-2xl bg-white shadow-xs border border-slate-200/80">
+                                        <PlanIcon planId={plan.id} />
+                                    </div>
                                     <h2 className={`text-2xl md:text-3xl font-extrabold ${titleColor}`}>
                                         {plan.name}
                                     </h2>

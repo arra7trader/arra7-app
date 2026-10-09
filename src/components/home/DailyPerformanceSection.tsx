@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { TrendUpIcon, ChartIcon } from '@/components/PremiumIcons';
 
 interface StatBlock {
     accuracy: string;
@@ -99,8 +100,9 @@ export default function DailyPerformanceSection() {
 
                 {/* TODAY's Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
-                        📈 Performa Hari Ini
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5 flex items-center gap-1.5">
+                        <TrendUpIcon size="xs" className="text-blue-600" />
+                        <span>Performa Hari Ini</span>
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.today.total ?? 0} label="Total Sinyal" />
@@ -117,8 +119,9 @@ export default function DailyPerformanceSection() {
 
                 {/* OVERALL Performance */}
                 <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5">
-                        📊 Overall Performance
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2.5 flex items-center gap-1.5">
+                        <ChartIcon size="xs" className="text-blue-600" />
+                        <span>Overall Performance</span>
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <StatCard value={data?.overall?.total ?? 0} label="Total Sinyal" />

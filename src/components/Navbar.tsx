@@ -10,6 +10,7 @@ import PicaLogo from './PicaLogo';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { BrainIcon, KeyIcon, CrownIcon, BoltIcon, TrendUpIcon } from './PremiumIcons';
 
 export default function Navbar() {
     const { data: session, status } = useSession();
@@ -31,7 +32,7 @@ export default function Navbar() {
         { 
             label: (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200/90 text-blue-700 transition-all shadow-xs group">
-                    <span className="text-sm">🧠</span>
+                    <BrainIcon size="xs" className="text-blue-600" />
                     <span className="font-semibold text-[13px] text-blue-700">Neural Lab</span>
                     <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                 </div>
@@ -42,7 +43,7 @@ export default function Navbar() {
         {
             label: (
                 <div className="flex items-center gap-1.5 px-2 py-0.5">
-                    <span>📈</span>
+                    <TrendUpIcon size="xs" className="text-blue-600" />
                     <span>Kursus Fibo Kyoko</span>
                     <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-700 border border-blue-500/30">PRO</span>
                 </div>
@@ -167,7 +168,7 @@ export default function Navbar() {
                                                     href="/xauusd-neural-lab"
                                                     className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100/70 rounded-xl transition-colors font-['Inter']"
                                                 >
-                                                    <span>🧠</span>
+                                                    <BrainIcon size="xs" className="text-blue-600" />
                                                     <span>PICA Neural Lab</span>
                                                     <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 border border-amber-500/30">VVIP</span>
                                                 </Link>
@@ -215,7 +216,7 @@ export default function Navbar() {
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
                                     title="Klik untuk melihat masa aktif lisensi"
                                 >
-                                    <span>🌟</span>
+                                    <CrownIcon size="xs" className="text-amber-600" />
                                     <span>VVIP MEMBER</span>
                                     <span className="text-[10px] text-amber-700 font-medium">({daysLeft}h)</span>
                                 </button>
@@ -224,7 +225,7 @@ export default function Navbar() {
                                     onClick={openActivation}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
                                 >
-                                    <span>⚡</span>
+                                    <BoltIcon size="xs" className="text-blue-600" />
                                     <span>PRO MEMBER</span>
                                     <span className="text-[10px] text-blue-700 font-medium">({daysLeft}h)</span>
                                 </button>
@@ -237,7 +238,7 @@ export default function Navbar() {
                                         onClick={openActivation}
                                         className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95"
                                     >
-                                        <span>🔑</span>
+                                        <KeyIcon size="xs" className="text-white" />
                                         <span>Aktivasi Kode</span>
                                     </button>
                                 </div>
@@ -324,9 +325,10 @@ export default function Navbar() {
                                             setIsMobileMenuOpen(false);
                                             openActivation();
                                         }}
-                                        className="rounded-full py-2 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-['Inter'] font-semibold text-[13px] shadow-sm cursor-pointer"
+                                        className="flex items-center gap-2 rounded-full py-2 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-['Inter'] font-semibold text-[13px] shadow-sm cursor-pointer"
                                     >
-                                        🔑 Aktivasi Kode
+                                        <KeyIcon size="xs" className="text-white" />
+                                        <span>Aktivasi Kode</span>
                                     </button>
                                 )}
                             </div>

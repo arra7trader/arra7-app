@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { KeyIcon, BoltIcon, RefreshIcon, CheckIcon, SparklesIcon } from '@/components/PremiumIcons';
 
 interface LicenseKey {
   id?: number;
@@ -143,7 +144,9 @@ Langsung aktif seketika tanpa perlu login!`;
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 text-lg">🔑</span>
+            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 inline-flex items-center justify-center">
+              <KeyIcon size="md" />
+            </span>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight font-['Space_Grotesk']">
               Sistem Lisensi 1x Pakai &amp; Tracking Perangkat
             </h2>
@@ -179,7 +182,7 @@ Langsung aktif seketika tanpa perlu login!`;
           {/* ══════ GENERATOR CARD ══════ */}
           <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/90 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <span>⚡</span>
+              <BoltIcon size="sm" className="text-blue-600" />
               <span>Buat Kode Lisensi Baru (1 Kali Pakai)</span>
             </h3>
 
@@ -191,8 +194,8 @@ Langsung aktif seketika tanpa perlu login!`;
                   onChange={e => setGenTier(e.target.value as any)}
                   className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-900"
                 >
-                  <option value="VVIP">🌟 VVIP Access</option>
-                  <option value="PRO">⚡ PRO Access</option>
+                  <option value="VVIP">VVIP Access</option>
+                  <option value="PRO">PRO Access</option>
                 </select>
               </div>
 
@@ -255,7 +258,7 @@ Langsung aktif seketika tanpa perlu login!`;
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                    <span>🎉</span>
+                    <SparklesIcon size="xs" className="text-emerald-600" />
                     <span>{justGenerated.length} Kode Baru Berhasil Dibuat:</span>
                   </span>
                 </div>
@@ -272,16 +275,30 @@ Langsung aktif seketika tanpa perlu login!`;
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleCopy(code)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold cursor-pointer flex items-center gap-1"
                         >
-                          {copiedKey === code ? '✓ Salin' : 'Salin Kode'}
+                          {copiedKey === code ? (
+                            <>
+                              <CheckIcon size="xs" className="text-emerald-600" />
+                              <span className="text-emerald-600">Salin</span>
+                            </>
+                          ) : (
+                            'Salin Kode'
+                          )}
                         </button>
                         <button
                           onClick={() => handleCopyTemplate(code)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold cursor-pointer flex items-center gap-1"
                           title="Salin pesan siap kirim ke WhatsApp / Telegram"
                         >
-                          {copiedKey === code + '_template' ? '✓ Format WA' : 'Format Chat'}
+                          {copiedKey === code + '_template' ? (
+                            <>
+                              <CheckIcon size="xs" />
+                              <span>Format WA</span>
+                            </>
+                          ) : (
+                            'Format Chat'
+                          )}
                         </button>
                       </div>
                     </div>
@@ -323,9 +340,10 @@ Langsung aktif seketika tanpa perlu login!`;
 
               <button
                 onClick={fetchData}
-                className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
+                className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
               >
-                🔄 Refresh
+                <RefreshIcon size="xs" />
+                <span>Refresh</span>
               </button>
             </div>
 
@@ -399,7 +417,7 @@ Langsung aktif seketika tanpa perlu login!`;
                             onClick={() => handleCopy(k.code)}
                             className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer"
                           >
-                            {copiedKey === k.code ? '✓' : 'Salin'}
+                            {copiedKey === k.code ? <CheckIcon size="xs" className="text-emerald-600 inline" /> : 'Salin'}
                           </button>
                         </td>
                       </tr>
@@ -419,8 +437,9 @@ Langsung aktif seketika tanpa perlu login!`;
             <p className="text-xs text-slate-500">
               Setiap pengunjung yang membuka web otomatis terdaftar di sini tanpa perlu login.
             </p>
-            <button onClick={fetchData} className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">
-              🔄 Refresh
+            <button onClick={fetchData} className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1">
+              <RefreshIcon size="xs" />
+              <span>Refresh</span>
             </button>
           </div>
 

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { signIn, useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { GoogleIcon } from '@/components/PremiumIcons';
+import { GoogleIcon, WarningIcon, LockIcon } from '@/components/PremiumIcons';
 import PicaLogo from '@/components/PicaLogo';
 
 function LoginContent() {
@@ -107,7 +107,7 @@ function LoginContent() {
                     {authError && (
                         <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-left">
                             <div className="flex items-center gap-2 text-amber-800 font-bold text-xs mb-1">
-                                <span>⚠️</span>
+                                <WarningIcon size="xs" className="text-amber-800" />
                                 <span>Pemberitahuan Login Google</span>
                             </div>
                             <p className="text-xs text-amber-700 leading-relaxed">
@@ -145,7 +145,7 @@ function LoginContent() {
                             className="w-full flex items-center justify-between text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer transition-colors"
                         >
                             <span className="flex items-center gap-2">
-                                <span className="text-slate-500">🔒</span>
+                                <LockIcon size="xs" className="text-slate-500" />
                                 <span>Portal Khusus Administrator</span>
                             </span>
                             <span className="text-blue-600 text-[11px] font-bold">
@@ -191,8 +191,9 @@ function LoginContent() {
                                     </div>
 
                                     {adminErrorMsg && (
-                                        <p className="text-xs text-rose-600 font-medium">
-                                            ⚠️ {adminErrorMsg}
+                                        <p className="text-xs text-rose-600 font-medium flex items-center gap-1.5">
+                                            <WarningIcon size="xs" className="text-rose-600" />
+                                            <span>{adminErrorMsg}</span>
                                         </p>
                                     )}
 

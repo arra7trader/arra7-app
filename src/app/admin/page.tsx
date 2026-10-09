@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ChartIcon, GlobeIcon, CurrencyIcon, BellIcon, TrendUpIcon, LightbulbIcon } from '@/components/PremiumIcons';
+import { ChartIcon, GlobeIcon, CurrencyIcon, BellIcon, TrendUpIcon, LightbulbIcon, SignalIcon, UsersIcon, BroadcastIcon, RobotIcon, KeyIcon } from '@/components/PremiumIcons';
 import AdminStats from '@/components/admin/AdminStats';
 import TelegramMarketing from '@/components/admin/TelegramMarketing';
 import UserTable, { User } from '@/components/admin/UserTable';
@@ -613,27 +613,27 @@ Tim PICA`;
                 {/* Quick Access Grid Scrollable Menu */}
                 <div className="flex gap-3 mb-6 overflow-x-auto pb-3 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                     <Link href="/xauusd-neural-lab" className="admin-quick-link">
-                        <div className="icon-container bg-emerald-500/15">📡</div>
+                        <div className="icon-container bg-emerald-500/15 text-emerald-400"><SignalIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">PICA Neural Lab</div>
                     </Link>
                     <Link href="/admin/crm" className="admin-quick-link">
-                        <div className="icon-container bg-blue-500/15">📊</div>
+                        <div className="icon-container bg-blue-500/15 text-blue-400"><ChartIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">CRM Dashboard</div>
                     </Link>
                     <Link href="/admin/users-map" className="admin-quick-link">
-                        <div className="icon-container bg-cyan-500/15">🌍</div>
+                        <div className="icon-container bg-cyan-500/15 text-cyan-400"><GlobeIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Users Map</div>
                     </Link>
                     <Link href="/admin/revenue" className="admin-quick-link">
-                        <div className="icon-container bg-amber-500/15">💰</div>
+                        <div className="icon-container bg-amber-500/15 text-amber-400"><CurrencyIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Revenue</div>
                     </Link>
                     <Link href="/admin/notifications" className="admin-quick-link">
-                        <div className="icon-container bg-rose-500/15">🔔</div>
+                        <div className="icon-container bg-rose-500/15 text-rose-400"><BellIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">Notifikasi Web</div>
                     </Link>
                     <Link href="/admin/bot-private" className="admin-quick-link">
-                        <div className="icon-container bg-emerald-500/15">BOT</div>
+                        <div className="icon-container bg-emerald-500/15 text-emerald-400"><RobotIcon size="sm" /></div>
                         <div className="text-[#CBD5E1] font-medium text-sm">TELEBOT</div>
                     </Link>
                     <Link href="/admin/report" className="admin-quick-link">
@@ -666,27 +666,31 @@ Tim PICA`;
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-6 p-1 rounded-2xl bg-[#FFFFFF04]">
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`admin-pill-tab ${activeTab === 'users' ? 'active' : ''}`}
+                        className={`admin-pill-tab ${activeTab === 'users' ? 'active' : ''} flex items-center gap-2`}
                     >
-                        👥 User Management
+                        <UsersIcon size="sm" />
+                        <span>User Management</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('broadcast')}
-                        className={`admin-pill-tab ${activeTab === 'broadcast' ? 'active' : ''}`}
+                        className={`admin-pill-tab ${activeTab === 'broadcast' ? 'active' : ''} flex items-center gap-2`}
                     >
-                        📢 Forecast & Broadcast
+                        <BroadcastIcon size="sm" />
+                        <span>Forecast &amp; Broadcast</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('marketing')}
-                        className={`admin-pill-tab ${activeTab === 'marketing' ? 'active' : ''}`}
+                        className={`admin-pill-tab ${activeTab === 'marketing' ? 'active' : ''} flex items-center gap-2`}
                     >
-                        🤖 Marketing Bot
+                        <RobotIcon size="sm" />
+                        <span>Marketing Bot</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('license')}
-                        className={`admin-pill-tab ${activeTab === 'license' ? 'active' : ''}`}
+                        className={`admin-pill-tab ${activeTab === 'license' ? 'active' : ''} flex items-center gap-2`}
                     >
-                        🔑 Lisensi & Perangkat
+                        <KeyIcon size="sm" />
+                        <span>Lisensi &amp; Perangkat</span>
                     </button>
                 </div>
 

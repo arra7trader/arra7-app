@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
+import { KeyIcon, CrownIcon, BoltIcon, CheckCircleIcon, WarningIcon, CheckIcon } from '@/components/PremiumIcons';
 
 export default function ActivationModal() {
   const {
@@ -87,7 +88,7 @@ export default function ActivationModal() {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-lg shadow-orange-500/20 mb-3.5">
-              <span className="text-2xl">🔑</span>
+              <KeyIcon size="md" className="text-white" />
             </div>
             <h2 className="text-2xl font-bold font-['Space_Grotesk',system-ui,sans-serif] tracking-tight">
               Aktivasi Lisensi PICA
@@ -102,7 +103,7 @@ export default function ActivationModal() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs text-slate-500 font-medium">Status Perangkat Ini:</span>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 ${
                   isVvip
                     ? 'bg-amber-100 text-amber-800 border border-amber-300'
                     : isPro
@@ -110,7 +111,19 @@ export default function ActivationModal() {
                     : 'bg-slate-200/80 text-slate-700 border border-slate-300'
                 }`}
               >
-                {isVvip ? '🌟 VVIP AKTIF' : isPro ? '⚡ PRO AKTIF' : 'BASIC (GRATIS)'}
+                {isVvip ? (
+                  <>
+                    <CrownIcon size="xs" />
+                    <span>VVIP AKTIF</span>
+                  </>
+                ) : isPro ? (
+                  <>
+                    <BoltIcon size="xs" />
+                    <span>PRO AKTIF</span>
+                  </>
+                ) : (
+                  'BASIC (GRATIS)'
+                )}
               </span>
             </div>
 
@@ -136,7 +149,11 @@ export default function ActivationModal() {
                   : 'bg-rose-50 border border-rose-200 text-rose-800 font-medium'
               }`}
             >
-              <span className="text-base">{feedback.type === 'success' ? '🎉' : '⚠️'}</span>
+              {feedback.type === 'success' ? (
+                <CheckCircleIcon size="sm" className="text-emerald-600 shrink-0" />
+              ) : (
+                <WarningIcon size="sm" className="text-rose-600 shrink-0" />
+              )}
               <span>{feedback.message}</span>
             </motion.div>
           )}
@@ -183,7 +200,13 @@ export default function ActivationModal() {
               onClick={handleCopyDeviceId}
               className="hover:text-blue-600 font-semibold cursor-pointer transition-colors"
             >
-              {copiedDevId ? '✓ Tersalin' : 'Salin ID'}
+              {copiedDevId ? (
+                <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
+                  <CheckIcon size="xs" /> Tersalin
+                </span>
+              ) : (
+                'Salin ID'
+              )}
             </button>
           </div>
         </motion.div>
