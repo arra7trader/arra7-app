@@ -55,13 +55,8 @@ export function extractNeuralLabFeatures(
     candles: NeuralLabCandle[],
     lookback: number = 60
 ): number[][] {
-    const minRequired = lookback + 200; // Need enough history for EMA200
-    if (candles.length < minRequired) {
-        // Pad with zeros if not enough data
-        const available = Math.max(0, candles.length - 50);
-        if (available < lookback) {
-            return Array.from({ length: lookback }, () => new Array(22).fill(0));
-        }
+    if (candles.length < 15) {
+        return Array.from({ length: lookback }, () => new Array(22).fill(0));
     }
 
     const closes = candles.map(c => c.close);
@@ -93,8 +88,10 @@ export function extractNeuralLabFeatures(
         volumes.reduce((a, b) => a + (b - volMean) ** 2, 0) / volumes.length
     ) || 1;
 
-    // Extract features for the last `lookback` candles
-    const startIdx = candles.length - lookback;
+    // Extract features for the available candles up to `lookback`
+    const actualLength = candles.length;
+    const effectiveLookback = Math.min(lookback, actualLength);
+    const startIdx = Math.max(0, actualLength - effectiveLookback);
     const features: number[][] = [];
 
     for (let i = startIdx; i < candles.length; i++) {
@@ -207,7 +204,14 @@ export function extractNeuralLabFeatures(
         ]);
     }
 
-    return features;
+    if (features.length < lookback) {
+        const padCount = lookback - features.length;
+        const padRow = features[0] || new Array(22).fill(0);
+        const padding = Array.from({ length: padCount }, () => [...padRow]);
+        return [...padding, ...features];
+    }
+
+    return features.slice(-lookback);
 }
 
 // ═══════════════════════════════════════════════

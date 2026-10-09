@@ -308,12 +308,14 @@ export interface CandleData {
  *   9: Hour cos encoding
  */
 export function extractFeatures(candles: CandleData[], lookback: number = 60): number[][] {
-    if (candles.length < lookback + 14) {
+    if (candles.length < 15) {
         return Array.from({ length: lookback }, () => new Array(10).fill(0));
     }
 
+    const actualLength = candles.length;
+    const effectiveLookback = Math.min(lookback, actualLength);
+    const startIdx = Math.max(0, actualLength - effectiveLookback);
     const features: number[][] = [];
-    const startIdx = candles.length - lookback;
 
     const closes = candles.map(c => c.close);
     const ema20 = computeEMA(closes, 20);
@@ -362,7 +364,14 @@ export function extractFeatures(candles: CandleData[], lookback: number = 60): n
         ]);
     }
 
-    return features;
+    if (features.length < lookback) {
+        const padCount = lookback - features.length;
+        const padRow = features[0] || new Array(10).fill(0);
+        const padding = Array.from({ length: padCount }, () => [...padRow]);
+        return [...padding, ...features];
+    }
+
+    return features.slice(-lookback);
 }
 
 // ═══════════════════════════════════════════════

@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
             volume: c.volume,
             timestamp: c.timestamp,
         }));
-        const features22 = extractNeuralLabFeatures(neuralLabCandles, Math.min(lookback, neuralLabCandles.length - 20));
+        const features22 = extractNeuralLabFeatures(neuralLabCandles, lookback);
         
         const latestFeatures = features22.length > 0 ? features22[features22.length - 1] : new Array(22).fill(0);
         const featureMap: Record<string, number> = {};
