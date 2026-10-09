@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { isAdminEmail } from '@/lib/admin-access';
 import { FIBO_KYOKO_TRADINGVIEW_SCRIPT } from '@/lib/fibo-kyoko-script';
-import { KeyIcon, LockIcon, FilmIcon, BoltIcon, ChartIcon, TrendUpIcon, PlayIcon, FolderIcon, CheckIcon, DownloadIcon, ClipboardIcon, CheckCircleIcon } from '@/components/PremiumIcons';
+import { KeyIcon, LockIcon, FilmIcon, BoltIcon, ChartIcon, TrendUpIcon, PlayIcon, FolderIcon, CheckIcon, DownloadIcon, ClipboardIcon, CheckCircleIcon, ShieldCheckIcon } from '@/components/PremiumIcons';
 
 export default function KursusFiboKyokoPage() {
     const { data: session } = useSession();
@@ -30,39 +30,42 @@ export default function KursusFiboKyokoPage() {
             title: 'EPS 1: Basic Fibo Kyoko',
             subtitle: 'Konsep Dasar & Filosofi Fibonacci Modifikasi',
             duration: 'Masterclass Lengkap',
+            youtubeId: 'mphrLopNv9g',
             description: 'Memahami dasar pondasi Fibo Kyoko, perbedaan dengan Fibonacci standar, cara mengidentifikasi Golden Ratio, dan pengenalan zona support & resistance adaptif.',
             highlights: [
                 'Logika matematis level Fibo Kyoko',
                 'Mengapa Golden Ratio standar sering kena false breakout',
                 'Pengenalan Anchor Point 0 dan 1 yang presisi',
             ],
-            fileNote: 'EPS 1 Basic Fibo Kyoko.mp4 (Kualitas Full HD)',
+            note: 'Streaming Terproteksi PICA (Anti-Download Protected)',
         },
         {
             id: 2,
             title: 'EPS 2: Pola Trend Fibo Kyoko',
             subtitle: 'Identifikasi Struktur Trend & Break of Structure (BOS)',
             duration: 'Pola Trend & Konfirmasi',
+            youtubeId: 'NFXyWMVJX9U',
             description: 'Menganalisis pergerakan trend mayor dan minor menggunakan Fibo Kyoko. Mengetahui kapan trend akan berlanjut dan kapan terjadi reversal ekstrem.',
             highlights: [
                 'Validasi BOS (Break of Structure) dengan konfirmasi candle',
                 'Menghindari fakeout pada level 0.618 & 0.786',
                 'Kombinasi timeframe M15 ke H1 untuk swing sniper',
             ],
-            fileNote: 'EPS 2 POLA TREND FIBO KYOKO.mp4 (Kualitas Full HD)',
+            note: 'Streaming Terproteksi PICA (Anti-Download Protected)',
         },
         {
             id: 3,
             title: 'EPS 3: Cara Tarik Garis yang Benar',
             subtitle: 'Tutorial Praktikal Menarik Garis Swing High-Low',
             duration: 'Praktikal Eksekusi Sniper',
+            youtubeId: '4IVH7GkXqGY',
             description: 'Panduan teknikal step-by-step menarik garis Fibo Kyoko secara presisi pada chart live. Menentukan titik entry ideal, letak Stop Loss aman, dan Take Profit bertingkat.',
             highlights: [
                 'Aturan baku titik awal (0) dan titik akhir (1)',
                 'Filter volatilitas menggunakan ATR agar tidak salah tarik',
                 'Manajemen resiko: Rasio Risk to Reward 1:2 hingga 1:5',
             ],
-            fileNote: 'EPS 3 CARA TARIK GARIS YANG BENAR.mp4 (Kualitas Full HD)',
+            note: 'Streaming Terproteksi PICA (Anti-Download Protected)',
         },
     ];
 
@@ -246,27 +249,48 @@ export default function KursusFiboKyokoPage() {
                             {/* Main Video Viewport & Player */}
                             <div className="lg:col-span-2 space-y-6">
                                 <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                                    <div className="relative aspect-video bg-slate-900 flex items-center justify-center p-6 text-center">
-                                        <div className="max-w-md">
-                                            <div className="w-16 h-16 rounded-full bg-blue-600/90 text-white flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg">
-                                                <PlayIcon size="lg" className="ml-1" />
-                                            </div>
-                                            <h3 className="text-white font-bold text-lg mb-1">{currentEp.title}</h3>
-                                            <p className="text-slate-400 text-xs mb-4">{currentEp.subtitle}</p>
-                                            <p className="text-xs text-blue-300 font-mono bg-blue-950/70 border border-blue-800 rounded-lg p-2.5 inline-flex items-center gap-1.5">
-                                                <FolderIcon size="xs" className="text-blue-400" />
-                                                <span>File Master: {currentEp.fileNote}</span>
-                                            </p>
+                                    {/* Security Header Bar */}
+                                    <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-300">
+                                        <div className="flex items-center gap-2">
+                                            <ShieldCheckIcon size="xs" className="text-emerald-400 shrink-0" />
+                                            <span className="font-semibold text-slate-200">Enkripsi Streaming Aktif</span>
+                                            <span className="text-slate-600 hidden sm:inline">•</span>
+                                            <span className="text-slate-400 hidden sm:inline">Proteksi Anti-Download &amp; DRM</span>
                                         </div>
+                                        <div className="flex items-center gap-1.5 text-amber-300 font-semibold uppercase tracking-wider text-[10px]">
+                                            <LockIcon size="xs" className="text-amber-400" />
+                                            <span>Member PRO Eksklusif</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Protected Video Viewport */}
+                                    <div 
+                                        className="relative aspect-video bg-black select-none overflow-hidden"
+                                        onContextMenu={(e) => e.preventDefault()}
+                                    >
+                                        <iframe
+                                            key={currentEp.youtubeId}
+                                            src={`https://www.youtube-nocookie.com/embed/${currentEp.youtubeId}?rel=0&modestbranding=1&controls=1&iv_load_policy=3&playsinline=1`}
+                                            title={currentEp.title}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            className="w-full h-full border-0"
+                                        />
                                     </div>
 
                                     {/* Video Details */}
                                     <div className="p-6">
-                                        <div className="flex items-center justify-between gap-4 mb-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                                             <h2 className="text-xl font-extrabold text-slate-900">{currentEp.title}</h2>
-                                            <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
-                                                {currentEp.duration}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+                                                    {currentEp.duration}
+                                                </span>
+                                                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200 flex items-center gap-1">
+                                                    <ShieldCheckIcon size="xs" className="text-emerald-600" />
+                                                    HD 1080p
+                                                </span>
+                                            </div>
                                         </div>
                                         <p className="text-slate-600 text-sm leading-relaxed mb-6">
                                             {currentEp.description}
@@ -308,8 +332,11 @@ export default function KursusFiboKyokoPage() {
                                                 <span className={`text-[11px] font-bold uppercase tracking-wider ${isCurrent ? 'text-blue-700' : 'text-slate-500'}`}>
                                                     Episode {ep.id}
                                                 </span>
-                                                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
-                                                    HD Video
+                                                <span className={`text-[10px] px-2 py-0.5 rounded font-medium flex items-center gap-1 ${
+                                                    isCurrent ? 'bg-blue-600 text-white font-semibold' : 'bg-slate-100 text-slate-600'
+                                                }`}>
+                                                    <PlayIcon size="xs" />
+                                                    <span>{isCurrent ? 'Diputar' : 'Putar'}</span>
                                                 </span>
                                             </div>
                                             <div className="font-bold text-slate-900 text-sm mb-1">{ep.title.replace(`EPS ${ep.id}: `, '')}</div>
