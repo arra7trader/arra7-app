@@ -6,10 +6,29 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
+import { isAdminEmail } from '@/lib/admin-access';
+import {
+    BrainIcon,
+    SignalIcon,
+    SparklesIcon,
+    BoltIcon,
+    ShieldCheckIcon,
+    LockIcon,
+    KeyIcon,
+    CheckCircleIcon,
+    WarningIcon,
+    ArrowRightIcon,
+    RefreshIcon,
+    ClockIcon,
+    CrownIcon,
+    LightbulbIcon,
+    TargetIcon,
+    CrosshairIcon,
+} from '@/components/PremiumIcons';
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ─────────────────────────────────────────────────────────────
 // Types
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ─────────────────────────────────────────────────────────────
 
 interface Prediction {
     direction: 'BUY' | 'SELL' | 'HOLD';
@@ -47,6 +66,7 @@ interface MarketInfo {
 interface SessionInfo {
     name: string;
     emoji: string;
+    label?: string;
     utcHour: number;
 }
 
@@ -61,6 +81,7 @@ interface ModelMeta {
     inputFeatures: number;
     displayFeatures: number;
     epochs: number;
+    ensembleMethod?: string;
 }
 
 interface FeatureMeta {
@@ -170,19 +191,32 @@ export default function XauusdNeuralLabPage() {
     const [mtfPredictions, setMtfPredictions] = useState<Record<string, Prediction | null>>({});
     const [mtfLoading, setMtfLoading] = useState(false);
 
-    // Membership & Demo Mode
-    const [isCheckingVvip, setIsCheckingVvip] = useState(true);
-    const [isVvip, setIsVvip] = useState(false);
-    const [isDemoMode, setIsDemoMode] = useState(false);
+    // Membership & Access state
+    const [isCheckingMembership, setIsCheckingMembership] = useState(true);
+    const [isDbVvip, setIsDbVvip] = useState(false);
 
     const { isVvip: isDeviceVvip, openActivation, tier: deviceTier } = usePicaDevice();
 
-    // Check VVIP Status (Supports both Device License and Session)
+    // Determine Admin status
+    const isAdmin = Boolean(
+        isAdminEmail(session?.user?.email) || 
+        (session?.user as any)?.role === 'ADMIN'
+    );
+
+    // Full access if user is Admin OR VVIP (via device license or DB session)
+    const isFullAccess = Boolean(
+        isAdmin ||
+        isDeviceVvip ||
+        deviceTier === 'VVIP' ||
+        isDbVvip ||
+        session?.user?.tier === 'VVIP'
+    );
+
+    // Check VVIP Status from database if authenticated
     useEffect(() => {
-        if (isDeviceVvip) {
-            setIsVvip(true);
-            setIsDemoMode(false);
-            setIsCheckingVvip(false);
+        if (isAdmin || isDeviceVvip || deviceTier === 'VVIP') {
+            setIsDbVvip(true);
+            setIsCheckingMembership(false);
             return;
         }
 
@@ -194,25 +228,20 @@ export default function XauusdNeuralLabPage() {
                     if (qData.status === 'success') {
                         const membership = (qData.quota?.membership || 'BASIC').toUpperCase();
                         const vvipStatus = membership === 'VVIP' || membership === 'ADMIN';
-                        setIsVvip(vvipStatus);
-                        if (!vvipStatus) {
-                            setIsDemoMode(true);
-                        }
+                        setIsDbVvip(vvipStatus);
                     }
                 } catch {
-                    setIsDemoMode(true);
+                    setIsDbVvip(false);
                 } finally {
-                    setIsCheckingVvip(false);
+                    setIsCheckingMembership(false);
                 }
             };
             checkMembership();
         } else {
-            // Guest access: freely available!
-            setIsVvip(false);
-            setIsDemoMode(true);
-            setIsCheckingVvip(false);
+            setIsDbVvip(false);
+            setIsCheckingMembership(false);
         }
-    }, [status, isDeviceVvip]);
+    }, [status, isDeviceVvip, deviceTier, isAdmin]);
 
     const fetchPrediction = useCallback(async (tf: string = selectedTimeframe) => {
         setIsLoading(true);
@@ -264,19 +293,19 @@ export default function XauusdNeuralLabPage() {
         setMtfLoading(false);
     }, []);
 
-    // Auto-refresh interval (for VVIP)
+    // Auto-refresh interval (for full access / simulation)
     useEffect(() => {
-        if (!autoRefresh || (!isVvip && !isDemoMode)) return;
+        if (!autoRefresh) return;
         const interval = setInterval(() => fetchPrediction(), 60000);
         return () => clearInterval(interval);
-    }, [autoRefresh, isVvip, isDemoMode, fetchPrediction]);
+    }, [autoRefresh, fetchPrediction]);
 
     // Initial load
     useEffect(() => {
-        if (status === 'authenticated' && !isCheckingVvip) {
+        if (!isCheckingMembership) {
             fetchPrediction();
         }
-    }, [status, isCheckingVvip]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isCheckingMembership]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Multi-Timeframe Consensus Calculation
     const mtfConsensus = useMemo(() => {
@@ -300,12 +329,14 @@ export default function XauusdNeuralLabPage() {
         };
     }, [mtfPredictions]);
 
-    if (status === 'loading' || (status === 'authenticated' && isCheckingVvip)) {
+    if (status === 'loading' || isCheckingMembership) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm font-semibold text-slate-600 font-mono">Loading PICA Neural Studio...</p>
+                    <p className="text-sm font-semibold text-slate-600 font-['Space_Grotesk'] tracking-wide">
+                        Memuat PICA Neural Studio...
+                    </p>
                 </div>
             </div>
         );
@@ -319,83 +350,152 @@ export default function XauusdNeuralLabPage() {
     const features = data?.features || {};
     const featureNames = data?.featureNames || [];
     const candles = data?.recentCandles || [];
-    const trackRecord = data?.trackRecord;
     const reasoning = data?.aiReasoning || [];
     const taSignals = data?.taSignals;
 
     const dirColor = pred?.direction === 'BUY' ? 'text-emerald-700' : pred?.direction === 'SELL' ? 'text-rose-700' : 'text-amber-700';
-    const dirBg = pred?.direction === 'BUY' ? 'bg-emerald-50 border-emerald-200' : pred?.direction === 'SELL' ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200';
+    const dirBg = pred?.direction === 'BUY' ? 'bg-emerald-50/80 border-emerald-300' : pred?.direction === 'SELL' ? 'bg-rose-50/80 border-rose-300' : 'bg-amber-50/80 border-amber-300';
     const dirBadge = pred?.direction === 'BUY' ? 'bg-emerald-600 text-white' : pred?.direction === 'SELL' ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white';
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div className="min-h-screen bg-slate-50 text-slate-900 pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
             <div className="max-w-7xl mx-auto space-y-6">
 
-                {/* â•â•â•â•â•â• DEMO MODE / VVIP NOTICE â•â•â•â•â•â• */}
-                {!isVvip && (
-                    <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-amber-50 border border-blue-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <span className="text-2xl">âœ¨</span>
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* 1. ADMIN ACCESS vs USER SIMULATION BANNER NOTICES */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {isAdmin ? (
+                    // ADMIN FULL ACCESS BANNER
+                    <div className="rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-400/30 flex items-center justify-center shrink-0">
+                                <BoltIcon size="sm" />
+                            </div>
                             <div>
-                                <h3 className="text-sm font-bold text-slate-900">
-                                    Simulasi PICA Neural Lab Aktif
-                                </h3>
-                                <p className="text-xs text-slate-600">
-                                    Anda sedang mencoba modul Deep Learning dalam mode simulasi interaktif. Upgrade ke VVIP untuk akses feed Swissquote tick-by-tick &amp; auto-refresh real-time.
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-extrabold font-['Space_Grotesk'] tracking-wide text-white">
+                                        ADMIN FULL ACCESS UNLOCKED
+                                    </h3>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                                        LIVE ENGINE AKTIF
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-300 mt-0.5">
+                                    Anda memiliki hak akses penuh administrator untuk inferensi real-time, seluruh matriks 22-fitur, dan auto-confluence tanpa limitasi kuota.
                                 </p>
                             </div>
                         </div>
-                        <Link
-                            href="/pricing"
-                            className="shrink-0 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all"
-                        >
-                            Upgrade ke VVIP â†’
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/admin"
+                                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all flex items-center gap-1.5"
+                            >
+                                <span>Dashboard Admin</span>
+                                <span>&rarr;</span>
+                            </Link>
+                        </div>
                     </div>
-                )}
+                ) : !isFullAccess ? (
+                    // USER SIMULATION DEMO NOTICE BANNER
+                    <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-amber-50/70 border-2 border-blue-200/90 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-700 border border-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                                <LightbulbIcon size="md" />
+                            </div>
+                            <div className="space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-wider bg-amber-500 text-white shadow-xs">
+                                        MODE SIMULASI &amp; PREVIEW
+                                    </span>
+                                    <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk']">
+                                        Anda Sedang Melihat Mode Simulasi PICA Neural Lab
+                                    </h3>
+                                </div>
+                                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+                                    Hasil inferensi Bi-LSTM dan proyeksi level di bawah ini berjalan dalam <strong>Mode Simulasi Edukasi</strong> untuk mendemonstrasikan kapabilitas kecerdasan buatan. Untuk membuka akses sinyal live real-time tick-by-tick, auto-refresh 60 detik tanpa batas, dan alert eksekusi VIP, silakan aktifkan akun VVIP Anda.
+                                </p>
+                            </div>
+                        </div>
 
-                {/* â•â•â•â•â•â• HERO HEADER â•â•â•â•â•â• */}
+                        <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-end lg:self-center">
+                            <button
+                                type="button"
+                                onClick={openActivation}
+                                className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                                <KeyIcon size="xs" />
+                                <span>Aktivasi Kode Lisensi</span>
+                            </button>
+                            <Link
+                                href="/pricing"
+                                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                            >
+                                <CrownIcon size="xs" />
+                                <span>Upgrade ke VVIP &rarr;</span>
+                            </Link>
+                        </div>
+                    </div>
+                ) : null}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* 2. HERO HEADER & LIVE TICKER */}
+                {/* ═══════════════════════════════════════════════════════════ */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: -15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm"
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/90 shadow-sm"
                 >
                     <div>
-                        <div className="flex items-center gap-3 mb-1.5">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-md shadow-blue-500/20">
-                                ðŸ§ 
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+                                <BrainIcon size="md" className="text-white" />
                             </div>
                             <div>
-                                <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                                    <span>PICA Neural Lab</span>
-                                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                                        v8.2 Bi-LSTM
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-['Space_Grotesk']">
+                                        PICA Neural Lab
+                                    </h1>
+                                    <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                        v8.2 Bi-LSTM + TA Ensemble
                                     </span>
-                                </h1>
-                                <p className="text-xs text-slate-500">
-                                    XAU/USD Quantitative Neural Network â€¢ 22 Input Multi-Factor Indicators
+                                    {!isFullAccess && (
+                                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+                                            SIMULASI
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-xs sm:text-sm text-slate-500 font-sans mt-0.5">
+                                    XAU/USD Quantitative Neural Network • 22 Input Multi-Factor Indicators + 8 Indikator Teknikal
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Live Price Badge */}
+                    {/* Live Gold Price Card */}
                     {market && (
-                        <div className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div className="flex items-center gap-4 px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
                             <div>
-                                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">XAU/USD Gold</p>
-                                <p className="text-2xl font-mono font-black text-slate-900">
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold font-sans">
+                                    Live Gold Price (XAU/USD)
+                                </p>
+                                <p className="text-2xl font-mono font-black text-slate-900 tracking-tight">
                                     ${market.price.toFixed(2)}
                                 </p>
                             </div>
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono ${market.change >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                            <span className={`px-2.5 py-1 rounded-xl text-xs font-bold font-mono ${
+                                market.change >= 0 
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                    : 'bg-rose-100 text-rose-800 border border-rose-200'
+                            }`}>
                                 {market.change >= 0 ? '+' : ''}{market.change.toFixed(2)}%
                             </span>
                         </div>
                     )}
                 </motion.div>
 
-                {/* â•â•â•â•â•â• CONTROLS BAR â•â•â•â•â•â• */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* 3. CONTROLS BAR */}
+                {/* ═══════════════════════════════════════════════════════════ */}
                 <div className="flex flex-wrap items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
                     {/* Timeframe Selector */}
                     <div className="flex gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200">
@@ -403,7 +503,7 @@ export default function XauusdNeuralLabPage() {
                             <button
                                 key={tf.value}
                                 onClick={() => { setSelectedTimeframe(tf.value); fetchPrediction(tf.value); }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer font-sans ${
                                     selectedTimeframe === tf.value
                                         ? 'bg-blue-600 text-white shadow-xs'
                                         : 'text-slate-600 hover:text-slate-900'
@@ -420,17 +520,17 @@ export default function XauusdNeuralLabPage() {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => fetchPrediction()}
                         disabled={isLoading}
-                        className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-sm shadow-blue-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                        className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-sm shadow-blue-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2 font-sans"
                     >
                         {isLoading ? (
                             <>
                                 <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                <span>Running Inference...</span>
+                                <span>Menjalankan Komputasi...</span>
                             </>
                         ) : (
                             <>
-                                <span>ðŸ”¬</span>
-                                <span>Run Neural Inference</span>
+                                <CrosshairIcon size="xs" className="text-white" />
+                                <span>{isFullAccess ? 'Jalankan Neural Inference Live' : 'Jalankan Simulasi Neural AI'}</span>
                             </>
                         )}
                     </motion.button>
@@ -439,14 +539,14 @@ export default function XauusdNeuralLabPage() {
                     <button
                         onClick={fetchMTF}
                         disabled={mtfLoading}
-                        className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 font-sans"
                     >
-                        <span>ðŸ“¡</span>
-                        <span>{mtfLoading ? 'Scanning 4 TFs...' : 'Multi-TF Confluence'}</span>
+                        <SignalIcon size="xs" className="text-blue-600" />
+                        <span>{mtfLoading ? 'Memindai 4 TF...' : 'Multi-TF Confluence Scan'}</span>
                     </button>
 
                     {/* Auto-refresh */}
-                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                         <input
                             type="checkbox"
                             checked={autoRefresh}
@@ -464,49 +564,61 @@ export default function XauusdNeuralLabPage() {
                         }`}
                         title="Toggle Sound Alert"
                     >
-                        <span>{soundAlert ? 'ðŸ””' : 'ðŸ”•'}</span>
-                        <span>Alert Sound</span>
+                        <span>{soundAlert ? '🔊' : '🔇'}</span>
+                        <span>Suara Alert</span>
                     </button>
 
                     {/* Last Updated */}
                     {lastUpdated && (
                         <span className="text-xs text-slate-400 font-mono ml-auto">
-                            Updated: {lastUpdated}
+                            Diperbarui: {lastUpdated}
                         </span>
                     )}
                 </div>
 
-                {/* â•â•â•â•â•â• ERROR NOTICE â•â•â•â•â•â• */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* 4. ERROR NOTICE */}
+                {/* ═══════════════════════════════════════════════════════════ */}
                 <AnimatePresence>
                     {error && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="rounded-2xl bg-rose-50 border border-rose-200 p-4 text-rose-700 text-sm font-medium"
+                            className="rounded-2xl bg-rose-50 border border-rose-200 p-4 text-rose-700 text-sm font-medium flex items-center gap-2"
                         >
-                            {error}
+                            <WarningIcon size="sm" className="text-rose-600 shrink-0" />
+                            <span>{error}</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* â•â•â•â•â•â• MAIN GRID â•â•â•â•â•â• */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* 5. MAIN PREDICTION & EXECUTION GRID */}
+                {/* ═══════════════════════════════════════════════════════════ */}
                 {pred && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="grid grid-cols-1 lg:grid-cols-3 gap-6"
                     >
-                        {/* â”€â”€ LEFT COLUMN: Prediction, Setup & Probabilities â”€â”€ */}
+                        {/* ── LEFT COLUMN: Prediction, Setup & Probabilities ── */}
                         <div className="space-y-6">
                             
                             {/* Neural Forecast Verdict Card */}
-                            <div className={`rounded-3xl border p-6 shadow-sm transition-all ${dirBg}`}>
+                            <div className={`rounded-3xl border-2 p-6 shadow-sm transition-all ${dirBg}`}>
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
-                                        Model Verdict
-                                    </span>
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${dirBadge}`}>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
+                                            Model Verdict
+                                        </span>
+                                        {!isFullAccess && (
+                                            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-200/80 text-amber-900 border border-amber-300">
+                                                SIMULASI
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${dirBadge}`}>
                                         {pred.confidence.toFixed(0)}% Confident
                                     </span>
                                 </div>
@@ -516,7 +628,7 @@ export default function XauusdNeuralLabPage() {
                                         key={pred.direction + selectedTimeframe}
                                         initial={{ scale: 0.7, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
-                                        className={`text-6xl font-black ${dirColor}`}
+                                        className={`text-6xl font-black font-['Space_Grotesk'] tracking-tight ${dirColor}`}
                                     >
                                         {pred.direction}
                                     </motion.div>
@@ -529,7 +641,7 @@ export default function XauusdNeuralLabPage() {
                                 <div className="space-y-2.5 pt-4 border-t border-slate-200/80">
                                     <div>
                                         <div className="flex justify-between text-xs font-bold mb-1 text-emerald-800">
-                                            <span>â–² UP (BUY)</span>
+                                            <span>▲ UP (BUY)</span>
                                             <span className="font-mono">{(pred.probabilities.up * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -541,7 +653,7 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                     <div>
                                         <div className="flex justify-between text-xs font-bold mb-1 text-rose-800">
-                                            <span>â–¼ DOWN (SELL)</span>
+                                            <span>▼ DOWN (SELL)</span>
                                             <span className="font-mono">{(pred.probabilities.down * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -553,7 +665,7 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                     <div>
                                         <div className="flex justify-between text-xs font-bold mb-1 text-amber-800">
-                                            <span>â— NEUTRAL</span>
+                                            <span>● NEUTRAL</span>
                                             <span className="font-mono">{(pred.probabilities.neutral * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -571,8 +683,12 @@ export default function XauusdNeuralLabPage() {
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-5 shadow-sm">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Technical Analysis Ensemble</span>
-                                            <h3 className="text-sm font-extrabold text-slate-900">Sinyal 8 Indikator</h3>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                Technical Analysis Ensemble
+                                            </span>
+                                            <h3 className="text-sm font-extrabold text-slate-900 font-['Space_Grotesk']">
+                                                Sinyal 8 Indikator Teknikal
+                                            </h3>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
@@ -594,7 +710,7 @@ export default function XauusdNeuralLabPage() {
                                                 <div className="bg-rose-500 transition-all" style={{ width: `${(taSignals.sellCount / taSignals.total) * 100}%` }} />
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3 text-[10px] font-bold shrink-0">
+                                        <div className="flex items-center gap-3 text-[10px] font-bold shrink-0 font-mono">
                                             <span className="text-emerald-700">{taSignals.buyCount} BUY</span>
                                             <span className="text-slate-400">{taSignals.neutralCount} NETRAL</span>
                                             <span className="text-rose-700">{taSignals.sellCount} SELL</span>
@@ -609,7 +725,7 @@ export default function XauusdNeuralLabPage() {
                                                 sig.signal === 'SELL' ? 'bg-rose-50/70 border-rose-200 text-rose-800' :
                                                 'bg-slate-50 border-slate-200 text-slate-500'
                                             }`}>
-                                                <span>{sig.name}</span>
+                                                <span className="font-sans text-[11px]">{sig.name}</span>
                                                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white ${
                                                     sig.signal === 'BUY' ? 'bg-emerald-500' :
                                                     sig.signal === 'SELL' ? 'bg-rose-500' :
@@ -628,8 +744,19 @@ export default function XauusdNeuralLabPage() {
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-5 shadow-sm space-y-4">
                                     <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                                         <div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Execution Matrix</span>
-                                            <h3 className="text-base font-extrabold text-slate-900">Trade Setup Otomatis</h3>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                    Execution Matrix
+                                                </span>
+                                                {!isFullAccess && (
+                                                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                                        Simulasi
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk']">
+                                                Trade Setup Otomatis
+                                            </h3>
                                         </div>
                                         <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                             {setup.grade}
@@ -640,25 +767,25 @@ export default function XauusdNeuralLabPage() {
                                         <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase">Entry Price</span>
                                             <p className="text-lg font-black font-mono text-slate-900">${setup.entryPrice.toFixed(2)}</p>
-                                            <span className="text-[10px] text-slate-500">Zone: ${setup.entryZoneMin} - ${setup.entryZoneMax}</span>
+                                            <span className="text-[10px] text-slate-500 font-mono">Zone: ${setup.entryZoneMin} - ${setup.entryZoneMax}</span>
                                         </div>
 
                                         <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase">Risk / Reward</span>
                                             <p className="text-lg font-black font-mono text-blue-600">{setup.riskReward}</p>
-                                            <span className="text-[10px] text-slate-500">ATR Vol: {setup.atr}</span>
+                                            <span className="text-[10px] text-slate-500 font-mono">ATR Vol: {setup.atr}</span>
                                         </div>
 
                                         <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
                                             <span className="text-[10px] font-bold text-emerald-700 uppercase">Take Profit 1</span>
                                             <p className="text-lg font-black font-mono text-emerald-700">${setup.takeProfit1.toFixed(2)}</p>
-                                            <span className="text-[10px] font-semibold text-emerald-600">+{setup.pipsTp1} pips</span>
+                                            <span className="text-[10px] font-semibold text-emerald-600 font-mono">+{setup.pipsTp1} pips</span>
                                         </div>
 
                                         <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
                                             <span className="text-[10px] font-bold text-emerald-700 uppercase">Take Profit 2</span>
                                             <p className="text-lg font-black font-mono text-emerald-700">${setup.takeProfit2.toFixed(2)}</p>
-                                            <span className="text-[10px] font-semibold text-emerald-600">+{setup.pipsTp2} pips</span>
+                                            <span className="text-[10px] font-semibold text-emerald-600 font-mono">+{setup.pipsTp2} pips</span>
                                         </div>
 
                                         <div className="col-span-2 p-3 rounded-2xl bg-rose-50/70 border border-rose-200 flex items-center justify-between">
@@ -666,7 +793,7 @@ export default function XauusdNeuralLabPage() {
                                                 <span className="text-[10px] font-bold text-rose-700 uppercase">Stop Loss</span>
                                                 <p className="text-lg font-black font-mono text-rose-700">${setup.stopLoss.toFixed(2)}</p>
                                             </div>
-                                            <span className="text-xs font-bold text-rose-600 bg-white px-2.5 py-1 rounded-lg border border-rose-200">
+                                            <span className="text-xs font-bold text-rose-600 bg-white px-2.5 py-1 rounded-lg border border-rose-200 font-mono">
                                                 -{setup.pipsSl} pips
                                             </span>
                                         </div>
@@ -678,9 +805,11 @@ export default function XauusdNeuralLabPage() {
                             {Object.keys(mtfPredictions).length > 0 && (
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-5 shadow-sm">
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Multi-TF Scanner</span>
+                                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                                            Multi-TF Scanner
+                                        </span>
                                         {mtfConsensus && (
-                                            <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                            <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 font-mono">
                                                 {mtfConsensus.consensusScore}% {mtfConsensus.dominant}
                                             </span>
                                         )}
@@ -696,7 +825,7 @@ export default function XauusdNeuralLabPage() {
                                             return (
                                                 <div key={tf.value} className={`rounded-xl border p-2.5 text-center ${mtfBg}`}>
                                                     <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{tf.label.split(' ')[0]}</p>
-                                                    <p className="text-base font-black">{mtfPred?.direction || 'â€”'}</p>
+                                                    <p className="text-base font-black font-['Space_Grotesk']">{mtfPred?.direction || '—'}</p>
                                                     <p className="text-[11px] font-mono opacity-80">{mtfPred ? `${mtfPred.confidence.toFixed(0)}%` : ''}</p>
                                                 </div>
                                             );
@@ -707,25 +836,25 @@ export default function XauusdNeuralLabPage() {
 
                         </div>
 
-                        {/* â”€â”€ CENTER + RIGHT: AI Synthesis, Interactive Chart & 22-Feature Engine â”€â”€ */}
+                        {/* ── CENTER + RIGHT: AI Synthesis, Interactive Chart & 22-Feature Engine ── */}
                         <div className="lg:col-span-2 space-y-6">
 
                             {/* AI Qualitative Synthesis */}
                             {reasoning.length > 0 && (
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-lg">ðŸ¤–</span>
-                                        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
+                                        <SparklesIcon size="sm" className="text-blue-600" />
+                                        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 font-['Space_Grotesk']">
                                             PICA Neural Synthesis
                                         </h3>
-                                        <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                                        <span className="ml-auto text-[10px] px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
                                             Auto-Generated
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                         {reasoning.map((item, i) => (
-                                            <div key={i} className="flex items-start gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed">
-                                                <span className="text-blue-600 font-bold mt-0.5">âœ¦</span>
+                                            <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed font-sans">
+                                                <span className="text-blue-600 font-bold mt-0.5">•</span>
                                                 <span>{item}</span>
                                             </div>
                                         ))}
@@ -738,16 +867,16 @@ export default function XauusdNeuralLabPage() {
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                                            <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider font-['Space_Grotesk']">
                                                 Visual Price Trend &amp; Target Projection
                                             </h3>
-                                            <p className="text-xs text-slate-500">
+                                            <p className="text-xs text-slate-500 font-sans">
                                                 30 Candle Terakhir XAU/USD dengan Proyeksi Entry, TP1, TP2, dan SL
                                             </p>
                                         </div>
                                         {sess && (
-                                            <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
-                                                <span>{sess.emoji}</span>
+                                            <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-sans">
+                                                <span>{sess.emoji || '🌐'}</span>
                                                 <span>{sess.name}</span>
                                             </div>
                                         )}
@@ -769,7 +898,7 @@ export default function XauusdNeuralLabPage() {
                                                     <div
                                                         className={`w-0.5 absolute ${isGreen ? 'bg-emerald-400' : 'bg-rose-400'}`}
                                                         style={{
-                                                            bottom: `${((c.low - minPrice) / range) * 85}%`,
+                                                             bottom: `${((c.low - minPrice) / range) * 85}%`,
                                                             height: `${((c.high - c.low) / range) * 85}%`
                                                         }}
                                                     />
@@ -816,16 +945,16 @@ export default function XauusdNeuralLabPage() {
                             <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                                     <div>
-                                        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
+                                        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 font-['Space_Grotesk']">
                                             22-Feature Neural Input Dashboard
                                         </h3>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-xs text-slate-500 font-sans">
                                             Nilai normalisasi real-time yang diinput ke model Bi-LSTM
                                         </p>
                                     </div>
                                     <div className="flex flex-wrap gap-2 text-[10px]">
                                         {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
-                                            <span key={cat} className={`font-semibold ${color}`}>â— {cat}</span>
+                                            <span key={cat} className={`font-semibold ${color}`}>• {cat}</span>
                                         ))}
                                     </div>
                                 </div>
@@ -869,11 +998,11 @@ export default function XauusdNeuralLabPage() {
                             {meta && (
                                 <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
+                                        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 font-['Space_Grotesk']">
                                             Arsitektur &amp; Backtest Track Record
                                         </h3>
-                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                            Verified Model
+                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-sans">
+                                            Verified Quantitative Model
                                         </span>
                                     </div>
 
@@ -896,8 +1025,8 @@ export default function XauusdNeuralLabPage() {
                                         </div>
                                     </div>
 
-                                    <div className="pt-2 text-[11px] text-slate-500 border-t border-slate-100 flex flex-col sm:flex-row justify-between gap-1">
-                                        <span>Inference Pipeline: Bi-LSTM 3-Layer (128â†’64â†’32) + Dense Attention (64â†’3)</span>
+                                    <div className="pt-2 text-[11px] text-slate-500 border-t border-slate-100 flex flex-col sm:flex-row justify-between gap-1 font-mono">
+                                        <span>Inference Pipeline: Bi-LSTM 3-Layer (128→64→32) + Dense Attention (64→3)</span>
                                         <span>Optimizer: Adam (lr=0.001) | Epochs: 200</span>
                                     </div>
                                 </div>
@@ -911,20 +1040,21 @@ export default function XauusdNeuralLabPage() {
                 {/* Empty Initial State if Not Fetched */}
                 {!pred && !isLoading && !error && (
                     <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-                        <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-3xl">
-                            ðŸ§ 
+                        <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-600">
+                            <BrainIcon size="lg" />
                         </div>
-                        <h2 className="text-xl font-extrabold text-slate-900 mb-2">
+                        <h2 className="text-xl font-extrabold text-slate-900 mb-2 font-['Space_Grotesk']">
                             PICA Neural Studio Siap Digunakan
                         </h2>
-                        <p className="text-slate-600 text-sm max-w-md mb-6">
+                        <p className="text-slate-600 text-sm max-w-md mb-6 font-sans">
                             Klik tombol di bawah ini untuk memulai inferensi Bi-LSTM pada 22 fitur teknikal XAU/USD.
                         </p>
                         <button
                             onClick={() => fetchPrediction()}
-                            className="px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
+                            className="px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition-all cursor-pointer font-sans flex items-center gap-2"
                         >
-                            ðŸ”¬ Mulai Prediksi Neural
+                            <CrosshairIcon size="sm" />
+                            <span>{isFullAccess ? 'Mulai Prediksi Neural Live' : 'Mulai Simulasi Neural AI'}</span>
                         </button>
                     </div>
                 )}
