@@ -50,6 +50,14 @@ export const UPGRADE_OPTIONS = [
         popular: false,
         // Promo slot untuk 1 tahun unlimited (atau undefined)
     },
+    {
+        id: 'LIFETIME_FIBO',
+        duration: 120,
+        label: 'Lifetime (Kursus Fibo Kyoko)',
+        price: 'Rp 169.000',
+        icon: '🎓',
+        popular: false,
+    },
 ];
 
 interface UpgradeDurationModalProps {
@@ -154,10 +162,12 @@ export default function UpgradeDurationModal({
                         '3_MONTHS': '3months',
                         '6_MONTHS': '6months',
                         '12_MONTHS': '1year',
+                        'LIFETIME_FIBO': 'lifetime',
                     };
+                    const daysCount = selectedDuration.id === 'LIFETIME_FIBO' ? 3650 : selectedDuration.duration * 30;
                     await onSelect({
                         label: selectedDuration.label,
-                        days: selectedDuration.duration * 30,
+                        days: daysCount,
                         duration: durationCodeMap[selectedDuration.id] || '1month',
                     });
                 } else {

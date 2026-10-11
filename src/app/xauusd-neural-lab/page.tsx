@@ -78,6 +78,16 @@ interface Candle {
     volume: number;
 }
 
+interface TASignalSummary {
+    buyCount: number;
+    sellCount: number;
+    neutralCount: number;
+    total: number;
+    ensembleScore: number;
+    trendStrength: 'STRONG' | 'MODERATE' | 'WEAK';
+    signals: { name: string; signal: 'BUY' | 'SELL' | 'NEUTRAL' }[];
+}
+
 interface PredictionResponse {
     status: string;
     prediction: Prediction;
@@ -93,6 +103,7 @@ interface PredictionResponse {
     };
     features: Record<string, number>;
     featureNames: FeatureMeta[];
+    taSignals?: TASignalSummary;
     marketInfo: MarketInfo;
     session: SessionInfo;
     modelMeta: ModelMeta;
@@ -310,6 +321,7 @@ export default function XauusdNeuralLabPage() {
     const candles = data?.recentCandles || [];
     const trackRecord = data?.trackRecord;
     const reasoning = data?.aiReasoning || [];
+    const taSignals = data?.taSignals;
 
     const dirColor = pred?.direction === 'BUY' ? 'text-emerald-700' : pred?.direction === 'SELL' ? 'text-rose-700' : 'text-amber-700';
     const dirBg = pred?.direction === 'BUY' ? 'bg-emerald-50 border-emerald-200' : pred?.direction === 'SELL' ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200';
@@ -553,6 +565,63 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* TA Signal Overview Card */}
+                            {taSignals && (
+                                <div className="rounded-3xl bg-white border border-slate-200/90 p-5 shadow-sm">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Technical Analysis Ensemble</span>
+                                            <h3 className="text-sm font-extrabold text-slate-900">Sinyal 8 Indikator</h3>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
+                                                taSignals.trendStrength === 'STRONG' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                taSignals.trendStrength === 'MODERATE' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                'bg-amber-50 text-amber-700 border-amber-200'
+                                            }`}>
+                                                Tren: {taSignals.trendStrength}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Signal Summary Bar */}
+                                    <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                                        <div className="flex-1">
+                                            <div className="flex h-2.5 rounded-full overflow-hidden">
+                                                <div className="bg-emerald-500 transition-all" style={{ width: `${(taSignals.buyCount / taSignals.total) * 100}%` }} />
+                                                <div className="bg-slate-300 transition-all" style={{ width: `${(taSignals.neutralCount / taSignals.total) * 100}%` }} />
+                                                <div className="bg-rose-500 transition-all" style={{ width: `${(taSignals.sellCount / taSignals.total) * 100}%` }} />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-[10px] font-bold shrink-0">
+                                            <span className="text-emerald-700">{taSignals.buyCount} BUY</span>
+                                            <span className="text-slate-400">{taSignals.neutralCount} NETRAL</span>
+                                            <span className="text-rose-700">{taSignals.sellCount} SELL</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Individual Signals */}
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {taSignals.signals.map((sig) => (
+                                            <div key={sig.name} className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-semibold ${
+                                                sig.signal === 'BUY' ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800' :
+                                                sig.signal === 'SELL' ? 'bg-rose-50/70 border-rose-200 text-rose-800' :
+                                                'bg-slate-50 border-slate-200 text-slate-500'
+                                            }`}>
+                                                <span>{sig.name}</span>
+                                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white ${
+                                                    sig.signal === 'BUY' ? 'bg-emerald-500' :
+                                                    sig.signal === 'SELL' ? 'bg-rose-500' :
+                                                    'bg-slate-300'
+                                                }`}>
+                                                    {sig.signal === 'BUY' ? '▲' : sig.signal === 'SELL' ? '▼' : '—'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Precision Trade Setup Card */}
                             {setup && (

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ChartIcon, GlobeIcon, CurrencyIcon, BellIcon, TrendUpIcon, LightbulbIcon, SignalIcon, UsersIcon, BroadcastIcon, RobotIcon, KeyIcon } from '@/components/PremiumIcons';
+import { ChartIcon, GlobeIcon, CurrencyIcon, BellIcon, TrendUpIcon, LightbulbIcon, SignalIcon, UsersIcon, BroadcastIcon, RobotIcon, KeyIcon, BoltIcon } from '@/components/PremiumIcons';
 import AdminStats from '@/components/admin/AdminStats';
 import TelegramMarketing from '@/components/admin/TelegramMarketing';
 import UserTable, { User } from '@/components/admin/UserTable';
@@ -557,6 +557,14 @@ Tim PICA`;
                     
                     <div className="flex flex-wrap items-center gap-3">
                         <button
+                            onClick={() => setActiveTab('license')}
+                            className="flex items-center rounded-xl py-2.5 px-5 gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all text-white shadow-sm font-semibold text-sm cursor-pointer"
+                        >
+                            <BoltIcon size="xs" />
+                            <span>⚡ Aktivasi Produk (1-Klik)</span>
+                        </button>
+
+                        <button
                             onClick={handleAddUser}
                             className="flex items-center rounded-xl py-2.5 px-5 gap-2 bg-[#3B82F61A] hover:bg-[#3B82F633] transition-colors border border-solid border-[#3B82F633]"
                         >
@@ -690,7 +698,7 @@ Tim PICA`;
                         className={`admin-pill-tab ${activeTab === 'license' ? 'active' : ''} flex items-center gap-2`}
                     >
                         <KeyIcon size="sm" />
-                        <span>Lisensi &amp; Perangkat</span>
+                        <span>⚡ Aktivasi Produk &amp; Lisensi</span>
                     </button>
                 </div>
 
