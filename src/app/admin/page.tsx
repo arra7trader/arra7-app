@@ -161,7 +161,7 @@ export default function AdminDashboard() {
     const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
     const [autoPostEnabled, setAutoPostEnabled] = useState(false);
 
-    const isAdmin = isAdminEmail(session?.user?.email);
+    const isAdmin = isAdminEmail(session?.user?.email) || (session?.user as any)?.role === 'ADMIN';
 
     useEffect(() => {
         if (status === 'unauthenticated') {

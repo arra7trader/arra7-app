@@ -19,7 +19,7 @@ function LoginContent() {
     // Admin secret portal state
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [adminPin, setAdminPin] = useState('');
-    const [adminEmail, setAdminEmail] = useState('arlandpratama@gmail.com');
+    const [adminEmail, setAdminEmail] = useState('');
     const [adminLoading, setAdminLoading] = useState(false);
     const [adminErrorMsg, setAdminErrorMsg] = useState('');
 
@@ -166,14 +166,13 @@ function LoginContent() {
                                         <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
                                             Email Akun Admin
                                         </label>
-                                        <select
+                                        <input
+                                            type="email"
                                             value={adminEmail}
                                             onChange={(e) => setAdminEmail(e.target.value)}
+                                            placeholder="Masukkan email admin..."
                                             className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                        >
-                                            <option value="arlandpratama@gmail.com">arlandpratama@gmail.com</option>
-                                            <option value="apmexplore@gmail.com">apmexplore@gmail.com</option>
-                                        </select>
+                                        />
                                     </div>
 
                                     <div>

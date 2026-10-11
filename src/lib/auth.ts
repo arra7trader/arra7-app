@@ -29,7 +29,7 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 const correctPin = process.env.ADMIN_PIN || 'Aoyamapm7@';
                 if (credentials?.passkey === correctPin) {
-                    const chosenEmail = credentials?.targetEmail?.trim() || 'arlandpratama@gmail.com';
+                    const chosenEmail = credentials?.targetEmail?.trim() || process.env.ADMIN_DEFAULT_EMAIL || 'apmexplore@gmail.com';
                     return {
                         id: 'admin_master_1',
                         name: 'PICA Administrator',
