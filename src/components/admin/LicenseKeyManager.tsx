@@ -45,7 +45,7 @@ export interface DeviceUser {
   totalVisits: number;
 }
 
-type ProductType = 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
+type ProductType = 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
 
 interface ProductPreset {
   id: ProductType;
@@ -62,6 +62,41 @@ interface ProductPreset {
 }
 
 const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
+  ALL_ACCESS: {
+    id: 'ALL_ACCESS',
+    title: 'Promo Semua Produk Lifetime (4 Produk Inti)',
+    badge: '🔥 PROMO ALL ACCESS',
+    priceDisplay: 'Rp 125.000 (Lifetime)',
+    tagColor: 'bg-rose-50 text-rose-700 border-rose-200',
+    borderActive: 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/40',
+    description: 'Flash Sale 2 Hari: Akses Lifetime PICA Neural Lab, Kursus Fibo Kyoko (3 Video HD + MT5 + TradingView), DOM ARRA, dan Analisis Market. Cukup 1× bayar selamanya!',
+    tier: 'VVIP',
+    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 125.000' }],
+    notePrefix: '[ALL_ACCESS]',
+    generateText: (code, buyerName, _) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Terima kasih, pembayaran Promo Semua Produk Lifetime telah kami verifikasi. ✅
+
+Berikut Kode Lisensi Aktivasi Anda:
+🔑 Kode: ${code}
+⏳ Akses: Lifetime (Selamanya)
+💰 Paket: ALL ACCESS — 4 Produk Inti Platform
+
+Yang Anda Dapatkan:
+✅ PICA Neural Lab (AI Bi-LSTM + SMC Real-time)
+✅ Kursus Digital Fibo Kyoko (3 Video HD + Indikator MT5 + Script TradingView)
+✅ DOM ARRA & Whale Radar (Order Book + Volume Profile)
+✅ Analisis Market (Supply & Demand, S/R Key Levels Harian)
+✅ Semua Timeframe (M1-D1) + Free Update Selamanya
+
+Cara Aktivasi:
+1. Buka https://pica.my.id
+2. Klik tombol "Aktivasi Kode" di pojok kanan atas
+3. Tempel kode di atas lalu klik Aktifkan
+
+Semua fitur langsung terbuka seketika! Selamat trading dan salam cuan konsisten! 🚀`;
+    },
+  },
   FIBO_KYOKO: {
     id: 'FIBO_KYOKO',
     title: 'Kursus Digital Fibo Kyoko',
@@ -126,7 +161,7 @@ Bonus akses akun PRO website dan channel VIP Anda langsung aktif!`;
     priceDisplay: 'Mulai Rp 249.000',
     tagColor: 'bg-amber-50 text-amber-700 border-amber-200',
     borderActive: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/40',
-    description: 'Akses penuh seluruh fitur AI Doctor, Scanner Signal Real-time, DOM, & Analisa Saham/Crypto.',
+    description: 'Akses penuh seluruh fitur platform: PICA Neural Lab, DOM ARRA, Analisis Market, Scanner Signal Real-time tanpa batas.',
     tier: 'VVIP',
     durations: [
       { label: '1 Bulan (30 Hari)', days: 30, price: 'Rp 249.000' },
@@ -149,7 +184,7 @@ Cara Aktivasi:
 2. Klik tombol "Aktivasi Kode" di pojok kanan atas
 3. Tempel kode di atas lalu klik Aktifkan
 
-Semua fitur VVIP, AI Doctor, Scanner Realtime, dan Neural Lab langsung terbuka seketika tanpa perlu login!`;
+Semua fitur VVIP, Scanner Realtime, DOM ARRA, dan Neural Lab langsung terbuka seketika tanpa perlu login!`;
     },
   },
   PRO: {
@@ -250,7 +285,7 @@ export default function LicenseKeyManager() {
   const [loading, setLoading] = useState(true);
 
   // Active Product Selection for 1-Click Activation
-  const [selectedProduct, setSelectedProduct] = useState<ProductType>('FIBO_KYOKO');
+  const [selectedProduct, setSelectedProduct] = useState<ProductType>('ALL_ACCESS');
   const [selectedDurationIndex, setSelectedDurationIndex] = useState<number>(0);
   const [buyerName, setBuyerName] = useState<string>('');
   const [buyerPhone, setBuyerPhone] = useState<string>('');
@@ -395,6 +430,7 @@ export default function LicenseKeyManager() {
   // Helper to parse product from note
   const getProductFromNote = (note?: string): ProductType => {
     if (!note) return 'CUSTOM';
+    if (note.includes('[ALL_ACCESS]') || note.toLowerCase().includes('all_access') || note.toLowerCase().includes('all access')) return 'ALL_ACCESS';
     if (note.includes('[FIBO_KYOKO]') || note.toLowerCase().includes('fibo')) return 'FIBO_KYOKO';
     if (note.includes('[TELEBOT]') || note.toLowerCase().includes('telebot')) return 'TELEBOT';
     if (note.includes('[VVIP]')) return 'VVIP';
@@ -729,6 +765,14 @@ export default function LicenseKeyManager() {
                   }`}
                 >
                   Semua Produk
+                </button>
+                <button
+                  onClick={() => setFilterProduct('ALL_ACCESS')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                    filterProduct === 'ALL_ACCESS' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+                  }`}
+                >
+                  🔥 All Access
                 </button>
                 <button
                   onClick={() => setFilterProduct('FIBO_KYOKO')}
