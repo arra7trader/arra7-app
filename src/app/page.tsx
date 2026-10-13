@@ -27,7 +27,7 @@ export default function Home() {
     <div className="relative min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-blue-500 selection:text-white overflow-hidden">
       
       {/* Hero Section */}
-      <section ref={heroRef} className="relative pt-24 sm:pt-32 pb-8 sm:pb-12 px-4 sm:px-6 md:px-12 flex flex-col items-center justify-center overflow-hidden">
+      <section ref={heroRef} className="relative pt-28 sm:pt-36 pb-8 sm:pb-12 px-4 sm:px-6 md:px-12 flex flex-col items-center justify-center overflow-hidden">
 
         {/* Neural Network Background Canvas */}
         <NeuralBackground />
@@ -138,6 +138,93 @@ export default function Home() {
               <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto mt-1">
                 Akses sinyal AI berakurasi tinggi, indikator eksklusif, dan kursus masterclass Fibo Kyoko.
               </p>
+            </div>
+
+            {/* Spotlight Flash Sale 2 Hari: 1 Harga Lifetime Rp 125.000 */}
+            <div className="mb-8 relative overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 shadow-xl">
+              <div className="bg-white rounded-[22px] p-6 sm:p-8 text-left">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-xs shadow-xs uppercase tracking-wider">
+                    <span className="animate-pulse">🔥</span>
+                    <span>PENGUMUMAN PROMO KHUSUS 2 HARI</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                    <span>⏰</span>
+                    <span>Hanya 48 Jam • Diskon 90%</span>
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                    1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">SEMUA PRODUK</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+                    Akses seumur hidup seluruh produk platform ARRA 7 / PICA tanpa biaya langganan bulanan. Dapatkan PICA Neural Lab (AI &amp; Institutional SMC), Kursus Masterclass Fibo Kyoko, Indikator MT5 &amp; Script TradingView, DOM ARRA, Sentiment Sniffer, Copytrade ARRA77, hingga AI Trade Doctor!
+                  </p>
+                </div>
+
+                {/* Grid Fitur Singkat */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6 text-xs">
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">🧠 Neural Lab</p>
+                    <p className="text-[11px] text-slate-500">Bi-LSTM + SMC SL/TP Realtime</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">🎓 Fibo Kyoko</p>
+                    <p className="text-[11px] text-slate-500">3 Video + MT5 .ex5 + PineScript</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">📊 DOM ARRA</p>
+                    <p className="text-[11px] text-slate-500">Whale Radar &amp; Order Book</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">📡 Sentiment</p>
+                    <p className="text-[11px] text-slate-500">Gold Heatmap &amp; COT Analysis</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">📐 Fibo Kanji</p>
+                    <p className="text-[11px] text-slate-500">Reversal &amp; Probability Zones</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">🤖 Copytrade 77</p>
+                    <p className="text-[11px] text-slate-500">VIP Terminal Execution</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">🩺 AI Doctor</p>
+                    <p className="text-[11px] text-slate-500">Review &amp; Audit Jurnal Trading</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900">♾️ Lifetime Free</p>
+                    <p className="text-[11px] text-slate-500">Semua Timeframe + Free Updates</p>
+                  </div>
+                </div>
+
+                {/* Harga & CTA */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-slate-400 line-through text-xs sm:text-sm font-semibold">Rp 1.499.000</span>
+                      <span className="text-[10px] font-extrabold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                        HEMAT Rp 1.374.000 (DISKON 90%)
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900">Rp 125.000</span>
+                      <span className="text-xs text-slate-500 font-semibold">/ sekali bayar (Lifetime)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Pembayaran via Bank BCA: <strong>1392698188</strong> a.n. Arland Pratama Muldiawan
+                    </p>
+                  </div>
+
+                  <Link href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime" className="w-full sm:w-auto">
+                    <button className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
+                      <span>Klaim Promo Semua Produk (Rp 125.000)</span>
+                      <span>&rarr;</span>
+                    </button>
+                  </Link>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">

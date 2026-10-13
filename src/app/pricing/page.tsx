@@ -8,6 +8,9 @@ import Link from 'next/link';
 import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon } from '@/components/PremiumIcons';
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
+    ALL_ACCESS: [
+        { duration: 'lifetime', days: 0, label: 'Lifetime Selamanya', price: 'Rp 125.000', originalPrice: 'Rp 1.499.000', savingsText: 'Hemat Rp 1.374.000 • Diskon 90%', promoSlots: 100, period: '/ sekali bayar' },
+    ],
     PRO: [
         { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 99.000', originalPrice: 'Rp 149.000' },
         { duration: '3months', days: 90, label: '3 Bulan', price: 'Rp 290.000', originalPrice: 'Rp 447.000', savingsText: 'Hemat Rp 157Rb', promoSlots: 15 },
@@ -194,7 +197,7 @@ export default function PricingPage() {
             durationOverride ||
             (planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
@@ -216,7 +219,7 @@ export default function PricingPage() {
         const duration =
             planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month';
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
@@ -268,6 +271,160 @@ export default function PricingPage() {
 
             {/* Pricing Section */}
             <section className="px-4 max-w-5xl mx-auto mb-24 flex flex-col gap-10">
+                {/* Spotlight Flash Sale 2 Hari Card (All-Access Lifetime) */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 shadow-2xl"
+                >
+                    <div className="bg-white rounded-[22px] p-6 sm:p-10">
+                        {/* Top Badge */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-xs shadow-md uppercase tracking-wider">
+                                <span className="animate-pulse">🔥</span>
+                                <span>PENGUMUMAN RESMI: FLASH SALE 2 HARI</span>
+                            </div>
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                                <span>⏰</span>
+                                <span>Hanya Berlaku 48 Jam</span>
+                            </div>
+                        </div>
+
+                        {/* Title & Description */}
+                        <div className="mb-8">
+                            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+                                1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">SEMUA PRODUK</span>
+                            </h2>
+                            <p className="text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed">
+                                Dapatkan akses seumur hidup (Lifetime) ke seluruh produk &amp; fitur unggulan di platform ARRA 7 / PICA. Cukup 1 kali bayar, Anda bebas menggunakan seluruh ekosistem tanpa perlu membayar iuran langganan bulanan lagi!
+                            </p>
+                        </div>
+
+                        {/* Grid Fitur Yang Didapat */}
+                        <div className="mb-8 bg-slate-50/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80">
+                            <p className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span>DAFTAR LENGKAP PRODUK &amp; FITUR YANG DIDAPATKAN:</span>
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        🧠
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">PICA Neural Lab (Bi-LSTM + SMC)</p>
+                                        <p className="text-[11px] text-slate-500">Prediksi XAUUSD real-time AI 3-Layer Bi-LSTM dipadukan dengan Smart Money Concepts (Order Block, Liquidity Sweeps, VWAP, FVG) &amp; akurasi 90%+.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        🎓
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Kursus Masterclass Fibo Kyoko</p>
+                                        <p className="text-[11px] text-slate-500">3 Video Masterclass HD komplit, File Indikator Auto FIBO KYOKO MT5 (.ex5), dan Script TradingView Pine Script v6 lengkap.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        📊
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">DOM ARRA &amp; Whale Radar</p>
+                                        <p className="text-[11px] text-slate-500">Depth of Market order book visualizer, mendeteksi jejak akumulasi whale &amp; cluster likuiditas institusi secara akurat.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        📡
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Sentiment Sniffer &amp; Gold Heatmap</p>
+                                        <p className="text-[11px] text-slate-500">Pemindaian sentimen pasar global, rasio posisi ritel vs smart money, dan peta panas kekuatan mata uang serta XAUUSD.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        📐
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Fibonacci Kanji &amp; Probability Zones</p>
+                                        <p className="text-[11px] text-slate-500">Scanner otomatis pola pembalikan arah Fibonacci Kanji dan kalkulasi zona probabilitas pembalikan harga emas.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        🤖
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Copytrade ARRA77 (VIP Terminal)</p>
+                                        <p className="text-[11px] text-slate-500">Akses terminal copytrade otomatis dengan eksekusi milidetik, manajemen risiko terukur, dan pemantauan posisi.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        🩺
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">AI Trade Doctor</p>
+                                        <p className="text-[11px] text-slate-500">Dokter trading pribadi berbasis AI untuk mereview histori trading, mendiagnosis kesalahan psikologi, dan memperbaiki Win Rate.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        ♾️
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Semua Timeframe &amp; Free Updates</p>
+                                        <p className="text-[11px] text-slate-500">Akses seluruh timeframe (M1 hingga D1) tanpa batas kuota harian + gratis update fitur dan model neural selamanya.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pricing Box & CTA */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2 border-t border-slate-100">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-slate-400 line-through text-base font-semibold">Rp 1.499.000</span>
+                                    <span className="text-xs font-extrabold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full">
+                                        HEMAT Rp 1.374.000 (DISKON 90%)
+                                    </span>
+                                </div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">Rp 125.000</span>
+                                    <span className="text-sm font-semibold text-slate-500">/ sekali bayar (Lifetime)</span>
+                                </div>
+                                <p className="text-xs text-amber-600 font-semibold mt-1">
+                                    ⚡ Promo ditutup otomatis setelah 2 hari!
+                                </p>
+                            </div>
+
+                            <div className="w-full sm:w-auto">
+                                <button
+                                    onClick={() => handleSubscribe('ALL_ACCESS', 'lifetime')}
+                                    disabled={isProcessing === 'ALL_ACCESS'}
+                                    className="w-full sm:w-auto px-8 py-4 rounded-2xl font-extrabold text-base text-white bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 shadow-lg shadow-rose-500/25 transition-all transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                                >
+                                    <span>Ambil Promo Semua Produk (Rp 125.000)</span>
+                                    <span className="text-xl">&rarr;</span>
+                                </button>
+                                <p className="text-[11px] text-center text-slate-500 mt-2">
+                                    Bank BCA: <strong>1392698188</strong> a.n. Arland Pratama Muldiawan
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
                 {PRICING_PLANS.map((plan, index) => {
                     const pricing = getPlanPricing(plan.id);
                     const isReversed = index % 2 !== 0;
@@ -418,7 +575,7 @@ export default function PricingPage() {
                 })}
 
                 <p className="text-center text-slate-500 text-xs mt-2">
-                    * Pembayaran instan via QRIS (qris.id). Mendukung semua e-wallet (GoPay, OVO, Dana) dan mobile banking (BCA, Mandiri, BRI, BNI).
+                    * Pembayaran melalui Transfer Bank BCA: 1392698188 a.n. Arland Pratama Muldiawan. Konfirmasi instan via Telegram @arra7trader.
                 </p>
             </section>
 

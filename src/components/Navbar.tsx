@@ -61,6 +61,26 @@ export default function Navbar() {
                 : 'bg-white/60 border-b border-slate-200/40 backdrop-blur-md'
                 }`}
         >
+            {/* Flash Sale 2 Hari Announcement Banner */}
+            <div className="bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex items-center justify-center gap-2 shadow-inner">
+                <span className="bg-white/20 text-white font-extrabold px-1.5 py-0.5 rounded text-[10px] tracking-wider uppercase shrink-0">
+                    🔥 FLASH SALE 2 HARI
+                </span>
+                <span className="font-medium text-white/95 hidden sm:inline">
+                    1 Harga Lifetime <strong>Semua Produk</strong> Hanya <strong>Rp 125.000</strong> (PICA Neural Lab, Fibo Kyoko, DOM, Sentiment &amp; Copytrade)
+                </span>
+                <span className="font-medium text-white/95 sm:hidden">
+                    Semua Produk Lifetime: <strong>Rp 125.000</strong>
+                </span>
+                <Link
+                    href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime"
+                    className="shrink-0 ml-1 inline-flex items-center gap-1 bg-white text-slate-900 hover:bg-amber-100 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold transition-all shadow-xs cursor-pointer active:scale-95"
+                >
+                    <span>Klaim 125K</span>
+                    <span>&rarr;</span>
+                </Link>
+            </div>
+
             <nav className="relative flex items-center justify-between h-16 w-full px-4 sm:px-6 md:px-12 antialiased">
                 {/* Left Side: Akses Harga */}
                 <div className="flex-1 flex items-center gap-3">
