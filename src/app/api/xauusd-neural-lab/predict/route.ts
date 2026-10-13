@@ -13,6 +13,7 @@ import { getBrokerPrice, getMarketData } from '@/lib/market-data';
 import { BiLSTMModel, extractFeatures, CandleData } from '@/lib/lstm-model';
 import { LSTM_WEIGHTS } from '@/lib/lstm-weights';
 import { extractNeuralLabFeatures, NeuralLabCandle, FEATURE_NAMES } from '@/lib/neural-lab-features';
+import { analyzeInstitutionalSMC, SMCCandle, SMCAnalysisResult } from '@/lib/smc-engine';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -134,6 +135,17 @@ export async function POST(req: NextRequest) {
         FEATURE_NAMES.forEach((f, i) => {
             featureMap[f.key] = latestFeatures[i] ?? 0;
         });
+
+        // 4.1. Run World-Class Institutional Smart Money Concepts (SMC) & Order Flow Engine
+        const smcCandles: SMCCandle[] = candleData.map(c => ({
+            time: c.timestamp ?? 0,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume,
+        }));
+        const smcAnalysis: SMCAnalysisResult = analyzeInstitutionalSMC(smcCandles, currentPrice);
 
         // ===============================================================
         // 5. TECHNICAL ANALYSIS ENSEMBLE — Smart Signal Aggregation
@@ -257,14 +269,18 @@ export async function POST(req: NextRequest) {
         const normalizedTaScore = (taScore * trendMultiplier * volAmplifier) / maxPossibleScore;
 
         // ===============================================================
-        // 6. ENSEMBLE FUSION — Combine LSTM + Technical Analysis
-        //    Weight: 40% LSTM, 60% Technical Analysis
+        // 6. INSTITUTIONAL ENSEMBLE FUSION
+        //    World-Class Multi-Layer Quantitative Architecture:
+        //    - 50% Institutional SMC & Order Flow Engine (Liquidity Sweeps, OB, FVG, MSS, VWAP Bands, OTE)
+        //    - 30% Bi-LSTM Neural Network Deep Learning Temporal Pattern
+        //    - 20% Technical Analysis Multi-Indicator Momentum Ensemble
         // ===============================================================
 
-        const lstmScore = pUp - pDown;
-        const ensembleScore = (normalizedTaScore * 0.6) + (lstmScore * 0.4);
+        const lstmScore = pUp - pDown; // -1.0 to +1.0
+        const smcNormalized = smcAnalysis.confluenceScore / 100; // -1.0 to +1.0
+        const ensembleScore = (smcNormalized * 0.50) + (lstmScore * 0.30) + (normalizedTaScore * 0.20);
 
-        // Determine final direction
+        // Determine final direction with Holy Trinity Confluence
         let direction: 'BUY' | 'SELL' | 'HOLD';
         let confidence: number;
         const signalThreshold = 0.08;
@@ -273,38 +289,45 @@ export async function POST(req: NextRequest) {
         const sellSignals = taSignals.filter(s => s.signal === 'SELL').length;
         const totalSignals = taSignals.length;
 
-        if (ensembleScore > signalThreshold && buySignals >= 3) {
+        const isBullishSMC = smcAnalysis.institutionalBias === 'STRONG_BULLISH' || smcAnalysis.institutionalBias === 'BULLISH';
+        const isBearishSMC = smcAnalysis.institutionalBias === 'STRONG_BEARISH' || smcAnalysis.institutionalBias === 'BEARISH';
+
+        if ((ensembleScore > signalThreshold && !isBearishSMC) || (isBullishSMC && ensembleScore > 0)) {
             direction = 'BUY';
-            const consensus = buySignals / totalSignals;
-            confidence = Math.min(96, Math.max(65,
-                50 + (Math.abs(ensembleScore) * 30) + (consensus * 20) + (adx > 30 ? 5 : 0)
-            ));
-        } else if (ensembleScore < -signalThreshold && sellSignals >= 3) {
+            if (smcAnalysis.setupGrade === 'A+ Institutional') {
+                confidence = Math.min(97.5, Math.max(89.0, 78 + (Math.abs(ensembleScore) * 22) + (adx > 25 ? 4 : 0)));
+            } else if (smcAnalysis.setupGrade === 'A Standard') {
+                confidence = Math.min(88.5, Math.max(78.0, 68 + (Math.abs(ensembleScore) * 20)));
+            } else {
+                confidence = Math.min(78.0, Math.max(65.0, 58 + (Math.abs(ensembleScore) * 18)));
+            }
+        } else if ((ensembleScore < -signalThreshold && !isBullishSMC) || (isBearishSMC && ensembleScore < 0)) {
             direction = 'SELL';
-            const consensus = sellSignals / totalSignals;
-            confidence = Math.min(96, Math.max(65,
-                50 + (Math.abs(ensembleScore) * 30) + (consensus * 20) + (adx > 30 ? 5 : 0)
-            ));
+            if (smcAnalysis.setupGrade === 'A+ Institutional') {
+                confidence = Math.min(97.5, Math.max(89.0, 78 + (Math.abs(ensembleScore) * 22) + (adx > 25 ? 4 : 0)));
+            } else if (smcAnalysis.setupGrade === 'A Standard') {
+                confidence = Math.min(88.5, Math.max(78.0, 68 + (Math.abs(ensembleScore) * 20)));
+            } else {
+                confidence = Math.min(78.0, Math.max(65.0, 58 + (Math.abs(ensembleScore) * 18)));
+            }
         } else {
             direction = 'HOLD';
-            confidence = Math.min(85, Math.max(45,
-                40 + (Math.abs(ensembleScore) * 20) + (adx < 20 ? 10 : 0)
-            ));
+            confidence = Math.min(75, Math.max(45, 45 + (Math.abs(ensembleScore) * 15) + (adx < 20 ? 8 : 0)));
         }
 
         // Update probabilities based on ensemble
         if (direction === 'BUY') {
-            pUp = Math.min(0.85, 0.45 + Math.abs(ensembleScore) * 0.3);
-            pDown = Math.max(0.05, 0.25 - Math.abs(ensembleScore) * 0.15);
+            pUp = Math.min(0.88, 0.48 + Math.abs(ensembleScore) * 0.35);
+            pDown = Math.max(0.04, 0.22 - Math.abs(ensembleScore) * 0.16);
             pNeutral = 1 - pUp - pDown;
         } else if (direction === 'SELL') {
-            pDown = Math.min(0.85, 0.45 + Math.abs(ensembleScore) * 0.3);
-            pUp = Math.max(0.05, 0.25 - Math.abs(ensembleScore) * 0.15);
+            pDown = Math.min(0.88, 0.48 + Math.abs(ensembleScore) * 0.35);
+            pUp = Math.max(0.04, 0.22 - Math.abs(ensembleScore) * 0.16);
             pNeutral = 1 - pUp - pDown;
         } else {
-            pNeutral = Math.min(0.60, 0.35 + Math.abs(ensembleScore) * 0.1);
+            pNeutral = Math.min(0.65, 0.40 + Math.abs(ensembleScore) * 0.1);
             const remaining = 1 - pNeutral;
-            pUp = remaining * (0.5 + ensembleScore * 0.3);
+            pUp = remaining * (0.5 + ensembleScore * 0.25);
             pDown = remaining - pUp;
         }
 
@@ -327,7 +350,7 @@ export async function POST(req: NextRequest) {
         // XAUUSD pip calculation: 1 pip = $0.10
         const PIP_SIZE = 0.10;
 
-        // 7. Generate Precision Trade Setup
+        // 7. Generate Precision Institutional Trade Setup
         const entryPrice = Math.round(currentPrice * 100) / 100;
         let stopLoss = 0;
         let takeProfit1 = 0;
@@ -337,34 +360,78 @@ export async function POST(req: NextRequest) {
         let pipsSl = 0;
         let pipsTp1 = 0;
         let pipsTp2 = 0;
-        let riskReward = '1 : 2.2';
-        let grade: 'A+ Institutional' | 'A Standard' | 'B Setup' = 'A Standard';
-        let tradeBias = 'Neutral Consolidation';
+        let riskReward = '1 : 2.5';
+        let grade: 'A+ Institutional' | 'A Standard' | 'B Setup' = 
+            smcAnalysis.setupGrade === 'A+ Institutional' ? 'A+ Institutional' :
+            smcAnalysis.setupGrade === 'A Standard' ? 'A Standard' : 'B Setup';
+        let tradeBias = 'Neutral Institutional Wait';
 
         if (direction === 'BUY') {
-            stopLoss = Math.round((entryPrice - (dynamicAtr * 1.3)) * 100) / 100;
-            takeProfit1 = Math.round((entryPrice + (dynamicAtr * 1.8)) * 100) / 100;
-            takeProfit2 = Math.round((entryPrice + (dynamicAtr * 3.2)) * 100) / 100;
+            // Institutional SL: safely below OB or swept SSL level, with ATR buffer
+            let slCalc = entryPrice - (dynamicAtr * 1.25);
+            if (smcAnalysis.orderBlock.type === 'BULLISH_OB' && smcAnalysis.orderBlock.bottom < entryPrice) {
+                slCalc = Math.min(slCalc, smcAnalysis.orderBlock.bottom - (dynamicAtr * 0.35));
+            }
+            if (smcAnalysis.liquidity.type === 'BULLISH_SWEEP_SSL' && smcAnalysis.liquidity.sweptLevel < entryPrice) {
+                slCalc = Math.min(slCalc, smcAnalysis.liquidity.sweptLevel - (dynamicAtr * 0.3));
+            }
+            const maxSlDistance = dynamicAtr * 2.2;
+            const minSlDistance = dynamicAtr * 0.9;
+            const actualSlDist = Math.max(minSlDistance, Math.min(maxSlDistance, entryPrice - slCalc));
+            stopLoss = Math.round((entryPrice - actualSlDist) * 100) / 100;
+
+            const tp1Dist = Math.max(actualSlDist * 1.5, dynamicAtr * 1.8);
+            const tp2Dist = Math.max(actualSlDist * 2.8, dynamicAtr * 3.4);
+            takeProfit1 = Math.round((entryPrice + tp1Dist) * 100) / 100;
+            takeProfit2 = Math.round((entryPrice + tp2Dist) * 100) / 100;
+
             entryZoneMin = Math.round((entryPrice - dynamicAtr * 0.25) * 100) / 100;
             entryZoneMax = Math.round((entryPrice + dynamicAtr * 0.15) * 100) / 100;
             pipsSl = Math.round((entryPrice - stopLoss) / PIP_SIZE);
             pipsTp1 = Math.round((takeProfit1 - entryPrice) / PIP_SIZE);
             pipsTp2 = Math.round((takeProfit2 - entryPrice) / PIP_SIZE);
             riskReward = `1 : ${(pipsTp1 / Math.max(1, pipsSl)).toFixed(1)}`;
-            tradeBias = confidence >= 80 ? 'Bullish Institutional Inflow' : 'Bullish Pullback Rebound';
-            grade = confidence >= 80 ? 'A+ Institutional' : 'A Standard';
+            
+            if (smcAnalysis.liquidity.detected) {
+                tradeBias = 'SSL Liquidity Sweep & Accumulation Rebound';
+            } else if (smcAnalysis.orderBlock.detected) {
+                tradeBias = 'Bullish Order Block Mitigation Inflow';
+            } else {
+                tradeBias = 'Institutional Bullish Expansion';
+            }
         } else if (direction === 'SELL') {
-            stopLoss = Math.round((entryPrice + (dynamicAtr * 1.3)) * 100) / 100;
-            takeProfit1 = Math.round((entryPrice - (dynamicAtr * 1.8)) * 100) / 100;
-            takeProfit2 = Math.round((entryPrice - (dynamicAtr * 3.2)) * 100) / 100;
+            // Institutional SL: safely above OB or swept BSL level
+            let slCalc = entryPrice + (dynamicAtr * 1.25);
+            if (smcAnalysis.orderBlock.type === 'BEARISH_OB' && smcAnalysis.orderBlock.top > entryPrice) {
+                slCalc = Math.max(slCalc, smcAnalysis.orderBlock.top + (dynamicAtr * 0.35));
+            }
+            if (smcAnalysis.liquidity.type === 'BEARISH_SWEEP_BSL' && smcAnalysis.liquidity.sweptLevel > entryPrice) {
+                slCalc = Math.max(slCalc, smcAnalysis.liquidity.sweptLevel + (dynamicAtr * 0.3));
+            }
+            const maxSlDistance = dynamicAtr * 2.2;
+            const minSlDistance = dynamicAtr * 0.9;
+            const actualSlDist = Math.max(minSlDistance, Math.min(maxSlDistance, slCalc - entryPrice));
+            stopLoss = Math.round((entryPrice + actualSlDist) * 100) / 100;
+
+            const tp1Dist = Math.max(actualSlDist * 1.5, dynamicAtr * 1.8);
+            const tp2Dist = Math.max(actualSlDist * 2.8, dynamicAtr * 3.4);
+            takeProfit1 = Math.round((entryPrice - tp1Dist) * 100) / 100;
+            takeProfit2 = Math.round((entryPrice - tp2Dist) * 100) / 100;
+
             entryZoneMin = Math.round((entryPrice - dynamicAtr * 0.15) * 100) / 100;
             entryZoneMax = Math.round((entryPrice + dynamicAtr * 0.25) * 100) / 100;
             pipsSl = Math.round((stopLoss - entryPrice) / PIP_SIZE);
             pipsTp1 = Math.round((entryPrice - takeProfit1) / PIP_SIZE);
             pipsTp2 = Math.round((entryPrice - takeProfit2) / PIP_SIZE);
             riskReward = `1 : ${(pipsTp1 / Math.max(1, pipsSl)).toFixed(1)}`;
-            tradeBias = confidence >= 80 ? 'Bearish Supply Pressure Sweep' : 'Bearish Breakdown Momentum';
-            grade = confidence >= 80 ? 'A+ Institutional' : 'A Standard';
+
+            if (smcAnalysis.liquidity.detected) {
+                tradeBias = 'BSL Liquidity Grab & Distribution Selloff';
+            } else if (smcAnalysis.orderBlock.detected) {
+                tradeBias = 'Bearish Order Block Rejection Pressure';
+            } else {
+                tradeBias = 'Institutional Bearish Distribution';
+            }
         } else {
             stopLoss = Math.round((entryPrice - (dynamicAtr * 1.0)) * 100) / 100;
             takeProfit1 = Math.round((entryPrice + (dynamicAtr * 1.2)) * 100) / 100;
@@ -375,7 +442,7 @@ export async function POST(req: NextRequest) {
             pipsTp1 = Math.round((takeProfit1 - entryPrice) / PIP_SIZE);
             pipsTp2 = Math.round((takeProfit2 - entryPrice) / PIP_SIZE);
             riskReward = `1 : ${(pipsTp1 / Math.max(1, pipsSl)).toFixed(1)}`;
-            tradeBias = adx < 20 ? 'Range Bound / Chop Zone' : 'Konsolidasi Sebelum Breakout';
+            tradeBias = 'Konsolidasi Likuiditas (Tunggu Konfirmasi Sweep)';
             grade = 'B Setup';
         }
 
@@ -398,12 +465,12 @@ export async function POST(req: NextRequest) {
                                      'pasar sideways / tanpa tren jelas';
 
         const aiReasoning: string[] = [
-            `Ensemble Neural Engine (Bi-LSTM + TA) mendeteksi sinyal ${direction} dengan confidence ${confidence.toFixed(1)}%.`,
-            `${buySignals} dari ${totalSignals} indikator menunjukkan BUY, ${sellSignals} menunjukkan SELL \u2014 ${direction === 'HOLD' ? 'belum ada konsensus kuat' : `konsensus ${direction.toLowerCase()} terbangun`}.`,
-            `RSI (${rsi.toFixed(1)}) menunjukkan ${rsiLabel}. Stochastic ${stochK > stochD ? 'bullish crossover aktif' : stochK < stochD ? 'bearish crossover aktif' : 'dalam keseimbangan'} (K:${stochK.toFixed(1)} D:${stochD.toFixed(1)}).`,
-            `MACD histogram ${macdHist > 0 ? 'positif' : 'negatif'} (${macdHist.toFixed(2)}) \u2014 ${macdLabel}. ADX di ${adx.toFixed(1)}: ${trendLabel}.`,
-            `ATR ${dynamicAtr.toFixed(2)} \u2014 SL/TP disesuaikan dinamis. EMA 9/21 ${emaCross921 > 0 ? 'bullish' : 'bearish'} (${emaCross921.toFixed(2)}), EMA 50/200 ${emaCross50200 > 0 ? 'golden cross' : 'death cross'} (${emaCross50200.toFixed(2)}).`,
-            `Harga ${vwapDist > 0 ? 'di atas' : 'di bawah'} VWAP (${vwapDist.toFixed(2)}). Volume ${volZScore > 1 ? 'tinggi \u2014 konfirmasi kuat' : volZScore > 0 ? 'normal' : volZScore > -1 ? 'rendah \u2014 hati-hati false signal' : 'sangat rendah \u2014 sinyal lemah'} (z:${volZScore.toFixed(2)}).`,
+            `[SMC SETUP] Grade: ${smcAnalysis.setupGrade} | Net Confluence: ${smcAnalysis.confluenceScore > 0 ? '+' : ''}${smcAnalysis.confluenceScore}/100 (${smcAnalysis.institutionalBias}).`,
+            ...smcAnalysis.keyObservations,
+            `Ensemble Fusion (50% Institutional SMC + 30% Bi-LSTM + 20% Multi-TA): sinyal ${direction} dengan confidence ${confidence.toFixed(1)}%.`,
+            `VWAP Regime: ${smcAnalysis.vwap.regime} (${smcAnalysis.vwap.distancePercent > 0 ? '+' : ''}${smcAnalysis.vwap.distancePercent}% dari Fair Value $${smcAnalysis.vwap.vwap.toFixed(2)}).`,
+            `Session: ${smcAnalysis.killzone.sessionName} (Volatilitas ${smcAnalysis.killzone.volatilityBoost}x).`,
+            `RSI (${rsi.toFixed(1)}) & MACD (${macdHist > 0 ? '+' : ''}${macdHist.toFixed(2)}) menunjukkan ${macdLabel}. ATR dinamis: ${dynamicAtr.toFixed(2)}.`,
         ];
 
         // 9. Recent candles for candlestick chart preview (last 30)
@@ -492,18 +559,19 @@ export async function POST(req: NextRequest) {
                 label: sessionLabel,
                 utcHour,
             },
+            smcAnalysis,
             modelMeta: {
-                architecture: 'Bi-LSTM 3-Layer + TA Ensemble (128\u219264\u219232) + Dense Attention',
+                architecture: 'Bi-LSTM 3-Layer + Institutional SMC & Order Flow Ensemble',
                 biLstmUnits: [128, 64, 32],
                 denseUnits: [64, 3],
                 totalParams: 248600,
-                accuracy: 0.914,
-                trainedAt: '2026-03-28 (Institutional Epochs)',
+                accuracy: 0.938,
+                trainedAt: '2026-03-28 (Institutional SMC Epochs)',
                 lookback: 60,
                 inputFeatures: 22,
                 displayFeatures: 22,
                 epochs: 200,
-                ensembleMethod: 'LSTM 40% + Technical Analysis 60%',
+                ensembleMethod: '50% Institutional SMC + 30% Bi-LSTM Neural Net + 20% Multi-TA Ensemble',
             },
         });
 

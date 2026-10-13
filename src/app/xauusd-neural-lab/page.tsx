@@ -25,6 +25,7 @@ import {
     TargetIcon,
     CrosshairIcon,
 } from '@/components/PremiumIcons';
+import type { SMCAnalysisResult } from '@/lib/smc-engine';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -128,6 +129,7 @@ interface PredictionResponse {
     marketInfo: MarketInfo;
     session: SessionInfo;
     modelMeta: ModelMeta;
+    smcAnalysis?: SMCAnalysisResult;
 }
 
 const TIMEFRAMES = [
@@ -352,6 +354,7 @@ export default function XauusdNeuralLabPage() {
     const candles = data?.recentCandles || [];
     const reasoning = data?.aiReasoning || [];
     const taSignals = data?.taSignals;
+    const smc = data?.smcAnalysis;
 
     const dirColor = pred?.direction === 'BUY' ? 'text-emerald-700' : pred?.direction === 'SELL' ? 'text-rose-700' : 'text-amber-700';
     const dirBg = pred?.direction === 'BUY' ? 'bg-emerald-50/80 border-emerald-300' : pred?.direction === 'SELL' ? 'bg-rose-50/80 border-rose-300' : 'bg-amber-50/80 border-amber-300';
@@ -838,6 +841,259 @@ export default function XauusdNeuralLabPage() {
 
                         {/* ── CENTER + RIGHT: AI Synthesis, Interactive Chart & 22-Feature Engine ── */}
                         <div className="lg:col-span-2 space-y-6">
+
+                            {/* Institutional Smart Money Concepts & Order Flow Matrix */}
+                            {smc && (
+                                <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm space-y-5">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                                    <CrownIcon size="xs" />
+                                                </div>
+                                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-600">
+                                                    Institutional Quantitative Engine
+                                                </span>
+                                            </div>
+                                            <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk'] mt-0.5">
+                                                Smart Money Concepts (SMC) &amp; Order Flow Matrix
+                                            </h3>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {/* Grade Badge */}
+                                            <span className={`px-3 py-1 rounded-xl text-xs font-black font-['Space_Grotesk'] border flex items-center gap-1.5 shadow-2xs ${
+                                                smc.setupGrade === 'A+ Institutional'
+                                                    ? 'bg-gradient-to-r from-amber-50 to-emerald-50 text-emerald-800 border-emerald-300'
+                                                    : smc.setupGrade === 'A Standard'
+                                                    ? 'bg-blue-50 text-blue-800 border-blue-200'
+                                                    : smc.setupGrade === 'B Setup'
+                                                    ? 'bg-slate-50 text-slate-700 border-slate-200'
+                                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                            }`}>
+                                                <span>{smc.setupGrade === 'A+ Institutional' ? '🏆' : '★'}</span>
+                                                <span>{smc.setupGrade}</span>
+                                            </span>
+
+                                            {/* Net Confluence Score Badge */}
+                                            <span className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold border ${
+                                                smc.confluenceScore > 0
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                    : smc.confluenceScore < 0
+                                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                                    : 'bg-slate-50 text-slate-600 border-slate-200'
+                                            }`}>
+                                                Net Confluence: {smc.confluenceScore > 0 ? '+' : ''}{smc.confluenceScore}/100
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Session Killzone Status Banner */}
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs">
+                                        <div className="flex items-center gap-2 font-sans">
+                                            <span className="text-base">🕒</span>
+                                            <span className="font-bold text-slate-800">{smc.killzone.sessionName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold border ${
+                                                smc.killzone.isKillzone
+                                                    ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                                    : 'bg-slate-200/70 text-slate-600 border-slate-300'
+                                            }`}>
+                                                {smc.killzone.isKillzone ? '⚡ HIGH VOLATILITY KILLZONE' : 'REGULER SESSION'}
+                                            </span>
+                                            <span className="font-mono text-slate-500 text-[11px]">
+                                                Boost: {smc.killzone.volatilityBoost}x
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* 6 Institutional Pillars Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+
+                                        {/* 1. Liquidity Sweeps */}
+                                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                                            smc.liquidity.type === 'BULLISH_SWEEP_SSL' ? 'bg-emerald-50/60 border-emerald-200' :
+                                            smc.liquidity.type === 'BEARISH_SWEEP_BSL' ? 'bg-rose-50/60 border-rose-200' :
+                                            'bg-slate-50 border-slate-200/80'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                                    <CrosshairIcon size="xs" />
+                                                    <span>Liquidity Sweep</span>
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                    smc.liquidity.type === 'BULLISH_SWEEP_SSL' ? 'bg-emerald-200 text-emerald-900' :
+                                                    smc.liquidity.type === 'BEARISH_SWEEP_BSL' ? 'bg-rose-200 text-rose-900' :
+                                                    'bg-slate-200 text-slate-600'
+                                                }`}>
+                                                    {smc.liquidity.type === 'BULLISH_SWEEP_SSL' ? 'SSL Grabbed' :
+                                                     smc.liquidity.type === 'BEARISH_SWEEP_BSL' ? 'BSL Grabbed' : 'None'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black font-['Space_Grotesk'] text-slate-900">
+                                                {smc.liquidity.detected ? `$${smc.liquidity.sweptLevel.toFixed(2)} Reclaimed` : 'Pembersihan Likuiditas Netral'}
+                                            </p>
+                                            <p className="text-[11px] text-slate-600 mt-1 leading-snug line-clamp-2">
+                                                {smc.liquidity.description}
+                                            </p>
+                                        </div>
+
+                                        {/* 2. Institutional Order Block */}
+                                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                                            smc.orderBlock.type === 'BULLISH_OB' ? 'bg-emerald-50/60 border-emerald-200' :
+                                            smc.orderBlock.type === 'BEARISH_OB' ? 'bg-rose-50/60 border-rose-200' :
+                                            'bg-slate-50 border-slate-200/80'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                                    <ShieldCheckIcon size="xs" />
+                                                    <span>Order Block (OB)</span>
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                    smc.orderBlock.type === 'BULLISH_OB' ? 'bg-emerald-200 text-emerald-900' :
+                                                    smc.orderBlock.type === 'BEARISH_OB' ? 'bg-rose-200 text-rose-900' :
+                                                    'bg-slate-200 text-slate-600'
+                                                }`}>
+                                                    {smc.orderBlock.type === 'BULLISH_OB' ? 'Bullish OB' :
+                                                     smc.orderBlock.type === 'BEARISH_OB' ? 'Bearish OB' : 'Neutral'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black font-['Space_Grotesk'] text-slate-900 font-mono">
+                                                {smc.orderBlock.detected ? `$${smc.orderBlock.bottom.toFixed(2)} - $${smc.orderBlock.top.toFixed(2)}` : 'Belum Ada OB Baru'}
+                                            </p>
+                                            <p className="text-[11px] text-slate-600 mt-1 leading-snug line-clamp-2">
+                                                {smc.orderBlock.description}
+                                            </p>
+                                        </div>
+
+                                        {/* 3. Fair Value Gap */}
+                                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                                            smc.fvg.type === 'BULLISH_FVG' ? 'bg-emerald-50/60 border-emerald-200' :
+                                            smc.fvg.type === 'BEARISH_FVG' ? 'bg-rose-50/60 border-rose-200' :
+                                            'bg-slate-50 border-slate-200/80'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                                    <TargetIcon size="xs" />
+                                                    <span>Fair Value Gap</span>
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                    smc.fvg.type === 'BULLISH_FVG' ? 'bg-emerald-200 text-emerald-900' :
+                                                    smc.fvg.type === 'BEARISH_FVG' ? 'bg-rose-200 text-rose-900' :
+                                                    'bg-slate-200 text-slate-600'
+                                                }`}>
+                                                    {smc.fvg.detected ? `${smc.fvg.sizePips} pips` : 'Balanced'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black font-['Space_Grotesk'] text-slate-900 font-mono">
+                                                {smc.fvg.detected ? `$${smc.fvg.bottom.toFixed(2)} - $${smc.fvg.top.toFixed(2)}` : 'Inefficiency Termitigasi'}
+                                            </p>
+                                            <p className="text-[11px] text-slate-600 mt-1 leading-snug line-clamp-2">
+                                                {smc.fvg.description}
+                                            </p>
+                                        </div>
+
+                                        {/* 4. Market Structure Shift */}
+                                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                                            smc.mss.direction === 'BULLISH_MSS' ? 'bg-emerald-50/60 border-emerald-200' :
+                                            smc.mss.direction === 'BEARISH_MSS' ? 'bg-rose-50/60 border-rose-200' :
+                                            'bg-slate-50 border-slate-200/80'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                                    <BoltIcon size="xs" />
+                                                    <span>Structure (MSS)</span>
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                    smc.mss.direction === 'BULLISH_MSS' ? 'bg-emerald-200 text-emerald-900' :
+                                                    smc.mss.direction === 'BEARISH_MSS' ? 'bg-rose-200 text-rose-900' :
+                                                    'bg-slate-200 text-slate-600'
+                                                }`}>
+                                                    {smc.mss.direction === 'BULLISH_MSS' ? 'Bullish Shift' :
+                                                     smc.mss.direction === 'BEARISH_MSS' ? 'Bearish Shift' : 'Neutral'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black font-['Space_Grotesk'] text-slate-900 font-mono">
+                                                {smc.mss.detected ? `Break Level: $${smc.mss.breakLevel.toFixed(2)}` : 'Struktur Konsolidasi'}
+                                            </p>
+                                            <p className="text-[11px] text-slate-600 mt-1 leading-snug line-clamp-2">
+                                                {smc.mss.description}
+                                            </p>
+                                        </div>
+
+                                        {/* 5. VWAP Dynamic Multi-Bands */}
+                                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                                            smc.vwap.regime.includes('OVERSOLD') ? 'bg-emerald-50/60 border-emerald-200' :
+                                            smc.vwap.regime.includes('OVERBOUGHT') ? 'bg-rose-50/60 border-rose-200' :
+                                            'bg-slate-50 border-slate-200/80'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                                    <SparklesIcon size="xs" />
+                                                    <span>VWAP ±2.5σ Bands</span>
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                    smc.vwap.regime.includes('OVERSOLD') ? 'bg-emerald-200 text-emerald-900' :
+                                                    smc.vwap.regime.includes('OVERBOUGHT') ? 'bg-rose-200 text-rose-900' :
+                                                    'bg-blue-100 text-blue-800'
+                                                }`}>
+                                                    {smc.vwap.regime}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black font-['Space_Grotesk'] text-slate-900 font-mono">
+                                                VWAP: ${smc.vwap.vwap.toFixed(2)} ({smc.vwap.distancePercent > 0 ? '+' : ''}{smc.vwap.distancePercent}%)
+                                            </p>
+                                            <p className="text-[11px] text-slate-600 mt-1 leading-snug font-mono">
+                                                Bands: -2σ ${smc.vwap.lower2.toFixed(2)} | +2σ ${smc.vwap.upper2.toFixed(2)}
+                                            </p>
+                                        </div>
+
+                                        {/* 6. Fibonacci OTE */}
+                                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                                            smc.ote.inGoldenPocket ? 'bg-amber-50/70 border-amber-300' :
+                                            'bg-slate-50 border-slate-200/80'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                                    <CrownIcon size="xs" />
+                                                    <span>Fibo OTE 0.618-0.786</span>
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                    smc.ote.inGoldenPocket ? 'bg-amber-300 text-amber-950 font-bold' :
+                                                    'bg-slate-200 text-slate-600'
+                                                }`}>
+                                                    {smc.ote.inGoldenPocket ? 'Golden Pocket' : 'Macro Swing'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black font-['Space_Grotesk'] text-slate-900 font-mono">
+                                                OTE: ${smc.ote.level786.toFixed(2)} - ${smc.ote.level618.toFixed(2)}
+                                            </p>
+                                            <p className="text-[11px] text-slate-600 mt-1 leading-snug font-mono">
+                                                Swing: ${smc.ote.anchorLow.toFixed(2)} → ${smc.ote.anchorHigh.toFixed(2)} ({smc.ote.trendDirection})
+                                            </p>
+                                        </div>
+
+                                    </div>
+
+                                    {/* Key Institutional Observations */}
+                                    {smc.keyObservations && smc.keyObservations.length > 0 && (
+                                        <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                Rangkuman Aliran Likuiditas Smart Money:
+                                            </span>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+                                                {smc.keyObservations.map((obs, idx) => (
+                                                    <div key={idx} className="flex items-start gap-2 bg-slate-50/80 px-2.5 py-1.5 rounded-xl border border-slate-100">
+                                                        <span className="text-blue-600 font-bold">•</span>
+                                                        <span className="leading-relaxed">{obs}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* AI Qualitative Synthesis */}
                             {reasoning.length > 0 && (
