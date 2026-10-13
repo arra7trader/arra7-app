@@ -82,8 +82,8 @@ export default function Navbar() {
             </div>
 
             <nav className="relative flex items-center justify-between h-16 w-full px-4 sm:px-6 md:px-12 antialiased">
-                {/* Left Side: Akses Harga */}
-                <div className="flex-1 flex items-center gap-3">
+                {/* Left Side: Akses Harga & Fitur */}
+                <div className="flex-1 flex items-center gap-2 sm:gap-3">
                     <Link
                         href="/pricing"
                         className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
@@ -91,6 +91,113 @@ export default function Navbar() {
                         <CurrencyIcon size="xs" className="text-blue-600" />
                         <span>Harga</span>
                     </Link>
+
+                    {/* Popover Menu: Semua Fitur */}
+                    <Popover.Root>
+                        <Popover.Trigger asChild>
+                            <button
+                                className="hidden sm:flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
+                            >
+                                <span className="text-xs">⚡</span>
+                                <span>Fitur</span>
+                                <span className="text-[10px] text-slate-400">▼</span>
+                            </button>
+                        </Popover.Trigger>
+                        <Popover.Portal>
+                            <Popover.Content
+                                align="start"
+                                sideOffset={8}
+                                className="z-50 w-72 bg-white/95 backdrop-blur-xl rounded-2xl p-2.5 border border-slate-200/90 shadow-2xl shadow-slate-300/50 animate-in fade-in-50 zoom-in-95"
+                            >
+                                <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                                    <span>EKOSISTEM ARRA 7 / PICA</span>
+                                    <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">8 FITUR</span>
+                                </div>
+                                <div className="py-1 space-y-0.5 text-xs">
+                                    <Link href="/xauusd-neural-lab" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🧠</span>
+                                            <div>
+                                                <p className="font-bold">PICA Neural Lab</p>
+                                                <p className="text-[10px] text-slate-400">Bi-LSTM + Institutional SMC</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">SMC</span>
+                                    </Link>
+                                    <Link href="/kursus-fibo-kyoko" className="flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 text-slate-800 hover:text-indigo-600 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🎓</span>
+                                            <div>
+                                                <p className="font-bold">Kursus Fibo Kyoko</p>
+                                                <p className="text-[10px] text-slate-400">Masterclass + MT5 + TradingView</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">LIFETIME</span>
+                                    </Link>
+                                    <Link href="/dom-arra" className="flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 text-slate-800 hover:text-amber-700 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>📊</span>
+                                            <div>
+                                                <p className="font-bold">DOM ARRA</p>
+                                                <p className="text-[10px] text-slate-400">Order Flow & Whale Radar</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">DOM</span>
+                                    </Link>
+                                    <Link href="/sentiment-sniffer" className="flex items-center justify-between p-2 rounded-xl hover:bg-rose-50 text-slate-800 hover:text-rose-600 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>📡</span>
+                                            <div>
+                                                <p className="font-bold">Sentiment Sniffer</p>
+                                                <p className="text-[10px] text-slate-400">Market Bias & Gold Heatmap</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">DATA</span>
+                                    </Link>
+                                    <Link href="/copytrade-arra77" className="flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 text-slate-800 hover:text-emerald-700 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🤖</span>
+                                            <div>
+                                                <p className="font-bold">Copytrade ARRA77</p>
+                                                <p className="text-[10px] text-slate-400">Terminal Eksekusi Otomatis</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">AUTO</span>
+                                    </Link>
+                                    <Link href="/fibonacci-kanji" className="flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-slate-800 hover:text-purple-600 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>📐</span>
+                                            <div>
+                                                <p className="font-bold">Fibonacci Kanji</p>
+                                                <p className="text-[10px] text-slate-400">Reversal & Probability Zones</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">KANJI</span>
+                                    </Link>
+                                    <Link href="/ai-trade-doctor" className="flex items-center justify-between p-2 rounded-xl hover:bg-teal-50 text-slate-800 hover:text-teal-700 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🩺</span>
+                                            <div>
+                                                <p className="font-bold">AI Trade Doctor</p>
+                                                <p className="text-[10px] text-slate-400">Audit Jurnal & Psikologi</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800">DOCTOR</span>
+                                    </Link>
+                                    <Link href="/analisa-market" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>📈</span>
+                                            <div>
+                                                <p className="font-bold">Analisis Market</p>
+                                                <p className="text-[10px] text-slate-400">Quant AI Forex & Saham</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AI</span>
+                                    </Link>
+                                </div>
+                            </Popover.Content>
+                        </Popover.Portal>
+                    </Popover.Root>
                 </div>
 
                 {/* Center: Logo PICA positioned dead center */}

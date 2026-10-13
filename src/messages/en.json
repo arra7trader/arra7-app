@@ -22,12 +22,12 @@
     "badge": "MAINTENANCE"
   },
   "hero": {
-    "badge": "PICA Neural Engine v8.2 Live",
+    "badge": "PICA Neural Lab · SMC & Bi-LSTM Live",
     "headline": "Trading with the Power of",
     "headlineHighlight": "Neural Networks",
     "headlineEnd": "",
     "titleSuffix": "Neural Networks",
-    "subheadline": "PICA AI analyzes millions of market data points per second, detecting institutional Whale liquidity footprints and delivering the highest probability edge for your trades.",
+    "subheadline": "PICA AI evaluates real-time market data combining Deep Learning Bi-LSTM and Institutional Smart Money Concepts (Order Blocks, Liquidity Sweeps, FVG, VWAP ±2.5σ) for maximum statistical edge.",
     "ctaNeuralLab": "Launch PICA Neural Lab",
     "ctaBookmap": "Bookmap PICA",
     "ctaStock": "Stock Analysis",

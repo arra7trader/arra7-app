@@ -22,12 +22,12 @@
         "badge": "MAINTENANCE"
     },
     "hero": {
-        "badge": "PICA Neural Engine v8.2 Live",
+        "badge": "PICA Neural Lab · SMC & Bi-LSTM Live",
         "headline": "Trading dengan Kekuatan",
         "headlineHighlight": "Neural Network",
         "headlineEnd": "",
         "titleSuffix": "Neural Network AI",
-        "subheadline": "PICA AI menganalisa jutaan data market setiap detik, mendeteksi jejak likuiditas institusional 'Whale', dan memberikan probabilitas kemenangan tertinggi untuk Anda.",
+        "subheadline": "PICA AI mengevaluasi data pasar real-time dengan integrasi Deep Learning Bi-LSTM dan Institutional Smart Money Concepts (Order Blocks, Liquidity Sweeps, FVG, VWAP ±2.5σ) untuk probabilitas kemenangan tertinggi.",
         "ctaNeuralLab": "Buka PICA Neural Lab",
         "ctaBookmap": "Bookmap PICA",
         "ctaStock": "Analisa Saham",

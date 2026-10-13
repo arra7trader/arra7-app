@@ -9,6 +9,7 @@ import { ArrowRightIcon, BoltIcon, CrownIcon, TrendUpIcon, CheckIcon, CurrencyIc
 import DailyPerformanceSection from '@/components/home/DailyPerformanceSection';
 import AppGrid from '@/components/home/AppGrid';
 import NeuralBackground from '@/components/home/NeuralBackground';
+import NeuralLabShowcase from '@/components/home/NeuralLabShowcase';
 import PicaLogo from '@/components/PicaLogo';
 
 export default function Home() {
@@ -52,7 +53,7 @@ export default function Home() {
                 <span className="relative inline-flex rounded-full bg-emerald-600 h-2 w-2" />
               </span>
               <span className="tracking-[1px] uppercase text-slate-700 font-['Inter',system-ui,sans-serif] font-bold text-xs">
-                PICA QUANT ENGINE · V4.2 ACTIVE
+                PICA NEURAL LAB · INSTITUTIONAL SMC &amp; BI-LSTM ACTIVE
               </span>
             </div>
           </motion.div>
@@ -99,7 +100,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
               </svg>
               <span className="font-mono font-semibold text-xs text-slate-800">
-                NEURAL CORE: BI-LSTM
+                CORE: BI-LSTM + SMC
               </span>
             </div>
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-slate-200/90 shadow-xs backdrop-blur-xs">
@@ -115,12 +116,12 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
               </svg>
               <span className="font-mono font-semibold text-xs text-slate-800">
-                22 QUANT FEATURES
+                22 FEATURES + 6-PILLAR SMC
               </span>
             </div>
           </motion.div>
 
-          {/* Menu Tombol Aplikasi (4 Menu Utama) */}
+          {/* Menu Tombol Aplikasi (8 Fitur Lengkap) */}
           <div className="w-full">
             <AppGrid />
           </div>
@@ -372,6 +373,11 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Neural Lab Interactive Showcase */}
+          <div className="w-full">
+            <NeuralLabShowcase />
+          </div>
+
           {/* Live Engine Performance Section */}
           <div className="w-full mt-6">
             <DailyPerformanceSection />
@@ -393,13 +399,16 @@ export default function Home() {
           </div>
           
           {/* Quick Footer Links */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-600 font-medium">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-slate-600 font-medium">
             <Link href="/xauusd-neural-lab" className="hover:text-blue-600 transition-colors">Neural Lab</Link>
+            <Link href="/kursus-fibo-kyoko" className="hover:text-blue-600 transition-colors">Fibo Kyoko</Link>
+            <Link href="/dom-arra" className="hover:text-blue-600 transition-colors">DOM ARRA</Link>
+            <Link href="/sentiment-sniffer" className="hover:text-blue-600 transition-colors">Sentiment</Link>
+            <Link href="/copytrade-arra77" className="hover:text-blue-600 transition-colors">Copytrade</Link>
+            <Link href="/fibonacci-kanji" className="hover:text-blue-600 transition-colors">Fibo Kanji</Link>
+            <Link href="/ai-trade-doctor" className="hover:text-blue-600 transition-colors">AI Doctor</Link>
             <Link href="/analisa-market" className="hover:text-blue-600 transition-colors">Market</Link>
-            <Link href="/dom-arra" className="hover:text-blue-600 transition-colors">Bookmap</Link>
             <Link href="/pricing" className="hover:text-blue-600 transition-colors">Pricing</Link>
-            <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
             <Link href="/faq" className="hover:text-blue-600 transition-colors">FAQ</Link>
           </div>
           

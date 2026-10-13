@@ -85,7 +85,7 @@ export default function NeuralLabShowcase() {
                             </span>
                         </h2>
                         <p className="text-slate-600 text-sm mt-1 max-w-xl">
-                            Arsitektur Bi-LSTM 3-layer mengevaluasi 22 indikator teknikal &amp; data tick Swissquote secara real-time untuk memprediksi arah pergerakan XAU/USD.
+                            Arsitektur Deep Learning Bi-LSTM 3-Layer dipadukan Institutional Smart Money Concepts (Liquidity Sweeps, Order Blocks, FVG, VWAP ±2.5σ) secara real-time untuk sinyal akurasi 90%+ XAU/USD.
                         </p>
                     </div>
 
