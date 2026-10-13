@@ -157,46 +157,30 @@ export default function Home() {
 
                 <div className="mb-5">
                   <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-                    1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">SEMUA PRODUK</span>
+                    1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">4 PRODUK INTI PLATFORM</span>
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                    Akses seumur hidup seluruh produk platform ARRA 7 / PICA tanpa biaya langganan bulanan. Dapatkan PICA Neural Lab (AI &amp; Institutional SMC), Kursus Masterclass Fibo Kyoko, Indikator MT5 &amp; Script TradingView, DOM ARRA, Sentiment Sniffer, Copytrade ARRA77, hingga AI Trade Doctor!
+                    Akses seumur hidup 4 produk unggulan platform ARRA 7 tanpa biaya langganan bulanan: PICA Neural Lab (AI Bi-LSTM &amp; Institutional SMC), Kursus Masterclass Fibo Kyoko (Video + Indikator MT5 &amp; Script TradingView), DOM ARRA (Realtime Order Book &amp; Whale Radar), dan Analisis Market harian!
                   </p>
                 </div>
 
-                {/* Grid Fitur Singkat */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">🧠 Neural Lab</p>
-                    <p className="text-[11px] text-slate-500">Bi-LSTM + SMC SL/TP Realtime</p>
+                {/* Grid Fitur Singkat (4 Produk Inti) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900 text-sm">🧠 PICA Neural Lab</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Bi-LSTM AI + Institutional SMC SL/TP Realtime Semua Timeframe</p>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">🎓 Fibo Kyoko</p>
-                    <p className="text-[11px] text-slate-500">3 Video + MT5 .ex5 + PineScript</p>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900 text-sm">🎓 Kursus Fibo Kyoko</p>
+                    <p className="text-[11px] text-slate-500 mt-1">3 Video HD + Indikator Auto MT5 (.ex5) + Script TradingView</p>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">📊 DOM ARRA</p>
-                    <p className="text-[11px] text-slate-500">Whale Radar &amp; Order Book</p>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900 text-sm">📊 DOM ARRA</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Depth of Market, Volume Profile, Spoofing Alert &amp; Whale Radar</p>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">📡 Sentiment</p>
-                    <p className="text-[11px] text-slate-500">Gold Heatmap &amp; COT Analysis</p>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">📐 Fibo Kanji</p>
-                    <p className="text-[11px] text-slate-500">Reversal &amp; Probability Zones</p>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">🤖 Copytrade 77</p>
-                    <p className="text-[11px] text-slate-500">VIP Terminal Execution</p>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">🩺 AI Doctor</p>
-                    <p className="text-[11px] text-slate-500">Review &amp; Audit Jurnal Trading</p>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="font-bold text-slate-900">♾️ Lifetime Free</p>
-                    <p className="text-[11px] text-slate-500">Semua Timeframe + Free Updates</p>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900 text-sm">📈 Analisis Market</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Struktur Trend, Area Supply &amp; Demand, S/R Key Levels Harian</p>
                   </div>
                 </div>
 
@@ -400,14 +384,10 @@ export default function Home() {
           
           {/* Quick Footer Links */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-slate-600 font-medium">
-            <Link href="/xauusd-neural-lab" className="hover:text-blue-600 transition-colors">Neural Lab</Link>
-            <Link href="/kursus-fibo-kyoko" className="hover:text-blue-600 transition-colors">Fibo Kyoko</Link>
+            <Link href="/xauusd-neural-lab" className="hover:text-blue-600 transition-colors">PICA Neural Lab</Link>
+            <Link href="/kursus-fibo-kyoko" className="hover:text-blue-600 transition-colors">Kursus Fibo Kyoko</Link>
             <Link href="/dom-arra" className="hover:text-blue-600 transition-colors">DOM ARRA</Link>
-            <Link href="/sentiment-sniffer" className="hover:text-blue-600 transition-colors">Sentiment</Link>
-            <Link href="/copytrade-arra77" className="hover:text-blue-600 transition-colors">Copytrade</Link>
-            <Link href="/fibonacci-kanji" className="hover:text-blue-600 transition-colors">Fibo Kanji</Link>
-            <Link href="/ai-trade-doctor" className="hover:text-blue-600 transition-colors">AI Doctor</Link>
-            <Link href="/analisa-market" className="hover:text-blue-600 transition-colors">Market</Link>
+            <Link href="/analisa-market" className="hover:text-blue-600 transition-colors">Analisis Market</Link>
             <Link href="/pricing" className="hover:text-blue-600 transition-colors">Pricing</Link>
             <Link href="/faq" className="hover:text-blue-600 transition-colors">FAQ</Link>
           </div>

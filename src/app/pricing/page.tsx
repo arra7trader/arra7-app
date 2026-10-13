@@ -62,7 +62,7 @@ const PRICING_PLANS = [
             { text: 'Hanya Pair XAUUSD', included: true, highlight: true },
             { text: 'Timeframe M5 dan M15', included: true, highlight: false },
             { text: 'Akses Gold Only', included: true, highlight: false },
-            { text: 'Bookmap PICA - Trial Terbatas', included: true, highlight: false },
+            { text: 'DOM ARRA - Trial Terbatas', included: true, highlight: false },
             { text: 'PICA Neural Lab Demo Simulation', included: true, highlight: true },
             { text: 'Analisa Saham IDX', included: false, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: false, highlight: false },
@@ -80,10 +80,10 @@ const PRICING_PLANS = [
             { text: '25x Analisa Saham IDX per hari', included: true, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: true, highlight: false },
             { text: 'Akses Semua Pairs + Crypto', included: true, highlight: false },
-            { text: 'Bookmap PICA - UNLIMITED', included: true, highlight: true },
+            { text: 'DOM ARRA - UNLIMITED', included: true, highlight: true },
             { text: 'PICA Neural Lab (Akses Prediksi Gold)', included: true, highlight: true },
             { text: 'AI Neural Ensemble (90%+ Accuracy)', included: true, highlight: true },
-            { text: 'AI Trade Doctor (Review Jurnal)', included: true, highlight: false },
+            { text: 'Analisis Market Real-time', included: true, highlight: false },
         ],
         cta: 'Upgrade ke Pro',
         popular: true,
@@ -98,10 +98,10 @@ const PRICING_PLANS = [
             { text: 'UNLIMITED Analisa Saham IDX', included: true, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: true, highlight: false },
             { text: 'Akses Semua Pairs + Crypto + Indices', included: true, highlight: false },
-            { text: 'Bookmap PICA - UNLIMITED', included: true, highlight: true },
+            { text: 'DOM ARRA - UNLIMITED', included: true, highlight: true },
             { text: 'PICA Neural Lab UNLIMITED Real-time', included: true, highlight: true },
             { text: 'Multi-Timeframe Neural Confluence (M15-D1)', included: true, highlight: true },
-            { text: 'AI Trade Doctor (Review Jurnal)', included: true, highlight: false },
+            { text: 'Akses Penuh Seluruh Fitur Platform', included: true, highlight: true },
         ],
         cta: 'Daftar VVIP',
         popular: false,
@@ -294,18 +294,18 @@ export default function PricingPage() {
                         {/* Title & Description */}
                         <div className="mb-8">
                             <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-                                1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">SEMUA PRODUK</span>
+                                1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">4 PRODUK INTI PLATFORM</span>
                             </h2>
                             <p className="text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed">
-                                Dapatkan akses seumur hidup (Lifetime) ke seluruh produk &amp; fitur unggulan di platform ARRA 7 / PICA. Cukup 1 kali bayar, Anda bebas menggunakan seluruh ekosistem tanpa perlu membayar iuran langganan bulanan lagi!
+                                Dapatkan akses seumur hidup (Lifetime) ke seluruh 4 produk &amp; fitur unggulan di platform ARRA 7: PICA Neural Lab, Kursus Masterclass Fibo Kyoko, DOM ARRA, dan Analisis Market. Cukup 1 kali bayar, Anda bebas menggunakan seluruh ekosistem tanpa perlu membayar iuran langganan bulanan lagi!
                             </p>
                         </div>
 
-                        {/* Grid Fitur Yang Didapat */}
+                        {/* Grid Fitur Yang Didapat (4 Produk Inti) */}
                         <div className="mb-8 bg-slate-50/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80">
                             <p className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                <span>DAFTAR LENGKAP PRODUK &amp; FITUR YANG DIDAPATKAN:</span>
+                                <span>DAFTAR LENGKAP 4 PRODUK &amp; FITUR YANG DIDAPATKAN:</span>
                             </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
@@ -313,8 +313,8 @@ export default function PricingPage() {
                                         🧠
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">PICA Neural Lab (Bi-LSTM + SMC)</p>
-                                        <p className="text-[11px] text-slate-500">Prediksi XAUUSD real-time AI 3-Layer Bi-LSTM dipadukan dengan Smart Money Concepts (Order Block, Liquidity Sweeps, VWAP, FVG) &amp; akurasi 90%+.</p>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">1. PICA Neural Lab (Bi-LSTM + SMC)</p>
+                                        <p className="text-[11px] text-slate-500">Prediksi XAUUSD real-time AI 3-Layer Bi-LSTM dipadukan dengan Smart Money Concepts (Order Block, Liquidity Sweeps, VWAP, FVG), target SL/TP terukur, &amp; akurasi tinggi di semua timeframe.</p>
                                     </div>
                                 </div>
 
@@ -323,68 +323,28 @@ export default function PricingPage() {
                                         🎓
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Kursus Masterclass Fibo Kyoko</p>
-                                        <p className="text-[11px] text-slate-500">3 Video Masterclass HD komplit, File Indikator Auto FIBO KYOKO MT5 (.ex5), dan Script TradingView Pine Script v6 lengkap.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                                        📊
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">DOM ARRA &amp; Whale Radar</p>
-                                        <p className="text-[11px] text-slate-500">Depth of Market order book visualizer, mendeteksi jejak akumulasi whale &amp; cluster likuiditas institusi secara akurat.</p>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">2. Kursus Masterclass Fibo Kyoko</p>
+                                        <p className="text-[11px] text-slate-500">3 Video Masterclass HD komplit (Mindset &amp; Dasar, Anatomi Reversal, Praktik Live), File Indikator Auto FIBO KYOKO MT5 (.ex5), dan Script TradingView Pine Script v6 lengkap.</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
                                     <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                                        📡
+                                        📊
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Sentiment Sniffer &amp; Gold Heatmap</p>
-                                        <p className="text-[11px] text-slate-500">Pemindaian sentimen pasar global, rasio posisi ritel vs smart money, dan peta panas kekuatan mata uang serta XAUUSD.</p>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">3. DOM ARRA &amp; Whale Radar</p>
+                                        <p className="text-[11px] text-slate-500">Depth of Market order book visualizer, Volume Profile, Spoofing Alert, dan pelacak likuiditas instan untuk mendeteksi jejak akumulasi whale serta big bank.</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                                        📐
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        📈
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Fibonacci Kanji &amp; Probability Zones</p>
-                                        <p className="text-[11px] text-slate-500">Scanner otomatis pola pembalikan arah Fibonacci Kanji dan kalkulasi zona probabilitas pembalikan harga emas.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                                    <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                                        🤖
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Copytrade ARRA77 (VIP Terminal)</p>
-                                        <p className="text-[11px] text-slate-500">Akses terminal copytrade otomatis dengan eksekusi milidetik, manajemen risiko terukur, dan pemantauan posisi.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                                        🩺
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">AI Trade Doctor</p>
-                                        <p className="text-[11px] text-slate-500">Dokter trading pribadi berbasis AI untuk mereview histori trading, mendiagnosis kesalahan psikologi, dan memperbaiki Win Rate.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                                    <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                                        ♾️
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">Semua Timeframe &amp; Free Updates</p>
-                                        <p className="text-[11px] text-slate-500">Akses seluruh timeframe (M1 hingga D1) tanpa batas kuota harian + gratis update fitur dan model neural selamanya.</p>
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">4. Analisis Market Real-time</p>
+                                        <p className="text-[11px] text-slate-500">Pemetaan struktur market kuantitatif Forex &amp; Saham, zona Supply &amp; Demand, Support/Resistance harian, dan ringkasan momentum teknikal multi-timeframe.</p>
                                     </div>
                                 </div>
                             </div>

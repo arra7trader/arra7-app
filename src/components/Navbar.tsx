@@ -67,7 +67,7 @@ export default function Navbar() {
                     🔥 FLASH SALE 2 HARI
                 </span>
                 <span className="font-medium text-white/95 hidden sm:inline">
-                    1 Harga Lifetime <strong>Semua Produk</strong> Hanya <strong>Rp 125.000</strong> (PICA Neural Lab, Fibo Kyoko, DOM, Sentiment &amp; Copytrade)
+                    1 Harga Lifetime <strong>Semua Produk</strong> Hanya <strong>Rp 125.000</strong> (PICA Neural Lab, Fibo Kyoko Masterclass, DOM ARRA &amp; Analisis Market)
                 </span>
                 <span className="font-medium text-white/95 sm:hidden">
                     Semua Produk Lifetime: <strong>Rp 125.000</strong>
@@ -92,7 +92,7 @@ export default function Navbar() {
                         <span>Harga</span>
                     </Link>
 
-                    {/* Popover Menu: Semua Fitur */}
+                    {/* Popover Menu: 4 Fitur Utama */}
                     <Popover.Root>
                         <Popover.Trigger asChild>
                             <button
@@ -111,7 +111,7 @@ export default function Navbar() {
                             >
                                 <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                                     <span>EKOSISTEM ARRA 7 / PICA</span>
-                                    <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">8 FITUR</span>
+                                    <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">4 FITUR UTAMA</span>
                                 </div>
                                 <div className="py-1 space-y-0.5 text-xs">
                                     <Link href="/xauusd-neural-lab" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
@@ -139,57 +139,17 @@ export default function Navbar() {
                                             <span>📊</span>
                                             <div>
                                                 <p className="font-bold">DOM ARRA</p>
-                                                <p className="text-[10px] text-slate-400">Order Flow & Whale Radar</p>
+                                                <p className="text-[10px] text-slate-400">Order Flow &amp; Whale Radar</p>
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">DOM</span>
-                                    </Link>
-                                    <Link href="/sentiment-sniffer" className="flex items-center justify-between p-2 rounded-xl hover:bg-rose-50 text-slate-800 hover:text-rose-600 transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <span>📡</span>
-                                            <div>
-                                                <p className="font-bold">Sentiment Sniffer</p>
-                                                <p className="text-[10px] text-slate-400">Market Bias & Gold Heatmap</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">DATA</span>
-                                    </Link>
-                                    <Link href="/copytrade-arra77" className="flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 text-slate-800 hover:text-emerald-700 transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <span>🤖</span>
-                                            <div>
-                                                <p className="font-bold">Copytrade ARRA77</p>
-                                                <p className="text-[10px] text-slate-400">Terminal Eksekusi Otomatis</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">AUTO</span>
-                                    </Link>
-                                    <Link href="/fibonacci-kanji" className="flex items-center justify-between p-2 rounded-xl hover:bg-purple-50 text-slate-800 hover:text-purple-600 transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <span>📐</span>
-                                            <div>
-                                                <p className="font-bold">Fibonacci Kanji</p>
-                                                <p className="text-[10px] text-slate-400">Reversal & Probability Zones</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">KANJI</span>
-                                    </Link>
-                                    <Link href="/ai-trade-doctor" className="flex items-center justify-between p-2 rounded-xl hover:bg-teal-50 text-slate-800 hover:text-teal-700 transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <span>🩺</span>
-                                            <div>
-                                                <p className="font-bold">AI Trade Doctor</p>
-                                                <p className="text-[10px] text-slate-400">Audit Jurnal & Psikologi</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800">DOCTOR</span>
                                     </Link>
                                     <Link href="/analisa-market" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <span>📈</span>
                                             <div>
                                                 <p className="font-bold">Analisis Market</p>
-                                                <p className="text-[10px] text-slate-400">Quant AI Forex & Saham</p>
+                                                <p className="text-[10px] text-slate-400">Quant AI Forex &amp; Saham</p>
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AI</span>

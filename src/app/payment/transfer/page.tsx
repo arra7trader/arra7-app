@@ -126,7 +126,7 @@ function TransferContent() {
         `Paket: ${plan.name} (${plan.durationLabel})`,
         `Nominal: ${plan.priceDisplay}`,
         requiresTelegramUsername ? `Username Telegram: @${normalizedTelegramUsername}` : null,
-        plan.id === 'ALL_ACCESS' ? '★ Paket Promo Flash Sale 2 Hari: Akses Lifetime Semua Produk (Neural Lab, Fibo Kyoko Masterclass + MT5/TradingView, DOM ARRA, Sentiment, Copytrade, AI Doctor)' : null,
+        plan.id === 'ALL_ACCESS' ? '★ Paket Promo Flash Sale 2 Hari: Akses Lifetime 4 Produk Inti Platform (PICA Neural Lab, Kursus Masterclass Fibo Kyoko + MT5/TradingView, DOM ARRA, dan Analisis Market)' : null,
         plan.id === 'TELEBOT' ? `Bonus member: akun PRO website 1 bulan + video eksklusif di ${telebotBonusPageUrl}` : null,
         plan.id === 'FIBO_KYOKO' ? 'Mohon kirimkan Kode Lisensi aktivasi Kursus Fibo Kyoko saya.' : null,
         '',
@@ -225,35 +225,23 @@ function TransferContent() {
                             <ul className="text-xs text-[var(--text-secondary)] space-y-1.5">
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>PICA Neural Lab:</strong> Sinyal AI Bi-LSTM + Institutional SMC & Order Flow SL/TP real-time</span>
+                                    <span><strong>PICA Neural Lab:</strong> Sinyal AI Bi-LSTM + Institutional SMC &amp; Order Flow SL/TP real-time</span>
                                 </li>
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>Kursus Fibo Kyoko:</strong> 3 Masterclass HD + File Indikator MT5 (.ex5) & Pine Script v6</span>
+                                    <span><strong>Kursus Fibo Kyoko:</strong> 3 Masterclass HD + File Indikator MT5 (.ex5) &amp; Pine Script v6</span>
                                 </li>
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>DOM ARRA & Whale Radar:</strong> Order book depth & deteksi akumulasi institusi</span>
+                                    <span><strong>DOM ARRA &amp; Whale Radar:</strong> Order book depth &amp; deteksi akumulasi institusi</span>
                                 </li>
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>Sentiment Sniffer:</strong> Sentiment market global & Gold Heatmap</span>
+                                    <span><strong>Analisis Market:</strong> Struktur Trend, Area Supply &amp; Demand, S/R Key Levels Harian</span>
                                 </li>
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>Fibonacci Kanji:</strong> Reversal pattern & probability zones visualizer</span>
-                                </li>
-                                <li className="flex items-start gap-1.5">
-                                    <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>Copytrade ARRA77:</strong> Akses terminal copytrade otomatis</span>
-                                </li>
-                                <li className="flex items-start gap-1.5">
-                                    <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>AI Trade Doctor:</strong> Evaluasi psikologi & audit jurnal otomatis</span>
-                                </li>
-                                <li className="flex items-start gap-1.5">
-                                    <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span><strong>Semua Timeframe (M1-D1)</strong> & Free Update Semua Fitur Selamanya</span>
+                                    <span><strong>Semua Timeframe (M1-D1)</strong> &amp; Free Update Semua Fitur Selamanya</span>
                                 </li>
                             </ul>
                         </div>
