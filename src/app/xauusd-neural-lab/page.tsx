@@ -219,18 +219,22 @@ export default function XauusdNeuralLabPage() {
         (session?.user as any)?.role === 'ADMIN'
     );
 
+    const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
+    const sessionTier = String((session?.user as any)?.tier || (session?.user as any)?.membership || '').toUpperCase();
+    const cleanDeviceTier = String(deviceTier || '').toUpperCase();
+
     // Full access if user is Admin OR VVIP (via device license or DB session)
     const isFullAccess = Boolean(
         isAdmin ||
         isDeviceVvip ||
-        deviceTier === 'VVIP' ||
+        FULL_ACCESS_TIERS.includes(cleanDeviceTier) ||
         isDbVvip ||
-        session?.user?.tier === 'VVIP'
+        FULL_ACCESS_TIERS.includes(sessionTier)
     );
 
     // Check VVIP Status from database if authenticated
     useEffect(() => {
-        if (isAdmin || isDeviceVvip || deviceTier === 'VVIP') {
+        if (isAdmin || isDeviceVvip || FULL_ACCESS_TIERS.includes(cleanDeviceTier)) {
             setIsDbVvip(true);
             setIsCheckingMembership(false);
             return;

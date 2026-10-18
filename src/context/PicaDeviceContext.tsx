@@ -132,6 +132,10 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
   const openActivation = () => setIsActivationOpen(true);
   const closeActivation = () => setIsActivationOpen(false);
 
+  const upperTier = String(tier || '').toUpperCase();
+  const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier);
+  const isProTier = isVvipTier || upperTier === 'PRO';
+
   const value: PicaDeviceState = {
     deviceId,
     tier,
@@ -139,8 +143,8 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
     daysLeft,
     isExpired,
     isLoading,
-    isVvip: tier === 'VVIP',
-    isPro: tier === 'PRO' || tier === 'VVIP',
+    isVvip: isVvipTier,
+    isPro: isProTier,
     isActivationOpen,
     openActivation,
     closeActivation,
