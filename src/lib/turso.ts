@@ -1025,6 +1025,12 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
         }
       }
 
+      const upperMem = membership.toUpperCase();
+      if (['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperMem)) {
+        membership = 'VVIP';
+      } else if (upperMem === 'PRO') {
+        membership = 'PRO';
+      }
       return { membership, createdAt, expiresAt };
     }
     // Check device_users table (for devices that activated license keys without NextAuth login)
@@ -1049,6 +1055,12 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
         }
       }
 
+      const upperTier = tier.toUpperCase();
+      if (['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier)) {
+        tier = 'VVIP';
+      } else if (upperTier === 'PRO') {
+        tier = 'PRO';
+      }
       return { membership: tier, createdAt, expiresAt };
     }
 

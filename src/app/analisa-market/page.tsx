@@ -762,7 +762,7 @@ export default function AnalisaMarketPage() {
     };
 
     const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
-    const isVvipMember = uppercaseMembership === 'VVIP' || isDeviceVvip;
+    const isVvipMember = isDeviceVvip || uppercaseMembership === 'VVIP' || uppercaseMembership === 'LIFETIME' || uppercaseMembership === 'ALL_ACCESS' || uppercaseMembership === 'FULL_ACCESS' || uppercaseMembership === 'PROMO_125K';
     const isProMember = uppercaseMembership === 'PRO' || isDevicePro || isVvipMember;
     const isPremiumMember = isVvipMember || isProMember;
     const isUnlimitedQuota = isVvipMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null;
@@ -772,9 +772,9 @@ export default function AnalisaMarketPage() {
     const usedPercentage = isUnlimitedQuota
         ? 0
         : Math.min(100, Math.max(0, ((quotaStatus?.used ?? 0) / Math.max(1, quotaStatus?.dailyLimit ?? 1)) * 100));
-    const allowedTimeframes = quotaStatus?.allowedTimeframes?.length
+    const allowedTimeframes = (isVvipMember || isProMember) ? ['1M', '5M', '15M', '30M', '1H', '4H', '1D'] : quotaStatus?.allowedTimeframes?.length
         ? quotaStatus.allowedTimeframes.map((tf) => tf.toUpperCase())
-        : (isVvipMember || isProMember) ? ['1M', '5M', '15M', '30M', '1H', '4H', '1D'] : ['5M', '15M'];
+        : ['5M', '15M'];
     const lastChargeLabel = lastQuotaCharged === null
         ? 'Belum ada analisa'
         : lastQuotaCharged
@@ -785,7 +785,7 @@ export default function AnalisaMarketPage() {
         : lastQuotaCharged
             ? 'text-amber-400'
             : 'text-emerald-400';
-    const isVvipUser = (quotaStatus?.membership || '').toUpperCase() === 'VVIP';
+    const isVvipUser = isVvipMember;
     const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
     const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
         ? `${Math.round(parsedSignal.confidence)}%`
@@ -1163,21 +1163,21 @@ export default function AnalisaMarketPage() {
 
                         {/* Quota Status */}
                         {quotaStatus && (
-                            <div className={`rounded-2xl p-4 border ${quotaStatus.membership === 'VVIP'
+                            <div className={`rounded-2xl p-4 border ${isVvipMember
                                 ? 'bg-amber-500/10 border-amber-500/20 border-amber-500/20'
-                                : quotaStatus.membership === 'PRO'
+                                : isProMember
                                     ? 'bg-blue-500/10 border-blue-500/20 border-blue-500/20'
                                     : 'bg-[var(--bg-primary)] border-[var(--border-light)]'
                                 }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-[var(--text-secondary)] flex items-center gap-1"><ChartIcon size="sm" /> Quota Hari Ini</span>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${quotaStatus.membership === 'VVIP'
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isVvipMember
                                         ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                                        : quotaStatus.membership === 'PRO'
+                                        : isProMember
                                             ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                         }`}>
-                                        {quotaStatus.membership}
+                                        {isVvipMember ? '👑 VVIP FULL ACCESS' : isProMember ? '⚡ PRO' : 'BASIC'}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1185,25 +1185,25 @@ export default function AnalisaMarketPage() {
                                         <div
                                             className={`h-full transition-all ${quotaStatus.remaining === 0
                                                 ? 'bg-red-500'
-                                                : quotaStatus.membership === 'VVIP'
+                                                : isVvipMember
                                                     ? 'bg-amber-500'
                                                     : 'bg-[var(--accent-blue)]'
                                                 }`}
                                             style={{
-                                                width: (quotaStatus.dailyLimit === -1 || quotaStatus.dailyLimit === null)
+                                                width: isUnlimitedQuota
                                                     ? '100%'
                                                     : `${Math.min(100, (quotaStatus.used / (quotaStatus.dailyLimit || 1)) * 100)}%`
                                             }}
                                         />
                                     </div>
                                     <span className="text-sm font-mono text-[var(--text-primary)]">
-                                        {(quotaStatus.dailyLimit === -1 || quotaStatus.dailyLimit === null)
+                                        {isUnlimitedQuota
                                             ? 'UNLIMITED'
                                             : `${quotaStatus.used}/${quotaStatus.dailyLimit}`
                                         }
                                     </span>
                                 </div>
-                                {quotaStatus.membership === 'BASIC' && quotaStatus.remaining <= 1 && (
+                                {!isPremiumMember && quotaStatus.remaining <= 1 && (
                                     <a
                                         href="/pricing"
                                         className="mt-3 block text-center text-xs text-[var(--accent-blue)] hover:underline"

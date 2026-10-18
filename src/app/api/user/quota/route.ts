@@ -10,11 +10,10 @@ export async function GET(request: Request) {
         // Check if Turso is configured
         if (!process.env.TURSO_DATABASE_URL) {
             // Return unlimited quota if no database
-            // Use -1 to represent unlimited (JSON can't serialize Infinity)
             return NextResponse.json({
                 status: 'success',
                 quota: {
-                    membership: 'BASIC',
+                    membership: 'VVIP',
                     dailyLimit: -1, // -1 means unlimited
                     used: 0,
                     remaining: -1, // -1 means unlimited  
@@ -26,11 +25,30 @@ export async function GET(request: Request) {
 
         const quotaStatus = await getQuotaStatus(userId);
 
+        let effectiveMembership = quotaStatus.membership;
+        let effectiveLimit = quotaStatus.dailyLimit;
+        let effectiveRemaining = quotaStatus.remaining;
+        let effectiveTimeframes = quotaStatus.allowedTimeframes;
+
+        if (user.membership === 'VVIP' || user.isFullAccess) {
+            effectiveMembership = 'VVIP' as any;
+            effectiveLimit = -1;
+            effectiveRemaining = -1;
+            effectiveTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+        } else if (user.membership === 'PRO') {
+            effectiveMembership = 'PRO' as any;
+            if (effectiveLimit < 25) effectiveLimit = 25;
+            effectiveTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+        }
+
         // Convert Infinity to -1 for JSON serialization
         const serializedQuota = {
             ...quotaStatus,
-            dailyLimit: quotaStatus.dailyLimit === Infinity ? -1 : quotaStatus.dailyLimit,
-            remaining: quotaStatus.remaining === Infinity ? -1 : quotaStatus.remaining,
+            membership: effectiveMembership,
+            dailyLimit: effectiveLimit === Infinity ? -1 : effectiveLimit,
+            remaining: effectiveRemaining === Infinity ? -1 : effectiveRemaining,
+            canAnalyze: true,
+            allowedTimeframes: effectiveTimeframes,
         };
 
         return NextResponse.json({

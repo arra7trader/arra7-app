@@ -5,6 +5,10 @@ export const QUOTA_LIMITS = {
     BASIC: 1, // 1x Trial Lifetime
     PRO: 25,
     VVIP: Infinity, // Unlimited
+    LIFETIME: Infinity,
+    ALL_ACCESS: Infinity,
+    FULL_ACCESS: Infinity,
+    PROMO_125K: Infinity,
 } as const;
 
 // PROMO quota (for APK download promotion)
@@ -15,6 +19,10 @@ export const COOLDOWN_DURATION = {
     BASIC: 60 * 1000,            // 1 minute rate limit
     PRO: 15 * 1000,              // 15 seconds
     VVIP: 3 * 1000,              // 3 seconds - instant for VVIP / Full Access
+    LIFETIME: 3 * 1000,
+    ALL_ACCESS: 3 * 1000,
+    FULL_ACCESS: 3 * 1000,
+    PROMO_125K: 3 * 1000,
 } as const;
 
 // Stock Analysis Quota limits (same as Forex)
@@ -22,6 +30,10 @@ export const STOCK_QUOTA_LIMITS = {
     BASIC: 1, // 1x Trial Lifetime
     PRO: 25,
     VVIP: Infinity, // Unlimited
+    LIFETIME: Infinity,
+    ALL_ACCESS: Infinity,
+    FULL_ACCESS: Infinity,
+    PROMO_125K: Infinity,
 } as const;
 
 // Allowed timeframes per membership
@@ -29,6 +41,10 @@ export const ALLOWED_TIMEFRAMES = {
     BASIC: ['5m', '15m'], // M5 and M15 only
     PRO: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
     VVIP: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+    LIFETIME: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+    ALL_ACCESS: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+    FULL_ACCESS: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+    PROMO_125K: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
 } as const;
 
 // Allowed pair categories per membership
@@ -36,6 +52,10 @@ export const ALLOWED_PAIR_CATEGORIES = {
     BASIC: ['major', 'gold'], // Forex Major and Gold only
     PRO: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
     VVIP: ['major', 'minor', 'commodities', 'crypto', 'indices'], // All pairs
+    LIFETIME: ['major', 'minor', 'commodities', 'crypto', 'indices'],
+    ALL_ACCESS: ['major', 'minor', 'commodities', 'crypto', 'indices'],
+    FULL_ACCESS: ['major', 'minor', 'commodities', 'crypto', 'indices'],
+    PROMO_125K: ['major', 'minor', 'commodities', 'crypto', 'indices'],
 } as const;
 
 // Specific pairs allowed for BASIC (Gold ONLY)
@@ -81,8 +101,9 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
 
     try {
         const { membership } = await getUserMembership(userId);
-        let dailyLimit = QUOTA_LIMITS[membership as Membership] || QUOTA_LIMITS.BASIC;
-        let allowedTimeframes = ALLOWED_TIMEFRAMES[membership as Membership] || ALLOWED_TIMEFRAMES.BASIC;
+        const memKey = String(membership || 'BASIC').toUpperCase() as Membership;
+        let dailyLimit = QUOTA_LIMITS[memKey] ?? QUOTA_LIMITS.BASIC;
+        let allowedTimeframes = ALLOWED_TIMEFRAMES[memKey] ?? ALLOWED_TIMEFRAMES.BASIC;
 
         // CRO STRATEGY: 
         // BASIC users now get 1x DAILY quota (instead of 1x Lifetime) to build habit.
@@ -175,7 +196,8 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     const promoStatus = await checkUserPromo(userId);
 
     // Check pair restriction for BASIC (skip if promo is active)
-    if (pair && status.membership === 'BASIC' && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
+    const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K'].includes(String(status.membership || '').toUpperCase());
+    if (pair && status.membership === 'BASIC' && !isVvipTier && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
         return {
             allowed: false,
             message: `Pair ${pair} tidak tersedia untuk paket BASIC. Basic hanya bisa analisa XAUUSD. Upgrade ke PRO untuk akses semua pairs.`,
@@ -206,7 +228,8 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     }
 
     // Check timeframe restriction
-    if (!status.allowedTimeframes.includes(timeframe)) {
+    const allowedTfs = status.allowedTimeframes.map((t) => t.toLowerCase());
+    if (!isVvipTier && !allowedTfs.includes(timeframe.toLowerCase())) {
         return {
             allowed: false,
             message: `Timeframe ${timeframe} tidak tersedia untuk paket ${status.membership}. Upgrade ke PRO untuk akses semua timeframe.`,
@@ -215,7 +238,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     }
 
     // Check quota
-    if (!status.canAnalyze) {
+    if (!isVvipTier && !status.canAnalyze) {
         const membershipLabel = String(status.membership || 'BASIC').toUpperCase();
         return {
             allowed: false,
