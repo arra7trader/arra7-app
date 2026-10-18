@@ -42,7 +42,7 @@ const PRICING_OPTIONS: Record<
         'lifetime': { durationLabel: 'Sekali Bayar', price: 169000, priceDisplay: 'Rp 169.000', originalPrice: 'Rp 499.000', period: '/sekali bayar' },
     },
     ALL_ACCESS: {
-        'lifetime': { durationLabel: 'Lifetime (Semua Produk)', price: 125000, priceDisplay: 'Rp 125.000', originalPrice: 'Rp 1.499.000', period: '/sekali bayar (Flash Sale 2 Hari)' },
+        'lifetime': { durationLabel: 'Lifetime (Semua Produk)', price: 125000, priceDisplay: 'Rp 125.000', originalPrice: 'Rp 1.499.000', period: '/sekali bayar (Flash Sale Diperpanjang 2 Hari)' },
     },
 };
 
@@ -367,7 +367,7 @@ function TransferContent() {
                                     <li>Masukkan nominal sesuai total pembayaran: <strong className="text-[var(--text-primary)]">{plan.priceDisplay}</strong></li>
                                     <li>Simpan screenshot bukti transfer yang berhasil.</li>
                                     {requiresTelegramUsername && <li>Masukkan username Telegram Anda di form atas.</li>}
-                                    {plan.id === 'ALL_ACCESS' && <li>Promo All-Access Lifetime Rp 125.000 berlaku hanya selama 2 hari!</li>}
+                                    {plan.id === 'ALL_ACCESS' && <li>Promo All-Access Lifetime Rp 125.000 resmi diperpanjang 2 hari lagi!</li>}
                                     <li>Klik tombol konfirmasi di bawah untuk mengirim bukti transfer ke Telegram admin.</li>
                                     <li>Admin akan memverifikasi dan mengaktifkan akun serta lisensi Anda.</li>
                                 </ol>

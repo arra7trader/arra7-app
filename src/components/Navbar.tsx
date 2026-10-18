@@ -64,7 +64,7 @@ export default function Navbar() {
             {/* Flash Sale 2 Hari Announcement Banner */}
             <div className="bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex items-center justify-center gap-2 shadow-inner">
                 <span className="bg-white/20 text-white font-extrabold px-1.5 py-0.5 rounded text-[10px] tracking-wider uppercase shrink-0">
-                    🔥 FLASH SALE 2 HARI
+                    🔥 FLASH SALE DIPERPANJANG 2 HARI
                 </span>
                 <span className="font-medium text-white/95 hidden sm:inline">
                     1 Harga Lifetime <strong>Semua Produk</strong> Hanya <strong>Rp 125.000</strong> (PICA Neural Lab, Fibo Kyoko Masterclass, DOM ARRA &amp; Analisis Market)

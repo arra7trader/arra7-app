@@ -283,11 +283,11 @@ export default function PricingPage() {
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-xs shadow-md uppercase tracking-wider">
                                 <span className="animate-pulse">🔥</span>
-                                <span>PENGUMUMAN RESMI: FLASH SALE 2 HARI</span>
+                                <span>PENGUMUMAN RESMI: FLASH SALE DIPERPANJANG 2 HARI!</span>
                             </div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
                                 <span>⏰</span>
-                                <span>Hanya Berlaku 48 Jam</span>
+                                <span>Diperpanjang 48 Jam • Kuota Terbatas</span>
                             </div>
                         </div>
 

@@ -69,7 +69,7 @@ const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
     priceDisplay: 'Rp 125.000 (Lifetime)',
     tagColor: 'bg-rose-50 text-rose-700 border-rose-200',
     borderActive: 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/40',
-    description: 'Flash Sale 2 Hari: Akses Lifetime PICA Neural Lab, Kursus Fibo Kyoko (3 Video HD + MT5 + TradingView), DOM ARRA, dan Analisis Market. Cukup 1× bayar selamanya!',
+    description: 'Flash Sale Diperpanjang 2 Hari: Akses Lifetime PICA Neural Lab, Kursus Fibo Kyoko (3 Video HD + MT5 + TradingView), DOM ARRA, dan Analisis Market. Cukup 1× bayar selamanya!',
     tier: 'VVIP',
     durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 125.000' }],
     notePrefix: '[ALL_ACCESS]',

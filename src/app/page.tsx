@@ -147,11 +147,11 @@ export default function Home() {
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-xs shadow-xs uppercase tracking-wider">
                     <span className="animate-pulse">🔥</span>
-                    <span>PENGUMUMAN PROMO KHUSUS 2 HARI</span>
+                    <span>PENGUMUMAN: PROMO DIPERPANJANG 2 HARI LAGI</span>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
                     <span>⏰</span>
-                    <span>Hanya 48 Jam • Diskon 90%</span>
+                    <span>Diperpanjang 48 Jam • Diskon 90%</span>
                   </div>
                 </div>
 
