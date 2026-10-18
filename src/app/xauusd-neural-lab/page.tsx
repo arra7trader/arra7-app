@@ -316,12 +316,12 @@ export default function XauusdNeuralLabPage() {
         return () => clearInterval(interval);
     }, [autoRefresh, fetchPrediction]);
 
-    // Initial load
+    // Initial load: Only fetch if user has verified key / full access
     useEffect(() => {
-        if (!isCheckingMembership) {
+        if (!isCheckingMembership && isFullAccess) {
             fetchPrediction();
         }
-    }, [isCheckingMembership]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isCheckingMembership, isFullAccess]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Multi-Timeframe Consensus Calculation
     const mtfConsensus = useMemo(() => {
@@ -354,6 +354,113 @@ export default function XauusdNeuralLabPage() {
                         Memuat PICA Neural Studio...
                     </p>
                 </div>
+            </div>
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // HARD LOCK: RESTRICTED ACCESS SCREEN (MUST HAVE KEY)
+    // ═══════════════════════════════════════════════════════════
+    if (!isFullAccess) {
+        return (
+            <div className="min-h-screen bg-slate-950 text-white pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans flex items-center justify-center relative overflow-hidden selection:bg-blue-600 selection:text-white">
+                {/* Background ambient glow */}
+                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-blue-600/20 via-indigo-600/15 to-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="max-w-xl w-full mx-auto relative z-10"
+                >
+                    <div className="rounded-3xl p-6 sm:p-9 bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-2xl space-y-6 text-center">
+                        
+                        {/* Lock Emblem */}
+                        <div className="relative mx-auto w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-blue-500/20 border-2 border-amber-400/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
+                            <LockIcon size="lg" className="text-amber-400" />
+                            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-600 border-2 border-slate-900 flex items-center justify-center text-white">
+                                <KeyIcon size="xs" className="text-white" />
+                            </div>
+                        </div>
+
+                        {/* Title & Description */}
+                        <div className="space-y-2">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs font-bold font-mono">
+                                <CrownIcon size="xs" />
+                                <span>PORTAL VVIP RESTRICTED</span>
+                            </div>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-['Space_Grotesk'] tracking-tight">
+                                PICA Neural Lab Terkunci
+                            </h1>
+                            <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
+                                Laboratorium inferensi kuantitatif XAU/USD ini diproteksi ketat. Anda harus memiliki <strong className="text-amber-400">Kunci Lisensi VVIP</strong> resmi untuk masuk dan melihat analisis live.
+                            </p>
+                        </div>
+
+                        {/* 6 Quantitative Features Preview */}
+                        <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 text-left space-y-2.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                6 Fitur Institusional di Dalam Portal:
+                            </span>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-200 font-sans">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-blue-400">🎯</span>
+                                    <span>Liquidity Hunt Radar</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-amber-400">🧠</span>
+                                    <span>Market Regime Brain</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-400">⏱️</span>
+                                    <span>Monte Carlo 1,000 Paths</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-cyan-400">⚡</span>
+                                    <span>Intermarket DXY Radar</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-rose-400">🌾</span>
+                                    <span>Neural Early Harvest</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-purple-400">⚔️</span>
+                                    <span>Adversarial AI Debate</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="space-y-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={openActivation}
+                                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer font-sans"
+                            >
+                                <KeyIcon size="sm" />
+                                <span>Masukkan Kunci Lisensi Saya</span>
+                            </button>
+
+                            <Link
+                                href="/pricing"
+                                className="w-full py-3.5 px-6 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 font-sans"
+                            >
+                                <CrownIcon size="sm" className="text-amber-400" />
+                                <span>Belum Punya Kunci? Beli Lisensi VVIP &rarr;</span>
+                            </Link>
+
+                            <div className="flex items-center justify-center gap-4 text-xs text-slate-400 pt-2 font-sans">
+                                <Link href="/login" className="hover:text-white transition-colors underline underline-offset-4">
+                                    Sudah beli tapi belum login? Masuk di sini
+                                </Link>
+                                <span>•</span>
+                                <Link href="/" className="hover:text-white transition-colors">
+                                    Kembali ke Beranda
+                                </Link>
+                            </div>
+                        </div>
+
+                    </div>
+                </motion.div>
             </div>
         );
     }
@@ -418,47 +525,39 @@ export default function XauusdNeuralLabPage() {
                             </Link>
                         </div>
                     </div>
-                ) : !isFullAccess ? (
-                    // USER SIMULATION DEMO NOTICE BANNER
-                    <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-amber-50/70 border-2 border-blue-200/90 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-700 border border-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                                <LightbulbIcon size="md" />
+                ) : (
+                    // VVIP MEMBER ACTIVE ACCESS BANNER
+                    <div className="rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center shrink-0">
+                                <CrownIcon size="sm" />
                             </div>
-                            <div className="space-y-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-wider bg-amber-500 text-white shadow-xs">
-                                        MODE SIMULASI &amp; PREVIEW
-                                    </span>
-                                    <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk']">
-                                        Anda Sedang Melihat Mode Simulasi PICA Neural Lab
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-extrabold font-['Space_Grotesk'] tracking-wide text-white">
+                                        VVIP LICENSE VERIFIED
                                     </h3>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                                        PORTAL RESMI TERBUKA
+                                    </span>
                                 </div>
-                                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
-                                    Hasil inferensi Bi-LSTM dan proyeksi level di bawah ini berjalan dalam <strong>Mode Simulasi Edukasi</strong> untuk mendemonstrasikan kapabilitas kecerdasan buatan. Untuk membuka akses sinyal live real-time tick-by-tick, auto-refresh 60 detik tanpa batas, dan alert eksekusi VIP, silakan aktifkan akun VVIP Anda.
+                                <p className="text-xs text-slate-300 mt-0.5">
+                                    Kunci lisensi terverifikasi aktif. Anda memiliki akses penuh ke seluruh 6 mesin kuantitatif XAU/USD dan auto-refresh real-time.
                                 </p>
                             </div>
                         </div>
-
-                        <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-end lg:self-center">
+                        <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={openActivation}
-                                className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
                             >
                                 <KeyIcon size="xs" />
-                                <span>Aktivasi Kode Lisensi</span>
+                                <span>Status Lisensi</span>
                             </button>
-                            <Link
-                                href="/pricing"
-                                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5"
-                            >
-                                <CrownIcon size="xs" />
-                                <span>Upgrade ke VVIP &rarr;</span>
-                            </Link>
                         </div>
                     </div>
-                ) : null}
+                )}
 
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {/* 2. HERO HEADER & LIVE TICKER */}
@@ -481,11 +580,6 @@ export default function XauusdNeuralLabPage() {
                                     <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                                         v8.2 Bi-LSTM + TA Ensemble
                                     </span>
-                                    {!isFullAccess && (
-                                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
-                                            SIMULASI
-                                        </span>
-                                    )}
                                 </div>
                                 <p className="text-xs sm:text-sm text-slate-500 font-sans mt-0.5">
                                     XAU/USD Quantitative Neural Network • 22 Input Multi-Factor Indicators + 8 Indikator Teknikal
@@ -575,7 +669,7 @@ export default function XauusdNeuralLabPage() {
                         ) : (
                             <>
                                 <CrosshairIcon size="xs" className="text-white" />
-                                <span>{isFullAccess ? 'Jalankan Neural Inference Live' : 'Jalankan Simulasi Neural AI'}</span>
+                                <span>Jalankan Neural Inference Live</span>
                             </>
                         )}
                     </motion.button>
@@ -715,11 +809,6 @@ export default function XauusdNeuralLabPage() {
                                         <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
                                             Model Verdict
                                         </span>
-                                        {!isFullAccess && (
-                                            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-200/80 text-amber-900 border border-amber-300">
-                                                SIMULASI
-                                            </span>
-                                        )}
                                     </div>
                                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${dirBadge}`}>
                                         {pred.confidence.toFixed(0)}% Confident
@@ -982,11 +1071,6 @@ export default function XauusdNeuralLabPage() {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                                     Execution Matrix
                                                 </span>
-                                                {!isFullAccess && (
-                                                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                                                        Simulasi
-                                                    </span>
-                                                )}
                                             </div>
                                             <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk']">
                                                 Trade Setup Otomatis
@@ -1713,7 +1797,7 @@ export default function XauusdNeuralLabPage() {
                             className="px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition-all cursor-pointer font-sans flex items-center gap-2"
                         >
                             <CrosshairIcon size="sm" />
-                            <span>{isFullAccess ? 'Mulai Prediksi Neural Live' : 'Mulai Simulasi Neural AI'}</span>
+                            <span>Mulai Prediksi Neural Live</span>
                         </button>
                     </div>
                 )}
