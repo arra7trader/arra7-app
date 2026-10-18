@@ -96,7 +96,7 @@ export async function POST(request: Request) {
 
         // 2. Kirim notifikasi instan ke Telegram Admin jika terkonfigurasi
         try {
-            const telegramMsg = `🏆 <b>REGISTRASI BARU KOMPETISI FBS SPRINT 3 HARI!</b>
+            const telegramMsg = `🏆 <b>REGISTRASI BARU KOMPETISI FBS 1 BULAN (19 OKT - 19 NOV 2026)!</b>
 
 👤 <b>Nama:</b> ${registrationRecord.fullName}
 📱 <b>WhatsApp:</b> ${registrationRecord.phone}

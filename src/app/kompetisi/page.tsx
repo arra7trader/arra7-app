@@ -250,9 +250,9 @@ export default function TradingCompetitionPage() {
         }
     }, []);
 
-    // Hitung Mundur Periode Sprint 3 Hari (Mulai Besok 19 Okt - Berakhir 21 Okt 2026)
+    // Hitung Mundur Periode Kompetisi 1 Bulan (Mulai Besok 19 Okt - Berakhir 19 Nov 2026)
     const [timeLeft, setTimeLeft] = useState({
-        days: 2,
+        days: 29,
         hours: 23,
         minutes: 59,
         seconds: 45
@@ -367,7 +367,7 @@ export default function TradingCompetitionPage() {
                         <span className="text-2xl sm:text-3xl">🏆</span>
                         <div>
                             <p className="font-extrabold text-sm sm:text-base leading-tight">
-                                PICA × FBS 3-DAY SPRINT CHAMPIONSHIP (19 - 21 OKTOBER 2026)
+                                PICA × FBS 1-MONTH TRADING CHAMPIONSHIP (19 OKTOBER - 19 NOVEMBER 2026)
                             </p>
                             <p className="text-xs text-amber-100 font-medium">
                                 Mulai Besok! Total Hadiah <strong className="text-white underline">$1,500 USD Cash Murni</strong> (Juara 1: $1,000 | Juara 2: $500). Minimal Deposit $25 di Broker FBS!
@@ -395,22 +395,22 @@ export default function TradingCompetitionPage() {
                     className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 font-bold text-xs uppercase tracking-wider mb-4 shadow-xs"
                 >
                     <span className="animate-pulse">⚡</span>
-                    <span>FBS 3-Day Sprint Trading Championship</span>
+                    <span>FBS 1-Month Trading Championship</span>
                     <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-extrabold">MULAI BESOK</span>
                 </motion.div>
 
                 <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight sm:leading-none mb-4">
-                    Kompetisi Kilat 3 Hari: Rebut <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-600">Hadiah Tunai $1,000 USD!</span>
+                    Kompetisi Trading 1 Bulan: Rebut <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-600">Hadiah Tunai $1,000 USD!</span>
                 </h1>
 
                 <p className="text-slate-600 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-                    Ajang pembuktian kecepatan &amp; konsistensi trading selama <strong>3 Hari Penuh</strong>. Modal mulai <strong>$25 USD di Broker FBS</strong>, penilaian murni berdasarkan <strong>Persentase ROI %</strong>. Verifikasi instan melalui Dashboard IB FBS tanpa ribet!
+                    Ajang pembuktian konsistensi &amp; keahlian trading selama <strong>1 Bulan Penuh (30 Hari)</strong>. Modal mulai <strong>$25 USD di Broker FBS</strong>, penilaian murni berdasarkan <strong>Persentase ROI %</strong>. Verifikasi instan melalui Dashboard IB FBS tanpa ribet!
                 </p>
 
                 {/* Countdown Timer */}
                 <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/90 shadow-xl shadow-slate-200/50 max-w-xl mx-auto mb-8">
                     <p className="text-xs uppercase font-extrabold tracking-widest text-slate-400 mb-3">
-                        ⏳ SISA WAKTU PERIODE SPRINT 3 HARI
+                        ⏳ SISA WAKTU PERIODE KOMPETISI (1 BULAN)
                     </p>
                     <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">

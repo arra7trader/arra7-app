@@ -141,12 +141,12 @@ export default function Home() {
                         <span>TURNAMEN RESMI</span>
                       </span>
                       <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold">
-                        ⚡ SPRINT 3 HARI · MULAI BESOK (19-21 OKT)
+                        ⚡ PERIODE 1 BULAN · MULAI BESOK (19 OKT - 19 NOV 2026)
                       </span>
                     </div>
 
                     <h3 className="text-xl sm:text-3xl font-black tracking-tight mb-2">
-                      PICA × FBS 3-Day Sprint Championship
+                      PICA × FBS 1-Month Trading Championship
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
                       Rebut total hadiah <strong className="text-amber-400">$1,500 USD Cash Murni</strong> (Juara 1: $1,000 | Juara 2: $500). Cukup buka akun FBS via Lynk.id dengan modal mulai <strong className="text-white">$25 USD</strong>. Penilaian murni persentase ROI % dengan verifikasi instan via Dashboard IB FBS!
@@ -163,7 +163,7 @@ export default function Home() {
                       </span>
                       <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
                         <span className="text-amber-400">⏱️</span>
-                        <span>Durasi: <strong>3 Hari Penuh</strong></span>
+                        <span>Durasi: <strong>1 Bulan Penuh</strong></span>
                       </span>
                     </div>
                   </div>

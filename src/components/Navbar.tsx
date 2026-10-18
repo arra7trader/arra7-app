@@ -61,17 +61,17 @@ export default function Navbar() {
                 : 'bg-white/60 border-b border-slate-200/40 backdrop-blur-md'
                 }`}
         >
-            {/* FBS 3-Day Sprint Trading Championship Announcement Banner */}
+            {/* FBS 1-Month Trading Championship Announcement Banner */}
             <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-700 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex items-center justify-center gap-2 shadow-inner">
                 <span className="bg-black/25 text-amber-200 border border-amber-300/40 font-extrabold px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase shrink-0 flex items-center gap-1">
                     <span>🏆</span>
-                    <span>FBS SPRINT 3 HARI (MULAI BESOK!)</span>
+                    <span>KOMPETISI FBS 1 BULAN (MULAI BESOK!)</span>
                 </span>
                 <span className="font-medium text-white/95 hidden sm:inline">
                     Total Hadiah <strong>$1,500 USD Cash</strong> (Juara 1: $1,000 | Juara 2: $500). Minimal Deposit <strong>$25</strong> di Broker FBS via Lynk.id!
                 </span>
                 <span className="font-medium text-white/95 sm:hidden">
-                    Hadiah Cash <strong>$1,500 USD</strong> · Depo $25 FBS
+                    Hadiah Cash <strong>$1,500 USD</strong> · 1 Bulan Penuh
                 </span>
                 <Link
                     href="/kompetisi"
