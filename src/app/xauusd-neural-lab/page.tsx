@@ -26,6 +26,14 @@ import {
     CrosshairIcon,
 } from '@/components/PremiumIcons';
 import type { SMCAnalysisResult } from '@/lib/smc-engine';
+import type {
+    LiquidityHuntRadarResult,
+    MarketRegimeResult,
+    MonteCarloResult,
+    IntermarketResult,
+    EarlyHarvestResult,
+    NeuralDebateRoomResult,
+} from '@/lib/xauusd-quant-engine';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -130,6 +138,12 @@ interface PredictionResponse {
     session: SessionInfo;
     modelMeta: ModelMeta;
     smcAnalysis?: SMCAnalysisResult;
+    liquidityHunt?: LiquidityHuntRadarResult;
+    marketRegime?: MarketRegimeResult;
+    monteCarlo?: MonteCarloResult;
+    intermarket?: IntermarketResult;
+    earlyHarvest?: EarlyHarvestResult;
+    neuralDebate?: NeuralDebateRoomResult;
 }
 
 const TIMEFRAMES = [
@@ -355,6 +369,12 @@ export default function XauusdNeuralLabPage() {
     const reasoning = data?.aiReasoning || [];
     const taSignals = data?.taSignals;
     const smc = data?.smcAnalysis;
+    const radar = data?.liquidityHunt;
+    const regime = data?.marketRegime;
+    const mc = data?.monteCarlo;
+    const intermarket = data?.intermarket;
+    const earlyHarvest = data?.earlyHarvest;
+    const debate = data?.neuralDebate;
 
     const dirColor = pred?.direction === 'BUY' ? 'text-emerald-700' : pred?.direction === 'SELL' ? 'text-rose-700' : 'text-amber-700';
     const dirBg = pred?.direction === 'BUY' ? 'bg-emerald-50/80 border-emerald-300' : pred?.direction === 'SELL' ? 'bg-rose-50/80 border-rose-300' : 'bg-amber-50/80 border-amber-300';
@@ -474,26 +494,48 @@ export default function XauusdNeuralLabPage() {
                         </div>
                     </div>
 
-                    {/* Live Gold Price Card */}
-                    {market && (
-                        <div className="flex items-center gap-4 px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold font-sans">
-                                    Live Gold Price (XAU/USD)
-                                </p>
-                                <p className="text-2xl font-mono font-black text-slate-900 tracking-tight">
-                                    ${market.price.toFixed(2)}
-                                </p>
+                    {/* Live Gold Price & Intermarket Macro Ticker */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {intermarket && (
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase font-sans">
+                                        <span>Intermarket Macro</span>
+                                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
+                                            intermarket.pressureIndex > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                                        }`}>
+                                            Tailwind: {intermarket.pressureIndex > 0 ? '+' : ''}{intermarket.pressureIndex}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 font-mono text-xs font-black text-slate-800">
+                                        <span>DXY: {intermarket.dxyPrice.toFixed(3)} <span className={intermarket.dxyChange > 0 ? 'text-rose-600' : 'text-emerald-600'}>({intermarket.dxyChange > 0 ? '+' : ''}{intermarket.dxyChange}%)</span></span>
+                                        <span className="text-slate-300">|</span>
+                                        <span>US10Y: {intermarket.tnxYield.toFixed(2)}%</span>
+                                    </div>
+                                </div>
                             </div>
-                            <span className={`px-2.5 py-1 rounded-xl text-xs font-bold font-mono ${
-                                market.change >= 0 
-                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                                    : 'bg-rose-100 text-rose-800 border border-rose-200'
-                            }`}>
-                                {market.change >= 0 ? '+' : ''}{market.change.toFixed(2)}%
-                            </span>
-                        </div>
-                    )}
+                        )}
+
+                        {market && (
+                            <div className="flex items-center gap-4 px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold font-sans">
+                                        Live Gold Price (XAU/USD)
+                                    </p>
+                                    <p className="text-2xl font-mono font-black text-slate-900 tracking-tight">
+                                        ${market.price.toFixed(2)}
+                                    </p>
+                                </div>
+                                <span className={`px-2.5 py-1 rounded-xl text-xs font-bold font-mono ${
+                                    market.change >= 0 
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                        : 'bg-rose-100 text-rose-800 border border-rose-200'
+                                }`}>
+                                    {market.change >= 0 ? '+' : ''}{market.change.toFixed(2)}%
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
 
                 {/* ═══════════════════════════════════════════════════════════ */}
@@ -597,6 +639,64 @@ export default function XauusdNeuralLabPage() {
                 </AnimatePresence>
 
                 {/* ═══════════════════════════════════════════════════════════ */}
+                {/* 4.5. NEURAL EARLY HARVEST & CAPITAL DEFENSE BANNER */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {earlyHarvest && earlyHarvest.status === 'EARLY_HARVEST' && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="rounded-3xl p-5 bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white shadow-lg border-2 border-amber-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-12 h-12 rounded-2xl bg-white/20 text-white flex items-center justify-center shrink-0 text-2xl font-black">
+                                🚨
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-extrabold font-['Space_Grotesk'] tracking-wide uppercase">
+                                        INSTITUTIONAL EARLY HARVEST TRIGGER
+                                    </h3>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-rose-700 shadow-2xs">
+                                        Exhaustion {earlyHarvest.exhaustionScore}%
+                                    </span>
+                                </div>
+                                <p className="text-xs text-white/95 mt-1 font-medium leading-relaxed max-w-3xl">
+                                    {earlyHarvest.actionText} — {earlyHarvest.reason}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 font-mono text-xs font-bold bg-black/25 px-4 py-2.5 rounded-2xl shrink-0 self-end md:self-center border border-white/20">
+                            <span>Amankan: ${earlyHarvest.recommendedExitPrice.toFixed(2)}</span>
+                            <span>•</span>
+                            <span className="text-amber-300">SL BEP: ${earlyHarvest.recommendedNewSl.toFixed(2)}</span>
+                        </div>
+                    </motion.div>
+                )}
+
+                {earlyHarvest && earlyHarvest.status === 'TIGHTEN_STOP' && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="rounded-3xl p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md border border-blue-400 flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">🛡️</span>
+                            <div>
+                                <h4 className="text-xs font-black uppercase tracking-wider">
+                                    CAPITAL DEFENSE PROTOCOL (RISK-FREE TRADE)
+                                </h4>
+                                <p className="text-xs text-blue-100">
+                                    {earlyHarvest.actionText} — {earlyHarvest.reason}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="font-mono text-xs font-bold bg-white/10 px-3 py-1.5 rounded-xl shrink-0 border border-white/20">
+                            New Stop Loss: ${earlyHarvest.recommendedNewSl.toFixed(2)}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
                 {/* 5. MAIN PREDICTION & EXECUTION GRID */}
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {pred && (
@@ -680,6 +780,137 @@ export default function XauusdNeuralLabPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* ── 1. NEURAL LIQUIDITY HUNT RADAR ── */}
+                            {radar && (
+                                <div className={`rounded-3xl border p-5 shadow-sm space-y-3 transition-all ${
+                                    radar.status === 'TRAP_CONFIRMED' ? 'bg-gradient-to-br from-emerald-50/90 to-teal-50/50 border-emerald-300' :
+                                    radar.status === 'HUNT_ACTIVE' ? 'bg-gradient-to-br from-amber-50/90 to-orange-50/50 border-amber-300' :
+                                    radar.status === 'PENDING_SWEEP' ? 'bg-gradient-to-br from-blue-50/90 to-indigo-50/50 border-blue-200' :
+                                    'bg-white border-slate-200/90'
+                                }`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base">🎯</span>
+                                            <div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                                    Institutional Order Flow
+                                                </span>
+                                                <h3 className="text-sm font-extrabold text-slate-900 font-['Space_Grotesk']">
+                                                    Liquidity Hunt Radar
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase font-mono border ${
+                                            radar.status === 'TRAP_CONFIRMED' ? 'bg-emerald-600 text-white border-emerald-600' :
+                                            radar.status === 'HUNT_ACTIVE' ? 'bg-amber-500 text-white border-amber-500' :
+                                            radar.status === 'PENDING_SWEEP' ? 'bg-blue-600 text-white border-blue-600' :
+                                            'bg-slate-200 text-slate-700 border-slate-300'
+                                        }`}>
+                                            {radar.status.replace('_', ' ')}
+                                        </span>
+                                    </div>
+
+                                    {/* Target Pool & Probability */}
+                                    {radar.targetPool && (
+                                        <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs space-y-2">
+                                            <div className="flex items-center justify-between text-xs font-mono font-bold">
+                                                <span className="text-slate-600">Target Magnet:</span>
+                                                <span className="text-blue-700 font-black">
+                                                    ${radar.targetPool.level.toFixed(2)} ({radar.targetPool.type === 'BSL' ? 'Buy-Side BSL' : 'Sell-Side SSL'})
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
+                                                <span>Jarak: {radar.targetPool.distancePips} pips (${radar.targetPool.distanceDollars})</span>
+                                                {radar.targetPool.isEqualLevel && (
+                                                    <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300">
+                                                        EQH/EQL Ganda
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Probability Bar */}
+                                            <div className="pt-1">
+                                                <div className="flex justify-between text-[10px] font-bold text-slate-600 mb-1 font-mono">
+                                                    <span>Peluang Sapuan Likuiditas</span>
+                                                    <span className="text-blue-700 font-black">{radar.huntProbability}%</span>
+                                                </div>
+                                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-700 ${
+                                                            radar.huntProbability > 75 ? 'bg-emerald-500' : 'bg-blue-600'
+                                                        }`}
+                                                        style={{ width: `${radar.huntProbability}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="text-[11px] text-slate-700 leading-relaxed font-sans">
+                                        {radar.description}
+                                    </p>
+
+                                    {radar.status === 'TRAP_CONFIRMED' && (
+                                        <div className="p-2.5 rounded-xl bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-mono font-bold flex items-center justify-between">
+                                            <span>Sniper Trigger: ${radar.reversalTriggerPrice.toFixed(2)}</span>
+                                            <span className="text-rose-700">Invalid: ${radar.invalidationPrice.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* ── 2. MARKET REGIME ADAPTIVE SWITCHER ── */}
+                            {regime && (
+                                <div className="rounded-3xl bg-white border border-slate-200/90 p-5 shadow-sm space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                Adaptive Brain Engine
+                                            </span>
+                                            <h3 className="text-sm font-extrabold text-slate-900 font-['Space_Grotesk']">
+                                                Market Regime Switcher
+                                            </h3>
+                                        </div>
+                                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${regime.badgeColor}`}>
+                                            {regime.label}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                        <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase">ADX (Trend)</span>
+                                            <p className="text-sm font-black font-mono text-slate-900">{regime.adx}</p>
+                                        </div>
+                                        <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase">BB Width</span>
+                                            <p className="text-sm font-black font-mono text-slate-900">{regime.bbWidthPercent}%</p>
+                                        </div>
+                                        <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase">ATR Ratio</span>
+                                            <p className="text-sm font-black font-mono text-slate-900">{regime.atrRatio}x</p>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-relaxed font-sans">
+                                        <strong className="text-blue-700">Taktik AI:</strong> {regime.strategyRecommendation}
+                                    </p>
+
+                                    {/* Dynamic Weights Meter */}
+                                    <div className="space-y-1 pt-1">
+                                        <div className="flex justify-between text-[10px] font-bold text-slate-500 font-mono">
+                                            <span>Trend: {(regime.activeWeights.trendWeight * 100).toFixed(0)}%</span>
+                                            <span>Mean-Rev: {(regime.activeWeights.meanReversionWeight * 100).toFixed(0)}%</span>
+                                            <span>Flow: {(regime.activeWeights.orderFlowWeight * 100).toFixed(0)}%</span>
+                                        </div>
+                                        <div className="flex h-2 rounded-full overflow-hidden bg-slate-100 border border-slate-200/60">
+                                            <div className="bg-blue-600 transition-all" style={{ width: `${regime.activeWeights.trendWeight * 100}%` }} title="Trend Weight" />
+                                            <div className="bg-amber-500 transition-all" style={{ width: `${regime.activeWeights.meanReversionWeight * 100}%` }} title="Mean Reversion Weight" />
+                                            <div className="bg-purple-600 transition-all" style={{ width: `${regime.activeWeights.orderFlowWeight * 100}%` }} title="Order Flow Weight" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* TA Signal Overview Card */}
                             {taSignals && (
@@ -841,6 +1072,113 @@ export default function XauusdNeuralLabPage() {
 
                         {/* ── CENTER + RIGHT: AI Synthesis, Interactive Chart & 22-Feature Engine ── */}
                         <div className="lg:col-span-2 space-y-6">
+
+                            {/* ── 6. ADVERSARIAL NEURAL DEBATE ROOM ── */}
+                            {debate && (
+                                <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm space-y-5">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">⚔️</span>
+                                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+                                                    Multi-Agent Quantitative Synthesis
+                                                </span>
+                                            </div>
+                                            <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk'] mt-0.5">
+                                                Adversarial Neural Debate Room
+                                            </h3>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-3 py-1 rounded-xl text-xs font-mono font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                                                3 AI Agents Internal Consensus
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* 3 Agents Cards Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {/* Agent Bullish */}
+                                        <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">{debate.bullishAgent.avatarEmoji}</span>
+                                                <div>
+                                                    <h4 className="text-xs font-black text-emerald-950 font-['Space_Grotesk']">
+                                                        {debate.bullishAgent.name}
+                                                    </h4>
+                                                    <p className="text-[10px] text-emerald-700 font-medium leading-tight">
+                                                        {debate.bullishAgent.role}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 pt-1">
+                                                {debate.bullishAgent.keyPoints.map((point, idx) => (
+                                                    <div key={idx} className="text-[11px] text-emerald-900 leading-snug flex items-start gap-1.5 font-sans">
+                                                        <span className="text-emerald-600 font-bold shrink-0">•</span>
+                                                        <span>{point}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Agent Bearish */}
+                                        <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">{debate.bearishAgent.avatarEmoji}</span>
+                                                <div>
+                                                    <h4 className="text-xs font-black text-rose-950 font-['Space_Grotesk']">
+                                                        {debate.bearishAgent.name}
+                                                    </h4>
+                                                    <p className="text-[10px] text-rose-700 font-medium leading-tight">
+                                                        {debate.bearishAgent.role}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 pt-1">
+                                                {debate.bearishAgent.keyPoints.map((point, idx) => (
+                                                    <div key={idx} className="text-[11px] text-rose-900 leading-snug flex items-start gap-1.5 font-sans">
+                                                        <span className="text-rose-600 font-bold shrink-0">•</span>
+                                                        <span>{point}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Chief Risk Officer */}
+                                        <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">{debate.chiefRiskOfficer.avatarEmoji}</span>
+                                                <div>
+                                                    <h4 className="text-xs font-black text-indigo-950 font-['Space_Grotesk']">
+                                                        {debate.chiefRiskOfficer.name}
+                                                    </h4>
+                                                    <p className="text-[10px] text-indigo-700 font-medium leading-tight">
+                                                        {debate.chiefRiskOfficer.role}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 pt-1">
+                                                {debate.chiefRiskOfficer.keyPoints.map((point, idx) => (
+                                                    <div key={idx} className="text-[11px] text-indigo-900 leading-snug flex items-start gap-1.5 font-sans">
+                                                        <span className="text-indigo-600 font-bold shrink-0">•</span>
+                                                        <span>{point}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Protocol Synthesis Box */}
+                                    <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-1 font-sans shadow-md border border-slate-800">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] font-bold font-mono gap-1">
+                                            <span className="text-amber-400">⚡ ACTION PROTOCOL DISCIPLINE:</span>
+                                            <span className="text-slate-300">{debate.finalExecutiveVerdict}</span>
+                                        </div>
+                                        <p className="text-xs text-slate-200 font-mono leading-relaxed pt-1">
+                                            {debate.actionProtocol}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Institutional Smart Money Concepts & Order Flow Matrix */}
                             {smc && (
@@ -1193,6 +1531,71 @@ export default function XauusdNeuralLabPage() {
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ── 3. MONTE CARLO JUMP-DIFFUSION SIMULATOR ── */}
+                            {mc && (
+                                <div className="rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm space-y-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                                        <div>
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                                Quantitative Jump-Diffusion Model
+                                            </span>
+                                            <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk']">
+                                                Monte Carlo 1,000 Paths &amp; Time-To-Target
+                                            </h3>
+                                        </div>
+                                        <span className="px-3 py-1 rounded-xl text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            1,000 Iterasi Kuantitatif Terverifikasi
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                                            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                                                Peluang Capai TP1
+                                            </span>
+                                            <p className="text-3xl font-black font-mono text-emerald-700 mt-0.5">
+                                                {mc.hitTp1Prob}%
+                                            </p>
+                                            <span className="text-[11px] text-emerald-600 font-sans mt-0.5 block">
+                                                Probabilitas hit sebelum menyentuh SL
+                                            </span>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200">
+                                            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">
+                                                Estimasi Waktu Sampai
+                                            </span>
+                                            <p className="text-3xl font-black font-mono text-blue-700 mt-0.5">
+                                                ~{mc.expectedTimeToTargetMinutes} mnt
+                                            </p>
+                                            <span className="text-[11px] text-blue-600 font-sans mt-0.5 block">
+                                                Median durasi ekspansi ({selectedTimeframe.toUpperCase()})
+                                            </span>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
+                                            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                                                Toleransi MAE Drawdown
+                                            </span>
+                                            <p className="text-3xl font-black font-mono text-amber-700 mt-0.5">
+                                                -{mc.maxExpectedAdversePips} pips
+                                            </p>
+                                            <span className="text-[11px] text-amber-700 font-sans mt-0.5 block">
+                                                Batas floating wajar sebelum rally
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Path Range Preview */}
+                                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-600">
+                                        <span>Cone of Uncertainty 24-Bar Proyeksi (10th - 90th percentile):</span>
+                                        <span className="font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                            ${mc.lower10Path[mc.lower10Path.length - 1]?.toFixed(2)} &rarr; ${mc.upper90Path[mc.upper90Path.length - 1]?.toFixed(2)}
+                                        </span>
                                     </div>
                                 </div>
                             )}

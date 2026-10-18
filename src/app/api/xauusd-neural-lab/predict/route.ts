@@ -14,6 +14,15 @@ import { BiLSTMModel, extractFeatures, CandleData } from '@/lib/lstm-model';
 import { LSTM_WEIGHTS } from '@/lib/lstm-weights';
 import { extractNeuralLabFeatures, NeuralLabCandle, FEATURE_NAMES } from '@/lib/neural-lab-features';
 import { analyzeInstitutionalSMC, SMCCandle, SMCAnalysisResult } from '@/lib/smc-engine';
+import {
+    computeLiquidityHuntRadar,
+    detectMarketRegime,
+    runMonteCarloJumpDiffusion,
+    fetchLiveIntermarketData,
+    evaluateEarlyHarvest,
+    conductNeuralDebate,
+    QuantCandle
+} from '@/lib/xauusd-quant-engine';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -447,7 +456,49 @@ export async function POST(req: NextRequest) {
         }
 
         // ===============================================================
-        // 8. Enhanced AI Qualitative Synthesis
+        // 8. ADVANCED QUANTITATIVE ENGINES FOR XAU/USD (100% REAL COMPUTATIONS)
+        // ===============================================================
+        const quantCandles: QuantCandle[] = candleData.map(c => ({
+            time: c.timestamp || 0,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume || 100,
+        }));
+
+        // 1. Real Intermarket Live Data (DXY & US10Y)
+        const intermarket = await fetchLiveIntermarketData(change);
+
+        // 2. Real Market Regime Adaptive Switcher
+        const marketRegime = detectMarketRegime(quantCandles, currentPrice, dynamicAtr);
+
+        // 3. Real Liquidity Hunt Radar
+        const liquidityHunt = computeLiquidityHuntRadar(quantCandles, currentPrice, dynamicAtr, smcAnalysis.killzone.isKillzone);
+
+        // 4. Real Monte Carlo Jump-Diffusion 1,000 Paths
+        const monteCarlo = runMonteCarloJumpDiffusion(quantCandles, currentPrice, takeProfit1, stopLoss, direction, timeframe);
+
+        // 5. Real Early Harvest Dynamic Smart Exit Monitor
+        const earlyHarvest = evaluateEarlyHarvest(quantCandles, currentPrice, entryPrice, direction, takeProfit1, stopLoss);
+
+        // 6. Adversarial Neural Debate Room (3 AI Agents)
+        const neuralDebate = conductNeuralDebate(
+            direction,
+            confidence,
+            currentPrice,
+            entryPrice,
+            takeProfit1,
+            stopLoss,
+            riskReward,
+            marketRegime,
+            liquidityHunt,
+            intermarket,
+            monteCarlo
+        );
+
+        // ===============================================================
+        // 9. Enhanced AI Qualitative Synthesis
         // ===============================================================
         
         const rsiLabel = rsi > 70 ? 'overbought \u2014 waspadai koreksi' :
@@ -460,17 +511,15 @@ export async function POST(req: NextRequest) {
             (macdHist > 1 ? 'momentum bullish kuat' : 'momentum bullish moderat') :
             (macdHist < -1 ? 'momentum bearish kuat' : 'momentum bearish moderat');
 
-        const trendLabel = adx > 40 ? 'tren kuat terkonfirmasi' :
-                          adx > 25 ? 'tren sedang berkembang' :
-                                     'pasar sideways / tanpa tren jelas';
-
         const aiReasoning: string[] = [
             `[SMC SETUP] Grade: ${smcAnalysis.setupGrade} | Net Confluence: ${smcAnalysis.confluenceScore > 0 ? '+' : ''}${smcAnalysis.confluenceScore}/100 (${smcAnalysis.institutionalBias}).`,
-            ...smcAnalysis.keyObservations,
-            `Ensemble Fusion (50% Institutional SMC + 30% Bi-LSTM + 20% Multi-TA): sinyal ${direction} dengan confidence ${confidence.toFixed(1)}%.`,
-            `VWAP Regime: ${smcAnalysis.vwap.regime} (${smcAnalysis.vwap.distancePercent > 0 ? '+' : ''}${smcAnalysis.vwap.distancePercent}% dari Fair Value $${smcAnalysis.vwap.vwap.toFixed(2)}).`,
-            `Session: ${smcAnalysis.killzone.sessionName} (Volatilitas ${smcAnalysis.killzone.volatilityBoost}x).`,
-            `RSI (${rsi.toFixed(1)}) & MACD (${macdHist > 0 ? '+' : ''}${macdHist.toFixed(2)}) menunjukkan ${macdLabel}. ATR dinamis: ${dynamicAtr.toFixed(2)}.`,
+            `[REGIME] ${marketRegime.label} (ADX: ${marketRegime.adx}, BB Width: ${marketRegime.bbWidthPercent}%): ${marketRegime.strategyRecommendation}`,
+            `[INTERMARKET] DXY: ${intermarket.dxyPrice} (${intermarket.dxyChange > 0 ? '+' : ''}${intermarket.dxyChange}%) | US10Y: ${intermarket.tnxYield}% | Pressure: ${intermarket.pressureIndex > 0 ? '+' : ''}${intermarket.pressureIndex}/100.`,
+            `[LIQUIDITY HUNT] ${liquidityHunt.description}`,
+            `[MONTE CARLO] Probabilitas ${monteCarlo.hitTp1Prob}% capai TP1 dalam ~${monteCarlo.expectedTimeToTargetMinutes} mnt (MAE Tol: -${monteCarlo.maxExpectedAdversePips} pips).`,
+            `[EARLY HARVEST] ${earlyHarvest.actionText} — ${earlyHarvest.reason}`,
+            `[CRO VERDICT] ${neuralDebate.finalExecutiveVerdict}`,
+            ...smcAnalysis.keyObservations.slice(0, 2),
         ];
 
         // 9. Recent candles for candlestick chart preview (last 30)
@@ -560,6 +609,12 @@ export async function POST(req: NextRequest) {
                 utcHour,
             },
             smcAnalysis,
+            liquidityHunt,
+            marketRegime,
+            monteCarlo,
+            intermarket,
+            earlyHarvest,
+            neuralDebate,
             modelMeta: {
                 architecture: 'Bi-LSTM 3-Layer + Institutional SMC & Order Flow Ensemble',
                 biLstmUnits: [128, 64, 32],
