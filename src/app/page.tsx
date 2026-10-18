@@ -126,6 +126,72 @@ export default function Home() {
             <AppGrid />
           </div>
 
+          {/* Spotlight Turnamen: PICA × FBS 3-Day Sprint Trading Championship */}
+          <div className="w-full max-w-5xl mx-auto mt-10 mb-2">
+            <div className="relative overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-600 shadow-xl shadow-amber-500/10">
+              <div className="bg-slate-900 rounded-[22px] p-6 sm:p-8 text-white text-left relative overflow-hidden">
+                <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="max-w-2xl">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span className="bg-amber-500 text-slate-950 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                        <span>🏆</span>
+                        <span>TURNAMEN RESMI</span>
+                      </span>
+                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold">
+                        ⚡ SPRINT 3 HARI · MULAI BESOK (19-21 OKT)
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl sm:text-3xl font-black tracking-tight mb-2">
+                      PICA × FBS 3-Day Sprint Championship
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+                      Rebut total hadiah <strong className="text-amber-400">$1,500 USD Cash Murni</strong> (Juara 1: $1,000 | Juara 2: $500). Cukup buka akun FBS via Lynk.id dengan modal mulai <strong className="text-white">$25 USD</strong>. Penilaian murni persentase ROI % dengan verifikasi instan via Dashboard IB FBS!
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-300">
+                      <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                        <span className="text-emerald-400">💵</span>
+                        <span>Juara 1: <strong>$1,000 USD Cash</strong></span>
+                      </span>
+                      <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                        <span className="text-slate-300">🥈</span>
+                        <span>Juara 2: <strong>$500 USD Cash</strong></span>
+                      </span>
+                      <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                        <span className="text-amber-400">⏱️</span>
+                        <span>Durasi: <strong>3 Hari Penuh</strong></span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+                    <Link
+                      href="/kompetisi"
+                      className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 text-center transition-transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <span>🏆</span>
+                      <span>Buka Halaman Kompetisi</span>
+                      <span>&rarr;</span>
+                    </Link>
+                    <a
+                      href="https://lynk.id/arra7"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs text-center border border-white/15 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                    >
+                      <span>Daftar FBS ($25 Min)</span>
+                      <span>↗</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Section Pilihan Paket & Harga */}
           <div className="w-full max-w-5xl mx-auto mt-12 mb-6">
             <div className="text-center mb-6">

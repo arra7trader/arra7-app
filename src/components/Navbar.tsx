@@ -61,22 +61,23 @@ export default function Navbar() {
                 : 'bg-white/60 border-b border-slate-200/40 backdrop-blur-md'
                 }`}
         >
-            {/* Flash Sale 2 Hari Announcement Banner */}
-            <div className="bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex items-center justify-center gap-2 shadow-inner">
-                <span className="bg-white/20 text-white font-extrabold px-1.5 py-0.5 rounded text-[10px] tracking-wider uppercase shrink-0">
-                    🔥 FLASH SALE DIPERPANJANG 2 HARI
+            {/* FBS 3-Day Sprint Trading Championship Announcement Banner */}
+            <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-700 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex items-center justify-center gap-2 shadow-inner">
+                <span className="bg-black/25 text-amber-200 border border-amber-300/40 font-extrabold px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase shrink-0 flex items-center gap-1">
+                    <span>🏆</span>
+                    <span>FBS SPRINT 3 HARI (MULAI BESOK!)</span>
                 </span>
                 <span className="font-medium text-white/95 hidden sm:inline">
-                    1 Harga Lifetime <strong>Semua Produk</strong> Hanya <strong>Rp 125.000</strong> (PICA Neural Lab, Fibo Kyoko Masterclass, DOM ARRA &amp; Analisis Market)
+                    Total Hadiah <strong>$1,500 USD Cash</strong> (Juara 1: $1,000 | Juara 2: $500). Minimal Deposit <strong>$25</strong> di Broker FBS via Lynk.id!
                 </span>
                 <span className="font-medium text-white/95 sm:hidden">
-                    Semua Produk Lifetime: <strong>Rp 125.000</strong>
+                    Hadiah Cash <strong>$1,500 USD</strong> · Depo $25 FBS
                 </span>
                 <Link
-                    href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime"
+                    href="/kompetisi"
                     className="shrink-0 ml-1 inline-flex items-center gap-1 bg-white text-slate-900 hover:bg-amber-100 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold transition-all shadow-xs cursor-pointer active:scale-95"
                 >
-                    <span>Klaim 125K</span>
+                    <span>Ikuti Lomba</span>
                     <span>&rarr;</span>
                 </Link>
             </div>
@@ -90,6 +91,15 @@ export default function Navbar() {
                     >
                         <CurrencyIcon size="xs" className="text-blue-600" />
                         <span>Harga</span>
+                    </Link>
+
+                    <Link
+                        href="/kompetisi"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100/90 text-amber-900 border border-amber-300/90 text-xs sm:text-[13px] font-bold transition-all shadow-2xs hover:border-amber-400 active:scale-95 cursor-pointer"
+                    >
+                        <span className="text-xs">🏆</span>
+                        <span className="hidden xs:inline">Kompetisi</span>
+                        <span className="xs:hidden">Lomba</span>
                     </Link>
 
                     {/* Popover Menu: 4 Fitur Utama */}
@@ -153,6 +163,16 @@ export default function Navbar() {
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AI</span>
+                                    </Link>
+                                    <Link href="/kompetisi" className="flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 text-slate-800 hover:text-amber-800 transition-colors border-t border-slate-100 mt-1 pt-1.5">
+                                        <div className="flex items-center gap-2">
+                                            <span>🏆</span>
+                                            <div>
+                                                <p className="font-bold">Trading Championship</p>
+                                                <p className="text-[10px] text-slate-400">Total Hadiah $1,500 (Juara 1 &amp; 2)</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">EVENT</span>
                                     </Link>
                                 </div>
                             </Popover.Content>
