@@ -149,21 +149,25 @@ export default function Home() {
                       PICA × FBS 1-Month Trading Championship
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
-                      Rebut total hadiah <strong className="text-amber-400">$1,500 USD Cash Murni</strong> (Juara 1: $1,000 | Juara 2: $500). Cukup buka akun FBS via Lynk.id dengan modal mulai <strong className="text-white">$25 USD</strong>. Penilaian murni persentase ROI % dengan verifikasi instan via Dashboard IB FBS!
+                      Rebut total hadiah <strong className="text-amber-400">$1,500 USD Cash Murni</strong> (Juara 1: $1,000 | Juara 2: $500). Modal mulai <strong className="text-white">$25 USD</strong> dengan penilaian murni ROI %, didukung <strong>Unlimited Re-Entry</strong> jika akun MC, dan <strong>FREE Sinyal VVIP PICA</strong> bagi deposit $100+!
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-300">
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold text-slate-300">
                       <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
                         <span className="text-emerald-400">💵</span>
-                        <span>Juara 1: <strong>$1,000 USD Cash</strong></span>
+                        <span>Juara 1: <strong>$1,000 Cash</strong></span>
                       </span>
                       <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
                         <span className="text-slate-300">🥈</span>
-                        <span>Juara 2: <strong>$500 USD Cash</strong></span>
+                        <span>Juara 2: <strong>$500 Cash</strong></span>
                       </span>
-                      <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                        <span className="text-amber-400">⏱️</span>
-                        <span>Durasi: <strong>1 Bulan Penuh</strong></span>
+                      <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-300 px-3 py-1.5 rounded-xl border border-amber-400/20">
+                        <span>🔄</span>
+                        <span>Unlimited Re-Entry</span>
+                      </span>
+                      <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-300 px-3 py-1.5 rounded-xl border border-blue-400/20">
+                        <span>💎</span>
+                        <span>Free Sinyal VVIP ($100+)</span>
                       </span>
                     </div>
                   </div>

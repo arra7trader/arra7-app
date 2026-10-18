@@ -68,10 +68,10 @@ export default function Navbar() {
                     <span>KOMPETISI FBS 1 BULAN (MULAI BESOK!)</span>
                 </span>
                 <span className="font-medium text-white/95 hidden sm:inline">
-                    Total Hadiah <strong>$1,500 USD Cash</strong> (Juara 1: $1,000 | Juara 2: $500). Minimal Deposit <strong>$25</strong> di Broker FBS via Lynk.id!
+                    Total Hadiah <strong>$1,500 Cash Murni</strong> · Modal Mulai <strong>$25</strong> · Unlimited Re-Entry · FREE Sinyal VVIP bagi Depo $100+!
                 </span>
                 <span className="font-medium text-white/95 sm:hidden">
-                    Hadiah Cash <strong>$1,500 USD</strong> · 1 Bulan Penuh
+                    Hadiah Cash <strong>$1,500 USD</strong> · Mulai $25 · Re-Entry Aktif
                 </span>
                 <Link
                     href="/kompetisi"

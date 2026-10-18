@@ -9,6 +9,7 @@ interface RegisterRequestBody {
     fbsAccountNumber: string;
     fbsAccountType?: string;
     depositAmount: number;
+    registrationType?: 'NEW' | 'RE_ENTRY' | 'MULTI_ACCOUNT';
 }
 
 // In-memory fallback if database is restarting or offline
@@ -18,7 +19,15 @@ export async function POST(request: Request) {
     try {
         const body: RegisterRequestBody = await request.json();
 
-        const { fullName, email, phone, fbsAccountNumber, fbsAccountType = 'Standard', depositAmount } = body;
+        const {
+            fullName,
+            email,
+            phone,
+            fbsAccountNumber,
+            fbsAccountType = 'Standard',
+            depositAmount,
+            registrationType = 'NEW'
+        } = body;
 
         // Validasi input
         if (!fullName || !email || !phone || !fbsAccountNumber) {
@@ -36,6 +45,13 @@ export async function POST(request: Request) {
             );
         }
 
+        // Tentukan tier fasilitas
+        const tier = depositNum >= 250
+            ? 'VIP_WHALE'
+            : depositNum >= 100
+            ? 'PRO_BOOSTER'
+            : 'STARTER';
+
         const registrationRecord = {
             id: `fbs-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             fullName: fullName.trim(),
@@ -44,6 +60,8 @@ export async function POST(request: Request) {
             fbsAccountNumber: fbsAccountNumber.trim(),
             fbsAccountType: fbsAccountType.trim(),
             depositAmount: depositNum,
+            registrationType,
+            tier,
             status: 'PENDING_VERIFICATION',
             createdAt: new Date().toISOString()
         };
@@ -96,17 +114,31 @@ export async function POST(request: Request) {
 
         // 2. Kirim notifikasi instan ke Telegram Admin jika terkonfigurasi
         try {
-            const telegramMsg = `🏆 <b>REGISTRASI BARU KOMPETISI FBS 1 BULAN (19 OKT - 19 NOV 2026)!</b>
+            const typeLabel = registrationRecord.registrationType === 'RE_ENTRY'
+                ? '🔄 RE-ENTRY / RESET AKUN MC'
+                : registrationRecord.registrationType === 'MULTI_ACCOUNT'
+                ? '🎰 MULTI-AKUN (TIKET TAMBAHAN)'
+                : '🆕 PENDAFTARAN PERTAMA';
+
+            const tierLabel = registrationRecord.tier === 'VIP_WHALE'
+                ? '👑 VIP WHALE ($250+) ➔ FREE Sinyal VVIP + Bot Indikator + Rebate 20%'
+                : registrationRecord.tier === 'PRO_BOOSTER'
+                ? '⭐ PRO BOOSTER ($100+) ➔ FREE Sinyal VVIP PICA 1 Bulan'
+                : '🌱 STARTER ($25+) ➔ Akses Turnamen & Leaderboard';
+
+            const telegramMsg = `🏆 <b>REGISTRASI KOMPETISI FBS 1 BULAN!</b>
 
 👤 <b>Nama:</b> ${registrationRecord.fullName}
 📱 <b>WhatsApp:</b> ${registrationRecord.phone}
 📧 <b>Email:</b> ${registrationRecord.email}
 🔢 <b>No. Akun FBS:</b> <code>${registrationRecord.fbsAccountNumber}</code>
 ⚙️ <b>Tipe Akun:</b> ${registrationRecord.fbsAccountType}
-💵 <b>Deposit Awal:</b> $${registrationRecord.depositAmount} USD
+💵 <b>Deposit:</b> $${registrationRecord.depositAmount} USD
+📋 <b>Tipe Registrasi:</b> ${typeLabel}
+💎 <b>Fasilitas Tier:</b> ${tierLabel}
 📅 <b>Waktu:</b> ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB
 
-<i>Silakan buka Dashboard IB FBS untuk memverifikasi akun ini di jaringan kemitraan ARRA 7.</i>`;
+<i>Silakan cek Dashboard IB FBS untuk memvalidasi akun & aktifkan akses sinyal peserta jika eligible.</i>`;
 
             await sendTelegramMessage(telegramMsg, 'HTML');
         } catch (teleErr) {

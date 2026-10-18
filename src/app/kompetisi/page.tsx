@@ -228,7 +228,8 @@ export default function TradingCompetitionPage() {
         phone: '',
         fbsAccountNumber: '',
         fbsAccountType: 'Standard',
-        depositAmount: 25
+        depositAmount: 25,
+        registrationType: 'NEW' as 'NEW' | 'RE_ENTRY' | 'MULTI_ACCOUNT'
     });
 
     // Load pendaftaran lokal saat pertama kali dimuat
@@ -403,9 +404,28 @@ export default function TradingCompetitionPage() {
                     Kompetisi Trading 1 Bulan: Rebut <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-600">Hadiah Tunai $1,000 USD!</span>
                 </h1>
 
-                <p className="text-slate-600 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-                    Ajang pembuktian konsistensi &amp; keahlian trading selama <strong>1 Bulan Penuh (30 Hari)</strong>. Modal mulai <strong>$25 USD di Broker FBS</strong>, penilaian murni berdasarkan <strong>Persentase ROI %</strong>. Verifikasi instan melalui Dashboard IB FBS tanpa ribet!
+                <p className="text-slate-600 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed mb-6">
+                    Ajang pembuktian konsistensi trading selama <strong>1 Bulan Penuh (30 Hari)</strong>. Modal mulai <strong>$25 USD di Broker FBS</strong>, penilaian murni persentase <strong>ROI %</strong> (Fair untuk semua modal), didukung <strong>Unlimited Re-Entry</strong> jika akun MC, dan <strong>FREE Sinyal VVIP PICA</strong> bagi deposit $100+!
                 </p>
+
+                {/* Feature Highlight Badges */}
+                <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto mb-8">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                        <span>💵</span> Modal Mulai $25 USD
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
+                        <span>⚖️</span> Penilaian Murni ROI %
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold">
+                        <span>🔄</span> Unlimited Re-Entry (Bisa Reset)
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-800 border border-purple-200 text-xs font-bold">
+                        <span>🎰</span> Multi-Akun (Hingga 3 Akun)
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-xs font-bold">
+                        <span>⚡</span> Min. Turnover 3.0 Lot
+                    </span>
+                </div>
 
                 {/* Countdown Timer */}
                 <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/90 shadow-xl shadow-slate-200/50 max-w-xl mx-auto mb-8">
@@ -639,6 +659,242 @@ export default function TradingCompetitionPage() {
                         <p className="text-xs text-blue-200/90 italic">
                             *Dengan sistem ini, trader dengan modal minimal $25 yang disiplin memiliki peluang mutlak untuk membawa pulang hadiah utama $1,000 USD!
                         </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* TINGKATAN FASILITAS & BOOSTER DEPOSIT */}
+            <section id="fasilitas" className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
+                <div className="text-center mb-10">
+                    <span className="text-xs uppercase font-extrabold tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                        ⚡ FASILITAS &amp; LEVEL BOOSTER
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+                        Pilih Nominal Modal &amp; Dapatkan Senjata Tambahan
+                    </h2>
+                    <p className="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto mt-1">
+                        Seluruh tingkat modal <strong>memiliki peluang menang yang 100% sama (Murni Berdasarkan ROI %)</strong>. Namun, deposit lebih besar memberi Anda amunisi sinyal, indikator, rebate, dan ketahanan margin yang jauh lebih aman!
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* TIER 1: STARTER */}
+                    <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-md flex flex-col justify-between relative">
+                        <div>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                🌱 TIER STARTER
+                            </span>
+                            <div className="my-3">
+                                <span className="text-3xl font-black text-slate-900">$25 - $99</span>
+                                <span className="text-xs font-semibold text-slate-500 block mt-0.5">Modal Ringan Terjangkau</span>
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed mb-5">
+                                Pilihan hemat bagi Anda yang ingin menguji kemampuan trading dengan risiko seminimal mungkin namun tetap berkesempatan menjadi juara.
+                            </p>
+
+                            <div className="space-y-2.5 text-xs text-slate-700 border-t border-slate-100 pt-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Tiket Resmi PICA Leaderboard</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Peluang Rebut Juara 1 ($1,000) &amp; 2 ($500)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Penilaian Murni Persentase ROI %</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Didukung Fitur Unlimited Re-Entry</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-400">
+                                    <span>✗</span>
+                                    <span>Tanpa Akses Sinyal VVIP PICA</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-slate-100">
+                            <button
+                                onClick={() => {
+                                    setRegForm(prev => ({ ...prev, depositAmount: 25 }));
+                                    setIsRegisterModalOpen(true);
+                                }}
+                                className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-all cursor-pointer"
+                            >
+                                Daftar Modal $25 &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* TIER 2: PRO BOOSTER (RECOMMENDED) */}
+                    <div className="bg-gradient-to-b from-amber-500/10 via-white to-amber-500/5 rounded-3xl p-6 sm:p-7 border-2 border-amber-500 shadow-xl shadow-amber-500/15 flex flex-col justify-between relative">
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md whitespace-nowrap">
+                            ⭐ PALING POPULER &amp; DIREKOMENDASIKAN
+                        </div>
+
+                        <div>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300">
+                                🚀 TIER PRO BOOSTER
+                            </span>
+                            <div className="my-3">
+                                <span className="text-3xl font-black text-slate-900">$100 - $249</span>
+                                <span className="text-xs font-semibold text-amber-700 block mt-0.5">Senjata Paling Efektif Memburu Hadiah</span>
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed mb-5">
+                                Kategori favorit peserta! Margin lebih tahan terhadap floating market plus mendapatkan bantuan panduan sinyal akurat.
+                            </p>
+
+                            <div className="space-y-2.5 text-xs text-slate-800 border-t border-amber-100 pt-4 font-medium">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Semua fasilitas Tier Starter</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-amber-500/15 p-2 rounded-xl text-amber-950 font-bold">
+                                    <span className="text-amber-600 text-base">🎁</span>
+                                    <span>FREE Akses Sinyal VVIP PICA (1 Bulan Penuh)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Analisa Harian Gold (XAUUSD) &amp; Forex Major</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Margin Jauh Lebih Aman dari Batas Drawdown 40%</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-600 font-bold">✓</span>
+                                    <span>Sangat Mudah Mencapai Target Min. 3.0 Lot</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-amber-100">
+                            <button
+                                onClick={() => {
+                                    setRegForm(prev => ({ ...prev, depositAmount: 100 }));
+                                    setIsRegisterModalOpen(true);
+                                }}
+                                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+                            >
+                                Daftar &amp; Klaim Sinyal VVIP ($100) &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* TIER 3: VIP WHALE */}
+                    <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl flex flex-col justify-between relative">
+                        <div className="absolute -top-3.5 right-6 bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
+                            👑 TINGKAT SULTAN
+                        </div>
+
+                        <div>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-300 bg-purple-950 px-2.5 py-1 rounded-full border border-purple-800">
+                                💎 TIER VIP WHALE
+                            </span>
+                            <div className="my-3">
+                                <span className="text-3xl font-black text-white">$250+</span>
+                                <span className="text-xs font-semibold text-purple-300 block mt-0.5">Ketahanan Maksimal &amp; Fasilitas Lengkap</span>
+                            </div>
+                            <p className="text-xs text-slate-300 leading-relaxed mb-5">
+                                Ditujukan bagi trader pro yang mengincar Juara 1 dengan kapasitas ketahanan balance tertinggi serta rebate cashback mingguan.
+                            </p>
+
+                            <div className="space-y-2.5 text-xs text-slate-200 border-t border-slate-800 pt-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-400 font-bold">✓</span>
+                                    <span>Semua fasilitas Pro Booster + Sinyal VVIP</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white/10 p-2 rounded-xl text-amber-300 font-bold">
+                                    <span>🤖</span>
+                                    <span>Akses Indikator Pro ARRA 7 / EA Companion</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white/10 p-2 rounded-xl text-emerald-300 font-bold">
+                                    <span>💰</span>
+                                    <span>Cashback Rebate Mingguan 20% ke Wallet</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-400 font-bold">✓</span>
+                                    <span>Ketahanan Drawdown Tertinggi (Bisa Multi-Pair)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-emerald-400 font-bold">✓</span>
+                                    <span>Prioritas Fast-Track Audit &amp; Support Admin 1-on-1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-slate-800">
+                            <button
+                                onClick={() => {
+                                    setRegForm(prev => ({ ...prev, depositAmount: 250 }));
+                                    setIsRegisterModalOpen(true);
+                                }}
+                                className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all active:scale-95 cursor-pointer"
+                            >
+                                Daftar VIP Whale ($250+) &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 3 FITUR UNGGULAN: UNLIMITED RE-ENTRY, MULTI-AKUN, & SYARAT MIN. LOT */}
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl shadow-slate-100">
+                    <div className="max-w-3xl mb-8">
+                        <span className="text-xs uppercase font-extrabold tracking-widest text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
+                            🛡️ MEKANISME KHUSUS TURNAMEN
+                        </span>
+                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+                            Peluang Menang Berlipat Ganda untuk Seluruh Peserta
+                        </h2>
+                        <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                            Sistem dirancang fleksibel agar setiap trader memiliki kesempatan bangkit kembali dan mengoptimalkan portofolionya.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* 1. Unlimited Re-Entry */}
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-200/80">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-md mb-4">
+                                🔄
+                            </div>
+                            <h3 className="text-base font-black text-slate-900 mb-2">
+                                Fitur Unlimited Re-Entry
+                            </h3>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                                Akun Anda terkena <em>Stop Out / Margin Call</em> atau melewati batas Drawdown 40%? <strong>Jangan khawatir!</strong> Anda tidak di-blacklist permanen. Anda bebas membuka akun MT5 baru di bawah link IB PICA dan mendaftarkannya kembali (Re-Entry / Reset) tanpa batasan kuota untuk kembali bertarung!
+                            </p>
+                        </div>
+
+                        {/* 2. Multi-Account */}
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50/50 border border-purple-200/80">
+                            <div className="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-2xl shadow-md mb-4">
+                                🎰
+                            </div>
+                            <h3 className="text-base font-black text-slate-900 mb-2">
+                                Multi-Akun (Hingga 3 Akun)
+                            </h3>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                                Maksimalkan peluang Anda merebut Juara 1 &amp; Juara 2! Setiap peserta diperbolehkan mendaftarkan hingga <strong>3 akun trading berbeda</strong> dengan strategi berbeda (misal: Akun 1 Scalping $25, Akun 2 Swing $100, Akun 3 EA Robot $250). Masing-masing akun berpeluang memenangkan hadiah tunai!
+                            </p>
+                        </div>
+
+                        {/* 3. Syarat Turnover Lot */}
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-50/50 border border-amber-200/80">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-2xl shadow-md mb-4">
+                                ⚡
+                            </div>
+                            <h3 className="text-base font-black text-slate-900 mb-2">
+                                Syarat Min. 3.0 Standard Lot
+                            </h3>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                                Untuk memastikan pemenang adalah trader aktif dan bukan keberuntungan 1 order pasif, akun yang sah membawa pulang hadiah wajib menyelesaikan akumulasi volume trading minimal <strong>3.0 Standard Lot</strong> (atau 300 Cent Lot) selama 30 hari periode kompetisi.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1076,21 +1332,26 @@ export default function TradingCompetitionPage() {
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">1</span>
-                                Ketentuan Pendaftaran &amp; Saldo Awal
+                                Ketentuan Pendaftaran, Deposit &amp; Tier Fasilitas
                             </h4>
                             <p className="leading-relaxed">
-                                Peserta wajib mendaftar melalui tautan afiliasi resmi di <a href="https://lynk.id/arra7" target="_blank" rel="noopener noreferrer" className="text-amber-600 underline font-bold">https://lynk.id/arra7</a>. Saldo deposit awal minimal adalah <strong>$25 USD</strong>. Peserta diperkenankan mendepositkan nominal lebih besar (misal $50, $100, $500), namun penilaian tetap berbasis persentase keuntungan.
+                                Peserta wajib mendaftar melalui tautan afiliasi resmi di <a href="https://lynk.id/arra7" target="_blank" rel="noopener noreferrer" className="text-amber-600 underline font-bold">https://lynk.id/arra7</a>. Minimal deposit awal adalah <strong>$25 USD</strong>.
                             </p>
+                            <div className="mt-2 text-[11px] space-y-1 text-slate-600">
+                                <div>• <strong>Starter ($25 - $99):</strong> Akses turnamen &amp; leaderboard resmi.</div>
+                                <div>• <strong>Pro Booster ($100 - $249):</strong> FREE Akses Sinyal VVIP PICA 1 Bulan Penuh.</div>
+                                <div>• <strong>VIP Whale ($250+):</strong> Sinyal VVIP + Indikator Pro ARRA 7 + Cashback Rebate 20%.</div>
+                            </div>
                         </div>
 
                         {/* Pasal 2 */}
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">2</span>
-                                Rumus Penentuan Pemenang (ROI %)
+                                Rumus Penentuan Pemenang (ROI % yang Adil)
                             </h4>
                             <p className="leading-relaxed">
-                                Penentuan peringkat 1 dan 2 didasarkan pada <strong>Return on Investment (ROI)</strong> dengan rumus resmi:
+                                Seluruh modal ($25 hingga $1,000+) bersaing setara secara fair. Penentuan peringkat 1 dan 2 didasarkan pada <strong>Return on Investment (ROI)</strong> dengan rumus resmi:
                             </p>
                             <div className="bg-white p-2 rounded-lg font-mono text-center font-bold text-slate-800 my-2 border border-slate-200">
                                 ROI (%) = (Profit Bersih / Total Deposit) × 100%
@@ -1107,7 +1368,7 @@ export default function TradingCompetitionPage() {
                                 Batas Resiko (Maksimal Drawdown 40%)
                             </h4>
                             <p className="leading-relaxed">
-                                Untuk menjaga standar manajemen risiko dan mencegah praktek judi serampangan (*all-in/reckless gambling*), akun yang mengalami <strong>penurunan saldo (*drawdown*) melebihi 40%</strong> dari titik saldo tertinggi otomatis terdiskualifikasi dari perebutan hadiah.
+                                Untuk menjaga standar manajemen risiko dan mencegah judi serampangan (*reckless gambling*), akun yang mengalami <strong>penurunan saldo (*drawdown*) melebihi 40%</strong> dari titik saldo tertinggi otomatis gugur dari perebutan hadiah pada akun tersebut (namun berhak melakukan Re-Entry).
                             </p>
                         </div>
 
@@ -1115,10 +1376,10 @@ export default function TradingCompetitionPage() {
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">4</span>
-                                Syarat Minimum Aktivitas (10 Closed Trades)
+                                Syarat Minimum Turnover Lot (3.0 Lot Standard)
                             </h4>
                             <p className="leading-relaxed">
-                                Peserta wajib menyelesaikan minimal <strong>10 kali transaksi tertutup (*closed trades*)</strong> selama periode kompetisi. Hal ini untuk memastikan peserta membuktikan konsistensi trading aktif, bukan sekadar melakukan 1 transaksi untung-untungan lalu pasif hingga akhir periode.
+                                Untuk sah dinyatakan sebagai Juara 1 atau Juara 2, akun wajib menyelesaikan volume trading akumulasi minimal <strong>3.0 Standard Lot</strong> (atau 300 Cent Lot) dan minimal <strong>10 transaksi tertutup</strong> selama 30 hari. Syarat ini memastikan peserta aktif bertransaksi secara konsisten.
                             </p>
                         </div>
 
@@ -1126,10 +1387,10 @@ export default function TradingCompetitionPage() {
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">5</span>
-                                Instrumen Trading &amp; Gaya Bebas
+                                Fitur Unlimited Re-Entry &amp; Reset Akun
                             </h4>
                             <p className="leading-relaxed">
-                                Peserta diperbolehkan mentradingkan seluruh instrumen yang tersedia di broker (Gold/XAUUSD, Forex Major/Cross, Crypto, Indeks). Diperbolehkan menggunakan teknik manual, Scalping, Day Trading, Swing Trading, maupun Expert Advisor (EA/Robot).
+                                Jika akun Anda mengalami Margin Call (MC) atau gugur karena drawdown &gt; 40%, Anda <strong>diperbolehkan membuka nomor akun FBS baru</strong> di bawah link IB PICA dan mendaftarkan kembali akun baru tersebut (Re-Entry / Reset) tanpa batasan kuota.
                             </p>
                         </div>
 
@@ -1137,26 +1398,21 @@ export default function TradingCompetitionPage() {
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">6</span>
-                                Larangan Kecurangan &amp; Integritas Fair Play
+                                Multi-Akun Resmi (Maksimal 3 Akun)
                             </h4>
                             <p className="leading-relaxed">
-                                Dilarang keras melakukan praktek curang seperti:
+                                1 Peserta diperbolehkan mendaftarkan hingga <strong>3 akun trading sekaligus</strong> dengan gaya trading berbeda (misal: Scalping, Swing, EA). Setiap akun memiliki nomor tiket dan perolehan skor tersendiri di leaderboard. Dilarang melakukan <em>opposite hedging</em> antar akun.
                             </p>
-                            <ul className="list-disc pl-4 space-y-1 mt-1 text-[11px] text-slate-600">
-                                <li>Multi-account opposite hedging (membuka Buy di Akun 1 dan Sell di Akun 2 secara berlawanan).</li>
-                                <li>Penyalahgunaan latency arbitrage atau eksploitasi bug harga broker.</li>
-                                <li>Setiap pelanggaran akan langsung menggugurkan hak kepesertaan.</li>
-                            </ul>
                         </div>
 
                         {/* Pasal 7 */}
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">7</span>
-                                Ketentuan Penarikan (Withdrawal) Dana
+                                Instrumen Trading &amp; Gaya Bebas
                             </h4>
                             <p className="leading-relaxed">
-                                Peserta berhak menarik (*withdraw*) modal atau profit mereka kapan saja dari broker. Namun, penarikan dana di tengah kompetisi akan dihitung mengurangi equity akhir dan mempengaruhi kalkulasi ROI sesuai standar Time-Weighted Return resmi.
+                                Bebas mentradingkan seluruh instrumen (Gold/XAUUSD, Forex Major/Cross, Crypto, Indeks). Diperbolehkan menggunakan teknik manual, Scalping, Day Trading, Swing Trading, maupun Expert Advisor (EA/Robot).
                             </p>
                         </div>
 
@@ -1164,10 +1420,10 @@ export default function TradingCompetitionPage() {
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                             <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center">8</span>
-                                Verifikasi &amp; Distribusi Hadiah
+                                Verifikasi &amp; Distribusi Hadiah Tunai 100%
                             </h4>
                             <p className="leading-relaxed">
-                                Pemenang Juara 1 ($1,000) dan Juara 2 ($500) wajib memberikan password investor / statement resmi untuk diverifikasi oleh tim juri ARRA 7. Hadiah dicairkan maksimal dalam 3×24 jam kerja melalui Transfer Bank Indonesia atau USDT (TRC-20/BEP-20) tanpa potongan biaya.
+                                Pemenang Juara 1 ($1,000) dan Juara 2 ($500) diverifikasi langsung oleh tim juri ARRA 7 melalui Dashboard IB &amp; investor statement. Hadiah uang tunai dicairkan maksimal 3×24 jam via Transfer Bank Indonesia atau USDT tanpa potongan sepeserpun.
                             </p>
                         </div>
                     </div>
@@ -1188,31 +1444,51 @@ export default function TradingCompetitionPage() {
                 <div className="space-y-3 text-xs sm:text-sm">
                     <details className="group bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs open:bg-slate-50/50">
                         <summary className="font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
-                            <span>Apakah saya harus deposit lebih dari $25 untuk bisa menang?</span>
+                            <span>Apakah akun dengan modal kecil ($25) benar-benar adil bisa menang?</span>
                             <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
                         </summary>
                         <p className="text-slate-600 mt-3 leading-relaxed text-xs">
-                            Tidak. Pemenang dinilai dari persentase keuntungan (ROI %). Trader dengan deposit $25 yang berhasil melipatgandakan modal menjadi $75 (ROI +200%) akan berada di atas trader dengan deposit $500 yang menghasilkan profit $100 (ROI +20%).
+                            Ya, 100% fair. Penilaian murni persentase ROI (Return on Investment). Jika modal $25 bertumbuh menjadi $75 (ROI +200%), skornya mengalahkan modal $1,000 yang profit $200 (ROI +20%).
                         </p>
                     </details>
 
                     <details className="group bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs open:bg-slate-50/50">
                         <summary className="font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
-                            <span>Bagaimana cara mendaftarkan nomor akun saya ke Leaderboard?</span>
+                            <span>Bagaimana jika akun saya MC atau loss? Apakah saya boleh ikut lagi?</span>
                             <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
                         </summary>
                         <p className="text-slate-600 mt-3 leading-relaxed text-xs">
-                            Setelah melakukan pendaftaran melalui <a href="https://lynk.id/arra7" target="_blank" rel="noopener noreferrer" className="text-amber-600 underline font-bold">https://lynk.id/arra7</a> dan mendepositkan minimal $25, klik tombol "Kirim ID Akun ke Leaderboard" di website ini atau hubungi WhatsApp admin untuk verifikasi nama dan alias Anda di klasemen.
+                            Sangat boleh! Kami menyediakan fitur <strong>Unlimited Re-Entry</strong>. Anda cukup membuka akun MT5 baru di bawah link IB PICA (<a href="https://lynk.id/arra7" target="_blank" rel="noopener noreferrer" className="text-amber-600 underline font-bold">https://lynk.id/arra7</a>), lakukan deposit, dan daftarkan kembali nomor akun baru tersebut ke form registrasi web dengan memilih opsi "Re-Entry / Reset Akun".
                         </p>
                     </details>
 
                     <details className="group bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs open:bg-slate-50/50">
                         <summary className="font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
-                            <span>Berapa lama periode kompetisi berlangsung?</span>
+                            <span>Berapa batas minimal transaksi lot yang harus dipenuhi?</span>
                             <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
                         </summary>
                         <p className="text-slate-600 mt-3 leading-relaxed text-xs">
-                            Kompetisi berlangsung selama 30 hari kalender. Anda dapat memantau sisa waktu secara langsung melalui timer hitung mundur di bagian atas halaman ini.
+                            Untuk mengklaim Juara 1 atau 2, akun wajib menyelesaikan volume trading akumulasi minimal <strong>3.0 Standard Lot</strong> (atau 300 Cent Lot) selama 30 hari kalender.
+                        </p>
+                    </details>
+
+                    <details className="group bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs open:bg-slate-50/50">
+                        <summary className="font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
+                            <span>Apakah saya boleh mendaftarkan lebih dari satu akun?</span>
+                            <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <p className="text-slate-600 mt-3 leading-relaxed text-xs">
+                            Boleh! Setiap peserta diperbolehkan mendaftarkan maksimal hingga <strong>3 akun trading berbeda</strong> untuk mencoba gaya trading yang berbeda (misal Akun 1 Scalping $25, Akun 2 Swing $100, Akun 3 EA $250).
+                        </p>
+                    </details>
+
+                    <details className="group bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs open:bg-slate-50/50">
+                        <summary className="font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
+                            <span>Apa keuntungan saya deposit $100 atau lebih dibanding hanya $25?</span>
+                            <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <p className="text-slate-600 mt-3 leading-relaxed text-xs">
+                            Dengan deposit $100+ (Tier Pro Booster), Anda langsung mendapatkan <strong>FREE Akses Sinyal VVIP PICA selama 1 bulan penuh</strong> untuk memandu entri dan exit Anda. Selain itu, ketahanan modal Anda jauh lebih kokoh dari batasan drawdown 40% dan target 3.0 lot jauh lebih cepat tercapai!
                         </p>
                     </details>
 
@@ -1222,7 +1498,7 @@ export default function TradingCompetitionPage() {
                             <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
                         </summary>
                         <p className="text-slate-600 mt-3 leading-relaxed text-xs">
-                            Hadiah \$1,000 untuk Juara 1 dan \$500 untuk Juara 2 akan dibayarkan secara langsung melalui rekening Bank BCA/Mandiri/BRI atau transfer USDT (kripto) dalam kurun waktu 3×24 jam setelah sesi audit selesai.
+                            Hadiah \$1,000 untuk Juara 1 dan \$500 untuk Juara 2 dibayarkan 100% tunai tanpa potongan via Rekening Bank (BCA, Mandiri, BRI, dll) atau Crypto USDT (TRC-20/BEP-20) dalam 3×24 jam kerja setelah audit berakhir.
                         </p>
                     </details>
                 </div>
@@ -1308,12 +1584,32 @@ export default function TradingCompetitionPage() {
                                             <strong className="text-slate-900">{regForm.fullName}</strong>
                                         </div>
                                         <div className="flex justify-between items-center text-slate-600">
+                                            <span>Tipe Registrasi:</span>
+                                            <span className="font-bold text-slate-800">
+                                                {regForm.registrationType === 'RE_ENTRY'
+                                                    ? '🔄 Re-Entry (Reset Akun MC)'
+                                                    : regForm.registrationType === 'MULTI_ACCOUNT'
+                                                    ? '🎰 Multi-Akun (Tiket Tambahan)'
+                                                    : '🆕 Pendaftaran Baru'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-slate-600">
                                             <span>Tipe Akun:</span>
                                             <span className="font-semibold text-slate-800">FBS {regForm.fbsAccountType}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-slate-600">
                                             <span>Modal Deposit:</span>
                                             <strong className="text-emerald-600 font-mono">${regForm.depositAmount} USD</strong>
+                                        </div>
+                                        <div className="flex justify-between items-center text-slate-600 border-t border-slate-200 pt-2">
+                                            <span>Fasilitas Aktif:</span>
+                                            <span className="font-extrabold text-[11px] text-amber-700">
+                                                {regForm.depositAmount >= 250
+                                                    ? '👑 VIP Whale (Signal + Bot + Rebate 20%)'
+                                                    : regForm.depositAmount >= 100
+                                                    ? '⭐ Pro Booster (FREE Sinyal VVIP 1 Bulan)'
+                                                    : '🌱 Starter (Turnamen & Leaderboard)'}
+                                            </span>
                                         </div>
                                         <div className="flex justify-between items-center text-slate-600 border-t border-slate-200 pt-2">
                                             <span>Status Verifikasi:</span>
@@ -1347,6 +1643,53 @@ export default function TradingCompetitionPage() {
                                             {submitError}
                                         </div>
                                     )}
+
+                                    {/* PILIHAN TIPE PENDAFTARAN */}
+                                    <div>
+                                        <label className="block font-bold text-slate-700 mb-1">Tipe Pendaftaran</label>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegForm({ ...regForm, registrationType: 'NEW' })}
+                                                className={`py-2 px-1.5 rounded-xl text-center border font-bold text-[11px] transition-all cursor-pointer ${
+                                                    regForm.registrationType === 'NEW'
+                                                        ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                🆕 Akun Baru
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegForm({ ...regForm, registrationType: 'RE_ENTRY' })}
+                                                className={`py-2 px-1.5 rounded-xl text-center border font-bold text-[11px] transition-all cursor-pointer ${
+                                                    regForm.registrationType === 'RE_ENTRY'
+                                                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                🔄 Re-Entry
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegForm({ ...regForm, registrationType: 'MULTI_ACCOUNT' })}
+                                                className={`py-2 px-1.5 rounded-xl text-center border font-bold text-[11px] transition-all cursor-pointer ${
+                                                    regForm.registrationType === 'MULTI_ACCOUNT'
+                                                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                🎰 Multi-Akun
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-1">
+                                            {regForm.registrationType === 'RE_ENTRY'
+                                                ? '🔄 Re-Entry: Akun sebelumnya MC/loss dan Anda buka akun baru untuk reset.'
+                                                : regForm.registrationType === 'MULTI_ACCOUNT'
+                                                ? '🎰 Multi-Akun: Pendaftaran tiket akun ke-2 atau ke-3 Anda.'
+                                                : '🆕 Akun Baru: Pendaftaran peserta pertama kali.'}
+                                        </p>
+                                    </div>
 
                                     <div>
                                         <label className="block font-bold text-slate-700 mb-1">Nama Lengkap / Alias</label>
@@ -1424,6 +1767,46 @@ export default function TradingCompetitionPage() {
                                             Minimal deposit $25 USD di akun FBS Anda.
                                         </p>
                                     </div>
+
+                                    {/* DYNAMIC TIER PREVIEW BOX */}
+                                    {regForm.depositAmount >= 250 ? (
+                                        <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 text-purple-950 text-[11px]">
+                                            <div className="font-extrabold flex items-center gap-1.5 text-purple-800">
+                                                <span>👑</span>
+                                                <span>TIER VIP WHALE AKTIF ($250+)</span>
+                                            </div>
+                                            <p className="mt-1 text-purple-900 leading-tight">
+                                                Anda berhak mendapatkan <strong>FREE Akses Sinyal VVIP PICA + Indikator Pro ARRA 7 + Cashback Rebate Mingguan 20%</strong>!
+                                            </p>
+                                        </div>
+                                    ) : regForm.depositAmount >= 100 ? (
+                                        <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 text-amber-950 text-[11px]">
+                                            <div className="font-extrabold flex items-center gap-1.5 text-amber-800">
+                                                <span>⭐</span>
+                                                <span>TIER PRO BOOSTER AKTIF ($100+)</span>
+                                            </div>
+                                            <p className="mt-1 text-amber-900 leading-tight">
+                                                Selamat! Anda berhak mendapatkan <strong>FREE Akses Sinyal VVIP PICA (1 Bulan Penuh)</strong> untuk memandu profit harian Anda!
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-[11px]">
+                                            <div className="font-bold flex items-center gap-1.5 text-slate-800">
+                                                <span>🌱</span>
+                                                <span>TIER STARTER AKTIF ($25+)</span>
+                                            </div>
+                                            <p className="mt-1 text-slate-600 leading-tight">
+                                                Terdaftar di Live Leaderboard &amp; berhak merebut Juara 1 ($1,000). <br />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRegForm({ ...regForm, depositAmount: 100 })}
+                                                    className="text-amber-700 font-bold underline mt-0.5 inline-block cursor-pointer"
+                                                >
+                                                    Tingkatkan ke $100 untuk klaim Sinyal VVIP Gratis &rarr;
+                                                </button>
+                                            </p>
+                                        </div>
+                                    )}
 
                                     <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] leading-relaxed">
                                         <div className="font-bold flex items-center gap-1.5 mb-1">
