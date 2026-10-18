@@ -1027,6 +1027,31 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
 
       return { membership, createdAt, expiresAt };
     }
+    // Check device_users table (for devices that activated license keys without NextAuth login)
+    const deviceResult = await turso.execute({
+      sql: 'SELECT tier, tier_expires_at, first_seen_at FROM device_users WHERE device_id = ? LIMIT 1',
+      args: [userId],
+    });
+
+    if (deviceResult.rows.length > 0) {
+      let tier = (deviceResult.rows[0].tier as string) || 'BASIC';
+      const createdAt = deviceResult.rows[0].first_seen_at ? new Date(deviceResult.rows[0].first_seen_at as string) : null;
+      const expiresAt = deviceResult.rows[0].tier_expires_at ? new Date(deviceResult.rows[0].tier_expires_at as string) : null;
+
+      if (expiresAt && tier !== 'BASIC') {
+        const now = new Date();
+        if (expiresAt < now) {
+          await turso.execute({
+            sql: "UPDATE device_users SET tier = 'BASIC' WHERE device_id = ?",
+            args: [userId],
+          });
+          tier = 'BASIC';
+        }
+      }
+
+      return { membership: tier, createdAt, expiresAt };
+    }
+
     return { membership: 'BASIC', createdAt: null, expiresAt: null };
   } catch (error) {
     console.error('Get membership error:', error);

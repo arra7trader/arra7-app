@@ -12,9 +12,9 @@ export const PROMO_QUOTA_LIMIT = 10; // 10 analyses per day during promo
 
 // Cooldown duration for each membership tier (in milliseconds)
 export const COOLDOWN_DURATION = {
-    BASIC: 24 * 60 * 60 * 1000,  // 24 hours (1 day) - matches daily quota limit
-    PRO: 5 * 60 * 1000,          // 5 minutes - standard rate limit
-    VVIP: 5 * 60 * 1000,         // 5 minutes - same as PRO
+    BASIC: 60 * 1000,            // 1 minute rate limit
+    PRO: 15 * 1000,              // 15 seconds
+    VVIP: 3 * 1000,              // 3 seconds - instant for VVIP / Full Access
 } as const;
 
 // Stock Analysis Quota limits (same as Forex)

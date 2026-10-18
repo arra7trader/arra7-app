@@ -1,27 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getQuotaStatus } from '@/lib/quota';
-import { resolveMobileUserFromRequest } from '@/lib/mobile-session';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        let userId = session?.user?.id || null;
-
-        if (!userId) {
-            const mobileUser = await resolveMobileUserFromRequest(request, {
-                allowLegacyGoogleIdToken: true,
-            });
-            userId = mobileUser?.userId || null;
-        }
-
-        if (!userId) {
-            return NextResponse.json(
-                { status: 'error', message: 'Not authenticated' },
-                { status: 401 }
-            );
-        }
+        const user = await resolveUserOrDevice(request);
+        const userId = user.userId;
 
         // Check if Turso is configured
         if (!process.env.TURSO_DATABASE_URL) {

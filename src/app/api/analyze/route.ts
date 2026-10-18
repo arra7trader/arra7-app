@@ -5,6 +5,7 @@ import { getMarketData, getBrokerPrice, formatMarketDataForAI, getMultiTimeframe
 import { analyzeWithGroq, MarketContext } from '@/lib/groq-ai';
 import { checkQuota, useQuota as consumeQuota, getQuotaStatus } from '@/lib/quota';
 import { resolveMobileUserFromRequest } from '@/lib/mobile-session';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 type LstmDirection = 'UP' | 'DOWN' | 'NEUTRAL';
 
@@ -262,27 +263,18 @@ function buildMeasuredLstmSignal(data: MarketData, marketContext: MarketContext)
 
 export async function POST(request: NextRequest) {
     try {
-        // Check authentication
-        const session = await getServerSession(authOptions);
-        let userId: string | null = session?.user?.id || null;
+        // Parse request body first to extract deviceId if present
+        const body = await request.json().catch(() => ({}));
+        const { pair, timeframe, broker, deviceId } = body as { 
+            pair: string; 
+            timeframe: string; 
+            broker?: BrokerSource; 
+            deviceId?: string;
+        };
 
-        if (!userId) {
-            const mobileUser = await resolveMobileUserFromRequest(request, {
-                allowLegacyGoogleIdToken: true,
-            });
-            userId = mobileUser?.userId || null;
-        }
-
-        if (!userId) {
-            return NextResponse.json(
-                { status: 'error', message: 'Silakan login terlebih dahulu' },
-                { status: 401 }
-            );
-        }
-
-        // Parse request body
-        const body = await request.json();
-        const { pair, timeframe, broker } = body as { pair: string; timeframe: string; broker?: BrokerSource };
+        // Resolve user or device (grants full access to licensed devices without forced login)
+        const user = await resolveUserOrDevice(request, deviceId);
+        const userId = user.userId;
 
         // Validate pair
         if (!pair || !(pair in FOREX_PAIRS)) {

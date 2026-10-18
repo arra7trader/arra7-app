@@ -530,7 +530,7 @@ export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
     const router = useRouter();
-    const { isVvip: isDeviceVvip, isPro: isDevicePro, openActivation } = usePicaDevice();
+    const { isVvip: isDeviceVvip, isPro: isDevicePro, openActivation, deviceId, tier: deviceTier } = usePicaDevice();
 
     const [selectedCategory, setSelectedCategory] = useState('commodities');
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
@@ -559,7 +559,7 @@ export default function AnalisaMarketPage() {
         fetchQuota();
         fetchTelegramLinkStatus();
         trackLocation();
-    }, []);
+    }, [deviceId]);
 
     // Timestamp-based Countdown Timer (works even when tab is inactive)
     useEffect(() => {
@@ -616,7 +616,10 @@ export default function AnalisaMarketPage() {
 
     const fetchQuota = async () => {
         try {
-            const res = await fetch('/api/user/quota');
+            const queryParam = deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : '';
+            const res = await fetch(`/api/user/quota${queryParam}`, {
+                headers: deviceId ? { 'x-device-id': deviceId } : {},
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setQuotaStatus(data.quota);
@@ -707,11 +710,12 @@ export default function AnalisaMarketPage() {
         try {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...(deviceId ? { 'x-device-id': deviceId } : {}) },
                 body: JSON.stringify({
                     pair: selectedPair,
                     timeframe: selectedTimeframe,
-                    broker: 'swissquote' // Swissquote Bank (real-time, no auth)
+                    broker: 'swissquote',
+                    deviceId: deviceId || undefined
                 }),
             });
 
@@ -757,7 +761,11 @@ export default function AnalisaMarketPage() {
         }
     };
 
-    const isUnlimitedQuota = quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null;
+    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
+    const isVvipMember = uppercaseMembership === 'VVIP' || isDeviceVvip;
+    const isProMember = uppercaseMembership === 'PRO' || isDevicePro || isVvipMember;
+    const isPremiumMember = isVvipMember || isProMember;
+    const isUnlimitedQuota = isVvipMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null;
     const dailyLimitLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.dailyLimit ?? '-');
     const usedLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.used ?? '-');
     const remainingLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.remaining ?? '-');
@@ -766,7 +774,7 @@ export default function AnalisaMarketPage() {
         : Math.min(100, Math.max(0, ((quotaStatus?.used ?? 0) / Math.max(1, quotaStatus?.dailyLimit ?? 1)) * 100));
     const allowedTimeframes = quotaStatus?.allowedTimeframes?.length
         ? quotaStatus.allowedTimeframes.map((tf) => tf.toUpperCase())
-        : [];
+        : (isVvipMember || isProMember) ? ['1M', '5M', '15M', '30M', '1H', '4H', '1D'] : ['5M', '15M'];
     const lastChargeLabel = lastQuotaCharged === null
         ? 'Belum ada analisa'
         : lastQuotaCharged
@@ -801,10 +809,8 @@ export default function AnalisaMarketPage() {
     const vvipAlias = session?.user?.name
         ? session.user.name.split(' ')[0]
         : 'VVIP Member';
-    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || 'BASIC').toUpperCase();
-    const isPremiumMember = uppercaseMembership === 'PRO' || uppercaseMembership === 'VVIP' || isDevicePro || isDeviceVvip;
-    const isProMember = uppercaseMembership === 'PRO' || isDevicePro;
-    const isVvipMember = uppercaseMembership === 'VVIP' || isDeviceVvip;
+
+
     const isQuotaOrLockError = Boolean(
         error && (error.includes("Limit") || error.includes("Quota") || error.includes("Locked") || error.includes("Upgrade") || error.includes("paket") || error.includes("habis"))
     );
@@ -861,7 +867,7 @@ export default function AnalisaMarketPage() {
                             <div>
                                 <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
                                 <p className="text-sm text-[var(--text-secondary)]">
-                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session?.user?.name || 'Trader'}</span>
+                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session?.user?.name || (isVvipMember ? 'VVIP Trader' : isProMember ? 'PRO Trader' : 'Trader')}</span>
                                 </p>
                             </div>
                         </div>
@@ -873,14 +879,26 @@ export default function AnalisaMarketPage() {
                                         <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Info Akun & Kuota</p>
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">Status akses analisa market</p>
                                     </div>
-                                    <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${quotaStatus?.membership === 'VVIP'
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${isVvipMember
                                         ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                                        : quotaStatus?.membership === 'PRO'
+                                        : isProMember
                                             ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                         }`}>
-                                        {quotaStatus?.membership || 'BASIC'}
+                                        {isVvipMember ? '👑 VVIP FULL ACCESS' : isProMember ? '⚡ PRO' : 'BASIC'}
                                     </span>
+                                    {!isVvipMember && (
+                                        <button
+                                            type="button"
+                                            onClick={() => openActivation()}
+                                            className="text-xs px-2.5 py-1 rounded-md font-semibold bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 transition-colors flex items-center gap-1 cursor-pointer"
+                                            title="Aktivasi Kode Lisensi Full Access"
+                                        >
+                                            <span>🔑 Aktivasi Kode</span>
+                                        </button>
+                                    )}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
@@ -1557,6 +1575,18 @@ export default function AnalisaMarketPage() {
                                                                 >
                                                                     <span>Buka Akses Premium</span>
                                                                     <ArrowRightIcon size="sm" className="group-hover:translate-x-1 transition-transform" />
+                                                                </button>
+                                                            )}
+                                                            {!isPremiumMember && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setError(null);
+                                                                        openActivation();
+                                                                    }}
+                                                                    className="w-full py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-amber-400 border border-amber-500/30 font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                                                >
+                                                                    <span>🔑 Punya Kode Lisensi? Aktivasi di Sini</span>
                                                                 </button>
                                                             )}
                                                             <button
