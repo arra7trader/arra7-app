@@ -8,6 +8,7 @@ import {
     ChartIcon,
     FireIcon,
     AcademicCapIcon,
+    CrosshairIcon,
 } from '@/components/PremiumIcons';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
@@ -24,6 +25,17 @@ export default function AppGrid() {
             icon: <BrainIcon size="lg" className="text-blue-600" />,
             href: '/xauusd-neural-lab',
             color: 'bg-blue-100/80 border-blue-300/80',
+            highlight: true,
+        },
+        {
+            id: 'crypto-hunter',
+            label: 'Crypto Hunter',
+            sublabel: 'OG Smart Money Scanner',
+            badge: 'NEW 🔥',
+            badgeColor: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white',
+            icon: <CrosshairIcon size="lg" className="text-emerald-600" />,
+            href: '/crypto-hunter',
+            color: 'bg-emerald-100/80 border-emerald-300/80',
             highlight: true,
         },
         {
@@ -67,7 +79,7 @@ export default function AppGrid() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="w-full max-w-5xl mx-auto mt-6"
             >
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-5 sm:p-6 bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/60">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 p-5 sm:p-6 bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/60">
                     {apps.map((app) => (
                         <Link key={app.id} href={app.href} className="group">
                             <motion.div
