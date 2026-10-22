@@ -192,8 +192,18 @@ export async function redeemLicenseKey(params: {
 
   // 3. Calculate expiration date
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-  const expiresAtIso = expiresAt.toISOString();
+  let expiresAtIso: string;
+  if (row.expires_at) {
+    const existingExpiry = new Date(row.expires_at as string);
+    // If still in the future, retain the existing expiration date so reset doesn't reset period
+    if (existingExpiry.getTime() > now.getTime()) {
+      expiresAtIso = existingExpiry.toISOString();
+    } else {
+      expiresAtIso = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+    }
+  } else {
+    expiresAtIso = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+  }
 
   // 4. Mark key as used & bound to device
   await turso.execute({
@@ -420,3 +430,83 @@ export async function listTrackedDevices(limit: number = 100): Promise<DeviceUse
     totalVisits: Number(row.total_visits) || 1,
   }));
 }
+
+// Admin: Reset a license key's device binding so the member can redeem it on another device (e.g. laptop)
+export async function resetLicenseKeyDevice(code: string): Promise<{
+  success: boolean;
+  message: string;
+  oldDeviceId?: string;
+}> {
+  await ensureLicenseSchema();
+  const turso = getTursoClient();
+  if (!turso) throw new Error('Database is not configured');
+
+  const cleanCode = code.trim().toUpperCase();
+
+  // 1. Fetch license key
+  const keyResult = await turso.execute({
+    sql: `SELECT * FROM license_keys WHERE UPPER(code) = ? LIMIT 1`,
+    args: [cleanCode],
+  });
+
+  if (!keyResult.rows || keyResult.rows.length === 0) {
+    return { success: false, message: 'Kode lisensi tidak valid atau tidak ditemukan.' };
+  }
+
+  const row = keyResult.rows[0];
+  const oldDeviceId = (row.used_by_device_id as string) || '';
+
+  // 2. Reset the key binding (unmark is_used and clear used_by_device_id)
+  await turso.execute({
+    sql: `UPDATE license_keys 
+          SET is_used = 0,
+              used_by_device_id = NULL
+          WHERE UPPER(code) = ?`,
+    args: [cleanCode],
+  });
+
+  // 3. Downgrade previous device if any so access cannot be shared
+  if (oldDeviceId) {
+    await turso.execute({
+      sql: `UPDATE device_users 
+            SET tier = 'BASIC', 
+                active_license_code = NULL 
+            WHERE device_id = ?`,
+      args: [oldDeviceId],
+    });
+
+    // 4. Log unbind event
+    try {
+      await turso.execute({
+        sql: `INSERT INTO device_activity_logs (device_id, path, action, meta)
+              VALUES (?, '/api/admin/license/reset', 'UNBIND_DEVICE_FOR_LAPTOP', ?)`,
+        args: [
+          oldDeviceId,
+          JSON.stringify({ code: cleanCode, timestamp: new Date().toISOString() }),
+        ],
+      });
+    } catch (_) {}
+  }
+
+  return {
+    success: true,
+    message: `Kuncian perangkat untuk kode ${cleanCode} berhasil direset. Member sekarang bisa memasukkan kode ini di laptop.`,
+    oldDeviceId: oldDeviceId || undefined,
+  };
+}
+
+// Admin: Delete a license key
+export async function deleteLicenseKey(code: string): Promise<{ success: boolean; message: string }> {
+  await ensureLicenseSchema();
+  const turso = getTursoClient();
+  if (!turso) throw new Error('Database is not configured');
+
+  const cleanCode = code.trim().toUpperCase();
+  await turso.execute({
+    sql: `DELETE FROM license_keys WHERE UPPER(code) = ?`,
+    args: [cleanCode],
+  });
+
+  return { success: true, message: `Kode ${cleanCode} berhasil dihapus.` };
+}
+

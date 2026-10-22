@@ -15,7 +15,11 @@ import {
   SignalIcon,
   CheckCircleIcon,
   ClipboardIcon,
-  TelegramIcon
+  TelegramIcon,
+  ComputerIcon,
+  TrashIcon,
+  SearchIcon,
+  XIcon
 } from '@/components/PremiumIcons';
 
 export interface LicenseKey {
@@ -306,9 +310,73 @@ export default function LicenseKeyManager() {
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Table filter
+  // Table search & filter
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'AVAILABLE' | 'USED'>('ALL');
   const [filterProduct, setFilterProduct] = useState<string>('ALL');
+
+  // Device reset & deletion state
+  const [resettingCode, setResettingCode] = useState<string | null>(null);
+  const [resetModalKey, setResetModalKey] = useState<LicenseKey | null>(null);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<{ code: string; text: string } | null>(null);
+  const [deletingCode, setDeletingCode] = useState<string | null>(null);
+
+  const handleResetDevice = async (license: LicenseKey) => {
+    try {
+      setResettingCode(license.code);
+      const res = await fetch('/api/admin/license/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: license.code }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setResetModalKey(null);
+        const instructions = `Halo Kak! Kuncian perangkat untuk lisensi Anda sudah berhasil kami reset dari HP. ✅
+
+Silakan langsung aktivasi di LAPTOP:
+1. Buka https://pica.my.id di browser laptop Kakak
+2. Klik tombol "Aktivasi Kode" di pojok kanan atas
+3. Masukkan kode lisensi Anda:
+🔑 ${license.code}
+4. Klik Aktifkan
+
+Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsisten! 🚀`;
+
+        setResetSuccessMessage({
+          code: license.code,
+          text: instructions,
+        });
+        await fetchData();
+      } else {
+        alert(data.message || 'Gagal mereset perangkat');
+      }
+    } catch (err: any) {
+      alert('Error saat mereset perangkat: ' + err.message);
+    } finally {
+      setResettingCode(null);
+    }
+  };
+
+  const handleDeleteKey = async (code: string) => {
+    if (!confirm(`Hapus kode lisensi ${code}? Aksi ini tidak dapat dibatalkan.`)) return;
+    try {
+      setDeletingCode(code);
+      const res = await fetch(`/api/admin/license?code=${encodeURIComponent(code)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        await fetchData();
+      } else {
+        alert(data.message || 'Gagal menghapus kode');
+      }
+    } catch (err: any) {
+      alert('Error saat menghapus kode: ' + err.message);
+    } finally {
+      setDeletingCode(null);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -446,6 +514,13 @@ export default function LicenseKeyManager() {
     if (filterProduct !== 'ALL') {
       const prod = getProductFromNote(k.notes);
       if (prod !== filterProduct) return false;
+    }
+    if (searchKeyword.trim()) {
+      const q = searchKeyword.toLowerCase().trim();
+      const matchCode = k.code.toLowerCase().includes(q);
+      const matchNote = (k.notes || '').toLowerCase().includes(q);
+      const matchDevice = (k.usedByDeviceId || '').toLowerCase().includes(q);
+      if (!matchCode && !matchNote && !matchDevice) return false;
     }
     return true;
   });
@@ -755,6 +830,58 @@ export default function LicenseKeyManager() {
 
           {/* ══════ FILTER & TABLE ══════ */}
           <div>
+            {/* Reset Success Banner */}
+            <AnimatePresence>
+              {resetSuccessMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs space-y-2 mb-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold text-emerald-800">
+                      <CheckCircleIcon size="sm" className="text-emerald-600" />
+                      <span>Kuncian Perangkat Kode {resetSuccessMessage.code} Berhasil Direset!</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setResetSuccessMessage(null)}
+                      className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
+                    >
+                      <XIcon size="xs" />
+                    </button>
+                  </div>
+                  <p className="text-slate-600">
+                    Status kode sekarang <b>Ready</b> dan kuncian HP sudah dilepas. Member bisa langsung memasukkan kode ini di laptop.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(resetSuccessMessage.text);
+                        setCopiedKey(resetSuccessMessage.code + '_reset_chat');
+                        setTimeout(() => setCopiedKey(null), 2500);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition-colors"
+                    >
+                      {copiedKey === resetSuccessMessage.code + '_reset_chat' ? (
+                        <>
+                          <CheckIcon size="xs" />
+                          <span>Pesan Laptop Tersalin!</span>
+                        </>
+                      ) : (
+                        <>
+                          <TelegramIcon size="xs" />
+                          <span>Salin Format WhatsApp untuk Member</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               {/* Product Filter Tabs */}
               <div className="flex flex-wrap items-center gap-1.5">
@@ -808,8 +935,28 @@ export default function LicenseKeyManager() {
                 </button>
               </div>
 
-              {/* Status Filter */}
-              <div className="flex items-center gap-2">
+              {/* Status & Search Filter */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-[200px]">
+                  <SearchIcon size="xs" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    placeholder="Cari kode / nama pembeli..."
+                    className="w-full pl-8 pr-7 py-1 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                  />
+                  {searchKeyword && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchKeyword('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <XIcon size="xs" />
+                    </button>
+                  )}
+                </div>
+
                 <button
                   onClick={() => setFilterStatus('ALL')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
@@ -837,7 +984,7 @@ export default function LicenseKeyManager() {
 
                 <button
                   onClick={fetchData}
-                  className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1 ml-2"
+                  className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1 ml-1"
                 >
                   <RefreshIcon size="xs" />
                   <span>Refresh</span>
@@ -911,6 +1058,17 @@ export default function LicenseKeyManager() {
                           </td>
                           <td className="p-3 text-right">
                             <div className="flex items-center justify-end gap-1.5">
+                              {k.isUsed && (
+                                <button
+                                  type="button"
+                                  onClick={() => setResetModalKey(k)}
+                                  className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold cursor-pointer text-[11px] inline-flex items-center gap-1 transition-colors shadow-2xs"
+                                  title="Lepas kuncian HP agar member bisa aktivasi di laptop"
+                                >
+                                  <ComputerIcon size="xs" />
+                                  <span>Pindah Laptop</span>
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => handleCopy(k.code)}
@@ -925,6 +1083,15 @@ export default function LicenseKeyManager() {
                                 title="Salin template chat WA/Telegram khusus produk ini"
                               >
                                 {copiedKey === k.code + '_chat' ? 'Tersalin!' : 'Format Chat'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteKey(k.code)}
+                                disabled={deletingCode === k.code}
+                                className="p-1 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                title="Hapus lisensi ini"
+                              >
+                                <TrashIcon size="xs" />
                               </button>
                             </div>
                           </td>
@@ -1010,6 +1177,90 @@ export default function LicenseKeyManager() {
           </div>
         </div>
       )}
+      {/* ══════ MODAL RESET PERANGKAT / PINDAH KE LAPTOP ══════ */}
+      <AnimatePresence>
+        {resetModalKey && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-200 space-y-5"
+            >
+              <div className="flex items-center gap-3">
+                <span className="p-3 rounded-2xl bg-amber-100 text-amber-700 inline-flex items-center justify-center">
+                  <ComputerIcon size="md" />
+                </span>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 font-['Space_Grotesk']">
+                    Pindahkan Lisensi ke Laptop
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Lepaskan kuncian perangkat HP agar member bisa aktivasi di laptop
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Kode Lisensi:</span>
+                  <span className="font-mono font-bold text-slate-900 select-all">{resetModalKey.code}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Perangkat HP:</span>
+                  <span className="font-mono text-[11px] text-slate-600 truncate max-w-[200px]" title={resetModalKey.usedByDeviceId || '-'}>
+                    {resetModalKey.usedByDeviceId || '-'}
+                  </span>
+                </div>
+                {resetModalKey.notes && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Pembeli / Catatan:</span>
+                    <span className="text-slate-700 font-medium truncate max-w-[200px]">{resetModalKey.notes}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-900 leading-relaxed">
+                💡 <b>Yang akan terjadi:</b>
+                <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px] text-amber-800">
+                  <li>Kuncian pada HP member akan dilepaskan (HP kembali ke Basic).</li>
+                  <li>Status kode lisensi kembali <b>Ready</b>.</li>
+                  <li>Member tinggal memasukkan kode ini di browser laptopnya via tombol <i>Aktivasi Kode</i>.</li>
+                </ul>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setResetModalKey(null)}
+                  disabled={resettingCode === resetModalKey.code}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleResetDevice(resetModalKey)}
+                  disabled={resettingCode === resetModalKey.code}
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  {resettingCode === resetModalKey.code ? (
+                    <>
+                      <RefreshIcon size="xs" className="animate-spin" />
+                      <span>Mereset...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ComputerIcon size="xs" />
+                      <span>Ya, Lepas Kunci &amp; Pindah ke Laptop</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
