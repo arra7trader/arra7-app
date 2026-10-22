@@ -402,7 +402,24 @@ export const Square2StackIcon: React.FC<IconProps> = ({ className = '', size = '
     </svg>
 );
 
+// Institutional Crypto Hunter Icon - Radar Target Scope + Faceted Crypto Gem
+export const CryptoHunterIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        {/* Radar Compass Reticle Crosshairs */}
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 1.75v2.5m0 15.5v2.5M1.75 12h2.5m15.5 0h2.5" />
+        {/* Outer Circular Radar Scope */}
+        <circle cx="12" cy="12" r="8.25" strokeLinecap="round" />
+        {/* Precision Targeting Diamond Gem */}
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.5l3.5 4-3.5 7-3.5-7 3.5-4z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 10.5h7" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.5v11" />
+        {/* Radar Satellite Sweep Node */}
+        <circle cx="16.5" cy="7.5" r="1" fill="currentColor" />
+    </svg>
+);
+
 export const IconMap = {
+    cryptoHunter: CryptoHunterIcon,
     chart: ChartIcon,
     trendUp: TrendUpIcon,
     trendDown: TrendDownIcon,
