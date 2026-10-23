@@ -26,6 +26,12 @@ export interface TokenSnapshot {
   snapshotTier: number;
   snapshotBuySellRatio: number;
   snapshotVmcRatio: number;
+  latestPrice?: number;
+  latestMarketCap?: number;
+  latestLiquidity?: number;
+  latestHolders?: number;
+  latestOgScore?: number;
+  latestVolume24h?: number;
   detectedAt: string;
   lastUpdatedAt: string;
   updateCount: number;
@@ -126,6 +132,12 @@ export function processTokenBatch(tokens: CryptoToken[]): Map<string, TokenSnaps
         snapshotTier: token.tier,
         snapshotBuySellRatio: token.buySellRatio,
         snapshotVmcRatio: token.vmcRatio,
+        latestPrice: token.priceUsd,
+        latestMarketCap: token.marketCap,
+        latestLiquidity: token.liquidity,
+        latestHolders: token.holders,
+        latestOgScore: token.ogScore,
+        latestVolume24h: token.volume24h,
         detectedAt: now,
         lastUpdatedAt: now,
         updateCount: 1,
@@ -141,6 +153,12 @@ export function processTokenBatch(tokens: CryptoToken[]): Map<string, TokenSnaps
       existing.updateCount += 1;
       existing.name = token.name;
       existing.imageUrl = token.imageUrl || existing.imageUrl;
+      existing.latestPrice = token.priceUsd;
+      existing.latestMarketCap = token.marketCap;
+      existing.latestLiquidity = token.liquidity;
+      existing.latestHolders = token.holders;
+      existing.latestOgScore = token.ogScore;
+      existing.latestVolume24h = token.volume24h;
 
       if (token.priceUsd > existing.peakPrice) {
         existing.peakPrice = token.priceUsd;
@@ -240,51 +258,47 @@ export function calculatePerformance(token: CryptoToken, snapshot: TokenSnapshot
   };
 }
 
-export function getTopPerformers(currentTokens: CryptoToken[], limit: number = 20): Array<{
+export function getTopPerformers(currentTokens: CryptoToken[], limit: number = 20, trackedSnapshots?: TokenSnapshot[]): Array<{
   token: CryptoToken;
   snapshot: TokenSnapshot;
   performance: PerformanceMetrics;
 }> {
-  const snapshots = getSnapshots();
+  const snapshots = trackedSnapshots
+    ? new Map(trackedSnapshots.map(snapshot => [getKey(snapshot.address, snapshot.chain), snapshot]))
+    : getSnapshots();
   const results: Array<{ token: CryptoToken; snapshot: TokenSnapshot; performance: PerformanceMetrics; }> = [];
 
-  for (const token of currentTokens) {
-    const key = getKey(token.address, token.chain);
-    const snapshot = snapshots.get(key);
-    if (snapshot && snapshot.updateCount > 1) {
-      const performance = calculatePerformance(token, snapshot);
-      results.push({ token, snapshot, performance });
-    }
-  }
+  const currentByKey = new Map(currentTokens.map(token => [getKey(token.address, token.chain), token]));
 
-  for (const [, snapshot] of snapshots) {
-    if (snapshot.peakMultiplier >= 2 && !results.find(r => r.snapshot.address === snapshot.address && r.snapshot.chain === snapshot.chain)) {
+  for (const [key, snapshot] of snapshots) {
+    const token = currentByKey.get(key) || (() => {
       const lastHistory = snapshot.priceHistory[snapshot.priceHistory.length - 1];
-      if (lastHistory) {
-        const pseudoToken: CryptoToken = {
+      if (!lastHistory) return null;
+      return {
           address: snapshot.address,
           chain: snapshot.chain,
           name: snapshot.name,
           symbol: snapshot.symbol,
-          marketCap: lastHistory.marketCap,
-          priceUsd: lastHistory.price,
-          liquidity: 0,
-          volume24h: 0,
+          marketCap: snapshot.latestMarketCap ?? lastHistory.marketCap,
+          priceUsd: snapshot.latestPrice ?? lastHistory.price,
+          liquidity: snapshot.latestLiquidity ?? snapshot.snapshotLiquidity,
+          volume24h: snapshot.latestVolume24h ?? snapshot.snapshotVolume24h,
           priceChange5m: 0, priceChange1h: 0, priceChange6h: 0, priceChange24h: 0,
-          holders: 0, holderGrowthRate: 0,
+          holders: snapshot.latestHolders ?? snapshot.snapshotHolders, holderGrowthRate: 0,
           age: (Date.now() - new Date(snapshot.detectedAt).getTime()) / 60000,
           vmcRatio: 0, buySellRatio: 50,
-          ogScore: snapshot.snapshotOgScore,
+          ogScore: snapshot.latestOgScore ?? snapshot.snapshotOgScore,
           tier: snapshot.snapshotTier as any,
           security: { mintRevoked: null, freezeRevoked: null, lpBurned: false, lpLocked: false, lpLockDuration: null, isHoneypot: null, buyTax: null, sellTax: null, isOpenSource: null, devHoldingPercent: null, top10HoldingPercent: null, bundlePercent: null, rugcheckScore: 'Unknown', securityScore: 5 },
           smartMoney: { smartWalletCount: 0, totalSmartMoneyInvested: 0, avgSmartWalletWinRate: 0, firstSmartBuyTime: null, smartMoneyScore: 0 },
           poolAddress: '', pairUrl: '', createdAt: snapshot.detectedAt,
           txCount24h: 0, buyCount24h: 0, sellCount24h: 0,
           imageUrl: snapshot.imageUrl,
-        };
-        const performance = calculatePerformance(pseudoToken, snapshot);
-        results.push({ token: pseudoToken, snapshot, performance });
-      }
+        } satisfies CryptoToken;
+    })();
+    if (token) {
+      const performance = calculatePerformance(token, snapshot);
+      results.push({ token, snapshot, performance });
     }
   }
 
@@ -297,7 +311,7 @@ export function getTokenSnapshot(address: string, chain: ChainType): TokenSnapsh
   return snapshots.get(getKey(address, chain)) || null;
 }
 
-export function getTrackerStats(): {
+export function getTrackerStats(trackedSnapshots?: TokenSnapshot[]): {
   totalTracked: number;
   totalRockets: number;
   totalPumping: number;
@@ -305,7 +319,9 @@ export function getTrackerStats(): {
   bestMultiplier: number;
   bestToken: string;
 } {
-  const snapshots = getSnapshots();
+  const snapshots = trackedSnapshots
+    ? new Map(trackedSnapshots.map(snapshot => [getKey(snapshot.address, snapshot.chain), snapshot]))
+    : getSnapshots();
   let totalRockets = 0;
   let totalPumping = 0;
   let totalGrowing = 0;

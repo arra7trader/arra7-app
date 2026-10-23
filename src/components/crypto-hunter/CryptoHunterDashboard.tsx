@@ -34,6 +34,22 @@ export default function CryptoHunterDashboard() {
   const [snapshots, setSnapshots] = useState<Map<string, TokenSnapshot>>(new Map());
   const [trackerStats, setTrackerStats] = useState({ totalTracked: 0, totalRockets: 0, totalPumping: 0, totalGrowing: 0, bestMultiplier: 0, bestToken: '' });
 
+  const refreshTracker = useCallback(async () => {
+    try {
+      const res = await fetch('/api/crypto-hunter/tracker');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.snapshots)) {
+        const savedSnapshots = new Map<string, TokenSnapshot>(
+          data.snapshots.map((snapshot: TokenSnapshot) => [`${snapshot.chain}:${snapshot.address}`, snapshot])
+        );
+        setSnapshots(savedSnapshots);
+        setTrackerStats(getTrackerStats(data.snapshots));
+      }
+    } catch {
+      // Keep the browser-local tracker available when the shared store is unreachable.
+    }
+  }, []);
+
   // Load watchlist from localStorage
   useEffect(() => {
     try {
@@ -74,18 +90,22 @@ export default function CryptoHunterDashboard() {
         setTokens(data.tokens);
         setLastUpdate(new Date());
         // Process snapshots for performance tracking
-        const newSnapshots = processTokenBatch(data.tokens);
+        const localSnapshots = processTokenBatch(data.tokens);
+        const newSnapshots = Array.isArray(data.snapshots)
+          ? new Map<string, TokenSnapshot>(data.snapshots.map((snapshot: TokenSnapshot) => [`${snapshot.chain}:${snapshot.address}`, snapshot]))
+          : localSnapshots;
         setSnapshots(newSnapshots);
-        setTrackerStats(getTrackerStats());
+        setTrackerStats(Array.isArray(data.snapshots) ? getTrackerStats(data.snapshots) : getTrackerStats());
+        if (!Array.isArray(data.snapshots)) void refreshTracker();
       } else {
         setError(data.error || 'Failed to fetch tokens');
       }
     } catch (err) {
-      setError('Network error â€” API tidak dapat diakses');
+      setError('Network error - API tidak dapat diakses');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, refreshTracker]);
 
   // Fetch trending
   const fetchTrending = useCallback(async () => {
@@ -95,9 +115,16 @@ export default function CryptoHunterDashboard() {
       const data = await res.json();
       if (data.success) {
         setTrendingTokens(data.tokens);
+        const localSnapshots = processTokenBatch(data.tokens);
+        const newSnapshots = Array.isArray(data.snapshots)
+          ? new Map<string, TokenSnapshot>(data.snapshots.map((snapshot: TokenSnapshot) => [`${snapshot.chain}:${snapshot.address}`, snapshot]))
+          : localSnapshots;
+        setSnapshots(newSnapshots);
+        setTrackerStats(Array.isArray(data.snapshots) ? getTrackerStats(data.snapshots) : getTrackerStats());
+        if (!Array.isArray(data.snapshots)) void refreshTracker();
       }
     } catch {}
-  }, [filters.chain]);
+  }, [filters.chain, refreshTracker]);
 
   // Initial fetch
   useEffect(() => {
@@ -134,7 +161,7 @@ export default function CryptoHunterDashboard() {
 
   // Get performance data for a token
   const getPerformance = (token: CryptoToken): PerformanceMetrics | null => {
-    const snapshot = getTokenSnapshot(token.address, token.chain);
+    const snapshot = snapshots.get(`${token.chain}:${token.address}`) || getTokenSnapshot(token.address, token.chain);
     if (!snapshot || snapshot.updateCount < 2) return null;
     return calculatePerformance(token, snapshot);
   };
@@ -177,7 +204,7 @@ export default function CryptoHunterDashboard() {
               <span>Crypto Hunter</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              OG Smart Money Scanner â€” Temukan Crypto Gems Sebelum Meledak
+              OG Smart Money Scanner - Temukan Crypto Gems Sebelum Meledak
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -213,11 +240,11 @@ export default function CryptoHunterDashboard() {
             <span className="text-xs font-bold text-slate-800">{tokens.length}</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200/80 shadow-xs">
-            <span className="text-[10px]">ðŸ’Ž</span>
+            <span className="text-[10px]">💎</span>
             <span className="text-xs font-bold text-cyan-800">{diamondCount} Diamond</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200/80 shadow-xs">
-            <span className="text-[10px]">ðŸ”¥</span>
+            <span className="text-[10px]">🔥</span>
             <span className="text-xs font-bold text-orange-800">{hotCount} Hot</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
@@ -226,13 +253,13 @@ export default function CryptoHunterDashboard() {
           </div>
           {trackerStats.totalRockets > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 shadow-xs">
-              <span className="text-[10px]">ðŸš€</span>
+              <span className="text-[10px]">🚀</span>
               <span className="text-xs font-bold text-emerald-800">{trackerStats.totalRockets} Rockets</span>
             </div>
           )}
           {trackerStats.bestMultiplier > 1.5 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 shadow-xs">
-              <span className="text-[10px]">ðŸ‘‘</span>
+              <span className="text-[10px]">👑</span>
               <span className="text-xs font-bold text-amber-800">Best: {trackerStats.bestMultiplier.toFixed(1)}x ${trackerStats.bestToken}</span>
             </div>
           )}
@@ -248,10 +275,10 @@ export default function CryptoHunterDashboard() {
 
         {/* Tab Navigation */}
         <div className="flex items-center gap-1.5 mb-4">
-          <TabButton active={activeTab === 'live'} onClick={() => setActiveTab('live')} emoji="ðŸ”¥" label="Live Feed" count={tokens.length} />
-          <TabButton active={activeTab === 'trending'} onClick={() => setActiveTab('trending')} emoji="ðŸš€" label="Trending" count={trendingTokens.length} />
-          <TabButton active={activeTab === 'watchlist'} onClick={() => setActiveTab('watchlist')} emoji="â­" label="Watchlist" count={watchlist.length} />
-          <TabButton active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} emoji="ðŸ“ˆ" label="Before/After" count={trackerStats.totalTracked} />
+          <TabButton active={activeTab === 'live'} onClick={() => setActiveTab('live')} emoji="🔥" label="Live Feed" count={tokens.length} />
+          <TabButton active={activeTab === 'trending'} onClick={() => setActiveTab('trending')} emoji="🚀" label="Trending" count={trendingTokens.length} />
+          <TabButton active={activeTab === 'watchlist'} onClick={() => setActiveTab('watchlist')} emoji="⭐" label="Watchlist" count={watchlist.length} />
+          <TabButton active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} emoji="📈" label="Before/After" count={trackerStats.totalTracked} />
         </div>
 
         {/* Search & Filters Row */}
@@ -302,7 +329,7 @@ export default function CryptoHunterDashboard() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center py-20 gap-4"
           >
-            <div className="text-4xl">âš ï¸</div>
+            <div className="text-4xl">⚠️</div>
             <div className="text-center">
               <p className="text-sm font-bold text-red-700">{error}</p>
               <button
@@ -321,7 +348,7 @@ export default function CryptoHunterDashboard() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center py-20 gap-4"
           >
-            <div className="text-4xl">ðŸ”</div>
+            <div className="text-4xl">🔍</div>
             <div className="text-center">
               <p className="text-sm font-bold text-slate-700">
                 {activeTab === 'watchlist' ? 'Watchlist kosong' : 'Tidak ada token ditemukan'}
@@ -342,8 +369,8 @@ export default function CryptoHunterDashboard() {
             {/* Performance Leaderboard Header */}
             <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80">
               <h3 className="text-sm font-black text-emerald-900 flex items-center gap-2">
-                <span>ðŸ†</span>
-                <span>Performance Leaderboard â€” Before vs After</span>
+                <span>🏆</span>
+                <span>Performance Leaderboard - Before vs After</span>
               </h3>
               <p className="text-[11px] text-emerald-700 mt-1">
                 Semua token yang terdeteksi scanner dilacak performanya. Berikut ranking berdasarkan kenaikan Market Cap sejak pertama terdeteksi.
@@ -352,11 +379,11 @@ export default function CryptoHunterDashboard() {
 
             {/* Top Performers List */}
             {(() => {
-              const topPerformers = getTopPerformers([...tokens, ...trendingTokens]);
+              const topPerformers = getTopPerformers([...tokens, ...trendingTokens], 20, Array.from(snapshots.values()));
               if (topPerformers.length === 0) {
                 return (
                   <div className="text-center py-12">
-                    <div className="text-3xl mb-2">ðŸ“Š</div>
+                    <div className="text-3xl mb-2">📊</div>
                     <p className="text-sm font-bold text-slate-700">Belum ada data performa</p>
                     <p className="text-xs text-slate-400 mt-1">Data akan muncul setelah scanner mendeteksi token dan melacak perubahannya seiring waktu</p>
                   </div>
@@ -381,7 +408,7 @@ export default function CryptoHunterDashboard() {
                           idx === 2 ? 'bg-orange-100 text-orange-800' :
                           'bg-slate-100 text-slate-600'
                         }`}>
-                          {idx < 3 ? ['ðŸ¥‡', 'ðŸ¥ˆ', 'ðŸ¥‰'][idx] : `#${idx + 1}`}
+                          {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : `#${idx + 1}`}
                         </div>
                         {/* Token Info */}
                         <div className="flex-1 min-w-0">
@@ -399,7 +426,7 @@ export default function CryptoHunterDashboard() {
                         </div>
                       </div>
                       {/* Before/After Mini */}
-                      <div className="grid grid-cols-3 gap-2 text-[10px]">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px]">
                         <div className="p-1.5 rounded-lg bg-slate-50">
                           <div className="text-slate-400">MC Awal</div>
                           <div className="font-bold text-slate-600">{formatNumber(item.snapshot.snapshotMarketCap)}</div>
@@ -411,6 +438,31 @@ export default function CryptoHunterDashboard() {
                         <div className={`p-1.5 rounded-lg ${item.performance.mcMultiplier >= 1 ? 'bg-emerald-50' : 'bg-red-50'}`}>
                           <div className="text-slate-400">Peak</div>
                           <div className={`font-bold ${item.performance.mcMultiplier >= 1 ? 'text-emerald-700' : 'text-red-700'}`}>{item.performance.peakMultiplier.toFixed(1)}x</div>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <div className="text-slate-400">Harga Awal / Terbaru</div>
+                          <div className="font-bold text-slate-700">${item.snapshot.snapshotPrice.toExponential(2)} / ${item.token.priceUsd.toExponential(2)}</div>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <div className="text-slate-400">Likuiditas Awal / Terbaru</div>
+                          <div className="font-bold text-slate-700">{formatNumber(item.snapshot.snapshotLiquidity)} / {formatNumber(item.token.liquidity)}</div>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <div className="text-slate-400">Volume 24j Awal / Terbaru</div>
+                          <div className="font-bold text-slate-700">{formatNumber(item.snapshot.snapshotVolume24h)} / {formatNumber(item.token.volume24h)}</div>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <div className="text-slate-400">Holders Awal / Terbaru</div>
+                          <div className="font-bold text-slate-700">{item.snapshot.snapshotHolders.toLocaleString()} / {item.token.holders.toLocaleString()}</div>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <div className="text-slate-400">OG Score Awal / Terbaru</div>
+                          <div className="font-bold text-slate-700">{item.snapshot.snapshotOgScore} / {item.token.ogScore}</div>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <div className="text-slate-400">Deteksi / Pembaruan</div>
+                          <div className="font-bold text-slate-700">{new Date(item.snapshot.detectedAt).toLocaleString('id-ID')}</div>
+                          <div className="text-slate-500">Update {item.snapshot.updateCount}x · Terakhir {new Date(item.snapshot.lastUpdatedAt).toLocaleTimeString('id-ID')}</div>
                         </div>
                       </div>
                     </motion.div>
@@ -450,7 +502,7 @@ export default function CryptoHunterDashboard() {
         className="mt-8 p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-center"
       >
         <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
-          âš ï¸ <strong>DISCLAIMER:</strong> Crypto Hunter adalah alat ANALISIS dan RISET. Semua informasi bersifat edukatif dan BUKAN merupakan saran investasi. Trading cryptocurrency memiliki risiko sangat tinggi â€” Anda bisa kehilangan seluruh modal. Selalu lakukan riset mandiri (DYOR) dan hanya investasikan uang yang siap Anda kehilangan.
+          ⚠️ <strong>DISCLAIMER:</strong> Crypto Hunter adalah alat ANALISIS dan RISET. Semua informasi bersifat edukatif dan BUKAN merupakan saran investasi. Trading cryptocurrency memiliki risiko sangat tinggi - Anda bisa kehilangan seluruh modal. Selalu lakukan riset mandiri (DYOR) dan hanya investasikan uang yang siap Anda kehilangan.
         </p>
       </motion.div>
 
