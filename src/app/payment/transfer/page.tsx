@@ -90,7 +90,7 @@ function TransferContent() {
     const requiresTelegramUsername = plan?.id === 'TELEBOT';
     const hasBuyerInfo = Boolean(session) || (guestName.trim().length > 0 && guestContact.trim().length > 0);
     const canConfirmPayment = (!requiresTelegramUsername || normalizedTelegramUsername.length > 0) && hasBuyerInfo;
-    const telebotBonusPageUrl = 'https://arra7-app.vercel.app/telebot-bonus';
+    const telebotBonusPageUrl = 'https://pica.my.id/telebot-bonus';
 
     const buyerName = session?.user?.name || guestName.trim() || 'Pembeli';
     const buyerContact = session?.user?.email || guestContact.trim() || '-';

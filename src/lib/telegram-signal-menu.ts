@@ -38,7 +38,7 @@ function formatQuota(limit: number) {
 }
 
 function getTelebotShortUrl() {
-  const baseUrl = (process.env.NEXTAUTH_URL || 'https://arra7-app.vercel.app').replace(/\/$/, '');
+  const baseUrl = (process.env.NEXTAUTH_URL || 'https://pica.my.id').replace(/\/$/, '');
   return `${baseUrl}/telebot`;
 }
 
@@ -140,7 +140,7 @@ function formatZone(symbol: string, priceA: number, priceB: number) {
 }
 
 function getPublicBaseUrl() {
-  const raw = (process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://arra7-app.vercel.app').replace(/\/$/, '');
+  const raw = (process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://pica.my.id').replace(/\/$/, '');
   return /^https?:\/\//i.test(raw) ? raw.replace(/^https?:\/\//i, (protocol) => protocol.toLowerCase()) : `https://${raw}`;
 }
 

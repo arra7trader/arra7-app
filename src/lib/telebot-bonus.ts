@@ -51,7 +51,7 @@ export function getTelebotBonusVideoConfig() {
 export function getTelebotBonusPageUrl() {
   const baseUrl =
     process.env.NEXTAUTH_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://arra7-app.vercel.app');
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://pica.my.id');
   return `${baseUrl.replace(/\/$/, '')}/telebot-bonus`;
 }
 

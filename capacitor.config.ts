@@ -5,11 +5,11 @@ const config: CapacitorConfig = {
   appName: 'ARRA7',
   webDir: 'out',
   server: {
-    url: 'https://arra7-app.vercel.app',
+    url: 'https://pica.my.id',
     cleartext: true,
     // Handle all navigation inside the app
     androidScheme: 'https',
-    hostname: 'arra7-app.vercel.app'
+    hostname: 'pica.my.id'
   },
   android: {
     backgroundColor: '#0A0E14',

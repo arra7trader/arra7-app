@@ -197,7 +197,7 @@ Budi menemukan <b>Copytrade ARRA77</b>:
 Modal kecil bisa profit besar. Mulai sekarang!
 
 🔗 <b>Daftar Gratis:</b>
-https://arra7-app.vercel.app/copytrade
+https://pica.my.id/copytrade
 
 💰 <b>Biaya:</b> 1 signal = 3 credits (Rp 3.000)
 
@@ -211,7 +211,7 @@ https://arra7-app.vercel.app/copytrade
 <b>🎯 STEP 1: DAFTAR (5 MENIT)</b>
 ━━━━━━━━━━━━━━━━━━━━
 
-1. Buka https://arra7-app.vercel.app
+1. Buka https://pica.my.id
 2. Login/Register akun
 3. Menu "Copytrade" → "Create Profile"
 4. Isi nama & email → Submit
@@ -279,7 +279,7 @@ Dashboard menampilkan:
 • Top up sebelum habis
 
 🔗 <b>MULAI SEKARANG:</b>
-https://arra7-app.vercel.app/copytrade
+https://pica.my.id/copytrade
 
 #Tutorial #Copytrade #StepByStep #MT5`,
 
@@ -297,7 +297,7 @@ A:
 
 <b>Q3: Bagaimana cara daftar?</b>
 A: 
-1. Login di https://arra7-app.vercel.app
+1. Login di https://pica.my.id
 2. Menu Copytrade → Create Profile
 3. Generate License Key
 4. Install EA di MT5
@@ -335,7 +335,7 @@ A: Hubungi admin untuk penarikan saldo.
 <b>🚀 SIAP MULAI?</b>
 
 Panduan lengkap tersedia di:
-🔗 https://arra7-app.vercel.app/copytrade
+🔗 https://pica.my.id/copytrade
 
 <b>💬 Butuh bantuan?</b>
 DM admin via Telegram!
@@ -357,7 +357,7 @@ DM admin via Telegram!
 ━━━━━━━━━━━━━━━━━━━━
 <b>📋 REGISTRATION (Hari 1)</b>
 ━━━━━━━━━━━━━━━━━━━━
-□ Daftar di https://arra7-app.vercel.app
+□ Daftar di https://pica.my.id
 □ Login ke akun
 □ Menu "Copytrade"
 □ Create Profile (isi nama & email)
@@ -429,7 +429,7 @@ Anda sekarang copytrader aktif!
 • Fokus pada long-term consistency
 
 🔗 <b>Start Now:</b>
-https://arra7-app.vercel.app/copytrade
+https://pica.my.id/copytrade
 
 #Checklist #Copytrade #TradingPlan #Success`,
 
@@ -508,7 +508,7 @@ Day 30: Scale Up! 🚀
 
 <b>🎯 READY TO START?</b>
 
-🔗 https://arra7-app.vercel.app/copytrade
+🔗 https://pica.my.id/copytrade
 
 #VisualGuide #Infographic #Copytrade #EasyStart`,
 
@@ -570,7 +570,7 @@ Provider terbaik = yang konsisten 6-12 bulan.
 ━━━━━━━━━━━━━━━━━━━━
 
 <b>🚀 START SMART:</b>
-https://arra7-app.vercel.app/copytrade
+https://pica.my.id/copytrade
 
 #Mistakes #Copytrade #TradingTips #LearnFromOthers`,
 
@@ -683,7 +683,7 @@ https://arra7-app.vercel.app/copytrade
 ━━━━━━━━━━━━━━━━━━━━
 
 <b>🚀 START YOUR JOURNEY:</b>
-https://arra7-app.vercel.app/copytrade
+https://pica.my.id/copytrade
 
 <b>💬 Need Help?</b>
 Admin support via Telegram!

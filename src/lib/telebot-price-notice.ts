@@ -11,7 +11,7 @@ const TELEBOT_LIFETIME_LAST_OLD_PRICE_DAY = '18 April 2026';
 const TELEBOT_LIFETIME_RISE_DATE_LABEL = '19 April 2026';
 const TELEBOT_LIFETIME_NEW_PRICE_LABEL = 'Rp425.000';
 const TELEBOT_LIFETIME_CURRENT_PRICE_LABEL = 'Rp375.000';
-const TELEBOT_PAGE_URL = 'https://arra7-app.vercel.app/telebot';
+const TELEBOT_PAGE_URL = 'https://pica.my.id/telebot';
 
 export const TELEBOT_LIFETIME_PRICE_NOTICE_CAMPAIGN_KEY = 'telebot_lifetime_price_notice_2026_04_19';
 

@@ -10,6 +10,12 @@ type ProviderEntry = {
     modelFactory?: ReturnType<typeof createOpenAI>;
 };
 
+type CerebrasChatCompletionResponse = {
+    message?: string;
+    error?: { message?: string };
+    choices?: Array<{ message?: { content?: unknown } }>;
+};
+
 const providerPool: ProviderEntry[] = [];
 
 function splitCsv(value?: string): string[] {
@@ -38,18 +44,15 @@ function uniqueModels(models: string[]): string[] {
 }
 
 function getProviderModels(provider: ProviderName, preferredModel?: string): string[] {
-    if (provider === 'groq') {
-        return uniqueModels([
-            preferredModel || 'llama-3.1-8b-instant',
-            'llama-3.1-8b-instant',
-            'llama-3.3-70b-versatile',
-            'openai/gpt-oss-20b',
-        ]);
+    if (provider === 'cerebras') {
+        return uniqueModels([preferredModel || 'qwen-3.8-27b', 'qwen-3.8-27b', 'gpt-oss-120b']);
     }
 
     return uniqueModels([
-        preferredModel || 'llama3.1-8b',
-        'llama3.1-8b',
+        preferredModel || 'qwen/qwen3.8-27b',
+        'qwen/qwen3.8-27b',
+        'openai/gpt-oss-120b',
+        'openai/gpt-oss-20b',
     ]);
 }
 
@@ -60,9 +63,7 @@ function interleaveProviders(groups: ProviderEntry[][]): ProviderEntry[] {
     while (queues.some((group) => group.length > 0)) {
         for (const group of queues) {
             const next = group.shift();
-            if (next) {
-                result.push(next);
-            }
+            if (next) result.push(next);
         }
     }
 
@@ -74,37 +75,19 @@ function ensureProvidersInitialized() {
         return;
     }
 
-    const cerebrasModel =
-        process.env.CEREBRAS_MODEL ||
-        process.env.CELEBRAS_MODEL ||
-        'llama3.1-8b';
-    const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-
+    const cerebrasModel = process.env.CEREBRAS_MODEL || process.env.CELEBRAS_MODEL || 'qwen-3.8-27b';
+    const groqModel = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
     const cerebrasKeys = collectKeys([
-        'CEREBRAS_API_KEYS',
-        'CEREBRAS_API_KEY',
-        // Accept common typo to reduce config mistakes.
-        'CELEBRAS_API_KEYS',
-        'CELEBRAS_API_KEY',
+        'CEREBRAS_API_KEYS', 'CEREBRAS_API_KEY', 'CELEBRAS_API_KEYS', 'CELEBRAS_API_KEY',
     ]);
-
     const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
     const cerebrasEntries: ProviderEntry[] = [];
     const groqEntries: ProviderEntry[] = [];
 
     for (const apiKey of cerebrasKeys) {
-        const modelFactory = createOpenAI({
-            baseURL: 'https://api.cerebras.ai/v1',
-            apiKey,
-        });
-
+        const modelFactory = createOpenAI({ baseURL: 'https://api.cerebras.ai/v1', apiKey });
         for (const modelId of getProviderModels('cerebras', cerebrasModel)) {
-            cerebrasEntries.push({
-                provider: 'cerebras',
-                modelId,
-                apiKey,
-                modelFactory,
-            });
+            cerebrasEntries.push({ provider: 'cerebras', modelId, apiKey, modelFactory });
         }
     }
 
@@ -124,6 +107,8 @@ function ensureProvidersInitialized() {
         }
     }
 
+    // Try Cerebras first when configured; permanent billing/key/model errors remove
+    // that route and allow the request to continue through Groq.
     providerPool.push(...interleaveProviders([cerebrasEntries, groqEntries]));
 
     if (providerPool.length === 0) {
@@ -133,11 +118,9 @@ function ensureProvidersInitialized() {
         return;
     }
 
-    const cerebrasCount = providerPool.filter((p) => p.provider === 'cerebras').length;
     const groqCount = providerPool.filter((p) => p.provider === 'groq').length;
-    console.log(
-        `[AI Provider] Loaded ${providerPool.length} keys (Cerebras=${cerebrasCount}, Groq=${groqCount}).`,
-    );
+    const cerebrasCount = providerPool.filter((p) => p.provider === 'cerebras').length;
+    console.log(`[AI Provider] Loaded ${providerPool.length} routes (Cerebras=${cerebrasCount}, Groq=${groqCount}).`);
 }
 
 function getPrimaryModel(index?: number) {
@@ -192,50 +175,20 @@ function getErrorMessage(error: unknown): string {
 }
 
 function normalizeMessageContent(content: unknown): string {
-    if (typeof content === 'string') {
-        return content;
-    }
-
-    if (Array.isArray(content)) {
-        return content
-            .map((part) => {
-                if (typeof part === 'string') return part;
-                if (part && typeof part === 'object' && 'text' in part && typeof (part as { text?: unknown }).text === 'string') {
-                    return String((part as { text: string }).text);
-                }
-                return '';
-            })
-            .filter(Boolean)
-            .join('\n');
-    }
-
-    if (content && typeof content === 'object' && 'text' in content && typeof (content as { text?: unknown }).text === 'string') {
-        return String((content as { text: string }).text);
-    }
-
-    return '';
+    if (typeof content === 'string') return content;
+    if (!Array.isArray(content)) return '';
+    return content.map((part) => {
+        if (typeof part === 'string') return part;
+        if (part && typeof part === 'object' && 'text' in part && typeof part.text === 'string') return part.text;
+        return '';
+    }).filter(Boolean).join('\n');
 }
 
 function toOpenAICompatibleMessages(system: string | undefined, messages?: ModelMessage[]) {
     const normalized = (messages || [])
-        .map((message) => {
-            const role = String(message.role || 'user');
-            const content = normalizeMessageContent(message.content);
-            if (!content) return null;
-            return {
-                role,
-                content,
-            };
-        })
-        .filter(Boolean) as Array<{ role: string; content: string }>;
-
-    if (system?.trim()) {
-        normalized.unshift({
-            role: 'system',
-            content: system.trim(),
-        });
-    }
-
+        .map((message) => ({ role: String(message.role || 'user'), content: normalizeMessageContent(message.content) }))
+        .filter((message) => message.content.length > 0);
+    if (system?.trim()) normalized.unshift({ role: 'system', content: system.trim() });
     return normalized;
 }
 
@@ -251,43 +204,17 @@ async function generateTextWithCerebras(params: {
     const messages = params.prompt
         ? toOpenAICompatibleMessages(params.system, [{ role: 'user', content: params.prompt } as ModelMessage])
         : toOpenAICompatibleMessages(params.system, params.messages);
-
     const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
         method: 'POST',
-        headers: {
-            Authorization: `Bearer ${params.apiKey}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            model: params.modelId,
-            messages,
-            temperature: params.temperature,
-            max_completion_tokens: params.maxTokens,
-        }),
+        headers: { Authorization: `Bearer ${params.apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: params.modelId, messages, temperature: params.temperature, max_completion_tokens: params.maxTokens }),
     });
-
     const raw = await response.text();
-    let parsed: any = null;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        parsed = null;
-    }
-
-    if (!response.ok) {
-        const detail =
-            parsed?.message ||
-            parsed?.error?.message ||
-            raw ||
-            `Cerebras request failed with status ${response.status}`;
-        throw new Error(String(detail));
-    }
-
+    let parsed: CerebrasChatCompletionResponse | null = null;
+    try { parsed = JSON.parse(raw) as CerebrasChatCompletionResponse; } catch { parsed = null; }
+    if (!response.ok) throw new Error(String(parsed?.message || parsed?.error?.message || raw || `Cerebras request failed with status ${response.status}`));
     const text = parsed?.choices?.[0]?.message?.content;
-    if (typeof text !== 'string' || text.trim().length === 0) {
-        throw new Error('No analysis returned from Cerebras');
-    }
-
+    if (typeof text !== 'string' || !text.trim()) throw new Error('No analysis returned from Cerebras');
     return { text };
 }
 
@@ -298,6 +225,10 @@ function isPermanentProviderError(message: string): boolean {
         normalized.includes('organization has been restricted') ||
         normalized.includes('invalid api key') ||
         normalized.includes('unauthorized') ||
+        normalized.includes('payment required') ||
+        normalized.includes('payment_required') ||
+        normalized.includes('insufficient_quota') ||
+        normalized.includes('"code":"quota"') ||
         normalized.includes('not found') ||
         normalized.includes('404') ||
         normalized.includes('model_not_found') ||
@@ -380,10 +311,6 @@ export async function streamTextHybrid(params: {
             console.log(
                 `[AI Provider] Stream attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
             );
-            const entry = providerPool[providerIndex % providerPool.length];
-            if (entry.provider === 'cerebras') {
-                throw new Error('Cerebras streaming is not supported by the current adapter');
-            }
             return await streamText({
                 model: getPrimaryModel(providerIndex),
                 system: params.system,

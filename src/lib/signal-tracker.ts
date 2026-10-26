@@ -877,7 +877,7 @@ export async function generateDailyReport(targetDate?: string): Promise<string> 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 🤖 Powered by ARRA7 AI
-🌐 arra7-app.vercel.app
+🌐 pica.my.id
     `.trim();
 
     return report;

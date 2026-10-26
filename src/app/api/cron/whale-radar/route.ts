@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         // 1. Fetch live heatmap data
         // Note: In a real deploy, we might want to call the internal function directly rather than HTTP fetch to save overhead
         // But for consistency with frontend logic, we'll fetch the API or reuse the logic
-        const apiUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://arra7-app.vercel.app';
+        const apiUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pica.my.id';
         const res = await fetch(`${apiUrl}/api/xauusd/probability-zones`);
 
         if (!res.ok) throw new Error('Failed to fetch market data');

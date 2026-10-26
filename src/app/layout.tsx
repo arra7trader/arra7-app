@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "XAUUSD", "gold trading", "neural lab", "IDX saham", "bookmap", "order flow",
     "smart money concepts", "trading signals", "neural network trading"
   ],
-  authors: [{ name: "PICA", url: "https://arra7-app.vercel.app" }],
+  authors: [{ name: "PICA", url: "https://pica.my.id" }],
   creator: "PICA",
   publisher: "PICA",
   robots: {
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "PICA",
     locale: "id_ID",
-    url: "https://arra7-app.vercel.app",
+    url: "https://pica.my.id",
     images: [
       {
         url: "/og-image.png",
