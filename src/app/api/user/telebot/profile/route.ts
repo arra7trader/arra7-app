@@ -20,10 +20,6 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
-    if (!userId) {
-      return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const telegramUsername = normalizeTelegramUsername(body?.telegramUsername);
 
@@ -32,6 +28,11 @@ export async function POST(request: NextRequest) {
         { ok: false, message: 'Username Telegram wajib diisi.' },
         { status: 400 }
       );
+    }
+
+    if (!userId) {
+      // Guest payment flow: allow passing through so confirmation can proceed
+      return NextResponse.json({ ok: true, message: 'Username Telegram diterima.' });
     }
 
     await initDatabase();

@@ -1999,7 +1999,7 @@ export async function getPrivateBotMembershipByUserId(userId: string): Promise<P
     const result = await turso.execute({
       sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_username, bm.telegram_chat_id, bm.source, bm.expires_at
             FROM bot_memberships bm
-            JOIN users u ON u.id = bm.user_id
+            LEFT JOIN users u ON u.id = bm.user_id
             WHERE bm.user_id = ?
             LIMIT 1`,
       args: [userId]
@@ -2039,7 +2039,7 @@ export async function getPrivateBotMembershipByTelegramUsername(username: string
     const result = await turso.execute({
       sql: `SELECT bm.user_id, u.email, u.name, bm.plan_code, bm.status, bm.telegram_username, bm.telegram_chat_id, bm.source, bm.expires_at
             FROM bot_memberships bm
-            JOIN users u ON u.id = bm.user_id
+            LEFT JOIN users u ON u.id = bm.user_id
             WHERE lower(trim(bm.telegram_username)) = ?
             LIMIT 1`,
       args: [normalized]

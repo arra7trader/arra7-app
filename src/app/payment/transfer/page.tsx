@@ -168,7 +168,9 @@ function TransferContent() {
                         planCode: plan.id,
                         durationCode: duration,
                         amountIdr: plan.price,
-                        telegramUsername: normalizedTelegramUsername
+                        telegramUsername: normalizedTelegramUsername,
+                        email: buyerContact,
+                        name: buyerName,
                     })
                 });
                 const confirmationData = await confirmationResponse.json();

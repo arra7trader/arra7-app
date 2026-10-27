@@ -18,16 +18,20 @@ const TELEBOT_PAYMENT_OPTIONS: Record<string, number> = {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const planCode = String(body?.planCode || 'TELEBOT').trim().toUpperCase();
     const durationCode = String(body?.durationCode || '1month').trim().toLowerCase();
     const telegramUsername = normalizeTelegramUsername(body?.telegramUsername);
+    const guestEmail = typeof body?.email === 'string' ? body.email.trim() : null;
+    const guestName = typeof body?.name === 'string' ? body.name.trim() : null;
+
+    let userId = session?.user?.id;
+    if (!userId) {
+      if (!telegramUsername && !guestEmail) {
+        return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
+      }
+      userId = `guest_${telegramUsername || Date.now()}`;
+    }
 
     if (planCode !== 'TELEBOT') {
       return NextResponse.json(
@@ -67,8 +71,8 @@ export async function POST(request: NextRequest) {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, 'QRIS_MANUAL', 'submitted')`,
       args: [
         userId,
-        session.user.email || null,
-        session.user.name || null,
+        session?.user?.email || guestEmail || null,
+        session?.user?.name || guestName || null,
         planCode,
         durationCode,
         expectedAmount,

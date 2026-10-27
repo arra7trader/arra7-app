@@ -517,19 +517,19 @@ async function resolveUserId(
 
   if (normalizedTelegramUsername) {
     const fromMembership = await turso.execute({
-      sql: `SELECT u.id, u.email, u.name
+      sql: `SELECT COALESCE(u.id, bm.user_id) AS id, COALESCE(u.email, '') AS email, COALESCE(u.name, '') AS name
             FROM bot_memberships bm
             LEFT JOIN users u ON u.id = bm.user_id
             WHERE lower(trim(bm.telegram_username)) = ?
             LIMIT 1`,
       args: [normalizedTelegramUsername]
     });
-    if (fromMembership.rows[0]) {
+    if (fromMembership.rows[0]?.id) {
       return fromMembership.rows[0];
     }
 
     const fromPaymentConfirmation = await turso.execute({
-      sql: `SELECT u.id, u.email, u.name
+      sql: `SELECT COALESCE(u.id, pc.user_id) AS id, COALESCE(u.email, pc.email, '') AS email, COALESCE(u.name, pc.display_name, '') AS name
             FROM telebot_payment_confirmations pc
             LEFT JOIN users u ON u.id = pc.user_id
             WHERE lower(trim(pc.telegram_username)) = ?
@@ -537,7 +537,7 @@ async function resolveUserId(
             LIMIT 1`,
       args: [normalizedTelegramUsername]
     });
-    if (fromPaymentConfirmation.rows[0]) {
+    if (fromPaymentConfirmation.rows[0]?.id) {
       return fromPaymentConfirmation.rows[0];
     }
   }
@@ -547,7 +547,7 @@ async function resolveUserId(
       sql: `SELECT id, email, name FROM users WHERE id = ? LIMIT 1`,
       args: [userId.trim()]
     });
-    return res.rows[0] || null;
+    if (res.rows[0]) return res.rows[0];
   }
 
   if (email?.trim()) {
@@ -555,7 +555,48 @@ async function resolveUserId(
       sql: `SELECT id, email, name FROM users WHERE lower(email) = lower(?) LIMIT 1`,
       args: [email.trim()]
     });
-    return res.rows[0] || null;
+    if (res.rows[0]) return res.rows[0];
+  }
+
+  // Fallback: If user is not yet registered on the web, auto-resolve from telegram_contacts or auto-create user record
+  if (normalizedTelegramUsername || email?.trim()) {
+    let chatId: string | null = null;
+    let contactFirstName: string | null = null;
+
+    if (normalizedTelegramUsername) {
+      const fromContact = await turso.execute({
+        sql: `SELECT chat_id, username, first_name
+              FROM telegram_contacts
+              WHERE lower(trim(replace(username, '@', ''))) = ?
+              LIMIT 1`,
+        args: [normalizedTelegramUsername]
+      });
+      if (fromContact.rows[0]) {
+        chatId = String(fromContact.rows[0].chat_id || '');
+        contactFirstName = fromContact.rows[0].first_name ? String(fromContact.rows[0].first_name) : null;
+      }
+    }
+
+    const resolvedId = chatId ? `tg_${chatId}` : `tg_user_${normalizedTelegramUsername || Date.now()}`;
+    const resolvedEmail = email?.trim() || (normalizedTelegramUsername ? `${normalizedTelegramUsername}@telegram.pica` : `${resolvedId}@pica.my.id`);
+    const resolvedName = contactFirstName || (normalizedTelegramUsername ? `@${normalizedTelegramUsername}` : 'Trader');
+
+    try {
+      await turso.execute({
+        sql: `INSERT INTO users (id, email, name, telegram_chat_id, created_at, updated_at)
+              VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+              ON CONFLICT(id) DO UPDATE SET
+                email = COALESCE(users.email, excluded.email),
+                name = COALESCE(users.name, excluded.name),
+                telegram_chat_id = COALESCE(users.telegram_chat_id, excluded.telegram_chat_id),
+                updated_at = CURRENT_TIMESTAMP`,
+        args: [resolvedId, resolvedEmail, resolvedName, chatId]
+      });
+      return { id: resolvedId, email: resolvedEmail, name: resolvedName };
+    } catch (err) {
+      console.warn('[ADMIN_BOT_PRIVATE] Auto-create user error:', err);
+      return { id: resolvedId, email: resolvedEmail, name: resolvedName };
+    }
   }
 
   return null;
