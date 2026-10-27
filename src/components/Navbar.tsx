@@ -62,32 +62,34 @@ export default function Navbar() {
                 }`}
         >
             {/* FBS 1-Month Trading Championship Announcement Banner */}
-            <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-700 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex items-center justify-center gap-2 shadow-inner">
+            <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-700 text-white text-[11px] sm:text-xs py-1.5 px-2 sm:px-6 flex items-center justify-center gap-1.5 sm:gap-2 shadow-inner whitespace-nowrap overflow-hidden">
                 <span className="bg-black/25 text-amber-200 border border-amber-300/40 font-extrabold px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase shrink-0 flex items-center gap-1">
                     <span>🏆</span>
-                    <span>KOMPETISI FBS 1 BULAN (MULAI BESOK!)</span>
+                    <span className="hidden sm:inline">KOMPETISI FBS 1 BULAN (MULAI BESOK!)</span>
+                    <span className="sm:hidden">KOMPETISI FBS</span>
                 </span>
                 <span className="font-medium text-white/95 hidden sm:inline">
                     Total Hadiah <strong>$1,500 Cash Murni</strong> · Modal Mulai <strong>$25</strong> · Unlimited Re-Entry · FREE Sinyal VVIP bagi Depo $100+!
                 </span>
-                <span className="font-medium text-white/95 sm:hidden">
-                    Hadiah Cash <strong>$1,500 USD</strong> · Mulai $25 · Re-Entry Aktif
+                <span className="font-medium text-white/95 text-[10px] sm:hidden">
+                    Hadiah <strong>$1,500</strong> · Modal <strong>$25</strong>
                 </span>
                 <Link
                     href="/kompetisi"
-                    className="shrink-0 ml-1 inline-flex items-center gap-1 bg-white text-slate-900 hover:bg-amber-100 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold transition-all shadow-xs cursor-pointer active:scale-95"
+                    className="shrink-0 sm:ml-1 inline-flex items-center gap-1 bg-white text-slate-900 hover:bg-amber-100 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold transition-all shadow-xs cursor-pointer active:scale-95"
                 >
-                    <span>Ikuti Lomba</span>
-                    <span>&rarr;</span>
+                    <span className="sm:hidden">Ikuti</span>
+                    <span className="hidden sm:inline">Ikuti Lomba</span>
+                    <span className="hidden sm:inline">&rarr;</span>
                 </Link>
             </div>
 
-            <nav className="relative flex items-center justify-between h-16 w-full px-4 sm:px-6 md:px-12 antialiased">
+            <nav className="relative flex items-center justify-between h-14 sm:h-16 w-full px-3 sm:px-6 md:px-12 antialiased">
                 {/* Left Side: Akses Harga & Fitur */}
-                <div className="flex-1 flex items-center gap-2 sm:gap-3">
+                <div className="hidden sm:flex flex-1 items-center gap-1.5 sm:gap-3">
                     <Link
                         href="/pricing"
-                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
+                        className="hidden sm:flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
                     >
                         <CurrencyIcon size="xs" className="text-blue-600" />
                         <span>Harga</span>
@@ -181,13 +183,13 @@ export default function Navbar() {
                 </div>
 
                 {/* Center: Logo PICA positioned dead center */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto">
+                <div className="static sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex flex-none items-center justify-start sm:justify-center pointer-events-auto">
                     <Link href="/" className="flex items-center group">
                         <motion.div
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
                         >
-                            <PicaLogo size="sm" />
+                            <PicaLogo size="sm" className="scale-90 origin-left sm:scale-100" />
                         </motion.div>
                     </Link>
                 </div>
