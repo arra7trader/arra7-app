@@ -4,13 +4,15 @@ import os
 import time
 import logging
 import threading
+import hmac
+import math
 from datetime import timedelta
 from typing import Literal
 
 import pandas as pd
 import torch
 from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
 from model import Kronos, KronosPredictor, KronosTokenizer
 
@@ -30,11 +32,19 @@ inference_lock = threading.Lock()
 
 class Candle(BaseModel):
     time: str
-    open: float = Field(gt=0)
-    high: float = Field(gt=0)
-    low: float = Field(gt=0)
-    close: float = Field(gt=0)
-    volume: float = Field(ge=0)
+    open: float = Field(gt=0, allow_inf_nan=False)
+    high: float = Field(gt=0, allow_inf_nan=False)
+    low: float = Field(gt=0, allow_inf_nan=False)
+    close: float = Field(gt=0, allow_inf_nan=False)
+    volume: float = Field(ge=0, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def validate_ohlc(self) -> "Candle":
+        if self.high < max(self.open, self.close, self.low):
+            raise ValueError("high must be at least the open, close, and low")
+        if self.low > min(self.open, self.close, self.high):
+            raise ValueError("low must be at most the open, close, and high")
+        return self
 
 
 class ForecastRequest(BaseModel):
@@ -44,6 +54,16 @@ class ForecastRequest(BaseModel):
     interval_seconds: int = Field(gt=0, le=86_400)
     continuous_market: bool = False
     candles: list[Candle] = Field(min_length=20, max_length=512)
+    future_times: list[AwareDatetime] | None = None
+
+    @model_validator(mode="after")
+    def validate_future_times(self) -> "ForecastRequest":
+        if self.future_times is not None:
+            if len(self.future_times) != self.pred_len:
+                raise ValueError("future_times must contain exactly pred_len timestamps")
+            if any(current <= previous for previous, current in zip(self.future_times, self.future_times[1:])):
+                raise ValueError("future_times must be strictly increasing")
+        return self
 
 
 @app.on_event("startup")
@@ -75,7 +95,7 @@ def health() -> dict:
 def forecast(body: ForecastRequest, x_service_token: str | None = Header(default=None)) -> dict:
     if not SERVICE_TOKEN:
         raise HTTPException(status_code=503, detail="KRONOS_SERVICE_TOKEN is not configured")
-    if x_service_token != SERVICE_TOKEN:
+    if not hmac.compare_digest(x_service_token or "", SERVICE_TOKEN):
         raise HTTPException(status_code=401, detail="Invalid service token")
     if predictor is None:
         raise HTTPException(status_code=503, detail="Kronos model is unavailable")
@@ -89,14 +109,19 @@ def forecast(body: ForecastRequest, x_service_token: str | None = Header(default
     x_timestamps = frame["time"].reset_index(drop=True)
     last_time = x_timestamps.iloc[-1]
     interval = timedelta(seconds=body.interval_seconds)
-    future_times = []
-    next_time = last_time
-    while len(future_times) < body.pred_len:
-        next_time += interval
-        if not body.continuous_market:
-            while next_time.weekday() >= 5:
-                next_time += timedelta(days=1)
-        future_times.append(next_time)
+    if body.future_times is not None:
+        future_times = [pd.Timestamp(value).tz_convert("UTC") for value in body.future_times]
+        if future_times[0] <= last_time:
+            raise HTTPException(status_code=422, detail="future_times must occur after the last candle")
+    else:
+        future_times = []
+        next_time = last_time
+        while len(future_times) < body.pred_len:
+            next_time += interval
+            if not body.continuous_market:
+                while next_time.weekday() >= 5:
+                    next_time += timedelta(days=1)
+            future_times.append(next_time)
     y_timestamps = pd.Series(future_times)
     model_input = frame[["open", "high", "low", "close", "volume"]].reset_index(drop=True)
 
@@ -118,7 +143,7 @@ def forecast(body: ForecastRequest, x_service_token: str | None = Header(default
     for timestamp, row in predictions.iterrows():
         values = [float(row[column]) for column in ("open", "high", "low", "close", "volume")]
         open_price, high, low, close, volume = values
-        if not all(torch.isfinite(torch.tensor(value)).item() for value in values):
+        if not all(math.isfinite(value) for value in values):
             raise HTTPException(status_code=502, detail="Kronos returned a non-finite forecast")
         high = max(high, open_price, close)
         low = min(low, open_price, close)
