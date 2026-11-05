@@ -28,6 +28,17 @@ export default function AppGrid() {
             highlight: true,
         },
         {
+            id: 'arra-cronos',
+            label: 'ARRA Cronos',
+            sublabel: 'Multi-Market Kronos Forecast',
+            badge: 'NEW · MULTI-ASSET',
+            badgeColor: 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white',
+            icon: <ChartIcon size="lg" className="text-cyan-600" />,
+            href: '/arra-cronos',
+            color: 'bg-cyan-50 border-cyan-200',
+            highlight: true,
+        },
+        {
             id: 'crypto-hunter',
             label: 'Crypto Hunter',
             sublabel: 'OG Smart Money Scanner',
