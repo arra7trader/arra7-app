@@ -114,7 +114,7 @@ export default function ArraCronosPage() {
         [categories, selectedSymbol],
     );
 
-    const isForecastingRef = useRef(false);
+    const activeRequestIdRef = useRef(0);
 
     const loadStatus = useCallback(async () => {
         try {
@@ -126,9 +126,7 @@ export default function ArraCronosPage() {
         }
     }, []);
 
-    const runForecast = useCallback(async (sym: string, tf: string) => {
-        if (isForecastingRef.current) return;
-        isForecastingRef.current = true;
+    const runForecast = useCallback(async (sym: string, tf: string, reqId: number) => {
         setIsForecasting(true);
         setForecastError('');
         try {
@@ -138,25 +136,59 @@ export default function ArraCronosPage() {
                 body: JSON.stringify({ symbol: sym, timeframe: tf }),
             });
             const payload = await response.json();
-            if (!response.ok) throw new Error(payload.error || 'Forecast model tidak tersedia.');
-            setForecast(payload);
+            if (activeRequestIdRef.current === reqId) {
+                if (!response.ok) throw new Error(payload.error || 'Forecast model tidak tersedia.');
+                setForecast(payload);
+            }
         } catch (error) {
-            setForecastError(error instanceof Error ? error.message : 'Forecast model tidak tersedia.');
+            if (activeRequestIdRef.current === reqId) {
+                setForecastError(error instanceof Error ? error.message : 'Forecast model tidak tersedia.');
+            }
         } finally {
-            isForecastingRef.current = false;
-            setIsForecasting(false);
+            if (activeRequestIdRef.current === reqId) {
+                setIsForecasting(false);
+            }
         }
     }, []);
+
+    const handleSelectSymbol = useCallback((sym: string) => {
+        if (sym === selectedSymbol) return;
+        setMarket(null);
+        setForecast(null);
+        setSelectedSymbol(sym);
+    }, [selectedSymbol]);
+
+    const handleSelectCategory = useCallback((catId: string) => {
+        setSelectedCategory(catId);
+        setSearch('');
+        const cat = categories.find((c) => c.id === catId);
+        if (cat && cat.pairs.length > 0) {
+            const firstSym = cat.pairs[0].symbol;
+            if (firstSym !== selectedSymbol) {
+                setMarket(null);
+                setForecast(null);
+                setSelectedSymbol(firstSym);
+            }
+        }
+    }, [categories, selectedSymbol]);
+
+    const handleSelectTimeframe = useCallback((tf: (typeof TIMEFRAMES)[number]['id']) => {
+        if (tf === timeframe) return;
+        setMarket(null);
+        setForecast(null);
+        setTimeframe(tf);
+    }, [timeframe]);
 
     const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
         await loadStatus();
+        const reqId = ++activeRequestIdRef.current;
         try {
             const response = await fetch(`/api/arra-cronos/market?symbol=${encodeURIComponent(selectedSymbol)}&timeframe=${timeframe}`, { cache: 'no-store' });
             const payload = await response.json();
             if (response.ok && payload && !payload.error) {
                 setMarket(payload);
-                await runForecast(selectedSymbol, timeframe);
+                await runForecast(selectedSymbol, timeframe, reqId);
             }
         } catch {
             // ignore
@@ -180,21 +212,15 @@ export default function ArraCronosPage() {
         return () => window.clearInterval(interval);
     }, [loadStatus]);
 
-    useEffect(() => {
-        if (!categories.length) return;
-        const found = categories.some((category) => category.pairs.some((asset) => asset.symbol === selectedSymbol));
-        if (!found) setSelectedSymbol(categories.find((category) => category.id === selectedCategory)?.pairs[0]?.symbol || 'EURUSD');
-    }, [categories, selectedCategory, selectedSymbol]);
-
-    // Single stable effect for fetching market & forecast with NO infinite re-render loop
+    // Single stable effect for fetching market & forecast with instant reset on symbol/timeframe switch
     useEffect(() => {
         if (!categories.length) return;
         let cancelled = false;
+        const reqId = ++activeRequestIdRef.current;
 
         async function load() {
             setMarketError('');
-            // Only show loader if we have no market data yet
-            setIsLoading((prev) => (market ? false : true));
+            setIsLoading(true);
 
             try {
                 const response = await fetch(`/api/arra-cronos/market?symbol=${encodeURIComponent(selectedSymbol)}&timeframe=${timeframe}`, { cache: 'no-store' });
@@ -204,8 +230,8 @@ export default function ArraCronosPage() {
                 setMarket(payload);
                 setIsLoading(false);
 
-                // Auto calculate Kronos forecast smoothly
-                runForecast(selectedSymbol, timeframe);
+                // Auto calculate Kronos forecast for the newly selected pair
+                runForecast(selectedSymbol, timeframe, reqId);
             } catch (error) {
                 if (cancelled) return;
                 const message = error instanceof Error ? error.message : 'Analisis gagal dimuat.';
@@ -281,12 +307,12 @@ export default function ArraCronosPage() {
                             <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-[#080d15] px-3 py-2.5"><MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-slate-500" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari simbol / market" className="min-w-0 flex-1 bg-transparent text-xs text-slate-200 outline-none placeholder:text-slate-600" /></div>
                         </div>
                         <nav className="flex gap-1 overflow-x-auto border-b border-slate-800 p-2 xl:flex-col xl:overflow-visible" aria-label="Kelas aset">
-                            {categories.map((category) => <button key={category.id} onClick={() => { setSelectedCategory(category.id); setSearch(''); }} className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-left text-[10px] font-bold tracking-wide transition ${selectedCategory === category.id ? 'bg-cyan-300/10 text-cyan-200 ring-1 ring-inset ring-cyan-300/20' : 'text-slate-500 hover:bg-slate-800/60 hover:text-slate-200'}`}>{CATEGORY_SHORT[category.id] || category.name.toUpperCase()} <span className="ml-1 text-slate-600">{category.pairs.length}</span></button>)}
+                            {categories.map((category) => <button key={category.id} onClick={() => handleSelectCategory(category.id)} className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-left text-[10px] font-bold tracking-wide transition ${selectedCategory === category.id ? 'bg-cyan-300/10 text-cyan-200 ring-1 ring-inset ring-cyan-300/20' : 'text-slate-500 hover:bg-slate-800/60 hover:text-slate-200'}`}>{CATEGORY_SHORT[category.id] || category.name.toUpperCase()} <span className="ml-1 text-slate-600">{category.pairs.length}</span></button>)}
                         </nav>
                         <div className="max-h-[390px] overflow-y-auto p-2">
                             {visibleAssets.map((asset) => {
                                 const selected = selectedSymbol === asset.symbol;
-                                return <button key={asset.symbol} onClick={() => setSelectedSymbol(asset.symbol)} className={`mb-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition ${selected ? 'bg-[#142335] ring-1 ring-inset ring-cyan-300/25' : 'hover:bg-slate-900'}`}><span className="min-w-0"><span className={`block text-xs font-bold ${selected ? 'text-white' : 'text-slate-300'}`}>{asset.symbol}</span><span className="mt-0.5 block truncate text-[10px] text-slate-600">{asset.name}</span></span><span className={`ml-2 h-1.5 w-1.5 shrink-0 rounded-full ${selected ? 'bg-cyan-300' : 'bg-slate-700'}`} /></button>;
+                                return <button key={asset.symbol} onClick={() => handleSelectSymbol(asset.symbol)} className={`mb-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition ${selected ? 'bg-[#142335] ring-1 ring-inset ring-cyan-300/25' : 'hover:bg-slate-900'}`}><span className="min-w-0"><span className={`block text-xs font-bold ${selected ? 'text-white' : 'text-slate-300'}`}>{asset.symbol}</span><span className="mt-0.5 block truncate text-[10px] text-slate-600">{asset.name}</span></span><span className={`ml-2 h-1.5 w-1.5 shrink-0 rounded-full ${selected ? 'bg-cyan-300' : 'bg-slate-700'}`} /></button>;
                             })}
                             {visibleAssets.length === 0 && <div className="px-3 py-8 text-center text-xs text-slate-600">Market tidak ditemukan.</div>}
                         </div>
@@ -329,13 +355,14 @@ export default function ArraCronosPage() {
                                         <button onClick={() => setChartMode('lightweight')} className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition ${chartMode === 'lightweight' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-200'}`}>LW</button>
                                     </div>
                                     {/* Timeframe Selector */}
-                                    <div className="flex items-center gap-1 rounded-xl border border-slate-800 bg-[#080d15] p-1">{TIMEFRAMES.map((item) => <button key={item.id} onClick={() => setTimeframe(item.id)} className={`rounded-lg px-3 py-1.5 text-[10px] font-bold transition ${timeframe === item.id ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-200'}`}>{item.label}</button>)}</div>
+                                    <div className="flex items-center gap-1 rounded-xl border border-slate-800 bg-[#080d15] p-1">{TIMEFRAMES.map((item) => <button key={item.id} onClick={() => handleSelectTimeframe(item.id)} className={`rounded-lg px-3 py-1.5 text-[10px] font-bold transition ${timeframe === item.id ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-200'}`}>{item.label}</button>)}</div>
                                 </div>
                             </div>
                             <div className="relative bg-[#0b111b]">
                                 {/* TradingView Mode */}
                                 {chartMode === 'tradingview' && market && !marketError && (
                                     <TradingViewCronosChart
+                                        key={`tv_${selectedSymbol}_${timeframe}`}
                                         symbol={selectedSymbol}
                                         tvSymbol={market.tvSymbol || `OANDA:${selectedSymbol}`}
                                         timeframe={timeframe}
@@ -373,7 +400,7 @@ export default function ArraCronosPage() {
                             <div className="rounded-2xl border border-slate-800 bg-[#0b111b] p-4 sm:p-5">
                                 <div className="mb-4 flex items-center gap-2"><CpuChipIcon className="h-4 w-4 text-cyan-200" /><div><div className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Inference status</div><h3 className="mt-1 text-sm font-extrabold text-white">{modelStatus?.model || 'ARRA Cronos / Kronos-base'}</h3></div></div>
                                 {forecast ? <div className="grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#080d15] p-3"><div className="text-[9px] uppercase tracking-wide text-slate-600">Model path</div><div className="mt-1 text-sm font-bold text-slate-200">{forecast.forecast.length} bars</div></div><div className="rounded-xl bg-[#080d15] p-3"><div className="text-[9px] uppercase tracking-wide text-slate-600">Inference</div><div className="mt-1 text-sm font-bold text-slate-200">{(forecast.inferenceMs / 1000).toFixed(1)}s</div></div></div> : <div className="rounded-xl border border-dashed border-slate-800 bg-[#080d15] p-3 text-xs leading-relaxed text-slate-500">{forecastError || (modelStatus?.available ? 'Model siap. Forecast memakai kuota analisis akun Anda.' : modelStatus?.message || 'Memeriksa status model…')}</div>}
-                                <button onClick={() => runForecast(selectedSymbol, timeframe)} disabled={!modelStatus?.available || !market || isForecasting} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-200 px-3 py-2.5 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"><CpuChipIcon className={`h-4 w-4 ${isForecasting ? 'animate-pulse' : ''}`} />{isForecasting ? 'Menghitung forecast…' : forecast ? 'Jalankan ulang forecast' : 'Buat forecast Kronos'}</button>
+                                <button onClick={() => runForecast(selectedSymbol, timeframe, ++activeRequestIdRef.current)} disabled={!modelStatus?.available || !market || isForecasting} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-200 px-3 py-2.5 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"><CpuChipIcon className={`h-4 w-4 ${isForecasting ? 'animate-pulse' : ''}`} />{isForecasting ? 'Menghitung forecast…' : forecast ? 'Jalankan ulang forecast' : 'Buat forecast Kronos'}</button>
                                 {market && <p className="mt-3 text-[10px] leading-relaxed text-slate-600">Cakupan volume positif pada riwayat: {market.volumeCoverage}%. Feed forex umumnya tidak memiliki volume terpusat; model menerima volume nol pada candle tanpa data volume.</p>}
                                 <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-600"><ClockIcon className="h-3.5 w-3.5" />{forecast ? `Dibuat ${new Date(forecast.generatedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB` : isForecasting ? 'Memproses jalur forecast…' : 'Jalur forecast akan digambar pada chart.'}</div>
                             </div>
