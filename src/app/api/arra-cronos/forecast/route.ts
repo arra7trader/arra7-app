@@ -220,7 +220,8 @@ export async function POST(request: Request) {
         }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
 
     } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
         console.error('[ARRA Cronos] Forecast error:', error);
-        return NextResponse.json({ error: 'Model Kronos tidak dapat membuat forecast saat ini.' }, { status: 500 });
+        return NextResponse.json({ error: `Model Kronos: ${msg}` }, { status: 500 });
     }
 }
