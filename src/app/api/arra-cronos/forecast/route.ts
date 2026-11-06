@@ -138,7 +138,9 @@ export async function POST(request: Request) {
         recentRequests.set(clientKey, recent);
 
         let userId: string | null = null;
-        if (process.env.TURSO_DATABASE_URL && process.env.ARRA_CRONOS_ALLOW_UNMETERED !== 'true') {
+        // ARRA Cronos desk allows free public forecasts with IP rate-limiting (10 req/min).
+        // Only enforce strict user quota if ARRA_CRONOS_REQUIRE_QUOTA === 'true'.
+        if (process.env.ARRA_CRONOS_REQUIRE_QUOTA === 'true' && process.env.TURSO_DATABASE_URL) {
             try {
                 const user = await resolveUserOrDevice(request);
                 const quota = await checkQuota(user.userId, timeframe, symbol);

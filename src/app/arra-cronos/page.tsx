@@ -124,35 +124,9 @@ export default function ArraCronosPage() {
         }
     }, []);
 
-    const loadAnalysis = useCallback(async (quiet = false) => {
-        if (!quiet) setIsLoading(true);
-        else setIsRefreshing(true);
-        setMarketError('');
-        setForecastError('');
-        setMarket(null);
-        setForecast(null);
-        try {
-            const response = await fetch(`/api/arra-cronos/market?symbol=${encodeURIComponent(selectedSymbol)}&timeframe=${timeframe}`, { cache: 'no-store' });
-            const payload = await response.json();
-            if (!response.ok) throw new Error(payload.error || 'Data harga belum tersedia.');
-            setMarket(payload);
-        } catch (error) {
-            setMarket(null);
-            setForecast(null);
-            const message = error instanceof Error ? error.message : 'Analisis gagal dimuat.';
-            setMarketError(message);
-            setIsLoading(false);
-            setIsRefreshing(false);
-            return;
-        }
-
-        setIsLoading(false);
-        setIsRefreshing(false);
-    }, [selectedSymbol, timeframe]);
-
-    const runForecast = useCallback(async () => {
-        if (!market || !modelStatus?.available || isForecasting) return;
-        setForecast(null);
+    const runForecast = useCallback(async (customMarket?: MarketData) => {
+        const activeMarket = customMarket || market;
+        if (!activeMarket || isForecasting) return;
         setForecastError('');
         setIsForecasting(true);
         try {
@@ -169,7 +143,34 @@ export default function ArraCronosPage() {
         } finally {
             setIsForecasting(false);
         }
-    }, [market, modelStatus?.available, isForecasting, selectedSymbol, timeframe]);
+    }, [market, isForecasting, selectedSymbol, timeframe]);
+
+    const loadAnalysis = useCallback(async (quiet = false) => {
+        if (!quiet) setIsLoading(true);
+        else setIsRefreshing(true);
+        setMarketError('');
+        setForecastError('');
+        setMarket(null);
+        setForecast(null);
+        try {
+            const response = await fetch(`/api/arra-cronos/market?symbol=${encodeURIComponent(selectedSymbol)}&timeframe=${timeframe}`, { cache: 'no-store' });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.error || 'Data harga belum tersedia.');
+            setMarket(payload);
+            setIsLoading(false);
+            setIsRefreshing(false);
+            // Otomatis jalankan forecast Kronos begitu data realtime siap
+            runForecast(payload);
+        } catch (error) {
+            setMarket(null);
+            setForecast(null);
+            const message = error instanceof Error ? error.message : 'Analisis gagal dimuat.';
+            setMarketError(message);
+            setIsLoading(false);
+            setIsRefreshing(false);
+            return;
+        }
+    }, [selectedSymbol, timeframe, runForecast]);
 
     useEffect(() => {
         let live = true;
@@ -268,12 +269,12 @@ export default function ArraCronosPage() {
                             </div>
                             <div className="rounded-2xl border border-slate-800 bg-[#0b111b] p-4">
                                 <div className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Model bias</div>
-                                <div className="flex items-center gap-3">{modelBias === 'UP' ? <ArrowTrendingUpIcon className="h-8 w-8 text-emerald-300" /> : modelBias === 'DOWN' ? <ArrowTrendingDownIcon className="h-8 w-8 text-rose-300" /> : <BoltIcon className="h-8 w-8 text-slate-500" />}<div><div className={`text-xl font-black ${modelBias === 'UP' ? upColor : modelBias === 'DOWN' ? downColor : 'text-slate-400'}`}>{modelBias || (modelStatus?.available ? 'MENUNGGU' : 'OFFLINE')}</div><div className="mt-0.5 text-[10px] text-slate-600">{forecast ? `${forecast.forecast.length} candle ke depan` : 'Arah diambil dari forecast model'}</div></div></div>
+                                <div className="flex items-center gap-3">{modelBias === 'UP' ? <ArrowTrendingUpIcon className="h-8 w-8 text-emerald-300" /> : modelBias === 'DOWN' ? <ArrowTrendingDownIcon className="h-8 w-8 text-rose-300" /> : <BoltIcon className="h-8 w-8 text-slate-500" />}<div><div className={`text-xl font-black ${modelBias === 'UP' ? upColor : modelBias === 'DOWN' ? downColor : 'text-slate-400'}`}>{modelBias || (isForecasting ? 'MENGHITUNG…' : modelStatus?.available ? 'SIAP' : 'OFFLINE')}</div><div className="mt-0.5 text-[10px] text-slate-600">{forecast ? `${forecast.forecast.length} candle ke depan` : 'Arah diambil dari forecast model'}</div></div></div>
                             </div>
                             <div className="rounded-2xl border border-slate-800 bg-[#0b111b] p-4">
                                 <div className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Forecast target</div>
                                 <div className="text-xl font-extrabold text-white">{forecast ? price(forecast.targetPrice) : '—'}</div>
-                                <div className={`mt-1 text-[11px] font-bold ${rawMove >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{forecast ? `${rawMove >= 0 ? '+' : ''}${price(rawMove)} · ${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%` : 'Tampil saat model online'}</div>
+                                <div className={`mt-1 text-[11px] font-bold ${rawMove >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{forecast ? `${rawMove >= 0 ? '+' : ''}${price(rawMove)} · ${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%` : isForecasting ? 'Menghitung target…' : 'Siap dihitung'}</div>
                             </div>
                             <div className="rounded-2xl border border-slate-800 bg-[#0b111b] p-4">
                                 <div className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Action layer</div>
@@ -339,9 +340,9 @@ export default function ArraCronosPage() {
                             <div className="rounded-2xl border border-slate-800 bg-[#0b111b] p-4 sm:p-5">
                                 <div className="mb-4 flex items-center gap-2"><CpuChipIcon className="h-4 w-4 text-cyan-200" /><div><div className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Inference status</div><h3 className="mt-1 text-sm font-extrabold text-white">{modelStatus?.model || 'ARRA Cronos / Kronos-base'}</h3></div></div>
                                 {forecast ? <div className="grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#080d15] p-3"><div className="text-[9px] uppercase tracking-wide text-slate-600">Model path</div><div className="mt-1 text-sm font-bold text-slate-200">{forecast.forecast.length} bars</div></div><div className="rounded-xl bg-[#080d15] p-3"><div className="text-[9px] uppercase tracking-wide text-slate-600">Inference</div><div className="mt-1 text-sm font-bold text-slate-200">{(forecast.inferenceMs / 1000).toFixed(1)}s</div></div></div> : <div className="rounded-xl border border-dashed border-slate-800 bg-[#080d15] p-3 text-xs leading-relaxed text-slate-500">{forecastError || (modelStatus?.available ? 'Model siap. Forecast memakai kuota analisis akun Anda.' : modelStatus?.message || 'Memeriksa status model…')}</div>}
-                                <button onClick={runForecast} disabled={!modelStatus?.available || !market || isForecasting} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-200 px-3 py-2.5 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"><CpuChipIcon className={`h-4 w-4 ${isForecasting ? 'animate-pulse' : ''}`} />{isForecasting ? 'Menghitung forecast…' : forecast ? 'Jalankan ulang forecast' : 'Buat forecast Kronos'}</button>
+                                <button onClick={() => runForecast()} disabled={!modelStatus?.available || !market || isForecasting} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-200 px-3 py-2.5 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"><CpuChipIcon className={`h-4 w-4 ${isForecasting ? 'animate-pulse' : ''}`} />{isForecasting ? 'Menghitung forecast…' : forecast ? 'Jalankan ulang forecast' : 'Buat forecast Kronos'}</button>
                                 {market && <p className="mt-3 text-[10px] leading-relaxed text-slate-600">Cakupan volume positif pada riwayat: {market.volumeCoverage}%. Feed forex umumnya tidak memiliki volume terpusat; model menerima volume nol pada candle tanpa data volume.</p>}
-                                <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-600"><ClockIcon className="h-3.5 w-3.5" />{forecast ? `Dibuat ${new Date(forecast.generatedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB` : 'Jalur forecast muncul setelah layanan model aktif.'}</div>
+                                <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-600"><ClockIcon className="h-3.5 w-3.5" />{forecast ? `Dibuat ${new Date(forecast.generatedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB` : isForecasting ? 'Memproses jalur forecast…' : 'Jalur forecast akan digambar pada chart.'}</div>
                             </div>
                         </div>
 
