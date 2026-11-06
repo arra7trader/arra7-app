@@ -149,8 +149,10 @@ export function processTokenBatch(tokens: CryptoToken[]): Map<string, TokenSnaps
       };
       snapshots.set(key, snapshot);
     } else {
+      const previousUpdate = Date.parse(existing.lastUpdatedAt);
+      const shouldCountUpdate = !Number.isFinite(previousUpdate) || Date.now() - previousUpdate >= 30_000;
       existing.lastUpdatedAt = now;
-      existing.updateCount += 1;
+      if (shouldCountUpdate) existing.updateCount += 1;
       existing.name = token.name;
       existing.imageUrl = token.imageUrl || existing.imageUrl;
       existing.latestPrice = token.priceUsd;
@@ -289,8 +291,8 @@ export function getTopPerformers(currentTokens: CryptoToken[], limit: number = 2
           vmcRatio: 0, buySellRatio: 50,
           ogScore: snapshot.latestOgScore ?? snapshot.snapshotOgScore,
           tier: snapshot.snapshotTier as any,
-          security: { mintRevoked: null, freezeRevoked: null, lpBurned: false, lpLocked: false, lpLockDuration: null, isHoneypot: null, buyTax: null, sellTax: null, isOpenSource: null, devHoldingPercent: null, top10HoldingPercent: null, bundlePercent: null, rugcheckScore: 'Unknown', securityScore: 5 },
-          smartMoney: { smartWalletCount: 0, totalSmartMoneyInvested: 0, avgSmartWalletWinRate: 0, firstSmartBuyTime: null, smartMoneyScore: 0 },
+          security: { mintRevoked: null, freezeRevoked: null, lpBurned: false, lpLocked: false, lpLockDuration: null, lpLockedPercent: null, isHoneypot: null, buyTax: null, sellTax: null, isOpenSource: null, devHoldingPercent: null, top10HoldingPercent: null, holderCount: null, bundlePercent: null, rugcheckScore: 'Unknown', securityScore: 0 },
+          smartMoney: null,
           poolAddress: '', pairUrl: '', createdAt: snapshot.detectedAt,
           txCount24h: 0, buyCount24h: 0, sellCount24h: 0,
           imageUrl: snapshot.imageUrl,

@@ -9,6 +9,7 @@ declare module "next-auth" {
             /** The user's postal address. */
             id: string
             tier: 'BASIC' | 'PRO' | 'VVIP'
+            isAdmin?: boolean
             membershipExpires?: string
             daysUntilExpiry?: number
             isExpired?: boolean

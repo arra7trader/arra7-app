@@ -86,7 +86,7 @@ export async function POST(request: Request) {
         }
 
         if (userId) await useQuota(userId);
-        return NextResponse.json({ ...payload, dataSource: Object.prototype.hasOwnProperty.call(CRYPTO, symbol) ? 'Binance Spot' : 'Yahoo Finance reference' }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
+        return NextResponse.json({ ...payload, dataSource: Object.prototype.hasOwnProperty.call(CRYPTO, symbol) ? 'TradingView Realtime' : 'TradingView Realtime' }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
     } catch (error) {
         console.error('[ARRA Cronos] Forecast error:', error);
         return NextResponse.json({ error: 'Model Kronos tidak dapat membuat forecast saat ini.' }, { status: 503 });

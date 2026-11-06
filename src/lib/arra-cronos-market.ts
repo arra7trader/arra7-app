@@ -22,6 +22,7 @@ export type CronosMarketResult = {
     symbol: string;
     name: string;
     feedSymbol: string;
+    tvSymbol: string;
     timeframe: CronosTimeframe;
     candles: CronosMarketCandle[];
     currentPrice: number;
@@ -34,6 +35,79 @@ export type CronosMarketResult = {
     count: number;
     volumeCoverage: number;
 };
+
+// =======================================
+// TRADINGVIEW SYMBOL MAPPING
+// =======================================
+export const TRADINGVIEW_SYMBOLS: Record<string, string> = {
+    // Forex Major
+    'EURUSD': 'FX:EURUSD',
+    'GBPUSD': 'FX:GBPUSD',
+    'USDJPY': 'FX:USDJPY',
+    'USDCHF': 'FX:USDCHF',
+    'AUDUSD': 'FX:AUDUSD',
+    'USDCAD': 'FX:USDCAD',
+    'NZDUSD': 'FX:NZDUSD',
+    // Forex Minor/Cross
+    'EURGBP': 'FX:EURGBP',
+    'EURJPY': 'FX:EURJPY',
+    'GBPJPY': 'FX:GBPJPY',
+    'EURCHF': 'FX:EURCHF',
+    'EURAUD': 'FX:EURAUD',
+    'EURCAD': 'FX:EURCAD',
+    'GBPCHF': 'FX:GBPCHF',
+    'GBPAUD': 'FX:GBPAUD',
+    'AUDJPY': 'FX:AUDJPY',
+    'CADJPY': 'FX:CADJPY',
+    'CHFJPY': 'FX:CHFJPY',
+    'NZDJPY': 'FX:NZDJPY',
+    'AUDCAD': 'FX:AUDCAD',
+    'AUDCHF': 'FX:AUDCHF',
+    'AUDNZD': 'FX:AUDNZD',
+    'CADCHF': 'FX:CADCHF',
+    'EURNZD': 'FX:EURNZD',
+    'GBPCAD': 'FX:GBPCAD',
+    'GBPNZD': 'FX:GBPNZD',
+    'NZDCAD': 'FX:NZDCAD',
+    'NZDCHF': 'FX:NZDCHF',
+    // Commodities
+    'XAUUSD': 'OANDA:XAUUSD',
+    'XAGUSD': 'OANDA:XAGUSD',
+    'XPTUSD': 'TVC:PLATINUM',
+    'XPDUSD': 'TVC:PALLADIUM',
+    'XTIUSD': 'TVC:USOIL',
+    'XBRUSD': 'TVC:UKOIL',
+    'XNGUSD': 'NYMEX:NG1!',
+    'XCUUSD': 'COMEX:HG1!',
+    // Crypto
+    'BTCUSD': 'BINANCE:BTCUSDT',
+    'ETHUSD': 'BINANCE:ETHUSDT',
+    'XRPUSD': 'BINANCE:XRPUSDT',
+    'SOLUSD': 'BINANCE:SOLUSDT',
+    'BNBUSD': 'BINANCE:BNBUSDT',
+    'ADAUSD': 'BINANCE:ADAUSDT',
+    'DOGEUSD': 'BINANCE:DOGEUSDT',
+    'DOTUSD': 'BINANCE:DOTUSDT',
+    'MATICUSD': 'BINANCE:MATICUSDT',
+    'LINKUSD': 'BINANCE:LINKUSDT',
+    'AVAXUSD': 'BINANCE:AVAXUSDT',
+    'LTCUSD': 'BINANCE:LTCUSDT',
+    // Indices
+    'US30': 'TVC:DJI',
+    'US500': 'FOREXCOM:SPXUSD',
+    'USTEC': 'FOREXCOM:NSXUSD',
+    'DE40': 'PEPPERSTONE:GER40',
+    'UK100': 'FOREXCOM:UKXGBP',
+    'JP225': 'TVC:NI225',
+};
+
+/**
+ * Resolve TradingView symbol for a given instrument.
+ * Falls back to `OANDA:${symbol}` if no mapping found.
+ */
+export function getTradingViewSymbol(symbol: string): string {
+    return TRADINGVIEW_SYMBOLS[symbol] || `OANDA:${symbol}`;
+}
 
 const marketCache = new Map<string, { expiresAt: number; value: CronosMarketResult }>();
 
@@ -62,11 +136,69 @@ function aggregateFourHours(candles: CronosMarketCandle[]): CronosMarketCandle[]
     }));
 }
 
+// =======================================
+// TRADINGVIEW SCANNER REALTIME API
+// Directly queries TradingView's official scanner endpoints
+// =======================================
+async function fetchTradingViewLiveQuote(tvSymbol: string): Promise<{
+    livePrice: number | null;
+    open: number | null;
+    high: number | null;
+    low: number | null;
+    volume: number | null;
+}> {
+    let endpoint = 'cfd';
+    if (tvSymbol.startsWith('FX:')) {
+        endpoint = 'forex';
+    } else if (tvSymbol.startsWith('BINANCE:') || tvSymbol.includes('USDT') || tvSymbol.includes('BTC')) {
+        endpoint = 'crypto';
+    } else if (tvSymbol.startsWith('DJ:') || tvSymbol.startsWith('SP:') || tvSymbol.startsWith('TVC:DJI')) {
+        endpoint = 'cfd';
+    }
+
+    try {
+        const response = await fetch(`https://scanner.tradingview.com/${endpoint}/scan`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
+            },
+            body: JSON.stringify({
+                symbols: { tickers: [tvSymbol] },
+                columns: ['close', 'open', 'high', 'low', 'volume'],
+            }),
+            cache: 'no-store',
+            signal: AbortSignal.timeout(6_000),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const row = data?.data?.[0]?.d;
+            if (Array.isArray(row) && row.length >= 4 && Number.isFinite(row[0]) && Number(row[0]) > 0) {
+                return {
+                    livePrice: Number(row[0]),
+                    open: Number(row[1]) || null,
+                    high: Number(row[2]) || null,
+                    low: Number(row[3]) || null,
+                    volume: Number(row[4]) || null,
+                };
+            }
+        }
+    } catch {
+        // Fallback silently if scanner endpoint fails
+    }
+
+    return { livePrice: null, open: null, high: null, low: null, volume: null };
+}
+
+// =======================================
+// BINANCE (for Crypto historical series)
+// =======================================
 async function fetchBinanceCandles(symbol: string, interval: string): Promise<{ candles: CronosMarketCandle[]; livePrice: number | null; quoteTime: number | null }> {
     const binanceSymbol = symbol.replace('USD', 'USDT');
     const endpoints = [
-        `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=512`,
         `https://data-api.binance.vision/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=512`,
+        `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=512`,
     ];
     for (const url of endpoints) {
         try {
@@ -91,16 +223,19 @@ async function fetchBinanceCandles(symbol: string, interval: string): Promise<{ 
                     return { candles, livePrice: Number.isFinite(livePrice) ? livePrice : null, quoteTime: Date.now() };
                 }
             } catch {
-                // Use the latest exchange candle close when quote endpoint is unavailable.
+                // Use latest bar close if ticker not reachable
             }
-            return { candles, livePrice: null, quoteTime: null };
+            return { candles, livePrice: candles.length ? candles[candles.length - 1].close : null, quoteTime: Date.now() };
         } catch {
-            // Try Binance's public market-data mirror.
+            // Try next endpoint
         }
     }
     return { candles: [], livePrice: null, quoteTime: null };
 }
 
+// =======================================
+// YAHOO FINANCE (for Forex / Commodities / Indices historical series)
+// =======================================
 async function fetchYahooCandles(symbol: string, interval: string, range: string): Promise<{ candles: CronosMarketCandle[]; quoteTime: number | null; livePrice: number | null }> {
     const config = FOREX_PAIRS[symbol as ForexPair];
     if (!config) return { candles: [], quoteTime: null, livePrice: null };
@@ -109,7 +244,7 @@ async function fetchYahooCandles(symbol: string, interval: string, range: string
         try {
             const response = await fetch(url.replace('query1.finance.yahoo.com', host), {
                 cache: 'no-store',
-                headers: { 'User-Agent': 'Mozilla/5.0 PICA-ARRA-Cronos/1.0' },
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
                 signal: AbortSignal.timeout(8_000),
             });
             if (!response.ok) continue;
@@ -138,12 +273,18 @@ async function fetchYahooCandles(symbol: string, interval: string, range: string
                 };
             }
         } catch {
-            // Try Yahoo's second chart-data host.
+            // Try next host
         }
     }
     return { candles: [], quoteTime: null, livePrice: null };
 }
 
+// =======================================
+// MAIN DATA FETCHER
+// Hybrid Realtime Pipeline:
+// 1. Fetches historical candles (512 bars) for Kronos context.
+// 2. Calibrates live price & latest bar directly from TradingView Scanner API.
+// =======================================
 export async function getCronosMarketData(symbol: string, timeframe: CronosTimeframe): Promise<CronosMarketResult> {
     const cacheKey = `${symbol}:${timeframe}`;
     const cached = marketCache.get(cacheKey);
@@ -152,26 +293,48 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
     if (!pair) throw new Error('Instrumen tidak didukung.');
     const config = CRONOS_INTERVALS[timeframe];
     const isCrypto = Object.prototype.hasOwnProperty.call(CRYPTO, symbol);
+    const tvSymbol = getTradingViewSymbol(symbol);
     let candles: CronosMarketCandle[];
-    let source: string;
+    let source = 'TradingView Realtime';
     let livePrice: number | null = null;
     let quoteTime: number | null = null;
+
+    // Step 1: Fetch historical candles for Kronos inference context (up to 512 bars)
     if (isCrypto) {
         const fetched = await fetchBinanceCandles(symbol, config.binance);
         candles = fetched.candles;
         livePrice = fetched.livePrice;
         quoteTime = fetched.quoteTime;
-        source = 'Binance Spot';
     } else {
         const fetched = await fetchYahooCandles(symbol, timeframe === '4h' ? '60m' : config.yahoo, config.range);
         candles = fetched.candles;
         livePrice = fetched.livePrice;
         quoteTime = fetched.quoteTime;
-        source = 'Yahoo Finance reference';
         if (timeframe === '4h') candles = aggregateFourHours(candles);
     }
+
     candles = candles.slice(-512);
-    if (candles.length < 20) throw new Error(`Riwayat OHLCV riil untuk ${symbol} belum cukup tersedia dari ${source}.`);
+    if (candles.length < 20) throw new Error(`Riwayat OHLCV riil untuk ${symbol} belum cukup tersedia.`);
+
+    // Step 2: Fetch live real-time price & tick directly from TradingView Scanner API
+    try {
+        const tvQuote = await fetchTradingViewLiveQuote(tvSymbol);
+        if (tvQuote.livePrice !== null && tvQuote.livePrice > 0) {
+            livePrice = tvQuote.livePrice;
+            quoteTime = Date.now();
+            source = 'TradingView Realtime';
+
+            // Synchronize the latest bar close with TradingView's live price
+            const last = candles[candles.length - 1];
+            last.close = tvQuote.livePrice;
+            if (tvQuote.high && tvQuote.high > last.high) last.high = tvQuote.high;
+            if (tvQuote.low && tvQuote.low < last.low) last.low = tvQuote.low;
+        } else {
+            source = isCrypto ? 'Binance Spot' : 'Yahoo Finance';
+        }
+    } catch {
+        source = isCrypto ? 'Binance Spot' : 'Yahoo Finance';
+    }
 
     const lastCandle = candles[candles.length - 1];
     const latestTimestamp = quoteTime || new Date(lastCandle.time).getTime();
@@ -184,6 +347,7 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
         symbol,
         name: pair.name,
         feedSymbol: isCrypto ? symbol.replace('USD', 'USDT') : pair.yahoo,
+        tvSymbol,
         timeframe,
         candles,
         currentPrice: livePrice || lastCandle.close,
@@ -196,6 +360,6 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
         count: candles.length,
         volumeCoverage: candles.length ? Math.round(candles.filter((candle) => candle.volume > 0).length / candles.length * 100) : 0,
     };
-    marketCache.set(cacheKey, { expiresAt: Date.now() + 20_000, value: result });
+    marketCache.set(cacheKey, { expiresAt: Date.now() + 15_000, value: result });
     return result;
 }

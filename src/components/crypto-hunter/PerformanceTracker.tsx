@@ -113,7 +113,7 @@ function FullView({ token, snapshot, performance }: PerformanceTrackerProps) {
 
         {/* OG Score */}
         <BeforeAfterRow
-          label="OG Score"
+          label="Signal Score"
           emoji="🎯"
           before={snapshot.snapshotOgScore.toString()}
           after={token.ogScore.toString()}
@@ -157,16 +157,6 @@ function FullView({ token, snapshot, performance }: PerformanceTrackerProps) {
         </div>
       )}
 
-      {/* Investment Simulator */}
-      <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200/80">
-        <div className="text-[10px] font-bold text-indigo-700 mb-1.5">💡 Simulasi Investasi</div>
-        <div className="grid grid-cols-3 gap-2 text-[10px]">
-          <SimCard amount={100000} multiplier={performance.mcMultiplier} label="Rp 100K" />
-          <SimCard amount={500000} multiplier={performance.mcMultiplier} label="Rp 500K" />
-          <SimCard amount={1000000} multiplier={performance.mcMultiplier} label="Rp 1 Juta" />
-        </div>
-        <p className="text-[8px] text-indigo-500 mt-1.5 italic">* Simulasi berdasarkan perubahan MC, hasil aktual bisa berbeda</p>
-      </div>
     </div>
   );
 }
@@ -267,24 +257,6 @@ function MiniChart({ history }: { history: { time: string; price: number; market
           strokeLinejoin="round"
         />
       </svg>
-    </div>
-  );
-}
-
-function SimCard({ amount, multiplier, label }: { amount: number; multiplier: number; label: string }) {
-  const result = amount * multiplier;
-  const profit = result - amount;
-  const isPositive = multiplier >= 1;
-
-  return (
-    <div className={`p-2 rounded-lg text-center ${isPositive ? 'bg-white/80' : 'bg-red-50/50'}`}>
-      <div className="text-[9px] text-indigo-400 font-medium">{label}</div>
-      <div className={`text-xs font-black ${isPositive ? 'text-emerald-700' : 'text-red-700'}`}>
-        Rp {(result / 1000).toFixed(0)}K
-      </div>
-      <div className={`text-[8px] font-bold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
-        {profit >= 0 ? '+' : ''}{(profit / 1000).toFixed(0)}K
-      </div>
     </div>
   );
 }

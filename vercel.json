@@ -1,5 +1,10 @@
 {
-    "crons": [],
+    "crons": [
+        {
+            "path": "/api/cron/crypto-hunter",
+            "schedule": "*/10 * * * *"
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/ml/:path*",

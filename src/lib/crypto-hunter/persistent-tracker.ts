@@ -77,8 +77,10 @@ export async function recordCryptoTokenBatch(tokens: CryptoToken[]): Promise<Tok
       snapshot.latestHolders = token.holders;
       snapshot.latestOgScore = token.ogScore;
       snapshot.latestVolume24h = token.volume24h;
+      const previousUpdate = Date.parse(snapshot.lastUpdatedAt);
+      const shouldCountUpdate = !Number.isFinite(previousUpdate) || Date.now() - previousUpdate >= 30_000;
       snapshot.lastUpdatedAt = now;
-      snapshot.updateCount += 1;
+      if (shouldCountUpdate) snapshot.updateCount += 1;
       snapshot.peakPrice = Math.max(snapshot.peakPrice, token.priceUsd);
       snapshot.peakMarketCap = Math.max(snapshot.peakMarketCap, token.marketCap);
       snapshot.peakMultiplier = snapshot.snapshotMarketCap > 0

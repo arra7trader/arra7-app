@@ -20,7 +20,7 @@ interface TokenCardProps {
 
 export default function TokenCard({ token, onSelect, onWatchlist, isWatchlisted = false, index = 0, performance }: TokenCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const gradeConfig = getGradeConfig(token.ogScore >= 90 ? 'DIAMOND' : token.ogScore >= 75 ? 'HOT' : token.ogScore >= 60 ? 'INTERESTING' : token.ogScore >= 40 ? 'CAUTION' : 'AVOID');
+  const gradeConfig = getGradeConfig(token.ogScore >= 90 ? 'HIGH_SIGNAL' : token.ogScore >= 75 ? 'ACTIVE' : token.ogScore >= 60 ? 'WATCH' : token.ogScore >= 40 ? 'LOW_SIGNAL' : 'INSUFFICIENT');
   const tierConfig = getTierConfig(token.tier);
 
   const chainColors: Record<string, string> = {
@@ -63,17 +63,32 @@ export default function TokenCard({ token, onSelect, onWatchlist, isWatchlisted 
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[11px] text-slate-500 font-semibold">${token.symbol}</span>
               <span className="text-[9px] text-slate-400">•</span>
-              <span className="text-[10px] text-slate-400 font-medium">{formatAge(token.age)} ago</span>
+              <span className="text-[10px] text-slate-400 font-medium">{token.ageIsEstimate ? 'Age unknown' : `${formatAge(token.age)} ago`}</span>
             </div>
           </div>
         </div>
         <OGScoreGauge score={token.ogScore} size="sm" showLabel={false} />
       </div>
 
+      {(token.isPromoted || (token.discoverySources?.length || 0) > 0) && (
+        <div className="flex flex-wrap gap-1 px-3 -mt-1">
+          {token.isPromoted && (
+            <span className="px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-700 border border-violet-200 text-[8px] font-bold">
+              PAID BOOST{token.promotionAmount ? ` · ${token.promotionAmount}` : ''}
+            </span>
+          )}
+          {Array.from(new Set(token.discoverySources || [])).filter(source => source !== 'dexscreener-boost').map(source => (
+            <span key={source} className="px-1.5 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-200 text-[8px] font-semibold">
+              {source === 'geckoterminal-new' ? 'NEW POOL' : source === 'geckoterminal-trending' ? 'TRENDING POOL' : 'NEW PROFILE'}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-3 gap-1.5 px-3 py-2">
         <div className="text-center p-1.5 rounded-lg bg-slate-50/80">
-          <div className="text-[9px] text-slate-400 font-medium">MC</div>
+          <div className="text-[9px] text-slate-400 font-medium">{token.marketCapIsEstimate ? 'MC/FDV*' : 'MC'}</div>
           <div className="text-[11px] font-bold text-slate-800">{formatNumber(token.marketCap)}</div>
         </div>
         <div className="text-center p-1.5 rounded-lg bg-slate-50/80">
@@ -112,7 +127,7 @@ export default function TokenCard({ token, onSelect, onWatchlist, isWatchlisted 
             token.buySellRatio >= 45 ? 'bg-slate-100 text-slate-600' :
             'bg-red-100 text-red-700'
           }`}>
-            B/S: {token.buySellRatio.toFixed(0)}%
+            B/S: {token.txCount24h > 0 ? `${token.buySellRatio.toFixed(0)}%` : 'N/A'}
           </span>
 
           {/* Tier */}
@@ -179,7 +194,7 @@ export default function TokenCard({ token, onSelect, onWatchlist, isWatchlisted 
         token.ogScore >= 75 ? 'bg-gradient-to-r from-orange-400 to-orange-600' :
         token.ogScore >= 60 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
         token.ogScore >= 40 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
-        'bg-gradient-to-r from-red-400 to-red-500'
+        'bg-gradient-to-r from-slate-300 to-slate-500'
       }`} />
     </motion.div>
   );

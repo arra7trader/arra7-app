@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkTokenSecurity, checkRugcheck } from '@/lib/crypto-hunter/goplus-security';
+import { checkTokenSecurity, checkRugcheck, getDefaultSecurity } from '@/lib/crypto-hunter/goplus-security';
 import type { ChainType } from '@/lib/crypto-hunter/types';
 
 export const dynamic = 'force-dynamic';
@@ -7,7 +7,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const chain = (searchParams.get('chain') || 'solana') as ChainType;
+    const rawChain = searchParams.get('chain') || 'solana';
+    const supportedChains: ChainType[] = ['solana', 'base', 'ethereum', 'bsc'];
+    if (!supportedChains.includes(rawChain as ChainType)) {
+      return NextResponse.json({ success: false, error: 'Unsupported chain' }, { status: 400 });
+    }
+    const chain = rawChain as ChainType;
     const address = searchParams.get('address');
 
     if (!address) {
@@ -19,17 +24,14 @@ export async function GET(request: NextRequest) {
 
     // Run security checks in parallel
     const [securityResult, rugcheckResult] = await Promise.allSettled([
-      checkTokenSecurity(chain, address),
-      chain === 'solana' ? checkRugcheck(address) : Promise.resolve({ score: 'Unknown', risks: [] }),
+      chain === 'solana' ? Promise.resolve(null) : checkTokenSecurity(chain, address),
+      chain === 'solana' ? checkRugcheck(address) : Promise.resolve(null),
     ]);
 
-    const security = securityResult.status === 'fulfilled' ? securityResult.value : null;
-    const rugcheck = rugcheckResult.status === 'fulfilled' ? rugcheckResult.value : { score: 'Unknown', risks: [] };
+    const security = securityResult.status === 'fulfilled' ? securityResult.value || getDefaultSecurity() : getDefaultSecurity();
+    const rugcheck = rugcheckResult.status === 'fulfilled' ? rugcheckResult.value : null;
 
-    // Merge rugcheck into security
-    if (security && rugcheck.score !== 'Unknown') {
-      security.rugcheckScore = rugcheck.score as any;
-    }
+    if (rugcheck?.security) Object.assign(security, rugcheck.security);
 
     return NextResponse.json({
       success: true,

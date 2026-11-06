@@ -31,6 +31,8 @@ export default function CryptoHunterDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const tokenRequestRef = useRef<AbortController | null>(null);
+  const trendingRequestRef = useRef<AbortController | null>(null);
   const [snapshots, setSnapshots] = useState<Map<string, TokenSnapshot>>(new Map());
   const [trackerStats, setTrackerStats] = useState({ totalTracked: 0, totalRockets: 0, totalPumping: 0, totalGrowing: 0, bestMultiplier: 0, bestToken: '' });
 
@@ -67,10 +69,14 @@ export default function CryptoHunterDashboard() {
 
   // Fetch tokens
   const fetchTokens = useCallback(async () => {
+    tokenRequestRef.current?.abort();
+    const controller = new AbortController();
+    tokenRequestRef.current = controller;
+    setLoading(true);
     try {
       setError(null);
       const params = new URLSearchParams({
-        chain: filters.chain === 'all' ? 'solana' : filters.chain,
+        chain: filters.chain,
         minMc: filters.minMarketCap.toString(),
         maxMc: filters.maxMarketCap.toString(),
         minLiq: filters.minLiquidity.toString(),
@@ -83,12 +89,14 @@ export default function CryptoHunterDashboard() {
         ...(filters.tier !== 'all' ? { tier: filters.tier.toString() } : {}),
       });
 
-      const res = await fetch(`/api/crypto-hunter/scan?${params}`);
+      const res = await fetch(`/api/crypto-hunter/scan?${params}`, { signal: controller.signal });
       const data = await res.json();
 
       if (data.success) {
         setTokens(data.tokens);
         setLastUpdate(new Date());
+        const latestTokens = new Map<string, CryptoToken>(data.tokens.map((token: CryptoToken) => [`${token.chain}:${token.address}`, token]));
+        setWatchlist(current => current.map(token => latestTokens.get(`${token.chain}:${token.address}`) || token));
         // Process snapshots for performance tracking
         const localSnapshots = processTokenBatch(data.tokens);
         const newSnapshots = Array.isArray(data.snapshots)
@@ -101,30 +109,31 @@ export default function CryptoHunterDashboard() {
         setError(data.error || 'Failed to fetch tokens');
       }
     } catch (err) {
-      setError('Network error - API tidak dapat diakses');
+      if (!controller.signal.aborted) setError('Network error - API tidak dapat diakses');
     } finally {
-      setLoading(false);
+      if (tokenRequestRef.current === controller) {
+        tokenRequestRef.current = null;
+        setLoading(false);
+      }
     }
   }, [filters, refreshTracker]);
 
   // Fetch trending
   const fetchTrending = useCallback(async () => {
+    trendingRequestRef.current?.abort();
+    const controller = new AbortController();
+    trendingRequestRef.current = controller;
     try {
-      const chain = filters.chain === 'all' ? 'solana' : filters.chain;
-      const res = await fetch(`/api/crypto-hunter/trending?chain=${chain}`);
+      const res = await fetch(`/api/crypto-hunter/trending?chain=${filters.chain}`, { signal: controller.signal });
       const data = await res.json();
-      if (data.success) {
-        setTrendingTokens(data.tokens);
-        const localSnapshots = processTokenBatch(data.tokens);
-        const newSnapshots = Array.isArray(data.snapshots)
-          ? new Map<string, TokenSnapshot>(data.snapshots.map((snapshot: TokenSnapshot) => [`${snapshot.chain}:${snapshot.address}`, snapshot]))
-          : localSnapshots;
-        setSnapshots(newSnapshots);
-        setTrackerStats(Array.isArray(data.snapshots) ? getTrackerStats(data.snapshots) : getTrackerStats());
-        if (!Array.isArray(data.snapshots)) void refreshTracker();
-      }
-    } catch {}
-  }, [filters.chain, refreshTracker]);
+      if (data.success && Array.isArray(data.tokens)) setTrendingTokens(data.tokens);
+      else if (!controller.signal.aborted) setTrendingTokens([]);
+    } catch {
+      if (!controller.signal.aborted) setTrendingTokens([]);
+    } finally {
+      if (trendingRequestRef.current === controller) trendingRequestRef.current = null;
+    }
+  }, [filters.chain]);
 
   // Initial fetch
   useEffect(() => {
@@ -132,17 +141,22 @@ export default function CryptoHunterDashboard() {
     fetchTrending();
   }, [fetchTokens, fetchTrending]);
 
-  // Auto-refresh every 30 seconds
+  // Refresh Live every 30 seconds and Trending every 60 seconds while the dashboard is open.
   useEffect(() => {
     if (autoRefresh) {
+      let refreshCount = 0;
       intervalRef.current = setInterval(() => {
-        fetchTokens();
+        if (!tokenRequestRef.current) fetchTokens();
+        refreshCount += 1;
+        if (refreshCount % 2 === 0 && !trendingRequestRef.current) fetchTrending();
       }, 30000);
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      tokenRequestRef.current?.abort();
+      trendingRequestRef.current?.abort();
     };
-  }, [autoRefresh, fetchTokens]);
+  }, [autoRefresh, fetchTokens, fetchTrending]);
 
   // Watchlist management
   const toggleWatchlist = (token: CryptoToken) => {
@@ -204,7 +218,7 @@ export default function CryptoHunterDashboard() {
               <span>Crypto Hunter</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              OG Smart Money Scanner - Temukan Crypto Gems Sebelum Meledak
+              Pemindai token baru dan momentum pasar dari DexScreener & GeckoTerminal
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -233,6 +247,15 @@ export default function CryptoHunterDashboard() {
           </div>
         </div>
 
+        <div className="mb-4 p-3 rounded-xl border border-slate-200 bg-white/80">
+          <p className="text-[10px] text-slate-600 leading-relaxed">
+            Live Feed diperbarui setiap 30 detik dan Trending setiap 60 detik saat halaman aktif. Job server dijadwalkan tiap 10 menit untuk memperbarui tracker bila CRON_SECRET dan Turso telah dikonfigurasi. Cache pasar 30–60 detik; pemeriksaan risiko dapat berumur hingga 5 menit. Skor memakai aktivitas pasar dan data risiko, bukan pelacakan wallet OG/smart money, dan tidak menjamin kenaikan harga.
+          </p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            Skor masih parsial saat data keamanan belum tersedia; MC/FDV* memakai FDV sebagai perkiraan. Boosted berarti promosi berbayar DexScreener, bukan sinyal wallet atau sinyal beli.
+          </p>
+        </div>
+
         {/* Stats Bar */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
@@ -241,11 +264,11 @@ export default function CryptoHunterDashboard() {
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200/80 shadow-xs">
             <span className="text-[10px]">💎</span>
-            <span className="text-xs font-bold text-cyan-800">{diamondCount} Diamond</span>
+            <span className="text-xs font-bold text-cyan-800">{diamondCount} Skor Tinggi</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200/80 shadow-xs">
             <span className="text-[10px]">🔥</span>
-            <span className="text-xs font-bold text-orange-800">{hotCount} Hot</span>
+            <span className="text-xs font-bold text-orange-800">{hotCount} Active</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
             <span className="text-[10px] text-slate-400 font-medium">Avg Score</span>
@@ -254,7 +277,7 @@ export default function CryptoHunterDashboard() {
           {trackerStats.totalRockets > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 shadow-xs">
               <span className="text-[10px]">🚀</span>
-              <span className="text-xs font-bold text-emerald-800">{trackerStats.totalRockets} Rockets</span>
+              <span className="text-xs font-bold text-emerald-800">{trackerStats.totalRockets} token pernah ≥5×</span>
             </div>
           )}
           {trackerStats.bestMultiplier > 1.5 && (
@@ -318,7 +341,7 @@ export default function CryptoHunterDashboard() {
             <div className="w-12 h-12 border-3 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
             <div className="text-center">
               <p className="text-sm font-bold text-slate-700">Scanning Blockchain...</p>
-              <p className="text-xs text-slate-400 mt-1">Menganalisis token baru dari DexScreener & GeckoTerminal</p>
+              <p className="text-xs text-slate-400 mt-1">Pool baru, token trending, profil terbaru, harga, volume, dan risiko</p>
             </div>
           </motion.div>
         ) : error && tokens.length === 0 ? (
@@ -456,7 +479,7 @@ export default function CryptoHunterDashboard() {
                           <div className="font-bold text-slate-700">{item.snapshot.snapshotHolders.toLocaleString()} / {item.token.holders.toLocaleString()}</div>
                         </div>
                         <div className="p-1.5 rounded-lg bg-slate-50">
-                          <div className="text-slate-400">OG Score Awal / Terbaru</div>
+                          <div className="text-slate-400">Signal Score awal / terbaru</div>
                           <div className="font-bold text-slate-700">{item.snapshot.snapshotOgScore} / {item.token.ogScore}</div>
                         </div>
                         <div className="p-1.5 rounded-lg bg-slate-50">

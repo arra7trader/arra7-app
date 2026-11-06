@@ -8,6 +8,10 @@ interface SecurityBadgesProps {
 }
 
 export default function SecurityBadges({ security, compact = false }: SecurityBadgesProps) {
+  const hasKnownSecurityData = security.mintRevoked !== null || security.freezeRevoked !== null ||
+    security.isHoneypot !== null || security.buyTax !== null || security.sellTax !== null ||
+    security.devHoldingPercent !== null || security.top10HoldingPercent !== null ||
+    security.rugcheckScore !== 'Unknown';
   const checks = [
     {
       label: 'Mint',
@@ -32,7 +36,9 @@ export default function SecurityBadges({ security, compact = false }: SecurityBa
     },
     {
       label: 'LP',
-      value: security.lpBurned ? true : security.lpLocked ? true : null,
+      value: security.lpBurned || security.lpLocked
+        ? true
+        : security.lpLockedPercent != null ? false : null,
       good: true,
       goodText: security.lpBurned ? 'Burned 🔥' : 'Locked',
       badText: 'Unlocked',
@@ -73,11 +79,12 @@ export default function SecurityBadges({ security, compact = false }: SecurityBa
         <span>🛡️</span>
         <span>Security Check</span>
         <span className={`ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+          !hasKnownSecurityData ? 'bg-slate-100 text-slate-500' :
           security.securityScore >= 22 ? 'bg-emerald-100 text-emerald-700' :
           security.securityScore >= 15 ? 'bg-yellow-100 text-yellow-700' :
           'bg-red-100 text-red-700'
         }`}>
-          {security.securityScore}/30
+          {hasKnownSecurityData ? `${security.securityScore}/30` : 'N/A'}
         </span>
       </h4>
       <div className="grid grid-cols-2 gap-1.5">
@@ -155,6 +162,11 @@ export default function SecurityBadges({ security, compact = false }: SecurityBa
         }`}>
           <span>Rugcheck:</span>
           <span>{security.rugcheckScore === 'Good' ? '✅ Good' : security.rugcheckScore === 'Warning' ? '⚠️ Warning' : '🚨 Danger'}</span>
+        </div>
+      )}
+      {security.lpLockedPercent != null && (
+        <div className="text-[10px] text-slate-500 text-center">
+          LP terkunci: {security.lpLockedPercent.toFixed(1)}% · RugCheck
         </div>
       )}
     </div>

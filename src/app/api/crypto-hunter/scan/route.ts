@@ -9,36 +9,66 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
-    const chain = (searchParams.get('chain') || 'solana') as ChainType;
-    const minMc = parseInt(searchParams.get('minMc') || '5000');
-    const maxMc = parseInt(searchParams.get('maxMc') || '20000000');
-    const minLiq = parseInt(searchParams.get('minLiq') || '3000');
-    const maxAge = parseInt(searchParams.get('maxAge') || '1440');
-    const minScore = parseInt(searchParams.get('minScore') || '0');
-    const minHolders = parseInt(searchParams.get('minHolders') || '0');
-    const sortBy = (searchParams.get('sortBy') || 'ogScore') as SortOption;
-    const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
+    const rawChain = searchParams.get('chain') || 'solana';
+    const supportedChains: ChainType[] = ['solana', 'base', 'ethereum', 'bsc'];
+    if (rawChain !== 'all' && !supportedChains.includes(rawChain as ChainType)) {
+      return NextResponse.json({ success: false, error: 'Unsupported chain', tokens: [] }, { status: 400 });
+    }
+    const chains = rawChain === 'all' ? supportedChains : [rawChain as ChainType];
+    const readNumber = (key: string, fallback: number) => {
+      const rawValue = searchParams.get(key);
+      if (rawValue === null || rawValue.trim() === '') return fallback;
+      const parsed = Number(rawValue);
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    };
+    const minMc = readNumber('minMc', 5000);
+    const maxMc = Math.max(minMc, readNumber('maxMc', 20000000));
+    const minLiq = readNumber('minLiq', 3000);
+    const maxAge = readNumber('maxAge', 1440);
+    const minScore = readNumber('minScore', 0);
+    const minHolders = readNumber('minHolders', 0);
+    const allowedSorts: SortOption[] = ['ogScore', 'marketCap', 'volume24h', 'age', 'holders', 'priceChange1h', 'vmcRatio'];
+    const requestedSort = searchParams.get('sortBy') || 'ogScore';
+    const sortBy = allowedSorts.includes(requestedSort as SortOption) ? requestedSort as SortOption : 'ogScore';
+    const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
     const securityOnly = searchParams.get('securityOnly') === 'true';
-    const tier = searchParams.get('tier');
+    const requestedTier = Number(searchParams.get('tier'));
+    const tier = Number.isInteger(requestedTier) && requestedTier >= 1 && requestedTier <= 4
+      ? requestedTier as FilterConfig['tier']
+      : 'all';
 
     const filters: FilterConfig = {
-      chain,
+      chain: rawChain as ChainType | 'all',
       minMarketCap: minMc,
       maxMarketCap: maxMc,
       minLiquidity: minLiq,
       maxAge,
       minOgScore: minScore,
       minHolders,
-      tier: tier && tier !== 'all' ? parseInt(tier) as any : 'all',
+      tier,
       securityOnly,
       sortBy,
       sortOrder,
     };
 
-    const tokens = await scanNewTokens(chain, filters);
+    const batches = await Promise.all(chains.map(chain => scanNewTokens(chain, filters)));
+    const tokens = batches.flat();
+    const direction = sortOrder === 'desc' ? -1 : 1;
+    const sortValues: Record<SortOption, (token: (typeof tokens)[number]) => number> = {
+      ogScore: token => token.ogScore,
+      marketCap: token => token.marketCap,
+      volume24h: token => token.volume24h,
+      age: token => token.age,
+      holders: token => token.holders,
+      priceChange1h: token => token.priceChange1h,
+      vmcRatio: token => token.vmcRatio,
+    };
+    const sortDirection = sortBy === 'age' ? -direction : direction;
+    tokens.sort((a, b) => sortDirection * (sortValues[sortBy](a) - sortValues[sortBy](b)));
+    const topTokens = tokens.slice(0, 50);
     let snapshots = null;
     try {
-      snapshots = await recordCryptoTokenBatch(tokens);
+      snapshots = await recordCryptoTokenBatch(topTokens);
     } catch (error) {
       console.error('Crypto Hunter tracking save error:', error);
     }
@@ -46,9 +76,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: tokens.length,
-      chain,
+      chain: rawChain,
+      chains,
       timestamp: new Date().toISOString(),
-      tokens,
+      tokens: topTokens,
       snapshots,
     });
   } catch (error) {

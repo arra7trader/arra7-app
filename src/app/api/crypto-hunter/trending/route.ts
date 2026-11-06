@@ -8,20 +8,26 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const chain = (searchParams.get('chain') || 'solana') as ChainType;
+    const rawChain = searchParams.get('chain') || 'solana';
+    const supportedChains: ChainType[] = ['solana', 'base', 'ethereum', 'bsc'];
+    if (rawChain !== 'all' && !supportedChains.includes(rawChain as ChainType)) {
+      return NextResponse.json({ success: false, error: 'Unsupported chain', tokens: [] }, { status: 400 });
+    }
+    const chains = rawChain === 'all' ? supportedChains : [rawChain as ChainType];
 
-    const tokens = await getTrendingTokens(chain);
+    const batches = await Promise.all(chains.map(chain => getTrendingTokens(chain)));
+    const tokens = batches.flat().sort((a, b) => b.ogScore - a.ogScore).slice(0, 20);
     let snapshots = null;
     try {
       snapshots = await recordCryptoTokenBatch(tokens);
     } catch (error) {
-      console.error('Crypto Hunter tracking save error:', error);
+      console.error('Crypto Hunter trending tracking save error:', error);
     }
-
     return NextResponse.json({
       success: true,
       count: tokens.length,
-      chain,
+      chain: rawChain,
+      chains,
       timestamp: new Date().toISOString(),
       tokens,
       snapshots,

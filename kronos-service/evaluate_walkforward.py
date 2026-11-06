@@ -206,7 +206,7 @@ def main() -> None:
     rendered = json.dumps({
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "evaluation": "walk-forward smoke check; not a profitability claim",
-        "model": "Kronos-mini, upstream predictor average of five sampled paths",
+        "model": f"{os.getenv('KRONOS_MODEL_ID', 'NeoQuasar/Kronos-base')}, upstream predictor average of five sampled paths",
         "timeframe": "1h",
         "markets": results,
     }, indent=2)

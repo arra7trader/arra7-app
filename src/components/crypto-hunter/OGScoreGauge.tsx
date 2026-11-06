@@ -18,11 +18,11 @@ export default function OGScoreGauge({ score, size = 'md', showLabel = true }: O
   };
 
   const getGrade = () => {
-    if (score >= 90) return { emoji: '💎', label: 'DIAMOND' };
-    if (score >= 75) return { emoji: '🔥', label: 'HOT' };
-    if (score >= 60) return { emoji: '⚡', label: 'INTERESTING' };
-    if (score >= 40) return { emoji: '⚠️', label: 'CAUTION' };
-    return { emoji: '🚫', label: 'AVOID' };
+    if (score >= 90) return { emoji: '💎', label: 'SKOR TINGGI' };
+    if (score >= 75) return { emoji: '🔥', label: 'ACTIVE' };
+    if (score >= 60) return { emoji: '⚡', label: 'WATCH' };
+    if (score >= 40) return { emoji: '⚠️', label: 'LOW SIGNAL' };
+    return { emoji: '▫️', label: 'LIMITED DATA' };
   };
 
   const sizeConfig = {

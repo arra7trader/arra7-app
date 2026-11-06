@@ -18,6 +18,7 @@ interface TokenDetailModalProps {
 
 export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetailModalProps) {
   const [security, setSecurity] = useState<TokenSecurity | null>(null);
+  const [rugcheckRisks, setRugcheckRisks] = useState<string[]>([]);
   const [loadingSecurity, setLoadingSecurity] = useState(false);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
       const data = await res.json();
       if (data.success && data.security) {
         setSecurity(data.security);
+        setRugcheckRisks(Array.isArray(data.rugcheck?.risks) ? data.rugcheck.risks : []);
       }
     } catch (error) {
       console.error('Security fetch failed:', error);
@@ -43,7 +45,7 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
 
   if (!token) return null;
 
-  const ogBreakdown = calculateOGScore(token);
+  const ogBreakdown = calculateOGScore({ ...token, security: security || token.security });
   const gradeConfig = getGradeConfig(ogBreakdown.grade);
   const tierConfig = getTierConfig(token.tier);
   const displaySecurity = security || token.security;
@@ -100,7 +102,7 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
                   <div>
                     <div className={`text-lg font-black ${gradeConfig.color} flex items-center gap-2`}>
                       <span>{gradeConfig.emoji}</span>
-                      <span>OG Score: {ogBreakdown.totalScore}</span>
+                      <span>Riset Score: {ogBreakdown.totalScore}</span>
                     </div>
                     <p className={`text-xs ${gradeConfig.color} opacity-80 mt-0.5`}>{gradeConfig.label}</p>
                   </div>
@@ -110,18 +112,36 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
                 {/* Score Breakdown */}
                 <div className="mt-3 space-y-1.5">
                   <ScoreBar label="🛡️ Security" value={ogBreakdown.securityScore} max={30} />
-                  <ScoreBar label="🐋 Smart Money" value={ogBreakdown.smartMoneyScore} max={25} />
+                  <ScoreBar label="📊 Market Activity" value={ogBreakdown.activityScore} max={25} />
                   <ScoreBar label="📈 Momentum" value={ogBreakdown.momentumScore} max={20} />
                   <ScoreBar label="👥 Distribution" value={ogBreakdown.distributionScore} max={15} />
-                  <ScoreBar label="🎯 Narrative" value={ogBreakdown.narrativeScore} max={10} />
+                  <ScoreBar label="🗂️ Profile completeness" value={ogBreakdown.metadataScore} max={10} />
                 </div>
               </div>
+              <p className="text-[10px] text-slate-500 -mt-2">
+                Skor ini memakai data pasar dan pemeriksaan risiko. Pelacakan dompet OG/smart money belum tersedia.
+              </p>
+              {(token.discoverySources?.length || token.isPromoted) && (
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <h3 className="text-[10px] font-bold text-slate-700 mb-1">Sumber deteksi</h3>
+                  <p className="text-[10px] text-slate-600">
+                    {(token.discoverySources || []).filter(source => source !== 'dexscreener-boost').map(source =>
+                      source === 'geckoterminal-new' ? 'Pool baru' : source === 'geckoterminal-trending' ? 'Pool trending' : 'Profil token terbaru'
+                    ).join(' · ') || 'DexScreener'}
+                  </p>
+                  {token.isPromoted && (
+                    <p className="text-[10px] font-semibold text-violet-700 mt-1">
+                      Promosi berbayar DexScreener{token.promotionAmount ? ` · boost ${token.promotionAmount}` : ''}; ini bukan aktivitas wallet atau sinyal beli.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Tier & Risk Info */}
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700">{tierConfig.emoji} {tierConfig.label} — {tierConfig.riskLabel}</span>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Target: {tierConfig.targetReturn}</span>
+                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">Volatilitas sangat tinggi</span>
                 </div>
               </div>
 
@@ -132,11 +152,11 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   <MetricCard label="Price" value={`$${token.priceUsd < 0.001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(6)}`} />
-                  <MetricCard label="Market Cap" value={formatNumber(token.marketCap)} />
+                  <MetricCard label={token.marketCapIsEstimate ? 'MC / FDV Estimate*' : 'Market Cap'} value={formatNumber(token.marketCap)} />
                   <MetricCard label="Liquidity" value={formatNumber(token.liquidity)} />
                   <MetricCard label="Volume 24h" value={formatNumber(token.volume24h)} />
                   <MetricCard label="VMC Ratio" value={`${token.vmcRatio.toFixed(2)}x`} highlight={token.vmcRatio >= 1} />
-                  <MetricCard label="Age" value={formatAge(token.age)} />
+                  <MetricCard label="Age" value={token.ageIsEstimate ? 'Unknown' : formatAge(token.age)} />
                   <MetricCard label="Holders" value={token.holders > 0 ? token.holders.toString() : 'N/A'} />
                   <MetricCard label="Txs 24h" value={`${token.txCount24h} (B:${token.buyCount24h} S:${token.sellCount24h})`} />
                 </div>
@@ -159,12 +179,14 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
                 <div className="relative h-6 rounded-full overflow-hidden bg-red-200">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${token.buySellRatio}%` }}
+                    animate={{ width: `${token.txCount24h > 0 ? token.buySellRatio : 0}%` }}
                     transition={{ duration: 0.8 }}
                     className="absolute inset-y-0 left-0 bg-emerald-500 rounded-l-full"
                   />
                   <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
-                    Buy {token.buySellRatio.toFixed(0)}% / Sell {(100 - token.buySellRatio).toFixed(0)}%
+                    {token.txCount24h > 0
+                      ? `Buy ${token.buySellRatio.toFixed(0)}% / Sell ${(100 - token.buySellRatio).toFixed(0)}%`
+                      : 'Belum ada transaksi 24 jam yang dilaporkan'}
                   </div>
                 </div>
               </div>
@@ -178,6 +200,14 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
                   </div>
                 ) : (
                   <SecurityBadges security={displaySecurity} />
+                )}
+                {rugcheckRisks.length > 0 && !loadingSecurity && (
+                  <div className="p-3 rounded-xl border border-amber-200 bg-amber-50">
+                    <p className="text-[10px] font-bold text-amber-800">Temuan RugCheck</p>
+                    <ul className="mt-1 space-y-0.5 text-[10px] text-amber-700">
+                      {rugcheckRisks.slice(0, 6).map(risk => <li key={risk}>• {risk}</li>)}
+                    </ul>
+                  </div>
                 )}
               </div>
 
@@ -194,29 +224,10 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
                 );
               })()}
 
-              {/* Take Profit Guide */}
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80">
-                <h3 className="text-xs font-bold text-emerald-800 mb-2">💰 Take Profit Strategy (4-Quarter Method)</h3>
-                <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                  <div className="bg-white/80 rounded-lg px-2 py-1.5 text-emerald-700 font-semibold">
-                    At 2x → Sell 25%
-                  </div>
-                  <div className="bg-white/80 rounded-lg px-2 py-1.5 text-emerald-700 font-semibold">
-                    At 3x → Sell 25%
-                  </div>
-                  <div className="bg-white/80 rounded-lg px-2 py-1.5 text-emerald-700 font-semibold">
-                    At 5x → Sell 25%
-                  </div>
-                  <div className="bg-white/80 rounded-lg px-2 py-1.5 text-emerald-700 font-semibold">
-                    At 10x+ → Sell/Hold 25%
-                  </div>
-                </div>
-              </div>
-
               {/* Disclaimer */}
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80">
                 <p className="text-[9px] text-amber-700 font-medium leading-relaxed">
-                  ⚠️ <strong>DISCLAIMER:</strong> Crypto Hunter adalah alat ANALISIS dan RISET. Semua informasi bersifat edukatif dan BUKAN merupakan saran investasi. Trading cryptocurrency memiliki risiko sangat tinggi. Selalu lakukan riset mandiri (DYOR).
+                  ⚠️ <strong>DISCLAIMER:</strong> Crypto Hunter adalah alat analisis dan riset, bukan saran investasi atau jaminan kenaikan harga. Token baru sangat volatil; data bisa terlambat, tidak lengkap, dan bisa berubah cepat. Lakukan riset mandiri.
                 </p>
               </div>
             </div>

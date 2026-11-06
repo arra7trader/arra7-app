@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
-import { isAdminEmail } from '@/lib/admin-access';
 import CryptoHunterDashboard from '@/components/crypto-hunter/CryptoHunterDashboard';
 import {
     ArrowLeftIcon,
@@ -23,10 +22,7 @@ export default function CryptoHunterPage() {
     const [isDbFullAccess, setIsDbFullAccess] = useState(false);
 
     // Determine Admin status
-    const isAdmin = Boolean(
-        isAdminEmail(session?.user?.email) || 
-        (session?.user as any)?.role === 'ADMIN'
-    );
+    const isAdmin = session?.user?.isAdmin === true;
 
     // Full Access 125k tiers (Lifetime, All-Access, VVIP, Promo 125k, Admin)
     const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
@@ -127,7 +123,7 @@ export default function CryptoHunterPage() {
                             <div className="space-y-2 text-xs text-slate-200 font-sans">
                                 <div className="flex items-center gap-2.5">
                                     <span className="text-emerald-400 text-sm">🐋</span>
-                                    <span><strong>Smart Money Shadow:</strong> Lacak dompet whale anonim win-rate 60%+</span>
+                                    <span><strong>Market Flow Scanner:</strong> Bandingkan transaksi, volume, dan momentum token baru dari sumber pasar publik</span>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <span className="text-cyan-400 text-sm">🏴‍☠️</span>
@@ -135,15 +131,15 @@ export default function CryptoHunterPage() {
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <span className="text-rose-400 text-sm">🛡️</span>
-                                    <span><strong>GoPlus Auto-Audit:</strong> Filter honeypot, mint/freeze authority &amp; rug</span>
+                                    <span><strong>Pemeriksaan Risiko:</strong> GoPlus untuk EVM dan RugCheck untuk Solana; data yang tidak tersedia ditandai unknown</span>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <span className="text-amber-400 text-sm">📈</span>
-                                    <span><strong>Before/After Tracker:</strong> Bukti live kenaikan harga &amp; MC sejak deteksi</span>
+                                    <span><strong>Before/After Tracker:</strong> Bandingkan harga dan MC setelah token pertama kali terdeteksi</span>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <span className="text-purple-400 text-sm">⚡</span>
-                                    <span><strong>Volume/MC Divergence:</strong> Deteksi spike volume abnormal sebelum breakout</span>
+                                    <span><strong>Rasio Pasar:</strong> Lihat rasio volume terhadap MC dan perubahan harga; metrik ini bukan prediksi breakout</span>
                                 </div>
                             </div>
                         </div>
@@ -206,7 +202,7 @@ export default function CryptoHunterPage() {
                             </div>
                             <div>
                                 <h1 className="text-sm font-bold text-slate-900">Crypto Hunter</h1>
-                                <p className="text-[10px] text-slate-400 font-medium">OG Smart Money Scanner</p>
+                                <p className="text-[10px] text-slate-400 font-medium">Token Market Scanner</p>
                             </div>
                         </div>
                     </div>

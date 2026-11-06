@@ -5,6 +5,7 @@ export interface CryptoToken {
   symbol: string;
   chain: ChainType;
   marketCap: number;
+  marketCapIsEstimate?: boolean;
   liquidity: number;
   volume24h: number;
   priceUsd: number;
@@ -15,12 +16,13 @@ export interface CryptoToken {
   holders: number;
   holderGrowthRate: number;
   age: number; // minutes since creation
+  ageIsEstimate?: boolean;
   vmcRatio: number;
   buySellRatio: number;
   ogScore: number;
   tier: TierLevel;
   security: TokenSecurity;
-  smartMoney: SmartMoneyData;
+  smartMoney: SmartMoneyData | null;
   poolAddress: string;
   pairUrl: string;
   imageUrl?: string;
@@ -31,6 +33,11 @@ export interface CryptoToken {
   txCount24h: number;
   buyCount24h: number;
   sellCount24h: number;
+  /** Discovery source only. DexScreener boosts are paid promotion, not wallet-flow data. */
+  discoverySources?: ('geckoterminal-new' | 'geckoterminal-trending' | 'dexscreener-profile' | 'dexscreener-boost')[];
+  isPromoted?: boolean;
+  promotionAmount?: number;
+  description?: string;
 }
 
 export type ChainType = 'solana' | 'base' | 'ethereum' | 'bsc';
@@ -42,12 +49,14 @@ export interface TokenSecurity {
   lpBurned: boolean;
   lpLocked: boolean;
   lpLockDuration: number | null;
+  lpLockedPercent: number | null;
   isHoneypot: boolean | null;
   buyTax: number | null;
   sellTax: number | null;
   isOpenSource: boolean | null;
   devHoldingPercent: number | null;
   top10HoldingPercent: number | null;
+  holderCount: number | null;
   bundlePercent: number | null;
   rugcheckScore: 'Good' | 'Warning' | 'Danger' | 'Unknown';
   securityScore: number; // 0-30
@@ -63,15 +72,15 @@ export interface SmartMoneyData {
 
 export interface OGScoreBreakdown {
   securityScore: number;    // 0-30
-  smartMoneyScore: number;  // 0-25
+  activityScore: number;    // 0-25, based on market data; does not track wallets
   momentumScore: number;    // 0-20
   distributionScore: number; // 0-15
-  narrativeScore: number;   // 0-10
+  metadataScore: number;    // 0-10, project profile completeness only
   totalScore: number;       // 0-100
   grade: OGGrade;
 }
 
-export type OGGrade = 'DIAMOND' | 'HOT' | 'INTERESTING' | 'CAUTION' | 'AVOID';
+export type OGGrade = 'HIGH_SIGNAL' | 'ACTIVE' | 'WATCH' | 'LOW_SIGNAL' | 'INSUFFICIENT';
 
 export interface FilterConfig {
   chain: ChainType | 'all';
@@ -98,7 +107,7 @@ export interface WatchlistItem {
 }
 
 export interface WatchlistAlert {
-  type: 'price_above' | 'price_below' | 'og_score_change' | 'smart_money';
+  type: 'price_above' | 'price_below' | 'signal_score_change' | 'smart_money';
   value: number;
   enabled: boolean;
 }

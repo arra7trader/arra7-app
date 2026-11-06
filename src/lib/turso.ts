@@ -1,5 +1,6 @@
 import { createClient, Client } from '@libsql/client';
 import { createHash } from 'crypto';
+import { isAdminEmail } from './admin-access';
 
 // Check if Turso is configured
 export const isTursoConfigured = (): boolean => {
@@ -986,8 +987,6 @@ export async function upsertUser(user: {
   }
 }
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com', 'arlandpratama@gmail.com'];
-
 export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null; expiresAt: Date | null }> {
   const turso = getTursoClient();
   if (!turso) return { membership: 'BASIC', createdAt: null, expiresAt: null };
@@ -1004,7 +1003,7 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       const createdAt = result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null;
 
       // ADMIN OVERRIDE: Always VVIP, never expires
-      if (ADMIN_EMAILS.includes(email)) {
+      if (isAdminEmail(email)) {
         return { membership: 'VVIP', createdAt, expiresAt: null };
       }
 

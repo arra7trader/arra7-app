@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { upsertUser, initDatabase } from './turso';
+import { isAdminEmail } from './admin-access';
 
 // Initialize database on first load
 let dbInitialized = false;
@@ -78,9 +79,12 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             if (session.user && token.sub) {
                 session.user.id = token.sub;
+                const userEmail = token.email || session.user.email;
+                const isAdmin = isAdminEmail(userEmail);
+                session.user.isAdmin = isAdmin;
 
-                // Admin accounts override: always VVIP
-                if (token.email && (token.email === 'arlandpratama@gmail.com' || token.email === 'apmexplore@gmail.com')) {
+                // Configured admin accounts always receive Crypto Hunter full access.
+                if (isAdmin) {
                     session.user.tier = 'VVIP';
                     return session;
                 }
