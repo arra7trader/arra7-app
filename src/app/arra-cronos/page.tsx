@@ -102,6 +102,8 @@ export default function ArraCronosPage() {
     const [marketError, setMarketError] = useState('');
     const [forecastError, setForecastError] = useState('');
     const [chartMode, setChartMode] = useState<ChartMode>('tradingview');
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [countdown, setCountdown] = useState(30);
 
     const visibleAssets = useMemo(() => {
         const list = categories.find((category) => category.id === selectedCategory)?.pairs || [];
@@ -259,6 +261,25 @@ export default function ArraCronosPage() {
         };
     }, [categories.length, selectedSymbol, timeframe, runForecast]);
 
+    // Auto-refresh interval countdown (30s)
+    useEffect(() => {
+        setCountdown(30);
+    }, [selectedSymbol, timeframe]);
+
+    useEffect(() => {
+        if (!autoRefresh) return;
+        const timer = window.setInterval(() => {
+            setCountdown((prev) => {
+                if (prev <= 1) {
+                    handleRefresh();
+                    return 30;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => window.clearInterval(timer);
+    }, [autoRefresh, handleRefresh]);
+
     const metrics = useMemo(() => market ? calculateMetrics(market.candles) : null, [market]);
     const currentPrice = market?.currentPrice || 0;
     const forecastBase = forecast?.currentPrice || market?.latestBarClose || currentPrice;
@@ -294,6 +315,18 @@ export default function ArraCronosPage() {
                             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                             TradingView
                         </div>
+                        <button
+                            onClick={() => setAutoRefresh((prev) => !prev)}
+                            className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                                autoRefresh
+                                    ? 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15'
+                                    : 'border-slate-800 bg-slate-900 text-slate-500 hover:text-slate-300'
+                            }`}
+                            title={autoRefresh ? 'Klik untuk menjeda auto-refresh' : 'Klik untuk menyalakan auto-refresh'}
+                        >
+                            <span className={`h-2 w-2 rounded-full ${autoRefresh ? 'bg-cyan-300 shadow-[0_0_8px_#67e8f9] animate-pulse' : 'bg-slate-600'}`} />
+                            {autoRefresh ? `Auto: ${countdown}s` : 'Auto: OFF'}
+                        </button>
                         <button onClick={handleRefresh} disabled={isRefreshing || isLoading} className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:opacity-50">
                             <ArrowPathIcon className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} /> Refresh
                         </button>
