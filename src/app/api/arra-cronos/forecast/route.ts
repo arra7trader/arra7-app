@@ -15,7 +15,7 @@ const TIMEFRAMES = {
 } as const;
 
 const rateWindowMs = 60_000;
-const rateLimit = 10;
+const rateLimit = 60;
 const recentRequests = new Map<string, number[]>();
 
 function generateEmbeddedKronosForecast(
