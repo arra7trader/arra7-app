@@ -1,5 +1,7 @@
 'use client';
 
+import { isAdminEmail, isAdminUser, ADMIN_EMAILS } from '@/lib/admin-access';
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
@@ -17,7 +19,7 @@ import ImbalanceChart from '@/components/dom/ImbalanceChart';
 import { useAlertSystem, AlertPanel, AlertToastContainer, AlertSettings, DEFAULT_ALERT_SETTINGS } from '@/components/dom/AlertSystem';
 import { isMarketOpen } from '@/lib/market-hours';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+// Using imported ADMIN_EMAILS from admin-access
 const MAX_FLOW_HISTORY = 600; // Keep last 1 minute of data (100ms * 600)
 
 // Order Book Component
@@ -467,7 +469,7 @@ export default function DomArraClient({ accessResult }: DomArraClientProps) {
     const wsFailCountRef = useRef(0); // Track consecutive failures
     const smoothingStateRef = useRef<SmoothingState>(createSmoothingState()); // Instance-based smoothing state
 
-    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    const isAdmin = isAdminUser(session?.user);
     const symbolConfig = DOM_SYMBOLS[selectedSymbol];
 
     // Alert system

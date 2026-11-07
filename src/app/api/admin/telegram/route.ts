@@ -1,10 +1,11 @@
+import { isAdminEmail, isAdminUser, ADMIN_EMAILS } from '@/lib/admin-access';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendTelegramMessage, COPYTRADE_TEMPLATES, isTelegramConfigured, TEMPLATE_METADATA, getTodaysTemplate } from '@/lib/telegram';
 import getTursoClient from '@/lib/turso';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+// Using imported ADMIN_EMAILS from admin-access
 
 function isAdmin(email: string): boolean {
     return ADMIN_EMAILS.includes(email);

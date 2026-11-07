@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
 
     if (maintenanceEnabled) {
         const bypassMaintenance = maintenanceBypassPrefixes.some((route) => pathname.startsWith(route));
-        const isAdmin = isAdminEmail((token?.email as string | undefined) ?? undefined);
+        const isAdmin = isAdminEmail((token?.email as string | undefined) ?? undefined) || (token as any)?.isAdmin === true || (token as any)?.role === 'ADMIN';
 
         if (!bypassMaintenance && !isAdmin) {
             return NextResponse.redirect(new URL('/maintenance', request.url));
@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
 
     // Strict Admin route protection
     if (pathname.startsWith('/admin')) {
-        const isAdmin = isAdminEmail((token?.email as string | undefined) ?? undefined);
+        const isAdmin = isAdminEmail((token?.email as string | undefined) ?? undefined) || (token as any)?.isAdmin === true || (token as any)?.role === 'ADMIN';
         if (!token) {
             const loginUrl = new URL('/login', request.url);
             loginUrl.searchParams.set('callbackUrl', pathname);

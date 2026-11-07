@@ -28,7 +28,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
-import { isAdminEmail } from '@/lib/admin-access';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import PineScriptViewer from '@/components/arra-cronos/PineScriptViewer';
 import type { CronosCandle, CronosForecast } from '@/components/arra-cronos/CronosChart';
 import type {
@@ -235,7 +235,7 @@ export default function ArraCronosPage() {
         session?.user?.tier === 'VVIP' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS' ||
-        isAdminEmail(session?.user?.email);
+        isAdminEmail(session?.user?.email) || isAdminUser(session?.user);
 
     const [chartMode, setChartMode] = useState<ChartMode>('lightweight');
     const [autoRefresh, setAutoRefresh] = useState(true);

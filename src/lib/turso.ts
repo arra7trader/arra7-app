@@ -988,6 +988,9 @@ export async function upsertUser(user: {
 }
 
 export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null; expiresAt: Date | null }> {
+  if (isAdminEmail(userId)) {
+    return { membership: 'VVIP', createdAt: null, expiresAt: null };
+  }
   const turso = getTursoClient();
   if (!turso) return { membership: 'BASIC', createdAt: null, expiresAt: null };
 
@@ -1003,7 +1006,7 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       const createdAt = result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null;
 
       // ADMIN OVERRIDE: Always VVIP, never expires
-      if (isAdminEmail(email)) {
+      if (isAdminEmail(email) || membership === 'ADMIN') {
         return { membership: 'VVIP', createdAt, expiresAt: null };
       }
 
@@ -1078,6 +1081,9 @@ export interface AccessResult {
 }
 
 export async function checkBookmapAccess(userId: string): Promise<AccessResult> {
+  if (isAdminEmail(userId)) {
+    return { allowed: true, reason: 'GRANTED', membership: 'ADMIN' };
+  }
   const { membership } = await getUserMembership(userId);
 
   // 1. PRO and VVIP have unlimited access

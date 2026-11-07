@@ -80,12 +80,14 @@ export const authOptions: NextAuthOptions = {
             if (session.user && token.sub) {
                 session.user.id = token.sub;
                 const userEmail = token.email || session.user.email;
-                const isAdmin = isAdminEmail(userEmail);
+                const isAdmin = isAdminEmail(userEmail) || (token as any)?.isAdmin === true || (token as any)?.role === 'ADMIN' || (session.user as any)?.role === 'ADMIN';
                 session.user.isAdmin = isAdmin;
 
                 // Configured admin accounts always receive Crypto Hunter full access.
                 if (isAdmin) {
                     session.user.tier = 'VVIP';
+                    session.user.isAdmin = true;
+                    (session.user as any).role = 'ADMIN';
                     return session;
                 }
 
@@ -124,6 +126,12 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id;
                 token.tier = (user as any).tier || 'BASIC';
+            }
+            const email = token.email || user?.email;
+            if (isAdminEmail(email) || (user as any)?.isAdmin || (user as any)?.role === 'ADMIN') {
+                (token as any).isAdmin = true;
+                (token as any).role = 'ADMIN';
+                token.tier = 'VVIP';
             }
             return token;
         },

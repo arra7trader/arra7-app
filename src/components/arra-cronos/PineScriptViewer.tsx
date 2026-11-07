@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { isAdminUser } from '@/lib/admin-access';
 import Link from 'next/link';
 import { 
     ClipboardDocumentCheckIcon, 
@@ -20,6 +22,8 @@ interface PineScriptViewerProps {
 }
 
 export default function PineScriptViewer({ initialCode, isUnlocked = true }: PineScriptViewerProps) {
+    const { data: session } = useSession();
+    const effectiveUnlocked = isUnlocked || isAdminUser(session?.user);
     const [copied, setCopied] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -44,7 +48,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked = true }: Pin
     };
 
     const handleCopy = async () => {
-        if (!isUnlocked) {
+        if (!effectiveUnlocked) {
             setShowLockPrompt(true);
             return;
         }
@@ -77,14 +81,14 @@ export default function PineScriptViewer({ initialCode, isUnlocked = true }: Pin
     };
 
     const handleDownloadClick = (e: React.MouseEvent) => {
-        if (!isUnlocked) {
+        if (!effectiveUnlocked) {
             e.preventDefault();
             setShowLockPrompt(true);
         }
     };
 
     const toggleExpand = () => {
-        if (!isExpanded && !code && isUnlocked) {
+        if (!isExpanded && !code && effectiveUnlocked) {
             loadCodeIfNeeded();
         }
         setIsExpanded(!isExpanded);
@@ -100,7 +104,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked = true }: Pin
                             <CodeBracketIcon className="h-4 w-4" />
                         </span>
                         <h3 className="text-base font-extrabold text-white">Source Code Indikator Pine Script v6</h3>
-                        {!isUnlocked ? (
+                        {!effectiveUnlocked ? (
                             <span className="rounded-full bg-amber-400/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-400/30 flex items-center gap-1">
                                 <LockClosedIcon className="h-3 w-3" />
                                 <span>Bonus Khusus Member (Rp 150.000)</span>
@@ -117,7 +121,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked = true }: Pin
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                    {isUnlocked ? (
+                    {effectiveUnlocked ? (
                         <>
                             <button
                                 onClick={handleCopy}
@@ -179,7 +183,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked = true }: Pin
             </div>
 
             {/* Lock Prompt Modal if user clicked copy while locked */}
-            {showLockPrompt && !isUnlocked && (
+            {showLockPrompt && !effectiveUnlocked && (
                 <div className="border-b border-amber-500/30 bg-amber-500/10 p-4 text-center">
                     <p className="text-xs font-bold text-amber-200">
                         🔒 Source Code Pine Script v6 resmi adalah bonus eksklusif paket ARRA Cronos (Rp 150.000).
@@ -205,7 +209,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked = true }: Pin
             {/* Code Box Accordion */}
             {isExpanded && (
                 <div className="relative">
-                    {!isUnlocked ? (
+                    {!effectiveUnlocked ? (
                         <div className="flex flex-col items-center justify-center bg-[#070b12] p-8 text-center">
                             <LockClosedIcon className="h-8 w-8 text-amber-400 mb-2" />
                             <h4 className="text-sm font-bold text-white">Source Code Terkunci</h4>

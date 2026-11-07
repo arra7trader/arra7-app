@@ -1,3 +1,4 @@
+import { isAdminEmail, isAdminUser, ADMIN_EMAILS } from '@/lib/admin-access';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -5,12 +6,12 @@ import { givePromoToAllUsers } from '@/lib/turso';
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+// Using imported ADMIN_EMAILS from admin-access
 
 export async function GET() {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+    if (!session?.user?.email || !isAdminEmail(session.user.email)) {
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -1,4 +1,5 @@
 import getTursoClient, { getUserMembership, isTursoConfigured, checkUserPromo, getLastAnalysisTime } from './turso';
+import { isAdminEmail } from './admin-access';
 
 // Quota limits per membership level (Forex Analysis)
 export const QUOTA_LIMITS = {
@@ -9,6 +10,7 @@ export const QUOTA_LIMITS = {
     ALL_ACCESS: Infinity,
     FULL_ACCESS: Infinity,
     PROMO_125K: Infinity,
+    ADMIN: Infinity,
 } as const;
 
 // PROMO quota (for APK download promotion)
@@ -23,6 +25,7 @@ export const COOLDOWN_DURATION = {
     ALL_ACCESS: 3 * 1000,
     FULL_ACCESS: 3 * 1000,
     PROMO_125K: 3 * 1000,
+    ADMIN: 0,                    // 0 second cooldown for ADMIN
 } as const;
 
 // Stock Analysis Quota limits (same as Forex)
@@ -34,6 +37,7 @@ export const STOCK_QUOTA_LIMITS = {
     ALL_ACCESS: Infinity,
     FULL_ACCESS: Infinity,
     PROMO_125K: Infinity,
+    ADMIN: Infinity,
 } as const;
 
 // Allowed timeframes per membership
@@ -45,6 +49,7 @@ export const ALLOWED_TIMEFRAMES = {
     ALL_ACCESS: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
     FULL_ACCESS: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
     PROMO_125K: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+    ADMIN: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
 } as const;
 
 // Allowed pair categories per membership
@@ -56,6 +61,7 @@ export const ALLOWED_PAIR_CATEGORIES = {
     ALL_ACCESS: ['major', 'minor', 'commodities', 'crypto', 'indices'],
     FULL_ACCESS: ['major', 'minor', 'commodities', 'crypto', 'indices'],
     PROMO_125K: ['major', 'minor', 'commodities', 'crypto', 'indices'],
+    ADMIN: ['major', 'minor', 'commodities', 'crypto', 'indices'],
 } as const;
 
 // Specific pairs allowed for BASIC (Gold ONLY)
@@ -81,54 +87,42 @@ function getTodayDate(): string {
     return new Date().toISOString().split('T')[0];
 }
 
-// Default unlimited quota (when Turso is not configured)
-function getDefaultQuota(): QuotaStatus {
+// Default unlimited quota (when Turso is not configured or for admin)
+function getDefaultQuota(membership: Membership = 'VVIP'): QuotaStatus {
     return {
-        membership: 'VVIP', // Unlimited when not configured
+        membership,
         dailyLimit: Infinity,
         used: 0,
         remaining: Infinity,
         canAnalyze: true,
-        allowedTimeframes: ALLOWED_TIMEFRAMES.VVIP,
+        allowedTimeframes: ALLOWED_TIMEFRAMES.ADMIN,
         isTrialExpired: false,
     };
 }
 
 // Get user's quota status
 export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
+    // Fast-path bypass for admin
+    if (isAdminEmail(userId)) {
+        return getDefaultQuota('ADMIN');
+    }
+
     const turso = getTursoClient();
     if (!turso) return getDefaultQuota();
 
     try {
         const { membership } = await getUserMembership(userId);
         const memKey = String(membership || 'BASIC').toUpperCase() as Membership;
+
+        // Admin override
+        if (memKey === 'ADMIN') {
+            return getDefaultQuota('ADMIN');
+        }
+
         let dailyLimit = QUOTA_LIMITS[memKey] ?? QUOTA_LIMITS.BASIC;
         let allowedTimeframes = ALLOWED_TIMEFRAMES[memKey] ?? ALLOWED_TIMEFRAMES.BASIC;
 
-        // CRO STRATEGY: 
-        // BASIC users now get 1x DAILY quota (instead of 1x Lifetime) to build habit.
-        // We still check for "Trial" but maybe we just use it for highlighting, not blocking access entirely
-        // unless we want to enforce a hard 2-day trial. 
-        // For now, let's KEEP the 2-day trial check if we really want to push them to upgrade fast, 
-        // OR disable it to allow long-term free tier engagement (Freemium model).
-        // Decision: DISABLE strict trial expiry for now to allow daily use. 
-        // If client wants strict 2-day trial back, uncomment the logic below.
-
         const isTrialExpired = false;
-
-        /* 
-        // OLD LOGIC: Strict 2-Day Trial
-        if (membership === 'BASIC' && createdAt) {
-            const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
-            const now = new Date().getTime();
-            const createdTime = new Date(createdAt).getTime();
-
-            if (now - createdTime > twoDaysInMs) {
-                isTrialExpired = true;
-                dailyLimit = 0; 
-            }
-        }
-        */
 
         // Check if user has active promo
         const promoStatus = await checkUserPromo(userId);
@@ -140,10 +134,8 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
 
         const today = getTodayDate();
 
-        // Get usage for today (Unified Logic for ALL plans now, including BASIC)
+        // Get usage for today
         let used = 0;
-
-        // BASIC is now DAILY limit, so we query by date just like PRO/VVIP
         const result = await turso.execute({
             sql: 'SELECT count FROM quota_usage WHERE user_id = ? AND date = ?',
             args: [userId, today],
@@ -174,6 +166,14 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     quotaStatus: QuotaStatus;
     waitTimeSeconds?: number;
 }> {
+    // Admin fast-path bypass: always allowed, no cooldown, all timeframes, all pairs
+    if (isAdminEmail(userId)) {
+        return {
+            allowed: true,
+            quotaStatus: getDefaultQuota('ADMIN'),
+        };
+    }
+
     if (!isTursoConfigured()) {
         return {
             allowed: true,
@@ -182,6 +182,14 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     }
 
     const status = await getQuotaStatus(userId);
+
+    // If user is ADMIN tier, unconditionally allow
+    if (String(status.membership).toUpperCase() === 'ADMIN') {
+        return {
+            allowed: true,
+            quotaStatus: getDefaultQuota('ADMIN'),
+        };
+    }
 
     // Check Trial Expiry First
     if (status.isTrialExpired) {
@@ -196,7 +204,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     const promoStatus = await checkUserPromo(userId);
 
     // Check pair restriction for BASIC (skip if promo is active)
-    const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K'].includes(String(status.membership || '').toUpperCase());
+    const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(String(status.membership || '').toUpperCase());
     if (pair && status.membership === 'BASIC' && !isVvipTier && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
         return {
             allowed: false,
@@ -205,25 +213,27 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
         };
     }
 
-    // Check Rate Limit (Cooldown applies to ALL membership tiers)
+    // Check Rate Limit (Cooldown applies to membership tiers, ADMIN has 0 cooldown)
     const lastAnalysis = await getLastAnalysisTime(userId, 'forex');
     if (lastAnalysis) {
         // Get cooldown duration based on membership tier
-        const COOLDOWN_MS = COOLDOWN_DURATION[status.membership as Membership] || COOLDOWN_DURATION.BASIC;
-        const now = new Date().getTime();
-        const lastTime = lastAnalysis.getTime();
-        const timeDiff = now - lastTime;
+        const COOLDOWN_MS = COOLDOWN_DURATION[status.membership as Membership] ?? COOLDOWN_DURATION.BASIC;
+        if (COOLDOWN_MS > 0) {
+            const now = new Date().getTime();
+            const lastTime = lastAnalysis.getTime();
+            const timeDiff = now - lastTime;
 
-        if (timeDiff < COOLDOWN_MS) {
-            const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
-            const minutes = Math.floor(waitTime / 60);
-            const seconds = waitTime % 60;
-            return {
-                allowed: false,
-                message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
-                quotaStatus: status,
-                waitTimeSeconds: waitTime,
-            };
+            if (timeDiff < COOLDOWN_MS) {
+                const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
+                const minutes = Math.floor(waitTime / 60);
+                const seconds = waitTime % 60;
+                return {
+                    allowed: false,
+                    message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
+                    quotaStatus: status,
+                    waitTimeSeconds: waitTime,
+                };
+            }
         }
     }
 
@@ -257,6 +267,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
 
 // Use quota (decrement remaining)
 export async function useQuota(userId: string): Promise<boolean> {
+    if (isAdminEmail(userId)) return true;
     const turso = getTursoClient();
     if (!turso) return true; // No-op when not configured
 
@@ -316,9 +327,9 @@ export interface StockQuotaStatus {
 }
 
 // Default unlimited stock quota
-function getDefaultStockQuota(): StockQuotaStatus {
+function getDefaultStockQuota(membership: Membership = 'VVIP'): StockQuotaStatus {
     return {
-        membership: 'VVIP',
+        membership,
         dailyLimit: Infinity,
         used: 0,
         remaining: Infinity,
@@ -329,34 +340,27 @@ function getDefaultStockQuota(): StockQuotaStatus {
 
 // Get user's stock quota status
 export async function getStockQuotaStatus(userId: string): Promise<StockQuotaStatus> {
+    if (isAdminEmail(userId)) {
+        return getDefaultStockQuota('ADMIN');
+    }
+
     const turso = getTursoClient();
     if (!turso) return getDefaultStockQuota();
 
     try {
         const { membership } = await getUserMembership(userId);
+        const memUpper = String(membership || '').toUpperCase();
+        if (memUpper === 'ADMIN') {
+            return getDefaultStockQuota('ADMIN');
+        }
+
         let dailyLimit = STOCK_QUOTA_LIMITS[membership as Membership] || STOCK_QUOTA_LIMITS.BASIC;
 
-        // CRO STRATEGY: Disable strict trial expiry for Stock analysis too
         const isTrialExpired = false;
-
-        /*
-        // OLD LOGIC: Strict 2-Day Trial
-        if (membership === 'BASIC' && createdAt) {
-            const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
-            const now = new Date().getTime();
-            const createdTime = new Date(createdAt).getTime();
-
-            if (now - createdTime > twoDaysInMs) {
-                isTrialExpired = true;
-                dailyLimit = 0; // Force limit to 0
-            }
-        }
-        */
 
         // Check if user has active promo
         const promoStatus = await checkUserPromo(userId);
         if (promoStatus.hasPromo) {
-            // Override with promo limits (10/day for stock too)
             dailyLimit = Math.max(dailyLimit, PROMO_QUOTA_LIMIT);
             console.log(`[PROMO] User ${userId} has active stock promo until ${promoStatus.expiresAt}`);
         }
@@ -365,8 +369,6 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
 
         // Get today's stock analysis usage (Unified Logic)
         let used = 0;
-
-        // BASIC is now DAILY limit for stocks too
         const result = await turso.execute({
             sql: 'SELECT count FROM stock_quota_usage WHERE user_id = ? AND date = ?',
             args: [userId, today],
@@ -396,6 +398,13 @@ export async function checkStockQuota(userId: string): Promise<{
     quotaStatus: StockQuotaStatus;
     waitTimeSeconds?: number;
 }> {
+    if (isAdminEmail(userId)) {
+        return {
+            allowed: true,
+            quotaStatus: getDefaultStockQuota('ADMIN'),
+        };
+    }
+
     if (!isTursoConfigured()) {
         return {
             allowed: true,
@@ -404,6 +413,12 @@ export async function checkStockQuota(userId: string): Promise<{
     }
 
     const status = await getStockQuotaStatus(userId);
+    if (String(status.membership).toUpperCase() === 'ADMIN') {
+        return {
+            allowed: true,
+            quotaStatus: getDefaultStockQuota('ADMIN'),
+        };
+    }
 
     if (status.isTrialExpired) {
         return {
@@ -413,26 +428,28 @@ export async function checkStockQuota(userId: string): Promise<{
         };
     }
 
-    // Check Rate Limit (Cooldown applies to ALL membership tiers)
+    // Check Rate Limit (Cooldown applies to membership tiers, ADMIN has 0)
     const { membership } = await getUserMembership(userId);
     const lastAnalysis = await getLastAnalysisTime(userId, 'stock');
     if (lastAnalysis) {
         // Get cooldown duration based on membership tier
-        const COOLDOWN_MS = COOLDOWN_DURATION[membership as Membership] || COOLDOWN_DURATION.BASIC;
-        const now = new Date().getTime();
-        const lastTime = lastAnalysis.getTime();
-        const timeDiff = now - lastTime;
+        const COOLDOWN_MS = COOLDOWN_DURATION[membership as Membership] ?? COOLDOWN_DURATION.BASIC;
+        if (COOLDOWN_MS > 0) {
+            const now = new Date().getTime();
+            const lastTime = lastAnalysis.getTime();
+            const timeDiff = now - lastTime;
 
-        if (timeDiff < COOLDOWN_MS) {
-            const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
-            const minutes = Math.floor(waitTime / 60);
-            const seconds = waitTime % 60;
-            return {
-                allowed: false,
-                message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
-                quotaStatus: status,
-                waitTimeSeconds: waitTime,
-            };
+            if (timeDiff < COOLDOWN_MS) {
+                const waitTime = Math.ceil((COOLDOWN_MS - timeDiff) / 1000); // seconds
+                const minutes = Math.floor(waitTime / 60);
+                const seconds = waitTime % 60;
+                return {
+                    allowed: false,
+                    message: `Mohon tunggu ${minutes} menit ${seconds} detik sebelum melakukan analisa berikutnya.`,
+                    quotaStatus: status,
+                    waitTimeSeconds: waitTime,
+                };
+            }
         }
     }
 
@@ -455,6 +472,7 @@ export async function checkStockQuota(userId: string): Promise<{
 
 // Use stock quota
 export async function useStockQuota(userId: string): Promise<boolean> {
+    if (isAdminEmail(userId)) return true;
     const turso = getTursoClient();
     if (!turso) return true;
 

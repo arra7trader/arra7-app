@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { isAdminUser } from '@/lib/admin-access';
 
 export default function VipGate({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -15,8 +16,8 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // Check if user is VVIP
-    const isVVIP = session?.user?.tier === 'VVIP';
+    // Check if user is VVIP or ADMIN
+    const isVVIP = session?.user?.tier === 'VVIP' || isAdminUser(session?.user);
 
     if (!isVVIP) {
         return (

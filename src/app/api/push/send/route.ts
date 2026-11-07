@@ -1,10 +1,11 @@
+import { isAdminEmail, isAdminUser, ADMIN_EMAILS } from '@/lib/admin-access';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient from '@/lib/turso';
 import webpush from 'web-push';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+// Using imported ADMIN_EMAILS from admin-access
 
 // Configure web-push
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         const session = await getServerSession(authOptions);
 
         // Check admin
-        if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+        if (!session?.user?.email || !isAdminEmail(session.user.email)) {
             return NextResponse.json({ status: 'error', message: 'Admin only' }, { status: 403 });
         }
 

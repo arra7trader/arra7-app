@@ -1,9 +1,10 @@
+import { isAdminEmail, isAdminUser, ADMIN_EMAILS } from '@/lib/admin-access';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient from '@/lib/turso';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+// Using imported ADMIN_EMAILS from admin-access
 
 // Public VAPID key (can be exposed)
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';

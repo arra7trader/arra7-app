@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
-import { isAdminEmail } from '@/lib/admin-access';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import {
     BrainIcon,
     SignalIcon,
@@ -230,10 +230,7 @@ export default function XauusdNeuralLabPage() {
     const { isVvip: isDeviceVvip, openActivation, tier: deviceTier } = usePicaDevice();
 
     // Determine Admin status
-    const isAdmin = Boolean(
-        isAdminEmail(session?.user?.email) || 
-        (session?.user as any)?.role === 'ADMIN'
-    );
+    const isAdmin = Boolean(isAdminUser(session?.user));
 
     const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
     const sessionTier = String((session?.user as any)?.tier || (session?.user as any)?.membership || '').toUpperCase();

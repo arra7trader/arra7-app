@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSession } from 'next-auth/react';
+import { isAdminUser } from '@/lib/admin-access';
 import Link from 'next/link';
 import { LockIcon } from '@/components/PremiumIcons'; // Assuming this exists, or use generic logic
 import QuotaExceededCard from './QuotaExceededCard';
@@ -12,7 +13,7 @@ export default function ToolInvocationRenderer({ toolInvocation }: { toolInvocat
     const { data: session } = useSession();
     const isBasic = session?.user?.tier === 'BASIC';
     // Admin override just in case
-    const isAdmin = session?.user?.email === 'apmexplore@gmail.com';
+    const isAdmin = isAdminUser(session?.user);
     const isLocked = isBasic && !isAdmin;
 
     const { openPopup } = useLowBalancePopup();

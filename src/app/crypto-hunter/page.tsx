@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { isAdminUser } from '@/lib/admin-access';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import CryptoHunterDashboard from '@/components/crypto-hunter/CryptoHunterDashboard';
 import {
@@ -22,7 +23,7 @@ export default function CryptoHunterPage() {
     const [isDbFullAccess, setIsDbFullAccess] = useState(false);
 
     // Determine Admin status
-    const isAdmin = session?.user?.isAdmin === true;
+    const isAdmin = isAdminUser(session?.user);
 
     // Full Access 125k tiers (Lifetime, All-Access, VVIP, Promo 125k, Admin)
     const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];

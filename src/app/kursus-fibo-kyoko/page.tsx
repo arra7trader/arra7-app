@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
-import { isAdminEmail } from '@/lib/admin-access';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import { FIBO_KYOKO_TRADINGVIEW_SCRIPT } from '@/lib/fibo-kyoko-script';
 import { KeyIcon, LockIcon, FilmIcon, BoltIcon, ChartIcon, TrendUpIcon, PlayIcon, FolderIcon, CheckIcon, DownloadIcon, ClipboardIcon, CheckCircleIcon, ShieldCheckIcon } from '@/components/PremiumIcons';
 
@@ -13,7 +13,9 @@ export default function KursusFiboKyokoPage() {
     const { data: session } = useSession();
     const { tier, daysLeft, openActivation } = usePicaDevice();
 
+    const isAdmin = isAdminUser(session?.user);
     const isUnlocked = 
+        isAdmin ||
         tier === 'PRO' || 
         tier === 'VVIP' || 
         session?.user?.tier === 'PRO' || 

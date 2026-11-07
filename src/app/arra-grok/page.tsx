@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
-import { isAdminEmail } from '@/lib/admin-access';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import {
     ArrowPathIcon,
     ArrowTrendingDownIcon,
@@ -179,7 +179,7 @@ export default function ArraGrokPage() {
         session?.user?.tier === 'VVIP' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS' ||
-        isAdminEmail(session?.user?.email);
+        isAdminEmail(session?.user?.email) || isAdminUser(session?.user);
 
     // Terminal State
     const [isRunning, setIsRunning] = useState(true);

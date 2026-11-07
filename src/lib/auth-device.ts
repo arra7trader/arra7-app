@@ -12,6 +12,7 @@ export interface ResolvedUser {
     isDevice: boolean;
     isFullAccess: boolean;
     email?: string;
+    isAdmin?: boolean;
 }
 
 const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
@@ -73,7 +74,7 @@ export async function resolveUserOrDevice(
         const session = await getServerSession(authOptions);
         if (session?.user?.id) {
             const email = session.user.email || '';
-            const isAdmin = isAdminEmail(email) || (session.user as any)?.role === 'ADMIN';
+            const isAdmin = isAdminEmail(email) || (session.user as any)?.role === 'ADMIN' || (session.user as any)?.isAdmin === true;
             const sessionTier = String((session.user as any)?.tier || '').toUpperCase();
             const { membership } = await getUserMembership(session.user.id);
             const userMemUpper = String(membership || '').toUpperCase();
@@ -107,6 +108,7 @@ export async function resolveUserOrDevice(
                 isDevice: false,
                 isFullAccess: finalMembership === 'VVIP',
                 email,
+                isAdmin,
             };
         }
     } catch (err) {

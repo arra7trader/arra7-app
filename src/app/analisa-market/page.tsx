@@ -1,5 +1,7 @@
 'use client';
 
+import { isAdminUser } from '@/lib/admin-access';
+
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
@@ -761,11 +763,12 @@ export default function AnalisaMarketPage() {
         }
     };
 
-    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
-    const isVvipMember = isDeviceVvip || uppercaseMembership === 'VVIP' || uppercaseMembership === 'LIFETIME' || uppercaseMembership === 'ALL_ACCESS' || uppercaseMembership === 'FULL_ACCESS' || uppercaseMembership === 'PROMO_125K';
-    const isProMember = uppercaseMembership === 'PRO' || isDevicePro || isVvipMember;
+    const isAdmin = isAdminUser(session?.user);
+    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isAdmin ? 'ADMIN' : isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
+    const isVvipMember = isAdmin || isDeviceVvip || uppercaseMembership === 'VVIP' || uppercaseMembership === 'ADMIN' || uppercaseMembership === 'LIFETIME' || uppercaseMembership === 'ALL_ACCESS' || uppercaseMembership === 'FULL_ACCESS' || uppercaseMembership === 'PROMO_125K';
+    const isProMember = isAdmin || uppercaseMembership === 'PRO' || isDevicePro || isVvipMember;
     const isPremiumMember = isVvipMember || isProMember;
-    const isUnlimitedQuota = isVvipMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null;
+    const isUnlimitedQuota = isAdmin || isVvipMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null || quotaStatus?.dailyLimit === Infinity;
     const dailyLimitLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.dailyLimit ?? '-');
     const usedLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.used ?? '-');
     const remainingLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.remaining ?? '-');

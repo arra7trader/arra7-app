@@ -1,9 +1,10 @@
+import { isAdminEmail, isAdminUser, ADMIN_EMAILS } from '@/lib/admin-access';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import getTursoClient from '@/lib/turso';
 
-const ADMIN_EMAILS = ['apmexplore@gmail.com'];
+// Using imported ADMIN_EMAILS from admin-access
 
 // Harga membership
 const PRICES: Record<string, number> = {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+        if (!session?.user?.email || !isAdminEmail(session.user.email)) {
             return NextResponse.json({ status: 'error', message: 'Admin only' }, { status: 403 });
         }
 

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, memo, useCallback, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { isAdminUser } from '@/lib/admin-access';
 import Link from 'next/link';
 import {
     ArrowDownTrayIcon,
@@ -97,6 +99,8 @@ function TradingViewCronosChart({
     isUnlocked = true,
     formatPrice,
 }: TradingViewCronosChartProps) {
+    const { data: session } = useSession();
+    const effectiveUnlocked = isUnlocked || isAdminUser(session?.user);
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetRef = useRef<any>(null);
     const containerIdRef = useRef(`tv_cronos_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
@@ -222,7 +226,7 @@ function TradingViewCronosChart({
     }, [pineCode]);
 
     const handleCopyPineScript = useCallback(async () => {
-        if (!isUnlocked) {
+        if (!effectiveUnlocked) {
             setIsPineModalOpen(true);
             return;
         }
@@ -240,14 +244,14 @@ function TradingViewCronosChart({
                 console.error('Clipboard copy failed', err);
             }
         }
-    }, [pineCode, loadPineCode, isUnlocked]);
+    }, [pineCode, loadPineCode, effectiveUnlocked]);
 
     const handleOpenPineModal = useCallback(() => {
-        if (isUnlocked) {
+        if (effectiveUnlocked) {
             loadPineCode();
         }
         setIsPineModalOpen(true);
-    }, [loadPineCode, isUnlocked]);
+    }, [loadPineCode, effectiveUnlocked]);
 
     const effectiveTp1 = takeProfit1 ?? null;
     const effectiveTp2 = takeProfit2 ?? target ?? null;
@@ -503,7 +507,7 @@ function TradingViewCronosChart({
 
                         {/* Modal Content */}
                         <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
-                            {!isUnlocked && (
+                            {!effectiveUnlocked && (
                                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
                                     <div className="flex items-start gap-3">
                                         <LockClosedIcon className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />
@@ -592,7 +596,7 @@ function TradingViewCronosChart({
                                 </button>
                                 {showCodePreview && (
                                     <div className="mt-2 max-h-48 overflow-auto rounded-xl border border-slate-800 bg-[#060a12] p-3 font-mono text-[10px] text-slate-300">
-                                        {!isUnlocked ? (
+                                        {!effectiveUnlocked ? (
                                             <div className="py-6 text-center text-slate-400">
                                                 <LockClosedIcon className="h-6 w-6 text-amber-400 mx-auto mb-1" />
                                                 <p>Source code terkunci. Order paket ARRA Cronos (Rp 150.000) untuk membuka.</p>
@@ -619,7 +623,7 @@ function TradingViewCronosChart({
                                     <span>Buka di TradingView</span>
                                     <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                                 </a>
-                                {isUnlocked && (
+                                {effectiveUnlocked && (
                                     <a
                                         href="/ARRA_Cronos.pine"
                                         download="ARRA_Cronos.pine"
@@ -631,7 +635,7 @@ function TradingViewCronosChart({
                                 )}
                             </div>
 
-                            {isUnlocked ? (
+                            {effectiveUnlocked ? (
                                 <button
                                     onClick={handleCopyPineScript}
                                     className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold transition shadow-lg ${
