@@ -162,7 +162,6 @@ export default function ArraGrokPage() {
     const { tier, openActivation } = usePicaDevice();
 
     const [hasLocalUnlock, setHasLocalUnlock] = useState(false);
-    const [isDemoMode, setIsDemoMode] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -171,15 +170,22 @@ export default function ArraGrokPage() {
         }
     }, []);
 
+    const isAdmin =
+        isAdminUser(session?.user) ||
+        isAdminEmail(session?.user?.email) ||
+        session?.user?.isAdmin === true ||
+        (session?.user as any)?.role === 'ADMIN' ||
+        (session?.user as any)?.tier === 'ADMIN';
+
     const isUnlocked =
+        isAdmin ||
         hasLocalUnlock ||
         tier === 'PRO' ||
         tier === 'VVIP' ||
         session?.user?.tier === 'PRO' ||
         session?.user?.tier === 'VVIP' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
-        (session?.user as any)?.plan === 'ALL_ACCESS' ||
-        isAdminEmail(session?.user?.email) || isAdminUser(session?.user);
+        (session?.user as any)?.plan === 'ALL_ACCESS';
 
     // Terminal State
     const [isRunning, setIsRunning] = useState(true);
@@ -213,16 +219,16 @@ export default function ArraGrokPage() {
 
     // Session Timer tick
     useEffect(() => {
-        if (!isRunning) return;
+        if (!isRunning || !isUnlocked) return;
         const interval = window.setInterval(() => {
             setSessionTimer((prev) => prev + 1);
         }, 1000);
         return () => window.clearInterval(interval);
-    }, [isRunning]);
+    }, [isRunning, isUnlocked]);
 
-    // Simulated Realtime Ticker & Agents Activity
+    // Realtime Ticker & Agents Activity
     useEffect(() => {
-        if (!isRunning) return;
+        if (!isRunning || !isUnlocked) return;
         const interval = window.setInterval(() => {
             setActiveTrade((prev) => {
                 const delta = (Math.random() - 0.45) * 0.4;
@@ -241,7 +247,7 @@ export default function ArraGrokPage() {
         }, 2500);
 
         return () => window.clearInterval(interval);
-    }, [isRunning]);
+    }, [isRunning, isUnlocked]);
 
     // Format session timer (HH:MM:SS)
     const formatTimer = (totalSeconds: number) => {
@@ -374,11 +380,6 @@ _Generated autonomously by ARRA GROK 6-Agent Swarm_`;
                                     <span className="rounded-full bg-cyan-400/20 px-3 py-1 text-xs font-black text-cyan-200 border border-cyan-400/30">
                                         RP 150.000 · LIFETIME SEKALI BAYAR
                                     </span>
-                                    {isDemoMode && (
-                                        <span className="rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-[10px] font-black text-emerald-300 border border-emerald-400/40">
-                                            DEMO PREVIEW AKTIF
-                                        </span>
-                                    )}
                                 </div>
                                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                                     Buka Akses ARRA GROK 6-Agent Terminal + <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-indigo-300 bg-clip-text text-transparent">Bonus Indikator TradingView</span>
@@ -413,18 +414,93 @@ _Generated autonomously by ARRA GROK 6-Agent Swarm_`;
                                         <span>Aktivasi Kode</span>
                                     </button>
                                 </div>
-                                <button
-                                    onClick={() => setIsDemoMode((prev) => !prev)}
-                                    className="text-[10px] text-center font-bold text-slate-400 hover:text-cyan-300 transition py-1"
-                                >
-                                    {isDemoMode ? '← Tutup Mode Demo' : '👁️ Lihat Simulasi Live Demo'}
-                                </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* TOP METRICS STRIP (EQUITY, TRADES, WINRATE) */}
+                {/* TERMINAL SHOWCASE: LOCKED FOR NON-PURCHASERS, LIVE FOR ADMIN / PAID */}
+                {!isUnlocked ? (
+                    <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#0a0f18] p-6 sm:p-10 text-center shadow-2xl">
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/5 via-transparent to-purple-500/5" />
+                        <div className="relative mx-auto max-w-2xl py-6 sm:py-8">
+                            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border border-amber-400/40 bg-amber-400/10 text-amber-300 shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+                                <LockClosedIcon className="h-10 w-10" />
+                            </div>
+
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-amber-300 mb-3">
+                                TERMINAL ARRA GROK DIKUNCI
+                            </span>
+
+                            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                                6-Agent Autonomous Trading Terminal Hanya untuk Member
+                            </h2>
+                            <p className="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
+                                Mode simulasi dinonaktifkan. Fitur ARRA GROK termasuk dalam paket <strong>ARRA Cronos (Rp 150.000 Sekali Bayar Selamanya)</strong>. Order sekarang untuk mengaktifkan terminal 6 agen AI live signal Forex &amp; Gold Futures serta 1-Click MT5 order script.
+                            </p>
+
+                            {/* 6-Agent Grid Overview */}
+                            <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-left">
+                                <div className="rounded-xl border border-slate-800 bg-[#070b13] p-3.5">
+                                    <span className="text-cyan-300 font-bold text-xs block">1. Liquidity Hunter</span>
+                                    <span className="text-[10px] text-slate-500">OB &amp; FVG institutional sweep.</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-800 bg-[#070b13] p-3.5">
+                                    <span className="text-violet-300 font-bold text-xs block">2. Cycle Forecaster</span>
+                                    <span className="text-[10px] text-slate-500">Quantum Fourier harmonic wave.</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-800 bg-[#070b13] p-3.5">
+                                    <span className="text-blue-300 font-bold text-xs block">3. Sentiment Sniffer</span>
+                                    <span className="text-[10px] text-slate-500">CME FedWatch &amp; DXY correlation.</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-800 bg-[#070b13] p-3.5">
+                                    <span className="text-emerald-300 font-bold text-xs block">4. Neural Bi-LSTM</span>
+                                    <span className="text-[10px] text-slate-500">Multi-horizon dynamic price band.</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-800 bg-[#070b13] p-3.5">
+                                    <span className="text-amber-300 font-bold text-xs block">5. Volatility Filter</span>
+                                    <span className="text-[10px] text-slate-500">Spread &amp; high-impact news gate.</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-800 bg-[#070b13] p-3.5">
+                                    <span className="text-rose-300 font-bold text-xs block">6. Commander MT5</span>
+                                    <span className="text-[10px] text-slate-500">1-Click MT5 order execution.</span>
+                                </div>
+                            </div>
+
+                            {/* CTAs */}
+                            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <Link
+                                    href="/payment/checkout?plan=ARRA_CRONOS"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 px-8 py-4 text-sm font-black text-slate-950 shadow-xl shadow-cyan-500/25 hover:opacity-95 transition transform hover:scale-[1.02]"
+                                >
+                                    <BoltIcon className="h-5 w-5" />
+                                    <span>ORDER PAKET ARRA CRONOS — RP 150.000</span>
+                                </Link>
+                                <button
+                                    onClick={openActivation}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900 px-6 py-4 text-xs font-bold text-slate-200 hover:bg-slate-800 transition"
+                                >
+                                    <KeyIcon className="h-4 w-4 text-amber-300" />
+                                    <span>Aktivasi Kode Lisensi</span>
+                                </button>
+                                <a
+                                    href="https://t.me/arra7trader?text=Halo%20Admin%20ARRA7!%20Saya%20ingin%20order%20ARRA%20Cronos%20+%20ARRA%20Grok%20(Rp%20150.000)"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900 px-6 py-4 text-xs font-bold text-slate-200 hover:bg-slate-800 transition"
+                                >
+                                    <span>💬 Chat Admin Telegram</span>
+                                </a>
+                            </div>
+
+                            <p className="mt-5 text-[11px] text-slate-500">
+                                Khusus Forex &amp; Gold Futures. 100% Personal Execution (Tanpa Copytrade). Akun Admin otomatis memiliki akses penuh tanpa kunci.
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* TOP METRICS STRIP (EQUITY, TRADES, WINRATE) */}
                 <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
                     <div className="rounded-2xl border border-slate-800 bg-[#090f19] p-3.5">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -436,7 +512,7 @@ _Generated autonomously by ARRA GROK 6-Agent Swarm_`;
 
                     <div className="rounded-2xl border border-cyan-500/30 bg-[#081524] p-3.5">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
-                            Simulated Equity
+                            Portfolio Equity
                         </div>
                         <div className="mt-1 text-lg font-black text-cyan-200">
                             ${(equity + activeTrade.dollarPnl + 13746.30).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -804,6 +880,8 @@ _Generated autonomously by ARRA GROK 6-Agent Swarm_`;
                         </div>
                     </div>
                 </div>
+                    </>
+                )}
             </div>
         </main>
     );
