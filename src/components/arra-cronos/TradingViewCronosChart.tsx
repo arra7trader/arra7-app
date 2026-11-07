@@ -24,6 +24,8 @@ export interface CronosForecast {
     low: number;
     close: number;
     volume: number;
+    upper?: number;
+    lower?: number;
 }
 
 interface TradingViewCronosChartProps {
@@ -35,6 +37,10 @@ interface TradingViewCronosChartProps {
     entry: number | null;
     stop: number | null;
     target: number | null;
+    takeProfit1?: number | null;
+    takeProfit2?: number | null;
+    riskRewardRatio?: number | null;
+    confidence?: number | null;
     formatPrice: (value: number) => string;
     onCandleData?: (candles: CronosCandle[]) => void;
 }
@@ -56,8 +62,11 @@ function TradingViewCronosChart({
     entry,
     stop,
     target,
+    takeProfit1,
+    takeProfit2,
+    riskRewardRatio,
+    confidence,
     formatPrice,
-    onCandleData,
 }: TradingViewCronosChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetRef = useRef<any>(null);
@@ -70,9 +79,6 @@ function TradingViewCronosChart({
         containerRef.current.innerHTML = '';
 
         const interval = TV_INTERVAL_MAP[timeframe] || '60';
-
-        // Build studies list for forecast overlay lines
-        const studies: string[] = [];
 
         try {
             widgetRef.current = new window.TradingView.widget({
@@ -90,7 +96,7 @@ function TradingViewCronosChart({
                 hide_side_toolbar: false,
                 hide_top_toolbar: false,
                 save_image: true,
-                studies: studies,
+                studies: [],
                 show_popup_button: true,
                 popup_width: '1200',
                 popup_height: '700',
@@ -150,6 +156,9 @@ function TradingViewCronosChart({
         };
     }, [tvSymbol, timeframe, initWidget]);
 
+    const effectiveTp1 = takeProfit1 ?? null;
+    const effectiveTp2 = takeProfit2 ?? target ?? null;
+
     return (
         <div className="relative w-full">
             {/* TradingView Chart */}
@@ -160,49 +169,62 @@ function TradingViewCronosChart({
                 aria-label={`Chart TradingView ${symbol} - ARRA Cronos`}
             />
 
-            {/* Forecast overlay info bar */}
-            {forecast.length > 0 && (
-                <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-                    <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 px-2.5 py-1.5 backdrop-blur-sm">
+            {/* Top HUD Badges */}
+            <div className="pointer-events-none absolute right-3 top-3 z-10 flex flex-wrap items-center gap-2">
+                {confidence != null && (
+                    <div className="rounded-lg border border-cyan-400/30 bg-[#080d15]/90 px-2.5 py-1.5 shadow-lg backdrop-blur-md">
                         <div className="flex items-center gap-1.5">
-                            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-blue-200">
-                                KRONOS FORECAST: {forecast.length} bars
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#38bdf8]" />
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-200">
+                                CONFIDENCE: {confidence}%
                             </span>
                         </div>
                     </div>
-                    {action && action !== 'WAIT' && (
-                        <div className={`rounded-lg border px-2.5 py-1.5 backdrop-blur-sm ${
-                            action === 'BUY'
-                                ? 'border-emerald-400/20 bg-emerald-500/10'
-                                : 'border-rose-400/20 bg-rose-500/10'
-                        }`}>
-                            <span className={`text-[9px] font-bold uppercase tracking-wider ${
-                                action === 'BUY' ? 'text-emerald-200' : 'text-rose-200'
-                            }`}>
-                                SIGNAL: {action}
-                            </span>
-                        </div>
-                    )}
-                </div>
-            )}
+                )}
 
-            {/* Price level badges */}
-            {(entry || stop || target) && (
-                <div className="absolute bottom-16 left-3 z-10 flex flex-col gap-1">
+                {action && action !== 'WAIT' && (
+                    <div
+                        className={`rounded-lg border px-3 py-1.5 shadow-lg backdrop-blur-md ${
+                            action === 'BUY'
+                                ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-200'
+                                : 'border-rose-400/40 bg-rose-500/20 text-rose-200'
+                        }`}
+                    >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
+                            SIGNAL: {action}
+                        </span>
+                        {riskRewardRatio != null && riskRewardRatio > 0 && (
+                            <span className="ml-1.5 text-[9px] opacity-80">· R:R 1:{riskRewardRatio}</span>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Bottom-left Price Level Badges */}
+            {(entry || stop || effectiveTp1 || effectiveTp2) && (
+                <div className="pointer-events-none absolute bottom-14 left-3 z-10 flex flex-col gap-1.5">
                     {entry != null && (
-                        <div className="rounded-md bg-slate-800/90 px-2 py-1 text-[9px] font-bold text-slate-200 backdrop-blur-sm">
-                            ENTRY: {formatPrice(entry)}
+                        <div className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#070b12]/90 px-2.5 py-1 text-[10px] font-bold text-cyan-200 shadow-md backdrop-blur-md">
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                            <span>ENTRY: {formatPrice(entry)}</span>
                         </div>
                     )}
                     {stop != null && (
-                        <div className="rounded-md bg-rose-900/70 px-2 py-1 text-[9px] font-bold text-rose-200 backdrop-blur-sm">
-                            STOP: {formatPrice(stop)}
+                        <div className="inline-flex items-center gap-2 rounded-lg border border-rose-500/30 bg-[#1f0b11]/90 px-2.5 py-1 text-[10px] font-bold text-rose-300 shadow-md backdrop-blur-md">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                            <span>SL: {formatPrice(stop)}</span>
                         </div>
                     )}
-                    {target != null && (
-                        <div className="rounded-md bg-emerald-900/70 px-2 py-1 text-[9px] font-bold text-emerald-200 backdrop-blur-sm">
-                            TARGET: {formatPrice(target)}
+                    {effectiveTp1 != null && (
+                        <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-[#061e14]/90 px-2.5 py-1 text-[10px] font-bold text-emerald-300 shadow-md backdrop-blur-md">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                            <span>TP1: {formatPrice(effectiveTp1)}</span>
+                        </div>
+                    )}
+                    {effectiveTp2 != null && (
+                        <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/50 bg-[#082a1d]/90 px-2.5 py-1 text-[10px] font-black text-emerald-200 shadow-md backdrop-blur-md">
+                            <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_8px_#34d399]" />
+                            <span>TP2 / TARGET: {formatPrice(effectiveTp2)}</span>
                         </div>
                     )}
                 </div>

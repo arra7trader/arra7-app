@@ -6,6 +6,7 @@ echo ========================================================
 echo        ARRA CRONOS - PYTORCH INFERENCE SERVICE
 echo   Model: NeoQuasar/Kronos-base (102.3M parameters)
 echo   Tokenizer: NeoQuasar/Kronos-Tokenizer-base
+echo   Hardware: NVIDIA CUDA Acceleration Enabled
 echo ========================================================
 echo.
 
@@ -25,10 +26,12 @@ python -c "import torch, transformers, fastapi, uvicorn; print('   Dependencies 
 if %ERRORLEVEL% neq 0 (
     echo    Menginstall dependensi yang diperlukan...
     pip install -r requirements.txt
+    pip install "huggingface-hub<1.0,>=0.34.0"
 )
 
 echo.
 echo [3/3] Menjalankan server Kronos di http://localhost:8010 ...
+echo    Health check: http://localhost:8010/health
 echo    (Tekan Ctrl+C untuk menghentikan server)
 echo.
 
