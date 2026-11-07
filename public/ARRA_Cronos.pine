@@ -1,0 +1,501 @@
+//@version=6
+// © ARRA7 Trading
+// Independent candle-analogy indicator. Does not run the Kronos foundation model.
+indicator("ARRA Cronos", shorttitle="ARRACronos", overlay=true, max_lines_count=250, max_boxes_count=30, max_labels_count=100, max_bars_back=600)
+
+gAnalog = "Candle analog forecast"
+gFilter = "Signal filters"
+gDisplay = "Display"
+
+searchBars = input.int(400, "Historical search bars", minval=300, maxval=550, group=gAnalog)
+patternBars = input.int(5, "Pattern length (candles)", minval=3, maxval=12, group=gAnalog)
+forecastBars = input.int(8, "Forecast horizon (bars)", minval=1, maxval=24, group=gAnalog)
+minMatches = input.int(8, "Minimum similar patterns", minval=2, maxval=50, group=gAnalog)
+minEffectiveMatches = input.float(4.0, "Minimum effective pattern count", minval=1.0, maxval=25.0, step=0.5, group=gAnalog)
+maxDistance = input.float(2.0, "Maximum normalized distance", minval=0.25, maxval=10.0, step=0.25, group=gAnalog)
+evaluationWindow = input.int(200, "Walk-forward samples", minval=50, maxval=500, group=gAnalog)
+maxDispersionAtr = input.float(2.0, "Maximum forecast dispersion (ATR)", minval=0.25, maxval=10.0, step=0.25, group=gAnalog)
+minMoveAtr = input.float(0.15, "Minimum forecast move (ATR)", minval=0.0, maxval=2.0, step=0.05, group=gAnalog)
+
+fastLength = input.int(21, "Fast EMA", minval=2, maxval=100, group=gFilter)
+slowLength = input.int(55, "Slow EMA", minval=5, maxval=250, group=gFilter)
+momentumLength = input.int(5, "Momentum lookback", minval=1, maxval=50, group=gFilter)
+useVolume = input.bool(true, "Use candle volume pressure", group=gFilter)
+useHtf = input.bool(true, "Use confirmed higher-timeframe bias", group=gFilter)
+htf = input.timeframe("60", "Higher timeframe", group=gFilter)
+htfEmaLength = input.int(50, "Higher-timeframe EMA", minval=5, maxval=200, group=gFilter)
+minScore = input.float(35.0, "Minimum alignment score", minval=10.0, maxval=90.0, step=5.0, group=gFilter)
+minDirectionalShare = input.float(55.0, "Minimum analog direction agreement (%)", minval=50.0, maxval=90.0, step=1.0, group=gFilter)
+signalStopAtr = input.float(1.0, "Reference stop distance (ATR)", minval=0.25, maxval=5.0, step=0.25, group=gFilter)
+
+showForecast = input.bool(true, "Show forecast", group=gDisplay)
+forecastDisplay = input.string("3-nearest path + analogs", "Forecast style", options=["3-nearest path + analogs", "OHLC candles"], group=gDisplay)
+showLiveForecastBadge = input.bool(true, "Show live forecast badge", group=gDisplay)
+showEma = input.bool(false, "Show trend EMAs", group=gDisplay)
+showSignals = input.bool(true, "Show BUY / SELL detail on signal candles", group=gDisplay)
+signalHistory = input.int(5, "Detailed signal candles to retain", minval=1, maxval=20, group=gDisplay)
+showDashboard = input.bool(false, "Show dashboard table", group=gDisplay)
+
+atr = ta.atr(14)
+fastEma = ta.ema(close, fastLength)
+slowEma = ta.ema(close, slowLength)
+momentum = ta.roc(close, momentumLength)
+averageVolume = ta.sma(volume, 20)
+
+closeLocation = high > low ? (2.0 * close - high - low) / (high - low) : 0.0
+relativeVolume = not na(volume) and not na(averageVolume) and averageVolume > 0 ? math.min(volume / averageVolume, 3.0) : 1.0
+candlePressure = ta.ema(closeLocation * relativeVolume, 8)
+
+weightTotal = 0.0
+weightSquaredTotal = 0.0
+matchCount = 0
+upWeight = 0.0
+horizonMoveTotal = 0.0
+horizonMoveSquaredTotal = 0.0
+var openTotals = array.new_float(forecastBars + 1, 0.0)
+var highTotals = array.new_float(forecastBars + 1, 0.0)
+var lowTotals = array.new_float(forecastBars + 1, 0.0)
+var closeTotals = array.new_float(forecastBars + 1, 0.0)
+var closeSquaredTotals = array.new_float(forecastBars + 1, 0.0)
+var nearestPathTotals = array.new_float(forecastBars + 1, 0.0)
+array.fill(openTotals, 0.0)
+array.fill(highTotals, 0.0)
+array.fill(lowTotals, 0.0)
+array.fill(closeTotals, 0.0)
+array.fill(closeSquaredTotals, 0.0)
+array.fill(nearestPathTotals, 0.0)
+stride = math.max(forecastBars + patternBars, int(math.floor((searchBars - forecastBars - patternBars - 1) / 65.0)))
+firstCandidate = forecastBars + patternBars + 1
+enoughHistory = bar_index >= searchBars + forecastBars + patternBars + 1 and not na(atr[searchBars + patternBars + 1])
+int bestCandidate1 = na
+int bestCandidate2 = na
+int bestCandidate3 = na
+float bestDistance1 = na
+float bestDistance2 = na
+float bestDistance3 = na
+
+if enoughHistory
+    for candidate = firstCandidate to searchBars by stride
+        distance = 0.0
+        for patternStep = 0 to patternBars - 1
+            currentAtr = math.max(nz(atr[patternStep], atr), syminfo.mintick)
+            historicalAtr = math.max(nz(atr[candidate + patternStep], atr), syminfo.mintick)
+            currentBody = (close[patternStep] - open[patternStep]) / currentAtr
+            historicalBody = (close[candidate + patternStep] - open[candidate + patternStep]) / historicalAtr
+            currentRange = (high[patternStep] - low[patternStep]) / currentAtr
+            historicalRange = (high[candidate + patternStep] - low[candidate + patternStep]) / historicalAtr
+            currentCloseLocation = high[patternStep] > low[patternStep] ? (2.0 * close[patternStep] - high[patternStep] - low[patternStep]) / (high[patternStep] - low[patternStep]) : 0.0
+            historicalCloseLocation = high[candidate + patternStep] > low[candidate + patternStep] ? (2.0 * close[candidate + patternStep] - high[candidate + patternStep] - low[candidate + patternStep]) / (high[candidate + patternStep] - low[candidate + patternStep]) : 0.0
+            currentWickBalance = ((high[patternStep] - math.max(open[patternStep], close[patternStep])) - (math.min(open[patternStep], close[patternStep]) - low[patternStep])) / currentAtr
+            historicalWickBalance = ((high[candidate + patternStep] - math.max(open[candidate + patternStep], close[candidate + patternStep])) - (math.min(open[candidate + patternStep], close[candidate + patternStep]) - low[candidate + patternStep])) / historicalAtr
+            currentRelativeVolume = math.min(nz(relativeVolume[patternStep], 1.0), 3.0)
+            historicalRelativeVolume = math.min(nz(relativeVolume[candidate + patternStep], 1.0), 3.0)
+            recencyWeight = 1.0 / (1.0 + patternStep * 0.25)
+            stepDistance = math.abs(currentBody - historicalBody)
+            stepDistance += 0.5 * math.abs(currentRange - historicalRange)
+            stepDistance += 0.5 * math.abs(currentCloseLocation - historicalCloseLocation)
+            stepDistance += 0.25 * math.abs(currentWickBalance - historicalWickBalance)
+            stepDistance += 0.1 * math.abs(currentRelativeVolume - historicalRelativeVolume)
+            distance += stepDistance * recencyWeight
+        distance /= patternBars
+        if distance <= maxDistance and close[candidate] > 0
+            if na(bestDistance1) or distance < bestDistance1
+                bestCandidate3 := bestCandidate2
+                bestDistance3 := bestDistance2
+                bestCandidate2 := bestCandidate1
+                bestDistance2 := bestDistance1
+                bestCandidate1 := candidate
+                bestDistance1 := distance
+            else if na(bestDistance2) or distance < bestDistance2
+                bestCandidate3 := bestCandidate2
+                bestDistance3 := bestDistance2
+                bestCandidate2 := candidate
+                bestDistance2 := distance
+            else if na(bestDistance3) or distance < bestDistance3
+                bestCandidate3 := candidate
+                bestDistance3 := distance
+            weight = 1.0 / math.pow(1.0 + distance, 2.0)
+            weightTotal += weight
+            weightSquaredTotal += weight * weight
+            candidateAtr = math.max(nz(atr[candidate], atr), syminfo.mintick)
+            historicalFinalMove = (close[candidate - forecastBars] - close[candidate]) / candidateAtr
+            horizonMoveTotal += historicalFinalMove * weight
+            horizonMoveSquaredTotal += historicalFinalMove * historicalFinalMove * weight
+            if historicalFinalMove > 0
+                upWeight += weight
+            for step = 1 to forecastBars
+                historicalBar = candidate - step
+                array.set(openTotals, step, array.get(openTotals, step) + (open[historicalBar] - close[candidate]) / candidateAtr * weight)
+                array.set(highTotals, step, array.get(highTotals, step) + (high[historicalBar] - close[candidate]) / candidateAtr * weight)
+                array.set(lowTotals, step, array.get(lowTotals, step) + (low[historicalBar] - close[candidate]) / candidateAtr * weight)
+                normalizedCloseMove = (close[historicalBar] - close[candidate]) / candidateAtr
+                array.set(closeTotals, step, array.get(closeTotals, step) + normalizedCloseMove * weight)
+                array.set(closeSquaredTotals, step, array.get(closeSquaredTotals, step) + normalizedCloseMove * normalizedCloseMove * weight)
+            matchCount += 1
+
+if matchCount > 0
+    for step = 1 to forecastBars
+        nearestPathWeightedMove = 0.0
+        nearestPathWeight = 0.0
+        if not na(bestCandidate1) and not na(bestDistance1)
+            analogWeight1 = 1.0 / math.pow(1.0 + bestDistance1, 2.0)
+            analogAtr1 = math.max(nz(atr[bestCandidate1], atr), syminfo.mintick)
+            analogMove1 = (close[bestCandidate1 - step] - close[bestCandidate1]) / analogAtr1
+            nearestPathWeightedMove += analogMove1 * analogWeight1
+            nearestPathWeight += analogWeight1
+        if not na(bestCandidate2) and not na(bestDistance2)
+            analogWeight2 = 1.0 / math.pow(1.0 + bestDistance2, 2.0)
+            analogAtr2 = math.max(nz(atr[bestCandidate2], atr), syminfo.mintick)
+            analogMove2 = (close[bestCandidate2 - step] - close[bestCandidate2]) / analogAtr2
+            nearestPathWeightedMove += analogMove2 * analogWeight2
+            nearestPathWeight += analogWeight2
+        if not na(bestCandidate3) and not na(bestDistance3)
+            analogWeight3 = 1.0 / math.pow(1.0 + bestDistance3, 2.0)
+            analogAtr3 = math.max(nz(atr[bestCandidate3], atr), syminfo.mintick)
+            analogMove3 = (close[bestCandidate3 - step] - close[bestCandidate3]) / analogAtr3
+            nearestPathWeightedMove += analogMove3 * analogWeight3
+            nearestPathWeight += analogWeight3
+        array.set(nearestPathTotals, step, nearestPathWeight > 0 ? nearestPathWeightedMove / nearestPathWeight : na)
+
+nearestPathMoveAtr = matchCount > 0 ? array.get(nearestPathTotals, forecastBars) : na
+analogUpShare = weightTotal > 0 ? upWeight / weightTotal * 100.0 : na
+effectiveMatches = weightSquaredTotal > 0 ? weightTotal * weightTotal / weightSquaredTotal : 0.0
+fullBasketMeanMove = weightTotal > 0 ? horizonMoveTotal / weightTotal : na
+fullBasketDispersionAtr = weightTotal > 0 ? math.sqrt(math.max(0.0, horizonMoveSquaredTotal / weightTotal - fullBasketMeanMove * fullBasketMeanMove)) : na
+nearestPathDispersionAtr = weightTotal > 0 and not na(nearestPathMoveAtr) ? math.sqrt(math.max(0.0, horizonMoveSquaredTotal / weightTotal - 2.0 * fullBasketMeanMove * nearestPathMoveAtr + nearestPathMoveAtr * nearestPathMoveAtr)) : na
+forecastAtr = forecastDisplay == "OHLC candles" ? fullBasketMeanMove : nearestPathMoveAtr
+forecastReturn = not na(forecastAtr) and close > 0 ? forecastAtr * atr / close : na
+forecastDispersionAtr = forecastDisplay == "OHLC candles" ? fullBasketDispersionAtr : nearestPathDispersionAtr
+displayDispersionAcceptable = not na(forecastDispersionAtr) and forecastDispersionAtr <= maxDispersionAtr
+signalForecastAtr = forecastAtr
+signalDispersionAcceptable = displayDispersionAcceptable
+
+[htfClose, htfEma] = request.security(syminfo.tickerid, htf, [close[1], ta.ema(close, htfEmaLength)[1]], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+htfUsable = timeframe.in_seconds(htf) >= timeframe.in_seconds() and not na(htfClose) and not na(htfEma)
+htfDirection = htfUsable ? (htfClose > htfEma ? 1 : htfClose < htfEma ? -1 : 0) : 0
+htfText = not useHtf ? "OFF" : not htfUsable ? "UNAVAILABLE" : htfDirection > 0 ? "BULLISH" : htfDirection < 0 ? "BEARISH" : "NEUTRAL"
+trendDirection = fastEma > slowEma ? 1 : fastEma < slowEma ? -1 : 0
+momentumDirection = momentum > 0 ? 1 : momentum < 0 ? -1 : 0
+
+scoreTop = 0.0
+scoreBottom = 0.0
+if not na(signalForecastAtr)
+    scoreTop += math.max(-1.0, math.min(1.0, signalForecastAtr / 0.5)) * 45.0
+    scoreBottom += 45.0
+scoreTop += trendDirection * 20.0
+scoreBottom += 20.0
+scoreTop += momentumDirection * 15.0
+scoreBottom += 15.0
+if useVolume and not na(candlePressure)
+    scoreTop += math.max(-1.0, math.min(1.0, candlePressure)) * 10.0
+    scoreBottom += 10.0
+if useHtf and htfUsable
+    scoreTop += htfDirection * 10.0
+    scoreBottom += 10.0
+alignment = scoreBottom > 0 ? scoreTop / scoreBottom * 100.0 : 0.0
+
+hasAnalogSet = matchCount >= minMatches and effectiveMatches >= minEffectiveMatches and not na(signalForecastAtr)
+enoughMatches = hasAnalogSet and signalDispersionAcceptable
+buyAgreement = not na(analogUpShare) and analogUpShare >= minDirectionalShare
+sellAgreement = not na(analogUpShare) and analogUpShare <= 100.0 - minDirectionalShare
+buySetup = enoughMatches and atr > 0 and buyAgreement and alignment >= minScore and signalForecastAtr >= minMoveAtr
+sellSetup = enoughMatches and atr > 0 and sellAgreement and alignment <= -minScore and signalForecastAtr <= -minMoveAtr
+buySignal = barstate.isconfirmed and buySetup and not buySetup[1]
+sellSignal = barstate.isconfirmed and sellSetup and not sellSetup[1]
+forecastUsable = showForecast and enoughMatches and weightTotal > 0
+setupText = buySetup ? "BUY SETUP" : sellSetup ? "SELL SETUP" : not enoughHistory ? "BUILDING HISTORY" : not hasAnalogSet ? "LOW ANALOG SAMPLE" : not signalDispersionAcceptable ? "HIGH DISPERSION" : not (buyAgreement or sellAgreement) ? "ANALOG DISAGREEMENT" : signalForecastAtr >= 0 ? "UPWARD BIAS · WAIT" : "DOWNWARD BIAS · WAIT"
+
+var array<int> pendingBars = array.new_int()
+var array<float> pendingPrices = array.new_float()
+var array<float> pendingAtrs = array.new_float()
+var array<float> pendingTargets = array.new_float()
+var array<int> pendingDirections = array.new_int()
+var array<float> realizedErrors = array.new_float()
+var array<float> realizedBaselineErrors = array.new_float()
+var array<int> realizedHits = array.new_int()
+var float rollingErrorSum = 0.0
+var float rollingBaselineErrorSum = 0.0
+var int rollingHitSum = 0
+
+if barstate.isconfirmed
+    if array.size(pendingBars) > 0 and bar_index >= array.get(pendingBars, 0) + forecastBars
+        originBar = array.shift(pendingBars)
+        originPrice = array.shift(pendingPrices)
+        originAtr = array.shift(pendingAtrs)
+        predictedTarget = array.shift(pendingTargets)
+        predictedDirection = array.shift(pendingDirections)
+        if bar_index == originBar + forecastBars and originPrice > 0 and originAtr > 0
+            actualDirection = close > originPrice ? 1 : close < originPrice ? -1 : 0
+            errorInAtr = math.abs(close - predictedTarget) / originAtr
+            directionHit = actualDirection != 0 and actualDirection == predictedDirection ? 1 : 0
+            baselineErrorInAtr = math.abs(close - originPrice) / originAtr
+            array.push(realizedErrors, errorInAtr)
+            array.push(realizedBaselineErrors, baselineErrorInAtr)
+            array.push(realizedHits, directionHit)
+            rollingErrorSum += errorInAtr
+            rollingBaselineErrorSum += baselineErrorInAtr
+            rollingHitSum += directionHit
+            if array.size(realizedErrors) > evaluationWindow
+                rollingErrorSum -= array.shift(realizedErrors)
+                rollingBaselineErrorSum -= array.shift(realizedBaselineErrors)
+                rollingHitSum -= array.shift(realizedHits)
+    if (buySignal or sellSignal) and not na(forecastReturn) and atr > 0
+        array.push(pendingBars, bar_index)
+        array.push(pendingPrices, close)
+        array.push(pendingAtrs, atr)
+        array.push(pendingTargets, close + signalForecastAtr * atr)
+        array.push(pendingDirections, buySetup ? 1 : -1)
+
+walkForwardCount = array.size(realizedErrors)
+walkForwardHitRate = walkForwardCount > 0 ? rollingHitSum / walkForwardCount * 100.0 : na
+walkForwardMae = walkForwardCount > 0 ? rollingErrorSum / walkForwardCount : na
+noChangeMae = walkForwardCount > 0 ? rollingBaselineErrorSum / walkForwardCount : na
+walkForwardMature = walkForwardCount >= 30
+forecastColor = na(forecastAtr) or not displayDispersionAcceptable ? color.gray : forecastAtr >= 0 ? color.rgb(40, 200, 130) : color.rgb(240, 85, 95)
+plot(showEma ? fastEma : na, "Fast EMA", color=color.aqua, linewidth=1, force_overlay=true)
+plot(showEma ? slowEma : na, "Slow EMA", color=color.orange, linewidth=2, force_overlay=true)
+
+var array<label> signalLabels = array.new<label>()
+var forecastWicks = array.new_line(forecastBars, na)
+var forecastBodies = array.new_box(forecastBars, na)
+var forecastPath = array.new_line(forecastBars, na)
+var analogPaths = array.new_line(forecastBars * 3, na)
+var bandTopLines = array.new_line(forecastBars, na)
+var bandBottomLines = array.new_line(forecastBars, na)
+var dispersionFills = array.new<linefill>(forecastBars, na)
+var chartReadout = label.new(bar_index, close, "", xloc=xloc.bar_index, style=label.style_label_lower_left, color=color.rgb(14, 23, 35), textcolor=color.white, size=size.small, force_overlay=true)
+
+if showSignals and barstate.isconfirmed and (buySignal or sellSignal)
+    signalDirection = buySignal ? 1 : -1
+    signalEntry = close
+    signalTarget = close + signalForecastAtr * atr
+    signalStop = signalEntry - signalDirection * signalStopAtr * atr
+    signalMovePct = signalEntry != 0 ? signalForecastAtr * atr / signalEntry * 100.0 : na
+    signalRewardRisk = math.abs(signalTarget - signalEntry) / (signalStopAtr * atr)
+    signalTitle = buySignal ? "BUY" : "SELL"
+    signalAgreementShare = buySignal ? analogUpShare : 100.0 - analogUpShare
+    signalSampleText = na(signalAgreementShare) ? "n/a" : str.tostring(signalAgreementShare, "#.0") + "% aligned sample"
+    signalDistanceText = na(bestDistance1) ? "n/a" : str.tostring(bestDistance1, "#.00") + "/" + (na(bestDistance2) ? "n/a" : str.tostring(bestDistance2, "#.00")) + "/" + (na(bestDistance3) ? "n/a" : str.tostring(bestDistance3, "#.00"))
+    signalDispersionText = na(forecastDispersionAtr) ? "n/a" : str.tostring(forecastDispersionAtr, "#.00") + " ATR"
+    signalTrendText = "HTF " + htfText + " · EMA " + (trendDirection > 0 ? "UP" : trendDirection < 0 ? "DOWN" : "FLAT") + " · MOM " + str.tostring(momentum, "+#.00;-#.00") + "%"
+    signalWalkForward = not walkForwardMature ? "WF sample " + str.tostring(walkForwardCount) + "/30" : "WF " + str.tostring(walkForwardHitRate, "#.0") + "% / " + str.tostring(walkForwardCount)
+    signalMaeText = not walkForwardMature ? "MAE sample " + str.tostring(walkForwardCount) + "/30" : "MAE " + str.tostring(walkForwardMae, "#.00") + " vs hold " + str.tostring(noChangeMae, "#.00") + " ATR"
+    signalText = signalTitle + " · ALIGN " + str.tostring(alignment, "#.0") + " · " + signalSampleText + "\nENTRY " + str.tostring(signalEntry, format.mintick) + " · FCST " + str.tostring(signalTarget, format.mintick) + " (" + str.tostring(signalMovePct, "+#.00;-#.00") + "%)\nREF SL " + str.tostring(signalStop, format.mintick) + " · MODEL R:R " + str.tostring(signalRewardRisk, "#.00") + "\nANALOG N " + str.tostring(matchCount) + " · EFF " + str.tostring(effectiveMatches, "#.0") + " · D " + signalDistanceText + "\nDISP " + signalDispersionText + " · " + signalTrendText + "\n" + signalWalkForward + " · " + signalMaeText
+    signalY = buySignal ? low - atr * 0.25 : high + atr * 0.25
+    signalLabelColor = buySignal ? color.rgb(12, 115, 86) : color.rgb(166, 48, 61)
+    signalLabelStyle = buySignal ? label.style_label_up : label.style_label_down
+    signalLabel = label.new(bar_index, signalY, signalText, xloc=xloc.bar_index, yloc=yloc.price, style=signalLabelStyle, color=signalLabelColor, textcolor=color.white, size=size.small, textalign=text.align_left, force_overlay=true)
+    array.push(signalLabels, signalLabel)
+    if array.size(signalLabels) > signalHistory
+        oldSignalLabel = array.shift(signalLabels)
+        label.delete(oldSignalLabel)
+
+if barstate.islast
+    previousForecastClose = close
+    showProjectedCandles = forecastDisplay == "OHLC candles"
+    showConsensusAndAnalogs = forecastDisplay == "3-nearest path + analogs"
+    for scenarioIndex = 0 to 2
+        scenarioCandidate = scenarioIndex == 0 ? bestCandidate1 : scenarioIndex == 1 ? bestCandidate2 : bestCandidate3
+        scenarioDistance = scenarioIndex == 0 ? bestDistance1 : scenarioIndex == 1 ? bestDistance2 : bestDistance3
+        scenarioPreviousClose = close
+        scenarioValid = forecastUsable and showConsensusAndAnalogs and not na(scenarioCandidate) and not na(scenarioDistance)
+        for step = 1 to forecastBars
+            scenarioLineIndex = scenarioIndex * forecastBars + step - 1
+            scenarioLine = array.get(analogPaths, scenarioLineIndex)
+            if scenarioValid
+                historicalBar = scenarioCandidate - step
+                scenarioAtr = math.max(nz(atr[scenarioCandidate], atr), syminfo.mintick)
+                scenarioClose = close + (close[historicalBar] - close[scenarioCandidate]) / scenarioAtr * atr
+                scenarioDirection = close[scenarioCandidate - forecastBars] >= close[scenarioCandidate] ? 1 : -1
+                scenarioColor = scenarioDirection > 0 ? color.rgb(63, 119, 117) : color.rgb(143, 83, 91)
+                scenarioTransparency = scenarioIndex == 0 ? 22 : 62
+                scenarioWidth = scenarioIndex == 0 ? 2 : 1
+                if na(scenarioLine)
+                    scenarioLine := line.new(bar_index + step - 1, scenarioPreviousClose, bar_index + step, scenarioClose, xloc=xloc.bar_index, color=color.new(scenarioColor, scenarioTransparency), width=scenarioWidth, style=line.style_dashed, force_overlay=true)
+                    array.set(analogPaths, scenarioLineIndex, scenarioLine)
+                else
+                    line.set_xy1(scenarioLine, bar_index + step - 1, scenarioPreviousClose)
+                    line.set_xy2(scenarioLine, bar_index + step, scenarioClose)
+                    line.set_color(scenarioLine, color.new(scenarioColor, scenarioTransparency))
+                    line.set_width(scenarioLine, scenarioWidth)
+                    line.set_style(scenarioLine, line.style_dashed)
+                scenarioPreviousClose := scenarioClose
+            else if not na(scenarioLine)
+                line.set_color(scenarioLine, color.new(color.gray, 100))
+    for step = 1 to forecastBars
+        wick = array.get(forecastWicks, step - 1)
+        candleBody = array.get(forecastBodies, step - 1)
+        path = array.get(forecastPath, step - 1)
+        bandTop = array.get(bandTopLines, step - 1)
+        bandBottom = array.get(bandBottomLines, step - 1)
+        dispersionFill = array.get(dispersionFills, step - 1)
+        if forecastUsable
+            predictedOpen = close + array.get(openTotals, step) / weightTotal * atr
+            predictedHigh = close + array.get(highTotals, step) / weightTotal * atr
+            predictedLow = close + array.get(lowTotals, step) / weightTotal * atr
+            allAnalogMean = array.get(closeTotals, step) / weightTotal
+            nearestMean = array.get(nearestPathTotals, step)
+            predictedClose = close + (showProjectedCandles ? allAnalogMean : nearestMean) * atr
+            allAnalogVariance = math.max(0.0, array.get(closeSquaredTotals, step) / weightTotal - allAnalogMean * allAnalogMean)
+            stepVariance = showProjectedCandles ? allAnalogVariance : math.max(0.0, allAnalogVariance + math.pow(allAnalogMean - nearestMean, 2.0))
+            stepDispersion = math.sqrt(stepVariance) * atr
+            dispersionTop = predictedClose + math.max(stepDispersion, syminfo.mintick * 0.5)
+            dispersionBottom = predictedClose - math.max(stepDispersion, syminfo.mintick * 0.5)
+            previousAllAnalogMean = step == 1 ? 0.0 : array.get(closeTotals, step - 1) / weightTotal
+            previousNearestMean = step == 1 ? 0.0 : array.get(nearestPathTotals, step - 1)
+            previousVariance = step == 1 ? 0.0 : showProjectedCandles ? math.max(0.0, array.get(closeSquaredTotals, step - 1) / weightTotal - previousAllAnalogMean * previousAllAnalogMean) : math.max(0.0, array.get(closeSquaredTotals, step - 1) / weightTotal - previousAllAnalogMean * previousAllAnalogMean + math.pow(previousAllAnalogMean - previousNearestMean, 2.0))
+            previousCenter = step == 1 ? close : close + (showProjectedCandles ? previousAllAnalogMean : previousNearestMean) * atr
+            previousDispersion = math.sqrt(previousVariance) * atr
+            previousBandTop = previousCenter + math.max(previousDispersion, step == 1 ? 0.0 : syminfo.mintick * 0.5)
+            previousBandBottom = previousCenter - math.max(previousDispersion, step == 1 ? 0.0 : syminfo.mintick * 0.5)
+            candleColor = predictedClose >= predictedOpen ? color.rgb(35, 190, 135) : color.rgb(235, 85, 95)
+            rawBodyTop = math.max(predictedOpen, predictedClose)
+            rawBodyBottom = math.min(predictedOpen, predictedClose)
+            isDoji = rawBodyTop == rawBodyBottom
+            bodyTop = isDoji ? rawBodyTop + syminfo.mintick * 0.5 : rawBodyTop
+            bodyBottom = isDoji ? rawBodyBottom - syminfo.mintick * 0.5 : rawBodyBottom
+            if showProjectedCandles
+                if na(wick)
+                    wick := line.new(bar_index + step, predictedLow, bar_index + step, predictedHigh, xloc=xloc.bar_index, color=color.new(candleColor, 10), width=1, force_overlay=true)
+                    array.set(forecastWicks, step - 1, wick)
+                else
+                    line.set_xy1(wick, bar_index + step, predictedLow)
+                    line.set_xy2(wick, bar_index + step, predictedHigh)
+                    line.set_color(wick, color.new(candleColor, 10))
+                if na(candleBody)
+                    candleBody := box.new(bar_index + step - 1, bodyTop, bar_index + step, bodyBottom, xloc=xloc.bar_index, border_color=color.new(candleColor, 8), bgcolor=color.new(candleColor, 48), force_overlay=true)
+                    array.set(forecastBodies, step - 1, candleBody)
+                else
+                    box.set_left(candleBody, bar_index + step - 1)
+                    box.set_right(candleBody, bar_index + step)
+                    box.set_top(candleBody, bodyTop)
+                    box.set_bottom(candleBody, bodyBottom)
+                    box.set_border_color(candleBody, color.new(candleColor, 8))
+                    box.set_bgcolor(candleBody, color.new(candleColor, 48))
+                if not na(path)
+                    line.set_color(path, color.new(forecastColor, 100))
+                if not na(bandTop)
+                    line.set_color(bandTop, color.new(forecastColor, 100))
+                if not na(bandBottom)
+                    line.set_color(bandBottom, color.new(forecastColor, 100))
+                if not na(dispersionFill)
+                    linefill.set_color(dispersionFill, color.new(forecastColor, 100))
+            else
+                if not na(wick)
+                    line.set_color(wick, color.new(candleColor, 100))
+                if not na(candleBody)
+                    box.set_border_color(candleBody, color.new(candleColor, 100))
+                    box.set_bgcolor(candleBody, color.new(candleColor, 100))
+                if showConsensusAndAnalogs
+                    if na(path)
+                        path := line.new(bar_index + step - 1, previousForecastClose, bar_index + step, predictedClose, xloc=xloc.bar_index, color=forecastColor, width=3, style=line.style_solid, force_overlay=true)
+                        array.set(forecastPath, step - 1, path)
+                    else
+                        line.set_xy1(path, bar_index + step - 1, previousForecastClose)
+                        line.set_xy2(path, bar_index + step, predictedClose)
+                        line.set_color(path, forecastColor)
+                        line.set_width(path, 3)
+                    if na(bandTop)
+                        bandTop := line.new(bar_index + step - 1, previousBandTop, bar_index + step, dispersionTop, xloc=xloc.bar_index, color=color.new(forecastColor, 100), width=1, force_overlay=true)
+                        array.set(bandTopLines, step - 1, bandTop)
+                    else
+                        line.set_xy1(bandTop, bar_index + step - 1, previousBandTop)
+                        line.set_xy2(bandTop, bar_index + step, dispersionTop)
+                    if na(bandBottom)
+                        bandBottom := line.new(bar_index + step - 1, previousBandBottom, bar_index + step, dispersionBottom, xloc=xloc.bar_index, color=color.new(forecastColor, 100), width=1, force_overlay=true)
+                        array.set(bandBottomLines, step - 1, bandBottom)
+                    else
+                        line.set_xy1(bandBottom, bar_index + step - 1, previousBandBottom)
+                        line.set_xy2(bandBottom, bar_index + step, dispersionBottom)
+                    if na(dispersionFill)
+                        dispersionFill := linefill.new(bandTop, bandBottom, color.new(forecastColor, 92))
+                        array.set(dispersionFills, step - 1, dispersionFill)
+                    else
+                        linefill.set_color(dispersionFill, color.new(forecastColor, 92))
+                else
+                    if not na(path)
+                        line.set_color(path, color.new(forecastColor, 100))
+                    if not na(bandTop)
+                        line.set_color(bandTop, color.new(forecastColor, 100))
+                    if not na(bandBottom)
+                        line.set_color(bandBottom, color.new(forecastColor, 100))
+                    if not na(dispersionFill)
+                        linefill.set_color(dispersionFill, color.new(forecastColor, 100))
+            previousForecastClose := predictedClose
+        else
+            if not na(wick)
+                line.set_color(wick, color.new(color.gray, 100))
+            if not na(path)
+                line.set_color(path, color.new(color.gray, 100))
+            if not na(candleBody)
+                box.set_border_color(candleBody, color.new(color.gray, 100))
+                box.set_bgcolor(candleBody, color.new(color.gray, 100))
+            if not na(bandTop)
+                line.set_color(bandTop, color.new(color.gray, 100))
+            if not na(bandBottom)
+                line.set_color(bandBottom, color.new(color.gray, 100))
+            if not na(dispersionFill)
+                linefill.set_color(dispersionFill, color.new(color.gray, 100))
+    if showLiveForecastBadge
+        badgeTitle = forecastUsable ? setupText : not enoughHistory ? "BUILDING HISTORY" : not hasAnalogSet ? "LOW ANALOG SAMPLE" : "HIGH FORECAST DISPERSION"
+        badgeMove = forecastUsable ? str.tostring(forecastAtr * atr, "+#.00;-#.00") + " · " + str.tostring(forecastReturn * 100.0, "+#.00;-#.00") + "%" : "forecast gated"
+        badgeTarget = forecastUsable ? str.tostring(close + forecastAtr * atr, format.mintick) : "n/a"
+        badgeWalkForward = walkForwardMature ? str.tostring(walkForwardHitRate, "#.0") + "%/" + str.tostring(walkForwardCount) : "sample " + str.tostring(walkForwardCount) + "/30"
+        badgeText = badgeTitle + " · " + syminfo.ticker + " " + timeframe.period + " · " + str.tostring(forecastBars) + " bars\nTARGET " + badgeTarget + " · MOVE " + badgeMove + " · UP " + (na(analogUpShare) ? "n/a" : str.tostring(analogUpShare, "#.0") + "%") + " · N " + str.tostring(matchCount) + "\nDISP " + (na(forecastDispersionAtr) ? "n/a" : str.tostring(forecastDispersionAtr, "#.00") + " ATR") + " · HTF " + htfText + " · WF " + badgeWalkForward
+        badgeColor = buySetup ? color.rgb(10, 105, 78) : sellSetup ? color.rgb(145, 43, 55) : color.rgb(35, 48, 62)
+        label.set_xy(chartReadout, bar_index + 1, high + atr * 1.25)
+        label.set_text(chartReadout, badgeText)
+        label.set_color(chartReadout, color.new(badgeColor, 12))
+        label.set_textcolor(chartReadout, color.white)
+    else
+        label.set_color(chartReadout, color.new(color.gray, 100))
+        label.set_textcolor(chartReadout, color.new(color.gray, 100))
+
+var dashboard = table.new(position.top_right, 2, 14, bgcolor=color.new(color.rgb(12, 18, 28), 10), frame_color=color.new(color.gray, 60), frame_width=1, border_color=color.new(color.gray, 80), border_width=1, force_overlay=true)
+if barstate.islast
+    if showDashboard
+        statusText = buySetup ? "BUY SETUP" : sellSetup ? "SELL SETUP" : not enoughHistory ? "WARMING UP" : not hasAnalogSet ? "NEED MORE ANALOGS" : not signalDispersionAcceptable ? "NOISY ANALOGS" : "WAIT"
+        statusColor = buySetup ? color.lime : sellSetup ? color.red : color.silver
+        targetText = not enoughMatches ? "n/a" : str.tostring(close + forecastAtr * atr, format.mintick)
+        moveText = na(forecastAtr) ? "n/a" : str.tostring(forecastAtr, "+#.00;-#.00") + " ATR"
+        symbolTimeframe = syminfo.ticker + "  ·  " + timeframe.period
+        headerBg = color.rgb(14, 28, 44)
+        labelBg = color.new(color.rgb(18, 27, 39), 4)
+        valueBg = color.new(color.rgb(12, 20, 31), 2)
+        table.cell(dashboard, 0, 0, "ARRA  CRONOS", bgcolor=headerBg, text_color=color.white, text_halign=text.align_left, text_size=size.small)
+        table.cell(dashboard, 1, 0, "OHLCV ANALOGS", bgcolor=headerBg, text_color=color.aqua, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 1, "MARKET  /  TF", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 1, symbolTimeframe, bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 2, "FORECAST TARGET", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 2, targetText, bgcolor=valueBg, text_color=forecastColor, text_halign=text.align_right, text_size=size.small)
+        table.cell(dashboard, 0, 3, "Expected move", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 3, moveText, bgcolor=valueBg, text_color=forecastColor, text_halign=text.align_right)
+        table.cell(dashboard, 0, 4, "Analog dispersion", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 4, na(forecastDispersionAtr) ? "n/a" : "+/- " + str.tostring(forecastDispersionAtr, "#.00") + " ATR · not probability", bgcolor=valueBg, text_color=color.silver, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 5, "SETUP", bgcolor=headerBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 5, statusText, bgcolor=color.new(statusColor, 84), text_color=statusColor, text_halign=text.align_right, text_size=size.small)
+        table.cell(dashboard, 0, 6, "Directional alignment", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 6, str.tostring(alignment, "#.0") + " / 100", bgcolor=valueBg, text_color=alignment >= 0 ? color.lime : color.red, text_halign=text.align_right)
+        table.cell(dashboard, 0, 7, "Matching samples", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 7, str.tostring(matchCount) + "  ·  eff. " + str.tostring(effectiveMatches, "#.0"), bgcolor=valueBg, text_color=matchCount >= minMatches and effectiveMatches >= minEffectiveMatches ? color.white : color.orange, text_halign=text.align_right)
+        table.cell(dashboard, 0, 8, "Analog outcomes up", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 8, na(analogUpShare) ? "n/a" : str.tostring(analogUpShare, "#.0") + "% of samples", bgcolor=valueBg, text_color=na(analogUpShare) ? color.gray : analogUpShare >= 50 ? color.lime : color.red, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 9, "Higher timeframe", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 9, htfText, bgcolor=valueBg, text_color=htfDirection >= 0 ? color.lime : color.red, text_halign=text.align_right)
+        table.cell(dashboard, 0, 10, "WALK-FORWARD  /  " + str.tostring(walkForwardCount), bgcolor=headerBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 10, not walkForwardMature ? "Sample " + str.tostring(walkForwardCount) + "/30" : str.tostring(walkForwardHitRate, "#.0") + "% hit", bgcolor=headerBg, text_color=not walkForwardMature ? color.gray : walkForwardHitRate >= 50 ? color.lime : color.red, text_halign=text.align_right)
+        maeText = na(walkForwardMae) ? "n/a" : str.tostring(walkForwardMae, "#.00") + " / " + str.tostring(noChangeMae, "#.00") + " ATR"
+        maeColor = na(noChangeMae) or na(walkForwardMae) ? color.gray : walkForwardMae < noChangeMae ? color.lime : color.orange
+        table.cell(dashboard, 0, 11, "Forecast / hold MAE · " + str.tostring(forecastBars) + " bars", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 11, maeText, bgcolor=valueBg, text_color=maeColor, text_halign=text.align_right, text_size=size.tiny)
+        nearestDistances = na(bestDistance1) ? "n/a" : str.tostring(bestDistance1, "#.00") + " / " + (na(bestDistance2) ? "n/a" : str.tostring(bestDistance2, "#.00")) + " / " + (na(bestDistance3) ? "n/a" : str.tostring(bestDistance3, "#.00"))
+        table.cell(dashboard, 0, 12, "Top analog distance · lower = closer", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 12, nearestDistances, bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 13, "CHART KEY", bgcolor=headerBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        chartKey = forecastDisplay == "OHLC candles" ? "Projected OHLC means" : "Solid: 3-nearest path  ·  dashed: analogs"
+        table.cell(dashboard, 1, 13, chartKey, bgcolor=headerBg, text_color=color.aqua, text_halign=text.align_right, text_size=size.tiny)
+    else
+        table.clear(dashboard, 0, 0, 1, 13)
+
+alertcondition(buySignal, title="ARRA Cronos BUY", message="ARRA Cronos BUY | {{ticker}} | {{interval}} | close={{close}}. Alignment score is not a probability.")
+alertcondition(sellSignal, title="ARRA Cronos SELL", message="ARRA Cronos SELL | {{ticker}} | {{interval}} | close={{close}}. Alignment score is not a probability.")
