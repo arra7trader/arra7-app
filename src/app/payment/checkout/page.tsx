@@ -46,6 +46,15 @@ function PaymentCheckoutContent() {
                 description: 'UNLIMITED Analisa, Free Custom EA',
                 color: 'from-amber-500 to-orange-500'
             };
+        } else if (planId === 'ARRA_CRONOS' || planId === 'arra-cronos') {
+            return {
+                id: 'ARRA_CRONOS',
+                name: 'ARRA Cronos AI Quant Engine + Bonus Indikator TradingView',
+                price: 150000,
+                priceFormatted: 'Rp 150.000',
+                description: 'Akses Penuh Mesin Prediksi ARRA Cronos + Source Code Indikator TradingView Pine Script v6',
+                color: 'from-cyan-500 via-blue-600 to-indigo-600'
+            };
         }
         return null;
     }, [planId]);
@@ -78,7 +87,7 @@ function PaymentCheckoutContent() {
                 >
                     <div className="text-center mb-6">
                         <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3 bg-gradient-to-br ${plan.color} text-2xl`}>
-                            {planId === 'ALL_ACCESS' ? '👑' : planId === 'PRO' ? '🚀' : '👑'}
+                            {planId === 'ARRA_CRONOS' || planId === 'arra-cronos' ? '⚡' : planId === 'ALL_ACCESS' ? '👑' : planId === 'PRO' ? '🚀' : '👑'}
                         </div>
                         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                             Upgrade ke <span className="gradient-text">{plan.name}</span>

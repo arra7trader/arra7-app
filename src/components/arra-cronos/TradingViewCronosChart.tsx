@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, memo, useCallback, useState } from 'react';
+import Link from 'next/link';
 import {
     ArrowDownTrayIcon,
     ArrowTopRightOnSquareIcon,
@@ -13,6 +14,8 @@ import {
     EyeSlashIcon,
     SparklesIcon,
     XMarkIcon,
+    LockClosedIcon,
+    BoltIcon,
 } from '@heroicons/react/24/outline';
 import type { CronosQuantMetrics, CronosTradePlan } from '@/lib/arra-cronos-engine';
 
@@ -61,6 +64,7 @@ export interface TradingViewCronosChartProps {
     confluenceSummary?: string | null;
     direction?: 'UP' | 'DOWN' | 'FLAT' | null;
     pipSpec?: { pipSize: number; unitName: string } | null;
+    isUnlocked?: boolean;
     formatPrice: (value: number) => string;
     onCandleData?: (candles: CronosCandle[]) => void;
 }
@@ -90,6 +94,7 @@ function TradingViewCronosChart({
     confluenceScore,
     direction,
     pipSpec,
+    isUnlocked = true,
     formatPrice,
 }: TradingViewCronosChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -217,6 +222,11 @@ function TradingViewCronosChart({
     }, [pineCode]);
 
     const handleCopyPineScript = useCallback(async () => {
+        if (!isUnlocked) {
+            setIsPineModalOpen(true);
+            return;
+        }
+
         let codeToCopy = pineCode;
         if (!codeToCopy) {
             codeToCopy = await loadPineCode();
@@ -230,12 +240,14 @@ function TradingViewCronosChart({
                 console.error('Clipboard copy failed', err);
             }
         }
-    }, [pineCode, loadPineCode]);
+    }, [pineCode, loadPineCode, isUnlocked]);
 
     const handleOpenPineModal = useCallback(() => {
-        loadPineCode();
+        if (isUnlocked) {
+            loadPineCode();
+        }
         setIsPineModalOpen(true);
-    }, [loadPineCode]);
+    }, [loadPineCode, isUnlocked]);
 
     const effectiveTp1 = takeProfit1 ?? null;
     const effectiveTp2 = takeProfit2 ?? target ?? null;
@@ -245,6 +257,32 @@ function TradingViewCronosChart({
 
     return (
         <div className="relative w-full overflow-hidden rounded-2xl bg-[#0b111b]">
+            {/* Top Info Bar indicating ARRA Cronos on TradingView */}
+            <div className="flex items-center justify-between border-b border-slate-800 bg-[#080d16] px-3.5 py-1.5 text-[10px]">
+                <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#38bdf8]" />
+                    <span className="font-bold text-slate-300">
+                        Indikator ARRA Cronos Aktif di Chart:
+                    </span>
+                    <span className="text-cyan-300">Fast EMA 21 Cyan</span>
+                    <span className="text-slate-600">·</span>
+                    <span className="text-emerald-300">Volume 20 SMA</span>
+                    <span className="text-slate-600">·</span>
+                    <span className="text-cyan-200">Pine Indicator HUD</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="hidden sm:inline text-amber-300 font-semibold">
+                        🎁 Bonus Script TradingView Pine v6 (Rp 150.000)
+                    </span>
+                    <button
+                        onClick={handleOpenPineModal}
+                        className="rounded bg-cyan-400/20 px-2 py-0.5 text-[9px] font-black text-cyan-200 hover:bg-cyan-400/30 transition"
+                    >
+                        Pasang di TV
+                    </button>
+                </div>
+            </div>
+
             {/* TradingView Chart Container */}
             <div
                 id={containerIdRef.current}
@@ -255,8 +293,8 @@ function TradingViewCronosChart({
 
             {/* ON-CHART ARRA CRONOS INDICATOR OVERLAY (Institutional Pine HUD) */}
             {isOverlayVisible && (
-                <div className="pointer-events-auto absolute left-3 top-3 z-20 max-w-[calc(100%-24px)] sm:max-w-md transition-all duration-300">
-                    <div className="overflow-hidden rounded-xl border border-cyan-400/30 bg-[#070d17]/95 shadow-2xl backdrop-blur-md">
+                <div className="pointer-events-auto absolute left-3 top-10 z-20 max-w-[calc(100%-24px)] sm:max-w-md transition-all duration-300">
+                    <div className="overflow-hidden rounded-xl border border-cyan-400/40 bg-[#070d17]/95 shadow-2xl backdrop-blur-md">
                         {/* Header bar of indicator */}
                         <div className="flex items-center justify-between border-b border-slate-800/80 px-3 py-2 bg-gradient-to-r from-cyan-950/40 via-[#0a1422] to-slate-900/40">
                             <div className="flex items-center gap-2">
@@ -451,7 +489,7 @@ function TradingViewCronosChart({
                                         Pasang Indikator ARRA Cronos di TradingView
                                     </h3>
                                     <p className="text-xs text-slate-400">
-                                        Skrip Pine Script v6 resmi untuk platform desktop & web TradingView
+                                        Skrip Pine Script v6 resmi — BONUS paket ARRA Cronos (Rp 150.000)
                                     </p>
                                 </div>
                             </div>
@@ -465,10 +503,35 @@ function TradingViewCronosChart({
 
                         {/* Modal Content */}
                         <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
+                            {!isUnlocked && (
+                                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                                    <div className="flex items-start gap-3">
+                                        <LockClosedIcon className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />
+                                        <div>
+                                            <h4 className="text-xs font-bold text-amber-200 uppercase tracking-wide">
+                                                Bonus Eksklusif Pembeli ARRA Cronos (Rp 150.000)
+                                            </h4>
+                                            <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                                                Source code lengkap indikator TradingView Pine Script v6 (500 baris) disertakan sebagai bonus sekali bayar. Silakan order paket ARRA Cronos untuk mendapatkan akses penuh skrip ini.
+                                            </p>
+                                            <div className="mt-3">
+                                                <Link
+                                                    href="/payment/checkout?plan=ARRA_CRONOS"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-xs font-black text-slate-950 hover:opacity-95 transition"
+                                                >
+                                                    <BoltIcon className="h-4 w-4" />
+                                                    <span>Order ARRA Cronos Sekarang — Rp 150.000</span>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* 3 Steps Guide */}
                             <div className="rounded-xl border border-cyan-500/20 bg-[#070d17] p-4">
                                 <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                                    Cara Pemasangan Mudah (30 Detik)
+                                    Cara Pemasangan di TradingView (30 Detik)
                                 </div>
                                 <ol className="mt-3 space-y-2.5 text-xs text-slate-300">
                                     <li className="flex items-start gap-2.5">
@@ -476,7 +539,7 @@ function TradingViewCronosChart({
                                             1
                                         </span>
                                         <span>
-                                            Klik tombol <strong className="text-cyan-200">Salin Pine Script</strong> di bawah untuk menyalin seluruh source code resmi indikator.
+                                            Salin kode Pine Script di bawah menggunakan tombol <strong>Salin Script</strong>.
                                         </span>
                                     </li>
                                     <li className="flex items-start gap-2.5">
@@ -484,7 +547,7 @@ function TradingViewCronosChart({
                                             2
                                         </span>
                                         <span>
-                                            Buka chart di TradingView, lalu klik tab <strong className="text-white">Pine Editor</strong> di bagian bawah layar.
+                                            Buka chart di TradingView.com, lalu klik tab <strong className="text-white">Pine Editor</strong> di bagian bawah layar.
                                         </span>
                                     </li>
                                     <li className="flex items-start gap-2.5">
@@ -492,7 +555,7 @@ function TradingViewCronosChart({
                                             3
                                         </span>
                                         <span>
-                                            Hapus kode bawaan, paste skrip ARRA Cronos, lalu klik <strong className="text-emerald-400">Add to chart</strong> (Tambahkan ke chart). Indikator langsung aktif!
+                                            Hapus kode bawaan, paste skrip ARRA Cronos, lalu klik <strong className="text-emerald-400">Add to chart</strong> (Tambahkan ke chart). Indikator langsung aktif selamanya di akun TradingView Anda!
                                         </span>
                                     </li>
                                 </ol>
@@ -529,7 +592,16 @@ function TradingViewCronosChart({
                                 </button>
                                 {showCodePreview && (
                                     <div className="mt-2 max-h-48 overflow-auto rounded-xl border border-slate-800 bg-[#060a12] p-3 font-mono text-[10px] text-slate-300">
-                                        {loadingPine ? 'Memuat kode…' : <pre className="whitespace-pre">{pineCode}</pre>}
+                                        {!isUnlocked ? (
+                                            <div className="py-6 text-center text-slate-400">
+                                                <LockClosedIcon className="h-6 w-6 text-amber-400 mx-auto mb-1" />
+                                                <p>Source code terkunci. Order paket ARRA Cronos (Rp 150.000) untuk membuka.</p>
+                                            </div>
+                                        ) : loadingPine ? (
+                                            'Memuat kode…'
+                                        ) : (
+                                            <pre className="whitespace-pre">{pineCode}</pre>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -547,36 +619,48 @@ function TradingViewCronosChart({
                                     <span>Buka di TradingView</span>
                                     <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                                 </a>
-                                <a
-                                    href="/ARRA_Cronos.pine"
-                                    download="ARRA_Cronos.pine"
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-200 transition hover:bg-slate-700"
-                                >
-                                    <ArrowDownTrayIcon className="h-4 w-4" />
-                                    <span>Unduh File</span>
-                                </a>
+                                {isUnlocked && (
+                                    <a
+                                        href="/ARRA_Cronos.pine"
+                                        download="ARRA_Cronos.pine"
+                                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-200 transition hover:bg-slate-700"
+                                    >
+                                        <ArrowDownTrayIcon className="h-4 w-4" />
+                                        <span>Unduh File</span>
+                                    </a>
+                                )}
                             </div>
 
-                            <button
-                                onClick={handleCopyPineScript}
-                                className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold transition shadow-lg ${
-                                    copiedPine
-                                        ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/20'
-                                        : 'bg-cyan-300 text-slate-950 hover:bg-cyan-200 shadow-cyan-400/20'
-                                }`}
-                            >
-                                {copiedPine ? (
-                                    <>
-                                        <ClipboardDocumentCheckIcon className="h-4 w-4" />
-                                        <span>Kode Berhasil Disalin!</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <ClipboardDocumentIcon className="h-4 w-4" />
-                                        <span>Salin Pine Script (Copy)</span>
-                                    </>
-                                )}
-                            </button>
+                            {isUnlocked ? (
+                                <button
+                                    onClick={handleCopyPineScript}
+                                    className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold transition shadow-lg ${
+                                        copiedPine
+                                            ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/20'
+                                            : 'bg-cyan-300 text-slate-950 hover:bg-cyan-200 shadow-cyan-400/20'
+                                    }`}
+                                >
+                                    {copiedPine ? (
+                                        <>
+                                            <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                                            <span>Kode Berhasil Disalin!</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ClipboardDocumentIcon className="h-4 w-4" />
+                                            <span>Salin Pine Script (Copy)</span>
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                <Link
+                                    href="/payment/checkout?plan=ARRA_CRONOS"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 px-5 py-2 text-xs font-black text-slate-950 shadow-lg hover:opacity-95 transition"
+                                >
+                                    <BoltIcon className="h-4 w-4" />
+                                    <span>Order ARRA Cronos — Rp 150.000</span>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

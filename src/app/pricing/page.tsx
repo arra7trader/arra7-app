@@ -30,6 +30,9 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
     FIBO_KYOKO: [
         { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 169.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 330.000 • Akses Selamanya', period: '/ sekali bayar' },
     ],
+    ARRA_CRONOS: [
+        { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 150.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 349.000 · Diskon 70% + Bonus Indikator TradingView', period: '/ sekali bayar' },
+    ],
 };
 
 function PlanIcon({ planId }: { planId: string }) {
@@ -46,6 +49,8 @@ function PlanIcon({ planId }: { planId: string }) {
             return <GemIcon size="lg" className="text-amber-500" />;
         case 'FIBO_KYOKO':
             return <TrendUpIcon size="lg" className="text-indigo-600" />;
+        case 'ARRA_CRONOS':
+            return <BoltIcon size="lg" className="text-cyan-400" />;
         default:
             return <SparklesIcon size="lg" className="text-blue-600" />;
     }
@@ -197,7 +202,7 @@ export default function PricingPage() {
             durationOverride ||
             (planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
@@ -219,7 +224,7 @@ export default function PricingPage() {
         const duration =
             planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month';
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);

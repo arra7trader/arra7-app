@@ -41,6 +41,9 @@ const PRICING_OPTIONS: Record<
     FIBO_KYOKO: {
         'lifetime': { durationLabel: 'Sekali Bayar', price: 169000, priceDisplay: 'Rp 169.000', originalPrice: 'Rp 499.000', period: '/sekali bayar' },
     },
+    ARRA_CRONOS: {
+        'lifetime': { durationLabel: 'Lifetime Sekali Bayar', price: 150000, priceDisplay: 'Rp 150.000', originalPrice: 'Rp 499.000', period: '/sekali bayar (+ Bonus Indikator TradingView)' },
+    },
     ALL_ACCESS: {
         'lifetime': { durationLabel: 'Lifetime (Semua Produk)', price: 125000, priceDisplay: 'Rp 125.000', originalPrice: 'Rp 1.499.000', period: '/sekali bayar (Flash Sale Diperpanjang 2 Hari)' },
     },
@@ -76,6 +79,7 @@ function TransferContent() {
             CT_PROVIDER: 'CT Provider',
             TELEBOT: 'TELEBOT',
             FIBO_KYOKO: 'Kursus Digital Fibo Kyoko',
+            ARRA_CRONOS: 'ARRA Cronos AI Quant Engine + Bonus Indikator TradingView',
             ALL_ACCESS: 'Semua Produk ARRA 7 (Lifetime All-Access Promo)'
         };
 
@@ -129,6 +133,7 @@ function TransferContent() {
         plan.id === 'ALL_ACCESS' ? '★ Paket Promo Flash Sale 2 Hari: Akses Lifetime 4 Produk Inti Platform (PICA Neural Lab, Kursus Masterclass Fibo Kyoko + MT5/TradingView, DOM ARRA, dan Analisis Market)' : null,
         plan.id === 'TELEBOT' ? `Bonus member: akun PRO website 1 bulan + video eksklusif di ${telebotBonusPageUrl}` : null,
         plan.id === 'FIBO_KYOKO' ? 'Mohon kirimkan Kode Lisensi aktivasi Kursus Fibo Kyoko saya.' : null,
+        plan.id === 'ARRA_CRONOS' ? '🎯 Paket ARRA Cronos Lifetime: Akses Full AI Quant Engine + Bonus Source Code Indikator TradingView Pine Script v6. Mohon kirimkan kode aktivasi saya.' : null,
         '',
         requiresTelegramUsername
             ? 'Mohon approve akses TELEBOT saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer)'
