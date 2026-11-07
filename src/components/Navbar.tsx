@@ -128,13 +128,13 @@ export default function Navbar() {
                                 <div className="py-1 space-y-0.5 text-xs">
                                     <Link href="/arra-cronos" className="flex items-center justify-between p-2 rounded-xl hover:bg-cyan-50 text-slate-800 hover:text-cyan-700 transition-colors">
                                         <div className="flex items-center gap-2">
-                                            <span>〽️</span>
+                                            <span>⚡</span>
                                             <div>
                                                 <p className="font-bold">ARRA Cronos</p>
-                                                <p className="text-[10px] text-slate-400">Multi-market OHLCV Forecast</p>
+                                                <p className="text-[10px] text-slate-400">Quant Forecast + Bonus TradingView</p>
                                             </div>
                                         </div>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800">NEW</span>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">150K</span>
                                     </Link>
                                     <Link href="/xauusd-neural-lab" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
                                         <div className="flex items-center gap-2">

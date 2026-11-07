@@ -282,7 +282,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {/* Card PRO */}
               <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-lg shadow-slate-100 flex flex-col justify-between hover:border-blue-300 transition-all">
                 <div>
@@ -368,6 +368,52 @@ export default function Home() {
                 <Link href="/pricing">
                   <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer">
                     Daftar Akses VVIP
+                  </button>
+                </Link>
+              </div>
+
+              {/* Card ARRA Cronos */}
+              <div className="bg-gradient-to-b from-cyan-50/50 to-white rounded-3xl p-6 border border-cyan-200 shadow-lg shadow-cyan-100 flex flex-col justify-between hover:border-cyan-400 transition-all relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] font-extrabold px-3 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
+                  NEW QUANT ENGINE
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-3 mt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">
+                        ⚡
+                      </div>
+                      <span className="font-bold text-slate-900 text-base">ARRA Cronos</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-600 text-white">
+                      LIFETIME
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-slate-900">Rp 150.000</span>
+                      <span className="text-xs text-slate-500">sekali bayar</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">AI Quant Forecast Lilin Masa Depan + BONUS Indikator TradingView.</p>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6 border-t border-cyan-100 pt-3">
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-cyan-600 shrink-0" />
+                      <span>Prediksi Lilin Masa Depan &amp; Volatility Corridor</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-cyan-600 shrink-0" />
+                      <span>Multi-Timeframe Radar (15M, 1H, 4H, 1D)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckIcon size="xs" className="text-cyan-600 shrink-0" />
+                      <span className="font-semibold text-cyan-800">BONUS Script TradingView Pine Script v6</span>
+                    </li>
+                  </ul>
+                </div>
+                <Link href="/arra-cronos">
+                  <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white font-bold text-xs transition-all shadow-md shadow-cyan-500/20 cursor-pointer">
+                    Beli Akses ARRA Cronos
                   </button>
                 </Link>
               </div>
