@@ -148,6 +148,22 @@ const PRICING_PLANS = [
         popular: false,
     },
     {
+        id: 'ARRA_CRONOS',
+        name: 'ARRA Cronos & ARRA GROK Terminal',
+        description: 'Paket komplit AI Quant Forecast Lilin Masa Depan + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + BONUS Resmi Indikator TradingView Pine Script v6.',
+        theme: 'cyan',
+        features: [
+            { text: 'ARRA GROK: 6-Agent Autonomous Terminal (Scanner, Guard, AI, Sentry, Sizer, Execution)', included: true, highlight: true },
+            { text: 'Khusus Forex & Gold Futures (Tanpa Crypto & Tanpa Copytrade)', included: true, highlight: true },
+            { text: 'ARRA Cronos AI Quant Engine Lilin Masa Depan & Corridor P10-P90', included: true, highlight: true },
+            { text: 'BONUS Source Code Indikator TradingView Pine Script v6', included: true, highlight: true },
+            { text: 'Multi-Timeframe Radar (15M, 1H, 4H, 1D)', included: true, highlight: false },
+            { text: 'Akses Selamanya (Sekali Bayar Rp 150.000)', included: true, highlight: true },
+        ],
+        cta: 'Beli Akses ARRA Cronos (Rp 150.000)',
+        popular: true,
+    },
+    {
         id: 'FIBO_KYOKO',
         name: 'Kursus Digital Fibo Kyoko',
         description: 'Paket lengkap 3 video masterclass Fibo Kyoko + File Indikator Auto MT5 (.ex5) + Script TradingView Pine Script v6.',
@@ -161,7 +177,7 @@ const PRICING_PLANS = [
             { text: 'Panduan Instalasi Lengkap MT5 & TradingView', included: true, highlight: false },
         ],
         cta: 'Beli Kursus Sekarang (Rp 169.000)',
-        popular: true,
+        popular: false,
     },
 ];
 
@@ -399,7 +415,12 @@ export default function PricingPage() {
                     let ctaStyle = 'bg-slate-900 hover:bg-slate-800 text-white';
                     let checkStyle = 'bg-slate-100 text-slate-600';
 
-                    if (plan.theme === 'blue') {
+                    if (plan.theme === 'cyan') {
+                        leftBg = 'bg-cyan-50/50';
+                        titleColor = 'text-cyan-800';
+                        ctaStyle = 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white shadow-md shadow-cyan-500/20';
+                        checkStyle = 'bg-cyan-100 text-cyan-800';
+                    } else if (plan.theme === 'blue') {
                         leftBg = 'bg-blue-50/50';
                         titleColor = 'text-blue-700';
                         ctaStyle = 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20';

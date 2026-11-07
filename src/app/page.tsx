@@ -372,10 +372,10 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Card ARRA Cronos */}
+              {/* Card ARRA Cronos & ARRA GROK */}
               <div className="bg-gradient-to-b from-cyan-50/50 to-white rounded-3xl p-6 border border-cyan-200 shadow-lg shadow-cyan-100 flex flex-col justify-between hover:border-cyan-400 transition-all relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] font-extrabold px-3 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
-                  NEW QUANT ENGINE
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 via-emerald-500 to-blue-600 text-white text-[10px] font-extrabold px-3 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
+                  NEW QUANT + ARRA GROK TERMINAL
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-3 mt-1">
@@ -383,7 +383,7 @@ export default function Home() {
                       <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">
                         ⚡
                       </div>
-                      <span className="font-bold text-slate-900 text-base">ARRA Cronos</span>
+                      <span className="font-bold text-slate-900 text-base">ARRA Cronos &amp; Grok</span>
                     </div>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-600 text-white">
                       LIFETIME
@@ -394,16 +394,16 @@ export default function Home() {
                       <span className="text-2xl font-extrabold text-slate-900">Rp 150.000</span>
                       <span className="text-xs text-slate-500">sekali bayar</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">AI Quant Forecast Lilin Masa Depan + BONUS Indikator TradingView.</p>
+                    <p className="text-xs text-slate-500 mt-1">AI Quant Forecast + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold) + BONUS Indikator TradingView.</p>
                   </div>
                   <ul className="space-y-2 text-xs text-slate-600 mb-6 border-t border-cyan-100 pt-3">
                     <li className="flex items-center gap-2">
-                      <CheckIcon size="xs" className="text-cyan-600 shrink-0" />
-                      <span>Prediksi Lilin Masa Depan &amp; Volatility Corridor</span>
+                      <CheckIcon size="xs" className="text-emerald-600 shrink-0" />
+                      <span className="font-semibold text-emerald-800">ARRA GROK: 6-Agent Autonomous Terminal (Forex/Gold)</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon size="xs" className="text-cyan-600 shrink-0" />
-                      <span>Multi-Timeframe Radar (15M, 1H, 4H, 1D)</span>
+                      <span>Prediksi Lilin Masa Depan &amp; Volatility Corridor</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon size="xs" className="text-cyan-600 shrink-0" />
@@ -411,11 +411,18 @@ export default function Home() {
                     </li>
                   </ul>
                 </div>
-                <Link href="/arra-cronos">
-                  <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white font-bold text-xs transition-all shadow-md shadow-cyan-500/20 cursor-pointer">
-                    Beli Akses ARRA Cronos
-                  </button>
-                </Link>
+                <div className="flex flex-col gap-2">
+                  <Link href="/arra-cronos">
+                    <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white font-bold text-xs transition-all shadow-md shadow-cyan-500/20 cursor-pointer">
+                      Beli Akses ARRA Cronos (150k)
+                    </button>
+                  </Link>
+                  <Link href="/arra-grok">
+                    <button className="w-full py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition-all border border-emerald-300 cursor-pointer">
+                      Buka ARRA GROK Terminal &rarr;
+                    </button>
+                  </Link>
+                </div>
               </div>
 
               {/* Card Kursus Fibo Kyoko */}

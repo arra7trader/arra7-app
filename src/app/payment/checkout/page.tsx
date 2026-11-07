@@ -49,10 +49,10 @@ function PaymentCheckoutContent() {
         } else if (planId === 'ARRA_CRONOS' || planId === 'arra-cronos') {
             return {
                 id: 'ARRA_CRONOS',
-                name: 'ARRA Cronos AI Quant Engine + Bonus Indikator TradingView',
+                name: 'ARRA Cronos AI Quant + ARRA GROK Terminal + Bonus TradingView',
                 price: 150000,
                 priceFormatted: 'Rp 150.000',
-                description: 'Akses Penuh Mesin Prediksi ARRA Cronos + Source Code Indikator TradingView Pine Script v6',
+                description: 'Akses Penuh ARRA Cronos AI, ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures), serta Bonus Indikator TradingView Pine Script v6',
                 color: 'from-cyan-500 via-blue-600 to-indigo-600'
             };
         }

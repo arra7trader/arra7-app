@@ -136,6 +136,16 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">150K</span>
                                     </Link>
+                                    <Link href="/arra-grok" className="flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 text-slate-800 hover:text-emerald-700 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🤖</span>
+                                            <div>
+                                                <p className="font-bold">ARRA GROK</p>
+                                                <p className="text-[10px] text-slate-400">6-Agent Autonomous Terminal (Forex/Gold)</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">BARU</span>
+                                    </Link>
                                     <Link href="/xauusd-neural-lab" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <span>🧠</span>

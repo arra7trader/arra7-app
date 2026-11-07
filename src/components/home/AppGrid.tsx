@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import {
     FireIcon,
     AcademicCapIcon,
     CryptoHunterIcon,
+    BoltIcon,
 } from '@/components/PremiumIcons';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
@@ -39,13 +40,13 @@ export default function AppGrid() {
             highlight: true,
         },
         {
-            id: 'crypto-hunter',
-            label: 'Crypto Hunter',
-            sublabel: 'OG Smart Money Scanner',
-            badge: 'FULL ACCESS 125K',
-            badgeColor: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white font-extrabold shadow-xs',
-            icon: <CryptoHunterIcon size="lg" className="text-emerald-600" />,
-            href: '/crypto-hunter',
+            id: 'arra-grok',
+            label: 'ARRA GROK',
+            sublabel: '6-Agent Autonomous Terminal',
+            badge: 'AUTONOMOUS · BARU',
+            badgeColor: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white font-extrabold shadow-xs',
+            icon: <BoltIcon size="lg" className="text-emerald-600" />,
+            href: '/arra-grok',
             color: 'bg-emerald-100/80 border-emerald-300/80',
             highlight: true,
         },
