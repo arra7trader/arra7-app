@@ -10,7 +10,7 @@ import PicaLogo from './PicaLogo';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { isAdminEmail } from '@/lib/admin-access';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import {
     KeyIcon,
     CrownIcon,
@@ -27,7 +27,12 @@ export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const { isVvip, isPro, daysLeft, openActivation } = usePicaDevice();
 
-    const isAdmin = isAdminEmail(session?.user?.email);
+    const isAdmin =
+        Boolean(isAdminUser(session?.user)) ||
+        Boolean(isAdminEmail(session?.user?.email)) ||
+        session?.user?.isAdmin === true ||
+        (session?.user as any)?.role === 'ADMIN' ||
+        (session?.user as any)?.tier === 'ADMIN';
 
     useEffect(() => {
         const handleScroll = () => {

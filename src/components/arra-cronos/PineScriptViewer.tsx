@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { isAdminUser } from '@/lib/admin-access';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import Link from 'next/link';
 import { 
     ClipboardDocumentCheckIcon, 
@@ -21,9 +22,27 @@ interface PineScriptViewerProps {
     isUnlocked?: boolean;
 }
 
-export default function PineScriptViewer({ initialCode, isUnlocked = true }: PineScriptViewerProps) {
+export default function PineScriptViewer({ initialCode, isUnlocked }: PineScriptViewerProps) {
     const { data: session } = useSession();
-    const effectiveUnlocked = isUnlocked || isAdminUser(session?.user);
+    const { tier } = usePicaDevice();
+
+    const isAdmin =
+        Boolean(isAdminUser(session?.user)) ||
+        Boolean(isAdminEmail(session?.user?.email)) ||
+        session?.user?.isAdmin === true ||
+        (session?.user as any)?.role === 'ADMIN' ||
+        (session?.user as any)?.tier === 'ADMIN';
+
+    const hasOrder =
+        tier === 'PRO' ||
+        tier === 'VVIP' ||
+        session?.user?.tier === 'PRO' ||
+        session?.user?.tier === 'VVIP' ||
+        (session?.user as any)?.plan === 'ARRA_CRONOS' ||
+        (session?.user as any)?.plan === 'ALL_ACCESS' ||
+        (typeof window !== 'undefined' && localStorage.getItem('pica_arra_cronos_unlocked') === 'true');
+
+    const effectiveUnlocked = isAdmin || (isUnlocked !== undefined ? isUnlocked : hasOrder);
     const [copied, setCopied] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(false);
