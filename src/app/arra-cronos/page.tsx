@@ -25,8 +25,9 @@ import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import PineScriptViewer from '@/components/arra-cronos/PineScriptViewer';
-import type { CronosCandle } from '@/components/arra-cronos/CronosChart';
+import type { CronosCandle, CronosForecastPoint } from '@/components/arra-cronos/CronosChart';
 import type {
+    CronosScenarioSetup,
     CronosQuantMetrics,
     CronosMTFBias,
 } from '@/lib/arra-cronos-engine';
@@ -63,6 +64,9 @@ type MarketReviewData = {
     direction: 'UP' | 'DOWN' | 'FLAT';
     action: 'BUY' | 'SELL' | 'WAIT';
     currentPrice: number;
+    targetPrice?: number;
+    forecast?: CronosForecastPoint[];
+    scenarioSetup?: CronosScenarioSetup;
     metrics?: CronosQuantMetrics;
     mtfMatrix?: Record<string, CronosMTFBias>;
     confluenceScore?: number;
@@ -1114,15 +1118,41 @@ export default function ArraCronosPage() {
                                     />
                                 )}
 
-                                {/* Candle chart from the observed market feed */}
+                                {/* Observed candles with the estimated path and conditional levels */}
                                 {chartMode === 'lightweight' && market && !marketError && (
                                     <CronosChart
                                         symbol={selectedSymbol}
                                         timeframe={timeframe}
                                         candles={market.candles}
+                                        forecast={marketReview?.forecast || []}
+                                        scenarioSetup={marketReview?.scenarioSetup || null}
+                                        currentPrice={market.currentPrice}
                                         action={action}
                                         formatPrice={(value) => formatPrice(selectedSymbol, value)}
                                     />
+                                )}
+
+                                {chartMode === 'tradingview' && marketReview?.scenarioSetup && (
+                                    <div className="border-t border-slate-700 bg-[#0b111b] px-4 py-3 text-xs text-slate-200">
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                            <span className="font-bold text-sky-300">SKENARIO {marketReview.scenarioSetup.side} · {marketReview.scenarioSetup.action === 'WAIT' ? 'MENUNGGU KONFIRMASI' : 'BIAS TERKONFIRMASI'}</span>
+                                            <span>Entry {price(marketReview.scenarioSetup.entryPrice)}</span>
+                                            <span className="text-rose-300">SL {price(marketReview.scenarioSetup.stopLoss)}</span>
+                                            <span className="text-emerald-300">TP1 {price(marketReview.scenarioSetup.takeProfit1)}</span>
+                                            <span className="text-emerald-200">TP2 {price(marketReview.scenarioSetup.takeProfit2)}</span>
+                                        </div>
+                                        <p className="mt-2 text-[10px] text-slate-400">Level ini adalah estimasi teknikal dan tidak digambar pada widget TradingView tertanam.</p>
+                                    </div>
+                                )}
+
+                                {chartMode === 'lightweight' && marketReview?.scenarioSetup && (
+                                    <div className="grid grid-cols-2 gap-px border-t border-[#ECECE6] bg-[#ECECE6] sm:grid-cols-5">
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STATUS SETUP</div><div className={`mt-1 text-sm font-black ${marketReview.scenarioSetup.action === 'WAIT' ? 'text-amber-700' : marketReview.scenarioSetup.side === 'BUY' ? 'text-emerald-700' : 'text-rose-700'}`}>{marketReview.scenarioSetup.action === 'WAIT' ? `WAIT · ${marketReview.scenarioSetup.side}` : marketReview.scenarioSetup.action}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">ENTRY REFERENSI</div><div className="mt-1 text-sm font-bold text-slate-800">{price(marketReview.scenarioSetup.entryPrice)}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STOP SKENARIO</div><div className="mt-1 text-sm font-bold text-rose-700">{price(marketReview.scenarioSetup.stopLoss)}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">TARGET 1 / 2</div><div className="mt-1 text-sm font-bold text-emerald-700">{price(marketReview.scenarioSetup.takeProfit1)} / {price(marketReview.scenarioSetup.takeProfit2)}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">RASIO SKENARIO</div><div className="mt-1 text-sm font-bold text-slate-800">1:{marketReview.scenarioSetup.riskRewardRatio}</div></div>
+                                    </div>
                                 )}
 
                                 {(isLoading || (!market && !marketError)) && (
@@ -1208,7 +1238,7 @@ export default function ArraCronosPage() {
                             </div>
                         </div>
 
-                        {/* Tinjauan pasar berdasarkan feed dan candle aktual */}
+                        {/* Forecast and conditional setup based on observed market data */}
                         <div className="overflow-hidden rounded-2xl border border-[#ECECE6] bg-white">
                             <div className="flex border-b border-[#ECECE6] bg-[#F7F7F4] px-4 pt-2">
                                 <button
@@ -1216,7 +1246,7 @@ export default function ArraCronosPage() {
                                     className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-extrabold transition ${activeTab === 'review' ? 'border-cyan-400 text-cyan-800' : 'border-transparent text-slate-500'}`}
                                 >
                                     <ShieldCheckIcon className="h-4 w-4" />
-                                    <span>Tinjauan Pasar</span>
+                                    <span>Forecast & Setup</span>
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('commentary')}
@@ -1229,12 +1259,21 @@ export default function ArraCronosPage() {
                             {activeTab === 'review' && (
                                 <div className="space-y-4 p-4 sm:p-6">
                                     <div>
-                                        <h3 className="text-base font-extrabold text-slate-900">Pembacaan kondisi pasar</h3>
-                                        <p className="mt-0.5 text-xs text-slate-500">Indikator dihitung dari candle yang sudah tercatat. Bias teknikal bukan instruksi transaksi atau perkiraan keuntungan.</p>
+                                        <h3 className="text-base font-extrabold text-slate-900">Jalur forecast dan level setup</h3>
+                                        <p className="mt-0.5 text-xs text-slate-500">Forecast adalah estimasi teknikal berbasis tren dan ATR, bukan harga aktual atau kepastian hasil. Tidak ada simulasi eksekusi, P/L virtual, atau order broker.</p>
                                     </div>
                                     <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/[.03] p-4 text-xs leading-relaxed text-slate-600">
                                         {marketReview?.commentary || (reviewError ? `Tinjauan belum tersedia: ${reviewError}` : 'Menunggu candle dan data multi-timeframe untuk ditinjau.')}
                                     </div>
+                                    {marketReview?.scenarioSetup && (
+                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                            <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">ENTRY REFERENSI</div><div className="mt-1 text-sm font-bold text-slate-800">{price(marketReview.scenarioSetup.entryPrice)}</div></div>
+                                            <div className="rounded-xl bg-rose-50 p-3"><div className="text-[10px] font-bold text-rose-600">STOP SKENARIO</div><div className="mt-1 text-sm font-bold text-rose-800">{price(marketReview.scenarioSetup.stopLoss)}</div></div>
+                                            <div className="rounded-xl bg-emerald-50 p-3"><div className="text-[10px] font-bold text-emerald-600">TAKE PROFIT 1</div><div className="mt-1 text-sm font-bold text-emerald-800">{price(marketReview.scenarioSetup.takeProfit1)}</div></div>
+                                            <div className="rounded-xl bg-emerald-50 p-3"><div className="text-[10px] font-bold text-emerald-600">TAKE PROFIT 2</div><div className="mt-1 text-sm font-bold text-emerald-800">{price(marketReview.scenarioSetup.takeProfit2)}</div></div>
+                                            <div className="rounded-xl bg-sky-50 p-3"><div className="text-[10px] font-bold text-sky-600">TARGET JALUR</div><div className="mt-1 text-sm font-bold text-sky-800">{price(marketReview.targetPrice ?? marketReview.scenarioSetup.takeProfit2)}</div></div>
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                         <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">RSI 14</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.metrics?.rsi14 ?? '—'}</div></div>
                                         <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">ATR 14</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.metrics ? price(marketReview.metrics.atr14) : '—'}</div></div>
@@ -1297,8 +1336,8 @@ export default function ArraCronosPage() {
                                 <div className="text-xs font-bold text-slate-700">
                                     ARRA Cronos · TradingView Realtime & Multi-Timeframe Quant Engine
                                 </div>
-                                <p className="mt-1 max-w-2xl text-[10px] leading-relaxed text-slate-500">
-                                    Chart menampilkan candle pasar dan indikator teknikal aktual. Tersedia juga Pine Script indikator tanpa proyeksi harga.
+                                        <p className="mt-1 max-w-2xl text-[10px] leading-relaxed text-slate-500">
+                                    Quant Canvas menampilkan jalur estimasi dan setup Entry/SL/TP. Chart TradingView menampilkan harga pasar aktual; estimasi tidak mengirim order.
                                 </p>
                             </div>
                             <div className="flex shrink-0 gap-2">
@@ -1323,11 +1362,10 @@ export default function ArraCronosPage() {
 
                 <footer className="mt-5 flex flex-col gap-2 text-[9px] leading-relaxed text-slate-700 sm:flex-row sm:justify-between">
                     <span>
-                        Data harga berasal dari TradingView Scanner API, Binance Spot & Yahoo Finance. Analisis lokal
-                        memakai indikator teknikal dan keselarasan multi-timeframe.
+                        Data harga berasal dari TradingView Scanner API, Binance Spot & Yahoo Finance. Forecast adalah estimasi tren/ATR dari candle tertutup, bukan harga aktual atau jaminan hasil.
                     </span>
                     <span>
-                        Tinjauan teknikal bersifat deskriptif dan tidak menjamin akurasi atau keuntungan. Tidak ada simulasi atau order broker.
+                        Tidak ada simulasi eksekusi, P/L virtual, atau order broker.
                     </span>
                 </footer>
             </div>

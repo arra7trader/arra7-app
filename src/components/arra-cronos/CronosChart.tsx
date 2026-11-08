@@ -6,12 +6,15 @@ import {
     ColorType,
     createChart,
     createSeriesMarkers,
+    LineSeries,
+    type IPriceLine,
     type IChartApi,
     type ISeriesApi,
     type ISeriesMarkersPluginApi,
     type Time,
     type UTCTimestamp,
 } from 'lightweight-charts';
+import type { CronosScenarioSetup } from '@/lib/arra-cronos-engine';
 
 export interface CronosCandle {
     time: string;
@@ -22,10 +25,20 @@ export interface CronosCandle {
     volume: number;
 }
 
+export interface CronosForecastPoint {
+    time: string;
+    value: number;
+    upper: number;
+    lower: number;
+}
+
 interface CronosChartProps {
     symbol?: string;
     timeframe?: string;
     candles: CronosCandle[];
+    forecast: CronosForecastPoint[];
+    scenarioSetup: CronosScenarioSetup | null;
+    currentPrice: number;
     action: 'BUY' | 'SELL' | 'WAIT' | null;
     formatPrice: (value: number) => string;
 }
@@ -38,12 +51,19 @@ export default function CronosChart({
     symbol,
     timeframe,
     candles,
+    forecast,
+    scenarioSetup,
+    currentPrice,
     action,
     formatPrice,
 }: CronosChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+    const forecastRef = useRef<ISeriesApi<'Line'> | null>(null);
+    const upperBandRef = useRef<ISeriesApi<'Line'> | null>(null);
+    const lowerBandRef = useRef<ISeriesApi<'Line'> | null>(null);
+    const levelsRef = useRef<IPriceLine[]>([]);
     const markersRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
 
     const prevSymbolTimeframeRef = useRef<string>('');
@@ -151,8 +171,35 @@ export default function CronosChart({
             wickDownColor: '#f16d79',
         });
 
+        const forecastSeries = chart.addSeries(LineSeries, {
+            color: '#38bdf8',
+            lineWidth: 3,
+            crosshairMarkerVisible: true,
+            lastValueVisible: true,
+            priceLineVisible: false,
+        });
+        const upperBandSeries = chart.addSeries(LineSeries, {
+            color: 'rgba(56, 189, 248, 0.52)',
+            lineWidth: 1,
+            lineStyle: 2,
+            crosshairMarkerVisible: false,
+            lastValueVisible: false,
+            priceLineVisible: false,
+        });
+        const lowerBandSeries = chart.addSeries(LineSeries, {
+            color: 'rgba(56, 189, 248, 0.52)',
+            lineWidth: 1,
+            lineStyle: 2,
+            crosshairMarkerVisible: false,
+            lastValueVisible: false,
+            priceLineVisible: false,
+        });
+
         chartRef.current = chart;
         candlesRef.current = candleSeries;
+        forecastRef.current = forecastSeries;
+        upperBandRef.current = upperBandSeries;
+        lowerBandRef.current = lowerBandSeries;
         markersRef.current = createSeriesMarkers(candleSeries, []);
 
         const resize = new ResizeObserver((entries) => {
@@ -169,13 +216,20 @@ export default function CronosChart({
             markersRef.current = null;
             chartRef.current = null;
             candlesRef.current = null;
+            forecastRef.current = null;
+            upperBandRef.current = null;
+            lowerBandRef.current = null;
+            levelsRef.current = [];
         };
     }, []);
 
     useEffect(() => {
         const chart = chartRef.current;
         const candleSeries = candlesRef.current;
-        if (!chart || !candleSeries || candles.length === 0) return;
+        const forecastSeries = forecastRef.current;
+        const upperBand = upperBandRef.current;
+        const lowerBand = lowerBandRef.current;
+        if (!chart || !candleSeries || !forecastSeries || candles.length === 0) return;
         chart.applyOptions({ localization: { priceFormatter: formatPrice } });
 
         const visibleCandles = candles.slice(-512);
@@ -183,6 +237,39 @@ export default function CronosChart({
         candleSeries.setData(candleData);
 
         const last = visibleCandles[visibleCandles.length - 1];
+        const currentPointTime = Math.max(Math.floor(Date.now() / 1000), chartTime(last.time)) as UTCTimestamp;
+        const forecastLine = forecast.length
+            ? [{ time: currentPointTime, value: currentPrice }, ...forecast.map((point) => ({ time: chartTime(point.time), value: point.value }))]
+            : [];
+        forecastSeries.setData(forecastLine);
+        upperBand?.setData(forecast.length
+            ? [{ time: currentPointTime, value: currentPrice }, ...forecast.map((point) => ({ time: chartTime(point.time), value: point.upper }))]
+            : []);
+        lowerBand?.setData(forecast.length
+            ? [{ time: currentPointTime, value: currentPrice }, ...forecast.map((point) => ({ time: chartTime(point.time), value: point.lower }))]
+            : []);
+
+        levelsRef.current.forEach((line) => candleSeries.removePriceLine(line));
+        levelsRef.current = [];
+        if (scenarioSetup) {
+            const sideLabel = scenarioSetup.side === 'BUY' ? 'BUY' : 'SELL';
+            const levels = [
+                { price: scenarioSetup.entryPrice, title: `${sideLabel} · ENTRY`, color: '#38bdf8', width: 1 as const },
+                { price: scenarioSetup.stopLoss, title: 'SL · ESTIMASI', color: '#f43f5e', width: 1 as const },
+                { price: scenarioSetup.takeProfit1, title: 'TP1 · ESTIMASI', color: '#34d399', width: 1 as const },
+                { price: scenarioSetup.takeProfit2, title: 'TP2 · ESTIMASI', color: '#10b981', width: 2 as const },
+            ];
+            for (const level of levels) {
+                levelsRef.current.push(candleSeries.createPriceLine({
+                    price: level.price,
+                    color: level.color,
+                    lineWidth: level.width,
+                    lineStyle: 2,
+                    axisLabelVisible: true,
+                    title: level.title,
+                }));
+            }
+        }
 
         // On-chart signal marker
         const signalMarker = action && action !== 'WAIT' ? [{
@@ -207,11 +294,25 @@ export default function CronosChart({
         if (!userHasScrolledRef.current) {
             centerOnLastCandle();
         }
-    }, [candles, action, formatPrice, symbol, timeframe, centerOnLastCandle]);
+    }, [candles, forecast, scenarioSetup, currentPrice, action, formatPrice, symbol, timeframe, centerOnLastCandle]);
 
     return (
         <div className="relative w-full">
-            <div ref={containerRef} className="h-[390px] w-full sm:h-[485px]" aria-label="Chart OHLCV pasar aktual ARRA Cronos" />
+            <div ref={containerRef} className="h-[390px] w-full sm:h-[485px]" aria-label="Chart pasar aktual dengan jalur estimasi dan level skenario ARRA Cronos" />
+
+            {forecast.length > 0 && (
+                <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-wrap items-center gap-2">
+                    <span className="rounded-lg border border-sky-400/30 bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-sky-200 backdrop-blur-sm">
+                        JALUR ESTIMASI · BUKAN HARGA AKTUAL
+                    </span>
+                    <span className="rounded-lg border border-slate-600/50 bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-slate-200 backdrop-blur-sm">
+                        {scenarioSetup?.action === 'WAIT' ? 'SETUP MENUNGGU KONFIRMASI' : `SKENARIO ${scenarioSetup?.side || '—'}`}
+                    </span>
+                    <span className="rounded-lg border border-slate-600/50 bg-slate-900/90 px-2.5 py-1 text-[10px] font-semibold text-slate-300 backdrop-blur-sm">
+                        Garis biru = jalur tengah · putus-putus = koridor ATR
+                    </span>
+                </div>
+            )}
 
             {/* Top Right Quick Chart View Controls: Center Candle, Fit All, Zoom In, Zoom Out */}
             <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-1 shadow-xl">

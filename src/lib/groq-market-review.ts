@@ -1,5 +1,5 @@
 import type { CronosMarketCandle, CronosTimeframe } from '@/lib/arra-cronos-market';
-import type { CronosMTFBias, CronosQuantMetrics } from '@/lib/arra-cronos-engine';
+import type { CronosForecastPoint, CronosMTFBias, CronosQuantMetrics, CronosScenarioSetup } from '@/lib/arra-cronos-engine';
 import { getCompletedCronosCandles } from '@/lib/arra-cronos-engine';
 
 export async function reviewCronosSetup(input: {
@@ -12,6 +12,8 @@ export async function reviewCronosSetup(input: {
     metrics: CronosQuantMetrics;
     mtfMatrix: Record<CronosTimeframe, CronosMTFBias>;
     action: 'BUY' | 'SELL' | 'WAIT';
+    forecast?: CronosForecastPoint[];
+    scenarioSetup?: CronosScenarioSetup;
 }) {
     const apiKey = process.env.GROQ_API_KEY?.trim();
     if (!apiKey) throw new Error('Groq belum dikonfigurasi pada environment server.');
@@ -33,6 +35,8 @@ export async function reviewCronosSetup(input: {
         quoteAgeSeconds: input.quoteAgeSeconds,
         actionFromQuantEngine: input.action,
         metrics: input.metrics,
+        estimatedPricePath: input.forecast?.map(({ time, value, upper, lower }) => ({ time, value, upper, lower })) || [],
+        scenarioSetup: input.scenarioSetup || null,
         availableTimeframeReadings: Object.values(input.mtfMatrix)
             .filter((reading) => reading.available)
             .map(({ timeframe, direction, changePercent, label }) => ({ timeframe, direction, changePercent, label })),
@@ -56,6 +60,8 @@ export async function reviewCronosSetup(input: {
                         'Anda adalah reviewer sekunder untuk ringkasan analisis teknikal pasar, bukan pembuat sinyal.',
                         'Gunakan hanya angka yang tersedia pada data input. Jangan menciptakan harga, berita, indikator, atau probabilitas.',
                         'Jangan mengubah BUY, SELL, atau WAIT dari mesin kuantitatif; jelaskan bila datanya saling bertentangan.',
+                        'Forecast, Entry, SL, dan TP adalah estimasi teknikal bersyarat; jangan menyebutnya harga pasti atau harga aktual.',
+                        'Jangan melakukan simulasi eksekusi, menghitung P/L virtual, atau sizing posisi.',
                         'Jangan menyebut alignment score sebagai peluang menang atau confidence probabilitas.',
                         'Jangan menjanjikan keuntungan dan jangan membuat atau mengirim order broker.',
                         'Jawab dalam Bahasa Indonesia dengan ringkas: keselarasan tren, risiko/kontradiksi, kondisi yang membatalkan analisis, dan keterbatasan data.',

@@ -179,6 +179,10 @@ export function extractMTFMatrix(history: CronosMTFHistory): Record<CronosTimefr
 export interface CronosMarketReview {
     action: 'BUY' | 'SELL' | 'WAIT';
     direction: 'UP' | 'DOWN' | 'FLAT';
+    currentPrice: number;
+    targetPrice: number;
+    forecast: CronosForecastPoint[];
+    scenarioSetup: CronosScenarioSetup;
     metrics: CronosQuantMetrics;
     mtfMatrix: Record<CronosTimeframe, CronosMTFBias>;
     confluenceScore: number;
@@ -186,9 +190,28 @@ export interface CronosMarketReview {
     commentary: string;
 };
 
+export interface CronosForecastPoint {
+    time: string;
+    value: number;
+    upper: number;
+    lower: number;
+}
+
+export interface CronosScenarioSetup {
+    action: 'BUY' | 'SELL' | 'WAIT';
+    side: 'BUY' | 'SELL';
+    entryPrice: number;
+    stopLoss: number;
+    takeProfit1: number;
+    takeProfit2: number;
+    riskRewardRatio: number;
+    invalidationReason: string;
+}
+
 /**
- * Read technical conditions from observed candles only. It does not generate
- * future candles, trade levels, position size, or P/L.
+ * Read completed candles, calculate a deterministic ATR/trend scenario path,
+ * and derive conditional reference levels. No execution, fills, position size,
+ * or P/L are modeled.
  */
 export function buildKronosMarketReview(
     symbol: string,
@@ -212,13 +235,13 @@ export function buildKronosMarketReview(
     const ema55 = calcEma(55);
     const trueRanges = completedCandles.slice(-14).map((candle, index) => {
         const candleIndex = completedCandles.length - 14 + index;
-        const previousClose = candles[Math.max(0, candleIndex - 1)].close;
+        const previousClose = completedCandles[Math.max(0, candleIndex - 1)].close;
         return Math.max(candle.high - candle.low, Math.abs(candle.high - previousClose), Math.abs(candle.low - previousClose));
     });
-    const atr = trueRanges.reduce((sum, value) => sum + value, 0) / trueRanges.length;
+    const atr = trueRanges.reduce((sum, value) => sum + value, 0) / trueRanges.length || currentPrice * 0.005;
     const priorRanges = completedCandles.slice(-50, -14).map((candle, index) => {
         const candleIndex = completedCandles.length - 50 + index;
-        const previousClose = candles[Math.max(0, candleIndex - 1)].close;
+        const previousClose = completedCandles[Math.max(0, candleIndex - 1)].close;
         return Math.max(candle.high - candle.low, Math.abs(candle.high - previousClose), Math.abs(candle.low - previousClose));
     });
     const priorAtr = priorRanges.length ? priorRanges.reduce((sum, value) => sum + value, 0) / priorRanges.length : atr;
@@ -255,17 +278,65 @@ export function buildKronosMarketReview(
             : downCount === requiredBiases.length
                 ? `BEARISH (${downCount}/${requiredBiases.length} TF searah)`
                 : `MIXED / NEUTRAL (${dominantCount}/${requiredBiases.length} TF searah)`;
-    const direction: CronosMarketReview['direction'] = trendScore >= 8 ? 'UP' : trendScore <= -8 ? 'DOWN' : 'FLAT';
+    const timeframeMs = TIMEFRAME_MINUTES[timeframe] * 60_000;
+    const forecastBars = timeframe === '1d' ? 7 : 12;
+    const forecastStart = Math.floor(Date.now() / timeframeMs) * timeframeMs + timeframeMs;
+    const isContinuous = /^(BTC|ETH|SOL|BNB)/i.test(symbol);
+    const forecast: CronosForecastPoint[] = [];
+    let projectedPrice = currentPrice;
+    let forecastTime = forecastStart;
+    if (!isContinuous) {
+        while ([0, 6].includes(new Date(forecastTime).getUTCDay())) forecastTime += 86_400_000;
+    }
+    for (let index = 0; index < forecastBars; index += 1) {
+        const step = index + 1;
+        const trendDrift = (trendScore / 100) * atr * 0.24 * Math.exp(-0.06 * index);
+        const cycle = Math.sin((step / forecastBars) * Math.PI) * atr * 0.035 * Math.sign(trendScore || momentumPct || 1);
+        projectedPrice = Math.max(projectedPrice * 0.1, projectedPrice + trendDrift + cycle);
+        const dispersion = atr * Math.sqrt(step) * 0.48;
+        forecast.push({
+            time: new Date(forecastTime).toISOString(),
+            value: Number(projectedPrice.toFixed(getPriceDecimals(symbol))),
+            upper: Number((projectedPrice + dispersion).toFixed(getPriceDecimals(symbol))),
+            lower: Number((projectedPrice - dispersion).toFixed(getPriceDecimals(symbol))),
+        });
+        forecastTime += timeframeMs;
+        if (!isContinuous) {
+            const day = new Date(forecastTime).getUTCDay();
+            if (day === 6) forecastTime += 2 * 86_400_000;
+            else if (day === 0) forecastTime += 86_400_000;
+        }
+    }
+    const targetPrice = forecast.at(-1)?.value ?? currentPrice;
+    const netMove = targetPrice - currentPrice;
+    const direction: CronosMarketReview['direction'] = Math.abs(netMove) >= atr * 0.18
+        ? (netMove > 0 ? 'UP' : 'DOWN')
+        : 'FLAT';
     const allRequiredAvailable = availableBiases.length === requiredBiases.length;
     const bullish = allRequiredAvailable && requiredBiases.every((bias) => bias.direction === 'UP');
     const bearish = allRequiredAvailable && requiredBiases.every((bias) => bias.direction === 'DOWN');
-    const action: CronosMarketReview['action'] = trendScore >= 15 && bullish && rsi14 < 70
+    const action: CronosMarketReview['action'] = direction === 'UP' && trendScore >= 15 && bullish && rsi14 < 70
         ? 'BUY'
-        : trendScore <= -15 && bearish && rsi14 > 30
+        : direction === 'DOWN' && trendScore <= -15 && bearish && rsi14 > 30
             ? 'SELL'
             : 'WAIT';
 
     const priceDecimals = getPriceDecimals(symbol);
+    const side: CronosScenarioSetup['side'] = netMove < 0 || (netMove === 0 && trendScore < 0) ? 'SELL' : 'BUY';
+    const stopDistance = Math.max(atr * 1.35, currentPrice * 0.001);
+    const rewardDistance = Math.abs(netMove);
+    const scenarioSetup: CronosScenarioSetup = {
+        action,
+        side,
+        entryPrice: Number(currentPrice.toFixed(priceDecimals)),
+        stopLoss: Number((currentPrice + (side === 'BUY' ? -stopDistance : stopDistance)).toFixed(priceDecimals)),
+        takeProfit1: Number((currentPrice + (side === 'BUY' ? rewardDistance * 0.55 : -rewardDistance * 0.55)).toFixed(priceDecimals)),
+        takeProfit2: Number(targetPrice.toFixed(priceDecimals)),
+        riskRewardRatio: Number((rewardDistance / stopDistance).toFixed(2)),
+        invalidationReason: side === 'BUY'
+            ? 'Skenario BUY batal bila harga menembus stop skenario.'
+            : 'Skenario SELL batal bila harga menembus stop skenario.',
+    };
     const metrics: CronosQuantMetrics = {
         alignmentScore,
         trendScore,
@@ -279,15 +350,15 @@ export function buildKronosMarketReview(
         alignmentState: trendScore > 30 ? 'BULLISH ALIGNMENT' : trendScore < -30 ? 'BEARISH ALIGNMENT' : 'NEUTRAL CONSOLIDATION',
     };
     const commentary = action === 'WAIT'
-        ? `${symbol} ${timeframe.toUpperCase()}: WAIT. Trend ${trendScore}/100, RSI ${metrics.rsi14}, MTF ${confluenceSummary}. Tinjauan ini hanya memakai candle pasar yang tercatat; syarat tren atau konfirmasi belum lengkap.`
-        : `${symbol} ${timeframe.toUpperCase()}: bias ${action} dari tren, RSI ${metrics.rsi14}, dan konfirmasi ${confluenceSummary}. Ini pembacaan indikator candle teramati, bukan instruksi transaksi atau perkiraan hasil.`;
+        ? `${symbol} ${timeframe.toUpperCase()}: status WAIT karena konfirmasi tren/timeframe belum lengkap. Jalur dan level ${side} adalah skenario teknikal dari ATR dan tren teramati, bukan harga masa depan yang pasti.`
+        : `${symbol} ${timeframe.toUpperCase()}: bias ${action} dari tren, RSI ${metrics.rsi14}, dan konfirmasi ${confluenceSummary}. Jalur dan level adalah estimasi teknikal, bukan harga pasti atau instruksi order.`;
 
-    return { action, direction, metrics, mtfMatrix, confluenceScore, confluenceSummary, commentary };
+    return { action, direction, currentPrice, targetPrice, forecast, scenarioSetup, metrics, mtfMatrix, confluenceScore, confluenceSummary, commentary };
 }
 
 /**
- * Build a market review exclusively from completed OHLCV candles. No future
- * candle path, simulated fill, position sizing, or P/L is calculated.
+ * Build a market review from completed OHLCV candles and provide an estimated
+ * technical scenario. No simulated fills, position sizing, or P/L are calculated.
  */
 export function buildKronosQuantReview(
     symbol: string,
@@ -295,7 +366,7 @@ export function buildKronosQuantReview(
     candles: CronosMarketCandle[],
     mtfHistory?: CronosMTFHistory,
     currentPrice = candles.at(-1)?.close ?? 0
-): CronosMarketReview & { currentPrice: number } {
+): CronosMarketReview {
     const review = buildKronosMarketReview(symbol, timeframe, candles, currentPrice, mtfHistory);
-    return { ...review, currentPrice };
+    return review;
 }

@@ -76,11 +76,10 @@ export async function POST(request: Request) {
         const marketOpen = isCrypto || isMarketOpen(symbol).isOpen;
         if (!hasLiveQuote || !marketOpen) {
             result.action = 'WAIT';
+            result.scenarioSetup.action = 'WAIT';
             result.commentary = !marketOpen
-                ? 'Pasar tutup; tinjauan indikator tetap tersedia, tetapi status pasar harus diperiksa lagi saat pembukaan.'
-                : 'Kutipan live segar tidak tersedia; tunggu data feed langsung sebelum mempertimbangkan setup.';
-            if (!marketOpen) result.commentary = `Pasar ${symbol} sedang tutup. Indikator menggunakan candle yang tersedia dan belum cukup untuk menyimpulkan kondisi pasar yang dapat ditindaklanjuti.`;
-            if (!hasLiveQuote) result.commentary = `${symbol} ${timeframe.toUpperCase()}: WAIT karena kuotasi langsung segar tidak tersedia. Indikator candle historis tidak mewakili harga live.`;
+                ? `Pasar ${symbol} sedang tutup. Jalur forecast tetap berupa estimasi teknikal; status setup WAIT sampai sesi dibuka dan data terbaru tersedia.`
+                : `${symbol} ${timeframe.toUpperCase()}: WAIT karena kuotasi langsung segar tidak tersedia. Jalur forecast adalah estimasi dari candle historis; level setup menunggu feed terbaru.`;
         }
         const elapsedMs = Date.now() - started;
 
@@ -114,11 +113,14 @@ export async function POST(request: Request) {
         return NextResponse.json({
             symbol,
             timeframe,
-            model: 'ARRA Cronos Market Review',
-            modelSource: 'Tinjauan indikator dari candle pasar aktual',
+            model: 'ARRA Cronos Quant Forecast',
+            modelSource: 'Estimasi teknikal berbasis tren, ATR, dan candle teramati',
             currentPrice: market.currentPrice || result.currentPrice,
+            targetPrice: result.targetPrice,
             direction: result.direction,
             action: result.action,
+            forecast: result.forecast,
+            scenarioSetup: result.scenarioSetup,
             analysisSnapshotRecorded,
             metrics: result.metrics,
             mtfMatrix: result.mtfMatrix,
@@ -128,7 +130,7 @@ export async function POST(request: Request) {
             historyBars: completedCandles.length,
             inferenceMs: elapsedMs,
             generatedAt: new Date().toISOString(),
-            method: 'Candle OHLCV tercatat, EMA, RSI, ATR, dan keselarasan multi-timeframe; tidak ada proyeksi harga atau simulasi trading',
+            method: 'Jalur estimasi teknikal memakai tren dan ATR candle tertutup; bukan harga aktual, simulasi eksekusi, atau jaminan hasil',
             dataSource: market.source,
         }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
 

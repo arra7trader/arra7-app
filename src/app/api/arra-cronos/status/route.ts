@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     return NextResponse.json({
         available: true,
-        model: 'ARRA Cronos Market Review',
+        model: 'ARRA Cronos Quant Forecast',
         status: 'online',
         device: 'Observed Market Review',
-        message: 'Pembacaan indikator teknikal dari candle pasar tersedia.',
+        message: 'Jalur forecast dan level setup teknikal tersedia dari data candle pasar.',
     });
 }

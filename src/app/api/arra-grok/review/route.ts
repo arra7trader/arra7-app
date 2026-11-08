@@ -60,6 +60,8 @@ export async function POST(request: Request) {
             metrics: inference.metrics,
             mtfMatrix: inference.mtfMatrix,
             action,
+            forecast: inference.forecast,
+            scenarioSetup: { ...inference.scenarioSetup, action },
         });
 
         return NextResponse.json({
