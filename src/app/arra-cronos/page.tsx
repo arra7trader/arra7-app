@@ -487,17 +487,16 @@ export default function ArraCronosPage() {
             : 'WAIT'
         : 'WAIT';
 
-    const entry = forecast?.tradePlan?.entryPrice || (action !== 'WAIT' ? forecastBase : null);
+    const entry = action !== 'WAIT' ? (forecast?.tradePlan?.entryPrice || forecastBase) : null;
     const stop =
-        forecast?.tradePlan?.stopLoss ||
-        (action === 'BUY' && metrics
-            ? forecastBase - metrics.atr * 1.3
-            : action === 'SELL' && metrics
-            ? forecastBase + metrics.atr * 1.3
-            : null);
-    const target = forecast?.tradePlan?.takeProfit2 || forecast?.targetPrice || null;
-    const tp1 = forecast?.tradePlan?.takeProfit1 || null;
-    const tp2 = forecast?.tradePlan?.takeProfit2 || target;
+        action === 'BUY'
+            ? (forecast?.tradePlan?.stopLoss || (metrics ? forecastBase - metrics.atr * 1.3 : null))
+            : action === 'SELL'
+            ? (forecast?.tradePlan?.stopLoss || (metrics ? forecastBase + metrics.atr * 1.3 : null))
+            : null;
+    const tp1 = action !== 'WAIT' ? (forecast?.tradePlan?.takeProfit1 || null) : null;
+    const tp2 = action !== 'WAIT' ? (forecast?.tradePlan?.takeProfit2 || null) : null;
+    const target = action !== 'WAIT' ? tp2 : null;
     const movePct = forecastBase && forecast ? (rawMove / forecastBase) * 100 : 0;
 
     const pipSpec = useMemo(() => getPipSpec(selectedSymbol), [selectedSymbol]);

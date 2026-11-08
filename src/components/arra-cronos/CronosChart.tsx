@@ -271,8 +271,8 @@ export default function CronosChart({
         levelsRef.current.forEach((line) => candleSeries.removePriceLine(line));
         levelsRef.current = [];
 
-        // Dynamic price levels with institutional formatting
-        if (entry != null) {
+        // Dynamic price levels with institutional formatting (only active when action is BUY or SELL)
+        if (action && action !== 'WAIT' && entry != null && stop != null) {
             levelsRef.current.push(
                 candleSeries.createPriceLine({
                     price: entry,
@@ -283,9 +283,7 @@ export default function CronosChart({
                     title: 'ENTRY',
                 })
             );
-        }
 
-        if (stop != null) {
             levelsRef.current.push(
                 candleSeries.createPriceLine({
                     price: stop,
@@ -296,34 +294,34 @@ export default function CronosChart({
                     title: 'SL',
                 })
             );
-        }
 
-        const effectiveTp1 = takeProfit1 ?? null;
-        if (effectiveTp1 != null) {
-            levelsRef.current.push(
-                candleSeries.createPriceLine({
-                    price: effectiveTp1,
-                    color: '#34d399',
-                    lineWidth: 1,
-                    lineStyle: 2,
-                    axisLabelVisible: true,
-                    title: 'TP1 (55%)',
-                })
-            );
-        }
+            const effectiveTp1 = takeProfit1 ?? null;
+            if (effectiveTp1 != null) {
+                levelsRef.current.push(
+                    candleSeries.createPriceLine({
+                        price: effectiveTp1,
+                        color: '#34d399',
+                        lineWidth: 1,
+                        lineStyle: 2,
+                        axisLabelVisible: true,
+                        title: 'TP1 (55%)',
+                    })
+                );
+            }
 
-        const effectiveTp2 = takeProfit2 ?? target ?? null;
-        if (effectiveTp2 != null) {
-            levelsRef.current.push(
-                candleSeries.createPriceLine({
-                    price: effectiveTp2,
-                    color: '#10b981',
-                    lineWidth: 2,
-                    lineStyle: 0,
-                    axisLabelVisible: true,
-                    title: 'TP2 / TARGET',
-                })
-            );
+            const effectiveTp2 = takeProfit2 ?? target ?? null;
+            if (effectiveTp2 != null) {
+                levelsRef.current.push(
+                    candleSeries.createPriceLine({
+                        price: effectiveTp2,
+                        color: '#10b981',
+                        lineWidth: 2,
+                        lineStyle: 0,
+                        axisLabelVisible: true,
+                        title: 'TP2 / TARGET',
+                    })
+                );
+            }
         }
 
         const last = visibleCandles[visibleCandles.length - 1];

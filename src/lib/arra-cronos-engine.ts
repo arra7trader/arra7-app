@@ -362,20 +362,41 @@ export function buildKronosQuantForecast(
     const direction: 'UP' | 'DOWN' | 'FLAT' =
         Math.abs(netMove) >= atr * 0.18 ? (netMove > 0 ? 'UP' : 'DOWN') : 'FLAT';
 
-    // 12. Trade Plan
+    // 12. Trade Plan (Strictly ordered levels: SL < Entry < TP1 < TP2 for BUY; TP2 < TP1 < Entry < SL for SELL)
     const spec = getPipSpec(symbol);
     const action: 'BUY' | 'SELL' | 'WAIT' =
-        direction === 'UP' && trendScore >= 20 ? 'BUY' :
-        direction === 'DOWN' && trendScore <= -20 ? 'SELL' :
+        direction === 'UP' && trendScore >= 15 ? 'BUY' :
+        direction === 'DOWN' && trendScore <= -15 ? 'SELL' :
         'WAIT';
 
     const entryPrice = currentPrice;
-    const stopLossDistance = atr * 1.35;
-    const stopLoss = Number((action === 'BUY' ? entryPrice - stopLossDistance : action === 'SELL' ? entryPrice + stopLossDistance : entryPrice - stopLossDistance).toFixed(5));
+    const stopLossDistance = Math.max(atr * 1.35, entryPrice * 0.001);
+    const rewardDistance = Math.max(Math.abs(netMove), stopLossDistance * 1.5);
 
-    // Dynamic TP1 (at 55% target move) & TP2 (at 100% target)
-    const tp1Price = Number((action === 'BUY' ? entryPrice + Math.abs(netMove) * 0.55 : action === 'SELL' ? entryPrice - Math.abs(netMove) * 0.55 : targetPrice).toFixed(5));
-    const tp2Price = Number((action === 'BUY' || action === 'SELL' ? targetPrice : entryPrice + stopLossDistance * 2).toFixed(5));
+    let stopLoss: number;
+    let tp1Price: number;
+    let tp2Price: number;
+
+    if (action === 'BUY') {
+        stopLoss = Number((entryPrice - stopLossDistance).toFixed(spec.pipDecimals || 2));
+        tp1Price = Number((entryPrice + rewardDistance * 0.55).toFixed(spec.pipDecimals || 2));
+        tp2Price = Number((entryPrice + rewardDistance).toFixed(spec.pipDecimals || 2));
+    } else if (action === 'SELL') {
+        stopLoss = Number((entryPrice + stopLossDistance).toFixed(spec.pipDecimals || 2));
+        tp1Price = Number((entryPrice - rewardDistance * 0.55).toFixed(spec.pipDecimals || 2));
+        tp2Price = Number((entryPrice - rewardDistance).toFixed(spec.pipDecimals || 2));
+    } else {
+        // Logical fallback for WAIT aligned with forecast direction (never contradictory)
+        if (netMove >= 0) {
+            stopLoss = Number((entryPrice - stopLossDistance).toFixed(spec.pipDecimals || 2));
+            tp1Price = Number((entryPrice + rewardDistance * 0.55).toFixed(spec.pipDecimals || 2));
+            tp2Price = Number((entryPrice + rewardDistance).toFixed(spec.pipDecimals || 2));
+        } else {
+            stopLoss = Number((entryPrice + stopLossDistance).toFixed(spec.pipDecimals || 2));
+            tp1Price = Number((entryPrice - rewardDistance * 0.55).toFixed(spec.pipDecimals || 2));
+            tp2Price = Number((entryPrice - rewardDistance).toFixed(spec.pipDecimals || 2));
+        }
+    }
 
     const riskDist = Math.max(0.0001, Math.abs(entryPrice - stopLoss));
     const rewardDist = Math.abs(tp2Price - entryPrice);

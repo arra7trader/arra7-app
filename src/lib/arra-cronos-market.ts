@@ -325,10 +325,12 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
             source = 'TradingView Realtime';
 
             // Synchronize the latest bar close with TradingView's live price
+            // Only expand the current bar's high/low if the live tick price exceeds them
+            // (Do NOT use tvQuote.high/tvQuote.low directly as they represent 24-hour daily extremes)
             const last = candles[candles.length - 1];
             last.close = tvQuote.livePrice;
-            if (tvQuote.high && tvQuote.high > last.high) last.high = tvQuote.high;
-            if (tvQuote.low && tvQuote.low < last.low) last.low = tvQuote.low;
+            if (tvQuote.livePrice > last.high) last.high = tvQuote.livePrice;
+            if (tvQuote.livePrice < last.low) last.low = tvQuote.livePrice;
         } else {
             source = isCrypto ? 'Binance Spot' : 'Yahoo Finance';
         }
