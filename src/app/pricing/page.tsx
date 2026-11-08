@@ -153,7 +153,7 @@ const PRICING_PLANS = [
         description: 'Paket komplit AI Quant Forecast Lilin Masa Depan + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + BONUS Resmi Indikator TradingView Pine Script v6.',
         theme: 'cyan',
         features: [
-            { text: 'ARRA GROK: 6-Agent Autonomous Terminal (Scanner, Guard, AI, Sentry, Sizer, Execution)', included: true, highlight: true },
+            { text: 'ARRA GROK: 6-Agent Autonomous Terminal (Scanner, Sentry Guard, Sizer, Executor, Logger, Equity)', included: true, highlight: true },
             { text: 'Khusus Forex & Gold Futures (Tanpa Crypto & Tanpa Copytrade)', included: true, highlight: true },
             { text: 'ARRA Cronos AI Quant Engine Lilin Masa Depan & Corridor P10-P90', included: true, highlight: true },
             { text: 'BONUS Source Code Indikator TradingView Pine Script v6', included: true, highlight: true },

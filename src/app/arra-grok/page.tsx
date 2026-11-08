@@ -314,7 +314,7 @@ void OnStart() {
 
                     {/* Window Title Subtitle */}
                     <div className="hidden sm:block text-[11px] font-mono text-slate-400">
-                        Grok Bot Terminal — overnight · six agents · log first
+                        ARRA GROK — overnight · six autonomous agents · forex &amp; gold futures
                     </div>
 
                     {/* Right Tag */}
@@ -332,7 +332,7 @@ void OnStart() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         {/* Left: Avatar + Title & Status */}
                         <div className="flex items-start gap-4">
-                            {/* Grok Bot Avatar (From Video: Silver/White Sphere with Oval Eyes) */}
+                            {/* ARRA Grok Bot Avatar (From Video: Silver/White Sphere with Oval Eyes) */}
                             <div className="h-14 w-14 shrink-0 rounded-full bg-gradient-to-b from-[#FFFFFF] via-[#F0F0EE] to-[#E2E2DC] border border-[#D5D5CE] shadow-[0_4px_10px_rgba(0,0,0,0.06),inset_0_2px_4px_rgba(255,255,255,0.9)] flex items-center justify-center gap-1.5">
                                 <span className="h-4 w-1.5 rounded-full bg-slate-900" />
                                 <span className="h-4 w-1.5 rounded-full bg-slate-900" />
@@ -341,10 +341,10 @@ void OnStart() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h1 className="text-2xl sm:text-[26px] font-black text-slate-900 tracking-tight font-sans">
-                                        Grok Bot Terminal
+                                        ARRA GROK
                                     </h1>
-                                    <span className="rounded border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-600">
-                                        v1.0-night
+                                    <span className="rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-800">
+                                        Forex &amp; Gold Futures v1.0
                                     </span>
                                 </div>
 
@@ -358,7 +358,7 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <div className="mt-1 text-[11px] font-mono text-slate-400 italic">
-                                    every trade gets a reason
+                                    every trade gets a reason · 100% personal execution (no copytrade)
                                 </div>
                             </div>
                         </div>
@@ -427,17 +427,17 @@ void OnStart() {
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
-                                new pairs + volume spikes
+                                Forex &amp; Gold Sweeps + OB Spikes
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                flags only, never trades
+                                flags liquidity sweeps, never front-runs
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
                                 next $XAUUSD · OB 2742.50
                             </div>
                         </div>
 
-                        {/* AGENT 2: RUG CHECK / SENTRY GUARD */}
+                        {/* AGENT 2: SENTRY GUARD */}
                         <div className={`relative rounded-xl border p-2.5 transition-all duration-300 bg-white ${activeAgentIndex === 1 ? 'border-rose-400 shadow-md ring-2 ring-rose-300/40' : 'border-slate-200/80 shadow-xs'}`}>
                             {/* Stamped 'FILTERED' badge from video! */}
                             <span className="absolute -right-1 -top-1.5 rotate-[-8deg] rounded border border-rose-500 bg-white/95 px-1.5 py-0.2 text-[8px] font-mono font-black text-rose-600 shadow-xs">
@@ -449,7 +449,7 @@ void OnStart() {
                                         ▲
                                     </span>
                                     <span className="text-xs font-black tracking-wide text-slate-800 font-mono">
-                                        RUG CHECK
+                                        SENTRY GUARD
                                     </span>
                                 </div>
                                 <span className="rounded bg-rose-100 text-rose-800 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
@@ -457,10 +457,10 @@ void OnStart() {
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
-                                filters suspicious tokens / news
+                                CPI / NFP &amp; Spread Filter
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                nothing executes before a pass
+                                nothing executes during high-spread spikes
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
                                 passed $XAUUSD
@@ -603,7 +603,7 @@ void OnStart() {
                         {/* 1. UPPER SECTION: LIVE FLOW PIPELINE */}
                         <div className="rounded-2xl border border-[#ECECE6] bg-white p-4 shadow-xs">
                             <div className="flex items-center justify-between pb-3 text-[10px] font-mono font-bold text-slate-400">
-                                <span>LIVE FLOW · SCAN → CHECK → SIZE → EXEC → LOG</span>
+                                <span>LIVE FLOW · SCAN &rarr; GUARD &rarr; SIZE &rarr; EXEC &rarr; LOG</span>
                                 <span>checked 93</span>
                             </div>
 
@@ -623,13 +623,13 @@ void OnStart() {
                             {/* SVG Flow Curve Diagram (Faithfully recreating the video diagram!) */}
                             <div className="relative rounded-2xl border border-slate-100 bg-[#FAF9F5] p-4 py-6 overflow-hidden">
                                 <div className="flex items-center justify-between max-w-lg mx-auto relative">
-                                    {/* Left Circle Node: RUG CHECK */}
+                                    {/* Left Circle Node: SENTRY GUARD */}
                                     <div className="flex flex-col items-center gap-1.5 z-10">
                                         <div className="h-16 w-16 rounded-full border-2 border-rose-400 bg-white shadow-md flex items-center justify-center relative">
                                             <span className="h-20 w-20 rounded-full border border-rose-300/40 absolute animate-ping" />
                                             <span className="text-rose-600 text-lg font-black">▲</span>
                                         </div>
-                                        <div className="text-[10px] font-mono font-bold text-slate-700">RUG CHECK</div>
+                                        <div className="text-[10px] font-mono font-bold text-slate-700">SENTRY GUARD</div>
                                         <div className="text-[9px] font-mono text-slate-400">PASS $XAUUSD</div>
                                     </div>
 
