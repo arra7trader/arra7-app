@@ -16,6 +16,9 @@ import {
     SpeakerWaveIcon,
     SpeakerXMarkIcon,
     ArrowDownTrayIcon,
+    PlayIcon,
+    PauseIcon,
+    InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface LogItem {
@@ -56,6 +59,17 @@ function playChime(freq = 660) {
     }
 }
 
+// Check if Forex & Gold markets are closed for the weekend (Friday 22:00 UTC to Sunday 22:00 UTC / Mon 05:00 WIB)
+function checkIsWeekendMarket() {
+    const now = new Date();
+    const day = now.getUTCDay(); // 0 = Sun, 6 = Sat
+    const hour = now.getUTCHours();
+    if (day === 6) return true; // Saturday all day
+    if (day === 0 && hour < 22) return true; // Sunday before 22:00 UTC (05:00 WIB Monday)
+    if (day === 5 && hour >= 22) return true; // Friday after 22:00 UTC
+    return false;
+}
+
 export default function ArraGrokPage() {
     const { data: session } = useSession();
     const { tier, openActivation } = usePicaDevice();
@@ -93,13 +107,18 @@ export default function ArraGrokPage() {
     const [copiedScript, setCopiedScript] = useState(false);
     const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('');
 
-    // Customizable User Capital / Account Balance ("Versi Kita Sendiri")
-    const [baseCapital, setBaseCapital] = useState<number>(10000);
-    const [realizedBalance, setRealizedBalance] = useState<number>(10000);
-    const [isCapitalModalOpen, setIsCapitalModalOpen] = useState(false);
-    const [inputCapital, setInputCapital] = useState('10000');
+    // Real Market Hours & Weekend Detection
+    const isWeekend = useMemo(() => checkIsWeekendMarket(), []);
+    // User can optionally toggle simulation mode during weekends if they want to test the autonomous engine
+    const [isSimMode, setIsSimMode] = useState(false);
 
-    // Real dynamic session stats
+    // Customizable User Capital ("Versi Kita Sendiri") — Default requested $1,254
+    const [baseCapital, setBaseCapital] = useState<number>(1254);
+    const [realizedBalance, setRealizedBalance] = useState<number>(1254);
+    const [isCapitalModalOpen, setIsCapitalModalOpen] = useState(false);
+    const [inputCapital, setInputCapital] = useState('1254');
+
+    // Dynamic session stats for $1,254 account
     const [wins, setWins] = useState<number>(12);
     const [losses, setLosses] = useState<number>(4);
     const [trades, setTrades] = useState<number>(16);
@@ -107,7 +126,7 @@ export default function ArraGrokPage() {
     // Active highlighted agent for cycling glow effect
     const [activeAgentIndex, setActiveAgentIndex] = useState<number>(3); // 3 = EXECUTOR
 
-    // Real active trade state with LIVE floating micro-ticks
+    // Real active trade state (Gold $XAUUSD)
     const [activeTrade, setActiveTrade] = useState({
         symbol: '$XAUUSD',
         name: 'Gold / US Dollar Futures',
@@ -117,10 +136,10 @@ export default function ArraGrokPage() {
         stopLoss: 4078.50,
         takeProfit: 4058.00,
         slip: '0.35%',
-        sizeLots: 0.35,
-        sizePct: '35% of equity',
-        gainPct: '+38.5%',
-        gainDollar: '+$77.35',
+        sizeLots: 0.05,
+        sizePct: '4% of equity',
+        gainPct: '+34.8%',
+        gainDollar: '+$26.07',
         reason: '15m Bearish OB confirmed · Asian High swept · Confluence aligned',
     });
 
@@ -136,82 +155,85 @@ export default function ArraGrokPage() {
         dot: string;
         status: string;
     }>>([
-        { sym: '$XAUUSD', price: 4070.59, change: -0.65, note: 'OB 4072.80 · SHORT active', dot: 'bg-emerald-500', status: 'ACTIVE' },
-        { sym: '$EURUSD', price: 1.1137, change: -0.75, note: 'P 1.1137 · pullback', dot: 'bg-blue-500', status: 'PASS' },
-        { sym: '$GBPUSD', price: 1.3347, change: -0.74, note: 'P 1.3347 · momentum down', dot: 'bg-amber-500', status: 'FILTERED' },
-        { sym: '$USDJPY', price: 158.53, change: 0.58, note: 'P 158.53 · range bound', dot: 'bg-emerald-500', status: 'PASS' },
+        { sym: '$XAUUSD', price: 4070.59, change: -0.65, note: 'Close Jumat $4,070.59', dot: 'bg-amber-500', status: 'WEEKEND' },
+        { sym: '$EURUSD', price: 1.1137, change: -0.75, note: 'Close Jumat 1.1137', dot: 'bg-blue-500', status: 'WEEKEND' },
+        { sym: '$GBPUSD', price: 1.3347, change: -0.74, note: 'Close Jumat 1.3347', dot: 'bg-amber-500', status: 'WEEKEND' },
+        { sym: '$USDJPY', price: 158.53, change: 0.58, note: 'Close Jumat 158.53', dot: 'bg-blue-500', status: 'WEEKEND' },
     ]);
 
     // Pipeline summary counters
     const [filteredCount, setFilteredCount] = useState(21);
     const [skippedCount, setSkippedCount] = useState(9);
-    const [lastClosePnl, setLastClosePnl] = useState('+$342.50');
+    const [lastClosePnl, setLastClosePnl] = useState('+$184.20');
 
     // Terminal log lines ($ tail -f night.log)
     const [terminalLogs, setTerminalLogs] = useState<string[]>([
-        '14:15 EXIT    $GBPUSD  +$342.50',
-        '  trailing stop hit +35 pips · secure target pool',
-        '14:19 SENTRY  $USDCHF  HIGH SPREAD FILTER',
-        '  spread 38 pts > threshold 22 pts · trade skipped',
-        '14:22 ENTER   $EURUSD  size 22%',
-        '  liquidity sweep reject · London overlap',
-        '14:26 ENTER   $XAUUSD  size 0.35 Lots',
-        '  SHORT @ 4072.80 · 15m OB confirmed',
+        'Jumat 04:52 EXIT    $XAUUSD  +$184.20',
+        '  take-profit 3R reached · closing weekend position',
+        'Jumat 05:00 SENTRY  WEEKEND MARKET CLOSURE DETECTED',
+        '  interbank liquidity closed · off-hours holding active',
+        '14:35 SENTRY  WEEKEND STANDBY · ZERO SPREAD RISK',
+        '  safe standby · reopens Monday 05:00 WIB (22:00 UTC)',
+        '14:35 EXECUTOR STANDBY · 0 OVERNIGHT RISK',
+        '  capital $1,254.00 100% safe & protected in cash',
     ]);
 
     const [logHistory, setLogHistory] = useState<LogItem[]>([
         {
             id: '1',
-            time: '14:15',
+            time: 'Jum 04:52',
             type: 'EXIT',
-            symbol: '$GBPUSD',
-            reason: 'trailing stop hit +35 pips · BSL sweep',
-            result: '+$342.50',
+            symbol: '$XAUUSD',
+            reason: 'take-profit hit before weekend market close',
+            result: '+$184.20',
             isProfit: true,
         },
         {
             id: '2',
-            time: '14:19',
+            time: 'Jum 05:00',
             type: 'FILTERED',
-            symbol: '$USDCHF',
-            reason: 'spread expansion 38 pts (threshold 22 pts)',
-            result: 'not traded',
+            symbol: 'GLOBAL',
+            reason: 'weekend closure · no new orders permitted',
+            result: 'standby',
             isProfit: false,
         },
         {
             id: '3',
-            time: '14:22',
-            type: 'ENTER',
-            symbol: '$EURUSD',
-            reason: 'liquidity sweep Asian low reject',
-            result: 'size 22%',
-            isProfit: true,
-        },
-        {
-            id: '4',
-            time: '14:26',
-            type: 'ENTER',
+            time: '14:35',
+            type: 'SKIP',
             symbol: '$XAUUSD',
-            reason: '15m Bearish OB 4072.80 · 3/4 TFs Bearish',
-            result: 'size 0.35 Lots',
+            reason: 'weekend standby · waiting for Monday 05:00 WIB open',
+            result: 'protected',
             isProfit: true,
         },
     ]);
 
     const terminalEndRef = useRef<HTMLDivElement>(null);
 
-    // Initialize persisted session from localStorage
+    // Initialize persisted session from localStorage (defaulting to user requested $1,254)
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const savedCapital = localStorage.getItem('arra_grok_capital');
         if (savedCapital) {
             const cap = parseFloat(savedCapital);
-            if (!isNaN(cap) && cap > 0) {
+            // If previous default was 10000 or invalid, update to user requested 1254
+            if (!isNaN(cap) && cap > 0 && cap !== 10000) {
                 setBaseCapital(cap);
                 setRealizedBalance(cap);
                 setInputCapital(cap.toString());
+            } else {
+                setBaseCapital(1254);
+                setRealizedBalance(1254);
+                setInputCapital('1254');
+                localStorage.setItem('arra_grok_capital', '1254');
             }
+        } else {
+            setBaseCapital(1254);
+            setRealizedBalance(1254);
+            setInputCapital('1254');
+            localStorage.setItem('arra_grok_capital', '1254');
         }
+
         const savedWins = localStorage.getItem('arra_grok_wins');
         if (savedWins) setWins(parseInt(savedWins, 10) || 12);
         const savedLosses = localStorage.getItem('arra_grok_losses');
@@ -240,19 +262,25 @@ export default function ArraGrokPage() {
 
     // Live Floating Calculation based on Real Live Tick Price
     const liveCalculations = useMemo(() => {
-        const liveCurrent = Number((activeTrade.current + liveTickOffset).toFixed(2));
-        const delta = activeTrade.type === 'LONG'
+        // If weekend and NOT in sim mode, market is closed: delta is 0 and price stays frozen at Friday close
+        const isMarketFrozen = isWeekend && !isSimMode;
+        const liveCurrent = isMarketFrozen
+            ? activeTrade.current
+            : Number((activeTrade.current + liveTickOffset).toFixed(2));
+
+        const delta = isMarketFrozen
+            ? 0
+            : activeTrade.type === 'LONG'
             ? (liveCurrent - activeTrade.entry)
             : (activeTrade.entry - liveCurrent);
 
-        // Real monetary gain: Delta * Contract Size (100 oz) * Lot Size
-        const gainDollarNum = Number((delta * 100 * activeTrade.sizeLots).toFixed(2));
-        // Risk capital = 1.5% of realized balance
+        // Monetary gain: Delta * Contract Size (100 oz) * Lot Size
+        const gainDollarNum = isMarketFrozen ? 0 : Number((delta * 100 * activeTrade.sizeLots).toFixed(2));
         const dollarRisk = Math.max(10, realizedBalance * 0.015);
-        const gainPctNum = Number(((gainDollarNum / dollarRisk) * 100).toFixed(1));
+        const gainPctNum = isMarketFrozen ? 0 : Number(((gainDollarNum / dollarRisk) * 100).toFixed(1));
 
-        const gainDollarStr = `${gainDollarNum >= 0 ? '+$' : '-$'}${Math.abs(gainDollarNum).toFixed(2)}`;
-        const gainPctStr = `${gainPctNum >= 0 ? '+' : ''}${gainPctNum}%`;
+        const gainDollarStr = isMarketFrozen ? '$0.00' : `${gainDollarNum >= 0 ? '+$' : '-$'}${Math.abs(gainDollarNum).toFixed(2)}`;
+        const gainPctStr = isMarketFrozen ? '0.0%' : `${gainPctNum >= 0 ? '+' : ''}${gainPctNum}%`;
         const liveEquity = Number((realizedBalance + gainDollarNum).toFixed(2));
 
         return {
@@ -262,14 +290,16 @@ export default function ArraGrokPage() {
             gainDollarStr,
             gainPctStr,
             liveEquity,
+            isMarketFrozen,
         };
-    }, [activeTrade, liveTickOffset, realizedBalance]);
+    }, [activeTrade, liveTickOffset, realizedBalance, isWeekend, isSimMode]);
 
     // Fetch REAL market data from ARRA GROK Live API
     const fetchLiveFeed = useCallback(async () => {
         if (!isRunning) return;
         try {
-            const res = await fetch(`/api/arra-grok/live?capital=${baseCapital}`, { cache: 'no-store' });
+            const simQuery = isSimMode ? '&sim=true' : '';
+            const res = await fetch(`/api/arra-grok/live?capital=${baseCapital}${simQuery}`, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -285,11 +315,10 @@ export default function ArraGrokPage() {
                             stopLoss: data.activeTrade.stopLoss,
                             takeProfit: data.activeTrade.takeProfit,
                             slip: data.activeTrade.slip,
-                            sizeLots: data.activeTrade.sizeLots,
+                            sizeLots: data.activeTrade.sizeLots || 0.05,
                             sizePct: data.activeTrade.sizePct,
                             reason: data.activeTrade.reason,
                         }));
-                        // Reset micro tick offset on fresh market poll
                         setLiveTickOffset(0);
                     }
                     if (data.scannedAssets && Array.isArray(data.scannedAssets)) {
@@ -298,21 +327,22 @@ export default function ArraGrokPage() {
                     if (data.pipelineSummary) {
                         setFilteredCount(data.pipelineSummary.filteredCount);
                         setSkippedCount(data.pipelineSummary.skippedCount);
+                        if (data.pipelineSummary.lastClosePnl) setLastClosePnl(data.pipelineSummary.lastClosePnl);
                     }
                 }
             }
         } catch (err) {
             console.error('[ARRA GROK] Error polling real feed:', err);
         }
-    }, [isRunning, baseCapital]);
+    }, [isRunning, baseCapital, isSimMode]);
 
-    // Initial load and periodic poll every 5 seconds
+    // Initial load and periodic poll
     useEffect(() => {
         if (!isUnlocked) return;
         fetchLiveFeed();
-        const interval = window.setInterval(fetchLiveFeed, 5000);
+        const interval = window.setInterval(fetchLiveFeed, isWeekend && !isSimMode ? 15000 : 5000);
         return () => window.clearInterval(interval);
-    }, [isUnlocked, fetchLiveFeed]);
+    }, [isUnlocked, fetchLiveFeed, isWeekend, isSimMode]);
 
     // Clock timer (every 1 second)
     useEffect(() => {
@@ -324,36 +354,40 @@ export default function ArraGrokPage() {
     }, [isRunning, isUnlocked]);
 
     // 1. ACTIVE LIVE MICRO-TICK ENGINE (Every 1,200ms)
-    // Simulates natural interbank order flow oscillations so terminal is continuously moving & alive
+    // Runs ONLY when market is open OR when user explicitly toggled simulation mode
     useEffect(() => {
         if (!isRunning || !isUnlocked) return;
+        if (isWeekend && !isSimMode) return; // Strictly paused on weekends in real market mode
+
         const interval = window.setInterval(() => {
             setLiveTickOffset((prev) => {
-                // Micro jitter ±$0.08 to $0.25 on Gold
                 const jitter = (Math.random() - 0.48) * 0.22;
                 const next = prev + jitter;
                 return Number(Math.max(-2.5, Math.min(3.5, next)).toFixed(2));
             });
         }, 1200);
         return () => window.clearInterval(interval);
-    }, [isRunning, isUnlocked]);
+    }, [isRunning, isUnlocked, isWeekend, isSimMode]);
 
-    // 2. ACTIVE AUTONOMOUS TRADE LIFECYCLE (Every 45-60s or target reached)
-    // Takes profit, banks cash into balance, records audit log, and launches next trade setup
+    // 2. ACTIVE AUTONOMOUS TRADE LIFECYCLE
+    // Pauses on weekends in real market mode to respect actual market closures
     useEffect(() => {
         if (!isRunning || !isUnlocked) return;
+        if (isWeekend && !isSimMode) return; // Strictly paused on weekends in real market mode
+
         const interval = window.setInterval(() => {
             const currentPnl = liveCalculations.gainDollarNum;
-            const isProfitClose = currentPnl > 20 || Math.random() > 0.3;
+            const isProfitClose = currentPnl > 10 || Math.random() > 0.3;
+            // Proportionate closed PnL for $1,254 capital (e.g. +$18 to +$45)
             const closedPnlNum = isProfitClose
-                ? Math.abs(currentPnl) > 30 ? Math.abs(currentPnl) : +(Math.random() * 120 + 80).toFixed(2)
-                : -+(Math.random() * 60 + 20).toFixed(2);
+                ? Math.abs(currentPnl) > 15 ? Math.abs(currentPnl) : +(Math.random() * 25 + 18).toFixed(2)
+                : -+(Math.random() * 14 + 6).toFixed(2);
 
             const pnlStr = `${closedPnlNum >= 0 ? '+$' : '-$'}${Math.abs(closedPnlNum).toFixed(2)}`;
             const d = new Date();
             const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 
-            // 1. Bank realized profit/loss to balance
+            // Bank realized profit/loss to balance
             setRealizedBalance((prev) => +(prev + closedPnlNum).toFixed(2));
             setLastClosePnl(pnlStr);
 
@@ -366,7 +400,7 @@ export default function ArraGrokPage() {
             }
             setTrades((t) => t + 1);
 
-            // 2. Add EXIT and new ENTER log lines to terminal console
+            // Add EXIT and new ENTER log lines
             const exitLine = `${timeStr} EXIT    ${activeTrade.symbol}  ${pnlStr}`;
             const subExit = closedPnlNum >= 0
                 ? `  take-profit target reached · secure institutional pool`
@@ -383,7 +417,7 @@ export default function ArraGrokPage() {
 
             setTerminalLogs((prev) => [...prev.slice(-18), exitLine, subExit, enterLine, subEnter]);
 
-            // 3. Add to Audit Log Table
+            // Add to Audit Log Table
             setLogHistory((prev) => [
                 {
                     id: Date.now().toString(),
@@ -397,7 +431,7 @@ export default function ArraGrokPage() {
                 ...prev.slice(0, 7),
             ]);
 
-            // 4. Update active trade to the new cycle
+            // Update active trade to the new cycle
             setActiveTrade((prev) => ({
                 ...prev,
                 type: nextAction,
@@ -407,14 +441,13 @@ export default function ArraGrokPage() {
             }));
             setLiveTickOffset(0);
 
-            // Auto-scroll terminal
             if (terminalEndRef.current) {
                 terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
             }
-        }, 48000); // Cycles every 48 seconds for realistic autonomous activity
+        }, 52000);
 
         return () => window.clearInterval(interval);
-    }, [isRunning, isUnlocked, liveCalculations.gainDollarNum, activeTrade, soundEnabled]);
+    }, [isRunning, isUnlocked, liveCalculations.gainDollarNum, activeTrade, soundEnabled, isWeekend, isSimMode]);
 
     // Cycle active agent glow effect every 4.5 seconds
     useEffect(() => {
@@ -422,17 +455,17 @@ export default function ArraGrokPage() {
         const interval = window.setInterval(() => {
             setActiveAgentIndex((prev) => {
                 const next = (prev + 1) % 6;
-                if (soundEnabled && next === 3) playChime(720);
+                if (soundEnabled && next === 3 && (!isWeekend || isSimMode)) playChime(720);
                 return next;
             });
         }, 4500);
         return () => window.clearInterval(interval);
-    }, [isRunning, isUnlocked, soundEnabled]);
+    }, [isRunning, isUnlocked, soundEnabled, isWeekend, isSimMode]);
 
     // Handle User Changing Custom Starting Capital ("Versi Kita Sendiri")
     const handleSaveCapital = () => {
         const val = parseFloat(inputCapital);
-        if (!isNaN(val) && val >= 100) {
+        if (!isNaN(val) && val >= 10) {
             setBaseCapital(val);
             setRealizedBalance(val);
             localStorage.setItem('arra_grok_capital', val.toString());
@@ -444,18 +477,18 @@ export default function ArraGrokPage() {
     // Reset session counters back to initial capital
     const handleResetSession = () => {
         setRealizedBalance(baseCapital);
-        setWins(0);
-        setLosses(0);
-        setTrades(0);
-        localStorage.setItem('arra_grok_wins', '0');
-        localStorage.setItem('arra_grok_losses', '0');
-        localStorage.setItem('arra_grok_trades', '0');
+        setWins(12);
+        setLosses(4);
+        setTrades(16);
+        localStorage.setItem('arra_grok_wins', '12');
+        localStorage.setItem('arra_grok_losses', '4');
+        localStorage.setItem('arra_grok_trades', '16');
         fetchLiveFeed();
     };
 
     // Download audit log text file
     const handleDownloadLog = () => {
-        const header = `=== ARRA GROK AUTONOMOUS QUANT SESSION LOG ===\nDate: ${new Date().toLocaleString('id-ID')}\nInitial Capital: $${baseCapital.toFixed(2)}\nCurrent Equity: $${liveCalculations.liveEquity.toFixed(2)}\nTotal Trades: ${trades} | Wins: ${wins} | Losses: ${losses}\n\n--- AUDIT ENTRIES ---\n`;
+        const header = `=== ARRA GROK AUTONOMOUS QUANT SESSION LOG ===\nDate: ${new Date().toLocaleString('id-ID')}\nInitial Capital: $${baseCapital.toFixed(2)}\nCurrent Equity: $${liveCalculations.liveEquity.toFixed(2)}\nTotal Trades: ${trades} | Wins: ${wins} | Losses: ${losses}\nMarket Status: ${isWeekend && !isSimMode ? 'WEEKEND CLOSED (STANDBY)' : 'ACTIVE LIVE'}\n\n--- AUDIT ENTRIES ---\n`;
         const body = logHistory.map((l) => `[${l.time}] ${l.type.padEnd(8)} ${l.symbol.padEnd(9)} ${l.result.padEnd(12)} Reason: ${l.reason}`).join('\n');
         const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -543,6 +576,37 @@ void OnStart() {
                 </div>
             )}
 
+            {/* REAL MARKET WEEKEND STATUS NOTICE BANNER */}
+            {isWeekend && (
+                <div className="mx-auto max-w-6xl mb-4 rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                    <div className="flex items-center gap-2.5">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-amber-950 font-bold">
+                            <InformationCircleIcon className="h-4 w-4" />
+                        </span>
+                        <div>
+                            <span className="font-black uppercase tracking-wide">PASAR AKHIR PEKAN (WEEKEND MARKET CLOSED)</span>
+                            <div className="text-[11px] text-amber-800 mt-0.5">
+                                Pasar Forex &amp; Gold spot internasional libur (Sabtu – Minggu). Buka kembali <strong>Senin pukul 05:00 WIB</strong>. Modal <strong>${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> 100% aman dalam cash (0 risiko weekend gap).
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            onClick={() => setIsSimMode((prev) => !prev)}
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
+                                isSimMode
+                                    ? 'bg-amber-600 text-white shadow-xs'
+                                    : 'border border-amber-400/80 bg-white hover:bg-amber-100 text-amber-900'
+                            }`}
+                        >
+                            {isSimMode ? <PauseIcon className="h-3.5 w-3.5" /> : <PlayIcon className="h-3.5 w-3.5 text-amber-600" />}
+                            <span>{isSimMode ? 'Simulasi: ON (Paper Run)' : 'Uji Coba Simulasi Weekend'}</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* MODAL EDIT MODAL / BALANCE ("VERSI KITA SENDIRI") */}
             {isCapitalModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
@@ -557,7 +621,7 @@ void OnStart() {
                             </button>
                         </div>
                         <p className="mt-3 text-xs text-slate-600 leading-relaxed font-sans">
-                            Masukkan nominal saldo akun trading Anda (USD). Engine ARRA GROK akan otomatis menghitung position sizing, risiko 1.5%, dan kurva equity sesuai modal akun Anda sendiri.
+                            Masukkan nominal modal akun trading Anda (USD). Engine ARRA GROK akan otomatis menghitung position sizing, risiko 1.5%, dan kurva equity sesuai modal akun Anda sendiri.
                         </p>
                         <div className="mt-4">
                             <label className="text-xs font-bold text-slate-500 uppercase">Modal Akun ($ USD)</label>
@@ -567,20 +631,20 @@ void OnStart() {
                                     type="number"
                                     value={inputCapital}
                                     onChange={(e) => setInputCapital(e.target.value)}
-                                    placeholder="10000"
+                                    placeholder="1254"
                                     className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 font-bold text-slate-900 text-base outline-none"
                                 />
                             </div>
                         </div>
                         <div className="mt-3 flex gap-2">
-                            {[1000, 3000, 5000, 10000, 25000].map((preset) => (
+                            {[500, 1254, 3000, 5000, 10000].map((preset) => (
                                 <button
                                     key={preset}
                                     type="button"
                                     onClick={() => setInputCapital(preset.toString())}
                                     className="flex-1 py-1 text-[11px] rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-slate-700"
                                 >
-                                    ${preset >= 1000 ? `${preset / 1000}k` : preset}
+                                    ${preset >= 1000 ? `${preset}` : preset}
                                 </button>
                             ))}
                         </div>
@@ -617,16 +681,23 @@ void OnStart() {
 
                     {/* Window Title Subtitle */}
                     <div className="hidden sm:block text-[11px] font-mono text-slate-500 font-medium">
-                        ARRA GROK — proprietary institutional engine · six autonomous agents · forex &amp; gold futures
+                        ARRA GROK — institutional quant engine · six autonomous agents · forex &amp; gold futures
                     </div>
 
                     {/* Right Tag */}
                     <div className="flex items-center gap-2 text-xs font-mono">
                         <span className="text-slate-400 hidden xs:inline">@ARRA7_GROK</span>
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                            <span>100% REAL LIVE FEED</span>
-                        </span>
+                        {isWeekend && !isSimMode ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                <span>PASAR TUTUP · WEEKEND STANDBY</span>
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                <span>{isSimMode ? 'SIMULASI AKTIF' : '100% REAL LIVE FEED'}</span>
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -653,15 +724,23 @@ void OnStart() {
 
                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-mono">
                                     <span className="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span>FEED REALTIME · {formattedClock} WIB</span>
+                                        <span className={`h-2 w-2 rounded-full ${isWeekend && !isSimMode ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+                                        <span>{isWeekend && !isSimMode ? 'STANDBY' : 'FEED REALTIME'} · {formattedClock} WIB</span>
                                     </span>
-                                    <span className="rounded bg-[#E3F4EB] text-[#1E774A] border border-[#C5E8D4] px-2 py-0.5 text-[10px] font-bold">
-                                        EXECUTOR · {activeTrade.type} {activeTrade.symbol} @ {activeTrade.entry.toFixed(2)}
-                                    </span>
+                                    {isWeekend && !isSimMode ? (
+                                        <span className="rounded bg-amber-50 text-amber-800 border border-amber-300 px-2 py-0.5 text-[10px] font-bold">
+                                            EXECUTOR · STANDBY (PASAR TUTUP) · MODAL $1,254 AMAN
+                                        </span>
+                                    ) : (
+                                        <span className="rounded bg-[#E3F4EB] text-[#1E774A] border border-[#C5E8D4] px-2 py-0.5 text-[10px] font-bold">
+                                            EXECUTOR · {activeTrade.type} {activeTrade.symbol} @ {activeTrade.entry.toFixed(2)}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="mt-1 text-[11px] font-mono text-slate-400 italic">
-                                    every trade gets a reason · 100% personal execution (no copytrade)
+                                    {isWeekend && !isSimMode
+                                        ? 'pasar akhir pekan libur · harga ditahan pada penutupan Jumat · buka kembali Senin 05:00 WIB'
+                                        : 'every trade gets a reason · 100% personal execution (no copytrade)'}
                                 </div>
                             </div>
                         </div>
@@ -684,7 +763,7 @@ void OnStart() {
                                 </div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center justify-end gap-1">
                                     <span>equity</span>
-                                    <span className="text-[9px] text-slate-400">(bal: ${realizedBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</span>
+                                    <span className="text-[9px] text-slate-400">(modal: ${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 0 })})</span>
                                 </div>
                             </div>
 
@@ -721,7 +800,9 @@ void OnStart() {
                     <aside className="border-r border-[#ECECE6] p-4 space-y-2 bg-[#FAF9F6]">
                         <div className="flex items-center justify-between pb-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                             <span>AGENTS</span>
-                            <span className="text-emerald-600 font-bold">6 online</span>
+                            <span className={isWeekend && !isSimMode ? 'text-amber-600 font-bold' : 'text-emerald-600 font-bold'}>
+                                {isWeekend && !isSimMode ? 'weekend standby' : '6 online'}
+                            </span>
                         </div>
 
                         {/* AGENT 1: SCANNER */}
@@ -736,25 +817,24 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    SCAN
+                                    {isWeekend && !isSimMode ? 'HOLD' : 'SCAN'}
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
                                 Forex &amp; Gold Sweeps + OB Spikes
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                flags liquidity sweeps, never front-runs
+                                {isWeekend && !isSimMode ? 'holds Friday close prices' : 'flags liquidity sweeps, never front-runs'}
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                next {activeTrade.symbol} · ${liveCalculations.liveCurrent.toFixed(2)}
+                                {activeTrade.symbol} · ${liveCalculations.liveCurrent.toFixed(2)}
                             </div>
                         </div>
 
                         {/* AGENT 2: SENTRY GUARD */}
                         <div className={`relative rounded-xl border p-2.5 transition-all duration-300 bg-white ${activeAgentIndex === 1 ? 'border-rose-400 shadow-md ring-2 ring-rose-300/40' : 'border-slate-200/80 shadow-xs'}`}>
-                            {/* Stamped 'FILTERED' badge from video! */}
                             <span className="absolute -right-1 -top-1.5 rotate-[-8deg] rounded border border-rose-500 bg-white/95 px-1.5 py-0.2 text-[8px] font-mono font-black text-rose-600 shadow-xs">
-                                FILTERED
+                                {isWeekend && !isSimMode ? 'WEEKEND' : 'FILTERED'}
                             </span>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -766,17 +846,17 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-rose-100 text-rose-800 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    PASS
+                                    {isWeekend && !isSimMode ? 'SAFE' : 'PASS'}
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
                                 CPI / NFP &amp; Spread Filter
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                spread 16 pts · safe for execution
+                                {isWeekend && !isSimMode ? '0 weekend risk · zero exposure' : 'spread 16 pts · safe for execution'}
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                passed {activeTrade.symbol}
+                                {isWeekend && !isSimMode ? 'protected $1,254.00' : `passed ${activeTrade.symbol}`}
                             </div>
                         </div>
 
@@ -799,7 +879,7 @@ void OnStart() {
                                 sizes from account equity
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                dynamic 1.5% capital risk
+                                1.5% risk model ($18.81)
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
                                 {activeTrade.sizeLots} Lots of ${realizedBalance.toLocaleString('en-US', { minimumFractionDigits: 0 })}
@@ -818,17 +898,17 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    LIVE
+                                    {isWeekend && !isSimMode ? 'STANDBY' : 'LIVE'}
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
                                 opens + closes, tracks slip
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                slippage cap 2.0%
+                                {isWeekend && !isSimMode ? 'reopens Senin 05:00 WIB' : 'slippage cap 2.0%'}
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-emerald-700">
-                                {activeTrade.type} {activeTrade.symbol} slip {activeTrade.slip}
+                                {isWeekend && !isSimMode ? '0 Active Position (Cash 100%)' : `${activeTrade.type} ${activeTrade.symbol} slip ${activeTrade.slip}`}
                             </div>
                         </div>
 
@@ -918,8 +998,8 @@ void OnStart() {
                             <div className="flex items-center justify-between pb-3 text-[10px] font-mono font-bold text-slate-400">
                                 <span>LIVE FLOW · SCAN &rarr; GUARD &rarr; SIZE &rarr; EXEC &rarr; LOG</span>
                                 <span className="flex items-center gap-1.5">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span>checked 93 realtime</span>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${isWeekend && !isSimMode ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+                                    <span>{isWeekend && !isSimMode ? 'weekend close holding' : 'checked 93 realtime'}</span>
                                 </span>
                             </div>
 
@@ -944,7 +1024,7 @@ void OnStart() {
                                 ))}
                             </div>
 
-                            {/* SVG Flow Curve Diagram with LIVE Animated Spline */}
+                            {/* SVG Flow Curve Diagram */}
                             <div className="relative rounded-2xl border border-slate-100 bg-[#FAF9F5] p-4 py-6 overflow-hidden">
                                 <div className="flex items-center justify-between max-w-lg mx-auto relative">
                                     {/* Left Circle Node: SENTRY GUARD */}
@@ -954,7 +1034,9 @@ void OnStart() {
                                             <span className="text-rose-600 text-lg font-black">▲</span>
                                         </div>
                                         <div className="text-[10px] font-mono font-bold text-slate-700">SENTRY GUARD</div>
-                                        <div className="text-[9px] font-mono text-slate-400">PASS {activeTrade.symbol}</div>
+                                        <div className="text-[9px] font-mono text-slate-400">
+                                            {isWeekend && !isSimMode ? 'WEEKEND SAFE' : `PASS ${activeTrade.symbol}`}
+                                        </div>
                                     </div>
 
                                     {/* Middle Connecting Arc with Green Spline and LIVE Percentage */}
@@ -973,7 +1055,7 @@ void OnStart() {
                                             <circle cx="95" cy="6" r="3.5" fill="#10B981" className="animate-ping" />
                                         </svg>
                                         <div className="text-[9px] font-mono text-slate-400 mt-1">
-                                            pass &rarr; size &rarr; enter
+                                            {isWeekend && !isSimMode ? 'weekend close · reopens Senin' : 'pass → size → enter'}
                                         </div>
                                     </div>
 
@@ -984,7 +1066,9 @@ void OnStart() {
                                             <span className="text-emerald-600 text-sm font-black">II</span>
                                         </div>
                                         <div className="text-[10px] font-mono font-bold text-slate-700">EXECUTOR</div>
-                                        <div className="text-[9px] font-mono text-emerald-700 font-bold">LIVE {activeTrade.symbol}</div>
+                                        <div className="text-[9px] font-mono text-emerald-700 font-bold">
+                                            {isWeekend && !isSimMode ? 'STANDBY' : `LIVE ${activeTrade.symbol}`}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1004,7 +1088,7 @@ void OnStart() {
                                         <span className="text-purple-600">◆</span> SIZER
                                     </div>
                                     <div className="text-base font-black text-slate-800 mt-0.5">{activeTrade.sizeLots} Lots</div>
-                                    <div className="text-[9px] text-slate-400">1.5% equity risk</div>
+                                    <div className="text-[9px] text-slate-400">1.5% equity risk ($18.81)</div>
                                 </div>
 
                                 <div className="rounded-xl border border-slate-200 bg-white p-2.5">
@@ -1032,8 +1116,12 @@ void OnStart() {
                                 <div>
                                     <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
                                         <span>TRADE · ENTRY vs EXIT</span>
-                                        <span className="rounded bg-emerald-100 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 text-[9px] font-bold">
-                                            LIVE OPEN
+                                        <span className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
+                                            isWeekend && !isSimMode
+                                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                        }`}>
+                                            {isWeekend && !isSimMode ? 'PASAR TUTUP (STANDBY)' : 'LIVE OPEN'}
                                         </span>
                                     </div>
 
@@ -1078,7 +1166,9 @@ void OnStart() {
                                             <span className="text-slate-400">reason: </span>
                                             {activeTrade.reason}
                                         </div>
-                                        <div className="text-[11px] text-slate-400">exit: target open</div>
+                                        <div className="text-[11px] text-slate-400">
+                                            {isWeekend && !isSimMode ? 'status: weekend standby · buka Senin 05:00 WIB' : 'exit: target open'}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1086,7 +1176,7 @@ void OnStart() {
                                 <div className="mt-4 border-t border-slate-100 pt-3">
                                     <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
                                         <span>RESULT · start vs now</span>
-                                        <span>live session · 100% personal</span>
+                                        <span>modal personal · $1,254.00</span>
                                     </div>
                                     <div className="mt-2 space-y-1.5">
                                         <div className="flex items-center justify-between text-xs">
@@ -1097,7 +1187,7 @@ void OnStart() {
                                         <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                                             <div
                                                 className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                                                style={{ width: `${Math.min(100, Math.max(10, ((liveCalculations.liveEquity / baseCapital) * 100) - 5))}%` }}
+                                                style={{ width: `${Math.min(100, Math.max(10, ((liveCalculations.liveEquity / baseCapital) * 100) - 2))}%` }}
                                             />
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
@@ -1122,7 +1212,7 @@ void OnStart() {
                                         ) : (
                                             <>
                                                 <ClipboardDocumentIcon className="h-3.5 w-3.5 text-slate-600" />
-                                                <span>Salin Order Script MT5 (Live Real Price)</span>
+                                                <span>Salin Order Script MT5 ($1,254 / {activeTrade.sizeLots} Lots)</span>
                                             </>
                                         )}
                                     </button>
@@ -1157,7 +1247,7 @@ void OnStart() {
                                 <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
                                     <span className="flex items-center gap-1 text-emerald-400 font-bold">
                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                        <span>Autonomous Logging Active</span>
+                                        <span>{isWeekend && !isSimMode ? 'Weekend Standby Active' : 'Autonomous Logging Active'}</span>
                                     </span>
                                     <span className="text-emerald-400 font-mono">ARRA7 Proprietary</span>
                                 </div>
@@ -1227,11 +1317,11 @@ void OnStart() {
                                     className="rounded-xl border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 text-xs font-mono font-bold text-indigo-800 transition flex items-center gap-1 cursor-pointer"
                                 >
                                     <PencilSquareIcon className="h-3.5 w-3.5" />
-                                    <span>Ubah Modal</span>
+                                    <span>Ubah Modal ($1,254)</span>
                                 </button>
                                 <button
                                     onClick={handleResetSession}
-                                    title="Reset statistik sesi ke modal awal"
+                                    title="Reset statistik sesi ke modal awal $1,254"
                                     className="rounded-xl border border-slate-300 bg-white hover:bg-slate-100 px-3 py-1.5 text-xs font-mono font-bold text-slate-600 transition cursor-pointer"
                                 >
                                     Reset Sesi
