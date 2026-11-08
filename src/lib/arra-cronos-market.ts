@@ -9,6 +9,13 @@ export const CRONOS_INTERVALS = {
 
 export type CronosTimeframe = keyof typeof CRONOS_INTERVALS;
 
+export const CRONOS_CONFIRMATION_TIMEFRAMES: Record<CronosTimeframe, CronosTimeframe[]> = {
+    '15m': ['15m', '1h', '4h'],
+    '1h': ['1h', '4h', '1d'],
+    '4h': ['4h', '1d'],
+    '1d': ['4h', '1d'],
+};
+
 export type CronosMarketCandle = {
     time: string;
     open: number;
@@ -194,8 +201,12 @@ async function fetchTradingViewLiveQuote(tvSymbol: string): Promise<{
 // =======================================
 // BINANCE (for Crypto historical series)
 // =======================================
-async function fetchBinanceCandles(symbol: string, interval: string): Promise<{ candles: CronosMarketCandle[]; livePrice: number | null; quoteTime: number | null }> {
+async function fetchBinanceCandles(symbol: string, interval: string): Promise<{ candles: CronosMarketCandle[]; livePrice: number | null; quoteTime: number | null; source: string }> {
     const binanceSymbol = symbol.replace('USD', 'USDT');
+    const intervalUnit = interval.slice(-1);
+    const intervalSize = Number.parseInt(interval, 10);
+    const intervalUnitMs: Record<string, number> = { m: 60_000, h: 3_600_000, d: 86_400_000 };
+    const intervalMs = intervalSize * (intervalUnitMs[intervalUnit] || 0);
     const endpoints = [
         `https://data-api.binance.vision/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=512`,
         `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=512`,
@@ -220,17 +231,31 @@ async function fetchBinanceCandles(symbol: string, interval: string): Promise<{ 
                 if (tickerResponse.ok) {
                     const ticker = await tickerResponse.json();
                     const livePrice = Number(ticker.price);
-                    return { candles, livePrice: Number.isFinite(livePrice) ? livePrice : null, quoteTime: Date.now() };
+                    if (Number.isFinite(livePrice) && livePrice > 0) {
+                        return { candles, livePrice, quoteTime: Date.now(), source: 'Binance Spot' };
+                    }
                 }
             } catch {
                 // Use latest bar close if ticker not reachable
             }
-            return { candles, livePrice: candles.length ? candles[candles.length - 1].close : null, quoteTime: Date.now() };
+            // Without the ticker endpoint, use the last completed candle and its actual close time.
+            // Never stamp historical candle data with the current time as though it were a live quote.
+            const now = Date.now();
+            if (intervalMs > 0 && candles.length) {
+                const latestCandleTime = new Date(candles[candles.length - 1].time).getTime();
+                const currentIntervalStart = Math.floor(now / intervalMs) * intervalMs;
+                if (latestCandleTime >= currentIntervalStart) candles.pop();
+            }
+            const lastClosedCandle = candles.at(-1);
+            const quoteTime = lastClosedCandle && intervalMs > 0
+                ? new Date(lastClosedCandle.time).getTime() + intervalMs
+                : null;
+            return { candles, livePrice: lastClosedCandle?.close ?? null, quoteTime, source: 'Binance candle close' };
         } catch {
             // Try next endpoint
         }
     }
-    return { candles: [], livePrice: null, quoteTime: null };
+    return { candles: [], livePrice: null, quoteTime: null, source: 'Binance candle close' };
 }
 
 // =======================================
@@ -305,11 +330,13 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
         candles = fetched.candles;
         livePrice = fetched.livePrice;
         quoteTime = fetched.quoteTime;
+        source = fetched.source;
     } else {
         const fetched = await fetchYahooCandles(symbol, timeframe === '4h' ? '60m' : config.yahoo, config.range);
         candles = fetched.candles;
         livePrice = fetched.livePrice;
         quoteTime = fetched.quoteTime;
+        source = fetched.livePrice !== null && fetched.quoteTime !== null ? 'Yahoo Finance' : 'Yahoo Finance candle close';
         if (timeframe === '4h') candles = aggregateFourHours(candles);
     }
 
@@ -332,10 +359,14 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
             if (tvQuote.livePrice > last.high) last.high = tvQuote.livePrice;
             if (tvQuote.livePrice < last.low) last.low = tvQuote.livePrice;
         } else {
-            source = isCrypto ? 'Binance Spot' : 'Yahoo Finance';
+            source = isCrypto
+                ? (quoteTime !== null && source === 'Binance Spot' ? source : 'Binance candle close')
+                : (quoteTime !== null && source === 'Yahoo Finance' ? source : 'Yahoo Finance candle close');
         }
     } catch {
-        source = isCrypto ? 'Binance Spot' : 'Yahoo Finance';
+        source = isCrypto
+            ? (quoteTime !== null && source === 'Binance Spot' ? source : 'Binance candle close')
+            : (quoteTime !== null && source === 'Yahoo Finance' ? source : 'Yahoo Finance candle close');
     }
 
     const lastCandle = candles[candles.length - 1];

@@ -193,7 +193,7 @@ export default function CronosChart({
             priceLineVisible: false,
         });
 
-        // 3. Volatility Corridor: Upper Band (P90)
+        // 3. ATR scenario corridor: upper band (not a calibrated percentile).
         const upperBandSeries = chart.addSeries(LineSeries, {
             color: 'rgba(56, 189, 248, 0.45)',
             lineWidth: 1,
@@ -203,7 +203,7 @@ export default function CronosChart({
             priceLineVisible: false,
         });
 
-        // 4. Volatility Corridor: Lower Band (P10)
+        // 4. ATR scenario corridor: lower band (not a calibrated percentile).
         const lowerBandSeries = chart.addSeries(LineSeries, {
             color: 'rgba(56, 189, 248, 0.45)',
             lineWidth: 1,
@@ -388,7 +388,7 @@ export default function CronosChart({
             {forecast.length > 0 && (
                 <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-2">
                     <span className="rounded-lg border border-cyan-400/30 bg-slate-900/80 px-2.5 py-1 text-[10px] font-bold text-cyan-200 backdrop-blur-sm shadow-md">
-                        ⚡ QUANT VOLATILITY ENVELOPE (P10 - P90)
+                        ⚡ KORIDOR SKENARIO VOLATILITAS ATR
                     </span>
                 </div>
             )}

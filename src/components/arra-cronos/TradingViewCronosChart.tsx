@@ -60,7 +60,7 @@ export interface TradingViewCronosChartProps {
     takeProfit1?: number | null;
     takeProfit2?: number | null;
     riskRewardRatio?: number | null;
-    confidence?: number | null;
+    alignmentScore?: number | null;
     metrics?: CronosQuantMetrics | null;
     tradePlan?: CronosTradePlan | null;
     confluenceScore?: number | null;
@@ -91,7 +91,7 @@ function TradingViewCronosChart({
     takeProfit1,
     takeProfit2,
     riskRewardRatio,
-    confidence,
+    alignmentScore,
     metrics,
     tradePlan,
     confluenceScore,
@@ -413,21 +413,21 @@ function TradingViewCronosChart({
                                 {/* Row 2: Pine Indicator Readouts Grid */}
                                 <div className="grid grid-cols-3 gap-1.5 text-center">
                                     <div className="rounded-lg border border-slate-800/60 bg-[#080d16] p-1.5">
-                                        <div className="text-[8px] font-bold uppercase text-slate-500">Alignment</div>
+                                        <div className="text-[8px] font-bold uppercase text-slate-500">MTF Direction</div>
                                         <div className="text-[11px] font-black text-emerald-300">
-                                            {confluenceScore ?? metrics?.trendScore ?? 75}/100
+                                            {confluenceScore ?? '—'}/100
                                         </div>
                                     </div>
                                     <div className="rounded-lg border border-slate-800/60 bg-[#080d16] p-1.5">
-                                        <div className="text-[8px] font-bold uppercase text-slate-500">Confidence</div>
+                                        <div className="text-[8px] font-bold uppercase text-slate-500">Alignment · bukan probabilitas</div>
                                         <div className="text-[11px] font-black text-cyan-300">
-                                            {confidence ?? metrics?.confidenceScore ?? 80}%
+                                            {alignmentScore ?? metrics?.alignmentScore ?? '—'}/100
                                         </div>
                                     </div>
                                     <div className="rounded-lg border border-slate-800/60 bg-[#080d16] p-1.5">
                                         <div className="text-[8px] font-bold uppercase text-slate-500">Risk:Reward</div>
                                         <div className="text-[11px] font-black text-white">
-                                            1:{riskRewardRatio ?? tradePlan?.riskRewardRatio ?? '2.0'}
+                                            1:{riskRewardRatio ?? tradePlan?.riskRewardRatio ?? '—'}
                                         </div>
                                     </div>
                                 </div>

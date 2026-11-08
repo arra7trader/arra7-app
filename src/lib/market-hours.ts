@@ -1,6 +1,4 @@
 
-import { DOMSymbolId } from '@/types/dom';
-
 export interface MarketStatus {
     isOpen: boolean;
     reason?: string;
@@ -11,61 +9,50 @@ export interface MarketStatus {
  * Checks if the market is currently open for the given symbol.
  * 
  * - CRYPTO (BTCUSD): Always Open (24/7)
- * - FOREX/METALS (XAUUSD): Closed on Weekends (Sat/Sun)
+ * - Non-crypto markets: Closed over the weekend using a broad Friday/Sunday session estimate
  *   - Closes: Friday 22:00 UTC (approx)
  *   - Opens: Sunday 22:00 UTC (approx)
  *   - For simplicity, we'll treat Saturday and Sunday (UTC) as closed.
  */
-export function isMarketOpen(symbol: DOMSymbolId): MarketStatus {
+export function isMarketOpen(symbol: string): MarketStatus {
     // 1. Crypto is always open
     if (symbol === 'BTCUSD') {
         return { isOpen: true };
     }
 
-    // 2. Forex/Metals (XAUUSD)
-    if (symbol === 'XAUUSD') {
-        const now = new Date();
-        const day = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-        const hour = now.getUTCHours();
+    // Apply the weekend gate to every non-crypto market. Session holidays and
+    // exchange-specific hours still depend on the instrument and broker.
+    const now = new Date();
+    const day = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const hour = now.getUTCHours();
 
-        // Closed on Saturday (6)
-        if (day === 6) {
-            return {
-                isOpen: false,
-                reason: 'Market Closed (Weekend)',
-                nextOpen: getNextMarketOpen(now)
-            };
-        }
-
-        // Closed on Sunday (0) before 22:00 UTC (Early open)
-        // Usually opens around 22:00 UTC or 23:00 UTC depending on broker/DST.
-        // Let's assume strict weekend closure for now: Closed all Sunday until late.
-        if (day === 0) {
-            // Let's say it opens at 22:00 UTC
-            if (hour < 22) {
-                return {
-                    isOpen: false,
-                    reason: 'Market Closed (Weekend)',
-                    nextOpen: getNextMarketOpen(now)
-                };
-            }
-        }
-
-        // Also check late Friday close? 
-        // Usually closes Friday 21:00-22:00 UTC. 
-        // For simplicity: If Friday and hour >= 22, it's closed.
-        if (day === 5 && hour >= 22) {
-            return {
-                isOpen: false,
-                reason: 'Market Closed (Weekend)',
-                nextOpen: getNextMarketOpen(now)
-            };
-        }
-
-        return { isOpen: true };
+    // Closed on Saturday (6)
+    if (day === 6) {
+        return {
+            isOpen: false,
+            reason: 'Market Closed (Weekend)',
+            nextOpen: getNextMarketOpen(now)
+        };
     }
 
-    // Default open
+    // Closed on Sunday (0) before 22:00 UTC (approximate open time)
+    if (day === 0 && hour < 22) {
+        return {
+            isOpen: false,
+            reason: 'Market Closed (Weekend)',
+            nextOpen: getNextMarketOpen(now)
+        };
+    }
+
+    // Closed on Friday after 22:00 UTC (approximate close time)
+    if (day === 5 && hour >= 22) {
+        return {
+            isOpen: false,
+            reason: 'Market Closed (Weekend)',
+            nextOpen: getNextMarketOpen(now)
+        }
+    }
+
     return { isOpen: true };
 }
 

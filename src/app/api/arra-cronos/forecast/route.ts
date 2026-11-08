@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { CRYPTO, FOREX_PAIRS } from '@/lib/market-data';
 import { getCronosMarketData, type CronosTimeframe } from '@/lib/arra-cronos-market';
+import { getCronosAnalysisHistory } from '@/lib/arra-cronos-analysis';
 import { buildKronosQuantForecast } from '@/lib/arra-cronos-engine';
 import { resolveUserOrDevice } from '@/lib/auth-device';
 import { checkQuota, useQuota } from '@/lib/quota';
+import { isMarketOpen } from '@/lib/market-hours';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,54 +56,30 @@ export async function POST(request: Request) {
             }
         }
 
-        const market = await getCronosMarketData(symbol, timeframe as CronosTimeframe);
+        const resolvedTimeframe = timeframe as CronosTimeframe;
+        const market = await getCronosMarketData(symbol, resolvedTimeframe);
         const isCrypto = Object.prototype.hasOwnProperty.call(CRYPTO, symbol);
-        const serviceUrl = process.env.KRONOS_SERVICE_URL?.replace(/\/$/, '');
-
-        // Strategy 1: External PyTorch Kronos cluster if available
-        if (serviceUrl && process.env.KRONOS_SERVICE_TOKEN) {
-            try {
-                const response = await fetch(`${serviceUrl}/forecast`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Service-Token': process.env.KRONOS_SERVICE_TOKEN,
-                    },
-                    body: JSON.stringify({
-                        symbol,
-                        timeframe,
-                        pred_len: config.bars,
-                        candles: market.candles,
-                        interval_seconds: config.seconds,
-                        continuous_market: isCrypto,
-                    }),
-                    cache: 'no-store',
-                    signal: AbortSignal.timeout(1_500),
-                });
-
-                if (response.ok) {
-                    const payload = await response.json();
-                    if (userId) await useQuota(userId).catch(() => undefined);
-                    return NextResponse.json({
-                        ...payload,
-                        dataSource: 'TradingView Realtime',
-                    }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
-                }
-            } catch {
-                // Remote service timeout/failure, fall through to embedded quant engine
-            }
-        }
-
-        // Strategy 2: Embedded ARRA Kronos Institutional Quant Engine (Zero-downtime, high-precision)
+        // Local deterministic scenario engine; the signal is gated by direct MTF history.
         const started = Date.now();
+        const mtfHistory = await getCronosAnalysisHistory(symbol, market);
         const result = buildKronosQuantForecast(
             symbol,
-            timeframe as CronosTimeframe,
+            resolvedTimeframe,
             market.candles,
             config.bars,
             config.seconds,
-            isCrypto
+            isCrypto,
+            mtfHistory
         );
+        const hasLiveQuote = market.isFresh && ['TradingView Realtime', 'Binance Spot'].includes(market.source);
+        const marketOpen = isCrypto || isMarketOpen(symbol).isOpen;
+        if (!hasLiveQuote || !marketOpen) {
+            result.tradePlan.action = 'WAIT';
+            result.tradePlan.invalidationReason = !marketOpen
+                ? 'Pasar tutup; tunggu pembukaan dan kuotasi terbaru sebelum mempertimbangkan setup.'
+                : 'Kutipan live segar tidak tersedia; tunggu data feed langsung sebelum mempertimbangkan setup.';
+            result.commentary = `${symbol} ${timeframe.toUpperCase()}: WAIT karena ${!marketOpen ? 'pasar sedang tutup' : 'kuotasi live segar tidak tersedia'}. Ringkasan indikator teknikal tidak cukup untuk menyimpulkan setup yang dapat ditindaklanjuti.`;
+        }
         const elapsedMs = Date.now() - started;
 
         if (userId) await useQuota(userId).catch(() => undefined);
@@ -109,8 +87,8 @@ export async function POST(request: Request) {
         return NextResponse.json({
             symbol,
             timeframe,
-            model: 'NeoQuasar/Kronos-base',
-            modelSource: 'NeoQuasar Kronos-base (Engine Active)',
+            model: 'ARRA Cronos Quant Scenarios',
+            modelSource: 'Mesin skenario teknikal berbasis aturan',
             currentPrice: market.currentPrice || result.currentPrice,
             targetPrice: result.targetPrice,
             direction: result.direction,
@@ -125,13 +103,13 @@ export async function POST(request: Request) {
             historyBars: market.candles.length,
             inferenceMs: elapsedMs,
             generatedAt: new Date().toISOString(),
-            method: 'Kronos-base Quant Autoregressive Forecast & Uncertainty Corridor',
-            dataSource: 'TradingView Realtime',
+            method: 'Deterministic ATR scenario path; uncalibrated volatility envelope',
+            dataSource: market.source,
         }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
 
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         console.error('[ARRA Cronos] Forecast error:', error);
-        return NextResponse.json({ error: `Model Kronos: ${msg}` }, { status: 500 });
+        return NextResponse.json({ error: `ARRA Cronos: ${msg}` }, { status: 500 });
     }
 }
