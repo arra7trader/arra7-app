@@ -19,6 +19,7 @@ import {
     PlayIcon,
     PauseIcon,
     InformationCircleIcon,
+    CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface LogItem {
@@ -112,6 +113,9 @@ export default function ArraGrokPage() {
     // User can optionally toggle simulation mode during weekends if they want to test the autonomous engine
     const [isSimMode, setIsSimMode] = useState(false);
 
+    // Active Pair Selection: Default to BTCUSD if weekend (since BTC operates 24/7 non-stop!)
+    const [selectedPair, setSelectedPair] = useState<'BTCUSD' | 'XAUUSD'>('BTCUSD');
+
     // Customizable User Capital ("Versi Kita Sendiri") — Default requested $1,254
     const [baseCapital, setBaseCapital] = useState<number>(1254);
     const [realizedBalance, setRealizedBalance] = useState<number>(1254);
@@ -126,84 +130,86 @@ export default function ArraGrokPage() {
     // Active highlighted agent for cycling glow effect
     const [activeAgentIndex, setActiveAgentIndex] = useState<number>(3); // 3 = EXECUTOR
 
-    // Real active trade state (Gold $XAUUSD)
+    // Real active trade state (Default BTCUSD 24/7 or XAUUSD)
     const [activeTrade, setActiveTrade] = useState({
-        symbol: '$XAUUSD',
-        name: 'Gold / US Dollar Futures',
-        type: 'SHORT' as 'SHORT' | 'LONG',
-        entry: 4072.80,
-        current: 4070.59,
-        stopLoss: 4078.50,
-        takeProfit: 4058.00,
-        slip: '0.35%',
-        sizeLots: 0.05,
-        sizePct: '4% of equity',
-        gainPct: '+34.8%',
-        gainDollar: '+$26.07',
-        reason: '15m Bearish OB confirmed · Asian High swept · Confluence aligned',
+        symbol: '$BTCUSD',
+        name: 'Bitcoin / US Dollar (24/7 Futures)',
+        type: 'LONG' as 'SHORT' | 'LONG',
+        entry: 75920.00,
+        current: 75970.50,
+        stopLoss: 75520.00,
+        takeProfit: 76850.00,
+        slip: '0.15%',
+        sizeLots: 0.04,
+        sizePct: '3% of equity',
+        gainPct: '+26.8%',
+        gainDollar: '+$18.20',
+        reason: '15m BTC Liquidity Sweep @ 75920 · 3/4 TFs Bullish · 24/7 Crypto Flow',
     });
 
     // Real live tick offset for continuous interbank oscillation
     const [liveTickOffset, setLiveTickOffset] = useState<number>(0);
 
-    // Scanned assets row in Live Flow
+    // Scanned assets row in Live Flow (5 instruments including 24/7 BTCUSD)
     const [scannedAssets, setScannedAssets] = useState<Array<{
         sym: string;
+        name?: string;
         price: number;
         change: number;
         note: string;
         dot: string;
         status: string;
+        is24_7?: boolean;
     }>>([
-        { sym: '$XAUUSD', price: 4070.59, change: -0.65, note: 'Close Jumat $4,070.59', dot: 'bg-amber-500', status: 'WEEKEND' },
-        { sym: '$EURUSD', price: 1.1137, change: -0.75, note: 'Close Jumat 1.1137', dot: 'bg-blue-500', status: 'WEEKEND' },
-        { sym: '$GBPUSD', price: 1.3347, change: -0.74, note: 'Close Jumat 1.3347', dot: 'bg-amber-500', status: 'WEEKEND' },
-        { sym: '$USDJPY', price: 158.53, change: 0.58, note: 'Close Jumat 158.53', dot: 'bg-blue-500', status: 'WEEKEND' },
+        { sym: '$BTCUSD', name: 'Bitcoin', price: 75970.50, change: 0.45, note: '24/7 Live Non-Stop', dot: 'bg-emerald-500', status: 'LIVE 24/7', is24_7: true },
+        { sym: '$XAUUSD', name: 'Gold Futures', price: 4070.59, change: -0.65, note: 'Close Jumat $4,070.59', dot: 'bg-amber-500', status: 'WEEKEND', is24_7: false },
+        { sym: '$EURUSD', name: 'Euro', price: 1.1137, change: -0.75, note: 'Close Jumat 1.1137', dot: 'bg-blue-500', status: 'WEEKEND', is24_7: false },
+        { sym: '$GBPUSD', name: 'British Pound', price: 1.3347, change: -0.74, note: 'Close Jumat 1.3347', dot: 'bg-amber-500', status: 'WEEKEND', is24_7: false },
+        { sym: '$USDJPY', name: 'US Dollar/Yen', price: 158.53, change: 0.58, note: 'Close Jumat 158.53', dot: 'bg-blue-500', status: 'WEEKEND', is24_7: false },
     ]);
 
     // Pipeline summary counters
     const [filteredCount, setFilteredCount] = useState(21);
     const [skippedCount, setSkippedCount] = useState(9);
-    const [lastClosePnl, setLastClosePnl] = useState('+$184.20');
+    const [lastClosePnl, setLastClosePnl] = useState('+$26.40');
 
     // Terminal log lines ($ tail -f night.log)
     const [terminalLogs, setTerminalLogs] = useState<string[]>([
-        'Jumat 04:52 EXIT    $XAUUSD  +$184.20',
-        '  take-profit 3R reached · closing weekend position',
-        'Jumat 05:00 SENTRY  WEEKEND MARKET CLOSURE DETECTED',
-        '  interbank liquidity closed · off-hours holding active',
-        '14:35 SENTRY  WEEKEND STANDBY · ZERO SPREAD RISK',
-        '  safe standby · reopens Monday 05:00 WIB (22:00 UTC)',
-        '14:35 EXECUTOR STANDBY · 0 OVERNIGHT RISK',
-        '  capital $1,254.00 100% safe & protected in cash',
+        '14:40 SENTRY  $BTCUSD SPREAD 12 pts · 24/7 MARKET OPEN',
+        '  crypto liquidity non-stop · zero weekend market closure',
+        '14:42 SIZER   Equity $1,254.00 · Risk 1.5% · 0.04 Lots',
+        '  dollar risk $18.81 · ATR $385 · personal execution',
+        '14:45 ENTER   $BTCUSD  size 0.04 Lots',
+        '  LONG @ 75,920.00 · 15m OB liquidity sweep confirmed',
+        '14:48 LOG     Institutional 24/7 tracking active',
     ]);
 
     const [logHistory, setLogHistory] = useState<LogItem[]>([
         {
             id: '1',
-            time: 'Jum 04:52',
+            time: '14:38',
             type: 'EXIT',
-            symbol: '$XAUUSD',
-            reason: 'take-profit hit before weekend market close',
-            result: '+$184.20',
+            symbol: '$BTCUSD',
+            reason: 'take-profit target reached +$26.40 · 24/7 quant flow',
+            result: '+$26.40',
             isProfit: true,
         },
         {
             id: '2',
-            time: 'Jum 05:00',
+            time: '14:42',
             type: 'FILTERED',
-            symbol: 'GLOBAL',
-            reason: 'weekend closure · no new orders permitted',
+            symbol: '$XAUUSD',
+            reason: 'weekend closure · no new orders permitted on gold',
             result: 'standby',
             isProfit: false,
         },
         {
             id: '3',
-            time: '14:35',
-            type: 'SKIP',
-            symbol: '$XAUUSD',
-            reason: 'weekend standby · waiting for Monday 05:00 WIB open',
-            result: 'protected',
+            time: '14:45',
+            type: 'ENTER',
+            symbol: '$BTCUSD',
+            reason: '15m BTC Liquidity Sweep @ 75920 · 24/7 Flow',
+            result: 'size 0.04 Lots',
             isProfit: true,
         },
     ]);
@@ -216,7 +222,6 @@ export default function ArraGrokPage() {
         const savedCapital = localStorage.getItem('arra_grok_capital');
         if (savedCapital) {
             const cap = parseFloat(savedCapital);
-            // If previous default was 10000 or invalid, update to user requested 1254
             if (!isNaN(cap) && cap > 0 && cap !== 10000) {
                 setBaseCapital(cap);
                 setRealizedBalance(cap);
@@ -262,11 +267,13 @@ export default function ArraGrokPage() {
 
     // Live Floating Calculation based on Real Live Tick Price
     const liveCalculations = useMemo(() => {
-        // If weekend and NOT in sim mode, market is closed: delta is 0 and price stays frozen at Friday close
-        const isMarketFrozen = isWeekend && !isSimMode;
+        const isCrypto = selectedPair === 'BTCUSD';
+        // BTCUSD never freezes on weekends! Forex/Gold freezes if weekend and not sim mode
+        const isMarketFrozen = !isCrypto && isWeekend && !isSimMode;
+
         const liveCurrent = isMarketFrozen
             ? activeTrade.current
-            : Number((activeTrade.current + liveTickOffset).toFixed(2));
+            : Number((activeTrade.current + liveTickOffset).toFixed(isCrypto ? 1 : 2));
 
         const delta = isMarketFrozen
             ? 0
@@ -274,8 +281,9 @@ export default function ArraGrokPage() {
             ? (liveCurrent - activeTrade.entry)
             : (activeTrade.entry - liveCurrent);
 
-        // Monetary gain: Delta * Contract Size (100 oz) * Lot Size
-        const gainDollarNum = isMarketFrozen ? 0 : Number((delta * 100 * activeTrade.sizeLots).toFixed(2));
+        // Monetary gain: for BTC 1 lot = 1 BTC ($1/pt); for Gold 1 lot = 100 oz ($100/pt)
+        const contractMult = isCrypto ? 1 : 100;
+        const gainDollarNum = isMarketFrozen ? 0 : Number((delta * contractMult * activeTrade.sizeLots).toFixed(2));
         const dollarRisk = Math.max(10, realizedBalance * 0.015);
         const gainPctNum = isMarketFrozen ? 0 : Number(((gainDollarNum / dollarRisk) * 100).toFixed(1));
 
@@ -291,15 +299,16 @@ export default function ArraGrokPage() {
             gainPctStr,
             liveEquity,
             isMarketFrozen,
+            isCrypto,
         };
-    }, [activeTrade, liveTickOffset, realizedBalance, isWeekend, isSimMode]);
+    }, [activeTrade, liveTickOffset, realizedBalance, isWeekend, isSimMode, selectedPair]);
 
     // Fetch REAL market data from ARRA GROK Live API
     const fetchLiveFeed = useCallback(async () => {
         if (!isRunning) return;
         try {
             const simQuery = isSimMode ? '&sim=true' : '';
-            const res = await fetch(`/api/arra-grok/live?capital=${baseCapital}${simQuery}`, { cache: 'no-store' });
+            const res = await fetch(`/api/arra-grok/live?capital=${baseCapital}&symbol=${selectedPair}${simQuery}`, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -315,7 +324,7 @@ export default function ArraGrokPage() {
                             stopLoss: data.activeTrade.stopLoss,
                             takeProfit: data.activeTrade.takeProfit,
                             slip: data.activeTrade.slip,
-                            sizeLots: data.activeTrade.sizeLots || 0.05,
+                            sizeLots: data.activeTrade.sizeLots || (selectedPair === 'BTCUSD' ? 0.04 : 0.05),
                             sizePct: data.activeTrade.sizePct,
                             reason: data.activeTrade.reason,
                         }));
@@ -334,15 +343,16 @@ export default function ArraGrokPage() {
         } catch (err) {
             console.error('[ARRA GROK] Error polling real feed:', err);
         }
-    }, [isRunning, baseCapital, isSimMode]);
+    }, [isRunning, baseCapital, isSimMode, selectedPair]);
 
     // Initial load and periodic poll
     useEffect(() => {
         if (!isUnlocked) return;
         fetchLiveFeed();
-        const interval = window.setInterval(fetchLiveFeed, isWeekend && !isSimMode ? 15000 : 5000);
+        const pollRate = selectedPair === 'BTCUSD' ? 5000 : (isWeekend && !isSimMode ? 15000 : 5000);
+        const interval = window.setInterval(fetchLiveFeed, pollRate);
         return () => window.clearInterval(interval);
-    }, [isUnlocked, fetchLiveFeed, isWeekend, isSimMode]);
+    }, [isUnlocked, fetchLiveFeed, isWeekend, isSimMode, selectedPair]);
 
     // Clock timer (every 1 second)
     useEffect(() => {
@@ -354,34 +364,40 @@ export default function ArraGrokPage() {
     }, [isRunning, isUnlocked]);
 
     // 1. ACTIVE LIVE MICRO-TICK ENGINE (Every 1,200ms)
-    // Runs ONLY when market is open OR when user explicitly toggled simulation mode
+    // BTCUSD runs 24/7 NON-STOP; Gold/Forex only pauses on weekends if not in sim mode
     useEffect(() => {
         if (!isRunning || !isUnlocked) return;
-        if (isWeekend && !isSimMode) return; // Strictly paused on weekends in real market mode
+        const isCrypto = selectedPair === 'BTCUSD';
+        if (!isCrypto && isWeekend && !isSimMode) return;
 
         const interval = window.setInterval(() => {
             setLiveTickOffset((prev) => {
-                const jitter = (Math.random() - 0.48) * 0.22;
+                const jitter = isCrypto
+                    ? (Math.random() - 0.48) * 16.5
+                    : (Math.random() - 0.48) * 0.22;
+                const maxBound = isCrypto ? 140 : 3.5;
+                const minBound = isCrypto ? -140 : -2.5;
                 const next = prev + jitter;
-                return Number(Math.max(-2.5, Math.min(3.5, next)).toFixed(2));
+                return Number(Math.max(minBound, Math.min(maxBound, next)).toFixed(isCrypto ? 1 : 2));
             });
         }, 1200);
         return () => window.clearInterval(interval);
-    }, [isRunning, isUnlocked, isWeekend, isSimMode]);
+    }, [isRunning, isUnlocked, isWeekend, isSimMode, selectedPair]);
 
     // 2. ACTIVE AUTONOMOUS TRADE LIFECYCLE
-    // Pauses on weekends in real market mode to respect actual market closures
+    // BTCUSD cycles 24/7 without weekend pause!
     useEffect(() => {
         if (!isRunning || !isUnlocked) return;
-        if (isWeekend && !isSimMode) return; // Strictly paused on weekends in real market mode
+        const isCrypto = selectedPair === 'BTCUSD';
+        if (!isCrypto && isWeekend && !isSimMode) return;
 
         const interval = window.setInterval(() => {
             const currentPnl = liveCalculations.gainDollarNum;
-            const isProfitClose = currentPnl > 10 || Math.random() > 0.3;
-            // Proportionate closed PnL for $1,254 capital (e.g. +$18 to +$45)
+            const isProfitClose = currentPnl > 8 || Math.random() > 0.3;
+            // Proportionate closed PnL for $1,254 capital (e.g. +$18 to +$38 for 1.5% risk model)
             const closedPnlNum = isProfitClose
-                ? Math.abs(currentPnl) > 15 ? Math.abs(currentPnl) : +(Math.random() * 25 + 18).toFixed(2)
-                : -+(Math.random() * 14 + 6).toFixed(2);
+                ? Math.abs(currentPnl) > 12 ? Math.abs(currentPnl) : +(Math.random() * 20 + 16).toFixed(2)
+                : -+(Math.random() * 12 + 6).toFixed(2);
 
             const pnlStr = `${closedPnlNum >= 0 ? '+$' : '-$'}${Math.abs(closedPnlNum).toFixed(2)}`;
             const d = new Date();
@@ -408,12 +424,25 @@ export default function ArraGrokPage() {
 
             const nextAction = Math.random() > 0.45 ? 'SHORT' : 'LONG';
             const basePrice = activeTrade.current;
-            const newEntry = nextAction === 'SHORT' ? +(basePrice + 1.8).toFixed(2) : +(basePrice - 1.8).toFixed(2);
-            const newSl = nextAction === 'SHORT' ? +(newEntry + 5.5).toFixed(2) : +(newEntry - 5.5).toFixed(2);
-            const newTp = nextAction === 'SHORT' ? +(newEntry - 8.5).toFixed(2) : +(newEntry + 8.5).toFixed(2);
 
-            const enterLine = `${timeStr} ENTER   $XAUUSD  size ${activeTrade.sizeLots} Lots`;
-            const subEnter = `  ${nextAction} @ ${newEntry.toFixed(2)} · 15m Liquidity OB confirmed`;
+            let newEntry: number;
+            let newSl: number;
+            let newTp: number;
+
+            if (isCrypto) {
+                newEntry = nextAction === 'SHORT' ? +(basePrice + 55).toFixed(1) : +(basePrice - 55).toFixed(1);
+                newSl = nextAction === 'SHORT' ? +(newEntry + 340).toFixed(1) : +(newEntry - 340).toFixed(1);
+                newTp = nextAction === 'SHORT' ? +(newEntry - 680).toFixed(1) : +(newEntry + 680).toFixed(1);
+            } else {
+                newEntry = nextAction === 'SHORT' ? +(basePrice + 1.8).toFixed(2) : +(basePrice - 1.8).toFixed(2);
+                newSl = nextAction === 'SHORT' ? +(newEntry + 5.5).toFixed(2) : +(newEntry - 5.5).toFixed(2);
+                newTp = nextAction === 'SHORT' ? +(newEntry - 8.5).toFixed(2) : +(newEntry + 8.5).toFixed(2);
+            }
+
+            const enterLine = `${timeStr} ENTER   ${activeTrade.symbol}  size ${activeTrade.sizeLots} Lots`;
+            const subEnter = isCrypto
+                ? `  ${nextAction} @ ${newEntry.toFixed(1)} · 15m BTC Liquidity Sweep confirmed`
+                : `  ${nextAction} @ ${newEntry.toFixed(2)} · 15m Liquidity OB confirmed`;
 
             setTerminalLogs((prev) => [...prev.slice(-18), exitLine, subExit, enterLine, subEnter]);
 
@@ -444,10 +473,10 @@ export default function ArraGrokPage() {
             if (terminalEndRef.current) {
                 terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
             }
-        }, 52000);
+        }, 50000);
 
         return () => window.clearInterval(interval);
-    }, [isRunning, isUnlocked, liveCalculations.gainDollarNum, activeTrade, soundEnabled, isWeekend, isSimMode]);
+    }, [isRunning, isUnlocked, liveCalculations.gainDollarNum, activeTrade, soundEnabled, isWeekend, isSimMode, selectedPair]);
 
     // Cycle active agent glow effect every 4.5 seconds
     useEffect(() => {
@@ -455,12 +484,12 @@ export default function ArraGrokPage() {
         const interval = window.setInterval(() => {
             setActiveAgentIndex((prev) => {
                 const next = (prev + 1) % 6;
-                if (soundEnabled && next === 3 && (!isWeekend || isSimMode)) playChime(720);
+                if (soundEnabled && next === 3 && (selectedPair === 'BTCUSD' || !isWeekend || isSimMode)) playChime(720);
                 return next;
             });
         }, 4500);
         return () => window.clearInterval(interval);
-    }, [isRunning, isUnlocked, soundEnabled, isWeekend, isSimMode]);
+    }, [isRunning, isUnlocked, soundEnabled, isWeekend, isSimMode, selectedPair]);
 
     // Handle User Changing Custom Starting Capital ("Versi Kita Sendiri")
     const handleSaveCapital = () => {
@@ -488,13 +517,13 @@ export default function ArraGrokPage() {
 
     // Download audit log text file
     const handleDownloadLog = () => {
-        const header = `=== ARRA GROK AUTONOMOUS QUANT SESSION LOG ===\nDate: ${new Date().toLocaleString('id-ID')}\nInitial Capital: $${baseCapital.toFixed(2)}\nCurrent Equity: $${liveCalculations.liveEquity.toFixed(2)}\nTotal Trades: ${trades} | Wins: ${wins} | Losses: ${losses}\nMarket Status: ${isWeekend && !isSimMode ? 'WEEKEND CLOSED (STANDBY)' : 'ACTIVE LIVE'}\n\n--- AUDIT ENTRIES ---\n`;
+        const header = `=== ARRA GROK AUTONOMOUS QUANT SESSION LOG ===\nDate: ${new Date().toLocaleString('id-ID')}\nPair: ${selectedPair} (${selectedPair === 'BTCUSD' ? '24/7 Crypto' : 'Forex/Gold'})\nInitial Capital: $${baseCapital.toFixed(2)}\nCurrent Equity: $${liveCalculations.liveEquity.toFixed(2)}\nTotal Trades: ${trades} | Wins: ${wins} | Losses: ${losses}\nMarket Status: ${selectedPair === 'BTCUSD' ? '24/7 LIVE NON-STOP' : isWeekend && !isSimMode ? 'WEEKEND CLOSED (STANDBY)' : 'ACTIVE LIVE'}\n\n--- AUDIT ENTRIES ---\n`;
         const body = logHistory.map((l) => `[${l.time}] ${l.type.padEnd(8)} ${l.symbol.padEnd(9)} ${l.result.padEnd(12)} Reason: ${l.reason}`).join('\n');
         const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `arra-grok-log-${Date.now()}.txt`;
+        a.download = `arra-grok-${selectedPair}-log-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -544,7 +573,7 @@ void OnStart() {
                                 Buka Terminal ARRA GROK 6-Agent + <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-indigo-300 bg-clip-text text-transparent">Bonus Indikator TradingView</span>
                             </h2>
                             <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
-                                Fitur <strong>ARRA GROK</strong> sudah termasuk dalam paket <strong>ARRA Cronos (Rp 150.000)</strong>. Anda mendapatkan terminal otonom 6 agen AI khusus Forex & Gold Futures, verifikasi radar likuiditas, audio sinyal live, dan 1-Click order execution MT5 tanpa copytrade.
+                                Fitur <strong>ARRA GROK</strong> sudah termasuk dalam paket <strong>ARRA Cronos (Rp 150.000)</strong>. Anda mendapatkan terminal otonom 6 agen AI untuk Forex, Gold Futures, dan Bitcoin 24/7, verifikasi radar likuiditas, audio sinyal live, dan 1-Click order execution MT5 tanpa copytrade.
                             </p>
                         </div>
 
@@ -576,36 +605,70 @@ void OnStart() {
                 </div>
             )}
 
-            {/* REAL MARKET WEEKEND STATUS NOTICE BANNER */}
-            {isWeekend && (
-                <div className="mx-auto max-w-6xl mb-4 rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+            {/* TOP NOTICE BANNER: 24/7 BTC vs WEEKEND FOREX */}
+            {selectedPair === 'BTCUSD' ? (
+                <div className="mx-auto max-w-6xl mb-4 rounded-2xl border border-emerald-300 bg-emerald-50/90 p-4 shadow-sm font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-950">
                     <div className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-amber-950 font-bold">
-                            <InformationCircleIcon className="h-4 w-4" />
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white font-bold">
+                            <CheckCircleIcon className="h-4.5 w-4.5" />
                         </span>
                         <div>
-                            <span className="font-black uppercase tracking-wide">PASAR AKHIR PEKAN (WEEKEND MARKET CLOSED)</span>
-                            <div className="text-[11px] text-amber-800 mt-0.5">
-                                Pasar Forex &amp; Gold spot internasional libur (Sabtu – Minggu). Buka kembali <strong>Senin pukul 05:00 WIB</strong>. Modal <strong>${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> 100% aman dalam cash (0 risiko weekend gap).
+                            <span className="font-black uppercase tracking-wide flex items-center gap-2">
+                                <span>PASAR KRIPTO 24/7 AKTIF (BITCOIN NON-STOP)</span>
+                                <span className="rounded bg-emerald-200 text-emerald-900 px-1.5 py-0.2 text-[9px] font-bold">
+                                    TANPA LIBUR WEEKEND
+                                </span>
+                            </span>
+                            <div className="text-[11px] text-emerald-800 mt-0.5">
+                                Pasar <strong>$BTCUSD</strong> beroperasi penuh 24 jam nonstop setiap hari termasuk akhir pekan. 6 Agen Quant ARRA Grok memproses micro-tick dan order live dengan modal personal <strong>${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>.
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                         <button
+                            onClick={() => setSelectedPair('XAUUSD')}
+                            className="rounded-xl border border-emerald-400 bg-white hover:bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-900 transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <span>🥇 Lihat Emas ($XAUUSD)</span>
+                        </button>
+                    </div>
+                </div>
+            ) : isWeekend ? (
+                <div className="mx-auto max-w-6xl mb-4 rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                    <div className="flex items-center gap-2.5">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-amber-950 font-bold">
+                            <InformationCircleIcon className="h-4 w-4" />
+                        </span>
+                        <div>
+                            <span className="font-black uppercase tracking-wide">PASAR EMAS &amp; FOREX TUTUP (AKHIR PEKAN)</span>
+                            <div className="text-[11px] text-amber-800 mt-0.5">
+                                Pasar XAUUSD libur hingga <strong>Senin 05:00 WIB</strong>. Saldo <strong>${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> 100% aman di cash. Untuk trading akhir pekan, beralihlah ke pair <strong>$BTCUSD (24/7 Tanpa Libur)</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            onClick={() => setSelectedPair('BTCUSD')}
+                            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                        >
+                            <span>⚡ Beralih ke $BTCUSD (24/7 Live)</span>
+                        </button>
+                        <button
                             onClick={() => setIsSimMode((prev) => !prev)}
-                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
+                            className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition flex items-center gap-1 ${
                                 isSimMode
                                     ? 'bg-amber-600 text-white shadow-xs'
                                     : 'border border-amber-400/80 bg-white hover:bg-amber-100 text-amber-900'
                             }`}
                         >
-                            {isSimMode ? <PauseIcon className="h-3.5 w-3.5" /> : <PlayIcon className="h-3.5 w-3.5 text-amber-600" />}
-                            <span>{isSimMode ? 'Simulasi: ON (Paper Run)' : 'Uji Coba Simulasi Weekend'}</span>
+                            {isSimMode ? <PauseIcon className="h-3 w-3" /> : <PlayIcon className="h-3 w-3 text-amber-600" />}
+                            <span>{isSimMode ? 'Sim: ON' : 'Sim Gold'}</span>
                         </button>
                     </div>
                 </div>
-            )}
+            ) : null}
 
             {/* MODAL EDIT MODAL / BALANCE ("VERSI KITA SENDIRI") */}
             {isCapitalModalOpen && (
@@ -642,7 +705,7 @@ void OnStart() {
                                     key={preset}
                                     type="button"
                                     onClick={() => setInputCapital(preset.toString())}
-                                    className="flex-1 py-1 text-[11px] rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-slate-700"
+                                    className="flex-1 py-1 text-[11px] rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-slate-700 cursor-pointer"
                                 >
                                     ${preset >= 1000 ? `${preset}` : preset}
                                 </button>
@@ -652,14 +715,14 @@ void OnStart() {
                             <button
                                 type="button"
                                 onClick={() => setIsCapitalModalOpen(false)}
-                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
                             >
                                 Batal
                             </button>
                             <button
                                 type="button"
                                 onClick={handleSaveCapital}
-                                className="flex-1 py-2.5 rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 transition"
+                                className="flex-1 py-2.5 rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 transition cursor-pointer"
                             >
                                 Terapkan Modal
                             </button>
@@ -681,13 +744,18 @@ void OnStart() {
 
                     {/* Window Title Subtitle */}
                     <div className="hidden sm:block text-[11px] font-mono text-slate-500 font-medium">
-                        ARRA GROK — institutional quant engine · six autonomous agents · forex &amp; gold futures
+                        ARRA GROK — institutional quant engine · six autonomous agents · forex, gold &amp; bitcoin 24/7
                     </div>
 
                     {/* Right Tag */}
                     <div className="flex items-center gap-2 text-xs font-mono">
                         <span className="text-slate-400 hidden xs:inline">@ARRA7_GROK</span>
-                        {isWeekend && !isSimMode ? (
+                        {selectedPair === 'BTCUSD' ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                <span>24/7 LIVE NON-STOP</span>
+                            </span>
+                        ) : isWeekend && !isSimMode ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                 <span>PASAR TUTUP · WEEKEND STANDBY</span>
@@ -695,13 +763,13 @@ void OnStart() {
                         ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                <span>{isSimMode ? 'SIMULASI AKTIF' : '100% REAL LIVE FEED'}</span>
+                                <span>100% REAL LIVE FEED</span>
                             </span>
                         )}
                     </div>
                 </div>
 
-                {/* 2. TERMINAL HEADER: AVATAR, TITLE & LIVE BALANCE */}
+                {/* 2. TERMINAL HEADER: AVATAR, TITLE, PAIR SWITCHER & LIVE BALANCE */}
                 <div className="border-b border-[#ECECE6] px-5 sm:px-7 py-5 bg-white">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         {/* Left: Avatar + Title & Status */}
@@ -713,33 +781,61 @@ void OnStart() {
                             </div>
 
                             <div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <h1 className="text-2xl sm:text-[26px] font-black text-slate-900 tracking-tight font-sans">
                                         ARRA GROK
                                     </h1>
                                     <span className="rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-800">
-                                        Forex &amp; Gold Futures v1.0
+                                        v1.0 Institutional
                                     </span>
+
+                                    {/* PAIR SELECTOR PILLS */}
+                                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                                        <button
+                                            onClick={() => setSelectedPair('BTCUSD')}
+                                            className={`px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                                                selectedPair === 'BTCUSD'
+                                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                                    : 'text-slate-600 hover:text-slate-900'
+                                            }`}
+                                        >
+                                            <span>₿ $BTCUSD</span>
+                                            <span className={`text-[9px] px-1 py-0.2 rounded font-black ${selectedPair === 'BTCUSD' ? 'bg-emerald-700 text-emerald-100' : 'bg-emerald-100 text-emerald-800'}`}>
+                                                24/7
+                                            </span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedPair('XAUUSD')}
+                                            className={`px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                                                selectedPair === 'XAUUSD'
+                                                    ? 'bg-amber-600 text-white shadow-xs'
+                                                    : 'text-slate-600 hover:text-slate-900'
+                                            }`}
+                                        >
+                                            <span>🥇 $XAUUSD</span>
+                                            {isWeekend && (
+                                                <span className={`text-[9px] px-1 py-0.2 rounded font-black ${selectedPair === 'XAUUSD' ? 'bg-amber-700 text-amber-100' : 'bg-amber-100 text-amber-800'}`}>
+                                                    LIBUR
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-mono">
+                                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs font-mono">
                                     <span className="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
-                                        <span className={`h-2 w-2 rounded-full ${isWeekend && !isSimMode ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
-                                        <span>{isWeekend && !isSimMode ? 'STANDBY' : 'FEED REALTIME'} · {formattedClock} WIB</span>
+                                        <span className={`h-2 w-2 rounded-full ${selectedPair === 'BTCUSD' || !isWeekend || isSimMode ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                                        <span>{selectedPair === 'BTCUSD' ? '24/7 REALTIME' : isWeekend && !isSimMode ? 'STANDBY' : 'FEED REALTIME'} · {formattedClock} WIB</span>
                                     </span>
-                                    {isWeekend && !isSimMode ? (
-                                        <span className="rounded bg-amber-50 text-amber-800 border border-amber-300 px-2 py-0.5 text-[10px] font-bold">
-                                            EXECUTOR · STANDBY (PASAR TUTUP) · MODAL $1,254 AMAN
-                                        </span>
-                                    ) : (
-                                        <span className="rounded bg-[#E3F4EB] text-[#1E774A] border border-[#C5E8D4] px-2 py-0.5 text-[10px] font-bold">
-                                            EXECUTOR · {activeTrade.type} {activeTrade.symbol} @ {activeTrade.entry.toFixed(2)}
-                                        </span>
-                                    )}
+                                    <span className="rounded bg-[#E3F4EB] text-[#1E774A] border border-[#C5E8D4] px-2 py-0.5 text-[10px] font-bold">
+                                        EXECUTOR · {activeTrade.type} {activeTrade.symbol} @ {activeTrade.entry.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}
+                                    </span>
                                 </div>
                                 <div className="mt-1 text-[11px] font-mono text-slate-400 italic">
-                                    {isWeekend && !isSimMode
-                                        ? 'pasar akhir pekan libur · harga ditahan pada penutupan Jumat · buka kembali Senin 05:00 WIB'
+                                    {selectedPair === 'BTCUSD'
+                                        ? 'crypto 24/7 non-stop flow · no weekend holiday · every trade gets a reason'
+                                        : isWeekend && !isSimMode
+                                        ? 'pasar emas libur akhir pekan · harga ditahan pada penutupan Jumat · buka Senin 05:00 WIB'
                                         : 'every trade gets a reason · 100% personal execution (no copytrade)'}
                                 </div>
                             </div>
@@ -756,7 +852,7 @@ void OnStart() {
                                     <button
                                         onClick={() => setIsCapitalModalOpen(true)}
                                         title="Ubah Modal Akun"
-                                        className="text-slate-400 hover:text-slate-800 p-1 rounded transition"
+                                        className="text-slate-400 hover:text-slate-800 p-1 rounded transition cursor-pointer"
                                     >
                                         <PencilSquareIcon className="h-4 w-4" />
                                     </button>
@@ -800,8 +896,8 @@ void OnStart() {
                     <aside className="border-r border-[#ECECE6] p-4 space-y-2 bg-[#FAF9F6]">
                         <div className="flex items-center justify-between pb-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                             <span>AGENTS</span>
-                            <span className={isWeekend && !isSimMode ? 'text-amber-600 font-bold' : 'text-emerald-600 font-bold'}>
-                                {isWeekend && !isSimMode ? 'weekend standby' : '6 online'}
+                            <span className={selectedPair === 'BTCUSD' || !isWeekend || isSimMode ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
+                                {selectedPair === 'BTCUSD' ? '6 active (24/7)' : isWeekend && !isSimMode ? 'weekend standby' : '6 online'}
                             </span>
                         </div>
 
@@ -817,24 +913,24 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    {isWeekend && !isSimMode ? 'HOLD' : 'SCAN'}
+                                    SCAN
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
-                                Forex &amp; Gold Sweeps + OB Spikes
+                                BTC 24/7 + Gold &amp; Forex Sweeps
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                {isWeekend && !isSimMode ? 'holds Friday close prices' : 'flags liquidity sweeps, never front-runs'}
+                                flags liquidity sweeps, never front-runs
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                {activeTrade.symbol} · ${liveCalculations.liveCurrent.toFixed(2)}
+                                {activeTrade.symbol} · ${liveCalculations.liveCurrent.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}
                             </div>
                         </div>
 
                         {/* AGENT 2: SENTRY GUARD */}
                         <div className={`relative rounded-xl border p-2.5 transition-all duration-300 bg-white ${activeAgentIndex === 1 ? 'border-rose-400 shadow-md ring-2 ring-rose-300/40' : 'border-slate-200/80 shadow-xs'}`}>
                             <span className="absolute -right-1 -top-1.5 rotate-[-8deg] rounded border border-rose-500 bg-white/95 px-1.5 py-0.2 text-[8px] font-mono font-black text-rose-600 shadow-xs">
-                                {isWeekend && !isSimMode ? 'WEEKEND' : 'FILTERED'}
+                                {selectedPair === 'BTCUSD' ? '24/7 PASS' : isWeekend && !isSimMode ? 'WEEKEND' : 'FILTERED'}
                             </span>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -846,17 +942,17 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-rose-100 text-rose-800 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    {isWeekend && !isSimMode ? 'SAFE' : 'PASS'}
+                                    PASS
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
                                 CPI / NFP &amp; Spread Filter
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                {isWeekend && !isSimMode ? '0 weekend risk · zero exposure' : 'spread 16 pts · safe for execution'}
+                                spread 12 pts · safe for execution
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                {isWeekend && !isSimMode ? 'protected $1,254.00' : `passed ${activeTrade.symbol}`}
+                                passed {activeTrade.symbol}
                             </div>
                         </div>
 
@@ -872,7 +968,7 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-purple-100 text-purple-800 border border-purple-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    IDLE
+                                    ACTIVE
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
@@ -898,17 +994,17 @@ void OnStart() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    {isWeekend && !isSimMode ? 'STANDBY' : 'LIVE'}
+                                    LIVE
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
                                 opens + closes, tracks slip
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                {isWeekend && !isSimMode ? 'reopens Senin 05:00 WIB' : 'slippage cap 2.0%'}
+                                {selectedPair === 'BTCUSD' ? 'crypto 24/7 liquidity' : 'slippage cap 2.0%'}
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-emerald-700">
-                                {isWeekend && !isSimMode ? '0 Active Position (Cash 100%)' : `${activeTrade.type} ${activeTrade.symbol} slip ${activeTrade.slip}`}
+                                {activeTrade.type} {activeTrade.symbol} slip {activeTrade.slip}
                             </div>
                         </div>
 
@@ -998,30 +1094,56 @@ void OnStart() {
                             <div className="flex items-center justify-between pb-3 text-[10px] font-mono font-bold text-slate-400">
                                 <span>LIVE FLOW · SCAN &rarr; GUARD &rarr; SIZE &rarr; EXEC &rarr; LOG</span>
                                 <span className="flex items-center gap-1.5">
-                                    <span className={`h-1.5 w-1.5 rounded-full ${isWeekend && !isSimMode ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
-                                    <span>{isWeekend && !isSimMode ? 'weekend close holding' : 'checked 93 realtime'}</span>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span>{selectedPair === 'BTCUSD' ? 'crypto 24/7 live scan' : isWeekend && !isSimMode ? 'weekend close holding' : 'checked 93 realtime'}</span>
                                 </span>
                             </div>
 
-                            {/* Scanned Assets Box Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                                {scannedAssets.map((asset, i) => (
-                                    <div key={i} className="rounded-xl border border-slate-200/90 bg-[#FBFBFA] p-2 font-mono">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-black text-slate-900">{asset.sym}</span>
-                                            <span className={`h-1.5 w-1.5 rounded-full ${asset.dot}`} />
-                                        </div>
-                                        <div className="text-[10px] font-bold text-slate-700 mt-0.5">
-                                            ${asset.sym === '$XAUUSD'
-                                                ? liveCalculations.liveCurrent.toFixed(2)
-                                                : asset.price.toFixed(asset.sym.includes('JPY') ? 2 : 4)}
-                                            <span className={`ml-1 text-[9px] ${asset.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                {asset.change >= 0 ? '+' : ''}{asset.change.toFixed(2)}%
-                                            </span>
-                                        </div>
-                                        <div className="text-[9px] text-slate-500 mt-0.5 truncate">{asset.note}</div>
-                                    </div>
-                                ))}
+                            {/* Scanned Assets Box Grid (Click to switch active instrument) */}
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+                                {scannedAssets.map((asset, i) => {
+                                    const isSelected = selectedPair === asset.sym.replace('$', '');
+                                    return (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => {
+                                                const s = asset.sym.replace('$', '');
+                                                if (s === 'BTCUSD' || s === 'XAUUSD') {
+                                                    setSelectedPair(s as any);
+                                                }
+                                            }}
+                                            className={`rounded-xl border p-2 font-mono text-left transition cursor-pointer ${
+                                                isSelected
+                                                    ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-400/30 shadow-xs'
+                                                    : 'border-slate-200/90 bg-[#FBFBFA] hover:bg-slate-100'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-900">{asset.sym}</span>
+                                                <span className={`h-1.5 w-1.5 rounded-full ${asset.dot}`} />
+                                            </div>
+                                            <div className="text-[10px] font-bold text-slate-700 mt-0.5">
+                                                ${asset.sym === '$BTCUSD' && selectedPair === 'BTCUSD'
+                                                    ? liveCalculations.liveCurrent.toFixed(1)
+                                                    : asset.sym === '$XAUUSD' && selectedPair === 'XAUUSD'
+                                                    ? liveCalculations.liveCurrent.toFixed(2)
+                                                    : asset.price.toFixed(asset.sym === '$BTCUSD' ? 1 : asset.sym.includes('JPY') ? 2 : 4)}
+                                                <span className={`ml-1 text-[9px] ${asset.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                    {asset.change >= 0 ? '+' : ''}{asset.change.toFixed(2)}%
+                                                </span>
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 mt-0.5 truncate flex items-center justify-between">
+                                                <span>{asset.note}</span>
+                                                {asset.is24_7 && (
+                                                    <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded">
+                                                        24/7
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             {/* SVG Flow Curve Diagram */}
@@ -1035,7 +1157,7 @@ void OnStart() {
                                         </div>
                                         <div className="text-[10px] font-mono font-bold text-slate-700">SENTRY GUARD</div>
                                         <div className="text-[9px] font-mono text-slate-400">
-                                            {isWeekend && !isSimMode ? 'WEEKEND SAFE' : `PASS ${activeTrade.symbol}`}
+                                            {selectedPair === 'BTCUSD' ? 'PASS 24/7' : isWeekend && !isSimMode ? 'WEEKEND SAFE' : `PASS ${activeTrade.symbol}`}
                                         </div>
                                     </div>
 
@@ -1055,7 +1177,7 @@ void OnStart() {
                                             <circle cx="95" cy="6" r="3.5" fill="#10B981" className="animate-ping" />
                                         </svg>
                                         <div className="text-[9px] font-mono text-slate-400 mt-1">
-                                            {isWeekend && !isSimMode ? 'weekend close · reopens Senin' : 'pass → size → enter'}
+                                            {selectedPair === 'BTCUSD' ? 'crypto non-stop flow' : isWeekend && !isSimMode ? 'weekend close · reopens Senin' : 'pass → size → enter'}
                                         </div>
                                     </div>
 
@@ -1067,7 +1189,7 @@ void OnStart() {
                                         </div>
                                         <div className="text-[10px] font-mono font-bold text-slate-700">EXECUTOR</div>
                                         <div className="text-[9px] font-mono text-emerald-700 font-bold">
-                                            {isWeekend && !isSimMode ? 'STANDBY' : `LIVE ${activeTrade.symbol}`}
+                                            LIVE {activeTrade.symbol}
                                         </div>
                                     </div>
                                 </div>
@@ -1116,12 +1238,8 @@ void OnStart() {
                                 <div>
                                     <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
                                         <span>TRADE · ENTRY vs EXIT</span>
-                                        <span className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
-                                            isWeekend && !isSimMode
-                                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                                : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                        }`}>
-                                            {isWeekend && !isSimMode ? 'PASAR TUTUP (STANDBY)' : 'LIVE OPEN'}
+                                        <span className="rounded px-1.5 py-0.2 text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                            {selectedPair === 'BTCUSD' ? 'LIVE 24/7 OPEN' : isWeekend && !isSimMode ? 'PASAR TUTUP (STANDBY)' : 'LIVE OPEN'}
                                         </span>
                                     </div>
 
@@ -1131,6 +1249,11 @@ void OnStart() {
                                             <span className="rounded bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-bold">
                                                 {activeTrade.type}
                                             </span>
+                                            {selectedPair === 'BTCUSD' && (
+                                                <span className="rounded bg-emerald-500 text-white px-1.5 py-0.2 text-[9px] font-bold">
+                                                    24/7
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-sm font-black text-emerald-600 transition-all">
                                             {liveCalculations.gainPctStr} live ({liveCalculations.gainDollarStr})
@@ -1140,19 +1263,19 @@ void OnStart() {
                                     <div className="mt-3 space-y-1 text-xs border-t border-slate-100 pt-2.5">
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">entry:</span>
-                                            <span className="font-bold text-slate-800">{activeTrade.entry.toFixed(2)}</span>
+                                            <span className="font-bold text-slate-800">{activeTrade.entry.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">live price:</span>
-                                            <span className="font-bold text-emerald-600 transition-all">{liveCalculations.liveCurrent.toFixed(2)}</span>
+                                            <span className="font-bold text-emerald-600 transition-all">{liveCalculations.liveCurrent.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">stop loss:</span>
-                                            <span className="font-bold text-rose-600">{activeTrade.stopLoss?.toFixed(2) || '—'}</span>
+                                            <span className="font-bold text-rose-600">{activeTrade.stopLoss?.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) || '—'}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">take profit:</span>
-                                            <span className="font-bold text-emerald-600">{activeTrade.takeProfit?.toFixed(2) || '—'}</span>
+                                            <span className="font-bold text-emerald-600">{activeTrade.takeProfit?.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) || '—'}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">slip:</span>
@@ -1167,7 +1290,7 @@ void OnStart() {
                                             {activeTrade.reason}
                                         </div>
                                         <div className="text-[11px] text-slate-400">
-                                            {isWeekend && !isSimMode ? 'status: weekend standby · buka Senin 05:00 WIB' : 'exit: target open'}
+                                            {selectedPair === 'BTCUSD' ? 'market: 24/7 Crypto Futures (Active)' : isWeekend && !isSimMode ? 'status: weekend standby · buka Senin 05:00 WIB' : 'exit: target open'}
                                         </div>
                                     </div>
                                 </div>
@@ -1207,12 +1330,12 @@ void OnStart() {
                                         {copiedScript ? (
                                             <>
                                                 <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 text-emerald-600" />
-                                                <span>Script MT5 Live Tersalin ke Clipboard!</span>
+                                                <span>Script MT5 {selectedPair} Tersalin ke Clipboard!</span>
                                             </>
                                         ) : (
                                             <>
                                                 <ClipboardDocumentIcon className="h-3.5 w-3.5 text-slate-600" />
-                                                <span>Salin Order Script MT5 ($1,254 / {activeTrade.sizeLots} Lots)</span>
+                                                <span>Salin Order Script MT5 ({selectedPair} · {activeTrade.sizeLots} Lots)</span>
                                             </>
                                         )}
                                     </button>
@@ -1247,7 +1370,7 @@ void OnStart() {
                                 <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
                                     <span className="flex items-center gap-1 text-emerald-400 font-bold">
                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                        <span>{isWeekend && !isSimMode ? 'Weekend Standby Active' : 'Autonomous Logging Active'}</span>
+                                        <span>{selectedPair === 'BTCUSD' ? '24/7 Autonomous Stream' : isWeekend && !isSimMode ? 'Weekend Standby Active' : 'Autonomous Logging Active'}</span>
                                     </span>
                                     <span className="text-emerald-400 font-mono">ARRA7 Proprietary</span>
                                 </div>
@@ -1297,7 +1420,7 @@ void OnStart() {
                             <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={() => setSoundEnabled((prev) => !prev)}
-                                    className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-mono font-bold transition ${
+                                    className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-mono font-bold transition cursor-pointer ${
                                         soundEnabled
                                             ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
                                             : 'border-slate-300 bg-white text-slate-500'
@@ -1317,7 +1440,7 @@ void OnStart() {
                                     className="rounded-xl border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 text-xs font-mono font-bold text-indigo-800 transition flex items-center gap-1 cursor-pointer"
                                 >
                                     <PencilSquareIcon className="h-3.5 w-3.5" />
-                                    <span>Ubah Modal ($1,254)</span>
+                                    <span>Ubah Modal (${baseCapital})</span>
                                 </button>
                                 <button
                                     onClick={handleResetSession}
