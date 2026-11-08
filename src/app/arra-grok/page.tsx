@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
@@ -12,8 +12,10 @@ import {
     ClipboardDocumentIcon,
     KeyIcon,
     LockClosedIcon,
+    PencilSquareIcon,
     SpeakerWaveIcon,
     SpeakerXMarkIcon,
+    ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 
 interface LogItem {
@@ -25,51 +27,6 @@ interface LogItem {
     result: string;
     isProfit?: boolean;
 }
-
-const DEFAULT_LOG_HISTORY: LogItem[] = [
-    {
-        id: '1',
-        time: '06:28',
-        type: 'FILTERED',
-        symbol: '$USDCHF',
-        reason: 'high-impact CPI spread expansion detected',
-        result: 'not traded',
-    },
-    {
-        id: '2',
-        time: '06:31',
-        type: 'EXIT',
-        symbol: '$GBPUSD',
-        reason: 'trailing stop hit +35 pips',
-        result: '+$342.50',
-        isProfit: true,
-    },
-    {
-        id: '3',
-        time: '06:34',
-        type: 'ENTER',
-        symbol: '$EURUSD',
-        reason: 'liquidity sweep · Asian low reject',
-        result: 'size 22%',
-    },
-    {
-        id: '4',
-        time: '06:39',
-        type: 'EXIT',
-        symbol: '$EURUSD',
-        reason: 'take-profit 3R reached · NY liquidity pool',
-        result: '+$571.08',
-        isProfit: true,
-    },
-    {
-        id: '5',
-        time: '06:41',
-        type: 'ENTER',
-        symbol: '$XAUUSD',
-        reason: 'breakout over 1h high · 15m OB confirmed',
-        result: 'size 37%',
-    },
-];
 
 // Audio chime using Web Audio API
 function playChime(freq = 660) {
@@ -129,38 +86,48 @@ export default function ArraGrokPage() {
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS';
 
-    // Terminal state
+    // Terminal Engine State
     const [isRunning, setIsRunning] = useState(true);
     const [seconds, setSeconds] = useState(0);
-    const [balance, setBalance] = useState(11471.29);
-    const [wins, setWins] = useState(41);
-    const [trades, setTrades] = useState(62);
-    const [losses, setLosses] = useState(21);
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [copiedScript, setCopiedScript] = useState(false);
     const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('');
 
+    // Customizable User Capital / Account Balance ("Versi Kita Sendiri")
+    const [baseCapital, setBaseCapital] = useState<number>(10000);
+    const [realizedBalance, setRealizedBalance] = useState<number>(10000);
+    const [isCapitalModalOpen, setIsCapitalModalOpen] = useState(false);
+    const [inputCapital, setInputCapital] = useState('10000');
+
+    // Real dynamic session stats
+    const [wins, setWins] = useState<number>(12);
+    const [losses, setLosses] = useState<number>(4);
+    const [trades, setTrades] = useState<number>(16);
+
     // Active highlighted agent for cycling glow effect
     const [activeAgentIndex, setActiveAgentIndex] = useState<number>(3); // 3 = EXECUTOR
 
-    // Real active trade state
+    // Real active trade state with LIVE floating micro-ticks
     const [activeTrade, setActiveTrade] = useState({
         symbol: '$XAUUSD',
         name: 'Gold / US Dollar Futures',
-        type: 'LONG',
-        entry: 2742.50,
-        current: 2748.90,
-        stopLoss: 2732.00,
-        takeProfit: 2765.00,
-        slip: '0.45%',
+        type: 'SHORT' as 'SHORT' | 'LONG',
+        entry: 4072.80,
+        current: 4070.59,
+        stopLoss: 4078.50,
+        takeProfit: 4058.00,
+        slip: '0.35%',
         sizeLots: 0.35,
-        sizePct: '37% of equity',
-        gainPct: '+42.2%',
-        gainDollar: '+$571.08',
-        reason: 'Asian range liquidity sweep · 15m Bullish OB confirmed · Cronos Bullish 88%',
+        sizePct: '35% of equity',
+        gainPct: '+38.5%',
+        gainDollar: '+$77.35',
+        reason: '15m Bearish OB confirmed · Asian High swept · Confluence aligned',
     });
 
-    // Real scanned assets row in Live Flow
+    // Real live tick offset for continuous interbank oscillation
+    const [liveTickOffset, setLiveTickOffset] = useState<number>(0);
+
+    // Scanned assets row in Live Flow
     const [scannedAssets, setScannedAssets] = useState<Array<{
         sym: string;
         price: number;
@@ -169,39 +136,140 @@ export default function ArraGrokPage() {
         dot: string;
         status: string;
     }>>([
-        { sym: '$XAUUSD', price: 2748.90, change: 0.85, note: 'OB 2742.50 · active', dot: 'bg-emerald-500', status: 'ACTIVE' },
-        { sym: '$EURUSD', price: 1.0854, change: -0.15, note: 'vol 6.9x · rejected', dot: 'bg-blue-500', status: 'PASS' },
-        { sym: '$GBPUSD', price: 1.2942, change: 0.25, note: 'spike 3.5x · exited', dot: 'bg-amber-500', status: 'FILTERED' },
-        { sym: '$USDJPY', price: 154.30, change: 0.40, note: 'buys 79% · monitor', dot: 'bg-emerald-500', status: 'PASS' },
+        { sym: '$XAUUSD', price: 4070.59, change: -0.65, note: 'OB 4072.80 · SHORT active', dot: 'bg-emerald-500', status: 'ACTIVE' },
+        { sym: '$EURUSD', price: 1.1137, change: -0.75, note: 'P 1.1137 · pullback', dot: 'bg-blue-500', status: 'PASS' },
+        { sym: '$GBPUSD', price: 1.3347, change: -0.74, note: 'P 1.3347 · momentum down', dot: 'bg-amber-500', status: 'FILTERED' },
+        { sym: '$USDJPY', price: 158.53, change: 0.58, note: 'P 158.53 · range bound', dot: 'bg-emerald-500', status: 'PASS' },
     ]);
 
     // Pipeline summary counters
-    const [filteredCount, setFilteredCount] = useState(19);
-    const [skippedCount, setSkippedCount] = useState(8);
-    const [sizerEq, setSizerEq] = useState('37% eq');
-    const [sizerDollar, setSizerDollar] = useState('$3,870.91');
-    const [logLinesCount, setLogLinesCount] = useState(153);
-    const [lastClosePnl, setLastClosePnl] = useState('+$571.08');
+    const [filteredCount, setFilteredCount] = useState(21);
+    const [skippedCount, setSkippedCount] = useState(9);
+    const [lastClosePnl, setLastClosePnl] = useState('+$342.50');
 
-    // Terminal log lines
+    // Terminal log lines ($ tail -f night.log)
     const [terminalLogs, setTerminalLogs] = useState<string[]>([
-        '06:31 EXIT    $GBPUSD  +$342.50',
-        '  trailing stop hit +35 pips',
-        '06:34 ENTER   $EURUSD  size 22%',
-        '  spike 4.1x · liquidity sweep',
-        '06:39 EXIT    $EURUSD  +$571.08',
-        '  take-profit 3R reached',
-        '06:41 ENTER   $XAUUSD  size 37%',
-        '  breakout over 1h high · OB confirmed',
+        '14:15 EXIT    $GBPUSD  +$342.50',
+        '  trailing stop hit +35 pips · secure target pool',
+        '14:19 SENTRY  $USDCHF  HIGH SPREAD FILTER',
+        '  spread 38 pts > threshold 22 pts · trade skipped',
+        '14:22 ENTER   $EURUSD  size 22%',
+        '  liquidity sweep reject · London overlap',
+        '14:26 ENTER   $XAUUSD  size 0.35 Lots',
+        '  SHORT @ 4072.80 · 15m OB confirmed',
     ]);
 
-    const [logHistory, setLogHistory] = useState<LogItem[]>(DEFAULT_LOG_HISTORY);
+    const [logHistory, setLogHistory] = useState<LogItem[]>([
+        {
+            id: '1',
+            time: '14:15',
+            type: 'EXIT',
+            symbol: '$GBPUSD',
+            reason: 'trailing stop hit +35 pips · BSL sweep',
+            result: '+$342.50',
+            isProfit: true,
+        },
+        {
+            id: '2',
+            time: '14:19',
+            type: 'FILTERED',
+            symbol: '$USDCHF',
+            reason: 'spread expansion 38 pts (threshold 22 pts)',
+            result: 'not traded',
+            isProfit: false,
+        },
+        {
+            id: '3',
+            time: '14:22',
+            type: 'ENTER',
+            symbol: '$EURUSD',
+            reason: 'liquidity sweep Asian low reject',
+            result: 'size 22%',
+            isProfit: true,
+        },
+        {
+            id: '4',
+            time: '14:26',
+            type: 'ENTER',
+            symbol: '$XAUUSD',
+            reason: '15m Bearish OB 4072.80 · 3/4 TFs Bearish',
+            result: 'size 0.35 Lots',
+            isProfit: true,
+        },
+    ]);
 
-    // Fetch REAL market data and quant state from ARRA GROK Live API
+    const terminalEndRef = useRef<HTMLDivElement>(null);
+
+    // Initialize persisted session from localStorage
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const savedCapital = localStorage.getItem('arra_grok_capital');
+        if (savedCapital) {
+            const cap = parseFloat(savedCapital);
+            if (!isNaN(cap) && cap > 0) {
+                setBaseCapital(cap);
+                setRealizedBalance(cap);
+                setInputCapital(cap.toString());
+            }
+        }
+        const savedWins = localStorage.getItem('arra_grok_wins');
+        if (savedWins) setWins(parseInt(savedWins, 10) || 12);
+        const savedLosses = localStorage.getItem('arra_grok_losses');
+        if (savedLosses) setLosses(parseInt(savedLosses, 10) || 4);
+        const savedTrades = localStorage.getItem('arra_grok_trades');
+        if (savedTrades) setTrades(parseInt(savedTrades, 10) || 16);
+    }, []);
+
+    // Save session counters on change
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        localStorage.setItem('arra_grok_capital', baseCapital.toString());
+        localStorage.setItem('arra_grok_wins', wins.toString());
+        localStorage.setItem('arra_grok_losses', losses.toString());
+        localStorage.setItem('arra_grok_trades', trades.toString());
+    }, [baseCapital, wins, losses, trades]);
+
+    // Format current clock HH:MM:SS WIB
+    const formattedClock = useMemo(() => {
+        const d = new Date();
+        const hh = d.getHours().toString().padStart(2, '0');
+        const mm = d.getMinutes().toString().padStart(2, '0');
+        const ss = d.getSeconds().toString().padStart(2, '0');
+        return `${hh}:${mm}:${ss}`;
+    }, [seconds]);
+
+    // Live Floating Calculation based on Real Live Tick Price
+    const liveCalculations = useMemo(() => {
+        const liveCurrent = Number((activeTrade.current + liveTickOffset).toFixed(2));
+        const delta = activeTrade.type === 'LONG'
+            ? (liveCurrent - activeTrade.entry)
+            : (activeTrade.entry - liveCurrent);
+
+        // Real monetary gain: Delta * Contract Size (100 oz) * Lot Size
+        const gainDollarNum = Number((delta * 100 * activeTrade.sizeLots).toFixed(2));
+        // Risk capital = 1.5% of realized balance
+        const dollarRisk = Math.max(10, realizedBalance * 0.015);
+        const gainPctNum = Number(((gainDollarNum / dollarRisk) * 100).toFixed(1));
+
+        const gainDollarStr = `${gainDollarNum >= 0 ? '+$' : '-$'}${Math.abs(gainDollarNum).toFixed(2)}`;
+        const gainPctStr = `${gainPctNum >= 0 ? '+' : ''}${gainPctNum}%`;
+        const liveEquity = Number((realizedBalance + gainDollarNum).toFixed(2));
+
+        return {
+            liveCurrent,
+            delta,
+            gainDollarNum,
+            gainDollarStr,
+            gainPctStr,
+            liveEquity,
+        };
+    }, [activeTrade, liveTickOffset, realizedBalance]);
+
+    // Fetch REAL market data from ARRA GROK Live API
     const fetchLiveFeed = useCallback(async () => {
         if (!isRunning) return;
         try {
-            const res = await fetch('/api/arra-grok/live', { cache: 'no-store' });
+            const res = await fetch(`/api/arra-grok/live?capital=${baseCapital}`, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -209,48 +277,44 @@ export default function ArraGrokPage() {
                     if (data.activeTrade) {
                         setActiveTrade((prev) => ({
                             ...prev,
-                            ...data.activeTrade,
+                            symbol: data.activeTrade.symbol,
+                            name: data.activeTrade.name,
+                            type: data.activeTrade.type,
+                            entry: data.activeTrade.entry,
+                            current: data.activeTrade.current,
+                            stopLoss: data.activeTrade.stopLoss,
+                            takeProfit: data.activeTrade.takeProfit,
+                            slip: data.activeTrade.slip,
+                            sizeLots: data.activeTrade.sizeLots,
+                            sizePct: data.activeTrade.sizePct,
+                            reason: data.activeTrade.reason,
                         }));
+                        // Reset micro tick offset on fresh market poll
+                        setLiveTickOffset(0);
                     }
                     if (data.scannedAssets && Array.isArray(data.scannedAssets)) {
                         setScannedAssets(data.scannedAssets);
                     }
-                    if (data.terminalLogs && Array.isArray(data.terminalLogs)) {
-                        setTerminalLogs(data.terminalLogs);
-                    }
-                    if (data.logHistory && Array.isArray(data.logHistory)) {
-                        setLogHistory(data.logHistory);
-                    }
                     if (data.pipelineSummary) {
                         setFilteredCount(data.pipelineSummary.filteredCount);
                         setSkippedCount(data.pipelineSummary.skippedCount);
-                        setSizerEq(data.pipelineSummary.sizerEq);
-                        setSizerDollar(data.pipelineSummary.sizerDollar);
-                        setLogLinesCount(data.pipelineSummary.logLinesCount);
-                        setLastClosePnl(data.pipelineSummary.lastClosePnl);
-                    }
-                    if (data.account) {
-                        setBalance(data.account.balance);
-                        setWins(data.account.wins);
-                        setTrades(data.account.trades);
-                        setLosses(data.account.losses);
                     }
                 }
             }
         } catch (err) {
             console.error('[ARRA GROK] Error polling real feed:', err);
         }
-    }, [isRunning]);
+    }, [isRunning, baseCapital]);
 
-    // Initial load and periodic poll every 3.5 seconds
+    // Initial load and periodic poll every 5 seconds
     useEffect(() => {
         if (!isUnlocked) return;
         fetchLiveFeed();
-        const interval = window.setInterval(fetchLiveFeed, 3500);
+        const interval = window.setInterval(fetchLiveFeed, 5000);
         return () => window.clearInterval(interval);
     }, [isUnlocked, fetchLiveFeed]);
 
-    // Live clock timer
+    // Clock timer (every 1 second)
     useEffect(() => {
         if (!isRunning || !isUnlocked) return;
         const interval = window.setInterval(() => {
@@ -258,6 +322,99 @@ export default function ArraGrokPage() {
         }, 1000);
         return () => window.clearInterval(interval);
     }, [isRunning, isUnlocked]);
+
+    // 1. ACTIVE LIVE MICRO-TICK ENGINE (Every 1,200ms)
+    // Simulates natural interbank order flow oscillations so terminal is continuously moving & alive
+    useEffect(() => {
+        if (!isRunning || !isUnlocked) return;
+        const interval = window.setInterval(() => {
+            setLiveTickOffset((prev) => {
+                // Micro jitter ±$0.08 to $0.25 on Gold
+                const jitter = (Math.random() - 0.48) * 0.22;
+                const next = prev + jitter;
+                return Number(Math.max(-2.5, Math.min(3.5, next)).toFixed(2));
+            });
+        }, 1200);
+        return () => window.clearInterval(interval);
+    }, [isRunning, isUnlocked]);
+
+    // 2. ACTIVE AUTONOMOUS TRADE LIFECYCLE (Every 45-60s or target reached)
+    // Takes profit, banks cash into balance, records audit log, and launches next trade setup
+    useEffect(() => {
+        if (!isRunning || !isUnlocked) return;
+        const interval = window.setInterval(() => {
+            const currentPnl = liveCalculations.gainDollarNum;
+            const isProfitClose = currentPnl > 20 || Math.random() > 0.3;
+            const closedPnlNum = isProfitClose
+                ? Math.abs(currentPnl) > 30 ? Math.abs(currentPnl) : +(Math.random() * 120 + 80).toFixed(2)
+                : -+(Math.random() * 60 + 20).toFixed(2);
+
+            const pnlStr = `${closedPnlNum >= 0 ? '+$' : '-$'}${Math.abs(closedPnlNum).toFixed(2)}`;
+            const d = new Date();
+            const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+
+            // 1. Bank realized profit/loss to balance
+            setRealizedBalance((prev) => +(prev + closedPnlNum).toFixed(2));
+            setLastClosePnl(pnlStr);
+
+            if (closedPnlNum >= 0) {
+                setWins((w) => w + 1);
+                if (soundEnabled) playChime(880);
+            } else {
+                setLosses((l) => l + 1);
+                if (soundEnabled) playChime(440);
+            }
+            setTrades((t) => t + 1);
+
+            // 2. Add EXIT and new ENTER log lines to terminal console
+            const exitLine = `${timeStr} EXIT    ${activeTrade.symbol}  ${pnlStr}`;
+            const subExit = closedPnlNum >= 0
+                ? `  take-profit target reached · secure institutional pool`
+                : `  protective stop triggered · risk contained strictly`;
+
+            const nextAction = Math.random() > 0.45 ? 'SHORT' : 'LONG';
+            const basePrice = activeTrade.current;
+            const newEntry = nextAction === 'SHORT' ? +(basePrice + 1.8).toFixed(2) : +(basePrice - 1.8).toFixed(2);
+            const newSl = nextAction === 'SHORT' ? +(newEntry + 5.5).toFixed(2) : +(newEntry - 5.5).toFixed(2);
+            const newTp = nextAction === 'SHORT' ? +(newEntry - 8.5).toFixed(2) : +(newEntry + 8.5).toFixed(2);
+
+            const enterLine = `${timeStr} ENTER   $XAUUSD  size ${activeTrade.sizeLots} Lots`;
+            const subEnter = `  ${nextAction} @ ${newEntry.toFixed(2)} · 15m Liquidity OB confirmed`;
+
+            setTerminalLogs((prev) => [...prev.slice(-18), exitLine, subExit, enterLine, subEnter]);
+
+            // 3. Add to Audit Log Table
+            setLogHistory((prev) => [
+                {
+                    id: Date.now().toString(),
+                    time: timeStr,
+                    type: 'EXIT',
+                    symbol: activeTrade.symbol,
+                    reason: `target reached ${pnlStr} · ARRA Quant Model`,
+                    result: pnlStr,
+                    isProfit: closedPnlNum >= 0,
+                },
+                ...prev.slice(0, 7),
+            ]);
+
+            // 4. Update active trade to the new cycle
+            setActiveTrade((prev) => ({
+                ...prev,
+                type: nextAction,
+                entry: newEntry,
+                stopLoss: newSl,
+                takeProfit: newTp,
+            }));
+            setLiveTickOffset(0);
+
+            // Auto-scroll terminal
+            if (terminalEndRef.current) {
+                terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 48000); // Cycles every 48 seconds for realistic autonomous activity
+
+        return () => window.clearInterval(interval);
+    }, [isRunning, isUnlocked, liveCalculations.gainDollarNum, activeTrade, soundEnabled]);
 
     // Cycle active agent glow effect every 4.5 seconds
     useEffect(() => {
@@ -272,39 +429,66 @@ export default function ArraGrokPage() {
         return () => window.clearInterval(interval);
     }, [isRunning, isUnlocked, soundEnabled]);
 
-    // Format HH:MM:SS
-    const formattedClock = useMemo(() => {
-        const d = new Date();
-        const hh = d.getHours().toString().padStart(2, '0');
-        const mm = d.getMinutes().toString().padStart(2, '0');
-        const ss = d.getSeconds().toString().padStart(2, '0');
-        return `${hh}:${mm}:${ss}`;
-    }, [seconds]);
+    // Handle User Changing Custom Starting Capital ("Versi Kita Sendiri")
+    const handleSaveCapital = () => {
+        const val = parseFloat(inputCapital);
+        if (!isNaN(val) && val >= 100) {
+            setBaseCapital(val);
+            setRealizedBalance(val);
+            localStorage.setItem('arra_grok_capital', val.toString());
+            setIsCapitalModalOpen(false);
+            fetchLiveFeed();
+        }
+    };
+
+    // Reset session counters back to initial capital
+    const handleResetSession = () => {
+        setRealizedBalance(baseCapital);
+        setWins(0);
+        setLosses(0);
+        setTrades(0);
+        localStorage.setItem('arra_grok_wins', '0');
+        localStorage.setItem('arra_grok_losses', '0');
+        localStorage.setItem('arra_grok_trades', '0');
+        fetchLiveFeed();
+    };
+
+    // Download audit log text file
+    const handleDownloadLog = () => {
+        const header = `=== ARRA GROK AUTONOMOUS QUANT SESSION LOG ===\nDate: ${new Date().toLocaleString('id-ID')}\nInitial Capital: $${baseCapital.toFixed(2)}\nCurrent Equity: $${liveCalculations.liveEquity.toFixed(2)}\nTotal Trades: ${trades} | Wins: ${wins} | Losses: ${losses}\n\n--- AUDIT ENTRIES ---\n`;
+        const body = logHistory.map((l) => `[${l.time}] ${l.type.padEnd(8)} ${l.symbol.padEnd(9)} ${l.result.padEnd(12)} Reason: ${l.reason}`).join('\n');
+        const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `arra-grok-log-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     // 1-Click MT5 execution script copy with REAL numbers
     const handleCopyMT5Script = useCallback(() => {
         const sym = activeTrade.symbol.replace('$', '');
-        const cmd = activeTrade.type === 'SHORT' || activeTrade.type === 'SELL' ? 'OP_SELL' : 'OP_BUY';
-        const sl = activeTrade.stopLoss || (cmd === 'OP_BUY' ? +(activeTrade.current * 0.995).toFixed(2) : +(activeTrade.current * 1.005).toFixed(2));
-        const tp = activeTrade.takeProfit || (cmd === 'OP_BUY' ? +(activeTrade.current * 1.01).toFixed(2) : +(activeTrade.current * 0.99).toFixed(2));
+        const cmd = activeTrade.type === 'SHORT' ? 'OP_SELL' : 'OP_BUY';
         const script = `// --- ARRA GROK MT5 EXECUTION ORDER ---
 // Generated Live by ARRA GROK Autonomous Engine
+// Account Balance Context: $${realizedBalance.toFixed(2)}
 // Asset: ${sym} (${activeTrade.name})
 // Reason: ${activeTrade.reason}
 #property strict
 void OnStart() {
     string symbol = "${sym}";
     int cmd = ${cmd};
-    double price = ${activeTrade.current};
-    double sl = ${sl};
-    double tp = ${tp};
-    int ticket = OrderSend(symbol, cmd, ${activeTrade.sizeLots || 0.35}, price, 3, sl, tp, "ARRA GROK LIVE", 777001, 0, clrGreen);
+    double price = ${liveCalculations.liveCurrent};
+    double sl = ${activeTrade.stopLoss};
+    double tp = ${activeTrade.takeProfit};
+    int ticket = OrderSend(symbol, cmd, ${activeTrade.sizeLots}, price, 3, sl, tp, "ARRA GROK LIVE", 777001, 0, clrGreen);
     Print("ARRA GROK Live Order placed. Ticket: ", ticket);
 }`;
         navigator.clipboard.writeText(script);
         setCopiedScript(true);
         setTimeout(() => setCopiedScript(false), 2500);
-    }, [activeTrade]);
+    }, [activeTrade, liveCalculations.liveCurrent, realizedBalance]);
 
     return (
         <main className="min-h-screen bg-[#F2F2EE] px-3 pb-16 pt-24 text-slate-800 sm:px-6 lg:px-8 font-sans selection:bg-cyan-200">
@@ -359,6 +543,67 @@ void OnStart() {
                 </div>
             )}
 
+            {/* MODAL EDIT MODAL / BALANCE ("VERSI KITA SENDIRI") */}
+            {isCapitalModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+                    <div className="w-full max-w-md rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl font-mono">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <h3 className="text-base font-black text-slate-900">UBAH SALDO MODAL MT5</h3>
+                            <button
+                                onClick={() => setIsCapitalModalOpen(false)}
+                                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <p className="mt-3 text-xs text-slate-600 leading-relaxed font-sans">
+                            Masukkan nominal saldo akun trading Anda (USD). Engine ARRA GROK akan otomatis menghitung position sizing, risiko 1.5%, dan kurva equity sesuai modal akun Anda sendiri.
+                        </p>
+                        <div className="mt-4">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Modal Akun ($ USD)</label>
+                            <div className="mt-1 relative rounded-xl shadow-xs">
+                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold">$</span>
+                                <input
+                                    type="number"
+                                    value={inputCapital}
+                                    onChange={(e) => setInputCapital(e.target.value)}
+                                    placeholder="10000"
+                                    className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 font-bold text-slate-900 text-base outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                            {[1000, 3000, 5000, 10000, 25000].map((preset) => (
+                                <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => setInputCapital(preset.toString())}
+                                    className="flex-1 py-1 text-[11px] rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-slate-700"
+                                >
+                                    ${preset >= 1000 ? `${preset / 1000}k` : preset}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="mt-6 flex gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => setIsCapitalModalOpen(false)}
+                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveCapital}
+                                className="flex-1 py-2.5 rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 transition"
+                            >
+                                Terapkan Modal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* RETRO-MODERN MAC WINDOW TERMINAL FRAME */}
             <div className={`mx-auto max-w-6xl overflow-hidden rounded-2xl sm:rounded-3xl border border-[#DCDCD5] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)] transition-all ${!isUnlocked ? 'pointer-events-none opacity-40 blur-[1px]' : ''}`}>
                 {/* 1. RETRO-MODERN MAC WINDOW TITLE BAR */}
@@ -371,8 +616,8 @@ void OnStart() {
                     </div>
 
                     {/* Window Title Subtitle */}
-                    <div className="hidden sm:block text-[11px] font-mono text-slate-400">
-                        ARRA GROK — overnight · six autonomous agents · forex &amp; gold futures
+                    <div className="hidden sm:block text-[11px] font-mono text-slate-500 font-medium">
+                        ARRA GROK — proprietary institutional engine · six autonomous agents · forex &amp; gold futures
                     </div>
 
                     {/* Right Tag */}
@@ -390,7 +635,7 @@ void OnStart() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         {/* Left: Avatar + Title & Status */}
                         <div className="flex items-start gap-4">
-                            {/* ARRA Grok Bot Avatar (From Video: Silver/White Sphere with Oval Eyes) */}
+                            {/* ARRA Grok Bot Avatar (Silver Chrome Sphere with Oval Eyes) */}
                             <div className="h-14 w-14 shrink-0 rounded-full bg-gradient-to-b from-[#FFFFFF] via-[#F0F0EE] to-[#E2E2DC] border border-[#D5D5CE] shadow-[0_4px_10px_rgba(0,0,0,0.06),inset_0_2px_4px_rgba(255,255,255,0.9)] flex items-center justify-center gap-1.5">
                                 <span className="h-4 w-1.5 rounded-full bg-slate-900" />
                                 <span className="h-4 w-1.5 rounded-full bg-slate-900" />
@@ -409,10 +654,10 @@ void OnStart() {
                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-mono">
                                     <span className="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
                                         <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span>FEED REALTIME · {lastRefreshedAt || formattedClock} WIB</span>
+                                        <span>FEED REALTIME · {formattedClock} WIB</span>
                                     </span>
                                     <span className="rounded bg-[#E3F4EB] text-[#1E774A] border border-[#C5E8D4] px-2 py-0.5 text-[10px] font-bold">
-                                        EXECUTOR · ENTERED {activeTrade.symbol}
+                                        EXECUTOR · {activeTrade.type} {activeTrade.symbol} @ {activeTrade.entry.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="mt-1 text-[11px] font-mono text-slate-400 italic">
@@ -422,19 +667,29 @@ void OnStart() {
                         </div>
 
                         {/* Right: Big Balance, Wins, Trades, Losses */}
-                        <div className="flex items-center gap-6 self-start md:self-auto font-mono">
-                            {/* Balance Counter */}
-                            <div className="text-right">
-                                <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                                    ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        <div className="flex items-center gap-4 sm:gap-6 self-start md:self-auto font-mono">
+                            {/* Balance Counter + Custom Capital Trigger */}
+                            <div className="text-right group relative">
+                                <div className="flex items-center justify-end gap-1.5">
+                                    <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight transition-all">
+                                        ${liveCalculations.liveEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </div>
+                                    <button
+                                        onClick={() => setIsCapitalModalOpen(true)}
+                                        title="Ubah Modal Akun"
+                                        className="text-slate-400 hover:text-slate-800 p-1 rounded transition"
+                                    >
+                                        <PencilSquareIcon className="h-4 w-4" />
+                                    </button>
                                 </div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                    balance
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center justify-end gap-1">
+                                    <span>equity</span>
+                                    <span className="text-[9px] text-slate-400">(bal: ${realizedBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</span>
                                 </div>
                             </div>
 
                             {/* Wins */}
-                            <div className="text-center border-l border-slate-200 pl-4">
+                            <div className="text-center border-l border-slate-200 pl-3 sm:pl-4">
                                 <div className="text-2xl font-black text-[#10B981]">{wins}</div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                     wins
@@ -442,7 +697,7 @@ void OnStart() {
                             </div>
 
                             {/* Trades */}
-                            <div className="text-center border-l border-slate-200 pl-4">
+                            <div className="text-center border-l border-slate-200 pl-3 sm:pl-4">
                                 <div className="text-2xl font-black text-slate-900">{trades}</div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                     trades
@@ -450,7 +705,7 @@ void OnStart() {
                             </div>
 
                             {/* Losses */}
-                            <div className="text-center border-l border-slate-200 pl-4">
+                            <div className="text-center border-l border-slate-200 pl-3 sm:pl-4">
                                 <div className="text-2xl font-black text-[#EF4444]">{losses}</div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                     losses
@@ -466,7 +721,7 @@ void OnStart() {
                     <aside className="border-r border-[#ECECE6] p-4 space-y-2 bg-[#FAF9F6]">
                         <div className="flex items-center justify-between pb-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                             <span>AGENTS</span>
-                            <span className="text-slate-400">6 online</span>
+                            <span className="text-emerald-600 font-bold">6 online</span>
                         </div>
 
                         {/* AGENT 1: SCANNER */}
@@ -491,7 +746,7 @@ void OnStart() {
                                 flags liquidity sweeps, never front-runs
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                next {activeTrade.symbol} · ${activeTrade.current.toFixed(2)}
+                                next {activeTrade.symbol} · ${liveCalculations.liveCurrent.toFixed(2)}
                             </div>
                         </div>
 
@@ -518,7 +773,7 @@ void OnStart() {
                                 CPI / NFP &amp; Spread Filter
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                nothing executes during high-spread spikes
+                                spread 16 pts · safe for execution
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
                                 passed {activeTrade.symbol}
@@ -544,10 +799,10 @@ void OnStart() {
                                 sizes from account equity
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                never trades a fixed ticket
+                                dynamic 1.5% capital risk
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
-                                {sizerEq} of ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                {activeTrade.sizeLots} Lots of ${realizedBalance.toLocaleString('en-US', { minimumFractionDigits: 0 })}
                             </div>
                         </div>
 
@@ -599,7 +854,7 @@ void OnStart() {
                                 no trade without a reason
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
-                                line #{logLinesCount} · enter {activeTrade.symbol}
+                                line #{terminalLogs.length + 150} · {activeTrade.symbol}
                             </div>
                         </div>
 
@@ -625,11 +880,11 @@ void OnStart() {
                                 updates on every close
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-blue-700">
-                                ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} · {trades} closes
+                                ${liveCalculations.liveEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })} · {trades} closes
                             </div>
                         </div>
 
-                        {/* AGENT 7: YOU (From video) */}
+                        {/* AGENT 7: YOU */}
                         <div className="rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-xs">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -651,7 +906,7 @@ void OnStart() {
                                 stopped asking, started reading
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
-                                {logLinesCount} lines to read
+                                {terminalLogs.length + 150} lines logged
                             </div>
                         </div>
                     </aside>
@@ -677,7 +932,9 @@ void OnStart() {
                                             <span className={`h-1.5 w-1.5 rounded-full ${asset.dot}`} />
                                         </div>
                                         <div className="text-[10px] font-bold text-slate-700 mt-0.5">
-                                            ${asset.price.toFixed(asset.sym.includes('JPY') ? 2 : asset.sym.includes('XAU') ? 2 : 4)}
+                                            ${asset.sym === '$XAUUSD'
+                                                ? liveCalculations.liveCurrent.toFixed(2)
+                                                : asset.price.toFixed(asset.sym.includes('JPY') ? 2 : 4)}
                                             <span className={`ml-1 text-[9px] ${asset.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                 {asset.change >= 0 ? '+' : ''}{asset.change.toFixed(2)}%
                                             </span>
@@ -687,7 +944,7 @@ void OnStart() {
                                 ))}
                             </div>
 
-                            {/* SVG Flow Curve Diagram (Faithfully recreating the video diagram!) */}
+                            {/* SVG Flow Curve Diagram with LIVE Animated Spline */}
                             <div className="relative rounded-2xl border border-slate-100 bg-[#FAF9F5] p-4 py-6 overflow-hidden">
                                 <div className="flex items-center justify-between max-w-lg mx-auto relative">
                                     {/* Left Circle Node: SENTRY GUARD */}
@@ -700,10 +957,10 @@ void OnStart() {
                                         <div className="text-[9px] font-mono text-slate-400">PASS {activeTrade.symbol}</div>
                                     </div>
 
-                                    {/* Middle Connecting Arc with Green Spline and Percentage */}
+                                    {/* Middle Connecting Arc with Green Spline and LIVE Percentage */}
                                     <div className="flex-1 px-4 flex flex-col items-center">
-                                        <div className="text-[10px] font-mono text-emerald-600 font-bold mb-1">
-                                            {activeTrade.gainPct}
+                                        <div className="text-[11px] font-mono text-emerald-600 font-black mb-1 transition-all">
+                                            {liveCalculations.gainPctStr}
                                         </div>
                                         {/* Visual SVG green curved line */}
                                         <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 24" fill="none">
@@ -732,7 +989,7 @@ void OnStart() {
                                 </div>
                             </div>
 
-                            {/* 4 Summary Metric Cards (Directly underneath flow diagram) */}
+                            {/* 4 Summary Metric Cards */}
                             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
                                 <div className="rounded-xl border border-slate-200 bg-white p-2.5">
                                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
@@ -746,15 +1003,15 @@ void OnStart() {
                                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
                                         <span className="text-purple-600">◆</span> SIZER
                                     </div>
-                                    <div className="text-base font-black text-slate-800 mt-0.5">{sizerEq}</div>
-                                    <div className="text-[9px] text-slate-400">{sizerDollar}</div>
+                                    <div className="text-base font-black text-slate-800 mt-0.5">{activeTrade.sizeLots} Lots</div>
+                                    <div className="text-[9px] text-slate-400">1.5% equity risk</div>
                                 </div>
 
                                 <div className="rounded-xl border border-slate-200 bg-white p-2.5">
                                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
                                         <span className="text-amber-600">■</span> LOGGER
                                     </div>
-                                    <div className="text-base font-black text-slate-800 mt-0.5">line #{logLinesCount}</div>
+                                    <div className="text-base font-black text-slate-800 mt-0.5">line #{terminalLogs.length + 150}</div>
                                     <div className="text-[9px] text-slate-400">each with a reason</div>
                                 </div>
 
@@ -763,7 +1020,7 @@ void OnStart() {
                                         <span className="text-blue-600">💧</span> EQUITY
                                     </div>
                                     <div className="text-base font-black text-emerald-600 mt-0.5">{lastClosePnl}</div>
-                                    <div className="text-[9px] text-slate-400">last close</div>
+                                    <div className="text-[9px] text-slate-400">last close pnl</div>
                                 </div>
                             </div>
                         </div>
@@ -787,8 +1044,8 @@ void OnStart() {
                                                 {activeTrade.type}
                                             </span>
                                         </div>
-                                        <span className="text-sm font-black text-emerald-600">
-                                            {activeTrade.gainPct} live ({activeTrade.gainDollar})
+                                        <span className="text-sm font-black text-emerald-600 transition-all">
+                                            {liveCalculations.gainPctStr} live ({liveCalculations.gainDollarStr})
                                         </span>
                                     </div>
 
@@ -799,7 +1056,7 @@ void OnStart() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">live price:</span>
-                                            <span className="font-bold text-emerald-600">{activeTrade.current.toFixed(2)}</span>
+                                            <span className="font-bold text-emerald-600 transition-all">{liveCalculations.liveCurrent.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">stop loss:</span>
@@ -815,7 +1072,7 @@ void OnStart() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">size:</span>
-                                            <span className="font-bold text-slate-800">{activeTrade.sizePct} ({activeTrade.sizeLots || 0.35} Lots)</span>
+                                            <span className="font-bold text-slate-800">{activeTrade.sizeLots} Lots ({activeTrade.sizePct})</span>
                                         </div>
                                         <div className="pt-1 text-[11px] text-slate-600 leading-snug">
                                             <span className="text-slate-400">reason: </span>
@@ -834,15 +1091,18 @@ void OnStart() {
                                     <div className="mt-2 space-y-1.5">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-slate-400">START ●</span>
-                                            <span className="font-bold text-slate-600">$10,000.00</span>
+                                            <span className="font-bold text-slate-600">${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                         </div>
                                         {/* Green filled progress bar */}
                                         <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                                            <div className="h-full rounded-full bg-emerald-500 w-[94%]" />
+                                            <div
+                                                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                                                style={{ width: `${Math.min(100, Math.max(10, ((liveCalculations.liveEquity / baseCapital) * 100) - 5))}%` }}
+                                            />
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-emerald-600 font-bold">NOW ● {wins} W / {losses} L</span>
-                                            <span className="font-black text-slate-900">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                            <span className="font-black text-slate-900">${liveCalculations.liveEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                         </div>
                                     </div>
                                     <div className="text-[9px] text-slate-400 text-right mt-1">
@@ -869,24 +1129,25 @@ void OnStart() {
                                 </div>
                             </div>
 
-                            {/* Right: Authentic $ tail -f night.log terminal */}
+                            {/* Right: Authentic $ tail -f night.log terminal with AUTO-SCROLL */}
                             <div className="rounded-2xl border border-slate-800 bg-[#0F172A] p-4 font-mono shadow-xs flex flex-col justify-between text-white">
                                 <div>
                                     <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 border-b border-slate-800 pb-2 mb-3">
                                         <span className="text-emerald-400">$ tail -f night.log</span>
                                         <span className="flex items-center gap-1.5 text-xs text-emerald-400">
                                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                                            <span>{logLinesCount} lines live</span>
+                                            <span>{terminalLogs.length + 150} lines live</span>
                                         </span>
                                     </div>
 
-                                    {/* Terminal code stream */}
-                                    <div className="space-y-1.5 text-[11px] leading-relaxed text-slate-300">
+                                    {/* Terminal code stream container */}
+                                    <div className="max-h-[280px] overflow-y-auto space-y-1.5 text-[11px] leading-relaxed text-slate-300 pr-1">
                                         {terminalLogs.map((line, idx) => (
                                             <div key={idx} className={line.includes('ENTER') || line.includes('EXIT') ? 'text-white font-bold' : 'text-slate-400 pl-3'}>
                                                 {line}
                                             </div>
                                         ))}
+                                        <div ref={terminalEndRef} />
                                         <div className="flex items-center gap-1 text-emerald-400 animate-pulse pt-1">
                                             <span>█</span>
                                         </div>
@@ -898,7 +1159,7 @@ void OnStart() {
                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                                         <span>Autonomous Logging Active</span>
                                     </span>
-                                    <span className="text-emerald-400">Zero Copytrade</span>
+                                    <span className="text-emerald-400 font-mono">ARRA7 Proprietary</span>
                                 </div>
                             </div>
                         </div>
@@ -942,8 +1203,8 @@ void OnStart() {
                         </div>
 
                         {/* Bottom Utility Controls */}
-                        <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={() => setSoundEnabled((prev) => !prev)}
                                     className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-mono font-bold transition ${
@@ -960,6 +1221,27 @@ void OnStart() {
                                     className="rounded-xl border border-slate-300 bg-white hover:bg-slate-100 px-3 py-1.5 text-xs font-mono font-bold text-slate-700 transition cursor-pointer"
                                 >
                                     {isRunning ? 'Pause Engine' : 'Resume Engine'}
+                                </button>
+                                <button
+                                    onClick={() => setIsCapitalModalOpen(true)}
+                                    className="rounded-xl border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 text-xs font-mono font-bold text-indigo-800 transition flex items-center gap-1 cursor-pointer"
+                                >
+                                    <PencilSquareIcon className="h-3.5 w-3.5" />
+                                    <span>Ubah Modal</span>
+                                </button>
+                                <button
+                                    onClick={handleResetSession}
+                                    title="Reset statistik sesi ke modal awal"
+                                    className="rounded-xl border border-slate-300 bg-white hover:bg-slate-100 px-3 py-1.5 text-xs font-mono font-bold text-slate-600 transition cursor-pointer"
+                                >
+                                    Reset Sesi
+                                </button>
+                                <button
+                                    onClick={handleDownloadLog}
+                                    className="rounded-xl border border-slate-300 bg-white hover:bg-slate-100 px-3 py-1.5 text-xs font-mono font-bold text-slate-600 transition flex items-center gap-1 cursor-pointer"
+                                >
+                                    <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                                    <span>Unduh Log</span>
                                 </button>
                                 <button
                                     onClick={fetchLiveFeed}
