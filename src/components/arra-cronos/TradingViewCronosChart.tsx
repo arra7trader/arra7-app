@@ -177,6 +177,7 @@ function TradingViewCronosChart({
                 hotlist: false,
                 calendar: false,
                 overrides: {
+                    'paneProperties.rightMargin': 15,
                     'paneProperties.background': '#0b111b',
                     'paneProperties.backgroundType': 'solid',
                     'paneProperties.vertGridProperties.color': 'rgba(37, 49, 66, 0.32)',
