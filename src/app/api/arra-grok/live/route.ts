@@ -33,11 +33,23 @@ export async function GET() {
             }
         }
 
-        // Action and setup parameters
-        const actionType = xauInference?.tradePlan?.action === 'SELL' ? 'SHORT' : 'LONG';
+        // Action and setup parameters with strict mathematical hierarchy enforcement
+        const isShort = xauInference?.tradePlan?.action === 'SELL' ||
+            (xauInference?.tradePlan?.action === 'WAIT' && (xauInference?.direction === 'DOWN' || (xauInference?.tradePlan?.takeProfit2 ?? 0) < (xauInference?.tradePlan?.entryPrice ?? 0)));
+        const actionType: 'SHORT' | 'LONG' = isShort ? 'SHORT' : 'LONG';
         const entryPrice = xauInference?.tradePlan?.entryPrice || (xauCurrentPrice * 0.998);
-        const stopLoss = xauInference?.tradePlan?.stopLoss || (actionType === 'LONG' ? entryPrice * 0.994 : entryPrice * 1.006);
-        const takeProfit = xauInference?.tradePlan?.takeProfit2 || (actionType === 'LONG' ? entryPrice * 1.008 : entryPrice * 0.992);
+
+        // Strict boundary: LONG must have SL < Entry < TP; SHORT must have TP < Entry < SL
+        let stopLoss = xauInference?.tradePlan?.stopLoss || (actionType === 'LONG' ? entryPrice * 0.994 : entryPrice * 1.006);
+        let takeProfit = xauInference?.tradePlan?.takeProfit2 || (actionType === 'LONG' ? entryPrice * 1.008 : entryPrice * 0.992);
+
+        if (actionType === 'LONG') {
+            if (stopLoss >= entryPrice) stopLoss = entryPrice - Math.max(atr * 1.35, entryPrice * 0.003);
+            if (takeProfit <= entryPrice) takeProfit = entryPrice + Math.max(atr * 2.0, entryPrice * 0.006);
+        } else {
+            if (stopLoss <= entryPrice) stopLoss = entryPrice + Math.max(atr * 1.35, entryPrice * 0.003);
+            if (takeProfit >= entryPrice) takeProfit = entryPrice - Math.max(atr * 2.0, entryPrice * 0.006);
+        }
         
         // Real-time gain calculation
         const rawDelta = actionType === 'LONG' ? (xauCurrentPrice - entryPrice) : (entryPrice - xauCurrentPrice);
