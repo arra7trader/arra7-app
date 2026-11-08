@@ -33,6 +33,12 @@ export async function GET() {
             }
         }
 
+        // Quant indicator breakdown for real reasons & dynamic calculations
+        const trendScore = xauInference?.metrics?.trendScore ?? 45;
+        const rsi = xauInference?.metrics?.rsi14 ?? 56;
+        const atr = xauInference?.metrics?.atr14 ?? 4.8;
+        const confluence = xauInference?.confluenceSummary ?? '3/4 TFs Bullish';
+
         // Action and setup parameters with strict mathematical hierarchy enforcement
         const isShort = xauInference?.tradePlan?.action === 'SELL' ||
             (xauInference?.tradePlan?.action === 'WAIT' && (xauInference?.direction === 'DOWN' || (xauInference?.tradePlan?.takeProfit2 ?? 0) < (xauInference?.tradePlan?.entryPrice ?? 0)));
@@ -56,12 +62,6 @@ export async function GET() {
         const gainPctNum = +((rawDelta / entryPrice) * 100 * 20).toFixed(1); // 20x futures leverage effect
         const gainPct = `${gainPctNum >= 0 ? '+' : ''}${gainPctNum}%`;
         const gainDollar = `${rawDelta >= 0 ? '+$' : '-$'}${Math.abs(rawDelta * 100 * 0.35).toFixed(2)}`;
-
-        // Quant indicator breakdown for real reasons
-        const trendScore = xauInference?.metrics?.trendScore ?? 45;
-        const rsi = xauInference?.metrics?.rsi14 ?? 56;
-        const atr = xauInference?.metrics?.atr14 ?? 4.8;
-        const confluence = xauInference?.confluenceSummary ?? '3/4 TFs Bullish';
 
         const reason = xauInference
             ? `Trend Score ${trendScore > 0 ? '+' : ''}${trendScore}/100 · RSI ${rsi.toFixed(1)} · Volatility ATR $${atr.toFixed(2)} · ${confluence}`
