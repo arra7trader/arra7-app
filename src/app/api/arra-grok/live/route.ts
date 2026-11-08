@@ -52,7 +52,7 @@ export async function GET() {
         const confluence = xauInference?.confluenceSummary ?? '3/4 TFs Bullish';
 
         const reason = xauInference
-            ? `Trend Score ${trendScore > 0 ? '+' : ''}${trendScore}/100 · RSI ${rsi} · Volatility ATR $${atr} · ${confluence}`
+            ? `Trend Score ${trendScore > 0 ? '+' : ''}${trendScore}/100 · RSI ${rsi.toFixed(1)} · Volatility ATR $${atr.toFixed(2)} · ${confluence}`
             : 'Asian range liquidity sweep · 15m Bullish OB confirmed · Confluence aligned';
 
         // Real scanned assets array
