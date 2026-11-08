@@ -4,13 +4,13 @@ import PineScriptViewer from '@/components/arra-cronos/PineScriptViewer';
 
 export const metadata = {
     title: 'ARRA Cronos untuk TradingView',
-    description: 'Cara menggunakan indikator ARRA Cronos pada chart TradingView serta memahami label dan forecast candle-nya.',
+    description: 'Cara membaca indikator ARRA Cronos pada chart TradingView dari candle pasar yang teramati.',
 };
 
 const features = [
-    { title: 'Forecast bergerak di chart', description: 'Jalur forecast dan beberapa analog historis memperlihatkan kemungkinan lintasan harga di depan candle terakhir.', icon: ChartBarIcon },
-    { title: 'Setup pada candle', description: 'Label BUY atau SELL hanya tampil saat filter data analog, kesepakatan arah, dispersi, dan konfirmasi memenuhi syarat.', icon: BellAlertIcon },
-    { title: 'Validasi walk-forward', description: 'Sampel forecast yang sudah matang dibandingkan dengan baseline no-change. Statistik baru ditampilkan setelah cukup banyak hasil.', icon: ShieldCheckIcon },
+    { title: 'Harga dan EMA', description: 'Chart mempertahankan candle aktual dengan EMA cepat dan lambat untuk membaca arah relatif.', icon: ChartBarIcon },
+    { title: 'Momentum dan volatilitas', description: 'RSI dan ATR merangkum momentum serta rentang candle historis.', icon: BellAlertIcon },
+    { title: 'Bias beberapa timeframe', description: 'Ringkasan membandingkan arah EMA chart, 1 jam, 4 jam, dan harian.', icon: ShieldCheckIcon },
 ];
 
 export default function ArraCronosIndicatorPage() {
@@ -28,10 +28,10 @@ export default function ArraCronosIndicatorPage() {
                             ARRA CRONOS · TRADINGVIEW
                         </div>
                         <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
-                            Forecast yang <span className="text-cyan-200">terlihat di candle.</span>
+                            Data pasar yang <span className="text-cyan-200">terbaca jelas.</span>
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-                            Indikator Pine Script berjalan di chart TradingView dan menganalisis OHLCV dari simbol chart aktif. Ia menggambar lintasan analog, konteks entry, target, referensi stop, dan sinyal candle dengan evaluasi walk-forward.
+                            Indikator Pine Script membaca OHLCV dari simbol dan timeframe chart aktif. Ia menampilkan EMA, RSI, ATR, dan bias timeframe lebih tinggi. Tidak ada proyeksi harga, simulasi trading, atau order broker.
                         </p>
                         <div className="mt-7 flex flex-wrap gap-3">
                             <Link href="/arra-cronos" className="rounded-xl bg-cyan-200 px-4 py-3 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100">
@@ -64,7 +64,7 @@ export default function ArraCronosIndicatorPage() {
                             ['01', 'Salin Script di Atas', 'Klik tombol "Salin Script (Copy)" di panel atas atau download file .pine.'],
                             ['02', 'Buka Pine Editor', 'Di halaman chart TradingView, buka panel Pine Editor di bagian bawah chart.'],
                             ['03', 'Paste & Simpan', 'Buat script baru di Pine Editor, paste seluruh kode, lalu klik tombol "Save".'],
-                            ['04', 'Add to Chart', 'Klik tombol "Add to chart". Atur parameter horizon dan filter sesuai kebutuhan timeframe.'],
+                            ['04', 'Add to Chart', 'Klik tombol "Add to chart". Atur periode EMA, RSI, dan ATR sesuai kebutuhan.'],
                         ].map(([number, title, detail]) => (
                             <li key={number} className="flex gap-3 rounded-xl border border-slate-800/70 bg-[#080d14] p-4">
                                 <span className="font-mono text-xs font-bold text-cyan-200">{number}</span>
@@ -78,7 +78,7 @@ export default function ArraCronosIndicatorPage() {
                 </section>
 
                 <aside className="mt-6 rounded-2xl border border-amber-200/10 bg-amber-100/[.035] p-5 text-[11px] leading-relaxed text-slate-500">
-                    <strong className="text-amber-100">Model Pine dan model web berbeda.</strong> Script TradingView membandingkan candle analog secara mandiri dan tidak menjalankan checkpoint Kronos PyTorch. Sinyal, level target, dan stop referensi bukan probabilitas, jaminan akurasi, atau saran finansial mutlak. Uji di simbol, feed, dan timeframe Anda sebelum dipakai langsung.
+                    <strong className="text-amber-100">Indikator ini bersifat deskriptif.</strong> Nilai EMA, RSI, dan ATR berasal dari feed chart TradingView, yang dapat berbeda dari feed web. Bias teknikal bukan probabilitas atau jaminan akurasi maupun keuntungan.
                 </aside>
             </div>
         </main>

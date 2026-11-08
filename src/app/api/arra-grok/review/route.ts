@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { buildKronosQuantForecast } from '@/lib/arra-cronos-engine';
-import { getCronosMarketData } from '@/lib/arra-cronos-market';
+import { buildKronosMarketReview } from '@/lib/arra-cronos-engine';
+import { getCronosMarketData, isActionableMarketQuote } from '@/lib/arra-cronos-market';
 import { getCronosAnalysisHistory } from '@/lib/arra-cronos-analysis';
 import { isMarketOpen } from '@/lib/market-hours';
 import { reviewCronosSetup } from '@/lib/groq-market-review';
@@ -46,16 +46,10 @@ export async function POST(request: Request) {
 
         const market = await getCronosMarketData(symbol, '15m');
         const history = await getCronosAnalysisHistory(symbol, market);
-        const isCrypto = symbol === 'BTCUSD';
-        const inference = buildKronosQuantForecast(symbol, '15m', market.candles, 10, 900, isCrypto, history);
-        const liveQuote = market.isFresh && ['TradingView Realtime', 'Binance Spot'].includes(market.source);
-        const open = isCrypto || isMarketOpen('XAUUSD').isOpen;
-        const action = liveQuote && open ? inference.tradePlan.action : 'WAIT';
-        if (action === 'WAIT' && inference.tradePlan.action !== 'WAIT') {
-            inference.tradePlan.invalidationReason = !open
-                ? 'Pasar tutup; tunggu pembukaan sebelum mempertimbangkan setup.'
-                : 'Kutipan live segar tidak tersedia.';
-        }
+        const inference = buildKronosMarketReview(symbol, '15m', market.candles, market.currentPrice, history);
+        const liveQuote = isActionableMarketQuote(market);
+        const open = symbol === 'BTCUSD' || isMarketOpen('XAUUSD').isOpen;
+        const action = liveQuote && open ? inference.action : 'WAIT';
         const result = await reviewCronosSetup({
             symbol,
             timeframe: '15m',
@@ -65,7 +59,6 @@ export async function POST(request: Request) {
             candles: market.candles,
             metrics: inference.metrics,
             mtfMatrix: inference.mtfMatrix,
-            tradePlan: inference.tradePlan,
             action,
         });
 

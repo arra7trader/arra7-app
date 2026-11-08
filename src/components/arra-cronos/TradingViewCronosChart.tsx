@@ -20,7 +20,7 @@ import {
     LockClosedIcon,
     BoltIcon,
 } from '@heroicons/react/24/outline';
-import type { CronosQuantMetrics, CronosTradePlan } from '@/lib/arra-cronos-engine';
+import type { CronosQuantMetrics } from '@/lib/arra-cronos-engine';
 
 declare global {
     interface Window {
@@ -37,36 +37,17 @@ export interface CronosCandle {
     volume: number;
 }
 
-export interface CronosForecast {
-    time: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-    upper?: number;
-    lower?: number;
-}
-
 export interface TradingViewCronosChartProps {
     symbol: string;
     tvSymbol: string;
     timeframe: string;
-    forecast: CronosForecast[];
     action: 'BUY' | 'SELL' | 'WAIT' | null;
-    entry: number | null;
-    stop: number | null;
-    target: number | null;
-    takeProfit1?: number | null;
-    takeProfit2?: number | null;
-    riskRewardRatio?: number | null;
     alignmentScore?: number | null;
     metrics?: CronosQuantMetrics | null;
-    tradePlan?: CronosTradePlan | null;
     confluenceScore?: number | null;
     confluenceSummary?: string | null;
     direction?: 'UP' | 'DOWN' | 'FLAT' | null;
-    pipSpec?: { pipSize: number; unitName: string } | null;
+    currentPrice: number;
     isUnlocked?: boolean;
     formatPrice: (value: number) => string;
     onCandleData?: (candles: CronosCandle[]) => void;
@@ -85,18 +66,11 @@ function TradingViewCronosChart({
     tvSymbol,
     timeframe,
     action,
-    entry,
-    stop,
-    target,
-    takeProfit1,
-    takeProfit2,
-    riskRewardRatio,
     alignmentScore,
     metrics,
-    tradePlan,
     confluenceScore,
     direction,
-    pipSpec,
+    currentPrice,
     isUnlocked,
     formatPrice,
 }: TradingViewCronosChartProps) {
@@ -273,10 +247,6 @@ function TradingViewCronosChart({
         setIsPineModalOpen(true);
     }, [loadPineCode, effectiveUnlocked]);
 
-    const effectiveTp1 = takeProfit1 ?? null;
-    const effectiveTp2 = takeProfit2 ?? target ?? null;
-    const effectiveTarget = effectiveTp2;
-
     const tvExternalUrl = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol)}`;
 
     return (
@@ -347,7 +317,7 @@ function TradingViewCronosChart({
                                             : 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
                                     }`}
                                 >
-                                    {action === 'BUY' ? 'BUY SETUP' : action === 'SELL' ? 'SELL SETUP' : 'WAIT / NEUTRAL'}
+                                    {action === 'BUY' ? 'BIAS BULLISH' : action === 'SELL' ? 'BIAS BEARISH' : 'WAIT / NETRAL'}
                                 </span>
 
                                 {/* Quick Pine Button */}
@@ -378,14 +348,14 @@ function TradingViewCronosChart({
                         {/* Expanded Readout Body */}
                         {isOverlayExpanded && (
                             <div className="p-3 text-[10px] space-y-2">
-                                {/* Row 1: Target Price & Expected Move */}
+                                {/* Row 1: Current observed price and technical bias */}
                                 <div className="flex items-center justify-between rounded-lg border border-slate-800/80 bg-[#060a12] p-2">
                                     <div>
                                         <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                                            Forecast Target (TP2)
+                                            Harga saat ini · data feed
                                         </div>
                                         <div className="text-sm font-black text-cyan-200">
-                                            {effectiveTarget ? formatPrice(effectiveTarget) : '—'}
+                                            {currentPrice ? formatPrice(currentPrice) : '—'}
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -398,15 +368,8 @@ function TradingViewCronosChart({
                                                     : 'text-slate-400'
                                             }`}
                                         >
-                                            {tradePlan?.expectedMovePercent != null
-                                                ? `${tradePlan.expectedMovePercent >= 0 ? '+' : ''}${tradePlan.expectedMovePercent.toFixed(2)}%`
-                                                : direction || 'NEUTRAL'}
+                                            {direction || 'FLAT'}
                                         </div>
-                                        {tradePlan?.expectedMovePips != null && (
-                                            <div className="text-[9px] font-bold text-slate-400">
-                                                {tradePlan.expectedMovePips} {pipSpec?.unitName || 'pts'}
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
 
@@ -425,33 +388,16 @@ function TradingViewCronosChart({
                                         </div>
                                     </div>
                                     <div className="rounded-lg border border-slate-800/60 bg-[#080d16] p-1.5">
-                                        <div className="text-[8px] font-bold uppercase text-slate-500">Risk:Reward</div>
-                                        <div className="text-[11px] font-black text-white">
-                                            1:{riskRewardRatio ?? tradePlan?.riskRewardRatio ?? '—'}
-                                        </div>
+                                        <div className="text-[8px] font-bold uppercase text-slate-500">RSI 14</div>
+                                        <div className="text-[11px] font-black text-white">{metrics?.rsi14 ?? '—'}</div>
                                     </div>
                                 </div>
 
-                                {/* Row 3: Key Execution Levels */}
+                                {/* Row 3: Observed technical indicator values */}
                                 <div className="flex flex-wrap items-center justify-between gap-1 border-t border-slate-800/60 pt-2 text-[9px] text-slate-400">
-                                    {entry != null && (
-                                        <span className="flex items-center gap-1 font-mono">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                                            <span>Entry: <strong className="text-white">{formatPrice(entry)}</strong></span>
-                                        </span>
-                                    )}
-                                    {stop != null && (
-                                        <span className="flex items-center gap-1 font-mono">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                                            <span>SL: <strong className="text-rose-300">{formatPrice(stop)}</strong></span>
-                                        </span>
-                                    )}
-                                    {effectiveTp1 != null && (
-                                        <span className="flex items-center gap-1 font-mono">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                            <span>TP1: <strong className="text-emerald-300">{formatPrice(effectiveTp1)}</strong></span>
-                                        </span>
-                                    )}
+                                    <span>EMA 21: <strong className="text-white">{metrics ? formatPrice(metrics.ema21) : '—'}</strong></span>
+                                    <span>EMA 55: <strong className="text-white">{metrics ? formatPrice(metrics.ema55) : '—'}</strong></span>
+                                    <span>ATR 14: <strong className="text-white">{metrics ? formatPrice(metrics.atr14) : '—'}</strong></span>
                                 </div>
 
                                 {/* Technical EMA Status */}
@@ -536,7 +482,7 @@ function TradingViewCronosChart({
                                                 Bonus Eksklusif Pembeli ARRA Cronos (Rp 150.000)
                                             </h4>
                                             <p className="mt-1 text-xs text-slate-300 leading-relaxed">
-                                                Source code lengkap indikator TradingView Pine Script v6 (500 baris) disertakan sebagai bonus sekali bayar. Silakan order paket ARRA Cronos untuk mendapatkan akses penuh skrip ini.
+                                                Source code indikator TradingView Pine Script v6 disertakan sebagai bonus sekali bayar. Silakan order paket ARRA Cronos untuk mendapatkan akses penuh skrip ini.
                                             </p>
                                             <div className="mt-3">
                                                 <Link
@@ -588,20 +534,20 @@ function TradingViewCronosChart({
                             {/* Features list */}
                             <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
                                 <div className="rounded-lg border border-slate-800 bg-[#09101b] p-2.5">
-                                    <span className="font-bold text-cyan-300">⚡ Analog Forecast Projection</span>
-                                    <p className="mt-0.5 text-[10px] text-slate-500">Pencarian pola candle historis 400 bars & target ray.</p>
+                                    <span className="font-bold text-cyan-300">⚡ Indikator harga teramati</span>
+                                    <p className="mt-0.5 text-[10px] text-slate-500">EMA cepat dan lambat dari candle chart aktif.</p>
                                 </div>
                                 <div className="rounded-lg border border-slate-800 bg-[#09101b] p-2.5">
-                                    <span className="font-bold text-emerald-300">🎯 Live Setup & TP/SL</span>
-                                    <p className="mt-0.5 text-[10px] text-slate-500">Label BUY/SELL otomatis dengan level Stop Loss & Target.</p>
+                                    <span className="font-bold text-emerald-300">📊 RSI & ATR</span>
+                                    <p className="mt-0.5 text-[10px] text-slate-500">Ringkasan momentum dan volatilitas historis.</p>
                                 </div>
                                 <div className="rounded-lg border border-slate-800 bg-[#09101b] p-2.5">
                                     <span className="font-bold text-indigo-300">📈 Trend EMA 21 & 55</span>
                                     <p className="mt-0.5 text-[10px] text-slate-500">Filter tren terintegrasi langsung di chart.</p>
                                 </div>
                                 <div className="rounded-lg border border-slate-800 bg-[#09101b] p-2.5">
-                                    <span className="font-bold text-amber-300">📊 Quantitative Dashboard</span>
-                                    <p className="mt-0.5 text-[10px] text-slate-500">Tabel readout walk-forward hit rate & alignment score.</p>
+                                    <span className="font-bold text-amber-300">🧭 Bias multi-timeframe</span>
+                                    <p className="mt-0.5 text-[10px] text-slate-500">EMA timeframe 1 jam, 4 jam, dan harian dari chart.</p>
                                 </div>
                             </div>
 
@@ -612,7 +558,7 @@ function TradingViewCronosChart({
                                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-cyan-300"
                                 >
                                     {showCodePreview ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
-                                    <span>{showCodePreview ? 'Sembunyikan Source Code' : 'Lihat Source Code Script (500 lines)'}</span>
+                                    <span>{showCodePreview ? 'Sembunyikan Source Code' : 'Lihat Source Code Script'}</span>
                                 </button>
                                 {showCodePreview && (
                                     <div className="mt-2 max-h-48 overflow-auto rounded-xl border border-slate-800 bg-[#060a12] p-3 font-mono text-[10px] text-slate-300">

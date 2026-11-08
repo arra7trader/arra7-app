@@ -8,15 +8,10 @@ import {
     ArrowTrendingDownIcon,
     ArrowTrendingUpIcon,
     BoltIcon,
-    CalculatorIcon,
     ChartBarIcon,
-    CheckIcon,
     ChevronDownIcon,
-    ClipboardDocumentCheckIcon,
-    ClockIcon,
     CpuChipIcon,
     DocumentTextIcon,
-    InformationCircleIcon,
     KeyIcon,
     LockClosedIcon,
     MagnifyingGlassIcon,
@@ -30,13 +25,11 @@ import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import PineScriptViewer from '@/components/arra-cronos/PineScriptViewer';
-import type { CronosCandle, CronosForecast } from '@/components/arra-cronos/CronosChart';
+import type { CronosCandle } from '@/components/arra-cronos/CronosChart';
 import type {
-    CronosTradePlan,
     CronosQuantMetrics,
     CronosMTFBias,
 } from '@/lib/arra-cronos-engine';
-import { getPipSpec, calculatePositionSizing } from '@/lib/arra-cronos-engine';
 
 const CronosChart = dynamic(() => import('@/components/arra-cronos/CronosChart'), { ssr: false });
 const TradingViewCronosChart = dynamic(() => import('@/components/arra-cronos/TradingViewCronosChart'), { ssr: false });
@@ -55,8 +48,10 @@ type MarketData = {
     latestBarClose: number;
     changePercent: number;
     source: string;
+    quoteMode: 'LIVE' | 'DELAYED' | 'TIMESTAMPED' | 'CANDLE_CLOSE';
     updatedAt: string;
     freshnessSeconds: number;
+    latestBarAgeSeconds: number;
     isFresh: boolean;
     count: number;
     volumeCoverage: number;
@@ -64,13 +59,10 @@ type MarketData = {
 
 type ModelStatus = { available: boolean; model: string; status: string; device?: string; message: string };
 
-type ForecastData = {
-    forecast: CronosForecast[];
+type MarketReviewData = {
     direction: 'UP' | 'DOWN' | 'FLAT';
-    action?: 'BUY' | 'SELL' | 'WAIT';
+    action: 'BUY' | 'SELL' | 'WAIT';
     currentPrice: number;
-    targetPrice: number;
-    tradePlan?: CronosTradePlan;
     metrics?: CronosQuantMetrics;
     mtfMatrix?: Record<string, CronosMTFBias>;
     confluenceScore?: number;
@@ -208,13 +200,13 @@ export default function ArraCronosPage() {
     const [timeframe, setTimeframe] = useState<(typeof TIMEFRAMES)[number]['id']>('1h');
     const [search, setSearch] = useState('');
     const [market, setMarket] = useState<MarketData | null>(null);
-    const [forecast, setForecast] = useState<ForecastData | null>(null);
+    const [marketReview, setMarketReview] = useState<MarketReviewData | null>(null);
     const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isForecasting, setIsForecasting] = useState(false);
+    const [isReviewing, setIsReviewing] = useState(false);
     const [marketError, setMarketError] = useState('');
-    const [forecastError, setForecastError] = useState('');
+    const [reviewError, setReviewError] = useState('');
     const [groqReview, setGroqReview] = useState('');
     const [groqReviewModel, setGroqReviewModel] = useState('');
     const [groqReviewError, setGroqReviewError] = useState('');
@@ -251,12 +243,8 @@ export default function ArraCronosPage() {
     const [autoRefresh, setAutoRefresh] = useState(true);
     const [countdown, setCountdown] = useState(30);
 
-    // Interactive Institutional Tools State
     const [soundEnabled, setSoundEnabled] = useState(true);
-    const [accountEquity, setAccountEquity] = useState<number>(1000);
-    const [riskPercent, setRiskPercent] = useState<number>(1.0);
-    const [copiedPlan, setCopiedPlan] = useState(false);
-    const [activeTab, setActiveTab] = useState<'plan' | 'commentary' | 'calculator'>('plan');
+    const [activeTab, setActiveTab] = useState<'review' | 'commentary'>('review');
 
     const visibleAssets = useMemo(() => {
         const list = categories.find((category) => category.id === selectedCategory)?.pairs || [];
@@ -282,27 +270,27 @@ export default function ArraCronosPage() {
         } catch {
             setModelStatus({
                 available: false,
-                model: 'ARRA Cronos Quant Scenarios',
+                model: 'ARRA Cronos Market Review',
                 status: 'offline',
                 message: 'Status model tidak bisa dibaca.',
             });
         }
     }, []);
 
-    const runForecast = useCallback(
+    const runMarketReview = useCallback(
         async (sym: string, tf: string, reqId: number) => {
-            setIsForecasting(true);
-            setForecastError('');
+            setIsReviewing(true);
+            setReviewError('');
             try {
-                const response = await fetch('/api/arra-cronos/forecast', {
+                const response = await fetch('/api/arra-cronos/analysis', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ symbol: sym, timeframe: tf }),
                 });
                 const payload = await response.json();
                 if (activeRequestIdRef.current === reqId) {
-                    if (!response.ok) throw new Error(payload.error || 'Forecast model tidak tersedia.');
-                    setForecast(payload);
+                    if (!response.ok) throw new Error(payload.error || 'Tinjauan pasar tidak tersedia.');
+                    setMarketReview(payload);
 
                     // Trigger sound chime if signal changes
                     if (payload.action && payload.action !== 'WAIT' && soundEnabled) {
@@ -315,11 +303,11 @@ export default function ArraCronosPage() {
                 }
             } catch (error) {
                 if (activeRequestIdRef.current === reqId) {
-                    setForecastError(error instanceof Error ? error.message : 'Forecast model tidak tersedia.');
+                    setReviewError(error instanceof Error ? error.message : 'Tinjauan pasar tidak tersedia.');
                 }
             } finally {
                 if (activeRequestIdRef.current === reqId) {
-                    setIsForecasting(false);
+                    setIsReviewing(false);
                 }
             }
         },
@@ -330,7 +318,7 @@ export default function ArraCronosPage() {
         (sym: string) => {
             if (sym === selectedSymbol) return;
             setMarket(null);
-            setForecast(null);
+            setMarketReview(null);
             setSelectedSymbol(sym);
         },
         [selectedSymbol]
@@ -345,7 +333,7 @@ export default function ArraCronosPage() {
                 const firstSym = cat.pairs[0].symbol;
                 if (firstSym !== selectedSymbol) {
                     setMarket(null);
-                    setForecast(null);
+                    setMarketReview(null);
                     setSelectedSymbol(firstSym);
                 }
             }
@@ -357,7 +345,7 @@ export default function ArraCronosPage() {
         (tf: (typeof TIMEFRAMES)[number]['id']) => {
             if (tf === timeframe) return;
             setMarket(null);
-            setForecast(null);
+            setMarketReview(null);
             setTimeframe(tf);
         },
         [timeframe]
@@ -403,14 +391,14 @@ export default function ArraCronosPage() {
             const payload = await response.json();
             if (response.ok && payload && !payload.error) {
                 setMarket(payload);
-                await runForecast(selectedSymbol, timeframe, reqId);
+                await runMarketReview(selectedSymbol, timeframe, reqId);
             }
         } catch {
             // ignore
         } finally {
             setIsRefreshing(false);
         }
-    }, [selectedSymbol, timeframe, loadStatus, runForecast]);
+    }, [selectedSymbol, timeframe, loadStatus, runMarketReview]);
 
     useEffect(() => {
         let live = true;
@@ -431,7 +419,7 @@ export default function ArraCronosPage() {
         return () => window.clearInterval(interval);
     }, [loadStatus]);
 
-    // Single stable effect for fetching market & forecast with instant reset on symbol/timeframe switch
+    // Single stable effect for loading market data and its technical review.
     useEffect(() => {
         if (!categories.length) return;
         let cancelled = false;
@@ -452,8 +440,8 @@ export default function ArraCronosPage() {
                 setMarket(payload);
                 setIsLoading(false);
 
-                // Auto calculate Kronos forecast for the newly selected pair
-                runForecast(selectedSymbol, timeframe, reqId);
+                // Review the newly selected market and timeframe.
+                runMarketReview(selectedSymbol, timeframe, reqId);
             } catch (error) {
                 if (cancelled) return;
                 const message = error instanceof Error ? error.message : 'Analisis gagal dimuat.';
@@ -481,7 +469,7 @@ export default function ArraCronosPage() {
             cancelled = true;
             window.clearInterval(interval);
         };
-    }, [categories.length, selectedSymbol, timeframe, runForecast]);
+    }, [categories.length, selectedSymbol, timeframe, runMarketReview]);
 
     // Auto-refresh interval countdown (30s)
     useEffect(() => {
@@ -502,77 +490,14 @@ export default function ArraCronosPage() {
         return () => window.clearInterval(timer);
     }, [autoRefresh, handleRefresh]);
 
-    const metrics = useMemo(() => (market ? calculateMetrics(market.candles) : null), [market]);
     const currentPrice = market?.currentPrice || 0;
-    const forecastBase = forecast?.currentPrice || market?.latestBarClose || currentPrice;
-    const rawMove = forecast ? forecast.targetPrice - forecastBase : 0;
-    const modelBias = forecast?.direction || null;
-
-    // Resolve technical action & reference levels
-    const action: 'BUY' | 'SELL' | 'WAIT' = forecast?.tradePlan?.action
-        ? forecast.tradePlan.action
-        : forecast && metrics
-        ? Math.abs(rawMove) >= metrics.atr * 0.2
-            ? rawMove > 0
-                ? 'BUY'
-                : 'SELL'
-            : 'WAIT'
-        : 'WAIT';
-
-    const entry = action !== 'WAIT' ? (forecast?.tradePlan?.entryPrice || forecastBase) : null;
-    const stop =
-        action === 'BUY'
-            ? (forecast?.tradePlan?.stopLoss || (metrics ? forecastBase - metrics.atr * 1.3 : null))
-            : action === 'SELL'
-            ? (forecast?.tradePlan?.stopLoss || (metrics ? forecastBase + metrics.atr * 1.3 : null))
-            : null;
-    const tp1 = action !== 'WAIT' ? (forecast?.tradePlan?.takeProfit1 || null) : null;
-    const tp2 = action !== 'WAIT' ? (forecast?.tradePlan?.takeProfit2 || null) : null;
-    const target = action !== 'WAIT' ? tp2 : null;
-    const movePct = forecastBase && forecast ? (rawMove / forecastBase) * 100 : 0;
-
-    const pipSpec = useMemo(() => getPipSpec(selectedSymbol), [selectedSymbol]);
-
-    // Live position sizing calculation based on user input
-    const liveSizing = useMemo(() => {
-        if (!entry || !stop || !tp1 || !tp2) return null;
-        return calculatePositionSizing(
-            selectedSymbol,
-            accountEquity,
-            riskPercent,
-            entry,
-            stop,
-            tp1,
-            tp2
-        );
-    }, [selectedSymbol, accountEquity, riskPercent, entry, stop, tp1, tp2]);
+    const modelBias = marketReview?.direction || null;
+    const action: 'BUY' | 'SELL' | 'WAIT' = marketReview?.action || 'WAIT';
 
     const upColor = 'text-emerald-300';
     const downColor = 'text-rose-300';
     const price = (value: number) => formatPrice(selectedSymbol, value);
     const selectedCategoryName = CATEGORY_SHORT[selectedCategory] || 'PASAR';
-
-    // Copy formatted signal message to clipboard
-    const handleCopySignal = useCallback(() => {
-        if (!forecast || !entry || !stop || !tp2) return;
-        const dateStr = new Date(forecast.generatedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
-        const text = `🎯 *ARRA CRONOS SIGNAL · ${selectedSymbol}*
-────────────────────────
-⚡ *Action:* ${action} @ ${price(entry)}
-🎯 *Take Profit 2:* ${price(tp2)} (${forecast.tradePlan?.expectedMovePips || ''} ${pipSpec.unitName})
-💰 *Take Profit 1:* ${tp1 ? price(tp1) : '—'}
-🛡️ *Stop Loss:* ${price(stop)} (${forecast.tradePlan?.riskPips || ''} ${pipSpec.unitName})
-📊 *Risk:Reward:* 1:${forecast.tradePlan?.riskRewardRatio || '2.0'}
-📐 *Alignment index:* ${forecast.metrics?.alignmentScore ?? 0}/100 · ${forecast.confluenceSummary || 'Konfluensi belum tersedia'}
-💼 *Lot ilustratif:* ${liveSizing?.lotSize ?? forecast.tradePlan?.recommendedLot ?? '—'} ($${liveSizing?.dollarRisk ?? forecast.tradePlan?.dollarRisk ?? '—'} risiko estimasi @ $${accountEquity})
-⏰ *Timeframe:* ${timeframe.toUpperCase()} (${dateStr} WIB)
-────────────────────────
-_Generated by ARRA Cronos Quant Engine_`;
-
-        navigator.clipboard.writeText(text);
-        setCopiedPlan(true);
-        setTimeout(() => setCopiedPlan(false), 2500);
-    }, [forecast, entry, stop, tp1, tp2, action, selectedSymbol, pipSpec.unitName, liveSizing, accountEquity, timeframe]);
 
     return (
         <main className="min-h-screen bg-[#F2F2EE] px-3 pb-12 pt-24 text-slate-800 sm:px-6 lg:px-8 font-sans selection:bg-cyan-200">
@@ -702,20 +627,20 @@ _Generated by ARRA Cronos Quant Engine_`;
                                     Buka Akses ARRA Cronos Analysis Desk + <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-indigo-300 bg-clip-text text-transparent">Bonus Indikator TradingView</span>
                                 </h2>
                                 <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
-                                    Dapatkan akses ke analisis teknikal multi-timeframe ARRA Cronos, skenario berbasis ATR, kalkulator risiko ilustratif, <strong>ARRA GROK market terminal (Forex, Gold Futures, dan Bitcoin)</strong>, serta bonus source code indikator TradingView Pine Script v6.
+                                    Dapatkan akses ke tinjauan teknikal multi-timeframe ARRA Cronos, data candle dan indikator pasar, <strong>ARRA GROK market terminal (Forex, Gold Futures, dan Bitcoin)</strong>, serta source code indikator TradingView Pine Script v6.
                                 </p>
                                 <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-semibold text-slate-300">
                                     <div className="rounded-xl border border-slate-800 bg-[#060b13]/80 p-2">
-                                        <span className="text-cyan-300">🎯 Proyeksi Masa Depan</span>
-                                        <p className="text-[10px] text-slate-500 mt-0.5">Skenario ATR; bukan probabilitas terkalibrasi.</p>
+                                        <span className="text-cyan-300">📊 Indikator Teramati</span>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">EMA, RSI, ATR, dan bias multi-timeframe.</p>
                                     </div>
                                     <div className="rounded-xl border border-slate-800 bg-[#060b13]/80 p-2">
                                         <span className="text-emerald-300">🎁 Bonus Pine Script v6</span>
                                         <p className="text-[10px] text-slate-500">Pasang di TradingView sendiri.</p>
                                     </div>
                                     <div className="rounded-xl border border-slate-800 bg-[#060b13]/80 p-2">
-                                        <span className="text-indigo-300">⚡ Sinyal BUY/SELL & SL/TP</span>
-                                        <p className="text-[10px] text-slate-500">Target otomatis berbasis ATR.</p>
+                                        <span className="text-indigo-300">🧭 Bias Pasar</span>
+                                        <p className="text-[10px] text-slate-500">Kondisi feed buruk atau tidak lengkap ditandai WAIT.</p>
                                     </div>
                                     <div className="rounded-xl border border-slate-800 bg-[#060b13]/80 p-2">
                                         <span className="text-amber-300">👑 Sekali Bayar Selamanya</span>
@@ -895,7 +820,7 @@ _Generated by ARRA Cronos Quant Engine_`;
                                         <SignalIcon className="h-3.5 w-3.5 text-cyan-400" />
                                         {market?.source || 'Sumber harga'}
                                     </span>
-                                    <span>1 pt = {pipSpec.pipSize} {pipSpec.unitName}</span>
+                                    <span>{market ? `${market.quoteMode} · ${formatAge(market.freshnessSeconds)}` : 'FEED —'}</span>
                                 </div>
                             </div>
 
@@ -905,15 +830,15 @@ _Generated by ARRA Cronos Quant Engine_`;
                                     <div className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">
                                         Bias & Indeks Keselarasan
                                     </div>
-                                    {forecast?.metrics && (
+                                    {marketReview?.metrics && (
                                         <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold ${
-                                            forecast.metrics.volatilityRegime === 'EXPANSION'
+                                            marketReview.metrics.volatilityRegime === 'EXPANSION'
                                                 ? 'bg-amber-400/10 text-amber-700 border border-amber-400/20'
-                                                : forecast.metrics.volatilityRegime === 'COMPRESSION'
+                                                : marketReview.metrics.volatilityRegime === 'COMPRESSION'
                                                 ? 'bg-blue-400/10 text-blue-700 border border-blue-400/20'
                                                 : 'bg-slate-800 text-slate-500'
                                         }`}>
-                                            {forecast.metrics.volatilityRegime}
+                                            {marketReview.metrics.volatilityRegime}
                                         </span>
                                     )}
                                 </div>
@@ -931,23 +856,23 @@ _Generated by ARRA Cronos Quant Engine_`;
                                                 modelBias === 'UP' ? upColor : modelBias === 'DOWN' ? downColor : 'text-slate-500'
                                             }`}
                                         >
-                                            {modelBias || (isForecasting ? 'MENGHITUNG…' : modelStatus?.available ? 'SIAP' : 'OFFLINE')}
+                                            {modelBias || (isReviewing ? 'MENGHITUNG…' : modelStatus?.available ? 'SIAP' : 'OFFLINE')}
                                         </div>
                                         {/* Heuristic alignment index; not win probability. */}
-                                        {forecast?.metrics && (
+                                        {marketReview?.metrics && (
                                             <div className="mt-1.5">
                                                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                                    <span>Indeks alignment · bukan peluang menang</span>
-                                                    <span className="text-cyan-700">{forecast.metrics.alignmentScore}/100</span>
+                                            <span>Indeks alignment · bukan probabilitas</span>
+                                                    <span className="text-cyan-700">{marketReview.metrics.alignmentScore}/100</span>
                                                 </div>
                                                 <div className="mt-1 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full transition-all duration-700 ${
-                                                            forecast.metrics.alignmentScore >= 75
+                                                            marketReview.metrics.alignmentScore >= 75
                                                                 ? 'bg-gradient-to-r from-cyan-400 to-emerald-400'
                                                                 : 'bg-gradient-to-r from-blue-400 to-cyan-400'
                                                         }`}
-                                                        style={{ width: `${forecast.metrics.alignmentScore}%` }}
+                                                        style={{ width: `${marketReview.metrics.alignmentScore}%` }}
                                                     />
                                                 </div>
                                             </div>
@@ -956,52 +881,23 @@ _Generated by ARRA Cronos Quant Engine_`;
                                 </div>
                             </div>
 
-                            {/* Card 3: Target & Expected Move */}
+                            {/* Card 3: Observed technical readings */}
                             <div className="rounded-2xl border border-[#ECECE6] bg-white p-4">
-                                <div className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">
-                                    Forecast Target (TP2)
-                                </div>
-                                <div className="text-xl font-extrabold text-slate-900">
-                                    {forecast ? price(forecast.targetPrice) : '—'}
-                                </div>
-                                <div
-                                    className={`mt-1 text-[11px] font-bold ${
-                                        rawMove >= 0 ? 'text-emerald-700' : 'text-rose-700'
-                                    }`}
-                                >
-                                    {forecast ? (
-                                        <>
-                                            {rawMove >= 0 ? '+' : ''}
-                                            {price(rawMove)} · {movePct >= 0 ? '+' : ''}
-                                            {movePct.toFixed(2)}%
-                                            {forecast.tradePlan?.expectedMovePips != null && (
-                                                <span className="ml-1 text-slate-500">
-                                                    ({forecast.tradePlan.expectedMovePips} {pipSpec.unitName})
-                                                </span>
-                                            )}
-                                        </>
-                                    ) : isForecasting ? (
-                                        'Menghitung target…'
-                                    ) : (
-                                        'Siap dihitung'
-                                    )}
-                                </div>
-                                <div className="mt-2 text-[10px] text-slate-500">
-                                    TP1: {tp1 ? price(tp1) : '—'} · TP2: {tp2 ? price(tp2) : '—'}
+                                <div className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Indikator candle tercatat</div>
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                    <div><span className="text-slate-500">RSI 14</span><div className="mt-1 font-bold text-slate-900">{marketReview?.metrics?.rsi14 ?? '—'}</div></div>
+                                    <div><span className="text-slate-500">ATR 14</span><div className="mt-1 font-bold text-slate-900">{marketReview?.metrics ? price(marketReview.metrics.atr14) : '—'}</div></div>
+                                    <div><span className="text-slate-500">EMA 21</span><div className="mt-1 font-bold text-slate-900">{marketReview?.metrics ? price(marketReview.metrics.ema21) : '—'}</div></div>
+                                    <div><span className="text-slate-500">EMA 55</span><div className="mt-1 font-bold text-slate-900">{marketReview?.metrics ? price(marketReview.metrics.ema55) : '—'}</div></div>
                                 </div>
                             </div>
 
-                            {/* Card 4: Action Layer & Risk-Reward */}
+                            {/* Card 4: Analytical posture */}
                             <div className="rounded-2xl border border-[#ECECE6] bg-white p-4">
                                 <div className="mb-2 flex items-center justify-between">
                                     <div className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">
-                                        Action & Setup
+                                        Postur analisis
                                     </div>
-                                    {forecast?.tradePlan && (
-                                        <span className="rounded-md bg-cyan-400/10 px-1.5 py-0.5 text-[9px] font-bold text-cyan-700 border border-cyan-400/20">
-                                            R:R 1:{forecast.tradePlan.riskRewardRatio}
-                                        </span>
-                                    )}
                                 </div>
                                 <div
                                     className={`text-xl font-black ${
@@ -1012,26 +908,20 @@ _Generated by ARRA Cronos Quant Engine_`;
                                             : 'text-amber-800'
                                     }`}
                                 >
-                                    {action}
+                                    {action === 'WAIT' ? 'WAIT' : `BIAS ${action}`}
                                 </div>
                                 <div className="mt-1 text-[10px] leading-relaxed text-slate-500">
                                     {action === 'BUY'
-                                        ? 'Bullish impulse setup terkonfirmasi'
+                                        ? 'Bias teknikal bullish dari kondisi teramati; bukan instruksi order.'
                                         : action === 'SELL'
-                                        ? 'Bearish expansion setup terkonfirmasi'
-                                        : 'Sideways / Menunggu konfirmasi breakout'}
+                                        ? 'Bias teknikal bearish dari kondisi teramati; bukan instruksi order.'
+                                        : 'Kondisi atau kualitas feed belum cukup untuk menetapkan bias.'}
                                 </div>
-                                {liveSizing && action !== 'WAIT' && (
-                                    <div className="mt-2 flex items-center justify-between border-t border-[#ECECE6] pt-1 text-[10px]">
-                                        <span className="text-slate-500">Rec. Lot:</span>
-                                        <span className="font-bold text-cyan-800">{liveSizing.lotSize} Lot</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
                         {/* Multi-Timeframe (MTF) Confluence Radar */}
-                        {forecast?.mtfMatrix && (
+                        {marketReview?.mtfMatrix && (
                             <div className="rounded-2xl border border-[#ECECE6] bg-white p-3.5">
                                 <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
@@ -1041,12 +931,12 @@ _Generated by ARRA Cronos Quant Engine_`;
                                         </span>
                                     </div>
                                     <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-0.5 text-[10px] font-bold text-cyan-800">
-                                        {forecast.confluenceSummary || `${forecast.confluenceScore}% Confluence`}
+                                        {marketReview.confluenceSummary || `${marketReview.confluenceScore}% Confluence`}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                     {TIMEFRAMES.map((item) => {
-                                        const mtf = forecast.mtfMatrix?.[item.id];
+                                        const mtf = marketReview.mtfMatrix?.[item.id];
                                         const isCurrent = timeframe === item.id;
                                         const dir = mtf?.direction || 'FLAT';
                                         return (
@@ -1130,7 +1020,13 @@ _Generated by ARRA Cronos Quant Engine_`;
                                                             : 'bg-amber-300/10 text-amber-800'
                                                     }`}
                                                 >
-                                                    {market.isFresh ? 'DATA FRESH' : `DATA ${formatAge(market.freshnessSeconds)} LALU`}
+                                                    {market.quoteMode === 'LIVE' && market.isFresh
+                                                        ? 'LIVE'
+                                                        : market.quoteMode === 'DELAYED'
+                                                        ? `DELAYED · ${formatAge(market.freshnessSeconds)}`
+                                                        : market.isFresh
+                                                        ? `TIMESTAMPED · BAR ${formatAge(market.latestBarAgeSeconds)}`
+                                                        : `STALE · ${formatAge(market.freshnessSeconds)}`}
                                                 </span>
                                             )}
                                             {market && (
@@ -1206,39 +1102,25 @@ _Generated by ARRA Cronos Quant Engine_`;
                                         symbol={selectedSymbol}
                                         tvSymbol={market.tvSymbol || `OANDA:${selectedSymbol}`}
                                         timeframe={timeframe}
-                                        forecast={forecast?.forecast || []}
+                                        currentPrice={market.currentPrice}
                                         action={action}
-                                        entry={entry}
-                                        stop={stop}
-                                        target={target}
-                                        takeProfit1={tp1}
-                                        takeProfit2={tp2}
-                                        riskRewardRatio={forecast?.tradePlan?.riskRewardRatio}
-                                        alignmentScore={forecast?.metrics?.alignmentScore}
-                                        metrics={forecast?.metrics}
-                                        tradePlan={forecast?.tradePlan}
-                                        confluenceScore={forecast?.confluenceScore}
-                                        confluenceSummary={forecast?.confluenceSummary}
-                                        direction={forecast?.direction}
-                                        pipSpec={pipSpec}
+                                        alignmentScore={marketReview?.metrics?.alignmentScore}
+                                        metrics={marketReview?.metrics}
+                                        confluenceScore={marketReview?.confluenceScore}
+                                        confluenceSummary={marketReview?.confluenceSummary}
+                                        direction={marketReview?.direction}
                                         isUnlocked={isUnlocked}
                                         formatPrice={(value) => formatPrice(selectedSymbol, value)}
                                     />
                                 )}
 
-                                {/* Lightweight Charts Mode (with Quant Envelope) */}
+                                {/* Candle chart from the observed market feed */}
                                 {chartMode === 'lightweight' && market && !marketError && (
                                     <CronosChart
                                         symbol={selectedSymbol}
                                         timeframe={timeframe}
                                         candles={market.candles}
-                                        forecast={forecast?.forecast || []}
                                         action={action}
-                                        entry={entry}
-                                        stop={stop}
-                                        target={target}
-                                        takeProfit1={tp1}
-                                        takeProfit2={tp2}
                                         formatPrice={(value) => formatPrice(selectedSymbol, value)}
                                     />
                                 )}
@@ -1274,12 +1156,12 @@ _Generated by ARRA Cronos Quant Engine_`;
                                         RSI (14)
                                     </div>
                                     <div className="mt-1 text-sm font-bold text-slate-700">
-                                        {metrics ? metrics.rsi.toFixed(1) : '—'}{' '}
+                                        {marketReview?.metrics ? marketReview.metrics.rsi14.toFixed(1) : '—'}{' '}
                                         <span className="ml-1 text-[9px] font-medium text-slate-500">
-                                            {metrics
-                                                ? metrics.rsi > 70
+                                            {marketReview?.metrics
+                                                ? marketReview.metrics.rsi14 > 70
                                                     ? 'OVERBOUGHT'
-                                                    : metrics.rsi < 30
+                                                    : marketReview.metrics.rsi14 < 30
                                                     ? 'OVERSOLD'
                                                     : 'NEUTRAL'
                                                 : ''}
@@ -1291,7 +1173,7 @@ _Generated by ARRA Cronos Quant Engine_`;
                                         ATR (14)
                                     </div>
                                     <div className="mt-1 text-sm font-bold text-slate-700">
-                                        {metrics ? price(metrics.atr) : '—'}{' '}
+                                        {marketReview?.metrics ? price(marketReview.metrics.atr14) : '—'}{' '}
                                         <span className="ml-1 text-[9px] font-medium text-slate-500">VOLATILITAS</span>
                                     </div>
                                 </div>
@@ -1300,10 +1182,10 @@ _Generated by ARRA Cronos Quant Engine_`;
                                         EMA TREND
                                     </div>
                                     <div className="mt-1 text-sm font-bold text-slate-700">
-                                        {metrics && market ? (
-                                            metrics.ema21 > metrics.ema55 ? (
+                                        {marketReview?.metrics && market ? (
+                                            marketReview.metrics.ema21 > marketReview.metrics.ema55 ? (
                                                 <span className="text-emerald-700">BULLISH</span>
-                                            ) : metrics.ema21 < metrics.ema55 ? (
+                                            ) : marketReview.metrics.ema21 < marketReview.metrics.ema55 ? (
                                                 <span className="text-rose-700">BEARISH</span>
                                             ) : (
                                                 'FLAT'
@@ -1326,339 +1208,82 @@ _Generated by ARRA Cronos Quant Engine_`;
                             </div>
                         </div>
 
-                        {/* Interactive Institutional Workspace (Tabs: Trade Plan, AI Commentary, Lot Calculator) */}
-                        <div className="rounded-2xl border border-[#ECECE6] bg-white overflow-hidden">
-                            {/* Tab Switcher */}
+                        {/* Tinjauan pasar berdasarkan feed dan candle aktual */}
+                        <div className="overflow-hidden rounded-2xl border border-[#ECECE6] bg-white">
                             <div className="flex border-b border-[#ECECE6] bg-[#F7F7F4] px-4 pt-2">
                                 <button
-                                    onClick={() => setActiveTab('plan')}
-                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-extrabold transition ${
-                                        activeTab === 'plan'
-                                            ? 'border-cyan-400 text-cyan-800'
-                                            : 'border-transparent text-slate-500 hover:text-slate-500'
-                                    }`}
+                                    onClick={() => setActiveTab('review')}
+                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-extrabold transition ${activeTab === 'review' ? 'border-cyan-400 text-cyan-800' : 'border-transparent text-slate-500'}`}
                                 >
                                     <ShieldCheckIcon className="h-4 w-4" />
-                                    <span>Rencana Eksekusi (Trade Plan)</span>
+                                    <span>Tinjauan Pasar</span>
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('commentary')}
-                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-extrabold transition ${
-                                        activeTab === 'commentary'
-                                            ? 'border-cyan-400 text-cyan-800'
-                                            : 'border-transparent text-slate-500 hover:text-slate-500'
-                                    }`}
+                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-extrabold transition ${activeTab === 'commentary' ? 'border-cyan-400 text-cyan-800' : 'border-transparent text-slate-500'}`}
                                 >
                                     <DocumentTextIcon className="h-4 w-4" />
-                                    <span>Analisis Quant & Logika</span>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('calculator')}
-                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-extrabold transition ${
-                                        activeTab === 'calculator'
-                                            ? 'border-cyan-400 text-cyan-800'
-                                            : 'border-transparent text-slate-500 hover:text-slate-500'
-                                    }`}
-                                >
-                                    <CalculatorIcon className="h-4 w-4" />
-                                    <span>Kalkulator Lot & Risiko</span>
+                                    <span>Analisis & Review Groq</span>
                                 </button>
                             </div>
-
-                            {/* Tab 1: Trade Plan */}
-                            {activeTab === 'plan' && (
-                                <div className="p-4 sm:p-6 space-y-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <div>
-                                            <h3 className="text-base font-extrabold text-slate-900">
-                                                Level Harga & Parameter Setup
-                                            </h3>
-                                            <p className="text-xs text-slate-500 mt-0.5">
-                                                Berdasarkan aturan teknikal lokal dan skenario ATR ilustratif.
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            onClick={handleCopySignal}
-                                            disabled={!forecast || action === 'WAIT'}
-                                            className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3.5 py-2 text-xs font-bold text-cyan-800 transition hover:bg-cyan-400/20 disabled:opacity-40"
-                                        >
-                                            {copiedPlan ? (
-                                                <>
-                                                    <CheckIcon className="h-4 w-4 text-emerald-400" />
-                                                    <span>Tersalin ke Clipboard!</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <ClipboardDocumentCheckIcon className="h-4 w-4" />
-                                                    <span>Salin Signal Card</span>
-                                                </>
-                                            )}
-                                        </button>
+                            {activeTab === 'review' && (
+                                <div className="space-y-4 p-4 sm:p-6">
+                                    <div>
+                                        <h3 className="text-base font-extrabold text-slate-900">Pembacaan kondisi pasar</h3>
+                                        <p className="mt-0.5 text-xs text-slate-500">Indikator dihitung dari candle yang sudah tercatat. Bias teknikal bukan instruksi transaksi atau perkiraan keuntungan.</p>
                                     </div>
-
-                                    {/* Price Targets Grid */}
+                                    <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/[.03] p-4 text-xs leading-relaxed text-slate-600">
+                                        {marketReview?.commentary || (reviewError ? `Tinjauan belum tersedia: ${reviewError}` : 'Menunggu candle dan data multi-timeframe untuk ditinjau.')}
+                                    </div>
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                                        <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-3.5">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                                Entry Level
-                                            </div>
-                                            <div className="mt-1.5 text-lg font-black text-cyan-800">
-                                                {entry ? price(entry) : '—'}
-                                            </div>
-                                            <div className="mt-1 text-[10px] text-slate-500">Harga acuan eksekusi</div>
-                                        </div>
-
-                                        <div className="rounded-xl border border-rose-500/20 bg-rose-500/[.03] p-3.5">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700/70">
-                                                Stop Loss (SL)
-                                            </div>
-                                            <div className="mt-1.5 text-lg font-black text-rose-700">
-                                                {stop ? price(stop) : '—'}
-                                            </div>
-                                            <div className="mt-1 text-[10px] text-rose-700/60">
-                                                {forecast?.tradePlan?.riskPips != null
-                                                    ? `${forecast.tradePlan.riskPips} ${pipSpec.unitName} risiko`
-                                                    : '1.35x ATR buffer'}
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[.03] p-3.5">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">
-                                                Take Profit 1 (TP1)
-                                            </div>
-                                            <div className="mt-1.5 text-lg font-black text-emerald-700">
-                                                {tp1 ? price(tp1) : '—'}
-                                            </div>
-                                            <div className="mt-1 text-[10px] text-emerald-700/60">Konservatif (55% move)</div>
-                                        </div>
-
-                                        <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/[.06] p-3.5">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
-                                                Take Profit 2 (Full Target)
-                                            </div>
-                                            <div className="mt-1.5 text-lg font-black text-emerald-800">
-                                                {tp2 ? price(tp2) : '—'}
-                                            </div>
-                                            <div className="mt-1 text-[10px] text-emerald-700/70">
-                                                {forecast?.tradePlan?.expectedMovePips != null
-                                                    ? `+${forecast.tradePlan.expectedMovePips} ${pipSpec.unitName} target`
-                                                    : 'Target skenario teknikal'}
-                                            </div>
-                                        </div>
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">RSI 14</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.metrics?.rsi14 ?? '—'}</div></div>
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">ATR 14</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.metrics ? price(marketReview.metrics.atr14) : '—'}</div></div>
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">EMA 21</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.metrics ? price(marketReview.metrics.ema21) : '—'}</div></div>
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">EMA 55</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.metrics ? price(marketReview.metrics.ema55) : '—'}</div></div>
                                     </div>
-
-                                    {/* Action Advice Box */}
-                                    <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-3.5 text-xs text-slate-500 flex items-start gap-3">
-                                        <InformationCircleIcon className="h-5 w-5 text-cyan-700 shrink-0 mt-0.5" />
-                                        <div className="leading-relaxed">
-                                            <span className="font-bold text-slate-700">Kondisi Invalidation: </span>
-                                            {forecast?.tradePlan?.invalidationReason ||
-                                                'Setup ini gugur jika harga menembus level Stop Loss pada penutupan candle.'}
-                                        </div>
+                                    <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-3 text-[11px] text-slate-600">
+                                        Feed: <strong>{market?.source || 'belum tersedia'}</strong> · Mode: <strong>{market?.quoteMode || '—'}</strong> · Usia quote: <strong>{market ? formatAge(market.freshnessSeconds) : '—'}</strong> · Candle terakhir: <strong>{market ? formatAge(market.latestBarAgeSeconds) : '—'}</strong>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Tab 2: AI Commentary & Logic */}
-                            {activeTab === 'commentary' && (
-                                <div className="p-4 sm:p-6 space-y-4">
-                                    <div>
-                                        <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                                            <CpuChipIcon className="h-5 w-5 text-cyan-700" />
-                                            <span>Analisis teknikal ARRA Cronos</span>
-                                        </h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Skor teknikal lokal tetap menjadi sumber sinyal. Groq hanya memberi ulasan sekunder atas snapshot pasar.
-                                        </p>
-                                    </div>
-
-                                    <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/[.03] p-4 text-xs leading-relaxed text-slate-500">
-                                        {forecast?.commentary ||
-                                            'Pilih instrumen dan jalankan kalkulasi untuk membaca ringkasan skenario teknikal.'}
-                                    </div>
-
-                                    <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-4">
-                                        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                                            <div>
-                                                <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                                                    <SparklesIcon className="h-4 w-4 text-cyan-700" />
-                                                    Review sekunder Groq
-                                                </h4>
-                                                <p className="mt-1 text-[11px] text-slate-500">
-                                                    Dipanggil saat tombol ditekan; tidak mengubah sinyal dan tidak mengirim order broker.
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={handleGroqReview}
-                                                disabled={isReviewingWithGroq || isLoading || !forecast}
-                                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-3.5 py-2 text-xs font-bold text-cyan-800 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                {isReviewingWithGroq ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <SparklesIcon className="h-4 w-4" />}
-                                                {isReviewingWithGroq ? 'Meninjau…' : 'Minta review Groq'}
-                                            </button>
-                                        </div>
-                                        {groqReviewError && <p className="mt-3 text-xs font-medium text-rose-700">{groqReviewError}</p>}
-                                        {groqReview && (
-                                            <div className="mt-3 rounded-lg border border-[#ECECE6] bg-white p-3 text-xs leading-relaxed text-slate-500">
-                                                <div className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-cyan-700">{groqReviewModel} · opini sekunder</div>
-                                                {groqReview}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 pt-2">
-                                        <div className="rounded-xl bg-[#F7F7F4] p-3">
-                                            <div className="text-[10px] font-bold text-slate-500">WAKTU ANALISIS</div>
-                                            <div className="mt-1 text-sm font-bold text-slate-700">
-                                                {forecast ? `${(forecast.inferenceMs / 1000).toFixed(2)}s` : '—'}
-                                            </div>
-                                        </div>
-                                        <div className="rounded-xl bg-[#F7F7F4] p-3">
-                                            <div className="text-[10px] font-bold text-slate-500">HISTORICAL CONTEXT</div>
-                                            <div className="mt-1 text-sm font-bold text-slate-700">
-                                                {forecast ? `${forecast.historyBars} bars` : '—'}
-                                            </div>
-                                        </div>
-                                        <div className="rounded-xl bg-[#F7F7F4] p-3">
-                                            <div className="text-[10px] font-bold text-slate-500">ENGINE METHOD</div>
-                                            <div className="mt-1 text-sm font-bold text-slate-700">
-                                                {forecast?.model || 'ARRA Cronos Quant Scenarios'}
-                                            </div>
-                                        </div>
-                                        <div className="rounded-xl bg-[#F7F7F4] p-3">
-                                        <div className="text-[10px] font-bold text-slate-500">INDEKS ALIGNMENT</div>
-                                            <div className="mt-1 text-sm font-bold text-cyan-700">
-                                                {forecast?.metrics ? `${forecast.metrics.alignmentScore}/100` : '—'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Tab 3: Interactive Lot & Risk Calculator */}
-                            {activeTab === 'calculator' && (
-                                <div className="p-4 sm:p-6 space-y-4">
-                                    <div>
-                                        <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                                            <CalculatorIcon className="h-5 w-5 text-cyan-700" />
-                                            <span>Kalkulator Manajemen Risiko & Lot Size</span>
-                                        </h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Hitung ukuran lot ideal berdasarkan modal akun dan persentase risiko terukur.
-                                        </p>
-                                    </div>
-
-                                    {/* Calculator Inputs */}
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-4">
-                                            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                                                Modal Akun Trading ($ USD)
-                                            </label>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-slate-500">$</span>
-                                                <input
-                                                    type="number"
-                                                    min="10"
-                                                    step="50"
-                                                    value={accountEquity}
-                                                    onChange={(e) => setAccountEquity(Math.max(10, Number(e.target.value)))}
-                                                    className="w-full bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-cyan-400"
-                                                />
-                                            </div>
-                                            <div className="mt-2 flex gap-1.5">
-                                                {[500, 1000, 5000, 10000].map((val) => (
-                                                    <button
-                                                        key={val}
-                                                        onClick={() => setAccountEquity(val)}
-                                                        className="rounded bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                                                    >
-                                                        ${val}
+                                    {marketReview?.mtfMatrix && (
+                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                            {TIMEFRAMES.map((item) => {
+                                                const mtf = marketReview.mtfMatrix?.[item.id];
+                                                return (
+                                                    <button key={item.id} onClick={() => handleSelectTimeframe(item.id)} className="rounded-xl border border-[#ECECE6] bg-white p-3 text-left hover:border-cyan-400/50">
+                                                        <div className="text-[10px] font-bold text-slate-500">{item.label}</div>
+                                                        <div className={`mt-1 text-sm font-black ${mtf?.direction === 'UP' ? 'text-emerald-700' : mtf?.direction === 'DOWN' ? 'text-rose-700' : 'text-slate-500'}`}>{mtf?.available ? mtf.direction : 'BELUM TERSEDIA'}</div>
+                                                        <div className="mt-1 text-[9px] text-slate-500">{mtf?.label || 'Riwayat belum cukup'}</div>
                                                     </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-4">
-                                            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                                                Batas Risiko per Trade (%)
-                                            </label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min="0.25"
-                                                    max="5"
-                                                    step="0.25"
-                                                    value={riskPercent}
-                                                    onChange={(e) => setRiskPercent(Math.max(0.1, Math.min(10, Number(e.target.value))))}
-                                                    className="w-full bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-cyan-400"
-                                                />
-                                                <span className="text-sm font-bold text-slate-500">%</span>
-                                            </div>
-                                            <div className="mt-2 flex gap-1.5">
-                                                {[0.5, 1.0, 1.5, 2.0].map((val) => (
-                                                    <button
-                                                        key={val}
-                                                        onClick={() => setRiskPercent(val)}
-                                                        className="rounded bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                                                    >
-                                                        {val}%
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Calculations Result */}
-                                    {liveSizing && (
-                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 pt-2">
-                                            <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/[.04] p-3.5">
-                                                <div className="text-[10px] font-bold uppercase text-cyan-700">
-                                                Ukuran Lot Ilustratif
-                                                </div>
-                                                <div className="mt-1 text-xl font-black text-cyan-800">
-                                                    {liveSizing.lotSize} Lot
-                                                </div>
-                                                <div className="mt-0.5 text-[10px] text-slate-500">Estimasi saja; spesifikasi broker belum diketahui.</div>
-                                            </div>
-
-                                            <div className="rounded-xl border border-rose-500/20 bg-rose-500/[.03] p-3.5">
-                                                <div className="text-[10px] font-bold uppercase text-rose-700">
-                                                    Risiko Estimasi ($)
-                                                </div>
-                                                <div className="mt-1 text-xl font-black text-rose-700">
-                                                    -${liveSizing.dollarRisk}
-                                                </div>
-                                                <div className="mt-0.5 text-[10px] text-slate-500">
-                                                    {riskPercent}% dari modal ${accountEquity}
-                                                </div>
-                                            </div>
-
-                                            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[.03] p-3.5">
-                                                <div className="text-[10px] font-bold uppercase text-emerald-700">
-                                                    Estimasi Skenario TP1
-                                                </div>
-                                                <div className="mt-1 text-xl font-black text-emerald-700">
-                                                    +${liveSizing.dollarProfit1}
-                                                </div>
-                                                <div className="mt-0.5 text-[10px] text-slate-500">
-                                                    +{liveSizing.tp1Pips} {pipSpec.unitName}
-                                                </div>
-                                            </div>
-
-                                            <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/[.06] p-3.5">
-                                                <div className="text-[10px] font-bold uppercase text-emerald-800">
-                                                    Estimasi Skenario TP2
-                                                </div>
-                                                <div className="mt-1 text-xl font-black text-emerald-800">
-                                                    +${liveSizing.dollarProfit2}
-                                                </div>
-                                                <div className="mt-0.5 text-[10px] text-slate-500">
-                                                    +{liveSizing.tp2Pips} {pipSpec.unitName}
-                                                </div>
-                                            </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
+                                </div>
+                            )}
+                            {activeTab === 'commentary' && (
+                                <div className="space-y-4 p-4 sm:p-6">
+                                    <div>
+                                        <h3 className="flex items-center gap-2 text-base font-extrabold text-slate-900"><CpuChipIcon className="h-5 w-5 text-cyan-700" />Review sekunder Groq</h3>
+                                        <p className="mt-0.5 text-xs text-slate-500">Groq meninjau snapshot data dan tidak membuat atau mengirim order broker.</p>
+                                    </div>
+                                    <button
+                                        onClick={handleGroqReview}
+                                        disabled={isReviewingWithGroq || isLoading || !marketReview}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-3.5 py-2 text-xs font-bold text-cyan-800 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {isReviewingWithGroq ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <SparklesIcon className="h-4 w-4" />}
+                                        {isReviewingWithGroq ? 'Meninjau…' : 'Minta review Groq'}
+                                    </button>
+                                    {groqReviewError && <p className="text-xs font-medium text-rose-700">{groqReviewError}</p>}
+                                    {groqReview && <div className="rounded-xl border border-[#ECECE6] bg-[#F7F7F4] p-4 text-xs leading-relaxed text-slate-600"><div className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-cyan-700">{groqReviewModel} · opini sekunder</div>{groqReview}</div>}
+                                    <div className="rounded-xl border border-[#ECECE6] bg-white p-4 text-xs leading-relaxed text-slate-600">
+                                        {marketReview?.commentary || 'Ringkasan indikator akan tampil setelah data candle tersedia.'}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">CANDLE TERBACA</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.historyBars ?? '—'}</div></div>
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">METODE</div><div className="mt-1 text-sm font-bold text-slate-800">{marketReview?.model || 'ARRA Cronos Market Review'}</div></div>
+                                        <div className="rounded-xl bg-[#F7F7F4] p-3"><div className="text-[10px] font-bold text-slate-500">ALIGNMENT · BUKAN PROBABILITAS</div><div className="mt-1 text-sm font-bold text-cyan-700">{marketReview?.metrics ? `${marketReview.metrics.alignmentScore}/100` : '—'}</div></div>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -1673,9 +1298,7 @@ _Generated by ARRA Cronos Quant Engine_`;
                                     ARRA Cronos · TradingView Realtime & Multi-Timeframe Quant Engine
                                 </div>
                                 <p className="mt-1 max-w-2xl text-[10px] leading-relaxed text-slate-500">
-                                    Chart realtime menggunakan TradingView Advanced Chart. Proyeksi lokal memakai skenario ATR
-                                    dengan koridor volatilitas yang tidak terkalibrasi. Tersedia juga Pine Script indikator
-                                    untuk berjalan langsung di TradingView.
+                                    Chart menampilkan candle pasar dan indikator teknikal aktual. Tersedia juga Pine Script indikator tanpa proyeksi harga.
                                 </p>
                             </div>
                             <div className="flex shrink-0 gap-2">
@@ -1686,11 +1309,11 @@ _Generated by ARRA Cronos Quant Engine_`;
                                     Lihat Indikator Pine
                                 </Link>
                                 <button
-                                    onClick={() => runForecast(selectedSymbol, timeframe, ++activeRequestIdRef.current)}
-                                    disabled={isForecasting}
+                                    onClick={() => runMarketReview(selectedSymbol, timeframe, ++activeRequestIdRef.current)}
+                                    disabled={isReviewing}
                                     className="rounded-xl bg-cyan-200 px-3.5 py-2.5 text-[10px] font-extrabold text-slate-900 transition hover:bg-white disabled:opacity-50"
                                 >
-                                    {isForecasting ? 'Menghitung…' : 'Hitung Ulang Forecast'}
+                                    {isReviewing ? 'Memperbarui…' : 'Perbarui tinjauan'}
                                 </button>
                             </div>
                         </div>
@@ -1704,8 +1327,7 @@ _Generated by ARRA Cronos Quant Engine_`;
                         memakai indikator teknikal dan keselarasan multi-timeframe.
                     </span>
                     <span>
-                        Forecast berbasis kuantitatif · Dispersi volatilitas bukan garansi kepastian profit · Terapkan money
-                        management bijak.
+                        Tinjauan teknikal bersifat deskriptif dan tidak menjamin akurasi atau keuntungan. Tidak ada simulasi atau order broker.
                     </span>
                 </footer>
             </div>

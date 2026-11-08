@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { buildKronosQuantForecast } from '@/lib/arra-cronos-engine';
-import { CRONOS_INTERVALS, getCronosMarketData, type CronosTimeframe } from '@/lib/arra-cronos-market';
+import { buildKronosQuantReview } from '@/lib/arra-cronos-engine';
+import { CRONOS_INTERVALS, getCronosMarketData, isActionableMarketQuote, type CronosTimeframe } from '@/lib/arra-cronos-market';
 import { getCronosAnalysisHistory } from '@/lib/arra-cronos-analysis';
 import { CRYPTO, FOREX_PAIRS } from '@/lib/market-data';
 import { isMarketOpen } from '@/lib/market-hours';
@@ -50,23 +50,16 @@ export async function POST(request: Request) {
         const market = await getCronosMarketData(symbol, timeframe);
         const mtfHistory = await getCronosAnalysisHistory(symbol, market);
 
-        const inference = buildKronosQuantForecast(
+        const inference = buildKronosQuantReview(
             symbol,
             timeframe,
             market.candles,
-            12,
-            { '15m': 900, '1h': 3_600, '4h': 14_400, '1d': 86_400 }[timeframe],
-            Object.hasOwn(CRYPTO, symbol),
-            mtfHistory
+            mtfHistory,
+            market.currentPrice
         );
-        const quoteIsFresh = market.isFresh && ['TradingView Realtime', 'Binance Spot'].includes(market.source);
+        const quoteIsFresh = isActionableMarketQuote(market);
         const marketIsOpen = Object.hasOwn(CRYPTO, symbol) || isMarketOpen(symbol).isOpen;
-        const action = quoteIsFresh && marketIsOpen ? inference.tradePlan.action : 'WAIT';
-        if (action === 'WAIT' && inference.tradePlan.action !== 'WAIT') {
-            inference.tradePlan.invalidationReason = !marketIsOpen
-                ? 'Pasar tutup; tunggu pembukaan sebelum mempertimbangkan setup.'
-                : 'Kutipan live segar tidak tersedia.';
-        }
+        const action = quoteIsFresh && marketIsOpen ? inference.action : 'WAIT';
         const { model, review } = await reviewCronosSetup({
             symbol,
             timeframe,
@@ -76,7 +69,6 @@ export async function POST(request: Request) {
             candles: market.candles,
             metrics: inference.metrics,
             mtfMatrix: inference.mtfMatrix,
-            tradePlan: inference.tradePlan,
             action,
         });
 

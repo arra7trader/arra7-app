@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCronosMarketData } from '@/lib/arra-cronos-market';
+import { getCronosMarketData, isActionableMarketQuote } from '@/lib/arra-cronos-market';
 import { getCronosAnalysisHistory } from '@/lib/arra-cronos-analysis';
-import { buildKronosQuantForecast } from '@/lib/arra-cronos-engine';
-import { isMarketOpen } from '@/lib/market-hours';
+import { buildKronosMarketReview, CRONOS_MIN_COMPLETED_CANDLES, getCompletedCronosCandles } from '@/lib/arra-cronos-engine';
+import { formatMarketOpenWib, isMarketOpen } from '@/lib/market-hours';
+import { recordArraMarketObservation } from '@/lib/arra-market-observations';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,19 +11,14 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
-        const capitalParam = parseFloat(searchParams.get('capital') || '1254');
-        const capital = !Number.isFinite(capitalParam) || capitalParam <= 0 ? 1254 : capitalParam;
-
-        // Requested symbol: BTCUSD or XAUUSD (default XAUUSD unless weekend, or param provided)
+        // Requested symbol: BTCUSD or XAUUSD (default XAUUSD unless explicitly selected)
         const requestedSymbol = (searchParams.get('symbol') || 'XAUUSD').toUpperCase().replace('$', '');
         const activeSymbol = requestedSymbol === 'BTCUSD' ? 'BTCUSD' : 'XAUUSD';
         const isCrypto = activeSymbol === 'BTCUSD';
 
-        // Check real weekend market hours (Forex/Gold closed Friday 22:00 UTC to Sunday 22:00 UTC / Mon 05:00 WIB)
-        // Crypto (BTCUSD) operates 24/7/365 with ZERO holidays!
         const xauMarketStatus = isMarketOpen('XAUUSD');
-        const isForexWeekend = !xauMarketStatus.isOpen;
-        const isWeekendClosed = !isCrypto && isForexWeekend;
+        const forexMarketClosed = !isMarketOpen('EURUSD').isOpen;
+        const xauSessionClosed = !xauMarketStatus.isOpen;
 
         // Fetch 5 instruments in parallel (including 24/7 BTCUSD)
         const [btcMarket, xauMarket, eurMarket, gbpMarket, jpyMarket] = await Promise.allSettled([
@@ -38,9 +34,7 @@ export async function GET(request: NextRequest) {
         const eur = eurMarket.status === 'fulfilled' ? eurMarket.value : null;
         const gbp = gbpMarket.status === 'fulfilled' ? gbpMarket.value : null;
         const jpy = jpyMarket.status === 'fulfilled' ? jpyMarket.value : null;
-        const isQuoteFresh = (market: typeof btc) => Boolean(
-            market?.isFresh && ['TradingView Realtime', 'Binance Spot'].includes(market.source)
-        );
+        const isQuoteFresh = (market: typeof btc) => Boolean(market && isActionableMarketQuote(market));
         const btcQuoteIsFresh = isQuoteFresh(btc);
         const xauQuoteIsFresh = isQuoteFresh(xau);
         const eurQuoteIsFresh = isQuoteFresh(eur);
@@ -63,12 +57,20 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // Quantitative analysis on real candles
+        // Quantitative analysis uses completed real candles only.
+        const completedCandles = getCompletedCronosCandles(targetMarket.candles, '15m');
+        if (completedCandles.length < CRONOS_MIN_COMPLETED_CANDLES) {
+            return NextResponse.json(
+                { success: false, error: `Analisis ${activeSymbol} menunggu riwayat candle tertutup yang cukup (${completedCandles.length}/${CRONOS_MIN_COMPLETED_CANDLES}).` },
+                { status: 503, headers: { 'Cache-Control': 'no-store, max-age=0' } }
+            );
+        }
+
         let inference = null;
-        if (targetMarket && targetMarket.candles.length >= 20) {
+        if (targetMarket) {
             try {
                 const mtfHistory = await getCronosAnalysisHistory(activeSymbol, targetMarket);
-                inference = buildKronosQuantForecast(activeSymbol, '15m', targetMarket.candles, 10, 900, isCrypto, mtfHistory);
+                inference = buildKronosMarketReview(activeSymbol, '15m', completedCandles, currentPrice, mtfHistory);
             } catch (err) {
                 console.error(`[ARRA GROK] Inference error for ${activeSymbol}:`, err);
             }
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
 
         if (!inference) {
             return NextResponse.json(
-                { success: false, error: `Analisis ${activeSymbol} belum tersedia. Feed harga mungkin aktif, tetapi setup belum dapat dihitung.` },
+                { success: false, error: `Analisis ${activeSymbol} belum tersedia. Feed harga mungkin aktif, tetapi riwayat candle tertutup belum cukup.` },
                 { status: 503, headers: { 'Cache-Control': 'no-store, max-age=0' } }
             );
         }
@@ -88,56 +90,49 @@ export async function GET(request: NextRequest) {
         const confluence = inference.confluenceSummary;
 
         // Bias determination
-        const proposedAction = inference.tradePlan.action === 'BUY'
-            ? 'LONG'
-            : inference.tradePlan.action === 'SELL'
-                ? 'SHORT'
-                : 'WAIT';
         const targetQuoteIsFresh = isCrypto ? btcQuoteIsFresh : xauQuoteIsFresh;
-        let actionType = isWeekendClosed || !targetQuoteIsFresh ? 'WAIT' : proposedAction;
+        const marketStatus = isCrypto ? { isOpen: true } : isMarketOpen(activeSymbol);
+        const proposedBias = inference.action === 'BUY' ? 'BULLISH' : inference.action === 'SELL' ? 'BEARISH' : 'WAIT';
+        const bias = marketStatus.isOpen && targetQuoteIsFresh ? proposedBias : 'WAIT';
 
-        // Trade setup parameters
-        const entryPrice = inference.tradePlan.entryPrice;
-        const stopLoss = inference.tradePlan.stopLoss;
-        const takeProfit = inference.tradePlan.takeProfit2;
-
-        // Illustrative position size from reference capital; broker contract specs are not connected.
-        const riskPercent = 0.015;
-        const dollarRisk = Number((capital * riskPercent).toFixed(2)); // $18.81 for $1,254
-        const stopDistance = Math.max(0.00001, Math.abs(entryPrice - stopLoss));
-
-        let sizeLots: number;
-        let contractMultiplier: number;
-        if (isCrypto) {
-            contractMultiplier = 1;
-            const rawBtcLots = dollarRisk / stopDistance;
-            sizeLots = actionType === 'WAIT' ? 0 : Number(Math.min(2.0, Math.floor(rawBtcLots * 100) / 100).toFixed(2));
-        } else {
-            contractMultiplier = 100;
-            const rawGoldLots = dollarRisk / (stopDistance * 100);
-            sizeLots = actionType === 'WAIT' ? 0 : Number(Math.min(5.0, Math.floor(rawGoldLots * 100) / 100).toFixed(2));
-        }
-
-        if (sizeLots < 0.01) {
-            sizeLots = 0;
-            actionType = 'WAIT';
-        }
-
-        const sizePct = sizeLots
-            ? `${((sizeLots * contractMultiplier * currentPrice / capital) * 100).toFixed(0)}% notional vs reference capital`
-            : '—';
-
-        const reason = isWeekendClosed
-            ? 'Pasar Forex & Emas tutup (Weekend). Harga ditahan di penutupan Jumat. Buka kembali Senin 05:00 WIB.'
+        const reason = !marketStatus.isOpen
+                ? `${marketStatus.reason || 'Pasar futures gold tutup'}. Bias ditahan; perkiraan buka ${marketStatus.nextOpen ? formatMarketOpenWib(marketStatus.nextOpen) : 'belum tersedia'}.`
             : !targetMarket.isFresh
-                ? `Feed ${targetMarket.source} sudah ${targetMarket.freshnessSeconds} detik, melewati batas segar. Setup ditahan sampai feed terbaru tersedia.`
+                ? `Feed ${targetMarket.source} sudah ${targetMarket.freshnessSeconds} detik, melewati batas segar. Bias ditahan sampai feed terbaru tersedia.`
                 : !targetQuoteIsFresh
-                    ? `Feed ${targetMarket.source} hanya menyediakan candle terakhir, bukan kuotasi langsung. Rekomendasi ditahan.`
-                : actionType === 'WAIT' && proposedAction !== 'WAIT'
-                    ? 'Ukuran minimum 0.01 lot melampaui batas risiko referensi; setup ditahan.'
+                    ? targetMarket.quoteMode === 'DELAYED'
+                        ? `Feed ${targetMarket.source} tertunda; bias menjadi WAIT sampai kuotasi live tersedia.`
+                        : targetMarket.quoteMode === 'TIMESTAMPED'
+                            ? `Feed ${targetMarket.source} punya cap waktu, tetapi streaming live belum terkonfirmasi; bias menjadi WAIT.`
+                            : `Feed ${targetMarket.source} hanya menyediakan candle terakhir, bukan kuotasi langsung. Bias menjadi WAIT.`
             : isCrypto
                 ? `BTCUSD 24/7 · Trend Score ${trendScore > 0 ? '+' : ''}${trendScore}/100 · RSI ${rsi.toFixed(1)} · ATR $${atr.toFixed(0)} · ${confluence}`
                 : `Trend Score ${trendScore > 0 ? '+' : ''}${trendScore}/100 · RSI ${rsi.toFixed(1)} · ATR $${atr.toFixed(2)} · ${confluence}`;
+
+        const latestBar = completedCandles.at(-1);
+        let analysisSnapshotRecorded = false;
+        if (latestBar) {
+            analysisSnapshotRecorded = await recordArraMarketObservation({
+                symbol: activeSymbol,
+                timeframe: '15m',
+                barTime: latestBar.time,
+                analyzedAt: new Date().toISOString(),
+                price: currentPrice,
+                source: targetMarket.source,
+                quoteMode: targetMarket.quoteMode,
+                quoteAgeSeconds: targetMarket.freshnessSeconds,
+                feedFresh: targetQuoteIsFresh,
+                marketOpen: marketStatus.isOpen,
+                action: bias === 'BULLISH' ? 'BUY' : bias === 'BEARISH' ? 'SELL' : 'WAIT',
+                reason,
+                direction: inference.direction,
+                alignmentScore: inference.metrics.alignmentScore,
+                confluenceScore: inference.confluenceScore,
+                metrics: inference.metrics,
+                mtfMatrix: inference.mtfMatrix,
+                engine: 'ARRA GROK Quant Review v1',
+            });
+        }
 
         // Real scanned assets array (including 24/7 BTCUSD at the front)
         const scannedAssets = [
@@ -146,7 +141,7 @@ export async function GET(request: NextRequest) {
                 name: 'Bitcoin / US Dollar',
                 price: btcCurrentPrice,
                 change: btc?.changePercent ?? null,
-                note: !btc ? 'feed tidak tersedia' : !btcQuoteIsFresh ? 'kuotasi live tidak tersedia' : activeSymbol === 'BTCUSD' ? (actionType === 'WAIT' ? 'menunggu konfirmasi' : `${actionType} setup`) : 'Pasar 24/7',
+                note: !btc ? 'feed tidak tersedia' : !btcQuoteIsFresh ? 'kuotasi live tidak tersedia' : activeSymbol === 'BTCUSD' ? (bias === 'WAIT' ? 'menunggu konfirmasi' : `bias ${bias}`) : 'Pasar 24/7',
                 dot: !btc ? 'bg-slate-400' : btcQuoteIsFresh ? 'bg-emerald-500' : 'bg-amber-500',
                 status: !btc ? 'UNAVAILABLE' : btcQuoteIsFresh ? 'LIVE' : 'STALE',
                 is24_7: true,
@@ -156,9 +151,9 @@ export async function GET(request: NextRequest) {
                 name: 'Gold Futures',
                 price: xauCurrentPrice,
                 change: xau?.changePercent ?? null,
-                note: !xau ? 'feed tidak tersedia' : isForexWeekend ? 'pasar tutup' : !xauQuoteIsFresh ? 'kuotasi live tidak tersedia' : activeSymbol === 'XAUUSD' ? (actionType === 'WAIT' ? 'menunggu konfirmasi' : `${actionType} setup`) : 'feed segar',
-                dot: !xau ? 'bg-slate-400' : isForexWeekend ? 'bg-amber-500' : xauQuoteIsFresh ? 'bg-emerald-500' : 'bg-amber-500',
-                status: !xau ? 'UNAVAILABLE' : isForexWeekend ? 'WEEKEND' : xauQuoteIsFresh ? 'LIVE' : 'STALE',
+                note: !xau ? 'feed tidak tersedia' : xauSessionClosed ? 'sesi futures tutup' : !xauQuoteIsFresh ? 'kuotasi live tidak tersedia' : activeSymbol === 'XAUUSD' ? (bias === 'WAIT' ? 'menunggu konfirmasi' : `bias ${bias}`) : 'feed segar',
+                dot: !xau ? 'bg-slate-400' : xauSessionClosed ? 'bg-amber-500' : xauQuoteIsFresh ? 'bg-emerald-500' : 'bg-amber-500',
+                status: !xau ? 'UNAVAILABLE' : xauSessionClosed ? 'CLOSED' : xauQuoteIsFresh ? 'LIVE' : 'STALE',
                 is24_7: false,
             },
             {
@@ -166,9 +161,9 @@ export async function GET(request: NextRequest) {
                 name: 'Euro / US Dollar',
                 price: eur?.currentPrice ?? null,
                 change: eur?.changePercent ?? null,
-                note: !eur ? 'feed tidak tersedia' : isForexWeekend ? 'pasar tutup' : eurQuoteIsFresh ? 'feed segar' : 'kuotasi live tidak tersedia',
-                dot: !eur ? 'bg-slate-400' : isForexWeekend ? 'bg-amber-500' : eurQuoteIsFresh ? 'bg-blue-500' : 'bg-amber-500',
-                status: !eur ? 'UNAVAILABLE' : isForexWeekend ? 'WEEKEND' : eurQuoteIsFresh ? 'LIVE' : 'STALE',
+                note: !eur ? 'feed tidak tersedia' : forexMarketClosed ? 'pasar tutup' : eurQuoteIsFresh ? 'feed segar' : 'kuotasi live tidak tersedia',
+                dot: !eur ? 'bg-slate-400' : forexMarketClosed ? 'bg-amber-500' : eurQuoteIsFresh ? 'bg-blue-500' : 'bg-amber-500',
+                status: !eur ? 'UNAVAILABLE' : forexMarketClosed ? 'WEEKEND' : eurQuoteIsFresh ? 'LIVE' : 'STALE',
                 is24_7: false,
             },
             {
@@ -176,9 +171,9 @@ export async function GET(request: NextRequest) {
                 name: 'British Pound',
                 price: gbp?.currentPrice ?? null,
                 change: gbp?.changePercent ?? null,
-                note: !gbp ? 'feed tidak tersedia' : isForexWeekend ? 'pasar tutup' : gbpQuoteIsFresh ? 'feed segar' : 'kuotasi live tidak tersedia',
-                dot: !gbp ? 'bg-slate-400' : isForexWeekend ? 'bg-amber-500' : gbpQuoteIsFresh ? 'bg-amber-500' : 'bg-slate-400',
-                status: !gbp ? 'UNAVAILABLE' : isForexWeekend ? 'WEEKEND' : gbpQuoteIsFresh ? 'LIVE' : 'STALE',
+                note: !gbp ? 'feed tidak tersedia' : forexMarketClosed ? 'pasar tutup' : gbpQuoteIsFresh ? 'feed segar' : 'kuotasi live tidak tersedia',
+                dot: !gbp ? 'bg-slate-400' : forexMarketClosed ? 'bg-amber-500' : gbpQuoteIsFresh ? 'bg-amber-500' : 'bg-slate-400',
+                status: !gbp ? 'UNAVAILABLE' : forexMarketClosed ? 'WEEKEND' : gbpQuoteIsFresh ? 'LIVE' : 'STALE',
                 is24_7: false,
             },
             {
@@ -186,9 +181,9 @@ export async function GET(request: NextRequest) {
                 name: 'US Dollar / Yen',
                 price: jpy?.currentPrice ?? null,
                 change: jpy?.changePercent ?? null,
-                note: !jpy ? 'feed tidak tersedia' : isForexWeekend ? 'pasar tutup' : jpyQuoteIsFresh ? 'feed segar' : 'kuotasi live tidak tersedia',
-                dot: !jpy ? 'bg-slate-400' : isForexWeekend ? 'bg-amber-500' : jpyQuoteIsFresh ? 'bg-blue-500' : 'bg-amber-500',
-                status: !jpy ? 'UNAVAILABLE' : isForexWeekend ? 'WEEKEND' : jpyQuoteIsFresh ? 'LIVE' : 'STALE',
+                note: !jpy ? 'feed tidak tersedia' : forexMarketClosed ? 'pasar tutup' : jpyQuoteIsFresh ? 'feed segar' : 'kuotasi live tidak tersedia',
+                dot: !jpy ? 'bg-slate-400' : forexMarketClosed ? 'bg-amber-500' : jpyQuoteIsFresh ? 'bg-blue-500' : 'bg-amber-500',
+                status: !jpy ? 'UNAVAILABLE' : forexMarketClosed ? 'WEEKEND' : jpyQuoteIsFresh ? 'LIVE' : 'STALE',
                 is24_7: false,
             },
         ];
@@ -209,50 +204,35 @@ export async function GET(request: NextRequest) {
 
         const terminalLogs = [
             `${timeStr} FEED    $${activeSymbol} ${targetMarket.source} · ${targetMarket.freshnessSeconds}s`,
-            `${timeStr} SIZER   Referensi $${capital.toFixed(2)} · risiko 1.5% · ${sizeLots} lot`,
-            actionType === 'WAIT'
-                ? `${timeStr} SIGNAL  WAIT · no actionable levels`
-                : `${timeStr} SIGNAL  ${actionType} · entry ${entryPrice} · SL ${stopLoss} · TP ${takeProfit}`,
-            '  rekomendasi analisis saja · tidak ada order broker yang dikirim',
+            `${timeStr} BIAS    ${bias} · trend ${trendScore}/100 · RSI ${rsi.toFixed(1)} · alignment ${inference.metrics.alignmentScore}/100`,
+            '  pembacaan candle pasar aktual · tanpa proyeksi, sizing, P/L, atau order broker',
         ];
 
         return NextResponse.json({
             success: true,
+            analysisSnapshotRecorded,
             updatedAt: now.toISOString(),
             timeWib: `${timeStr}:${ss}`,
             selectedSymbol: activeSymbol,
             marketStatus: {
-                isOpen: !isWeekendClosed,
-                isWeekend: isWeekendClosed,
+                isOpen: marketStatus.isOpen,
+                isWeekend: !isCrypto && marketStatus.reason?.toLowerCase().includes('weekend') === true,
                 is24_7: isCrypto,
-                reason: isCrypto
-                    ? 'Pasar Kripto 24/7 Aktif Non-Stop (Tanpa Libur Weekend)'
-                    : isWeekendClosed
-                    ? 'Pasar Tutup (Weekend)'
-                    : 'Pasar Buka (Live)',
-                nextOpenWib: isCrypto ? '24/7 Realtime' : 'Senin 05:00 WIB',
+                reason: isCrypto ? 'Pasar Kripto 24/7 Aktif Non-Stop (Tanpa Libur Weekend)' : marketStatus.reason || 'COMEX gold futures session',
+                nextOpenWib: isCrypto ? '24/7 Realtime' : marketStatus.nextOpen ? formatMarketOpenWib(marketStatus.nextOpen) : 'Sesi Chicago berikutnya',
             },
-            activeTrade: {
+            marketAnalysis: {
                 symbol: `$${activeSymbol}`,
                 name: assetName,
-                type: actionType,
-                entry: actionType === 'WAIT' ? null : entryPrice,
+                bias,
                 current: currentPrice,
-                stopLoss: actionType === 'WAIT' ? null : stopLoss,
-                takeProfit: actionType === 'WAIT' ? null : takeProfit,
-                sizeLots,
-                sizePct,
+                rsi14: inference.metrics.rsi14,
+                atr14: inference.metrics.atr14,
+                trendScore: inference.metrics.trendScore,
+                alignmentScore: inference.metrics.alignmentScore,
                 reason,
             },
             scannedAssets,
-            pipelineSummary: {
-                filteredCount: 0,
-                skippedCount: scannedAssets.filter((asset) => asset.status === 'WEEKEND' || asset.status === 'UNAVAILABLE' || asset.status === 'STALE').length,
-                sizerEq: `${sizeLots} Lots`,
-                dollarRisk: `$${dollarRisk.toFixed(2)}`,
-                logLinesCount: 0,
-                lastClosePnl: null,
-            },
             terminalLogs,
             logHistory: [],
             marketSnapshot: {
@@ -266,6 +246,7 @@ export async function GET(request: NextRequest) {
                 source: targetMarket.source,
                 freshnessSeconds: targetMarket.freshnessSeconds,
                 isFresh: targetQuoteIsFresh,
+                quoteMode: targetMarket.quoteMode,
                 updatedAt: targetMarket.updatedAt,
                 quoteTimeWib,
             },

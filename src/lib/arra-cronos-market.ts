@@ -1,4 +1,5 @@
 import { CRYPTO, FOREX_PAIRS, type ForexPair } from '@/lib/market-data';
+import { isMarketOpen } from '@/lib/market-hours';
 
 export const CRONOS_INTERVALS = {
     '15m': { yahoo: '15m', range: '60d', binance: '15m' },
@@ -14,6 +15,13 @@ export const CRONOS_CONFIRMATION_TIMEFRAMES: Record<CronosTimeframe, CronosTimef
     '1h': ['1h', '4h', '1d'],
     '4h': ['4h', '1d'],
     '1d': ['4h', '1d'],
+};
+
+const QUOTE_FRESHNESS_LIMIT_SECONDS: Record<CronosTimeframe, number> = {
+    '15m': 900,
+    '1h': 3_600,
+    '4h': 14_400,
+    '1d': 172_800,
 };
 
 export type CronosMarketCandle = {
@@ -36,8 +44,11 @@ export type CronosMarketResult = {
     latestBarClose: number;
     changePercent: number;
     source: string;
+    historySource: string;
+    quoteMode: 'LIVE' | 'DELAYED' | 'TIMESTAMPED' | 'CANDLE_CLOSE';
     updatedAt: string;
     freshnessSeconds: number;
+    latestBarAgeSeconds: number;
     isFresh: boolean;
     count: number;
     volumeCoverage: number;
@@ -78,7 +89,9 @@ export const TRADINGVIEW_SYMBOLS: Record<string, string> = {
     'NZDCAD': 'FX:NZDCAD',
     'NZDCHF': 'FX:NZDCHF',
     // Commodities
-    'XAUUSD': 'OANDA:XAUUSD',
+    // Keep the live quote and historical GC=F candles on the same COMEX gold
+    // futures instrument. OANDA:XAUUSD is spot gold and does not match GC=F.
+    'XAUUSD': 'COMEX:GC1!',
     'XAGUSD': 'OANDA:XAGUSD',
     'XPTUSD': 'TVC:PLATINUM',
     'XPDUSD': 'TVC:PALLADIUM',
@@ -153,16 +166,20 @@ async function fetchTradingViewLiveQuote(tvSymbol: string): Promise<{
     high: number | null;
     low: number | null;
     volume: number | null;
+    updateMode: string | null;
 }> {
     let endpoint = 'cfd';
     if (tvSymbol.startsWith('FX:')) {
         endpoint = 'forex';
     } else if (tvSymbol.startsWith('BINANCE:') || tvSymbol.includes('USDT') || tvSymbol.includes('BTC')) {
         endpoint = 'crypto';
+    } else if (tvSymbol.startsWith('COMEX:') || tvSymbol.startsWith('NYMEX:') || tvSymbol.startsWith('CBOT:')) {
+        endpoint = 'futures';
     } else if (tvSymbol.startsWith('DJ:') || tvSymbol.startsWith('SP:') || tvSymbol.startsWith('TVC:DJI')) {
         endpoint = 'cfd';
     }
 
+    let updateMode: string | null = null;
     try {
         const response = await fetch(`https://scanner.tradingview.com/${endpoint}/scan`, {
             method: 'POST',
@@ -172,7 +189,7 @@ async function fetchTradingViewLiveQuote(tvSymbol: string): Promise<{
             },
             body: JSON.stringify({
                 symbols: { tickers: [tvSymbol] },
-                columns: ['close', 'open', 'high', 'low', 'volume'],
+                columns: ['close', 'open', 'high', 'low', 'volume', 'update_mode'],
             }),
             cache: 'no-store',
             signal: AbortSignal.timeout(6_000),
@@ -182,12 +199,14 @@ async function fetchTradingViewLiveQuote(tvSymbol: string): Promise<{
             const data = await response.json();
             const row = data?.data?.[0]?.d;
             if (Array.isArray(row) && row.length >= 4 && Number.isFinite(row[0]) && Number(row[0]) > 0) {
+                updateMode = typeof row[5] === 'string' ? row[5] : null;
                 return {
                     livePrice: Number(row[0]),
                     open: Number(row[1]) || null,
                     high: Number(row[2]) || null,
                     low: Number(row[3]) || null,
                     volume: Number(row[4]) || null,
+                    updateMode,
                 };
             }
         }
@@ -195,7 +214,7 @@ async function fetchTradingViewLiveQuote(tvSymbol: string): Promise<{
         // Fallback silently if scanner endpoint fails
     }
 
-    return { livePrice: null, open: null, high: null, low: null, volume: null };
+    return { livePrice: null, open: null, high: null, low: null, volume: null, updateMode };
 }
 
 // =======================================
@@ -288,12 +307,13 @@ async function fetchYahooCandles(symbol: string, interval: string, range: string
                     volume: Number.isFinite(Number(quote.volume?.[index])) ? Number(quote.volume[index]) : 0,
                 }];
             });
-            const quoteTime = Number(result.meta?.regularMarketTime);
+            const rawQuoteTime = Number(result.meta?.regularMarketTime);
+            const quoteTime = Number.isFinite(rawQuoteTime) && rawQuoteTime > 0 ? rawQuoteTime : null;
             if (candles.length) {
                 const livePrice = Number(result.meta?.regularMarketPrice);
                 return {
                     candles,
-                    quoteTime: Number.isFinite(quoteTime) ? quoteTime * 1000 : null,
+                    quoteTime: quoteTime !== null ? quoteTime * 1000 : null,
                     livePrice: Number.isFinite(livePrice) && livePrice > 0 ? livePrice : null,
                 };
             }
@@ -321,8 +341,10 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
     const tvSymbol = getTradingViewSymbol(symbol);
     let candles: CronosMarketCandle[];
     let source = 'TradingView Realtime';
+    let historySource = '';
     let livePrice: number | null = null;
     let quoteTime: number | null = null;
+    let quoteMode: CronosMarketResult['quoteMode'] = 'CANDLE_CLOSE';
 
     // Step 1: Fetch historical candles for Kronos inference context (up to 512 bars)
     if (isCrypto) {
@@ -331,12 +353,16 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
         livePrice = fetched.livePrice;
         quoteTime = fetched.quoteTime;
         source = fetched.source;
+        historySource = fetched.source;
+        quoteMode = fetched.source === 'Binance Spot' ? 'LIVE' : 'CANDLE_CLOSE';
     } else {
         const fetched = await fetchYahooCandles(symbol, timeframe === '4h' ? '60m' : config.yahoo, config.range);
         candles = fetched.candles;
         livePrice = fetched.livePrice;
         quoteTime = fetched.quoteTime;
         source = fetched.livePrice !== null && fetched.quoteTime !== null ? 'Yahoo Finance' : 'Yahoo Finance candle close';
+        historySource = `Yahoo Finance OHLCV (${pair.yahoo})`;
+        quoteMode = fetched.livePrice !== null && fetched.quoteTime !== null ? 'TIMESTAMPED' : 'CANDLE_CLOSE';
         if (timeframe === '4h') candles = aggregateFourHours(candles);
     }
 
@@ -346,10 +372,14 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
     // Step 2: Fetch live real-time price & tick directly from TradingView Scanner API
     try {
         const tvQuote = await fetchTradingViewLiveQuote(tvSymbol);
-        if (tvQuote.livePrice !== null && tvQuote.livePrice > 0) {
+        const exchangeOpen = isCrypto || isMarketOpen(symbol).isOpen;
+        const delayedMatch = tvQuote.updateMode?.match(/^delayed_streaming_(\d+)$/);
+        const isStreaming = tvQuote.updateMode === 'streaming';
+        if (tvQuote.livePrice !== null && tvQuote.livePrice > 0 && exchangeOpen && isStreaming) {
             livePrice = tvQuote.livePrice;
             quoteTime = Date.now();
             source = 'TradingView Realtime';
+            quoteMode = 'LIVE';
 
             // Synchronize the latest bar close with TradingView's live price
             // Only expand the current bar's high/low if the live tick price exceeds them
@@ -358,6 +388,18 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
             last.close = tvQuote.livePrice;
             if (tvQuote.livePrice > last.high) last.high = tvQuote.livePrice;
             if (tvQuote.livePrice < last.low) last.low = tvQuote.livePrice;
+        } else if (tvQuote.livePrice !== null && tvQuote.livePrice > 0 && delayedMatch) {
+            const delayedSeconds = Number(delayedMatch[1]);
+            const yahooQuoteIsFresh = quoteMode === 'TIMESTAMPED'
+                && source === 'Yahoo Finance'
+                && quoteTime !== null
+                && Date.now() - quoteTime <= QUOTE_FRESHNESS_LIMIT_SECONDS[timeframe];
+            if (exchangeOpen && !yahooQuoteIsFresh) {
+                livePrice = tvQuote.livePrice;
+                quoteTime = Date.now() - delayedSeconds * 1000;
+                source = `TradingView Delayed ${Math.ceil(delayedSeconds / 60)}m`;
+                quoteMode = 'DELAYED';
+            }
         } else {
             source = isCrypto
                 ? (quoteTime !== null && source === 'Binance Spot' ? source : 'Binance candle close')
@@ -372,8 +414,8 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
     const lastCandle = candles[candles.length - 1];
     const latestTimestamp = quoteTime || new Date(lastCandle.time).getTime();
     const freshnessSeconds = Math.max(0, Math.floor((Date.now() - latestTimestamp) / 1000));
-    const cryptoFreshnessByTimeframe: Record<CronosTimeframe, number> = { '15m': 1_800, '1h': 7_200, '4h': 28_800, '1d': 172_800 };
-    const freshnessLimit = isCrypto ? cryptoFreshnessByTimeframe[timeframe] : timeframe === '1d' ? 172_800 : 7_200;
+    const latestBarAgeSeconds = Math.max(0, Math.floor((Date.now() - new Date(lastCandle.time).getTime()) / 1000));
+    const freshnessLimit = QUOTE_FRESHNESS_LIMIT_SECONDS[timeframe];
     const referenceIndex = Math.max(0, candles.length - 1 - ({ '15m': 96, '1h': 24, '4h': 6, '1d': 1 } as const)[timeframe]);
     const referencePrice = candles[referenceIndex].close;
     const result: CronosMarketResult = {
@@ -387,12 +429,24 @@ export async function getCronosMarketData(symbol: string, timeframe: CronosTimef
         latestBarClose: lastCandle.close,
         changePercent: referencePrice ? (((livePrice || lastCandle.close) - referencePrice) / referencePrice) * 100 : 0,
         source,
+        historySource,
+        quoteMode,
         updatedAt: new Date(latestTimestamp).toISOString(),
         freshnessSeconds,
-        isFresh: freshnessSeconds <= freshnessLimit,
+        latestBarAgeSeconds,
+        isFresh: quoteMode !== 'DELAYED'
+            && (isCrypto || isMarketOpen(symbol).isOpen)
+            && freshnessSeconds <= freshnessLimit,
         count: candles.length,
         volumeCoverage: candles.length ? Math.round(candles.filter((candle) => candle.volume > 0).length / candles.length * 100) : 0,
     };
     marketCache.set(cacheKey, { expiresAt: Date.now() + 15_000, value: result });
     return result;
+}
+
+/** True only when the quote has a credible timestamp and is within the
+ * freshness window for its selected timeframe. Closed markets always fail. */
+export function isActionableMarketQuote(market: CronosMarketResult): boolean {
+    if (!market.isFresh) return false;
+    return market.quoteMode === 'LIVE' && ['TradingView Realtime', 'Binance Spot'].includes(market.source);
 }

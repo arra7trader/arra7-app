@@ -3,12 +3,11 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    // The local rule-based scenario engine requires no external model service.
     return NextResponse.json({
         available: true,
-        model: 'ARRA Cronos Quant Scenarios',
+        model: 'ARRA Cronos Market Review',
         status: 'online',
-        device: 'Quant Cloud Engine',
-        message: 'Mesin skenario teknikal lokal siap digunakan.',
+        device: 'Observed Market Review',
+        message: 'Pembacaan indikator teknikal dari candle pasar tersedia.',
     });
 }

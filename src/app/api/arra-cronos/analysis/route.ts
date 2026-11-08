@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import { CRYPTO, FOREX_PAIRS } from '@/lib/market-data';
 import { getCronosMarketData, type CronosTimeframe } from '@/lib/arra-cronos-market';
 import { getCronosAnalysisHistory } from '@/lib/arra-cronos-analysis';
-import { buildKronosQuantForecast } from '@/lib/arra-cronos-engine';
+import { buildKronosQuantReview, getCompletedCronosCandles } from '@/lib/arra-cronos-engine';
 import { resolveUserOrDevice } from '@/lib/auth-device';
 import { checkQuota, useQuota } from '@/lib/quota';
 import { isMarketOpen } from '@/lib/market-hours';
+import { isActionableMarketQuote } from '@/lib/arra-cronos-market';
+import { recordArraMarketObservation } from '@/lib/arra-market-observations';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
         const now = Date.now();
         const recent = (recentRequests.get(clientKey) || []).filter((time) => now - time < rateWindowMs);
         if (recent.length >= rateLimit) {
-            return NextResponse.json({ error: 'Batas permintaan forecast tercapai. Coba lagi sebentar.' }, { status: 429 });
+            return NextResponse.json({ error: 'Batas permintaan tinjauan tercapai. Coba lagi sebentar.' }, { status: 429 });
         }
         recent.push(now);
         recentRequests.set(clientKey, recent);
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
                 const user = await resolveUserOrDevice(request);
                 const quota = await checkQuota(user.userId, timeframe, symbol);
                 if (!quota.allowed) {
-                    return NextResponse.json({ error: quota.message || 'Kuota forecast tidak tersedia.' }, { status: 403 });
+                    return NextResponse.json({ error: quota.message || 'Kuota tinjauan tidak tersedia.' }, { status: 403 });
                 }
                 userId = user.userId;
             } catch {
@@ -59,57 +61,80 @@ export async function POST(request: Request) {
         const resolvedTimeframe = timeframe as CronosTimeframe;
         const market = await getCronosMarketData(symbol, resolvedTimeframe);
         const isCrypto = Object.prototype.hasOwnProperty.call(CRYPTO, symbol);
-        // Local deterministic scenario engine; the signal is gated by direct MTF history.
+        const completedCandles = getCompletedCronosCandles(market.candles, resolvedTimeframe);
+        // Review and persist completed observed candles only.
         const started = Date.now();
         const mtfHistory = await getCronosAnalysisHistory(symbol, market);
-        const result = buildKronosQuantForecast(
+        const result = buildKronosQuantReview(
             symbol,
             resolvedTimeframe,
-            market.candles,
-            config.bars,
-            config.seconds,
-            isCrypto,
-            mtfHistory
+            completedCandles,
+            mtfHistory,
+            market.currentPrice
         );
-        const hasLiveQuote = market.isFresh && ['TradingView Realtime', 'Binance Spot'].includes(market.source);
+        const hasLiveQuote = isActionableMarketQuote(market);
         const marketOpen = isCrypto || isMarketOpen(symbol).isOpen;
         if (!hasLiveQuote || !marketOpen) {
-            result.tradePlan.action = 'WAIT';
-            result.tradePlan.invalidationReason = !marketOpen
-                ? 'Pasar tutup; tunggu pembukaan dan kuotasi terbaru sebelum mempertimbangkan setup.'
+            result.action = 'WAIT';
+            result.commentary = !marketOpen
+                ? 'Pasar tutup; tinjauan indikator tetap tersedia, tetapi status pasar harus diperiksa lagi saat pembukaan.'
                 : 'Kutipan live segar tidak tersedia; tunggu data feed langsung sebelum mempertimbangkan setup.';
-            result.commentary = `${symbol} ${timeframe.toUpperCase()}: WAIT karena ${!marketOpen ? 'pasar sedang tutup' : 'kuotasi live segar tidak tersedia'}. Ringkasan indikator teknikal tidak cukup untuk menyimpulkan setup yang dapat ditindaklanjuti.`;
+            if (!marketOpen) result.commentary = `Pasar ${symbol} sedang tutup. Indikator menggunakan candle yang tersedia dan belum cukup untuk menyimpulkan kondisi pasar yang dapat ditindaklanjuti.`;
+            if (!hasLiveQuote) result.commentary = `${symbol} ${timeframe.toUpperCase()}: WAIT karena kuotasi langsung segar tidak tersedia. Indikator candle historis tidak mewakili harga live.`;
         }
         const elapsedMs = Date.now() - started;
+
+        const barTime = completedCandles.at(-1)?.time;
+        let analysisSnapshotRecorded = false;
+        if (barTime && ['BTCUSD', 'XAUUSD'].includes(symbol)) {
+            analysisSnapshotRecorded = await recordArraMarketObservation({
+                symbol,
+                timeframe: resolvedTimeframe,
+                barTime,
+                analyzedAt: new Date().toISOString(),
+                price: market.currentPrice,
+                source: market.source,
+                quoteMode: market.quoteMode,
+                quoteAgeSeconds: market.freshnessSeconds,
+                feedFresh: hasLiveQuote,
+                marketOpen,
+                action: result.action,
+                reason: result.commentary,
+                direction: result.direction,
+                alignmentScore: result.metrics.alignmentScore,
+                confluenceScore: result.confluenceScore,
+                metrics: result.metrics,
+                mtfMatrix: result.mtfMatrix,
+                engine: 'ARRA Cronos Observed Market Review',
+            });
+        }
 
         if (userId) await useQuota(userId).catch(() => undefined);
 
         return NextResponse.json({
             symbol,
             timeframe,
-            model: 'ARRA Cronos Quant Scenarios',
-            modelSource: 'Mesin skenario teknikal berbasis aturan',
+            model: 'ARRA Cronos Market Review',
+            modelSource: 'Tinjauan indikator dari candle pasar aktual',
             currentPrice: market.currentPrice || result.currentPrice,
-            targetPrice: result.targetPrice,
             direction: result.direction,
-            action: result.tradePlan.action,
-            forecast: result.forecast,
-            tradePlan: result.tradePlan,
+            action: result.action,
+            analysisSnapshotRecorded,
             metrics: result.metrics,
             mtfMatrix: result.mtfMatrix,
             confluenceScore: result.confluenceScore,
             confluenceSummary: result.confluenceSummary,
             commentary: result.commentary,
-            historyBars: market.candles.length,
+            historyBars: completedCandles.length,
             inferenceMs: elapsedMs,
             generatedAt: new Date().toISOString(),
-            method: 'Deterministic ATR scenario path; uncalibrated volatility envelope',
+            method: 'Candle OHLCV tercatat, EMA, RSI, ATR, dan keselarasan multi-timeframe; tidak ada proyeksi harga atau simulasi trading',
             dataSource: market.source,
         }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
 
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        console.error('[ARRA Cronos] Forecast error:', error);
+        console.error('[ARRA Cronos] Market review error:', error);
         return NextResponse.json({ error: `ARRA Cronos: ${msg}` }, { status: 500 });
     }
 }

@@ -8,11 +8,8 @@ import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 import {
     ArrowPathIcon,
     BoltIcon,
-    ClipboardDocumentCheckIcon,
-    ClipboardDocumentIcon,
     KeyIcon,
     LockClosedIcon,
-    PencilSquareIcon,
     ArrowDownTrayIcon,
     InformationCircleIcon,
     CheckCircleIcon,
@@ -22,34 +19,40 @@ import {
 interface LogItem {
     id: string;
     time: string;
-    type: 'SIGNAL' | 'SKIP';
+    type: 'BIAS' | 'WAIT';
     symbol: string;
     reason: string;
     result: string;
 }
 
-interface TradeSetup {
+interface MarketObservation {
+    id: number;
     symbol: string;
-    name: string;
-    type: 'SHORT' | 'LONG' | 'WAIT';
-    entry: number | null;
-    current: number;
-    stopLoss: number | null;
-    takeProfit: number | null;
-    sizeLots: number;
-    sizePct: string;
+    timeframe: string;
+    barTime: string;
+    analyzedAt: string;
+    price: number;
+    source: string;
+    quoteMode: string;
+    quoteAgeSeconds: number;
+    feedFresh: boolean;
+    marketOpen: boolean;
+    action: 'BUY' | 'SELL' | 'WAIT';
     reason: string;
+    alignmentScore: number;
+    metrics: { rsi14: number; atr14: number; trendScore: number };
 }
 
-// Check if Forex & Gold markets are closed for the weekend (Friday 22:00 UTC to Sunday 22:00 UTC / Mon 05:00 WIB)
-function checkIsWeekendMarket() {
-    const now = new Date();
-    const day = now.getUTCDay(); // 0 = Sun, 6 = Sat
-    const hour = now.getUTCHours();
-    if (day === 6) return true; // Saturday all day
-    if (day === 0 && hour < 22) return true; // Sunday before 22:00 UTC (05:00 WIB Monday)
-    if (day === 5 && hour >= 22) return true; // Friday after 22:00 UTC
-    return false;
+interface MarketAnalysis {
+    symbol: string;
+    name: string;
+    bias: 'BULLISH' | 'BEARISH' | 'WAIT';
+    current: number;
+    rsi14: number | null;
+    atr14: number | null;
+    trendScore: number | null;
+    alignmentScore: number | null;
+    reason: string;
 }
 
 export default function ArraGrokPage() {
@@ -85,28 +88,23 @@ export default function ArraGrokPage() {
     // Terminal Engine State
     const [isRunning, setIsRunning] = useState(true);
     const [seconds, setSeconds] = useState(0);
-    const [copiedScript, setCopiedScript] = useState(false);
     const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('');
 
-    // Market hours are also reported by the live API; this local value is used before the first response.
-    const isWeekend = checkIsWeekendMarket();
-    // Active Pair Selection: Default to BTCUSD if weekend (since BTC operates 24/7 non-stop!)
+    // Active pair selection; market hours are determined by the server's exchange calendar.
     const [selectedPair, setSelectedPair] = useState<'BTCUSD' | 'XAUUSD'>('BTCUSD');
+    const [marketOpen, setMarketOpen] = useState<boolean | null>(null);
+    const [marketOpenReason, setMarketOpenReason] = useState('');
+    const [nextMarketOpenWib, setNextMarketOpenWib] = useState('');
 
-    // Customizable User Capital ("Versi Kita Sendiri") — Default requested $1,254
-    const [baseCapital, setBaseCapital] = useState<number>(1254);
-    const [isCapitalModalOpen, setIsCapitalModalOpen] = useState(false);
-    const [inputCapital, setInputCapital] = useState('1254');
-    const [activeTrade, setActiveTrade] = useState<TradeSetup>({
+    const [marketAnalysis, setMarketAnalysis] = useState<MarketAnalysis>({
         symbol: '$BTCUSD',
         name: 'Bitcoin / US Dollar',
-        type: 'WAIT',
-        entry: null,
+        bias: 'WAIT',
         current: 0,
-        stopLoss: null,
-        takeProfit: null,
-        sizeLots: 0,
-        sizePct: '—',
+        rsi14: null,
+        atr14: null,
+        trendScore: null,
+        alignmentScore: null,
         reason: 'Menunggu feed dan analisis pasar.',
     });
     const [hasFeed, setHasFeed] = useState(false);
@@ -118,20 +116,15 @@ export default function ArraGrokPage() {
     const [groqReviewModel, setGroqReviewModel] = useState('');
     const [isReviewingWithGroq, setIsReviewingWithGroq] = useState(false);
     const liveRequestId = useRef(0);
-    const hasActionableAnalysis = isRunning && hasFeed && feedIsFresh === true && activeTrade.type !== 'WAIT';
+    const hasCurrentBias = isRunning && hasFeed && feedIsFresh === true && marketAnalysis.bias !== 'WAIT';
 
     const handleToggleFeed = () => {
         if (isRunning) {
             setFeedIsFresh(false);
-            setActiveTrade((previous) => ({
+            setMarketAnalysis((previous) => ({
                 ...previous,
-                type: 'WAIT',
-                entry: null,
-                stopLoss: null,
-                takeProfit: null,
-                sizeLots: 0,
-                sizePct: '—',
-                reason: 'Pembaruan feed dijeda. Setup ditahan sampai feed segar dimuat.',
+                bias: 'WAIT',
+                reason: 'Pembaruan feed dijeda. Bias menunggu feed segar.',
             }));
             setIsRunning(false);
             return;
@@ -153,6 +146,39 @@ export default function ArraGrokPage() {
 
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
     const [logHistory, setLogHistory] = useState<LogItem[]>([]);
+    const [marketObservations, setMarketObservations] = useState<MarketObservation[]>([]);
+
+    const fetchMarketObservations = useCallback(async () => {
+        try {
+            const response = await fetch(`/api/arra-grok/observations?symbol=${selectedPair}`, {
+                cache: 'no-store',
+                headers: deviceId ? { 'x-device-id': deviceId } : {},
+            });
+            const payload = await response.json();
+            if (response.ok && Array.isArray(payload.observations)) {
+                const observations = payload.observations as MarketObservation[];
+                setMarketObservations(observations);
+                setLogHistory(observations.map((observation) => ({
+                    id: String(observation.id),
+                    time: new Intl.DateTimeFormat('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                        timeZone: 'Asia/Jakarta',
+                    }).format(new Date(observation.analyzedAt)),
+                    type: observation.action === 'WAIT' ? 'WAIT' : 'BIAS',
+                    symbol: `$${observation.symbol}`,
+                    reason: `${observation.reason} · ${observation.source} · ${observation.quoteAgeSeconds}s · ${observation.timeframe}`,
+                    result: observation.action === 'WAIT'
+                        ? `WAIT · $${observation.price} · RSI ${observation.metrics.rsi14} · align ${observation.alignmentScore}/100`
+                        : `${observation.action === 'BUY' ? 'BULLISH' : 'BEARISH'} · $${observation.price} · RSI ${observation.metrics.rsi14} · align ${observation.alignmentScore}/100`,
+                })));
+            }
+        } catch {
+            // Keep the most recently loaded observations visible when the history service is unavailable.
+        }
+    }, [deviceId, selectedPair]);
 
     const handleSelectPair = useCallback((pair: 'BTCUSD' | 'XAUUSD') => {
         if (pair === selectedPair) return;
@@ -162,21 +188,24 @@ export default function ArraGrokPage() {
         setFeedIsFresh(null);
         setFeedError('');
         setFeedSource('');
+        setMarketOpen(null);
+        setMarketOpenReason('');
+        setNextMarketOpenWib('');
         setScannedAssets([]);
         setTerminalLogs([]);
         setLogHistory([]);
+        setMarketObservations([]);
         setGroqReview('');
         setGroqReviewError('');
-        setActiveTrade({
+        setMarketAnalysis({
             symbol: `$${pair}`,
             name: pair === 'BTCUSD' ? 'Bitcoin / US Dollar' : 'Gold / US Dollar',
-            type: 'WAIT',
-            entry: null,
+            bias: 'WAIT',
             current: 0,
-            stopLoss: null,
-            takeProfit: null,
-            sizeLots: 0,
-            sizePct: '—',
+            rsi14: null,
+            atr14: null,
+            trendScore: null,
+            alignmentScore: null,
             reason: 'Menunggu feed dan analisis pasar.',
         });
     }, [selectedPair]);
@@ -204,33 +233,6 @@ export default function ArraGrokPage() {
         }
     }, [deviceId, selectedPair]);
 
-    // Initialize persisted session from localStorage (defaulting to user requested $1,254)
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const savedCapital = localStorage.getItem('arra_grok_capital');
-        if (savedCapital) {
-            const cap = parseFloat(savedCapital);
-            if (!isNaN(cap) && cap > 0 && cap !== 10000) {
-                setBaseCapital(cap);
-                setInputCapital(cap.toString());
-            } else {
-                setBaseCapital(1254);
-                setInputCapital('1254');
-                localStorage.setItem('arra_grok_capital', '1254');
-            }
-        } else {
-            setBaseCapital(1254);
-            setInputCapital('1254');
-            localStorage.setItem('arra_grok_capital', '1254');
-        }
-    }, []);
-
-    // Save the user's reference capital only. It is not a connected broker balance.
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        localStorage.setItem('arra_grok_capital', baseCapital.toString());
-    }, [baseCapital]);
-
     // Format current clock HH:MM:SS WIB
     const formattedClock = useMemo(() => {
         const d = new Date();
@@ -249,24 +251,26 @@ export default function ArraGrokPage() {
             setHasFeed(false);
             setFeedIsFresh(false);
             setFeedSource('');
+            setMarketOpen(null);
+            setMarketOpenReason('');
+            setNextMarketOpenWib('');
             setLastRefreshedAt('');
             setScannedAssets([]);
             setTerminalLogs([]);
-            setActiveTrade({
+            setMarketAnalysis({
                 symbol: `$${selectedPair}`,
                 name: selectedPair === 'BTCUSD' ? 'Bitcoin / US Dollar' : 'Gold / US Dollar',
-                type: 'WAIT',
-                entry: null,
+                bias: 'WAIT',
                 current: 0,
-                stopLoss: null,
-                takeProfit: null,
-                sizeLots: 0,
-                sizePct: '—',
+                rsi14: null,
+                atr14: null,
+                trendScore: null,
+                alignmentScore: null,
                 reason: message,
             });
         };
         try {
-            const res = await fetch(`/api/arra-grok/live?capital=${baseCapital}&symbol=${selectedPair}`, { cache: 'no-store' });
+            const res = await fetch(`/api/arra-grok/live?symbol=${selectedPair}`, { cache: 'no-store' });
             const data = await res.json();
             if (requestId !== liveRequestId.current) return;
             if (!res.ok || !data.success) {
@@ -278,51 +282,41 @@ export default function ArraGrokPage() {
             setFeedSource(data.marketSnapshot?.source || '');
             setFeedIsFresh(Boolean(data.marketSnapshot?.isFresh));
             setLastRefreshedAt(data.marketSnapshot?.quoteTimeWib || '');
-            if (data.activeTrade) {
-                setActiveTrade({
-                    symbol: data.activeTrade.symbol,
-                    name: data.activeTrade.name,
-                    type: data.activeTrade.type,
-                    entry: data.activeTrade.entry,
-                    current: data.activeTrade.current,
-                    stopLoss: data.activeTrade.stopLoss,
-                    takeProfit: data.activeTrade.takeProfit,
-                    sizeLots: data.activeTrade.sizeLots,
-                    sizePct: data.activeTrade.sizePct,
-                    reason: data.activeTrade.reason,
-                });
+            setMarketOpen(typeof data.marketStatus?.isOpen === 'boolean' ? data.marketStatus.isOpen : null);
+            setMarketOpenReason(data.marketStatus?.reason || '');
+            setNextMarketOpenWib(data.marketStatus?.nextOpenWib || '');
+            if (data.marketAnalysis) {
+                setMarketAnalysis(data.marketAnalysis);
             }
             if (data.scannedAssets && Array.isArray(data.scannedAssets)) {
                 setScannedAssets(data.scannedAssets);
             }
             setTerminalLogs(Array.isArray(data.terminalLogs) ? data.terminalLogs : []);
-            const newLogItem: LogItem = {
-                id: `${selectedPair}-${data.updatedAt}`,
-                time: data.timeWib || '',
-                type: data.activeTrade?.type === 'WAIT' ? 'SKIP' : 'SIGNAL',
-                symbol: data.activeTrade?.symbol || `$${selectedPair}`,
-                reason: data.activeTrade?.reason || 'Analisis belum tersedia.',
-                result: data.activeTrade?.type === 'WAIT' ? 'WAIT' : `${data.activeTrade.entry}`,
-            };
-            setLogHistory((previous) => [newLogItem, ...previous].slice(0, 40));
         } catch (err) {
             if (requestId !== liveRequestId.current) return;
             clearUnavailableFeed('Koneksi feed pasar terputus. Coba perbarui feed.');
             console.error('[ARRA GROK] Error polling real feed:', err);
         }
-    }, [isRunning, baseCapital, selectedPair]);
+    }, [isRunning, selectedPair]);
+
+    useEffect(() => {
+        if (!isUnlocked) return;
+        void fetchMarketObservations();
+        const interval = window.setInterval(fetchMarketObservations, 60_000);
+        return () => window.clearInterval(interval);
+    }, [isUnlocked, fetchMarketObservations]);
 
     // Initial load and periodic poll
     useEffect(() => {
         if (!isUnlocked) return;
         fetchLiveFeed();
-        const pollRate = selectedPair === 'BTCUSD' ? 5000 : (isWeekend ? 15000 : 5000);
+        const pollRate = 15_000;
         const interval = window.setInterval(fetchLiveFeed, pollRate);
         return () => {
             window.clearInterval(interval);
             liveRequestId.current += 1;
         };
-    }, [isUnlocked, fetchLiveFeed, isWeekend, selectedPair]);
+    }, [isUnlocked, fetchLiveFeed, selectedPair]);
 
     // Clock timer (every 1 second)
     useEffect(() => {
@@ -333,20 +327,9 @@ export default function ArraGrokPage() {
         return () => window.clearInterval(interval);
     }, [isRunning, isUnlocked]);
 
-    // Handle User Changing Custom Starting Capital ("Versi Kita Sendiri")
-    const handleSaveCapital = () => {
-        const val = parseFloat(inputCapital);
-        if (!isNaN(val) && val >= 10) {
-            setBaseCapital(val);
-            localStorage.setItem('arra_grok_capital', val.toString());
-            setIsCapitalModalOpen(false);
-            fetchLiveFeed();
-        }
-    };
-
     // Download audit log text file
     const handleDownloadLog = () => {
-        const header = `=== ARRA GROK MARKET ANALYSIS ===\nDate: ${new Date().toLocaleString('id-ID')}\nPair: ${selectedPair} (${selectedPair === 'BTCUSD' ? '24/7 Crypto' : 'Forex/Gold'})\nReference Capital: $${baseCapital.toFixed(2)}\nMarket Data: ${feedSource || 'unavailable'} · ${feedIsFresh ? 'fresh' : 'stale/unavailable'}\nOrder execution: not connected\n\n--- ANALYSIS LOG ---\n`;
+        const header = `=== ARRA GROK MARKET OBSERVATIONS ===\nDate: ${new Date().toLocaleString('id-ID')}\nPair: ${selectedPair} (${selectedPair === 'BTCUSD' ? '24/7 Crypto' : 'Gold Futures'})\nMarket Data: ${feedSource || 'unavailable'} · ${feedIsFresh ? 'fresh' : 'stale/unavailable'}\nNo simulated trades, fills, or broker orders are recorded.\n\n--- MARKET ANALYSIS SNAPSHOTS ---\n`;
         const body = logHistory.map((l) => `[${l.time}] ${l.type.padEnd(8)} ${l.symbol.padEnd(9)} ${l.result.padEnd(12)} Reason: ${l.reason}`).join('\n');
         const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -356,32 +339,6 @@ export default function ArraGrokPage() {
         a.click();
         URL.revokeObjectURL(url);
     };
-
-    // Copy an MQL5 script for manual review; this does not send an order to a broker.
-    const handleCopyMT5Script = useCallback(() => {
-        if (!hasActionableAnalysis || activeTrade.entry === null || activeTrade.stopLoss === null || activeTrade.takeProfit === null) return;
-        const sym = activeTrade.symbol.replace('$', '');
-        const script = `// --- ARRA GROK MQL5 SIGNAL SNAPSHOT ---
-// Review only. This script does not submit an order.
-// Reference capital (not read from broker): $${baseCapital.toFixed(2)}
-// Asset: ${sym} (${activeTrade.name})
-// Reason: ${activeTrade.reason}
-#property strict
-void OnStart()
-{
-    Print("ARRA GROK analysis snapshot; no broker order was sent.");
-    Print("Symbol: ${sym}");
-    Print("Action: ${activeTrade.type}");
-    Print("Reference entry: ${activeTrade.entry}");
-    Print("Stop loss: ${activeTrade.stopLoss}");
-    Print("Take profit: ${activeTrade.takeProfit}");
-    Print("Estimated volume: ${activeTrade.sizeLots}");
-}`;
-        void navigator.clipboard.writeText(script).then(() => {
-            setCopiedScript(true);
-            window.setTimeout(() => setCopiedScript(false), 2500);
-        }).catch(() => setFeedError('Clipboard tidak tersedia. Izinkan akses clipboard lalu coba lagi.'));
-    }, [activeTrade, baseCapital, hasActionableAnalysis]);
 
     return (
         <main className="min-h-screen bg-[#F2F2EE] px-3 pb-16 pt-24 text-slate-800 sm:px-6 lg:px-8 font-sans selection:bg-cyan-200">
@@ -451,7 +408,7 @@ void OnStart()
                                 </span>
                             </span>
                             <div className="text-[11px] text-emerald-800 mt-0.5">
-                                Pasar <strong>$BTCUSD</strong> tersedia 24/7. Terminal membaca feed harga untuk analisis dan menghitung contoh ukuran posisi berdasarkan modal referensi <strong>${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>; tidak ada order broker yang dikirim.
+                                Pasar <strong>$BTCUSD</strong> tersedia 24/7. Terminal membaca harga dan candle pasar aktual untuk tinjauan teknikal; tidak ada transaksi simulasi atau order broker.
                             </div>
                         </div>
                     </div>
@@ -465,7 +422,7 @@ void OnStart()
                         </button>
                     </div>
                 </div>
-            ) : isWeekend ? (
+            ) : marketOpen === false ? (
                 <div className="mx-auto max-w-6xl mb-4 rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
                     <div className="flex items-center gap-2.5">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-amber-950 font-bold">
@@ -474,7 +431,7 @@ void OnStart()
                         <div>
                             <span className="font-black uppercase tracking-wide">PASAR EMAS &amp; FOREX TUTUP (AKHIR PEKAN)</span>
                             <div className="text-[11px] text-amber-800 mt-0.5">
-                                Pasar XAUUSD biasanya tutup pada akhir pekan. Terminal tidak terhubung ke saldo broker; beralihlah ke pair <strong>$BTCUSD (24/7)</strong> untuk melihat feed yang tersedia.
+                                {marketOpenReason || 'Sesi COMEX gold futures sedang tutup.'} {nextMarketOpenWib ? `Perkiraan buka ${nextMarketOpenWib}.` : ''} Terminal hanya mencatat analisis pasar aktual; beralihlah ke <strong>$BTCUSD (24/7)</strong> untuk feed langsung.
                             </div>
                         </div>
                     </div>
@@ -498,67 +455,6 @@ void OnStart()
                 </div>
             ) : null}
 
-            {/* MODAL EDIT MODAL / BALANCE ("VERSI KITA SENDIRI") */}
-            {isCapitalModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                    <div className="w-full max-w-md rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl font-mono">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                            <h3 className="text-base font-black text-slate-900">UBAH MODAL REFERENSI</h3>
-                            <button
-                                onClick={() => setIsCapitalModalOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        <p className="mt-3 text-xs text-slate-600 leading-relaxed font-sans">
-                            Masukkan modal referensi dalam USD. ARRA GROK memakainya untuk memperkirakan risiko dan ukuran posisi; angka ini bukan saldo akun broker.
-                        </p>
-                        <div className="mt-4">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Modal Referensi ($ USD)</label>
-                            <div className="mt-1 relative rounded-xl shadow-xs">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold">$</span>
-                                <input
-                                    type="number"
-                                    value={inputCapital}
-                                    onChange={(e) => setInputCapital(e.target.value)}
-                                    placeholder="1254"
-                                    className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 font-bold text-slate-900 text-base outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                            {[500, 1254, 3000, 5000, 10000].map((preset) => (
-                                <button
-                                    key={preset}
-                                    type="button"
-                                    onClick={() => setInputCapital(preset.toString())}
-                                    className="flex-1 py-1 text-[11px] rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-slate-700 cursor-pointer"
-                                >
-                                    ${preset >= 1000 ? `${preset}` : preset}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="mt-6 flex gap-2.5">
-                            <button
-                                type="button"
-                                onClick={() => setIsCapitalModalOpen(false)}
-                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSaveCapital}
-                                className="flex-1 py-2.5 rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 transition cursor-pointer"
-                            >
-                                Terapkan Modal
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* RETRO-MODERN MAC WINDOW TERMINAL FRAME */}
             <div className={`mx-auto max-w-6xl overflow-hidden rounded-2xl sm:rounded-3xl border border-[#DCDCD5] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)] transition-all ${!isUnlocked ? 'pointer-events-none opacity-40 blur-[1px]' : ''}`}>
                 {/* 1. RETRO-MODERN MAC WINDOW TITLE BAR */}
@@ -572,7 +468,7 @@ void OnStart()
 
                     {/* Window Title Subtitle */}
                     <div className="hidden sm:block text-[11px] font-mono text-slate-500 font-medium">
-                        ARRA GROK — market feed &amp; trade setup analysis · BTC, gold &amp; forex
+                        ARRA GROK — live market feed &amp; technical review · BTC and gold
                     </div>
 
                     {/* Right Tag */}
@@ -583,7 +479,7 @@ void OnStart()
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                                 <span>BTC 24/7 · {feedIsFresh ? 'FEED SEGAR' : 'MENUNGGU FEED'}</span>
                             </span>
-                        ) : isWeekend ? (
+                        ) : marketOpen === false ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                 <span>PASAR TUTUP · WEEKEND STANDBY</span>
@@ -597,7 +493,7 @@ void OnStart()
                     </div>
                 </div>
 
-                {/* 2. TERMINAL HEADER: AVATAR, TITLE, PAIR SWITCHER & REFERENCE CAPITAL */}
+                {/* 2. TERMINAL HEADER: AVATAR, TITLE, PAIR SWITCHER */}
                 <div className="border-b border-[#ECECE6] px-5 sm:px-7 py-5 bg-white">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         {/* Left: Avatar + Title & Status */}
@@ -641,7 +537,7 @@ void OnStart()
                                             }`}
                                         >
                                             <span>🥇 $XAUUSD</span>
-                                            {isWeekend && (
+                                            {marketOpen === false && (
                                                 <span className={`text-[9px] px-1 py-0.2 rounded font-black ${selectedPair === 'XAUUSD' ? 'bg-amber-700 text-amber-100' : 'bg-amber-100 text-amber-800'}`}>
                                                     LIBUR
                                                 </span>
@@ -656,37 +552,19 @@ void OnStart()
                                         <span>{!isRunning ? 'FEED DIJEDA' : feedIsFresh ? 'FEED TERBARU' : feedError ? 'FEED TERPUTUS' : 'MENUNGGU FEED'} · {formattedClock} WIB</span>
                                     </span>
                                     <span className="rounded bg-[#E3F4EB] text-[#1E774A] border border-[#C5E8D4] px-2 py-0.5 text-[10px] font-bold">
-                                        ANALISIS · {hasActionableAnalysis ? activeTrade.type : 'WAIT'} {activeTrade.symbol} {hasActionableAnalysis && activeTrade.entry !== null ? `@ ${activeTrade.entry.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}` : ''}
+                                        BIAS · {hasCurrentBias ? marketAnalysis.bias : 'WAIT'} {marketAnalysis.symbol}
                                     </span>
                                 </div>
                                 <div className="mt-1 text-[11px] font-mono text-slate-400 italic">
                                     {selectedPair === 'BTCUSD'
                                         ? 'BTC market 24/7 · market quote is separate from broker execution'
-                                        : isWeekend
-                                        ? 'pasar emas libur akhir pekan · kuotasi terakhir tersedia · rekomendasi ditahan sampai feed segar'
+                                        : marketOpen === false
+                                        ? `${marketOpenReason || 'sesi emas tutup'} · rekomendasi ditahan${nextMarketOpenWib ? ` sampai ${nextMarketOpenWib}` : ''}`
                                         : 'market analysis only · no broker account connection'}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right: Reference capital */}
-                        <div className="flex items-center gap-4 self-start md:self-auto font-mono">
-                            <div className="text-right">
-                                <div className="flex items-center justify-end gap-1.5">
-                                    <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                                        ${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </div>
-                                    <button
-                                        onClick={() => setIsCapitalModalOpen(true)}
-                                        title="Ubah modal referensi"
-                                        className="text-slate-400 hover:text-slate-800 p-1 rounded transition cursor-pointer"
-                                    >
-                                        <PencilSquareIcon className="h-4 w-4" />
-                                    </button>
-                                </div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">modal referensi · bukan saldo broker</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -723,14 +601,14 @@ void OnStart()
                                 quotes from the market feed
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                {activeTrade.symbol} · {activeTrade.current ? `$${activeTrade.current.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}` : 'harga menunggu feed'}
+                                {marketAnalysis.symbol} · {marketAnalysis.current ? `$${marketAnalysis.current.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}` : 'harga menunggu feed'}
                             </div>
                         </div>
 
                         {/* MODULE 2: MARKET GUARD */}
                         <div className="relative rounded-xl border border-slate-200/80 p-2.5 bg-white shadow-xs">
                             <span className="absolute -right-1 -top-1.5 rotate-[-8deg] rounded border border-rose-500 bg-white/95 px-1.5 py-0.2 text-[8px] font-mono font-black text-rose-600 shadow-xs">
-                                {selectedPair === 'XAUUSD' && isWeekend ? 'MARKET CLOSED' : !hasFeed ? 'NO FEED' : !feedIsFresh ? 'STALE FEED' : 'FEED OK'}
+                                {selectedPair === 'XAUUSD' && marketOpen === false ? 'MARKET CLOSED' : !hasFeed ? 'NO FEED' : !feedIsFresh ? 'NO LIVE QUOTE' : 'LIVE FEED'}
                             </span>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -742,7 +620,7 @@ void OnStart()
                                     </span>
                                 </div>
                                 <span className="rounded bg-rose-100 text-rose-800 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    {!hasFeed ? 'NO FEED' : !feedIsFresh ? 'STALE' : isWeekend && selectedPair === 'XAUUSD' ? 'CLOSED' : 'STATUS'}
+                                    {!hasFeed ? 'NO FEED' : selectedPair === 'XAUUSD' && marketOpen === false ? 'CLOSED' : !feedIsFresh ? 'NO LIVE QUOTE' : 'OPEN'}
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
@@ -752,11 +630,11 @@ void OnStart()
                                 news and spread checks are not connected
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                {activeTrade.type === 'WAIT' ? 'no entry recommendation' : `setup ${activeTrade.symbol}`}
+                                {marketAnalysis.bias === 'WAIT' ? 'bias belum terbentuk' : `bias ${marketAnalysis.bias} · ${marketAnalysis.symbol}`}
                             </div>
                         </div>
 
-                        {/* MODULE 3: SIZER */}
+                        {/* MODULE 3: ANALYSIS */}
                         <div className="rounded-xl border border-slate-200/80 p-2.5 bg-white shadow-xs">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -764,25 +642,25 @@ void OnStart()
                                         ◆
                                     </span>
                                     <span className="text-xs font-black tracking-wide text-slate-800 font-mono">
-                                        SIZER
+                                        ANALYSIS
                                     </span>
                                 </div>
-                                <span className="rounded bg-purple-100 text-purple-800 border border-purple-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    ESTIMATE
+                                <span className="rounded bg-cyan-100 text-cyan-800 border border-cyan-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
+                                    PRICE DATA
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
-                                estimated size from reference capital
+                                indikator dari candle aktual
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                1.5% reference risk model
+                                tanpa sizing atau P/L virtual
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
-                                {activeTrade.sizeLots || '—'} Lots · ${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 0 })} reference
+                                {marketAnalysis.bias} · {feedSource || 'menunggu feed'}
                             </div>
                         </div>
 
-                        {/* MODULE 4: ORDER REVIEW */}
+                        {/* MODULE 4: BIAS STATUS */}
                         <div className="rounded-xl border border-slate-200/80 p-2.5 bg-white shadow-xs">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -790,7 +668,7 @@ void OnStart()
                                         II
                                     </span>
                                     <span className="text-xs font-black tracking-wide text-slate-800 font-mono">
-                                        ORDER REVIEW
+                                        BIAS STATUS
                                     </span>
                                 </div>
                                 <span className="rounded bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
@@ -801,10 +679,10 @@ void OnStart()
                                 no broker connection
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                signal only
+                                market analysis only
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-emerald-700">
-                                {activeTrade.type} {activeTrade.symbol} · no order sent
+                                {marketAnalysis.bias} {marketAnalysis.symbol} · analysis only
                             </div>
                         </div>
 
@@ -830,11 +708,11 @@ void OnStart()
                                 no executed trade history
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
-                                {terminalLogs.length} current log lines · {activeTrade.symbol}
+                                {terminalLogs.length} current log lines · {marketAnalysis.symbol}
                             </div>
                         </div>
 
-                        {/* MODULE 6: CAPITAL REFERENCE */}
+                        {/* MODULE 6: STORED OBSERVATIONS */}
                         <div className="rounded-xl border border-slate-200/80 p-2.5 bg-white shadow-xs">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -842,21 +720,21 @@ void OnStart()
                                         💧
                                     </span>
                                     <span className="text-xs font-black tracking-wide text-slate-800 font-mono">
-                                        CAPITAL
+                                        OBSERVATIONS
                                     </span>
                                 </div>
                                 <span className="rounded bg-blue-100 text-blue-800 border border-blue-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    UPDATE
+                                    REAL DATA
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
-                                reference capital only
+                                snapshots tersimpan
                             </div>
                             <div className="mt-0.5 text-[9px] text-slate-400 italic">
-                                no broker equity data
+                                tanpa transaksi virtual
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-blue-700">
-                                ${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })} reference
+                                {marketObservations.length} snapshot
                             </div>
                         </div>
 
@@ -882,12 +760,12 @@ void OnStart()
                                 stopped asking, started reading
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700">
-                                {logHistory.length} signal snapshots logged
+                                {logHistory.length} market snapshots logged
                             </div>
                         </div>
                     </aside>
 
-                    {/* RIGHT MAIN AREA: FLOW, SIGNAL, FEED LOG, AND HISTORY */}
+                    {/* RIGHT MAIN AREA: FLOW, BIAS, FEED LOG, AND HISTORY */}
                     <div className="p-4 sm:p-5 space-y-4">
                         {/* 1. UPPER SECTION: LIVE FLOW PIPELINE */}
                         <div className="rounded-2xl border border-[#ECECE6] bg-white p-4 shadow-xs">
@@ -955,14 +833,14 @@ void OnStart()
                                         </div>
                                         <div className="text-[10px] font-mono font-bold text-slate-700">MARKET STATUS</div>
                                         <div className="text-[9px] font-mono text-slate-400">
-                                            {!hasFeed ? 'MENUNGGU FEED' : selectedPair === 'BTCUSD' ? 'PASAR 24/7' : isWeekend ? 'PASAR TUTUP' : 'STATUS PASAR'}
+                                            {!hasFeed ? 'MENUNGGU FEED' : selectedPair === 'BTCUSD' ? 'PASAR 24/7' : marketOpen === false ? 'PASAR TUTUP' : 'SESI PASAR'}
                                         </div>
                                     </div>
 
                                     {/* Middle Connecting Arc with Green Spline and LIVE Percentage */}
                                     <div className="flex-1 px-4 flex flex-col items-center">
                                         <div className="text-[11px] font-mono text-emerald-600 font-black mb-1 transition-all">
-                                            {activeTrade.type}
+                                            {marketAnalysis.bias}
                                         </div>
                                         {/* Visual SVG green curved line */}
                                         <svg className="w-full h-8 overflow-visible" viewBox="0 0 100 24" fill="none">
@@ -975,17 +853,17 @@ void OnStart()
                                             <circle cx="95" cy="6" r="3.5" fill={feedIsFresh ? '#10B981' : '#94A3B8'} className={feedIsFresh ? 'animate-ping' : ''} />
                                         </svg>
                                         <div className="text-[9px] font-mono text-slate-400 mt-1">
-                                            {activeTrade.type === 'WAIT' ? 'menunggu konfirmasi analisis' : 'rekomendasi · belum dieksekusi'}
+                                            {marketAnalysis.bias === 'WAIT' ? 'menunggu konfirmasi analisis' : 'pembacaan indikator aktual'}
                                         </div>
                                     </div>
 
-                                    {/* Right Circle Node: SIGNAL */}
+                                    {/* Right Circle Node: BIAS */}
                                     <div className="flex flex-col items-center gap-1.5 z-10">
                                         <div className="h-16 w-16 rounded-full border-2 border-emerald-500 bg-white shadow-md flex items-center justify-center relative">
                                             <span className="h-20 w-20 rounded-full border border-emerald-400/40 absolute animate-ping" />
                                             <span className="text-emerald-600 text-sm font-black">II</span>
                                         </div>
-                                        <div className="text-[10px] font-mono font-bold text-slate-700">SIGNAL</div>
+                                        <div className="text-[10px] font-mono font-bold text-slate-700">MARKET BIAS</div>
                                         <div className="text-[9px] font-mono text-emerald-700 font-bold">
                                             TIDAK TERHUBUNG
                                         </div>
@@ -1005,14 +883,6 @@ void OnStart()
 
                                 <div className="rounded-xl border border-slate-200 bg-white p-2.5">
                                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-                                        <span className="text-purple-600">◆</span> SIZER
-                                    </div>
-                                        <div className="text-base font-black text-slate-800 mt-0.5">{activeTrade.sizeLots || '—'} Lots</div>
-                                    <div className="text-[9px] text-slate-400">estimasi risiko 1.5% referensi</div>
-                                </div>
-
-                                <div className="rounded-xl border border-slate-200 bg-white p-2.5">
-                                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
                                         <span className="text-amber-600">■</span> LOGGER
                                     </div>
                                     <div className="text-base font-black text-slate-800 mt-0.5">{terminalLogs.length}</div>
@@ -1026,26 +896,34 @@ void OnStart()
                                     <div className="text-base font-black text-slate-800 mt-0.5">{feedIsFresh ? 'SEGAR' : 'STALE'}</div>
                                     <div className="text-[9px] text-slate-400">status data {feedSource || '—'}</div>
                                 </div>
+
+                                <div className="rounded-xl border border-slate-200 bg-white p-2.5">
+                                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
+                                        <span className="text-cyan-700">◆</span> ALIGNMENT
+                                    </div>
+                                    <div className="text-base font-black text-slate-800 mt-0.5">{marketAnalysis.alignmentScore ?? '—'}<span className="text-[10px]"> / 100</span></div>
+                                    <div className="text-[9px] text-slate-400">indikator, bukan probabilitas</div>
+                                </div>
                             </div>
                         </div>
 
-                        {/* 2. MIDDLE SECTION: ACTIVE TRADE vs NIGHT LOG */}
+                        {/* 2. MIDDLE SECTION: MARKET BIAS AND OBSERVATIONS */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Left: Active Trade Details & Start vs Now */}
-                            <div className="rounded-2xl border border-[#ECECE6] bg-white p-4 font-mono shadow-xs flex flex-col justify-between">
+                            <div className="rounded-2xl border border-[#ECECE6] bg-white p-4 font-mono shadow-xs">
                                 <div>
                                     <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
-                                        <span>ANALISIS · LEVEL REFERENSI</span>
+                                        <span>ANALISIS PASAR · SNAPSHOT AKTUAL</span>
                                         <span className="rounded px-1.5 py-0.2 text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                            {selectedPair === 'BTCUSD' ? 'PASAR 24/7' : isWeekend ? 'PASAR TUTUP · ANALISIS SAJA' : 'TIDAK ADA POSISI BROKER'}
+                                            {selectedPair === 'BTCUSD' ? 'PASAR 24/7' : marketOpen === false ? 'PASAR TUTUP · ANALISIS SAJA' : 'ANALISIS SAJA · TANPA BROKER'}
                                         </span>
                                     </div>
 
                                     <div className="mt-2 flex items-baseline justify-between">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xl font-black text-slate-900">{activeTrade.symbol}</span>
+                                            <span className="text-xl font-black text-slate-900">{marketAnalysis.symbol}</span>
                                             <span className="rounded bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-bold">
-                                                {activeTrade.type}
+                                                {marketAnalysis.bias}
                                             </span>
                                             {selectedPair === 'BTCUSD' && (
                                                 <span className="rounded bg-emerald-500 text-white px-1.5 py-0.2 text-[9px] font-bold">
@@ -1058,74 +936,29 @@ void OnStart()
 
                                     <div className="mt-3 space-y-1 text-xs border-t border-slate-100 pt-2.5">
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400">entry referensi:</span>
-                                            <span className="font-bold text-slate-800">{hasActionableAnalysis && activeTrade.entry !== null ? activeTrade.entry.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) : '—'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
                                         <span className="text-slate-400">harga feed:</span>
-                                            <span className="font-bold text-emerald-600 transition-all">{activeTrade.current ? activeTrade.current.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) : '—'}</span>
+                                            <span className="font-bold text-emerald-600 transition-all">{marketAnalysis.current ? marketAnalysis.current.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) : '—'}</span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">stop loss:</span>
-                                            <span className="font-bold text-rose-600">{hasActionableAnalysis && activeTrade.stopLoss !== null ? activeTrade.stopLoss.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) : '—'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">take profit:</span>
-                                            <span className="font-bold text-emerald-600">{hasActionableAnalysis && activeTrade.takeProfit !== null ? activeTrade.takeProfit.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) : '—'}</span>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 border-y border-slate-100 py-2">
+                                            <span className="text-slate-400">RSI 14: <strong className="text-slate-700">{marketAnalysis.rsi14 ?? '—'}</strong></span>
+                                            <span className="text-slate-400">ATR 14: <strong className="text-slate-700">{marketAnalysis.atr14?.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) ?? '—'}</strong></span>
+                                            <span className="text-slate-400">Trend: <strong className="text-slate-700">{marketAnalysis.trendScore ?? '—'}/100</strong></span>
+                                            <span className="text-slate-400">Alignment: <strong className="text-slate-700">{marketAnalysis.alignmentScore ?? '—'}/100</strong></span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-400">sumber feed:</span>
                                             <span className="font-bold text-slate-800">{feedSource || '—'}</span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">size:</span>
-                                            <span className="font-bold text-slate-800">{activeTrade.sizeLots || '—'} Lots ({activeTrade.sizePct})</span>
-                                        </div>
                                         <div className="pt-1 text-[11px] text-slate-600 leading-snug">
                                             <span className="text-slate-400">reason: </span>
-                                            {hasFeed && !feedIsFresh ? 'Feed tidak segar; level analisis lama disembunyikan.' : activeTrade.reason}
+                                            {hasFeed && !feedIsFresh ? 'Feed tidak segar; bias ditahan.' : marketAnalysis.reason}
                                         </div>
                                         <div className="text-[11px] text-slate-400">
-                                            {activeTrade.type === 'WAIT' ? 'Analisis belum menemukan setup yang dapat ditindaklanjuti.' : 'Ini level analisis, bukan posisi terbuka.'}
+                                            {marketAnalysis.bias === 'WAIT' ? 'Data/konfirmasi belum memadai; menunggu observasi berikutnya.' : 'Bias teknikal dari candle pasar teramati; bukan instruksi transaksi.'}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Reference size uses an editable capital assumption, not broker equity. */}
-                                <div className="mt-4 border-t border-slate-100 pt-3">
-                                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
-                                        <span>MODAL REFERENSI · ESTIMASI UKURAN</span>
-                                        <span>${baseCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="mt-2 space-y-1.5">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-400">Perkiraan volume:</span>
-                                            <span className="font-bold text-slate-600">{activeTrade.sizeLots || '—'} lot</span>
-                                        </div>
-                                        <p className="text-[10px] text-slate-500">Ukuran kontrak dan batas volume bisa berbeda di broker Anda. Tidak ada saldo atau P/L akun broker yang dibaca.</p>
-                                    </div>
-                                    <div className="text-[9px] text-slate-400 text-right mt-1">
-                                        draft untuk ditinjau · tidak mengirim order
-                                    </div>
-
-                                    <button
-                                        onClick={handleCopyMT5Script}
-                                        disabled={!hasActionableAnalysis}
-                                        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 px-3 py-2 text-[11px] font-bold text-slate-800 transition cursor-pointer"
-                                    >
-                                        {copiedScript ? (
-                                            <>
-                                                <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 text-emerald-600" />
-                                                <span>Draft MQL5 {selectedPair} Tersalin ke Clipboard!</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <ClipboardDocumentIcon className="h-3.5 w-3.5 text-slate-600" />
-                                                <span>Salin Draft Setup MQL5 ({selectedPair} · {activeTrade.sizeLots || '—'} Lots)</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
                             </div>
 
                             {/* Right: Market data and analysis output */}
@@ -1194,8 +1027,8 @@ void OnStart()
                         {/* 3. BOTTOM SECTION: LOG TABLE (reading the log) */}
                         <div className="rounded-2xl border border-[#ECECE6] bg-white p-4 font-mono shadow-xs">
                             <div className="flex items-center justify-between pb-3 border-b border-slate-100 text-[10px] font-bold text-slate-400">
-                                        <span>RIWAYAT SINYAL</span>
-                                        <span>snapshot analisis · bukan riwayat transaksi</span>
+                                        <span>RIWAYAT OBSERVASI · {marketObservations.length} SNAPSHOT</span>
+                                        <span>candle pasar aktual · tanpa transaksi simulasi</span>
                             </div>
 
                             <div className="divide-y divide-slate-100 text-xs">
@@ -1205,11 +1038,9 @@ void OnStart()
                                             <span className="text-slate-400 text-[11px]">{item.time}</span>
                                             <span
                                                 className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
-                                                    item.type === 'SIGNAL'
+                                                    item.type === 'BIAS'
                                                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                        : item.type === 'SKIP'
-                                                        ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                                                        : 'bg-rose-100 text-rose-800 border border-rose-300'
+                                                        : 'bg-blue-100 text-blue-800 border border-blue-300'
                                                 }`}
                                             >
                                                 {item.type}
@@ -1226,6 +1057,11 @@ void OnStart()
                                         </div>
                                     </div>
                                 ))}
+                                {logHistory.length === 0 && (
+                                    <div className="py-5 text-center text-[11px] text-slate-500">
+                                        Belum ada snapshot tersimpan untuk {selectedPair}. Analisis tercatat saat feed member aktif.
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1237,13 +1073,6 @@ void OnStart()
                                     className="rounded-xl border border-slate-300 bg-white hover:bg-slate-100 px-3 py-1.5 text-xs font-mono font-bold text-slate-700 transition cursor-pointer"
                                 >
                                     {isRunning ? 'Pause Feed Updates' : 'Resume Feed Updates'}
-                                </button>
-                                <button
-                                    onClick={() => setIsCapitalModalOpen(true)}
-                                    className="rounded-xl border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 text-xs font-mono font-bold text-indigo-800 transition flex items-center gap-1 cursor-pointer"
-                                >
-                                    <PencilSquareIcon className="h-3.5 w-3.5" />
-                                    <span>Ubah Modal (${baseCapital})</span>
                                 </button>
                                 <button
                                     onClick={handleDownloadLog}

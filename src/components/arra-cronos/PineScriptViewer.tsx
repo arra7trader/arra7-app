@@ -233,7 +233,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
                             <LockClosedIcon className="h-8 w-8 text-amber-400 mb-2" />
                             <h4 className="text-sm font-bold text-white">Source Code Terkunci</h4>
                             <p className="mt-1 max-w-md text-xs text-slate-400">
-                                Dapatkan akses penuh ke source code resmi indikator TradingView Pine Script v6 (500 baris) dengan mengorder ARRA Cronos seharga Rp 150.000 sekali bayar.
+                                Dapatkan akses penuh ke source code indikator TradingView Pine Script v6 dengan mengorder ARRA Cronos seharga Rp 150.000 sekali bayar.
                             </p>
                             <Link
                                 href="/payment/checkout?plan=ARRA_CRONOS"
@@ -254,45 +254,18 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
                 </div>
             )}
 
-            {/* Quick Presets Guide */}
             <div className="grid border-t border-slate-800/80 bg-[#0a101b] p-5 sm:grid-cols-3 sm:gap-4 sm:p-6">
                 <div className="rounded-xl border border-slate-800/60 bg-[#0e1624] p-4">
-                    <div className="flex items-center gap-2 text-xs font-bold text-cyan-300">
-                        <SparklesIcon className="h-3.5 w-3.5" />
-                        Preset Scalping (M1 - M5)
-                    </div>
-                    <ul className="mt-2.5 space-y-1 font-mono text-[11px] text-slate-400">
-                        <li>• Search bars: <span className="text-white">350</span></li>
-                        <li>• Pattern length: <span className="text-white">4</span></li>
-                        <li>• Forecast bars: <span className="text-white">6</span></li>
-                        <li>• Fast/Slow EMA: <span className="text-white">13 / 34</span></li>
-                    </ul>
+                    <div className="text-xs font-bold text-cyan-300">EMA cepat / lambat</div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-400">Membaca arah relatif dari candle timeframe chart yang aktif.</p>
                 </div>
-
                 <div className="mt-3 rounded-xl border border-cyan-500/20 bg-[#0e1624] p-4 sm:mt-0">
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-                        <SparklesIcon className="h-3.5 w-3.5" />
-                        Preset Intraday (M15 - H1) <span className="rounded bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">DEFAULT</span>
-                    </div>
-                    <ul className="mt-2.5 space-y-1 font-mono text-[11px] text-slate-400">
-                        <li>• Search bars: <span className="text-white">400</span></li>
-                        <li>• Pattern length: <span className="text-white">5</span></li>
-                        <li>• Forecast bars: <span className="text-white">8</span></li>
-                        <li>• Fast/Slow EMA: <span className="text-white">21 / 55</span></li>
-                    </ul>
+                    <div className="text-xs font-bold text-emerald-400">RSI dan ATR</div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-400">Menampilkan momentum dan rentang volatilitas historis.</p>
                 </div>
-
                 <div className="mt-3 rounded-xl border border-slate-800/60 bg-[#0e1624] p-4 sm:mt-0">
-                    <div className="flex items-center gap-2 text-xs font-bold text-indigo-400">
-                        <SparklesIcon className="h-3.5 w-3.5" />
-                        Preset Swing (H4 - D1)
-                    </div>
-                    <ul className="mt-2.5 space-y-1 font-mono text-[11px] text-slate-400">
-                        <li>• Search bars: <span className="text-white">500</span></li>
-                        <li>• Pattern length: <span className="text-white">7</span></li>
-                        <li>• Forecast bars: <span className="text-white">12</span></li>
-                        <li>• Fast/Slow EMA: <span className="text-white">34 / 89</span></li>
-                    </ul>
+                    <div className="text-xs font-bold text-indigo-400">Bias multi-timeframe</div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-400">Membandingkan EMA pada chart, 1 jam, 4 jam, dan harian. Tidak menghitung lintasan atau hasil transaksi.</p>
                 </div>
             </div>
         </div>

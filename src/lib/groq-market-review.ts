@@ -1,9 +1,6 @@
 import type { CronosMarketCandle, CronosTimeframe } from '@/lib/arra-cronos-market';
-import type {
-    CronosMTFBias,
-    CronosQuantMetrics,
-    CronosTradePlan,
-} from '@/lib/arra-cronos-engine';
+import type { CronosMTFBias, CronosQuantMetrics } from '@/lib/arra-cronos-engine';
+import { getCompletedCronosCandles } from '@/lib/arra-cronos-engine';
 
 export async function reviewCronosSetup(input: {
     symbol: string;
@@ -14,14 +11,13 @@ export async function reviewCronosSetup(input: {
     candles: CronosMarketCandle[];
     metrics: CronosQuantMetrics;
     mtfMatrix: Record<CronosTimeframe, CronosMTFBias>;
-    tradePlan: CronosTradePlan;
     action: 'BUY' | 'SELL' | 'WAIT';
 }) {
     const apiKey = process.env.GROQ_API_KEY?.trim();
     if (!apiKey) throw new Error('Groq belum dikonfigurasi pada environment server.');
 
     const model = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
-    const candles = input.candles.slice(-32).map((candle) => ({
+    const candles = getCompletedCronosCandles(input.candles, input.timeframe).slice(-32).map((candle) => ({
         time: candle.time,
         open: candle.open,
         high: candle.high,
@@ -40,15 +36,6 @@ export async function reviewCronosSetup(input: {
         availableTimeframeReadings: Object.values(input.mtfMatrix)
             .filter((reading) => reading.available)
             .map(({ timeframe, direction, changePercent, label }) => ({ timeframe, direction, changePercent, label })),
-        proposedLevels: input.action === 'WAIT'
-            ? null
-            : {
-                entry: input.tradePlan.entryPrice,
-                stopLoss: input.tradePlan.stopLoss,
-                takeProfit1: input.tradePlan.takeProfit1,
-                takeProfit2: input.tradePlan.takeProfit2,
-                rewardRisk: input.tradePlan.riskRewardRatio,
-            },
         recentCandles: candles,
     };
 
@@ -70,7 +57,6 @@ export async function reviewCronosSetup(input: {
                         'Gunakan hanya angka yang tersedia pada data input. Jangan menciptakan harga, berita, indikator, atau probabilitas.',
                         'Jangan mengubah BUY, SELL, atau WAIT dari mesin kuantitatif; jelaskan bila datanya saling bertentangan.',
                         'Jangan menyebut alignment score sebagai peluang menang atau confidence probabilitas.',
-                        'Nilai upper/lower forecast hanyalah koridor skenario ATR, bukan batas statistik terkalibrasi.',
                         'Jangan menjanjikan keuntungan dan jangan membuat atau mengirim order broker.',
                         'Jawab dalam Bahasa Indonesia dengan ringkas: keselarasan tren, risiko/kontradiksi, kondisi yang membatalkan analisis, dan keterbatasan data.',
                         'Jika feed bukan live atau sudah usang, sebutkan dan jangan mendukung entry.',
