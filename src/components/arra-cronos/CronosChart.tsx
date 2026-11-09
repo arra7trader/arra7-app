@@ -71,6 +71,9 @@ export default function CronosChart({
 
     const prevSymbolTimeframeRef = useRef<string>('');
     const userHasScrolledRef = useRef<boolean>(false);
+    const latestTrackedSetup = trackedSetups.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT')
+        ?? trackedSetups[0]
+        ?? null;
 
     // Posisikan candle terakhir tepat di tengah horizontal layar
     const centerOnLastCandle = useCallback(() => {
@@ -175,14 +178,17 @@ export default function CronosChart({
         });
 
         const forecastSeries = chart.addSeries(LineSeries, {
-            color: '#38bdf8',
-            lineWidth: 3,
+            color: '#22d3ee',
+            lineWidth: 4,
             crosshairMarkerVisible: true,
+            crosshairMarkerRadius: 5,
+            pointMarkersVisible: true,
+            pointMarkersRadius: 3,
             lastValueVisible: true,
             priceLineVisible: false,
         });
         const upperBandSeries = chart.addSeries(LineSeries, {
-            color: 'rgba(56, 189, 248, 0.52)',
+            color: 'rgba(34, 211, 238, 0.7)',
             lineWidth: 1,
             lineStyle: 2,
             crosshairMarkerVisible: false,
@@ -190,7 +196,7 @@ export default function CronosChart({
             priceLineVisible: false,
         });
         const lowerBandSeries = chart.addSeries(LineSeries, {
-            color: 'rgba(56, 189, 248, 0.52)',
+            color: 'rgba(34, 211, 238, 0.7)',
             lineWidth: 1,
             lineStyle: 2,
             crosshairMarkerVisible: false,
@@ -241,13 +247,19 @@ export default function CronosChart({
 
         const last = visibleCandles[visibleCandles.length - 1];
         const intervalSeconds = timeframe === '15m' ? 900 : timeframe === '1h' ? 3_600 : timeframe === '4h' ? 14_400 : 86_400;
-        const activeSetup = trackedSetups.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT');
-        const frozenSetup = activeSetup;
+        const frozenSetup = latestTrackedSetup;
         const visibleForecast = frozenSetup?.forecast?.length ? frozenSetup.forecast : forecast;
+        const lastCandleTime = chartTime(last.time);
+        const lastCandleCloseTime = (lastCandleTime + intervalSeconds) as UTCTimestamp;
         const currentPointTime = frozenSetup
             ? (chartTime(frozenSetup.setupBarTime) + intervalSeconds) as UTCTimestamp
-            : (chartTime(last.time) + intervalSeconds) as UTCTimestamp;
-        const currentForecastPrice = frozenSetup ? frozenSetup.entryPrice : last.close;
+            // Forecast points are generated from the last completed candle.
+            // Anchor one interval before the first projection so a live candle
+            // can never create a duplicate timestamp in the forecast series.
+            : visibleForecast.length
+                ? (chartTime(visibleForecast[0].time) - intervalSeconds) as UTCTimestamp
+                : lastCandleCloseTime;
+        const currentForecastPrice = frozenSetup?.entryPrice ?? scenarioSetup?.entryPrice ?? last.close;
         const forecastLine = visibleForecast.length
             ? [{ time: currentPointTime, value: currentForecastPrice }, ...visibleForecast.map((point) => ({ time: chartTime(point.time), value: point.value }))]
             : [];
@@ -345,11 +357,11 @@ export default function CronosChart({
                         {scenarioSetup?.action === 'WAIT' ? 'SETUP MENUNGGU KONFIRMASI' : `SKENARIO ${scenarioSetup?.side || '—'}`}
                     </span>
                     <span className="rounded-lg border border-slate-600/50 bg-slate-900/90 px-2.5 py-1 text-[10px] font-semibold text-slate-300 backdrop-blur-sm">
-                        Garis biru = jalur tengah · putus-putus = koridor ATR
+                        Garis cyan terang + titik = forecast · garis putus-putus = koridor ATR
                     </span>
-                    {trackedSetups.some((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT') && (
+                    {latestTrackedSetup && (
                         <span className="rounded-lg border border-emerald-400/30 bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-emerald-200 backdrop-blur-sm">
-                            LEVEL SETUP TETAP · HASIL DARI CANDLE AKTUAL
+                            LEVEL SETUP TETAP · STATUS {latestTrackedSetup.status} · CANDLE AKTUAL
                         </span>
                     )}
                 </div>

@@ -500,7 +500,8 @@ export default function ArraCronosPage() {
     const currentPrice = market?.currentPrice || 0;
     const modelBias = marketReview?.direction || null;
     const action: 'BUY' | 'SELL' | 'WAIT' = marketReview?.action || 'WAIT';
-    const displayedTrackedSetup = marketReview?.setupHistory?.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT');
+    const displayedTrackedSetup = marketReview?.setupHistory?.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT')
+        ?? marketReview?.setupHistory?.[0];
 
     const upColor = 'text-emerald-300';
     const downColor = 'text-rose-300';

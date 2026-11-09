@@ -105,17 +105,21 @@ export async function POST(request: Request) {
             result.commentary = `${result.commentary} Setup tidak diberi status BUY/SELL karena penyimpanan hasil candle tidak tersedia; levels estimasi dapat berubah.`;
         }
         const activeSetup = setupTracking.setups.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT');
-        if (activeSetup) {
-            result.forecast = activeSetup.forecast;
+        // Keep the newest setup snapshot visible after it closes so users can
+        // compare its original projection and levels with the candles that followed.
+        const displayedSetup = activeSetup ?? setupTracking.setups[0];
+        if (displayedSetup) {
+            result.forecast = displayedSetup.forecast;
+            result.targetPrice = displayedSetup.forecast.at(-1)?.value ?? displayedSetup.takeProfit2;
             result.scenarioSetup = {
-                action: activeSetup.side,
-                side: activeSetup.side,
-                entryPrice: activeSetup.entryPrice,
-                stopLoss: activeSetup.stopLoss,
-                takeProfit1: activeSetup.takeProfit1,
-                takeProfit2: activeSetup.takeProfit2,
-                riskRewardRatio: activeSetup.riskRewardRatio,
-                invalidationReason: `Setup ${activeSetup.side} tercatat pada candle ${activeSetup.setupBarTime}; level tetap sampai outcome terdeteksi atau horizon habis.`,
+                action: displayedSetup.side,
+                side: displayedSetup.side,
+                entryPrice: displayedSetup.entryPrice,
+                stopLoss: displayedSetup.stopLoss,
+                takeProfit1: displayedSetup.takeProfit1,
+                takeProfit2: displayedSetup.takeProfit2,
+                riskRewardRatio: displayedSetup.riskRewardRatio,
+                invalidationReason: `Setup ${displayedSetup.side} tercatat pada candle ${displayedSetup.setupBarTime}; Entry, SL, TP, dan forecast tetap untuk dibandingkan dengan candle aktual. Status: ${displayedSetup.status}.`,
             };
         }
         let analysisSnapshotRecorded = false;
