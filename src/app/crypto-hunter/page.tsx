@@ -112,7 +112,7 @@ export default function CryptoHunterPage() {
                                 Crypto Hunter Terkunci
                             </h1>
                             <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
-                                Radar pencari crypto potensial ini eksklusif untuk pemilik <strong className="text-amber-400">Paket Full Access Rp 125.000</strong> (Promo Lifetime) atau member <strong className="text-emerald-400">VVIP</strong> resmi.
+                                Radar pencari crypto potensial ini eksklusif untuk pemilik <strong className="text-amber-400">Paket Full Access Lifetime Rp 229.000</strong> atau member <strong className="text-emerald-400">VVIP</strong> resmi.
                             </p>
                         </div>
 
@@ -157,13 +157,13 @@ export default function CryptoHunterPage() {
                                 <span>Masukkan Kunci Lisensi Saya</span>
                             </button>
 
-                            {/* Buy 125k Promo Lifetime Link */}
+                            {/* Buy lifetime full access */}
                             <Link
                                 href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime"
                                 className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 text-white font-extrabold text-sm shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2 font-sans"
                             >
                                 <span>🔥</span>
-                                <span>Klaim Promo Full Access (Rp 125.000 Sekali Bayar) &rarr;</span>
+                                <span>Ambil Full Access Lifetime (Rp 229.000) &rarr;</span>
                             </Link>
 
                             {/* Secondary Navigation */}

@@ -211,30 +211,30 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Spotlight Flash Sale 2 Hari: 1 Harga Lifetime Rp 125.000 */}
+            {/* Lifetime full access website + ARRA Cronos and Grok */}
             <div className="mb-8 relative overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 shadow-xl">
               <div className="bg-white rounded-[22px] p-6 sm:p-8 text-left">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-xs shadow-xs uppercase tracking-wider">
                     <span className="animate-pulse">🔥</span>
-                    <span>PENGUMUMAN: PROMO DIPERPANJANG 2 HARI LAGI</span>
+                    <span>LIFETIME FULL ACCESS</span>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
                     <span>⏰</span>
-                    <span>Diperpanjang 48 Jam • Diskon 90%</span>
+                    <span>Sekali bayar</span>
                   </div>
                 </div>
 
                 <div className="mb-5">
                   <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-                    1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">4 PRODUK INTI PLATFORM</span>
+                    Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">FULL ACCESS WEBSITE + CRONOS &amp; GROK</span>
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                    Akses seumur hidup 4 produk unggulan platform ARRA 7 tanpa biaya langganan bulanan: PICA Neural Lab (AI Bi-LSTM &amp; Institutional SMC), Kursus Masterclass Fibo Kyoko (Video + Indikator MT5 &amp; Script TradingView), DOM ARRA (Realtime Order Book &amp; Whale Radar), dan Analisis Market harian!
+                    Akses lifetime website ARRA 7/PICA beserta ARRA Cronos dan ARRA Grok. Analisis pasar tanpa simulasi eksekusi maupun order broker otomatis.
                   </p>
                 </div>
 
-                {/* Grid Fitur Singkat (4 Produk Inti) */}
+                {/* Lifetime website features */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 text-xs">
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                     <p className="font-bold text-slate-900 text-sm">🧠 PICA Neural Lab</p>
@@ -252,19 +252,20 @@ export default function Home() {
                     <p className="font-bold text-slate-900 text-sm">📈 Analisis Market</p>
                     <p className="text-[11px] text-slate-500 mt-1">Struktur Trend, Area Supply &amp; Demand, S/R Key Levels Harian</p>
                   </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p className="font-bold text-slate-900 text-sm">⚡ ARRA Cronos + Grok</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Forecast dengan setup tercatat dan scan otomatis 5 pair</p>
+                  </div>
                 </div>
 
                 {/* Harga & CTA */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-100">
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-slate-400 line-through text-xs sm:text-sm font-semibold">Rp 1.499.000</span>
-                      <span className="text-[10px] font-extrabold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
-                        HEMAT Rp 1.374.000 (DISKON 90%)
-                      </span>
+                      <span className="text-xs sm:text-sm font-extrabold text-emerald-700">Sekali bayar · akses lifetime</span>
                     </div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-3xl sm:text-4xl font-black text-slate-900">Rp 125.000</span>
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900">Rp 229.000</span>
                       <span className="text-xs text-slate-500 font-semibold">/ sekali bayar (Lifetime)</span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1">
@@ -274,7 +275,7 @@ export default function Home() {
 
                   <Link href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime" className="w-full sm:w-auto">
                     <button className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
-                      <span>Klaim Promo Semua Produk (Rp 125.000)</span>
+                      <span>Ambil Lifetime Full Access (Rp 229.000)</span>
                       <span>&rarr;</span>
                     </button>
                   </Link>
@@ -394,12 +395,12 @@ export default function Home() {
                       <span className="text-2xl font-extrabold text-slate-900">Rp 150.000</span>
                       <span className="text-xs text-slate-500">sekali bayar</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">AI Quant Forecast + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold) + BONUS Indikator TradingView.</p>
+                    <p className="text-xs text-slate-500 mt-1">ARRA Cronos forecast dengan setup tercatat + ARRA GROK scan otomatis 5 pair. Analisis saja, tanpa simulasi dan order broker.</p>
                   </div>
                   <ul className="space-y-2 text-xs text-slate-600 mb-6 border-t border-cyan-100 pt-3">
                     <li className="flex items-center gap-2">
                       <CheckIcon size="xs" className="text-emerald-600 shrink-0" />
-                      <span className="font-semibold text-emerald-800">ARRA GROK: 6-Agent Autonomous Terminal (Forex/Gold)</span>
+                      <span className="font-semibold text-emerald-800">ARRA GROK: Auto scan BTCUSD, XAUUSD, EURUSD, GBPUSD, USDJPY</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon size="xs" className="text-cyan-600 shrink-0" />

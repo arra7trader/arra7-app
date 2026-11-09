@@ -9,7 +9,7 @@ import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, Rob
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
     ALL_ACCESS: [
-        { duration: 'lifetime', days: 0, label: 'Lifetime Selamanya', price: 'Rp 125.000', originalPrice: 'Rp 1.499.000', savingsText: 'Hemat Rp 1.374.000 • Diskon 90%', promoSlots: 100, period: '/ sekali bayar' },
+        { duration: 'lifetime', days: 0, label: 'Lifetime Full Access', price: 'Rp 229.000', originalPrice: null, savingsText: 'Akses website + ARRA Cronos & Grok', period: '/ sekali bayar' },
     ],
     PRO: [
         { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 99.000', originalPrice: 'Rp 149.000' },
@@ -150,12 +150,13 @@ const PRICING_PLANS = [
     {
         id: 'ARRA_CRONOS',
         name: 'ARRA Cronos & ARRA GROK Terminal',
-        description: 'Paket komplit AI Quant Forecast Lilin Masa Depan + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + BONUS Resmi Indikator TradingView Pine Script v6.',
+        description: 'Paket mandiri ARRA Cronos + ARRA GROK untuk analisis pasar otomatis multi-pair, jalur forecast dan setup Entry/SL/TP yang tercatat, plus indikator TradingView.',
         theme: 'cyan',
         features: [
-            { text: 'ARRA GROK: 6-Agent Autonomous Terminal (Scanner, Sentry Guard, Sizer, Executor, Logger, Equity)', included: true, highlight: true },
-            { text: 'Khusus Forex & Gold Futures (Tanpa Crypto & Tanpa Copytrade)', included: true, highlight: true },
+            { text: 'ARRA GROK: scanner otomatis BTCUSD, XAUUSD, EURUSD, GBPUSD, dan USDJPY', included: true, highlight: true },
+            { text: 'Analisis saja: tanpa simulasi dan tanpa order broker otomatis', included: true, highlight: true },
             { text: 'ARRA Cronos AI Quant Engine Lilin Masa Depan & Corridor P10-P90', included: true, highlight: true },
+            { text: 'Setup yang dicatat dari candle selesai; hasil TP/SL ditandai tanpa simulasi eksekusi', included: true, highlight: true },
             { text: 'BONUS Source Code Indikator TradingView Pine Script v6', included: true, highlight: true },
             { text: 'Multi-Timeframe Radar (15M, 1H, 4H, 1D)', included: true, highlight: false },
             { text: 'Akses Selamanya (Sekali Bayar Rp 150.000)', included: true, highlight: true },
@@ -292,7 +293,7 @@ export default function PricingPage() {
 
             {/* Pricing Section */}
             <section className="px-4 max-w-5xl mx-auto mb-24 flex flex-col gap-10">
-                {/* Spotlight Flash Sale 2 Hari Card (All-Access Lifetime) */}
+                {/* Lifetime full access website and ARRA Cronos + Grok */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -304,29 +305,29 @@ export default function PricingPage() {
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-xs shadow-md uppercase tracking-wider">
                                 <span className="animate-pulse">🔥</span>
-                                <span>PENGUMUMAN RESMI: FLASH SALE DIPERPANJANG 2 HARI!</span>
+                                <span>LIFETIME FULL ACCESS</span>
                             </div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
                                 <span>⏰</span>
-                                <span>Diperpanjang 48 Jam • Kuota Terbatas</span>
+                                <span>Sekali bayar</span>
                             </div>
                         </div>
 
                         {/* Title & Description */}
                         <div className="mb-8">
                             <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-                                1 Harga Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">4 PRODUK INTI PLATFORM</span>
+                                Lifetime untuk <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">FULL ACCESS WEBSITE + CRONOS &amp; GROK</span>
                             </h2>
                             <p className="text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed">
-                                Dapatkan akses seumur hidup (Lifetime) ke seluruh 4 produk &amp; fitur unggulan di platform ARRA 7: PICA Neural Lab, Kursus Masterclass Fibo Kyoko, DOM ARRA, dan Analisis Market. Cukup 1 kali bayar, Anda bebas menggunakan seluruh ekosistem tanpa perlu membayar iuran langganan bulanan lagi!
+                                Dapatkan akses lifetime ke website ARRA 7/PICA beserta ARRA Cronos dan ARRA Grok. Cronos menampilkan forecast dan setup teknikal yang dicatat berdasarkan candle selesai; Grok memindai lima pair otomatis. Keduanya menyediakan analisis saja, tanpa simulasi eksekusi atau order broker otomatis.
                             </p>
                         </div>
 
-                        {/* Grid Fitur Yang Didapat (4 Produk Inti) */}
+                        {/* Website lifetime feature list */}
                         <div className="mb-8 bg-slate-50/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80">
                             <p className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                <span>DAFTAR LENGKAP 4 PRODUK &amp; FITUR YANG DIDAPATKAN:</span>
+                                <span>FITUR LIFETIME:</span>
                             </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
@@ -374,18 +375,13 @@ export default function PricingPage() {
                         {/* Pricing Box & CTA */}
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2 border-t border-slate-100">
                             <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-slate-400 line-through text-base font-semibold">Rp 1.499.000</span>
-                                    <span className="text-xs font-extrabold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full">
-                                        HEMAT Rp 1.374.000 (DISKON 90%)
-                                    </span>
-                                </div>
+                                <div className="mb-1 text-sm font-extrabold text-emerald-700">Sekali bayar · akses lifetime</div>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">Rp 125.000</span>
+                                        <span className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">Rp 229.000</span>
                                     <span className="text-sm font-semibold text-slate-500">/ sekali bayar (Lifetime)</span>
                                 </div>
                                 <p className="text-xs text-amber-600 font-semibold mt-1">
-                                    ⚡ Promo ditutup otomatis setelah 2 hari!
+                                    Untuk pembelian lifetime baru.
                                 </p>
                             </div>
 
@@ -395,7 +391,7 @@ export default function PricingPage() {
                                     disabled={isProcessing === 'ALL_ACCESS'}
                                     className="w-full sm:w-auto px-8 py-4 rounded-2xl font-extrabold text-base text-white bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 shadow-lg shadow-rose-500/25 transition-all transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
                                 >
-                                    <span>Ambil Promo Semua Produk (Rp 125.000)</span>
+                                    <span>Ambil Lifetime Full Access (Rp 229.000)</span>
                                     <span className="text-xl">&rarr;</span>
                                 </button>
                                 <p className="text-[11px] text-center text-slate-500 mt-2">
@@ -405,6 +401,16 @@ export default function PricingPage() {
                         </div>
                     </div>
                 </motion.div>
+
+                <div className="rounded-3xl border border-cyan-200 bg-cyan-50 p-6 sm:p-8">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 className="text-xl font-extrabold text-slate-900">Upgrade pemilik Lifetime Rp129.000</h2>
+                            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600">Tambahkan ARRA Cronos + ARRA Grok dengan membayar selisih Rp100.000. Admin akan memverifikasi akun dan bukti Lifetime sebelum mengaktifkan upgrade.</p>
+                        </div>
+                        <Link href="/payment/transfer?plan=LIFETIME_UPGRADE&duration=lifetime" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-cyan-700 px-5 py-3 text-sm font-bold text-white hover:bg-cyan-800">Upgrade Rp100.000</Link>
+                    </div>
+                </div>
 
                 {PRICING_PLANS.map((plan, index) => {
                     const pricing = getPlanPricing(plan.id);

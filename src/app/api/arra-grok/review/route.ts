@@ -17,8 +17,8 @@ export async function POST(request: Request) {
     try {
         const body = await request.json().catch(() => ({}));
         const symbol = String(body?.symbol || '').toUpperCase();
-        if (!['BTCUSD', 'XAUUSD'].includes(symbol)) {
-            return NextResponse.json({ error: 'ARRA GROK hanya mendukung BTCUSD dan XAUUSD.' }, { status: 400 });
+        if (!['BTCUSD', 'XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY'].includes(symbol)) {
+            return NextResponse.json({ error: 'Pair yang didukung: BTCUSD, XAUUSD, EURUSD, GBPUSD, USDJPY.' }, { status: 400 });
         }
         const user = await resolveUserOrDevice(request);
         const hasReviewAccess = user.isAdmin || user.membership === 'PRO' || user.membership === 'VVIP';
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         const history = await getCronosAnalysisHistory(symbol, market);
         const inference = buildKronosMarketReview(symbol, '15m', market.candles, market.currentPrice, history);
         const liveQuote = isActionableMarketQuote(market);
-        const open = symbol === 'BTCUSD' || isMarketOpen('XAUUSD').isOpen;
+        const open = isMarketOpen(symbol).isOpen;
         const action = liveQuote && open ? inference.action : 'WAIT';
         const result = await reviewCronosSetup({
             symbol,

@@ -78,6 +78,13 @@ interface PairScan {
     status: 'ANALYZED' | 'WAIT' | 'CLOSED' | 'INSUFFICIENT_HISTORY' | 'UNAVAILABLE';
 }
 
+type ArraGrokPair = 'BTCUSD' | 'XAUUSD' | 'EURUSD' | 'GBPUSD' | 'USDJPY';
+const ARRA_GROK_PAIRS: ArraGrokPair[] = ['BTCUSD', 'XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY'];
+
+function pairDecimals(pair: ArraGrokPair) {
+    return pair === 'BTCUSD' ? 1 : pair === 'XAUUSD' ? 2 : pair === 'USDJPY' ? 3 : 5;
+}
+
 export default function ArraGrokPage() {
     const { data: session } = useSession();
     const { tier, openActivation, deviceId } = usePicaDevice();
@@ -114,7 +121,7 @@ export default function ArraGrokPage() {
     const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('');
 
     // Active pair selection; market hours are determined by the server's exchange calendar.
-    const [selectedPair, setSelectedPair] = useState<'BTCUSD' | 'XAUUSD'>('BTCUSD');
+    const [selectedPair, setSelectedPair] = useState<ArraGrokPair>('BTCUSD');
     const [marketOpen, setMarketOpen] = useState<boolean | null>(null);
     const [marketOpenReason, setMarketOpenReason] = useState('');
     const [nextMarketOpenWib, setNextMarketOpenWib] = useState('');
@@ -139,6 +146,7 @@ export default function ArraGrokPage() {
     const [groqReviewModel, setGroqReviewModel] = useState('');
     const [isReviewingWithGroq, setIsReviewingWithGroq] = useState(false);
     const scanInFlight = useRef(false);
+    const observationFetchTimes = useRef<Record<string, number>>({});
     const [pairScans, setPairScans] = useState<PairScan[]>([]);
     const [activeScanIndex, setActiveScanIndex] = useState(0);
     const [scanUpdatedAt, setScanUpdatedAt] = useState('');
@@ -162,18 +170,23 @@ export default function ArraGrokPage() {
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
     const [logHistory, setLogHistory] = useState<LogItem[]>([]);
     const [marketObservations, setMarketObservations] = useState<MarketObservation[]>([]);
+    const observationViewsByPair = useRef<Record<string, { observations: MarketObservation[]; logs: LogItem[] }>>({});
 
-    const fetchMarketObservations = useCallback(async () => {
+    const selectedPairRef = useRef(selectedPair);
+    selectedPairRef.current = selectedPair;
+
+    const fetchMarketObservations = useCallback(async (symbol: ArraGrokPair) => {
+        if (Date.now() - (observationFetchTimes.current[symbol] || 0) < 60_000) return;
+        observationFetchTimes.current[symbol] = Date.now();
         try {
-            const response = await fetch(`/api/arra-grok/observations?symbol=${selectedPair}`, {
+            const response = await fetch(`/api/arra-grok/observations?symbol=${symbol}`, {
                 cache: 'no-store',
                 headers: deviceId ? { 'x-device-id': deviceId } : {},
             });
             const payload = await response.json();
             if (response.ok && Array.isArray(payload.observations)) {
                 const observations = payload.observations as MarketObservation[];
-                setMarketObservations(observations);
-                setLogHistory(observations.map((observation) => ({
+                const logs: LogItem[] = observations.map((observation) => ({
                     id: String(observation.id),
                     time: new Intl.DateTimeFormat('id-ID', {
                         hour: '2-digit',
@@ -188,21 +201,17 @@ export default function ArraGrokPage() {
                     result: observation.action === 'WAIT'
                         ? `WAIT · $${observation.price} · RSI ${observation.metrics.rsi14} · align ${observation.alignmentScore}/100`
                         : `${observation.action === 'BUY' ? 'BULLISH' : 'BEARISH'} · $${observation.price} · RSI ${observation.metrics.rsi14} · align ${observation.alignmentScore}/100`,
-                })));
+                }));
+                observationViewsByPair.current[symbol] = { observations, logs };
+                if (symbol !== selectedPairRef.current) return;
+                setMarketObservations(observations);
+                setLogHistory(logs);
             }
         } catch {
+            delete observationFetchTimes.current[symbol];
             // Keep the most recently loaded observations visible when the history service is unavailable.
         }
-    }, [deviceId, selectedPair]);
-
-    const handleSelectPair = useCallback((pair: 'BTCUSD' | 'XAUUSD') => {
-        if (pair === selectedPair) return;
-        setSelectedPair(pair);
-        setLogHistory([]);
-        setMarketObservations([]);
-        setGroqReview('');
-        setGroqReviewError('');
-    }, [selectedPair]);
+    }, [deviceId]);
 
     const handleGroqReview = useCallback(async () => {
         setIsReviewingWithGroq(true);
@@ -292,6 +301,12 @@ export default function ArraGrokPage() {
     }, [pairScans, selectedPair]);
 
     useEffect(() => {
+        if (!isUnlocked || !isRunning || pairScans.length !== ARRA_GROK_PAIRS.length) return;
+        const activePair = pairScans[activeScanIndex]?.symbol as ArraGrokPair | undefined;
+        if (activePair && ARRA_GROK_PAIRS.includes(activePair)) setSelectedPair(activePair);
+    }, [activeScanIndex, isUnlocked, isRunning, pairScans]);
+
+    useEffect(() => {
         if (!isUnlocked || !isRunning) return;
         void fetchPairScans();
         const interval = window.setInterval(fetchPairScans, 15_000);
@@ -299,27 +314,27 @@ export default function ArraGrokPage() {
     }, [isUnlocked, isRunning, fetchPairScans]);
 
     useEffect(() => {
-        if (!isUnlocked || !isRunning || pairScans.length < 2) {
+        if (!isUnlocked || pairScans.length < 2) {
             setActiveScanIndex(0);
             return;
         }
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            setActiveScanIndex(-1);
-            return;
-        }
+        if (!isRunning) return;
         setActiveScanIndex(0);
         const interval = window.setInterval(() => {
             setActiveScanIndex((current) => (current + 1) % pairScans.length);
-        }, 1_400);
+        }, 3_000);
         return () => window.clearInterval(interval);
     }, [isUnlocked, isRunning, pairScans.length]);
 
     useEffect(() => {
         if (!isUnlocked) return;
-        void fetchMarketObservations();
-        const interval = window.setInterval(fetchMarketObservations, 60_000);
+        const cached = observationViewsByPair.current[selectedPair];
+        setMarketObservations(cached?.observations || []);
+        setLogHistory(cached?.logs || []);
+        void fetchMarketObservations(selectedPair);
+        const interval = window.setInterval(() => void fetchMarketObservations(selectedPair), 60_000);
         return () => window.clearInterval(interval);
-    }, [isUnlocked, fetchMarketObservations]);
+    }, [isUnlocked, fetchMarketObservations, selectedPair]);
 
     // Clock timer (every 1 second)
     useEffect(() => {
@@ -332,7 +347,7 @@ export default function ArraGrokPage() {
 
     // Download audit log text file
     const handleDownloadLog = () => {
-        const header = `=== ARRA GROK MARKET OBSERVATIONS ===\nDate: ${new Date().toLocaleString('id-ID')}\nPair: ${selectedPair} (${selectedPair === 'BTCUSD' ? '24/7 Crypto' : 'Gold Futures'})\nMarket Data: ${feedSource || 'unavailable'} · ${feedIsFresh ? 'fresh' : 'stale/unavailable'}\nNo simulated trades, fills, or broker orders are recorded.\n\n--- MARKET ANALYSIS SNAPSHOTS ---\n`;
+        const header = `=== ARRA GROK MARKET OBSERVATIONS ===\nDate: ${new Date().toLocaleString('id-ID')}\nPair: ${selectedPair} (${selectedPair === 'BTCUSD' ? '24/7 Crypto' : selectedPair === 'XAUUSD' ? 'Gold Futures' : 'Forex'})\nMarket Data: ${feedSource || 'unavailable'} · ${feedIsFresh ? 'fresh' : 'stale/unavailable'}\nNo simulated trades, fills, or broker orders are recorded.\n\n--- MARKET ANALYSIS SNAPSHOTS ---\n`;
         const body = logHistory.map((l) => `[${l.time}] ${l.type.padEnd(8)} ${l.symbol.padEnd(9)} ${l.result.padEnd(12)} Reason: ${l.reason}`).join('\n');
         const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -364,7 +379,7 @@ export default function ArraGrokPage() {
                                 Buka Terminal ARRA GROK + <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-indigo-300 bg-clip-text text-transparent">Bonus Indikator TradingView</span>
                             </h2>
                             <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
-                                Fitur <strong>ARRA GROK</strong> sudah termasuk dalam paket <strong>ARRA Cronos (Rp 150.000)</strong>. Anda mendapatkan terminal analisis pasar untuk Forex, Gold Futures, dan Bitcoin 24/7, perhitungan ukuran posisi, jurnal rekomendasi, serta contoh script MQL5 yang dapat ditinjau sebelum digunakan.
+                                Fitur <strong>ARRA GROK</strong> tersedia dalam paket <strong>ARRA Cronos (Rp 150.000)</strong>. Terminal memindai lima pair dan menampilkan analisis teknikal pasar aktual; tidak ada sizing posisi, simulasi transaksi, atau order broker otomatis.
                             </p>
                         </div>
 
@@ -416,14 +431,6 @@ export default function ArraGrokPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={() => handleSelectPair('XAUUSD')}
-                            className="rounded-xl border border-emerald-400 bg-white hover:bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-900 transition flex items-center gap-1.5 cursor-pointer"
-                        >
-                            <span>🥇 Lihat Emas ($XAUUSD)</span>
-                        </button>
-                    </div>
                 </div>
             ) : marketOpen === false ? (
                 <div className="mx-auto max-w-6xl mb-4 rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
@@ -433,30 +440,16 @@ export default function ArraGrokPage() {
                         </span>
                         <div>
                             <span className="font-black uppercase tracking-wide">PASAR EMAS &amp; FOREX TUTUP (AKHIR PEKAN)</span>
-                            <div className="text-[11px] text-amber-800 mt-0.5">
-                                {marketOpenReason || 'Sesi COMEX gold futures sedang tutup.'} {nextMarketOpenWib ? `Perkiraan buka ${nextMarketOpenWib}.` : ''} Terminal hanya mencatat analisis pasar aktual; beralihlah ke <strong>$BTCUSD (24/7)</strong> untuk feed langsung.
-                            </div>
+                            <div className="text-[11px] text-amber-800 mt-0.5">{marketOpenReason || `Pasar ${selectedPair} sedang tutup.`} {nextMarketOpenWib ? `Perkiraan buka ${nextMarketOpenWib}.` : ''} Pair ini tetap dipindai, dan bias ditahan di WAIT sampai sesi aktif.</div>
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={() => handleSelectPair('BTCUSD')}
-                            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
-                        >
-                            <span>⚡ Beralih ke $BTCUSD (24/7 Live)</span>
-                        </button>
-                        <button
-                            onClick={() => fetchPairScans()}
-                            className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition flex items-center gap-1 ${
-                                'border border-amber-400/80 bg-white hover:bg-amber-100 text-amber-900'
-                            }`}
-                        >
-                            <span>Perbarui feed</span>
-                        </button>
-                    </div>
                 </div>
-            ) : null}
+            ) : (
+                <div className="mx-auto max-w-6xl mb-4 flex items-center justify-between rounded-2xl border border-cyan-200 bg-cyan-50/90 p-3 font-mono text-[11px] text-cyan-900">
+                    <span>AUTO ROTASI · ${selectedPair} · ${marketAnalysis.current ? marketAnalysis.current.toFixed(pairDecimals(selectedPair)) : 'menunggu feed'} · {feedIsFresh ? 'kuotasi segar' : 'feed menunggu'}</span>
+                    <span className="font-bold">{activeScanIndex + 1}/5</span>
+                </div>
+            )}
 
             {/* RETRO-MODERN MAC WINDOW TERMINAL FRAME */}
             <div className={`mx-auto max-w-6xl overflow-hidden rounded-2xl sm:rounded-3xl border border-[#DCDCD5] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)] transition-all ${!isUnlocked ? 'pointer-events-none opacity-40 blur-[1px]' : ''}`}>
@@ -471,26 +464,21 @@ export default function ArraGrokPage() {
 
                     {/* Window Title Subtitle */}
                     <div className="hidden sm:block text-[11px] font-mono text-slate-500 font-medium">
-                        ARRA GROK — live market feed &amp; technical review · BTC and gold
+                        ARRA GROK — auto scan &amp; analysis · 5 markets
                     </div>
 
                     {/* Right Tag */}
                     <div className="flex items-center gap-2 text-xs font-mono">
                         <span className="text-slate-400 hidden xs:inline">@ARRA7_GROK</span>
-                        {selectedPair === 'BTCUSD' ? (
+                        {isRunning ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                <span>BTC 24/7 · {feedIsFresh ? 'FEED SEGAR' : 'MENUNGGU FEED'}</span>
-                            </span>
-                        ) : marketOpen === false ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                <span>PASAR TUTUP · WEEKEND STANDBY</span>
+                                <span>AUTO · ${selectedPair} · {activeScanIndex + 1}/5</span>
                             </span>
                         ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                <span>{feedIsFresh ? 'FEED TERBARU' : 'FEED MENUNGGU'}</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                <span>SCAN DIJEDA · ${selectedPair}</span>
                             </span>
                         )}
                     </div>
@@ -516,37 +504,7 @@ export default function ArraGrokPage() {
                                         v1.0 Quant
                                     </span>
 
-                                    {/* PAIR SELECTOR PILLS */}
-                                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
-                                        <button
-                                            onClick={() => handleSelectPair('BTCUSD')}
-                                            className={`px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                                                selectedPair === 'BTCUSD'
-                                                    ? 'bg-emerald-600 text-white shadow-xs'
-                                                    : 'text-slate-600 hover:text-slate-900'
-                                            }`}
-                                        >
-                                            <span>₿ $BTCUSD</span>
-                                            <span className={`text-[9px] px-1 py-0.2 rounded font-black ${selectedPair === 'BTCUSD' ? 'bg-emerald-700 text-emerald-100' : 'bg-emerald-100 text-emerald-800'}`}>
-                                                24/7
-                                            </span>
-                                        </button>
-                                        <button
-                                            onClick={() => handleSelectPair('XAUUSD')}
-                                            className={`px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                                                selectedPair === 'XAUUSD'
-                                                    ? 'bg-amber-600 text-white shadow-xs'
-                                                    : 'text-slate-600 hover:text-slate-900'
-                                            }`}
-                                        >
-                                            <span>🥇 $XAUUSD</span>
-                                            {marketOpen === false && (
-                                                <span className={`text-[9px] px-1 py-0.2 rounded font-black ${selectedPair === 'XAUUSD' ? 'bg-amber-700 text-amber-100' : 'bg-amber-100 text-amber-800'}`}>
-                                                    LIBUR
-                                                </span>
-                                            )}
-                                        </button>
-                                    </div>
+                                    <span className="rounded-xl border border-cyan-300 bg-cyan-50 px-2.5 py-1 text-[10px] font-mono font-black text-cyan-800">AUTO · {selectedPair} · {activeScanIndex + 1}/5</span>
                                 </div>
 
                                 <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs font-mono">
@@ -559,11 +517,9 @@ export default function ArraGrokPage() {
                                     </span>
                                 </div>
                                 <div className="mt-1 text-[11px] font-mono text-slate-400 italic">
-                                    {selectedPair === 'BTCUSD'
-                                        ? 'BTC market 24/7 · market quote is separate from broker execution'
-                                        : marketOpen === false
-                                        ? `${marketOpenReason || 'sesi emas tutup'} · rekomendasi ditahan${nextMarketOpenWib ? ` sampai ${nextMarketOpenWib}` : ''}`
-                                        : 'market analysis only · no broker account connection'}
+                                    {marketOpen === false
+                                        ? `${marketOpenReason || `sesi ${selectedPair} tutup`} · bias ditahan${nextMarketOpenWib ? ` sampai ${nextMarketOpenWib}` : ''}`
+                                        : 'analisis otomatis lima pair · tanpa order broker'}
                                 </div>
                             </div>
                         </div>
@@ -604,14 +560,14 @@ export default function ArraGrokPage() {
                                 quotes from the market feed
                             </div>
                             <div className="mt-1 text-[9px] font-mono font-bold text-slate-700 truncate">
-                                {marketAnalysis.symbol} · {marketAnalysis.current ? `$${marketAnalysis.current.toFixed(selectedPair === 'BTCUSD' ? 1 : 2)}` : 'harga menunggu feed'}
+                                {marketAnalysis.symbol} · {marketAnalysis.current ? `$${marketAnalysis.current.toFixed(pairDecimals(selectedPair))}` : 'harga menunggu feed'}
                             </div>
                         </div>
 
                         {/* MODULE 2: MARKET GUARD */}
                         <div className="relative rounded-xl border border-slate-200/80 p-2.5 bg-white shadow-xs">
                             <span className="absolute -right-1 -top-1.5 rotate-[-8deg] rounded border border-rose-500 bg-white/95 px-1.5 py-0.2 text-[8px] font-mono font-black text-rose-600 shadow-xs">
-                                {selectedPair === 'XAUUSD' && marketOpen === false ? 'MARKET CLOSED' : !hasFeed ? 'NO FEED' : !feedIsFresh ? 'NO LIVE QUOTE' : 'LIVE FEED'}
+                                {marketOpen === false ? 'MARKET CLOSED' : !hasFeed ? 'NO FEED' : !feedIsFresh ? 'NO LIVE QUOTE' : 'LIVE FEED'}
                             </span>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -623,7 +579,7 @@ export default function ArraGrokPage() {
                                     </span>
                                 </div>
                                 <span className="rounded bg-rose-100 text-rose-800 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono font-bold">
-                                    {!hasFeed ? 'NO FEED' : selectedPair === 'XAUUSD' && marketOpen === false ? 'CLOSED' : !feedIsFresh ? 'NO LIVE QUOTE' : 'OPEN'}
+                                    {!hasFeed ? 'NO FEED' : marketOpen === false ? 'CLOSED' : !feedIsFresh ? 'NO LIVE QUOTE' : 'OPEN'}
                                 </span>
                             </div>
                             <div className="mt-1 text-[10px] text-slate-500 font-mono">
@@ -780,7 +736,7 @@ export default function ArraGrokPage() {
                                 </span>
                             </div>
 
-                            {/* Every pair is scanned automatically; the detailed panel remains independently selectable. */}
+                            {/* Every pair is scanned automatically; the detailed panel follows the active scan. */}
                             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
                                 {pairScans.map((scan, index) => {
                                     const isVisuallyScanning = isRunning && pairScans.length === 5 && index === activeScanIndex;
@@ -804,7 +760,7 @@ export default function ArraGrokPage() {
                                                 </span>
                                             </div>
                                             <div className="text-[10px] font-bold text-slate-700 mt-0.5">
-                                                {scan.currentPrice === null ? '—' : `$${scan.currentPrice.toFixed(scan.symbol === 'BTCUSD' ? 1 : scan.symbol === 'USDJPY' || scan.symbol === 'XAUUSD' ? 2 : 4)}`}
+                                                {scan.currentPrice === null ? '—' : `$${scan.currentPrice.toFixed(pairDecimals(scan.symbol as ArraGrokPair))}`}
                                                 {scan.changePercent !== null && (
                                                     <span className={`ml-1 text-[9px] ${scan.changePercent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                         {scan.changePercent >= 0 ? '+' : ''}{scan.changePercent.toFixed(2)}%
@@ -946,11 +902,11 @@ export default function ArraGrokPage() {
                                     <div className="mt-3 space-y-1 text-xs border-t border-slate-100 pt-2.5">
                                         <div className="flex justify-between">
                                         <span className="text-slate-400">harga feed:</span>
-                                            <span className="font-bold text-emerald-600 transition-all">{marketAnalysis.current ? marketAnalysis.current.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) : '—'}</span>
+                                            <span className="font-bold text-emerald-600 transition-all">{marketAnalysis.current ? marketAnalysis.current.toFixed(pairDecimals(selectedPair)) : '—'}</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 border-y border-slate-100 py-2">
                                             <span className="text-slate-400">RSI 14: <strong className="text-slate-700">{marketAnalysis.rsi14 ?? '—'}</strong></span>
-                                            <span className="text-slate-400">ATR 14: <strong className="text-slate-700">{marketAnalysis.atr14?.toFixed(selectedPair === 'BTCUSD' ? 1 : 2) ?? '—'}</strong></span>
+                                            <span className="text-slate-400">ATR 14: <strong className="text-slate-700">{marketAnalysis.atr14?.toFixed(pairDecimals(selectedPair)) ?? '—'}</strong></span>
                                             <span className="text-slate-400">Trend: <strong className="text-slate-700">{marketAnalysis.trendScore ?? '—'}/100</strong></span>
                                             <span className="text-slate-400">Alignment: <strong className="text-slate-700">{marketAnalysis.alignmentScore ?? '—'}/100</strong></span>
                                         </div>

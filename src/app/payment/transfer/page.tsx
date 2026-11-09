@@ -45,7 +45,10 @@ const PRICING_OPTIONS: Record<
         'lifetime': { durationLabel: 'Lifetime Sekali Bayar', price: 150000, priceDisplay: 'Rp 150.000', originalPrice: 'Rp 499.000', period: '/sekali bayar (+ ARRA GROK & Bonus Indikator TradingView)' },
     },
     ALL_ACCESS: {
-        'lifetime': { durationLabel: 'Lifetime (Semua Produk)', price: 125000, priceDisplay: 'Rp 125.000', originalPrice: 'Rp 1.499.000', period: '/sekali bayar (Flash Sale Diperpanjang 2 Hari)' },
+        'lifetime': { durationLabel: 'Lifetime Full Access Website + Cronos & Grok', price: 229000, priceDisplay: 'Rp 229.000', originalPrice: null, period: '/sekali bayar' },
+    },
+    LIFETIME_UPGRADE: {
+        'lifetime': { durationLabel: 'Upgrade Lifetime: ARRA Cronos + ARRA Grok', price: 100000, priceDisplay: 'Rp 100.000', originalPrice: null, period: '/selisih sekali bayar' },
     },
 };
 
@@ -80,7 +83,8 @@ function TransferContent() {
             TELEBOT: 'TELEBOT',
             FIBO_KYOKO: 'Kursus Digital Fibo Kyoko',
             ARRA_CRONOS: 'ARRA Cronos AI Quant Engine + ARRA GROK Terminal + Bonus Indikator TradingView',
-            ALL_ACCESS: 'Semua Produk ARRA 7 (Lifetime All-Access Promo)'
+            ALL_ACCESS: 'Semua Produk Website ARRA 7 + ARRA Cronos & ARRA Grok (Lifetime)',
+            LIFETIME_UPGRADE: 'Upgrade Pemilik Lifetime Rp129.000: ARRA Cronos + ARRA Grok (Verifikasi Admin)',
         };
 
         return {
@@ -130,10 +134,11 @@ function TransferContent() {
         `Paket: ${plan.name} (${plan.durationLabel})`,
         `Nominal: ${plan.priceDisplay}`,
         requiresTelegramUsername ? `Username Telegram: @${normalizedTelegramUsername}` : null,
-        plan.id === 'ALL_ACCESS' ? '★ Paket Promo Flash Sale 2 Hari: Akses Lifetime 4 Produk Inti Platform (PICA Neural Lab, Kursus Masterclass Fibo Kyoko + MT5/TradingView, DOM ARRA, dan Analisis Market)' : null,
+        plan.id === 'ALL_ACCESS' ? '★ Lifetime full access website ARRA 7/PICA termasuk ARRA Cronos dan ARRA Grok.' : null,
+        plan.id === 'LIFETIME_UPGRADE' ? '★ Upgrade untuk pemilik paket Lifetime Rp129.000. Mohon admin memverifikasi akun dan bukti pembelian Lifetime sebelum memberikan akses ARRA Cronos + ARRA Grok.' : null,
         plan.id === 'TELEBOT' ? `Bonus member: akun PRO website 1 bulan + video eksklusif di ${telebotBonusPageUrl}` : null,
         plan.id === 'FIBO_KYOKO' ? 'Mohon kirimkan Kode Lisensi aktivasi Kursus Fibo Kyoko saya.' : null,
-        plan.id === 'ARRA_CRONOS' ? '🎯 Paket ARRA Cronos Lifetime: Akses Full AI Quant Engine + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + Bonus Source Code Indikator TradingView Pine Script v6. Mohon kirimkan kode aktivasi saya.' : null,
+        plan.id === 'ARRA_CRONOS' ? '🎯 Paket ARRA Cronos Lifetime + ARRA GROK auto scanner 5 pair + Bonus Indikator TradingView. Analisis saja; tanpa simulasi atau order broker.' : null,
         '',
         requiresTelegramUsername
             ? 'Mohon approve akses TELEBOT saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer)'
@@ -224,12 +229,13 @@ function TransferContent() {
                     </div>
 
                     {/* All-Access Features Summary Badge */}
-                    {plan.id === 'ALL_ACCESS' && (
+                    {(plan.id === 'ALL_ACCESS' || plan.id === 'LIFETIME_UPGRADE') && (
                         <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-indigo-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 text-left">
                             <p className="text-xs font-bold uppercase tracking-wider text-amber-500 mb-2 flex items-center gap-1.5">
-                                <span>🎉</span> FITUR LENGKAP YANG DIDAPATKAN (LIFETIME):
+                                <span>🎉</span> {plan.id === 'ALL_ACCESS' ? 'FULL ACCESS LIFETIME:' : 'UPGRADE LIFETIME:'}
                             </p>
                             <ul className="text-xs text-[var(--text-secondary)] space-y-1.5">
+                                {plan.id === 'ALL_ACCESS' ? <>
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
                                     <span><strong>PICA Neural Lab:</strong> Sinyal AI Bi-LSTM + Institutional SMC &amp; Order Flow SL/TP real-time</span>
@@ -250,6 +256,14 @@ function TransferContent() {
                                     <span className="text-emerald-500 font-bold shrink-0">✓</span>
                                     <span><strong>Semua Timeframe (M1-D1)</strong> &amp; Free Update Semua Fitur Selamanya</span>
                                 </li>
+                                <li className="flex items-start gap-1.5">
+                                    <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span><strong>ARRA Cronos + ARRA Grok:</strong> forecast/setup teknikal dan auto scan 5 pair; analisis saja tanpa simulasi maupun order broker</span>
+                                </li>
+                                </> : <>
+                                    <li className="flex items-start gap-1.5"><span className="text-emerald-500 font-bold shrink-0">✓</span><span><strong>ARRA Cronos + ARRA Grok:</strong> forecast/setup teknikal tersimpan, auto scan BTCUSD, XAUUSD, EURUSD, GBPUSD, dan USDJPY.</span></li>
+                                    <li className="flex items-start gap-1.5"><span className="text-amber-500 font-bold shrink-0">!</span><span>Harga upgrade Rp100.000 hanya untuk pemilik Lifetime Rp129.000. Admin memeriksa bukti kepemilikan sebelum memberi akses.</span></li>
+                                </>}
                             </ul>
                         </div>
                     )}
@@ -374,7 +388,8 @@ function TransferContent() {
                                     <li>Masukkan nominal sesuai total pembayaran: <strong className="text-[var(--text-primary)]">{plan.priceDisplay}</strong></li>
                                     <li>Simpan screenshot bukti transfer yang berhasil.</li>
                                     {requiresTelegramUsername && <li>Masukkan username Telegram Anda di form atas.</li>}
-                                    {plan.id === 'ALL_ACCESS' && <li>Promo All-Access Lifetime Rp 125.000 resmi diperpanjang 2 hari lagi!</li>}
+                                    {plan.id === 'ALL_ACCESS' && <li>Paket All-Access Lifetime mencakup akses website ARRA 7/PICA serta ARRA Cronos dan ARRA Grok.</li>}
+                                    {plan.id === 'LIFETIME_UPGRADE' && <li>Upgrade Rp100.000 hanya untuk pemilik Lifetime Rp129.000 dan akan diaktifkan setelah bukti awal diverifikasi admin.</li>}
                                     <li>Klik tombol konfirmasi di bawah untuk mengirim bukti transfer ke Telegram admin.</li>
                                     <li>Admin akan memverifikasi dan mengaktifkan akun serta lisensi Anda.</li>
                                 </ol>

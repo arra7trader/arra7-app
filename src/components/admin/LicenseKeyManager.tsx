@@ -68,14 +68,14 @@ interface ProductPreset {
 const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
   ALL_ACCESS: {
     id: 'ALL_ACCESS',
-    title: 'Promo Semua Produk Lifetime (4 Produk Inti)',
-    badge: '🔥 PROMO ALL ACCESS',
-    priceDisplay: 'Rp 125.000 (Lifetime)',
+    title: 'Full Access Website + Cronos & Grok Lifetime',
+    badge: '✨ LIFETIME FULL ACCESS',
+    priceDisplay: 'Rp 229.000 (Lifetime)',
     tagColor: 'bg-rose-50 text-rose-700 border-rose-200',
     borderActive: 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/40',
-    description: 'Flash Sale Diperpanjang 2 Hari: Akses Lifetime PICA Neural Lab, Kursus Fibo Kyoko (3 Video HD + MT5 + TradingView), DOM ARRA, dan Analisis Market. Cukup 1× bayar selamanya!',
+    description: 'Akses lifetime website ARRA 7/PICA, ARRA Cronos, dan ARRA Grok. Analisis saja, tanpa simulasi atau order broker otomatis.',
     tier: 'VVIP',
-    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 125.000' }],
+    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 229.000' }],
     notePrefix: '[ALL_ACCESS]',
     generateText: (code, buyerName, _) => {
       const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
@@ -84,13 +84,14 @@ const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
 Berikut Kode Lisensi Aktivasi Anda:
 🔑 Kode: ${code}
 ⏳ Akses: Lifetime (Selamanya)
-💰 Paket: ALL ACCESS — 4 Produk Inti Platform
+💰 Paket: ALL ACCESS — Full Access Website + ARRA Cronos & Grok
 
 Yang Anda Dapatkan:
 ✅ PICA Neural Lab (AI Bi-LSTM + SMC Real-time)
 ✅ Kursus Digital Fibo Kyoko (3 Video HD + Indikator MT5 + Script TradingView)
 ✅ DOM ARRA & Whale Radar (Order Book + Volume Profile)
 ✅ Analisis Market (Supply & Demand, S/R Key Levels Harian)
+✅ ARRA Cronos + ARRA Grok (forecast/setup dan scan otomatis 5 pair)
 ✅ Semua Timeframe (M1-D1) + Free Update Selamanya
 
 Cara Aktivasi:

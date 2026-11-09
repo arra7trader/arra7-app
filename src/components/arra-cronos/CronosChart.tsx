@@ -15,6 +15,7 @@ import {
     type UTCTimestamp,
 } from 'lightweight-charts';
 import type { CronosScenarioSetup } from '@/lib/arra-cronos-engine';
+import type { CronosTrackedSetup } from '@/lib/arra-cronos-setups';
 
 export interface CronosCandle {
     time: string;
@@ -38,6 +39,7 @@ interface CronosChartProps {
     candles: CronosCandle[];
     forecast: CronosForecastPoint[];
     scenarioSetup: CronosScenarioSetup | null;
+    trackedSetups: CronosTrackedSetup[];
     currentPrice: number;
     action: 'BUY' | 'SELL' | 'WAIT' | null;
     formatPrice: (value: number) => string;
@@ -53,6 +55,7 @@ export default function CronosChart({
     candles,
     forecast,
     scenarioSetup,
+    trackedSetups,
     currentPrice,
     action,
     formatPrice,
@@ -237,27 +240,35 @@ export default function CronosChart({
         candleSeries.setData(candleData);
 
         const last = visibleCandles[visibleCandles.length - 1];
-        const currentPointTime = Math.max(Math.floor(Date.now() / 1000), chartTime(last.time)) as UTCTimestamp;
-        const forecastLine = forecast.length
-            ? [{ time: currentPointTime, value: currentPrice }, ...forecast.map((point) => ({ time: chartTime(point.time), value: point.value }))]
+        const intervalSeconds = timeframe === '15m' ? 900 : timeframe === '1h' ? 3_600 : timeframe === '4h' ? 14_400 : 86_400;
+        const activeSetup = trackedSetups.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT');
+        const frozenSetup = activeSetup;
+        const visibleForecast = frozenSetup?.forecast?.length ? frozenSetup.forecast : forecast;
+        const currentPointTime = frozenSetup
+            ? (chartTime(frozenSetup.setupBarTime) + intervalSeconds) as UTCTimestamp
+            : (chartTime(last.time) + intervalSeconds) as UTCTimestamp;
+        const currentForecastPrice = frozenSetup ? frozenSetup.entryPrice : last.close;
+        const forecastLine = visibleForecast.length
+            ? [{ time: currentPointTime, value: currentForecastPrice }, ...visibleForecast.map((point) => ({ time: chartTime(point.time), value: point.value }))]
             : [];
         forecastSeries.setData(forecastLine);
-        upperBand?.setData(forecast.length
-            ? [{ time: currentPointTime, value: currentPrice }, ...forecast.map((point) => ({ time: chartTime(point.time), value: point.upper }))]
+        upperBand?.setData(visibleForecast.length
+            ? [{ time: currentPointTime, value: currentForecastPrice }, ...visibleForecast.map((point) => ({ time: chartTime(point.time), value: point.upper }))]
             : []);
-        lowerBand?.setData(forecast.length
-            ? [{ time: currentPointTime, value: currentPrice }, ...forecast.map((point) => ({ time: chartTime(point.time), value: point.lower }))]
+        lowerBand?.setData(visibleForecast.length
+            ? [{ time: currentPointTime, value: currentForecastPrice }, ...visibleForecast.map((point) => ({ time: chartTime(point.time), value: point.lower }))]
             : []);
 
         levelsRef.current.forEach((line) => candleSeries.removePriceLine(line));
         levelsRef.current = [];
-        if (scenarioSetup) {
-            const sideLabel = scenarioSetup.side === 'BUY' ? 'BUY' : 'SELL';
+        const visibleSetup = frozenSetup || scenarioSetup;
+        if (visibleSetup) {
+            const sideLabel = visibleSetup.side === 'BUY' ? 'BUY' : 'SELL';
             const levels = [
-                { price: scenarioSetup.entryPrice, title: `${sideLabel} · ENTRY`, color: '#38bdf8', width: 1 as const },
-                { price: scenarioSetup.stopLoss, title: 'SL · ESTIMASI', color: '#f43f5e', width: 1 as const },
-                { price: scenarioSetup.takeProfit1, title: 'TP1 · ESTIMASI', color: '#34d399', width: 1 as const },
-                { price: scenarioSetup.takeProfit2, title: 'TP2 · ESTIMASI', color: '#10b981', width: 2 as const },
+                { price: visibleSetup.entryPrice, title: `${sideLabel} · ENTRY${frozenSetup ? ' FIX' : ''}`, color: '#38bdf8', width: 1 as const },
+                { price: visibleSetup.stopLoss, title: `SL · ${frozenSetup ? 'FIX' : 'ESTIMASI'}`, color: '#f43f5e', width: 1 as const },
+                { price: visibleSetup.takeProfit1, title: `TP1 · ${frozenSetup ? `FIX ${frozenSetup.status}` : 'ESTIMASI'}`, color: '#34d399', width: 1 as const },
+                { price: visibleSetup.takeProfit2, title: `TP2 · ${frozenSetup ? `FIX ${frozenSetup.status}` : 'ESTIMASI'}`, color: '#10b981', width: 2 as const },
             ];
             for (const level of levels) {
                 levelsRef.current.push(candleSeries.createPriceLine({
@@ -280,7 +291,32 @@ export default function CronosChart({
             text: `BIAS · ${action}`,
             size: 2,
         }] : [];
-        markersRef.current?.setMarkers(signalMarker);
+        const visibleCandleTimes = new Set(candleData.map((candle) => Number(candle.time)));
+        const outcomeMarkers = trackedSetups.flatMap((setup) => {
+            const markers = [];
+            if (setup.tp1HitAt) markers.push({
+                time: chartTime(setup.tp1HitAt),
+                position: setup.side === 'BUY' ? 'belowBar' as const : 'aboveBar' as const,
+                color: '#34d399', shape: 'circle' as const, text: 'TP1 TERCAPAI', size: 2 as const,
+            });
+            if (setup.tp2HitAt) markers.push({
+                time: chartTime(setup.tp2HitAt),
+                position: setup.side === 'BUY' ? 'belowBar' as const : 'aboveBar' as const,
+                color: '#10b981', shape: setup.side === 'BUY' ? 'arrowUp' as const : 'arrowDown' as const, text: 'TP2 TERCAPAI', size: 2 as const,
+            });
+            if (setup.stopHitAt) markers.push({
+                time: chartTime(setup.stopHitAt),
+                position: setup.side === 'BUY' ? 'aboveBar' as const : 'belowBar' as const,
+                color: '#f43f5e', shape: 'square' as const, text: setup.status === 'SL_AFTER_TP1' ? 'SL · SETELAH TP1' : 'SL TERSENTUH', size: 2 as const,
+            });
+            if (setup.status === 'AMBIGUOUS' || setup.status === 'AMBIGUOUS_AFTER_TP1') markers.push({
+                time: chartTime(setup.ambiguousAt || setup.setupBarTime),
+                position: 'aboveBar' as const,
+                color: '#f59e0b', shape: 'square' as const, text: 'URUTAN TP/SL AMBIGU', size: 1 as const,
+            });
+            return markers;
+        }).filter((marker) => visibleCandleTimes.has(Number(marker.time)));
+        markersRef.current?.setMarkers([...signalMarker, ...outcomeMarkers].sort((a, b) => Number(a.time) - Number(b.time)));
 
         // Check if symbol or timeframe changed
         const currentKey = `${symbol || ''}_${timeframe || ''}`;
@@ -294,7 +330,7 @@ export default function CronosChart({
         if (!userHasScrolledRef.current) {
             centerOnLastCandle();
         }
-    }, [candles, forecast, scenarioSetup, currentPrice, action, formatPrice, symbol, timeframe, centerOnLastCandle]);
+    }, [candles, forecast, scenarioSetup, trackedSetups, currentPrice, action, formatPrice, symbol, timeframe, centerOnLastCandle]);
 
     return (
         <div className="relative w-full">
@@ -311,6 +347,11 @@ export default function CronosChart({
                     <span className="rounded-lg border border-slate-600/50 bg-slate-900/90 px-2.5 py-1 text-[10px] font-semibold text-slate-300 backdrop-blur-sm">
                         Garis biru = jalur tengah · putus-putus = koridor ATR
                     </span>
+                    {trackedSetups.some((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT') && (
+                        <span className="rounded-lg border border-emerald-400/30 bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-emerald-200 backdrop-blur-sm">
+                            LEVEL SETUP TETAP · HASIL DARI CANDLE AKTUAL
+                        </span>
+                    )}
                 </div>
             )}
 

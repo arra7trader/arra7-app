@@ -280,7 +280,9 @@ export function buildKronosMarketReview(
                 : `MIXED / NEUTRAL (${dominantCount}/${requiredBiases.length} TF searah)`;
     const timeframeMs = TIMEFRAME_MINUTES[timeframe] * 60_000;
     const forecastBars = timeframe === '1d' ? 7 : 12;
-    const forecastStart = Math.floor(Date.now() / timeframeMs) * timeframeMs + timeframeMs;
+    // A completed candle's timestamp is its open time. Its close/entry anchor is one interval later;
+    // the first projected candle close belongs one more interval after that.
+    const forecastStart = new Date(completedCandles.at(-1)!.time).getTime() + timeframeMs * 2;
     const isContinuous = /^(BTC|ETH|SOL|BNB)/i.test(symbol);
     const forecast: CronosForecastPoint[] = [];
     let projectedPrice = currentPrice;

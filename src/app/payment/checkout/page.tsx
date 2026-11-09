@@ -22,11 +22,20 @@ function PaymentCheckoutContent() {
         if (planId === 'ALL_ACCESS') {
             return {
                 id: 'ALL_ACCESS',
-                name: 'Semua Produk Lifetime (Flash Sale 2 Hari)',
-                price: 125000,
-                priceFormatted: 'Rp 125.000',
-                description: 'Akses Selamanya ke Seluruh Produk ARRA 7 / PICA',
+                name: 'Full Access Website + ARRA Cronos & Grok (Lifetime)',
+                price: 229000,
+                priceFormatted: 'Rp 229.000',
+                description: 'Akses lifetime website ARRA 7/PICA, ARRA Cronos, dan ARRA Grok',
                 color: 'from-amber-500 via-rose-500 to-indigo-600'
+            };
+        } else if (planId === 'LIFETIME_UPGRADE') {
+            return {
+                id: 'LIFETIME_UPGRADE',
+                name: 'Upgrade Lifetime Rp129.000: ARRA Cronos + ARRA Grok',
+                price: 100000,
+                priceFormatted: 'Rp 100.000',
+                description: 'Admin memverifikasi kepemilikan Lifetime sebelum memberi akses Cronos + Grok',
+                color: 'from-cyan-500 to-blue-600'
             };
         } else if (planId === 'PRO') {
             return {
@@ -52,7 +61,7 @@ function PaymentCheckoutContent() {
                 name: 'ARRA Cronos AI Quant + ARRA GROK Terminal + Bonus TradingView',
                 price: 150000,
                 priceFormatted: 'Rp 150.000',
-                description: 'Akses Penuh ARRA Cronos AI, ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures), serta Bonus Indikator TradingView Pine Script v6',
+                description: 'ARRA Cronos + ARRA Grok auto scan 5 pair dan bonus indikator TradingView; analisis tanpa simulasi dan tanpa order broker otomatis',
                 color: 'from-cyan-500 via-blue-600 to-indigo-600'
             };
         }
@@ -73,7 +82,7 @@ function PaymentCheckoutContent() {
     }
 
     const handleTelegramConfirm = () => {
-        const message = `Halo Admin ARRA7! 👋\n\nSaya ingin konfirmasi pembayaran Transfer Bank BCA:\n\n📦 Paket: ${plan.name}\n💰 Nominal: ${plan.priceFormatted}\n📧 Email: ${session?.user?.email || '-'}\n\nMohon diproses aktivasi/upgrade saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer) 🙏`;
+            const message = `Halo Admin ARRA7! 👋\n\nSaya ingin konfirmasi pembayaran Transfer Bank BCA:\n\n📦 Paket: ${plan.name}\n💰 Nominal: ${plan.priceFormatted}\n📧 Email: ${session?.user?.email || '-'}\n${planId === 'LIFETIME_UPGRADE' ? '\nMohon verifikasi akun dan bukti pembelian Lifetime Rp129.000 saya sebelum aktivasi upgrade ARRA Cronos + ARRA Grok.' : ''}\n\nMohon diproses aktivasi/upgrade saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer) 🙏`;
         window.open(`https://t.me/arra7trader?text=${encodeURIComponent(message)}`, '_blank');
     };
 

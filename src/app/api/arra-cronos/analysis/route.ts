@@ -8,6 +8,7 @@ import { checkQuota, useQuota } from '@/lib/quota';
 import { isMarketOpen } from '@/lib/market-hours';
 import { isActionableMarketQuote } from '@/lib/arra-cronos-market';
 import { recordArraMarketObservation } from '@/lib/arra-market-observations';
+import { recordAndEvaluateCronosSetups } from '@/lib/arra-cronos-setups';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
             resolvedTimeframe,
             completedCandles,
             mtfHistory,
-            market.currentPrice
+            completedCandles.at(-1)?.close ?? market.currentPrice
         );
         const hasLiveQuote = isActionableMarketQuote(market);
         const marketOpen = isCrypto || isMarketOpen(symbol).isOpen;
@@ -84,6 +85,39 @@ export async function POST(request: Request) {
         const elapsedMs = Date.now() - started;
 
         const barTime = completedCandles.at(-1)?.time;
+        const setupTracking = await recordAndEvaluateCronosSetups({
+            symbol,
+            timeframe: resolvedTimeframe,
+            candles: completedCandles,
+            candidate: barTime && result.action !== 'WAIT' && hasLiveQuote && marketOpen
+                ? {
+                    symbol,
+                    timeframe: resolvedTimeframe,
+                    setupBarTime: barTime,
+                    scenario: { ...result.scenarioSetup, action: result.action },
+                    forecast: result.forecast,
+                }
+                : null,
+        });
+        if (!setupTracking.persistenceAvailable) {
+            result.action = 'WAIT';
+            result.scenarioSetup.action = 'WAIT';
+            result.commentary = `${result.commentary} Setup tidak diberi status BUY/SELL karena penyimpanan hasil candle tidak tersedia; levels estimasi dapat berubah.`;
+        }
+        const activeSetup = setupTracking.setups.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT');
+        if (activeSetup) {
+            result.forecast = activeSetup.forecast;
+            result.scenarioSetup = {
+                action: activeSetup.side,
+                side: activeSetup.side,
+                entryPrice: activeSetup.entryPrice,
+                stopLoss: activeSetup.stopLoss,
+                takeProfit1: activeSetup.takeProfit1,
+                takeProfit2: activeSetup.takeProfit2,
+                riskRewardRatio: activeSetup.riskRewardRatio,
+                invalidationReason: `Setup ${activeSetup.side} tercatat pada candle ${activeSetup.setupBarTime}; level tetap sampai outcome terdeteksi atau horizon habis.`,
+            };
+        }
         let analysisSnapshotRecorded = false;
         if (barTime && ['BTCUSD', 'XAUUSD'].includes(symbol)) {
             analysisSnapshotRecorded = await recordArraMarketObservation({
@@ -115,12 +149,15 @@ export async function POST(request: Request) {
             timeframe,
             model: 'ARRA Cronos Quant Forecast',
             modelSource: 'Estimasi teknikal berbasis tren, ATR, dan candle teramati',
-            currentPrice: market.currentPrice || result.currentPrice,
+            currentPrice: result.currentPrice,
+            livePrice: market.currentPrice,
             targetPrice: result.targetPrice,
             direction: result.direction,
             action: result.action,
             forecast: result.forecast,
             scenarioSetup: result.scenarioSetup,
+            setupHistory: setupTracking.setups,
+            setupPersistenceAvailable: setupTracking.persistenceAvailable,
             analysisSnapshotRecorded,
             metrics: result.metrics,
             mtfMatrix: result.mtfMatrix,

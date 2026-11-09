@@ -31,6 +31,7 @@ import type {
     CronosQuantMetrics,
     CronosMTFBias,
 } from '@/lib/arra-cronos-engine';
+import type { CronosTrackedSetup } from '@/lib/arra-cronos-setups';
 
 const CronosChart = dynamic(() => import('@/components/arra-cronos/CronosChart'), { ssr: false });
 const TradingViewCronosChart = dynamic(() => import('@/components/arra-cronos/TradingViewCronosChart'), { ssr: false });
@@ -67,6 +68,8 @@ type MarketReviewData = {
     targetPrice?: number;
     forecast?: CronosForecastPoint[];
     scenarioSetup?: CronosScenarioSetup;
+    setupHistory?: CronosTrackedSetup[];
+    setupPersistenceAvailable?: boolean;
     metrics?: CronosQuantMetrics;
     mtfMatrix?: Record<string, CronosMTFBias>;
     confluenceScore?: number;
@@ -497,6 +500,7 @@ export default function ArraCronosPage() {
     const currentPrice = market?.currentPrice || 0;
     const modelBias = marketReview?.direction || null;
     const action: 'BUY' | 'SELL' | 'WAIT' = marketReview?.action || 'WAIT';
+    const displayedTrackedSetup = marketReview?.setupHistory?.find((setup) => setup.status === 'OPEN' || setup.status === 'TP1_HIT');
 
     const upColor = 'text-emerald-300';
     const downColor = 'text-rose-300';
@@ -1126,7 +1130,8 @@ export default function ArraCronosPage() {
                                         candles={market.candles}
                                         forecast={marketReview?.forecast || []}
                                         scenarioSetup={marketReview?.scenarioSetup || null}
-                                        currentPrice={market.currentPrice}
+                                        trackedSetups={marketReview?.setupHistory || []}
+                                        currentPrice={marketReview?.currentPrice ?? market.currentPrice}
                                         action={action}
                                         formatPrice={(value) => formatPrice(selectedSymbol, value)}
                                     />
@@ -1147,11 +1152,11 @@ export default function ArraCronosPage() {
 
                                 {chartMode === 'lightweight' && marketReview?.scenarioSetup && (
                                     <div className="grid grid-cols-2 gap-px border-t border-[#ECECE6] bg-[#ECECE6] sm:grid-cols-5">
-                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STATUS SETUP</div><div className={`mt-1 text-sm font-black ${marketReview.scenarioSetup.action === 'WAIT' ? 'text-amber-700' : marketReview.scenarioSetup.side === 'BUY' ? 'text-emerald-700' : 'text-rose-700'}`}>{marketReview.scenarioSetup.action === 'WAIT' ? `WAIT · ${marketReview.scenarioSetup.side}` : marketReview.scenarioSetup.action}</div></div>
-                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">ENTRY REFERENSI</div><div className="mt-1 text-sm font-bold text-slate-800">{price(marketReview.scenarioSetup.entryPrice)}</div></div>
-                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STOP SKENARIO</div><div className="mt-1 text-sm font-bold text-rose-700">{price(marketReview.scenarioSetup.stopLoss)}</div></div>
-                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">TARGET 1 / 2</div><div className="mt-1 text-sm font-bold text-emerald-700">{price(marketReview.scenarioSetup.takeProfit1)} / {price(marketReview.scenarioSetup.takeProfit2)}</div></div>
-                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">RASIO SKENARIO</div><div className="mt-1 text-sm font-bold text-slate-800">1:{marketReview.scenarioSetup.riskRewardRatio}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STATUS SETUP</div><div className={`mt-1 text-sm font-black ${displayedTrackedSetup?.status.includes('TP') ? 'text-emerald-700' : displayedTrackedSetup?.status.includes('SL') ? 'text-rose-700' : displayedTrackedSetup?.status.includes('AMBIGUOUS') ? 'text-amber-700' : marketReview.scenarioSetup.action === 'WAIT' && !displayedTrackedSetup ? 'text-amber-700' : displayedTrackedSetup?.side === 'SELL' ? 'text-rose-700' : 'text-emerald-700'}`}>{displayedTrackedSetup ? `${displayedTrackedSetup.status.replaceAll('_', ' ')} · ${displayedTrackedSetup.side}` : marketReview.scenarioSetup.action === 'WAIT' ? `WAIT · ${marketReview.scenarioSetup.side}` : marketReview.scenarioSetup.action}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">ENTRY {displayedTrackedSetup ? 'TERKUNCI' : 'REFERENSI'}</div><div className="mt-1 text-sm font-bold text-slate-800">{price(displayedTrackedSetup?.entryPrice ?? marketReview.scenarioSetup.entryPrice)}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STOP {displayedTrackedSetup ? 'TERKUNCI' : 'SKENARIO'}</div><div className="mt-1 text-sm font-bold text-rose-700">{price(displayedTrackedSetup?.stopLoss ?? marketReview.scenarioSetup.stopLoss)}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">TARGET 1 / 2</div><div className="mt-1 text-sm font-bold text-emerald-700">{price(displayedTrackedSetup?.takeProfit1 ?? marketReview.scenarioSetup.takeProfit1)} / {price(displayedTrackedSetup?.takeProfit2 ?? marketReview.scenarioSetup.takeProfit2)}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">RASIO SKENARIO</div><div className="mt-1 text-sm font-bold text-slate-800">1:{displayedTrackedSetup?.riskRewardRatio ?? marketReview.scenarioSetup.riskRewardRatio}</div></div>
                                     </div>
                                 )}
 
@@ -1272,6 +1277,21 @@ export default function ArraCronosPage() {
                                             <div className="rounded-xl bg-emerald-50 p-3"><div className="text-[10px] font-bold text-emerald-600">TAKE PROFIT 1</div><div className="mt-1 text-sm font-bold text-emerald-800">{price(marketReview.scenarioSetup.takeProfit1)}</div></div>
                                             <div className="rounded-xl bg-emerald-50 p-3"><div className="text-[10px] font-bold text-emerald-600">TAKE PROFIT 2</div><div className="mt-1 text-sm font-bold text-emerald-800">{price(marketReview.scenarioSetup.takeProfit2)}</div></div>
                                             <div className="rounded-xl bg-sky-50 p-3"><div className="text-[10px] font-bold text-sky-600">TARGET JALUR</div><div className="mt-1 text-sm font-bold text-sky-800">{price(marketReview.targetPrice ?? marketReview.scenarioSetup.takeProfit2)}</div></div>
+                                        </div>
+                                    )}
+                                    {marketReview?.setupPersistenceAvailable === false && <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">Pencatatan setup tetap belum tersedia karena penyimpanan server tidak aktif. Level yang tampil adalah estimasi yang dapat berubah; hasil TP/SL tidak dapat dikonfirmasi sampai penyimpanan tersedia.</div>}
+                                    {!!marketReview?.setupHistory?.length && (
+                                        <div className="rounded-xl border border-[#ECECE6] bg-white p-4">
+                                            <h4 className="text-xs font-extrabold text-slate-800">HASIL SETUP DARI CANDLE SELESAI</h4>
+                                            <div className="mt-3 space-y-2">
+                                                {marketReview.setupHistory.slice(0, 5).map((setup) => (
+                                                    <div key={setup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#F7F7F4] px-3 py-2 text-[11px]">
+                                                        <span className="font-bold text-slate-700">{setup.side} · {price(setup.entryPrice)} · {new Date(setup.setupBarTime).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</span>
+                                                        <span className={`font-extrabold ${setup.status.startsWith('TP') ? 'text-emerald-700' : setup.status.startsWith('SL') ? 'text-rose-700' : setup.status.startsWith('AMBIGUOUS') || setup.status.startsWith('EXPIRED') ? 'text-amber-700' : 'text-slate-500'}`}>{setup.status.replaceAll('_', ' ')}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <p className="mt-2 text-[10px] text-slate-500">TP/SL diperiksa memakai high-low candle aktual setelah candle setup ditutup. Jika TP dan SL tersentuh pada candle yang sama, hasil ditandai ambigu.</p>
                                         </div>
                                     )}
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
