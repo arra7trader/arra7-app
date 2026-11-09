@@ -229,6 +229,29 @@ body {
   }
 }
 
+@keyframes arraScanSweep {
+  0% { transform: translateX(-140%); opacity: 0; }
+  18% { opacity: 0.65; }
+  75% { opacity: 0.35; }
+  100% { transform: translateX(360%); opacity: 0; }
+}
+
+.arra-scan-card-active::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 34%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.14), transparent);
+  animation: arraScanSweep 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arra-scan-card-active::after {
+    animation: none;
+  }
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.8s ease forwards;
 }

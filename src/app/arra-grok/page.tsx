@@ -140,6 +140,7 @@ export default function ArraGrokPage() {
     const [isReviewingWithGroq, setIsReviewingWithGroq] = useState(false);
     const scanInFlight = useRef(false);
     const [pairScans, setPairScans] = useState<PairScan[]>([]);
+    const [activeScanIndex, setActiveScanIndex] = useState(0);
     const [scanUpdatedAt, setScanUpdatedAt] = useState('');
     const [scanError, setScanError] = useState('');
     const hasCurrentBias = isRunning && hasFeed && feedIsFresh === true && marketAnalysis.bias !== 'WAIT';
@@ -296,6 +297,22 @@ export default function ArraGrokPage() {
         const interval = window.setInterval(fetchPairScans, 15_000);
         return () => window.clearInterval(interval);
     }, [isUnlocked, isRunning, fetchPairScans]);
+
+    useEffect(() => {
+        if (!isUnlocked || !isRunning || pairScans.length < 2) {
+            setActiveScanIndex(0);
+            return;
+        }
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setActiveScanIndex(-1);
+            return;
+        }
+        setActiveScanIndex(0);
+        const interval = window.setInterval(() => {
+            setActiveScanIndex((current) => (current + 1) % pairScans.length);
+        }, 1_400);
+        return () => window.clearInterval(interval);
+    }, [isUnlocked, isRunning, pairScans.length]);
 
     useEffect(() => {
         if (!isUnlocked) return;
@@ -765,7 +782,8 @@ export default function ArraGrokPage() {
 
                             {/* Every pair is scanned automatically; the detailed panel remains independently selectable. */}
                             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
-                                {pairScans.map((scan) => {
+                                {pairScans.map((scan, index) => {
+                                    const isVisuallyScanning = isRunning && pairScans.length === 5 && index === activeScanIndex;
                                     const biasClass = scan.bias === 'BULLISH'
                                         ? 'bg-emerald-50 text-emerald-700'
                                         : scan.bias === 'BEARISH'
@@ -777,10 +795,13 @@ export default function ArraGrokPage() {
                                             ? 'bg-slate-400'
                                             : 'bg-amber-500';
                                     return (
-                                        <div key={scan.symbol} title={scan.reason} className="rounded-xl border border-slate-200/90 bg-[#FBFBFA] p-2 font-mono text-left">
+                                        <div key={scan.symbol} title={scan.reason} className={`arra-scan-card relative overflow-hidden rounded-xl border bg-[#FBFBFA] p-2 font-mono text-left transition-all duration-300 ${isVisuallyScanning ? 'arra-scan-card-active border-cyan-500 shadow-[0_0_0_2px_rgba(6,182,212,0.14),0_8px_24px_rgba(8,145,178,0.14)]' : 'border-slate-200/90'}`}>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-black text-slate-900">${scan.symbol}</span>
-                                                <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+                                                <span className="flex items-center gap-1.5">
+                                                    {isVisuallyScanning && <span className="text-[8px] font-black tracking-wide text-cyan-700">SCAN {index + 1}/5</span>}
+                                                    <span className={`h-1.5 w-1.5 rounded-full ${isVisuallyScanning ? 'bg-cyan-500 animate-pulse' : dotClass}`} />
+                                                </span>
                                             </div>
                                             <div className="text-[10px] font-bold text-slate-700 mt-0.5">
                                                 {scan.currentPrice === null ? '—' : `$${scan.currentPrice.toFixed(scan.symbol === 'BTCUSD' ? 1 : scan.symbol === 'USDJPY' || scan.symbol === 'XAUUSD' ? 2 : 4)}`}
@@ -806,7 +827,7 @@ export default function ArraGrokPage() {
                                 )}
                             </div>
                             <div className="mb-4 flex items-center justify-between text-[9px] font-mono text-slate-400">
-                                <span>{pairScans.length}/5 pair · refresh otomatis tiap 15 detik · analisis saja, tanpa order broker</span>
+                                <span>{pairScans.length}/5 pair · sorotan bergerak = indikator visual · hasil scan diperbarui tiap 15 detik</span>
                                 <span>{scanError || (scanUpdatedAt ? `Scan ${new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(scanUpdatedAt))} WIB` : 'menunggu scan pertama')}</span>
                             </div>
 
