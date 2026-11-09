@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { resolveUserOrDevice } from '@/lib/auth-device';
-import { getArraMarketObservations } from '@/lib/arra-market-observations';
+import { ARRA_OBSERVATION_SYMBOLS, getArraMarketObservations } from '@/lib/arra-market-observations';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const symbol = (searchParams.get('symbol') || 'BTCUSD').toUpperCase();
-        if (!['BTCUSD', 'XAUUSD'].includes(symbol)) {
+        if (!(ARRA_OBSERVATION_SYMBOLS as readonly string[]).includes(symbol)) {
             return NextResponse.json({ error: 'Instrumen riwayat tidak didukung.' }, { status: 400 });
         }
 

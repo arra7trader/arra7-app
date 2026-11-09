@@ -55,6 +55,29 @@ interface MarketAnalysis {
     reason: string;
 }
 
+interface PairScan {
+    symbol: string;
+    name: string;
+    currentPrice: number | null;
+    changePercent: number | null;
+    source: string | null;
+    quoteAgeSeconds: number | null;
+    quoteUpdatedAt: string | null;
+    feedFresh: boolean;
+    marketOpen: boolean;
+    marketOpenReason: string | null;
+    nextMarketOpenWib: string | null;
+    bias: 'BULLISH' | 'BEARISH' | 'WAIT';
+    action: 'BUY' | 'SELL' | 'WAIT';
+    rsi14: number | null;
+    atr14: number | null;
+    trendScore: number | null;
+    alignmentScore: number | null;
+    confluenceSummary: string;
+    reason: string;
+    status: 'ANALYZED' | 'WAIT' | 'CLOSED' | 'INSUFFICIENT_HISTORY' | 'UNAVAILABLE';
+}
+
 export default function ArraGrokPage() {
     const { data: session } = useSession();
     const { tier, openActivation, deviceId } = usePicaDevice();
@@ -115,7 +138,10 @@ export default function ArraGrokPage() {
     const [groqReviewError, setGroqReviewError] = useState('');
     const [groqReviewModel, setGroqReviewModel] = useState('');
     const [isReviewingWithGroq, setIsReviewingWithGroq] = useState(false);
-    const liveRequestId = useRef(0);
+    const scanInFlight = useRef(false);
+    const [pairScans, setPairScans] = useState<PairScan[]>([]);
+    const [scanUpdatedAt, setScanUpdatedAt] = useState('');
+    const [scanError, setScanError] = useState('');
     const hasCurrentBias = isRunning && hasFeed && feedIsFresh === true && marketAnalysis.bias !== 'WAIT';
 
     const handleToggleFeed = () => {
@@ -131,18 +157,6 @@ export default function ArraGrokPage() {
         }
         setIsRunning(true);
     };
-
-    // Scanned asset prices are provided by the API; unavailable prices stay null.
-    const [scannedAssets, setScannedAssets] = useState<Array<{
-        sym: string;
-        name?: string;
-        price: number | null;
-        change: number | null;
-        note: string;
-        dot: string;
-        status: string;
-        is24_7?: boolean;
-    }>>([]);
 
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
     const [logHistory, setLogHistory] = useState<LogItem[]>([]);
@@ -182,32 +196,11 @@ export default function ArraGrokPage() {
 
     const handleSelectPair = useCallback((pair: 'BTCUSD' | 'XAUUSD') => {
         if (pair === selectedPair) return;
-        liveRequestId.current += 1;
         setSelectedPair(pair);
-        setHasFeed(false);
-        setFeedIsFresh(null);
-        setFeedError('');
-        setFeedSource('');
-        setMarketOpen(null);
-        setMarketOpenReason('');
-        setNextMarketOpenWib('');
-        setScannedAssets([]);
-        setTerminalLogs([]);
         setLogHistory([]);
         setMarketObservations([]);
         setGroqReview('');
         setGroqReviewError('');
-        setMarketAnalysis({
-            symbol: `$${pair}`,
-            name: pair === 'BTCUSD' ? 'Bitcoin / US Dollar' : 'Gold / US Dollar',
-            bias: 'WAIT',
-            current: 0,
-            rsi14: null,
-            atr14: null,
-            trendScore: null,
-            alignmentScore: null,
-            reason: 'Menunggu feed dan analisis pasar.',
-        });
     }, [selectedPair]);
 
     const handleGroqReview = useCallback(async () => {
@@ -242,62 +235,67 @@ export default function ArraGrokPage() {
         return `${hh}:${mm}:${ss}`;
     }, [seconds]);
 
-    // Fetch REAL market data from ARRA GROK Live API
-    const fetchLiveFeed = useCallback(async () => {
-        if (!isRunning) return;
-        const requestId = ++liveRequestId.current;
-        const clearUnavailableFeed = (message: string) => {
-            setFeedError(message);
-            setHasFeed(false);
-            setFeedIsFresh(false);
-            setFeedSource('');
-            setMarketOpen(null);
-            setMarketOpenReason('');
-            setNextMarketOpenWib('');
-            setLastRefreshedAt('');
-            setScannedAssets([]);
-            setTerminalLogs([]);
-            setMarketAnalysis({
-                symbol: `$${selectedPair}`,
-                name: selectedPair === 'BTCUSD' ? 'Bitcoin / US Dollar' : 'Gold / US Dollar',
-                bias: 'WAIT',
-                current: 0,
-                rsi14: null,
-                atr14: null,
-                trendScore: null,
-                alignmentScore: null,
-                reason: message,
-            });
-        };
+    const fetchPairScans = useCallback(async () => {
+        if (!isRunning || scanInFlight.current) return;
+        scanInFlight.current = true;
         try {
-            const res = await fetch(`/api/arra-grok/live?symbol=${selectedPair}`, { cache: 'no-store' });
-            const data = await res.json();
-            if (requestId !== liveRequestId.current) return;
-            if (!res.ok || !data.success) {
-                clearUnavailableFeed(data.error || 'Feed pasar sementara tidak tersedia.');
-                return;
+            const response = await fetch('/api/arra-grok/scan', {
+                cache: 'no-store',
+                signal: AbortSignal.timeout(25_000),
+                headers: deviceId ? { 'x-device-id': deviceId } : {},
+            });
+            const payload = await response.json();
+            if (!response.ok || !Array.isArray(payload.scans)) {
+                throw new Error(payload.error || 'Pemindaian pair belum tersedia.');
             }
-            setFeedError('');
-            setHasFeed(true);
-            setFeedSource(data.marketSnapshot?.source || '');
-            setFeedIsFresh(Boolean(data.marketSnapshot?.isFresh));
-            setLastRefreshedAt(data.marketSnapshot?.quoteTimeWib || '');
-            setMarketOpen(typeof data.marketStatus?.isOpen === 'boolean' ? data.marketStatus.isOpen : null);
-            setMarketOpenReason(data.marketStatus?.reason || '');
-            setNextMarketOpenWib(data.marketStatus?.nextOpenWib || '');
-            if (data.marketAnalysis) {
-                setMarketAnalysis(data.marketAnalysis);
-            }
-            if (data.scannedAssets && Array.isArray(data.scannedAssets)) {
-                setScannedAssets(data.scannedAssets);
-            }
-            setTerminalLogs(Array.isArray(data.terminalLogs) ? data.terminalLogs : []);
-        } catch (err) {
-            if (requestId !== liveRequestId.current) return;
-            clearUnavailableFeed('Koneksi feed pasar terputus. Coba perbarui feed.');
-            console.error('[ARRA GROK] Error polling real feed:', err);
+            setPairScans(payload.scans as PairScan[]);
+            setScanUpdatedAt(payload.scannedAt || new Date().toISOString());
+            setScanError('');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Pemindaian otomatis gagal.';
+            setPairScans([]);
+            setScanError(message);
+            setFeedError(message);
+            setFeedIsFresh(false);
+            setMarketAnalysis((previous) => ({ ...previous, bias: 'WAIT', reason: `Scan terbaru gagal; ${message}` }));
+        } finally {
+            scanInFlight.current = false;
         }
-    }, [isRunning, selectedPair]);
+    }, [deviceId, isRunning]);
+
+    useEffect(() => {
+        const scan = pairScans.find((item) => item.symbol === selectedPair);
+        if (!scan) return;
+        setHasFeed(scan.currentPrice !== null);
+        setFeedError('');
+        setFeedSource(scan.source || '');
+        setFeedIsFresh(scan.feedFresh);
+        setLastRefreshedAt(scan.quoteUpdatedAt ? new Intl.DateTimeFormat('id-ID', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta',
+        }).format(new Date(scan.quoteUpdatedAt)) : '');
+        setMarketOpen(scan.marketOpen);
+        setMarketOpenReason(scan.marketOpenReason || '');
+        setNextMarketOpenWib(scan.nextMarketOpenWib || '');
+        setMarketAnalysis({
+            symbol: `$${scan.symbol}`,
+            name: scan.name,
+            bias: scan.bias,
+            current: scan.currentPrice ?? 0,
+            rsi14: scan.rsi14,
+            atr14: scan.atr14,
+            trendScore: scan.trendScore,
+            alignmentScore: scan.alignmentScore,
+            reason: scan.reason,
+        });
+        setTerminalLogs(pairScans.map((item) => `${item.symbol.padEnd(6)} ${item.bias.padEnd(8)} · ${item.reason}`));
+    }, [pairScans, selectedPair]);
+
+    useEffect(() => {
+        if (!isUnlocked || !isRunning) return;
+        void fetchPairScans();
+        const interval = window.setInterval(fetchPairScans, 15_000);
+        return () => window.clearInterval(interval);
+    }, [isUnlocked, isRunning, fetchPairScans]);
 
     useEffect(() => {
         if (!isUnlocked) return;
@@ -305,18 +303,6 @@ export default function ArraGrokPage() {
         const interval = window.setInterval(fetchMarketObservations, 60_000);
         return () => window.clearInterval(interval);
     }, [isUnlocked, fetchMarketObservations]);
-
-    // Initial load and periodic poll
-    useEffect(() => {
-        if (!isUnlocked) return;
-        fetchLiveFeed();
-        const pollRate = 15_000;
-        const interval = window.setInterval(fetchLiveFeed, pollRate);
-        return () => {
-            window.clearInterval(interval);
-            liveRequestId.current += 1;
-        };
-    }, [isUnlocked, fetchLiveFeed, selectedPair]);
 
     // Clock timer (every 1 second)
     useEffect(() => {
@@ -444,7 +430,7 @@ export default function ArraGrokPage() {
                             <span>⚡ Beralih ke $BTCUSD (24/7 Live)</span>
                         </button>
                         <button
-                            onClick={() => fetchLiveFeed()}
+                            onClick={() => fetchPairScans()}
                             className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition flex items-center gap-1 ${
                                 'border border-amber-400/80 bg-white hover:bg-amber-100 text-amber-900'
                             }`}
@@ -770,56 +756,58 @@ export default function ArraGrokPage() {
                         {/* 1. UPPER SECTION: LIVE FLOW PIPELINE */}
                         <div className="rounded-2xl border border-[#ECECE6] bg-white p-4 shadow-xs">
                             <div className="flex items-center justify-between pb-3 text-[10px] font-mono font-bold text-slate-400">
-                                <span>ANALYSIS FLOW · SCAN &rarr; MARKET CHECK &rarr; SIZE &rarr; REVIEW &rarr; LOG</span>
+                                <span>ANALYSIS FLOW · SCAN &rarr; MARKET CHECK &rarr; ANALYSIS &rarr; LOG</span>
                                 <span className="flex items-center gap-1.5">
                                     <span className={`h-1.5 w-1.5 rounded-full ${feedIsFresh ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
                                     <span>{feedIsFresh ? `${feedSource} · diperbarui ${lastRefreshedAt || 'baru saja'} WIB` : feedError || 'menunggu feed pasar'}</span>
                                 </span>
                             </div>
 
-                            {/* Scanned Assets Box Grid (Click to switch active instrument) */}
+                            {/* Every pair is scanned automatically; the detailed panel remains independently selectable. */}
                             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
-                                {scannedAssets.map((asset, i) => {
-                                    const isSelected = selectedPair === asset.sym.replace('$', '');
+                                {pairScans.map((scan) => {
+                                    const biasClass = scan.bias === 'BULLISH'
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : scan.bias === 'BEARISH'
+                                            ? 'bg-rose-50 text-rose-700'
+                                            : 'bg-amber-50 text-amber-700';
+                                    const dotClass = scan.status === 'ANALYZED' && scan.feedFresh
+                                        ? 'bg-emerald-500'
+                                        : scan.status === 'UNAVAILABLE' || scan.status === 'INSUFFICIENT_HISTORY'
+                                            ? 'bg-slate-400'
+                                            : 'bg-amber-500';
                                     return (
-                                        <button
-                                            key={i}
-                                            type="button"
-                                            onClick={() => {
-                                                const s = asset.sym.replace('$', '');
-                                                if (s === 'BTCUSD' || s === 'XAUUSD') {
-                                                    handleSelectPair(s as 'BTCUSD' | 'XAUUSD');
-                                                }
-                                            }}
-                                            className={`rounded-xl border p-2 font-mono text-left transition cursor-pointer ${
-                                                isSelected
-                                                    ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-400/30 shadow-xs'
-                                                    : 'border-slate-200/90 bg-[#FBFBFA] hover:bg-slate-100'
-                                            }`}
-                                        >
+                                        <div key={scan.symbol} title={scan.reason} className="rounded-xl border border-slate-200/90 bg-[#FBFBFA] p-2 font-mono text-left">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-black text-slate-900">{asset.sym}</span>
-                                                <span className={`h-1.5 w-1.5 rounded-full ${asset.dot}`} />
+                                                <span className="text-xs font-black text-slate-900">${scan.symbol}</span>
+                                                <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
                                             </div>
                                             <div className="text-[10px] font-bold text-slate-700 mt-0.5">
-                                                {asset.price === null ? '—' : `$${asset.price.toFixed(asset.sym === '$BTCUSD' ? 1 : asset.sym.includes('JPY') || asset.sym === '$XAUUSD' ? 2 : 4)}`}
-                                                {asset.change !== null && (
-                                                    <span className={`ml-1 text-[9px] ${asset.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                        {asset.change >= 0 ? '+' : ''}{asset.change.toFixed(2)}%
+                                                {scan.currentPrice === null ? '—' : `$${scan.currentPrice.toFixed(scan.symbol === 'BTCUSD' ? 1 : scan.symbol === 'USDJPY' || scan.symbol === 'XAUUSD' ? 2 : 4)}`}
+                                                {scan.changePercent !== null && (
+                                                    <span className={`ml-1 text-[9px] ${scan.changePercent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                        {scan.changePercent >= 0 ? '+' : ''}{scan.changePercent.toFixed(2)}%
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-[9px] text-slate-500 mt-0.5 truncate flex items-center justify-between">
-                                                <span>{asset.note}</span>
-                                                {asset.is24_7 && (
-                                                    <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded">
-                                                        24/7
-                                                    </span>
-                                                )}
+                                            <div className={`mt-1 inline-flex rounded px-1.5 py-0.5 text-[9px] font-black ${biasClass}`}>
+                                                {scan.status === 'CLOSED' ? 'CLOSED · WAIT' : scan.bias}
                                             </div>
-                                        </button>
+                                            <div className="mt-1 text-[9px] text-slate-600">{scan.alignmentScore === null ? 'Alignment —' : `Align ${scan.alignmentScore}/100`} · RSI {scan.rsi14?.toFixed(1) ?? '—'} · Trend {scan.trendScore ?? '—'}</div>
+                                            <div className="mt-1 text-[9px] font-semibold text-slate-600">{scan.confluenceSummary}</div>
+                                            <div className="mt-1 line-clamp-2 min-h-6 text-[9px] leading-3 text-slate-500">{scan.reason}</div>
+                                        </div>
                                     );
                                 })}
+                                {!pairScans.length && (
+                                    <div className="col-span-full rounded-xl border border-dashed border-slate-300 p-3 text-center text-[10px] text-slate-500">
+                                        {scanError || 'Memindai BTCUSD, XAUUSD, EURUSD, GBPUSD, dan USDJPY otomatis…'}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mb-4 flex items-center justify-between text-[9px] font-mono text-slate-400">
+                                <span>{pairScans.length}/5 pair · refresh otomatis tiap 15 detik · analisis saja, tanpa order broker</span>
+                                <span>{scanError || (scanUpdatedAt ? `Scan ${new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(scanUpdatedAt))} WIB` : 'menunggu scan pertama')}</span>
                             </div>
 
                             {/* SVG Flow Curve Diagram */}
@@ -877,7 +865,7 @@ export default function ArraGrokPage() {
                                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
                                         <span className="text-rose-500">▲</span> ASSETS SCANNED
                                     </div>
-                                    <div className="text-base font-black text-slate-800 mt-0.5">{scannedAssets.length}</div>
+                                    <div className="text-base font-black text-slate-800 mt-0.5">{pairScans.length}</div>
                                     <div className="text-[9px] text-slate-400">instrumen dari feed</div>
                                 </div>
 
@@ -1082,7 +1070,7 @@ export default function ArraGrokPage() {
                                     <span>Unduh Log</span>
                                 </button>
                                 <button
-                                    onClick={fetchLiveFeed}
+                                    onClick={fetchPairScans}
                                     className="rounded-xl border border-cyan-300 bg-cyan-50 hover:bg-cyan-100 px-3 py-1.5 text-xs font-mono font-bold text-cyan-800 transition flex items-center gap-1 cursor-pointer"
                                 >
                                     <ArrowPathIcon className="h-3.5 w-3.5" />

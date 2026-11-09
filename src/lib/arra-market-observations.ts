@@ -2,7 +2,8 @@ import getTursoClient from '@/lib/turso';
 import type { CronosMarketResult, CronosTimeframe } from '@/lib/arra-cronos-market';
 import type { CronosQuantMetrics, CronosMTFBias } from '@/lib/arra-cronos-engine';
 
-const SUPPORTED_SYMBOLS = new Set(['BTCUSD', 'XAUUSD']);
+export const ARRA_OBSERVATION_SYMBOLS = ['BTCUSD', 'XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY'] as const;
+const SUPPORTED_SYMBOLS = new Set<string>(ARRA_OBSERVATION_SYMBOLS);
 
 export type ArraMarketObservation = {
     symbol: string;
