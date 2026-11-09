@@ -18,22 +18,9 @@ is4h = timeframe.isminutes and timeframe.multiplier == 240
 is1d = timeframe.isdaily and timeframe.multiplier == 1
 supportedTimeframe = is15m or is1h or is4h or is1d
 
-// Match the web engine's seeded EMA window: twice the period for the current
-// timeframe, and three times the period for the multi-timeframe bias matrix.
-f_window_ema(source, period, windowFactor) =>
-    lookback = math.min(period * windowFactor, bar_index + 1)
-    alpha = 2.0 / (period + 1.0)
-    float result = na
-    if lookback > 0
-        result := source[lookback - 1]
-        if lookback > 1
-            for offset = 0 to lookback - 2
-                result := source[lookback - 2 - offset] * alpha + result * (1.0 - alpha)
-    result
-
-emaFast = f_window_ema(close, fastLength, 2)
-emaSignal = f_window_ema(close, signalLength, 2)
-emaSlow = f_window_ema(close, slowLength, 2)
+emaFast = ta.ema(close, fastLength)
+emaSignal = ta.ema(close, signalLength)
+emaSlow = ta.ema(close, slowLength)
 trueRangeValue = ta.tr(true)
 atrValue = ta.sma(trueRangeValue, atrLength)
 gain = ta.sma(math.max(ta.change(close), 0.0), rsiLength)
@@ -45,8 +32,8 @@ priorAtr = ta.sma(trueRangeValue[atrLength], 36)
 atrRatio = priorAtr != 0 and not na(priorAtr) ? atrValue / priorAtr : 1.0
 
 f_mtf_bias(float tolerance) =>
-    fast = f_window_ema(close, fastLength, 3)
-    signal = f_window_ema(close, signalLength, 3)
+    fast = ta.ema(close, fastLength)
+    signal = ta.ema(close, signalLength)
     bar_index < 21 ? na : fast > signal * (1.0 + tolerance) ? 1 : fast < signal * (1.0 - tolerance) ? -1 : 0
 
 // Higher-timeframe reads use only the previous completed candle. The chart
@@ -280,7 +267,7 @@ if barstate.islast
     else
         table.clear(dashboard, 0, 0, 1, 13)
 
-    if (setupStatus == 0 or setupStatus > 2 or setupStatus < 0) and showLevels
+    if setupStatus == 0 and showLevels
         if array.size(previewLevelLines) > 0
             for i = 0 to array.size(previewLevelLines) - 1
                 line.delete(array.get(previewLevelLines, i))
