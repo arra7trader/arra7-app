@@ -8,9 +8,9 @@ export const metadata = {
 };
 
 const features = [
-    { title: 'Harga dan EMA', description: 'Chart mempertahankan candle aktual dengan EMA cepat dan lambat untuk membaca arah relatif.', icon: ChartBarIcon },
-    { title: 'Momentum dan volatilitas', description: 'RSI dan ATR merangkum momentum serta rentang candle historis.', icon: BellAlertIcon },
-    { title: 'Bias beberapa timeframe', description: 'Ringkasan membandingkan arah EMA chart, 1 jam, 4 jam, dan harian.', icon: ShieldCheckIcon },
+    { title: 'Jalur forecast', description: 'Garis proyeksi dan koridor ATR memperlihatkan skenario harga untuk beberapa candle ke depan.', icon: ChartBarIcon },
+    { title: 'Setup tetap', description: 'Entry, SL, TP1, TP2, dan jalur forecast dibekukan setelah setup terkonfirmasi pada candle tertutup.', icon: BellAlertIcon },
+    { title: 'Audit level', description: 'Penanda di chart mencatat TP, SL, candle ambigu, dan batas waktu setup yang tersentuh.', icon: ShieldCheckIcon },
 ];
 
 export default function ArraCronosIndicatorPage() {
@@ -31,7 +31,7 @@ export default function ArraCronosIndicatorPage() {
                             Data pasar yang <span className="text-cyan-200">terbaca jelas.</span>
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-                            Indikator Pine Script membaca OHLCV dari simbol dan timeframe chart aktif. Ia menampilkan EMA, RSI, ATR, dan bias timeframe lebih tinggi. Tidak ada proyeksi harga, simulasi trading, atau order broker.
+                            Indikator Pine Script membaca OHLCV dari simbol dan timeframe chart aktif untuk menggambar forecast teknikal, koridor volatilitas, dan level setup. Setup hanya dikonfirmasi dari candle tertutup; level serta jalur yang sudah tercatat tidak bergeser saat candle berikutnya terbentuk. Indikator tidak mengirim order broker.
                         </p>
                         <div className="mt-7 flex flex-wrap gap-3">
                             <Link href="/arra-cronos" className="rounded-xl bg-cyan-200 px-4 py-3 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100">
@@ -78,7 +78,7 @@ export default function ArraCronosIndicatorPage() {
                 </section>
 
                 <aside className="mt-6 rounded-2xl border border-amber-200/10 bg-amber-100/[.035] p-5 text-[11px] leading-relaxed text-slate-500">
-                    <strong className="text-amber-100">Indikator ini bersifat deskriptif.</strong> Nilai EMA, RSI, dan ATR berasal dari feed chart TradingView, yang dapat berbeda dari feed web. Bias teknikal bukan probabilitas atau jaminan akurasi maupun keuntungan.
+                    <strong className="text-amber-100">Forecast adalah estimasi teknikal.</strong> Feed TradingView dapat berbeda dari feed web sehingga harga dan hasil pemantauan level tidak selalu identik. Candle OHLC yang menyentuh TP dan SL sekaligus ditandai ambigu karena urutan sentuhannya tidak diketahui. Indikator bukan jaminan akurasi atau keuntungan dan tidak mengirim order broker.
                 </aside>
             </div>
         </main>

@@ -1,56 +1,304 @@
 //@version=6
-indicator("ARRA Cronos · Observed Market Readings", overlay=true)
+indicator("ARRA Cronos · Forecast & Locked Setup", overlay=true, max_lines_count=500, max_labels_count=500, max_bars_back=500)
 
-fastLength = input.int(21, "EMA cepat", minval=2)
-slowLength = input.int(55, "EMA lambat", minval=3)
+fastLength = input.int(9, "EMA cepat", minval=2, maxval=100)
+signalLength = input.int(21, "EMA sinyal", minval=3, maxval=100)
+slowLength = input.int(55, "EMA tren", minval=3, maxval=100)
 rsiLength = input.int(14, "RSI", minval=2)
 atrLength = input.int(14, "ATR", minval=2)
+stopAtr = input.float(1.35, "Jarak SL (ATR)", minval=0.1, step=0.05)
 showDashboard = input.bool(true, "Tampilkan ringkasan")
+showForecast = input.bool(true, "Tampilkan jalur forecast & koridor")
+showLevels = input.bool(true, "Tampilkan ENTRY / SL / TP")
 
-fastEma = ta.ema(close, fastLength)
-slowEma = ta.ema(close, slowLength)
-rsiValue = ta.rsi(close, rsiLength)
-atrValue = ta.atr(atrLength)
+forecastBars = timeframe.isdaily ? 7 : 12
+is15m = timeframe.isminutes and timeframe.multiplier == 15
+is1h = timeframe.isminutes and timeframe.multiplier == 60
+is4h = timeframe.isminutes and timeframe.multiplier == 240
+is1d = timeframe.isdaily and timeframe.multiplier == 1
+supportedTimeframe = is15m or is1h or is4h or is1d
 
-f_bias() =>
-    fast = ta.ema(close, fastLength)
-    slow = ta.ema(close, slowLength)
-    fast > slow ? 1 : fast < slow ? -1 : 0
+// Match the web engine's seeded EMA window: twice the period for the current
+// timeframe, and three times the period for the multi-timeframe bias matrix.
+f_window_ema(source, period, windowFactor) =>
+    lookback = math.min(period * windowFactor, bar_index + 1)
+    alpha = 2.0 / (period + 1.0)
+    float result = na
+    if lookback > 0
+        result := source[lookback - 1]
+        if lookback > 1
+            for offset = 0 to lookback - 2
+                result := source[lookback - 2 - offset] * alpha + result * (1.0 - alpha)
+    result
 
-hourBias = request.security(syminfo.tickerid, "60", f_bias(), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
-fourHourBias = request.security(syminfo.tickerid, "240", f_bias(), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
-dailyBias = request.security(syminfo.tickerid, "D", f_bias(), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
-chartBias = fastEma > slowEma ? 1 : fastEma < slowEma ? -1 : 0
+emaFast = f_window_ema(close, fastLength, 2)
+emaSignal = f_window_ema(close, signalLength, 2)
+emaSlow = f_window_ema(close, slowLength, 2)
+trueRangeValue = ta.tr(true)
+atrValue = ta.sma(trueRangeValue, atrLength)
+gain = ta.sma(math.max(ta.change(close), 0.0), rsiLength)
+loss = ta.sma(math.max(-ta.change(close), 0.0), rsiLength)
+rsiValue = loss == 0 ? (gain == 0 ? 50.0 : 100.0) : 100.0 - 100.0 / (1.0 + gain / loss)
+momentumReference = close[10]
+momentumPct = not na(momentumReference) and momentumReference != 0 ? (close - momentumReference) / momentumReference * 100.0 : 0.0
+priorAtr = ta.sma(trueRangeValue[atrLength], 36)
+atrRatio = priorAtr != 0 and not na(priorAtr) ? atrValue / priorAtr : 1.0
+
+f_mtf_bias(float tolerance) =>
+    fast = f_window_ema(close, fastLength, 3)
+    signal = f_window_ema(close, signalLength, 3)
+    bar_index < 21 ? na : fast > signal * (1.0 + tolerance) ? 1 : fast < signal * (1.0 - tolerance) ? -1 : 0
+
+// Higher-timeframe reads use only the previous completed candle. The chart
+// timeframe itself is evaluated only when its candle closes.
+bias1h = request.security(syminfo.tickerid, "60", f_mtf_bias(0.0005)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+bias4h = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+bias1d = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+bias1hCurrent = request.security(syminfo.tickerid, "60", f_mtf_bias(0.0005), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
+bias4hCurrent = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
+bias1dCurrent = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
+confirmedHourBias = time_close == time_close("60") ? bias1hCurrent : bias1h
+confirmedFourHourBias = time_close == time_close("240") ? bias4hCurrent : bias4h
+confirmedDailyBias = time_close == time_close("D") ? bias1dCurrent : bias1d
+int dailyOneHourBias = 0
+int dailyFourHourBias = 0
+if is1d
+    dailyOneHourBiases = request.security_lower_tf(syminfo.tickerid, "60", f_mtf_bias(0.0005))
+    dailyFourHourBiases = request.security_lower_tf(syminfo.tickerid, "240", f_mtf_bias(0.0008))
+    dailyOneHourBias := array.size(dailyOneHourBiases) > 0 ? array.get(dailyOneHourBiases, array.size(dailyOneHourBiases) - 1) : 0
+    dailyFourHourBias := array.size(dailyFourHourBiases) > 0 ? array.get(dailyFourHourBiases, array.size(dailyFourHourBiases) - 1) : 0
+chartTolerance = is15m ? 0.0003 : is1h ? 0.0005 : is4h ? 0.0008 : 0.001
+chartBias = emaFast > emaSignal * (1.0 + chartTolerance) ? 1 : emaFast < emaSignal * (1.0 - chartTolerance) ? -1 : 0
+allBullish = is15m ? chartBias == 1 and confirmedHourBias == 1 and confirmedFourHourBias == 1 : is1h ? chartBias == 1 and confirmedFourHourBias == 1 and confirmedDailyBias == 1 : is4h ? chartBias == 1 and confirmedDailyBias == 1 : is1d ? chartBias == 1 and dailyFourHourBias == 1 : false
+allBearish = is15m ? chartBias == -1 and confirmedHourBias == -1 and confirmedFourHourBias == -1 : is1h ? chartBias == -1 and confirmedFourHourBias == -1 and confirmedDailyBias == -1 : is4h ? chartBias == -1 and confirmedDailyBias == -1 : is1d ? chartBias == -1 and dailyFourHourBias == -1 : false
+
+rawTrend = atrValue > 0 ? ((close - emaSignal) / atrValue) * 0.4 + ((emaFast - emaSignal) / atrValue) * 0.35 + ((emaSignal - emaSlow) / atrValue) * 0.25 : 0.0
+trendScore = math.round(math.max(-1.8, math.min(1.8, rawTrend)) / 1.8 * 100.0)
+volatilityRegime = atrRatio < 0.85 ? "COMPRESSION" : atrRatio > 1.25 ? "EXPANSION" : "NORMAL"
+
+var int setupSide = 0
+var int setupBar = na
+var float lockedEntry = na
+var float lockedStop = na
+var float lockedTp1 = na
+var float lockedTp2 = na
+var float lockedRR = na
+var int lockedHorizon = na
+var int setupStatus = 0 // 0 none, 1 open, 2 TP1, 3 TP2, -1 SL, -2 SL after TP1, 4 ambiguous, 5 ambiguous after TP1, 6 expired, 7 expired after TP1
+var array<line> previewLines = array.new_line()
+var array<line> previewLevelLines = array.new_line()
+var label previewEntryLabel = na
+
+// Save flags before evaluating this candle. Cronos does not open a replacement
+// setup on the same candle that closes the previous one.
+hadActiveSetup = setupStatus == 1 or setupStatus == 2
+tp1Event = false
+tp2Event = false
+slEvent = false
+ambiguousEvent = false
+
+if hadActiveSetup and barstate.isconfirmed and bar_index > setupBar
+    if bar_index - setupBar > lockedHorizon
+        setupStatus := setupStatus == 2 ? 7 : 6
+    else
+        hitStop = setupSide == 1 ? low <= lockedStop : high >= lockedStop
+        hitTp1 = setupStatus == 1 and (setupSide == 1 ? high >= lockedTp1 : low <= lockedTp1)
+        hitTp2 = setupSide == 1 ? high >= lockedTp2 : low <= lockedTp2
+        if hitStop and (hitTp1 or hitTp2)
+            setupStatus := setupStatus == 2 ? 5 : 4
+            ambiguousEvent := true
+        else if hitStop
+            setupStatus := setupStatus == 2 ? -2 : -1
+            slEvent := true
+        else if hitTp2
+            setupStatus := 3
+            tp1Event := hitTp1
+            tp2Event := true
+        else if hitTp1
+            setupStatus := 2
+            tp1Event := true
+
+forecast = array.new_float()
+forecastUpper = array.new_float()
+forecastLower = array.new_float()
+projected = close
+forecastSign = math.sign(trendScore != 0 ? trendScore : momentumPct != 0 ? momentumPct : 1.0)
+for step = 1 to forecastBars
+    drift = (trendScore / 100.0) * atrValue * 0.24 * math.exp(-0.06 * (step - 1))
+    cycle = math.sin((step / forecastBars) * math.pi) * atrValue * 0.035 * forecastSign
+    projected += drift + cycle
+    dispersion = atrValue * math.sqrt(step) * 0.48
+    array.push(forecast, projected)
+    array.push(forecastUpper, projected + dispersion)
+    array.push(forecastLower, projected - dispersion)
+
+forecastTarget = array.get(forecast, forecastBars - 1)
+netMove = forecastTarget - close
+forecastDirection = math.abs(netMove) >= atrValue * 0.18 ? (netMove > 0 ? 1 : -1) : 0
+stopDistance = math.max(atrValue * stopAtr, close * 0.001)
+forecastRR = stopDistance > 0 ? math.abs(netMove) / stopDistance : 0.0
+forecastSide = netMove < 0 or (netMove == 0 and trendScore < 0) ? -1 : 1
+candidateBuy = supportedTimeframe and bar_index >= 54 and barstate.isconfirmed and forecastDirection == 1 and trendScore >= 15 and allBullish and rsiValue < 70
+candidateSell = supportedTimeframe and bar_index >= 54 and barstate.isconfirmed and forecastDirection == -1 and trendScore <= -15 and allBearish and rsiValue > 30
+openedBuy = not hadActiveSetup and candidateBuy
+openedSell = not hadActiveSetup and candidateSell
+newSetup = openedBuy or openedSell
+
+if newSetup
+    setupSide := openedBuy ? 1 : -1
+    setupBar := bar_index
+    lockedEntry := close
+    lockedHorizon := forecastBars
+    lockedStop := close - setupSide * stopDistance
+    lockedTp1 := close + setupSide * math.abs(netMove) * 0.55
+    lockedTp2 := forecastTarget
+    lockedRR := forecastRR
+    setupStatus := 1
+
+    if array.size(previewLines) > 0
+        for i = 0 to array.size(previewLines) - 1
+            line.delete(array.get(previewLines, i))
+    array.clear(previewLines)
+    if array.size(previewLevelLines) > 0
+        for i = 0 to array.size(previewLevelLines) - 1
+            line.delete(array.get(previewLevelLines, i))
+    array.clear(previewLevelLines)
+    if not na(previewEntryLabel)
+        label.delete(previewEntryLabel)
+        previewEntryLabel := na
+
+    // Draw a permanent copy of the projection that existed at setup time.
+    // Historical forecast points remain in place after price reaches TP or SL.
+    if showForecast
+        prevX = bar_index + 1
+        prevMid = lockedEntry
+        prevUpper = lockedEntry
+        prevLower = lockedEntry
+        for step = 1 to forecastBars
+            nextMid = array.get(forecast, step - 1)
+            nextUpper = array.get(forecastUpper, step - 1)
+            nextLower = array.get(forecastLower, step - 1)
+            nextX = bar_index + step + 1
+            line.new(prevX, prevMid, nextX, nextMid, xloc=xloc.bar_index, color=color.aqua, width=3)
+            line.new(prevX, prevUpper, nextX, nextUpper, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1)
+            line.new(prevX, prevLower, nextX, nextLower, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1)
+            label.new(nextX, nextMid, "·", xloc=xloc.bar_index, style=label.style_none, textcolor=color.aqua, size=size.large)
+            prevX := nextX
+            prevMid := nextMid
+            prevUpper := nextUpper
+            prevLower := nextLower
+    if showLevels
+        line.new(bar_index, lockedEntry, bar_index + lockedHorizon + 1, lockedEntry, xloc=xloc.bar_index, color=color.blue, style=line.style_dashed, width=2)
+        line.new(bar_index, lockedStop, bar_index + lockedHorizon + 1, lockedStop, xloc=xloc.bar_index, color=color.red, style=line.style_dashed, width=2)
+        line.new(bar_index, lockedTp1, bar_index + lockedHorizon + 1, lockedTp1, xloc=xloc.bar_index, color=color.lime, style=line.style_dashed, width=1)
+        line.new(bar_index, lockedTp2, bar_index + lockedHorizon + 1, lockedTp2, xloc=xloc.bar_index, color=color.green, style=line.style_dashed, width=2)
+        label.new(bar_index + 1, lockedEntry, (setupSide == 1 ? "BUY" : "SELL") + " ENTRY · " + str.tostring(lockedEntry, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.blue, textcolor=color.white, size=size.tiny)
+        label.new(bar_index + 1, lockedStop, "SL · " + str.tostring(lockedStop, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.red, textcolor=color.white, size=size.tiny)
+        label.new(bar_index + 1, lockedTp1, "TP1 · " + str.tostring(lockedTp1, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.green, textcolor=color.white, size=size.tiny)
+        label.new(bar_index + 1, lockedTp2, "TP2 · " + str.tostring(lockedTp2, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.green, textcolor=color.white, size=size.tiny)
+
+// Before the first setup, show a live analytical path. It may update with the
+// still-forming market candle; confirmed setup paths above never repaint.
+if barstate.islast and (setupStatus == 0 or setupStatus > 2 or setupStatus < 0) and showForecast
+    if array.size(previewLines) > 0
+        for i = 0 to array.size(previewLines) - 1
+            line.delete(array.get(previewLines, i))
+    array.clear(previewLines)
+    prevX = bar_index + 1
+    prevMid = close
+    prevUpper = close
+    prevLower = close
+    for step = 1 to forecastBars
+        nextMid = array.get(forecast, step - 1)
+        nextUpper = array.get(forecastUpper, step - 1)
+        nextLower = array.get(forecastLower, step - 1)
+        nextX = bar_index + step + 1
+        array.push(previewLines, line.new(prevX, prevMid, nextX, nextMid, xloc=xloc.bar_index, color=color.aqua, width=3))
+        array.push(previewLines, line.new(prevX, prevUpper, nextX, nextUpper, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1))
+        array.push(previewLines, line.new(prevX, prevLower, nextX, nextLower, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1))
+        prevX := nextX
+        prevMid := nextMid
+        prevUpper := nextUpper
+        prevLower := nextLower
+
+displayEntry = setupStatus == 0 ? close : lockedEntry
+displayStop = setupStatus == 0 ? close - forecastSide * stopDistance : lockedStop
+displayTp1 = setupStatus == 0 ? close + forecastSide * math.abs(netMove) * 0.55 : lockedTp1
+displayTp2 = setupStatus == 0 ? forecastTarget : lockedTp2
+displayRR = setupStatus == 0 ? forecastRR : lockedRR
+
+plot(emaSignal, "EMA 21", color=color.aqua, linewidth=2)
+plot(emaSlow, "EMA 55", color=color.orange, linewidth=2)
+plot(showLevels and setupStatus != 0 ? lockedEntry : na, "ENTRY · terkunci", color=color.blue, linewidth=2, style=plot.style_linebr)
+plot(showLevels and setupStatus != 0 ? lockedStop : na, "SL · terkunci", color=color.red, linewidth=2, style=plot.style_linebr)
+plot(showLevels and setupStatus != 0 ? lockedTp1 : na, "TP1 · terkunci", color=color.lime, linewidth=1, style=plot.style_linebr)
+plot(showLevels and setupStatus != 0 ? lockedTp2 : na, "TP2 · terkunci", color=color.green, linewidth=2, style=plot.style_linebr)
+plotshape(openedBuy, title="Setup BUY confirmed", text="BUY", style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.tiny)
+plotshape(openedSell, title="Setup SELL confirmed", text="SELL", style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.tiny)
+plotshape(tp1Event, title="TP1 tersentuh", text="TP1", style=shape.labeldown, location=location.abovebar, color=color.green, textcolor=color.white, size=size.tiny)
+plotshape(tp2Event, title="TP2 tersentuh", text="TP2 HIT", style=shape.labeldown, location=location.abovebar, color=color.lime, textcolor=color.black, size=size.tiny)
+plotshape(slEvent, title="SL tersentuh", text="SL HIT", style=shape.labelup, location=location.belowbar, color=color.red, textcolor=color.white, size=size.tiny)
+plotshape(ambiguousEvent, title="TP dan SL pada candle yang sama", text="AMBIGUOUS", style=shape.labeldown, location=location.abovebar, color=color.orange, textcolor=color.black, size=size.tiny)
 
 f_bias_text(value) => value > 0 ? "BULLISH" : value < 0 ? "BEARISH" : "NETRAL"
-f_bias_color(value) => value > 0 ? color.lime : value < 0 ? color.red : color.silver
+f_status_text(value) => value == 1 ? "OPEN" : value == 2 ? "TP1 HIT · LEVEL TETAP" : value == 3 ? "TP2 HIT" : value == -1 ? "SL HIT" : value == -2 ? "SL SETELAH TP1" : value == 4 ? "AMBIGUOUS · CEK CANDLE" : value == 5 ? "AMBIGUOUS SETELAH TP1" : value == 6 ? "EXPIRED" : value == 7 ? "EXPIRED SETELAH TP1" : "BELUM ADA SETUP"
+var table dashboard = table.new(position.top_right, 2, 14, bgcolor=color.new(color.rgb(12, 18, 28), 8), frame_color=color.new(color.gray, 55), frame_width=1)
 
-plot(fastEma, "EMA cepat", color=color.aqua, linewidth=2)
-plot(slowEma, "EMA lambat", color=color.orange, linewidth=2)
-
-var dashboard = table.new(position.top_right, 2, 8, bgcolor=color.new(color.rgb(12, 18, 28), 8), frame_color=color.new(color.gray, 55), frame_width=1)
 if barstate.islast
     if showDashboard
         header = color.rgb(14, 28, 44)
         labelBg = color.new(color.rgb(18, 27, 39), 4)
         valueBg = color.new(color.rgb(12, 20, 31), 2)
         table.cell(dashboard, 0, 0, "ARRA CRONOS", bgcolor=header, text_color=color.white, text_halign=text.align_left)
-        table.cell(dashboard, 1, 0, "DATA TERAMATI", bgcolor=header, text_color=color.aqua, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 1, 0, "FORECAST & SETUP", bgcolor=header, text_color=color.aqua, text_halign=text.align_right, text_size=size.tiny)
         table.cell(dashboard, 0, 1, "Simbol / timeframe", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
         table.cell(dashboard, 1, 1, syminfo.ticker + " · " + timeframe.period, bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
-        table.cell(dashboard, 0, 2, "Bias timeframe ini", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 2, f_bias_text(chartBias), bgcolor=valueBg, text_color=f_bias_color(chartBias), text_halign=text.align_right)
-        table.cell(dashboard, 0, 3, "RSI " + str.tostring(rsiLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 3, str.tostring(rsiValue, "#.0"), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right)
-        table.cell(dashboard, 0, 4, "ATR " + str.tostring(atrLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 4, str.tostring(atrValue, format.mintick), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right)
-        table.cell(dashboard, 0, 5, "EMA " + str.tostring(fastLength) + " / " + str.tostring(slowLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 5, f_bias_text(chartBias), bgcolor=valueBg, text_color=f_bias_color(chartBias), text_halign=text.align_right)
-        table.cell(dashboard, 0, 6, "Bias 1H / 4H", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 6, f_bias_text(hourBias) + " / " + f_bias_text(fourHourBias), bgcolor=valueBg, text_color=f_bias_color(hourBias + fourHourBias), text_halign=text.align_right, text_size=size.tiny)
-        table.cell(dashboard, 0, 7, "Bias harian", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 7, f_bias_text(dailyBias), bgcolor=valueBg, text_color=f_bias_color(dailyBias), text_halign=text.align_right)
+        table.cell(dashboard, 0, 2, "Status timeframe", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 2, supportedTimeframe ? "SUPPORTED" : "GUNAKAN 15M / 1H / 4H / 1D", bgcolor=valueBg, text_color=supportedTimeframe ? color.lime : color.orange, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 3, "Bias chart / 1H / 4H / 1D", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 3, f_bias_text(chartBias) + " / " + f_bias_text(is1d ? dailyOneHourBias : confirmedHourBias) + " / " + f_bias_text(is1d ? dailyFourHourBias : confirmedFourHourBias) + " / " + f_bias_text(is1d ? chartBias : confirmedDailyBias), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 4, "Trend score", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 4, str.tostring(trendScore), bgcolor=valueBg, text_color=trendScore >= 15 ? color.lime : trendScore <= -15 ? color.red : color.silver, text_halign=text.align_right)
+        table.cell(dashboard, 0, 5, "RSI " + str.tostring(rsiLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 5, str.tostring(rsiValue, "#.0"), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right)
+        table.cell(dashboard, 0, 6, "ATR " + str.tostring(atrLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 6, str.tostring(atrValue, format.mintick) + " · " + volatilityRegime, bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 7, "STATUS SETUP", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 7, f_status_text(setupStatus), bgcolor=valueBg, text_color=setupStatus == 1 or setupStatus == 2 ? color.lime : setupStatus < 0 ? color.red : color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 8, setupStatus == 0 ? "ENTRY · referensi" : "ENTRY · terkunci", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 8, na(displayEntry) ? "—" : str.tostring(displayEntry, format.mintick), bgcolor=valueBg, text_color=color.aqua, text_halign=text.align_right)
+        table.cell(dashboard, 0, 9, "STOP LOSS", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 9, na(displayStop) ? "—" : str.tostring(displayStop, format.mintick), bgcolor=valueBg, text_color=color.red, text_halign=text.align_right)
+        table.cell(dashboard, 0, 10, "TAKE PROFIT 1 / 2", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 10, na(displayTp1) ? "—" : str.tostring(displayTp1, format.mintick) + " / " + str.tostring(displayTp2, format.mintick), bgcolor=valueBg, text_color=color.lime, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 11, "RR skenario", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        table.cell(dashboard, 1, 11, na(displayRR) ? "—" : "1:" + str.tostring(displayRR, "#.00"), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right)
+        table.cell(dashboard, 0, 12, "Target forecast", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 12, na(displayTp2) ? str.tostring(forecastTarget, format.mintick) : str.tostring(displayTp2, format.mintick), bgcolor=valueBg, text_color=color.aqua, text_halign=text.align_right)
+        table.cell(dashboard, 0, 13, "Catatan", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 13, setupStatus == 0 ? "Level referensi dapat berubah" : "Level & jalur setup tetap", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
     else
-        table.clear(dashboard, 0, 0, 1, 7)
+        table.clear(dashboard, 0, 0, 1, 13)
 
-alertcondition(barstate.isconfirmed and chartBias != chartBias[1], title="ARRA Cronos: bias berubah", message="Bias EMA ARRA Cronos berubah pada candle yang telah ditutup · {{ticker}} · {{interval}} · {{close}}")
+    if (setupStatus == 0 or setupStatus > 2 or setupStatus < 0) and showLevels
+        if array.size(previewLevelLines) > 0
+            for i = 0 to array.size(previewLevelLines) - 1
+                line.delete(array.get(previewLevelLines, i))
+        array.clear(previewLevelLines)
+        array.push(previewLevelLines, line.new(bar_index, displayEntry, bar_index + 1, displayEntry, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.blue, 25), style=line.style_dashed, width=2))
+        array.push(previewLevelLines, line.new(bar_index, displayStop, bar_index + 1, displayStop, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.red, 25), style=line.style_dashed, width=1))
+        array.push(previewLevelLines, line.new(bar_index, displayTp1, bar_index + 1, displayTp1, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 25), style=line.style_dashed, width=1))
+        array.push(previewLevelLines, line.new(bar_index, displayTp2, bar_index + 1, displayTp2, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.green, 25), style=line.style_dashed, width=2))
+        if not na(previewEntryLabel)
+            label.delete(previewEntryLabel)
+        previewEntryLabel := label.new(bar_index + 1, displayEntry, "REFERENSI ENTRY · menunggu setup terkonfirmasi", xloc=xloc.bar_index, style=label.style_label_left, color=color.new(color.blue, 20), textcolor=color.white, size=size.tiny)
+    else if not na(previewEntryLabel)
+        label.delete(previewEntryLabel)
+        previewEntryLabel := na
+
+alertcondition(openedBuy, title="ARRA Cronos BUY confirmed", message="ARRA Cronos BUY setup confirmed · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(openedSell, title="ARRA Cronos SELL confirmed", message="ARRA Cronos SELL setup confirmed · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(tp1Event, title="ARRA Cronos TP1 hit", message="ARRA Cronos TP1 touched · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(tp2Event, title="ARRA Cronos TP2 hit", message="ARRA Cronos TP2 hit · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(slEvent, title="ARRA Cronos SL hit", message="ARRA Cronos SL hit · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(ambiguousEvent, title="ARRA Cronos ambiguous candle", message="ARRA Cronos: candle touched both TP and SL; inspect OHLC sequence · {{ticker}} · {{interval}}")

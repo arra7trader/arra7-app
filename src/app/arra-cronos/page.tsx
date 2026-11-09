@@ -999,7 +999,7 @@ export default function ArraCronosPage() {
                                     💡
                                 </span>
                                 <span>
-                                    <strong>Indikator ARRA Cronos:</strong> Mode <strong className="text-cyan-700">Quant Canvas</strong> menampilkan lilin masa depan & lorong volatilitas ARRA Cronos langsung pada chart. Mode <strong className="text-slate-900">TradingView</strong> menampilkan feed realtime live + bonus Pine Script v6 resmi.
+                                    <strong>Indikator ARRA Cronos:</strong> Quant Canvas dan Pine Script TradingView sama-sama menampilkan jalur forecast, koridor volatilitas, serta ENTRY/SL/TP. Saat setup terkonfirmasi pada candle tutup, proyeksi dan levelnya tetap untuk dibandingkan dengan harga aktual.
                                 </span>
                             </div>
                             <span className="text-[11px] text-amber-700 font-bold">

@@ -264,8 +264,8 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
                     <p className="mt-2 text-[11px] leading-relaxed text-slate-400">Menampilkan momentum dan rentang volatilitas historis.</p>
                 </div>
                 <div className="mt-3 rounded-xl border border-slate-800/60 bg-[#0e1624] p-4 sm:mt-0">
-                    <div className="text-xs font-bold text-indigo-400">Bias multi-timeframe</div>
-                    <p className="mt-2 text-[11px] leading-relaxed text-slate-400">Membandingkan EMA pada chart, 1 jam, 4 jam, dan harian. Tidak menghitung lintasan atau hasil transaksi.</p>
+                    <div className="text-xs font-bold text-indigo-400">Forecast & setup terkunci</div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-400">Menggambar jalur harga estimasi dan koridor ATR. Saat setup terkonfirmasi setelah candle tutup, level Entry, SL, TP, serta jalurnya tetap dan status tersentuh tercatat pada chart.</p>
                 </div>
             </div>
         </div>
