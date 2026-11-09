@@ -34,6 +34,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Instrumen atau timeframe tidak didukung.' }, { status: 400 });
         }
 
+        const user = await resolveUserOrDevice(request);
+        if (!user.isAdmin && !user.hasArraCronosAccess) {
+            return NextResponse.json({ error: 'Analisis ARRA Cronos tersedia untuk pemilik paket ARRA Cronos atau Full Access.' }, { status: 403 });
+        }
+
         const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
         const clientKey = forwardedFor || request.headers.get('x-real-ip') || 'unknown-client';
         const now = Date.now();
@@ -46,9 +51,13 @@ export async function POST(request: Request) {
 
         let userId: string | null = null;
         // Quota check only if specifically configured
-        if (process.env.ARRA_CRONOS_REQUIRE_QUOTA === 'true' && process.env.TURSO_DATABASE_URL) {
+        if (
+            process.env.ARRA_CRONOS_REQUIRE_QUOTA === 'true' &&
+            process.env.TURSO_DATABASE_URL &&
+            user.membership !== 'ARRA_CRONOS' &&
+            !(user.membership === 'BASIC' && user.hasArraCronosAccess)
+        ) {
             try {
-                const user = await resolveUserOrDevice(request);
                 const quota = await checkQuota(user.userId, timeframe, symbol);
                 if (!quota.allowed) {
                     return NextResponse.json({ error: quota.message || 'Kuota tinjauan tidak tersedia.' }, { status: 403 });

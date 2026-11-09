@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function GET(request: Request) {
     try {
         const user = await resolveUserOrDevice(request);
-        if (!user.isAdmin && user.membership !== 'PRO' && user.membership !== 'VVIP') {
+        if (!user.isAdmin && !user.hasArraCronosAccess) {
             return NextResponse.json({ error: 'Riwayat analisis tersedia untuk member ARRA.' }, { status: 403 });
         }
 

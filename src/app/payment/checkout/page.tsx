@@ -28,32 +28,14 @@ function PaymentCheckoutContent() {
                 description: 'Akses lifetime website ARRA 7/PICA, ARRA Cronos, dan ARRA Grok',
                 color: 'from-amber-500 via-rose-500 to-indigo-600'
             };
-        } else if (planId === 'LIFETIME_UPGRADE') {
+        } else if (planId === 'WEBSITE_LIFETIME') {
             return {
-                id: 'LIFETIME_UPGRADE',
-                name: 'Upgrade Lifetime Rp129.000: ARRA Cronos + ARRA Grok',
-                price: 100000,
-                priceFormatted: 'Rp 100.000',
-                description: 'Admin memverifikasi kepemilikan Lifetime sebelum memberi akses Cronos + Grok',
-                color: 'from-cyan-500 to-blue-600'
-            };
-        } else if (planId === 'PRO') {
-            return {
-                id: 'PRO',
-                name: 'Pro',
-                price: 149000,
-                priceFormatted: 'Rp 149.000',
-                description: '25x Analisa/hari, Semua Timeframe',
-                color: 'from-blue-500 to-purple-500'
-            };
-        } else if (planId === 'VVIP') {
-            return {
-                id: 'VVIP',
-                name: 'VVIP',
-                price: 399000,
-                priceFormatted: 'Rp 399.000',
-                description: 'UNLIMITED Analisa, Free Custom EA',
-                color: 'from-amber-500 to-orange-500'
+                id: 'WEBSITE_LIFETIME',
+                name: 'PICA Website Lifetime',
+                price: 125000,
+                priceFormatted: 'Rp 125.000',
+                description: 'Akses lifetime website PICA; tidak termasuk ARRA Cronos dan ARRA Grok',
+                color: 'from-blue-500 to-indigo-600'
             };
         } else if (planId === 'ARRA_CRONOS' || planId === 'arra-cronos') {
             return {
@@ -82,7 +64,7 @@ function PaymentCheckoutContent() {
     }
 
     const handleTelegramConfirm = () => {
-            const message = `Halo Admin ARRA7! 👋\n\nSaya ingin konfirmasi pembayaran Transfer Bank BCA:\n\n📦 Paket: ${plan.name}\n💰 Nominal: ${plan.priceFormatted}\n📧 Email: ${session?.user?.email || '-'}\n${planId === 'LIFETIME_UPGRADE' ? '\nMohon verifikasi akun dan bukti pembelian Lifetime Rp129.000 saya sebelum aktivasi upgrade ARRA Cronos + ARRA Grok.' : ''}\n\nMohon diproses aktivasi/upgrade saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer) 🙏`;
+            const message = `Halo Admin ARRA7! 👋\n\nSaya ingin konfirmasi pembayaran Transfer Bank BCA:\n\n📦 Paket: ${plan.name}\n💰 Nominal: ${plan.priceFormatted}\n📧 Email: ${session?.user?.email || '-'}\n\nMohon diproses aktivasi saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer) 🙏`;
         window.open(`https://t.me/arra7trader?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -96,7 +78,7 @@ function PaymentCheckoutContent() {
                 >
                     <div className="text-center mb-6">
                         <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3 bg-gradient-to-br ${plan.color} text-2xl`}>
-                            {planId === 'ARRA_CRONOS' || planId === 'arra-cronos' ? '⚡' : planId === 'ALL_ACCESS' ? '👑' : planId === 'PRO' ? '🚀' : '👑'}
+                            {planId === 'ARRA_CRONOS' || planId === 'arra-cronos' ? '⚡' : planId === 'WEBSITE_LIFETIME' ? '♾️' : '👑'}
                         </div>
                         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                             Upgrade ke <span className="gradient-text">{plan.name}</span>

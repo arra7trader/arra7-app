@@ -4,12 +4,18 @@ import { getCronosAnalysisHistory } from '@/lib/arra-cronos-analysis';
 import { buildKronosMarketReview, CRONOS_MIN_COMPLETED_CANDLES, getCompletedCronosCandles } from '@/lib/arra-cronos-engine';
 import { formatMarketOpenWib, isMarketOpen } from '@/lib/market-hours';
 import { recordArraMarketObservation } from '@/lib/arra-market-observations';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
     try {
+        const user = await resolveUserOrDevice(request);
+        if (!user.isAdmin && !user.hasArraCronosAccess) {
+            return NextResponse.json({ error: 'Analisis ARRA GROK tersedia untuk pemilik paket ARRA Cronos atau Full Access.' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         // Requested symbol: BTCUSD or XAUUSD (default XAUUSD unless explicitly selected)
         const requestedSymbol = (searchParams.get('symbol') || 'XAUUSD').toUpperCase().replace('$', '');

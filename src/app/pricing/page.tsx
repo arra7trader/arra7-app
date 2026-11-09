@@ -2,36 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon } from '@/components/PremiumIcons';
+import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon } from '@/components/PremiumIcons';
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
+    WEBSITE_LIFETIME: [
+        { duration: 'lifetime', days: 0, label: 'Lifetime', price: 'Rp 125.000', originalPrice: null, period: '/ sekali bayar' },
+    ],
     ALL_ACCESS: [
         { duration: 'lifetime', days: 0, label: 'Lifetime Full Access', price: 'Rp 229.000', originalPrice: null, savingsText: 'Akses website + ARRA Cronos & Grok', period: '/ sekali bayar' },
     ],
-    PRO: [
-        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 99.000', originalPrice: 'Rp 149.000' },
-        { duration: '3months', days: 90, label: '3 Bulan', price: 'Rp 290.000', originalPrice: 'Rp 447.000', savingsText: 'Hemat Rp 157Rb', promoSlots: 15 },
-        { duration: '6months', days: 180, label: '6 Bulan', price: 'Rp 590.000', originalPrice: 'Rp 894.000', savingsText: 'Hemat Rp 304Rb', promoSlots: 15 },
-        { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 1.000.000', originalPrice: 'Rp 1.788.000', savingsText: 'Hemat Rp 788Rb', promoSlots: 15 },
-    ],
-    VVIP: [
-        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 249.000', originalPrice: 'Rp 399.000' },
-        { duration: '3months', days: 90, label: '3 Bulan', price: 'Rp 740.000', originalPrice: 'Rp 1.197.000', savingsText: 'Hemat Rp 457Rb', promoSlots: 15 },
-        { duration: '6months', days: 180, label: '6 Bulan', price: 'Rp 1.490.000', originalPrice: 'Rp 2.394.000', savingsText: 'Hemat Rp 904Rb', promoSlots: 15 },
-        { duration: '1year', days: 365, label: '1 Tahun', price: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', savingsText: 'Hemat Rp 1.98M', promoSlots: 15 },
-    ],
-    TELEBOT: [
-        { duration: '1month', days: 30, label: '1 Bulan', price: 'Rp 175.000', originalPrice: 'Rp 249.000', savingsText: 'Promo Launch + Bonus PRO', promoSlots: 50, period: '/ bulan' },
-        { duration: 'lifetime', days: 0, label: 'Lifetime', price: 'Rp 375.000', originalPrice: null, savingsText: '100 Slot Saja + Bonus PRO', promoSlots: 100, period: '/ sekali bayar' },
-    ],
-    FIBO_KYOKO: [
-        { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 169.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 330.000 • Akses Selamanya', period: '/ sekali bayar' },
-    ],
     ARRA_CRONOS: [
-        { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 150.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 349.000 · Diskon 70% + Bonus Indikator TradingView', period: '/ sekali bayar' },
+        { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 150.000', originalPrice: null, savingsText: 'ARRA Cronos + ARRA Grok + Bonus Indikator TradingView', period: '/ sekali bayar' },
     ],
 };
 
@@ -39,16 +23,8 @@ function PlanIcon({ planId }: { planId: string }) {
     switch (planId) {
         case 'BASIC':
             return <SparklesIcon size="lg" className="text-slate-600" />;
-        case 'PRO':
+        case 'WEBSITE_LIFETIME':
             return <BoltIcon size="lg" className="text-blue-600" />;
-        case 'VVIP':
-            return <CrownIcon size="lg" className="text-amber-500" />;
-        case 'TELEBOT_MONTHLY':
-            return <RobotIcon size="lg" className="text-emerald-600" />;
-        case 'TELEBOT_LIFETIME':
-            return <GemIcon size="lg" className="text-amber-500" />;
-        case 'FIBO_KYOKO':
-            return <TrendUpIcon size="lg" className="text-indigo-600" />;
         case 'ARRA_CRONOS':
             return <BoltIcon size="lg" className="text-cyan-400" />;
         default:
@@ -68,7 +44,7 @@ const PRICING_PLANS = [
             { text: 'Timeframe M5 dan M15', included: true, highlight: false },
             { text: 'Akses Gold Only', included: true, highlight: false },
             { text: 'DOM ARRA - Trial Terbatas', included: true, highlight: false },
-            { text: 'PICA Neural Lab Demo Simulation', included: true, highlight: true },
+            { text: 'Analisis teknikal dasar PICA untuk XAUUSD', included: true, highlight: true },
             { text: 'Analisa Saham IDX', included: false, highlight: false },
             { text: 'Semua Timeframe (M1 - D1)', included: false, highlight: false },
         ],
@@ -76,75 +52,17 @@ const PRICING_PLANS = [
         popular: false,
     },
     {
-        id: 'PRO',
-        name: 'Pro',
-        description: 'Untuk trader aktif yang serius meningkatkan profit harian dengan AI.',
+        id: 'WEBSITE_LIFETIME',
+        name: 'PICA Website Lifetime',
+        description: 'Akses lifetime ke fitur website PICA AI.',
         theme: 'blue',
         features: [
-            { text: '25x Analisa Forex per hari', included: true, highlight: false },
-            { text: '25x Analisa Saham IDX per hari', included: true, highlight: false },
-            { text: 'Semua Timeframe (M1 - D1)', included: true, highlight: false },
-            { text: 'Akses Semua Pairs + Crypto', included: true, highlight: false },
-            { text: 'DOM ARRA - UNLIMITED', included: true, highlight: true },
-            { text: 'PICA Neural Lab (Akses Prediksi Gold)', included: true, highlight: true },
-            { text: 'AI Neural Ensemble (90%+ Accuracy)', included: true, highlight: true },
-            { text: 'Analisis Market Real-time', included: true, highlight: false },
+            { text: 'Akses lifetime PICA Website', included: true, highlight: true },
+            { text: 'Analisis market dan fitur PICA', included: true, highlight: false },
+            { text: 'Kursus Fibo Kyoko, indikator MT5, dan script TradingView', included: true, highlight: false },
+            { text: 'Tidak termasuk ARRA Cronos dan ARRA Grok', included: true, highlight: true },
         ],
-        cta: 'Upgrade ke Pro',
-        popular: true,
-    },
-    {
-        id: 'VVIP',
-        name: 'VVIP',
-        description: 'Untuk trader profesional & institusi tanpa batas analisa kuantitatif.',
-        theme: 'amber',
-        features: [
-            { text: 'UNLIMITED Analisa Forex', included: true, highlight: false },
-            { text: 'UNLIMITED Analisa Saham IDX', included: true, highlight: false },
-            { text: 'Semua Timeframe (M1 - D1)', included: true, highlight: false },
-            { text: 'Akses Semua Pairs + Crypto + Indices', included: true, highlight: false },
-            { text: 'DOM ARRA - UNLIMITED', included: true, highlight: true },
-            { text: 'PICA Neural Lab UNLIMITED Real-time', included: true, highlight: true },
-            { text: 'Multi-Timeframe Neural Confluence (M15-D1)', included: true, highlight: true },
-            { text: 'Akses Penuh Seluruh Fitur Platform', included: true, highlight: true },
-        ],
-        cta: 'Daftar VVIP',
-        popular: false,
-    },
-    {
-        id: 'TELEBOT_MONTHLY',
-        name: 'TELEBOT 1 Bulan',
-        description: 'Private AI execution desk untuk trader yang ingin langsung signal Telegram premium PICA dengan live status, bonus akun PRO website 1 bulan, dan video Edukasi Sniper Entry.',
-        theme: 'emerald',
-        features: [
-            { text: 'Akses TELEBOT khusus member approved 1 bulan', included: true, highlight: true },
-            { text: 'Bonus akun PRO website 1 bulan', included: true, highlight: true },
-            { text: 'Bonus video eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
-            { text: 'Menu Signal semua pair dan timeframe', included: true, highlight: false },
-            { text: 'Menu Hasil + Live Status signal', included: true, highlight: false },
-            { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },
-            { text: 'Approval by username Telegram', included: true, highlight: false },
-            { text: 'Fokus penuh ke signal, tanpa chat bebas', included: true, highlight: false },
-        ],
-        cta: 'Ambil TELEBOT 1 Bulan',
-        popular: false,
-    },
-    {
-        id: 'TELEBOT_LIFETIME',
-        name: 'TELEBOT Lifetime',
-        description: 'Promo eksklusif sekali bayar untuk 100 orang tercepat. Akses TELEBOT lifetime, bonus akun PRO website 1 bulan, dan bonus video Edukasi Sniper Entry.',
-        theme: 'amber',
-        features: [
-            { text: 'Akses TELEBOT lifetime selamanya', included: true, highlight: true },
-            { text: 'Bonus akun PRO website 1 bulan', included: true, highlight: true },
-            { text: 'Bonus video eksklusif: Edukasi Sniper Entry', included: true, highlight: true },
-            { text: 'Signal multi-market + live monitoring', included: true, highlight: false },
-            { text: 'Menu Hasil untuk progress TP / SL', included: true, highlight: false },
-            { text: 'Format signal profesional: NOW / LIMIT / STOP', included: true, highlight: true },
-            { text: 'Hanya 100 slot lifetime, rebutan tercepat', included: true, highlight: true },
-            { text: 'Approval by username Telegram', included: true, highlight: false },
-        ],
-        cta: 'Ambil TELEBOT Lifetime',
+        cta: 'Beli Website Lifetime (Rp 125.000)',
         popular: false,
     },
     {
@@ -164,22 +82,6 @@ const PRICING_PLANS = [
         cta: 'Beli Akses ARRA Cronos (Rp 150.000)',
         popular: true,
     },
-    {
-        id: 'FIBO_KYOKO',
-        name: 'Kursus Digital Fibo Kyoko',
-        description: 'Paket lengkap 3 video masterclass Fibo Kyoko + File Indikator Auto MT5 (.ex5) + Script TradingView Pine Script v6.',
-        theme: 'indigo',
-        features: [
-            { text: '3 Video Masterclass HD (Basic, Pola Trend, Tarik Garis)', included: true, highlight: true },
-            { text: 'File Indikator FIBO KYOKO AUTO MT5 (.ex5)', included: true, highlight: true },
-            { text: 'Script TradingView Pine Script v6 Full Akses', included: true, highlight: true },
-            { text: 'Bonus Akses PRO PICA Platform (Analisa AI)', included: true, highlight: true },
-            { text: 'Akses Selamanya (Sekali Bayar, Tanpa Iuran Bulanan)', included: true, highlight: true },
-            { text: 'Panduan Instalasi Lengkap MT5 & TradingView', included: true, highlight: false },
-        ],
-        cta: 'Beli Kursus Sekarang (Rp 169.000)',
-        popular: false,
-    },
 ];
 
 export default function PricingPage() {
@@ -188,8 +90,7 @@ export default function PricingPage() {
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
-        PRO: '3months',
-        VVIP: '3months',
+        WEBSITE_LIFETIME: 'lifetime',
     });
 
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
@@ -212,16 +113,12 @@ export default function PricingPage() {
         }
 
         const catalogPlanId =
-            planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME'
-                ? 'TELEBOT'
-                : planId;
+            planId;
         const duration =
             durationOverride ||
-            (planId === 'TELEBOT_MONTHLY'
-                ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS'
-                    ? 'lifetime'
-                    : selectedDuration[planId] || '1month');
+            (planId === 'WEBSITE_LIFETIME' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS'
+                ? 'lifetime'
+                : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
         const durationOption = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
         const days = durationOption?.days ?? (duration === 'lifetime' ? 0 : 30);
@@ -235,20 +132,14 @@ export default function PricingPage() {
         }
 
         const catalogPlanId =
-            planId === 'TELEBOT_MONTHLY' || planId === 'TELEBOT_LIFETIME'
-                ? 'TELEBOT'
-                : planId;
+            planId;
         const duration =
-            planId === 'TELEBOT_MONTHLY'
-                ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS'
-                    ? 'lifetime'
-                    : selectedDuration[planId] || '1month';
+            planId === 'WEBSITE_LIFETIME' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS'
+                ? 'lifetime'
+                : selectedDuration[planId] || '1month';
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
 
-        if (!option) {
-            return { price: 'Rp 99.000', originalPrice: 'Rp 149.000', period: '/ bulan', badge: null };
-        }
+        if (!option) return { price: 'Tidak tersedia', originalPrice: null, period: '', badge: null };
 
         let badge = null;
         if (option.promoSlots && promoSlots) {
@@ -402,16 +293,6 @@ export default function PricingPage() {
                     </div>
                 </motion.div>
 
-                <div className="rounded-3xl border border-cyan-200 bg-cyan-50 p-6 sm:p-8">
-                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h2 className="text-xl font-extrabold text-slate-900">Upgrade pemilik Lifetime Rp129.000</h2>
-                            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600">Tambahkan ARRA Cronos + ARRA Grok dengan membayar selisih Rp100.000. Admin akan memverifikasi akun dan bukti Lifetime sebelum mengaktifkan upgrade.</p>
-                        </div>
-                        <Link href="/payment/transfer?plan=LIFETIME_UPGRADE&duration=lifetime" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-cyan-700 px-5 py-3 text-sm font-bold text-white hover:bg-cyan-800">Upgrade Rp100.000</Link>
-                    </div>
-                </div>
-
                 {PRICING_PLANS.map((plan, index) => {
                     const pricing = getPlanPricing(plan.id);
                     const isReversed = index % 2 !== 0;
@@ -450,7 +331,7 @@ export default function PricingPage() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1, duration: 0.5 }}
-                            className={`bg-white rounded-3xl border ${plan.id === 'PRO' ? 'border-blue-400 ring-2 ring-blue-100 shadow-xl' : 'border-slate-200/90 shadow-sm'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
+                            className={`bg-white rounded-3xl border ${plan.id === 'ARRA_CRONOS' ? 'border-cyan-300 ring-2 ring-cyan-100 shadow-xl' : 'border-slate-200/90 shadow-sm'} overflow-hidden flex flex-col md:flex-row items-stretch ${isReversed ? 'md:flex-row-reverse' : ''}`}
                         >
                             {/* Left Pane (Details & Features) */}
                             <div className={`w-full md:w-3/5 p-8 md:p-12 ${leftBg} flex flex-col justify-center border-b md:border-b-0 ${isReversed ? 'md:border-l' : 'md:border-r'} border-slate-200`}>

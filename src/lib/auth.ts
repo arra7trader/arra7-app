@@ -97,7 +97,9 @@ export const authOptions: NextAuthOptions = {
                         const { getUserMembership, getUserSubscription } = await import('./turso');
                         const { membership, expiresAt } = await getUserMembership(token.sub);
                         const subscription = await getUserSubscription(token.sub);
-                        session.user.tier = (membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
+                        session.user.tier = (membership === 'LIFETIME' || membership === 'WEBSITE_LIFETIME' || membership === 'ARRA_CRONOS'
+                            ? membership
+                            : membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
 
                         if (expiresAt) {
                             session.user.membershipExpires = expiresAt.toISOString();

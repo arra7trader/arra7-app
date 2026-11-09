@@ -27,7 +27,7 @@ const FAQ_DATA = [
         questions: [
             { q: 'Bagaimana cara upgrade?', a: 'Pilih paket di halaman Pricing, transfer, konfirmasi via Telegram @arra7trader.' },
             { q: 'Metode pembayaran apa yang tersedia?', a: 'Pembayaran melalui Transfer Bank BCA: 1392698188 a.n. Arland Pratama Muldiawan (m-BCA, KlikBCA, ATM, atau transfer antar-bank).' },
-            { q: 'Berapa lama durasi membership?', a: 'Tersedia paket bulanan, tahunan, serta paket Promo Flash Sale All-Access Lifetime (Akses Selamanya).' },
+            { q: 'Paket apa saja yang tersedia?', a: 'PICA Website Lifetime Rp125.000, ARRA Cronos + ARRA Grok Rp150.000, dan Full Access Rp229.000. Ada juga akses Basic gratis.' },
         ]
     },
     {

@@ -87,8 +87,12 @@ function TradingViewCronosChart({
     const hasOrder =
         tier === 'PRO' ||
         tier === 'VVIP' ||
+        tier === 'ARRA_CRONOS' ||
+        tier === 'LIFETIME' ||
         session?.user?.tier === 'PRO' ||
         session?.user?.tier === 'VVIP' ||
+        session?.user?.tier === 'ARRA_CRONOS' ||
+        session?.user?.tier === 'LIFETIME' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS' ||
         (typeof window !== 'undefined' && localStorage.getItem('pica_arra_cronos_unlocked') === 'true');
@@ -205,7 +209,7 @@ function TradingViewCronosChart({
         if (pineCode) return pineCode;
         setLoadingPine(true);
         try {
-            const res = await fetch('/ARRA_Cronos.pine', { cache: 'no-store' });
+            const res = await fetch('/api/arra-cronos/pine', { cache: 'no-store' });
             if (res.ok) {
                 const text = await res.text();
                 setPineCode(text);
@@ -591,7 +595,7 @@ function TradingViewCronosChart({
                                 </a>
                                 {effectiveUnlocked && (
                                     <a
-                                        href="/ARRA_Cronos.pine"
+                                        href="/api/arra-cronos/pine"
                                         download="ARRA_Cronos.pine"
                                         className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-200 transition hover:bg-slate-700"
                                     >

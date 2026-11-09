@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  outputFileTracingIncludes: {
+    '/api/arra-cronos/pine': ['./src/assets/ARRA_Cronos.pine'],
+  },
 };
 
 export default withNextIntl(nextConfig);

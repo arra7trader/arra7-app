@@ -241,8 +241,12 @@ export default function ArraCronosPage() {
         hasLocalUnlock ||
         tier === 'PRO' ||
         tier === 'VVIP' ||
+        tier === 'ARRA_CRONOS' ||
+        tier === 'LIFETIME' ||
         session?.user?.tier === 'PRO' ||
         session?.user?.tier === 'VVIP' ||
+        session?.user?.tier === 'ARRA_CRONOS' ||
+        session?.user?.tier === 'LIFETIME' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS';
 
@@ -626,10 +630,7 @@ export default function ArraCronosPage() {
                                         FITUR ARRA CRONOS TERKUNCI
                                     </span>
                                     <span className="rounded-full bg-cyan-400/20 px-3 py-1 text-xs font-black text-cyan-200 border border-cyan-400/30">
-                                        DISKON SPESIAL 70% · RP 150.000
-                                    </span>
-                                    <span className="text-[11px] text-slate-400 line-through">
-                                        Rp 499.000
+                                        AKSES LIFETIME · RP 150.000
                                     </span>
                                 </div>
                                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">

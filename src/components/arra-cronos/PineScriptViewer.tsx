@@ -36,8 +36,12 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
     const hasOrder =
         tier === 'PRO' ||
         tier === 'VVIP' ||
+        tier === 'LIFETIME' ||
+        tier === 'ARRA_CRONOS' ||
         session?.user?.tier === 'PRO' ||
         session?.user?.tier === 'VVIP' ||
+        session?.user?.tier === 'LIFETIME' ||
+        session?.user?.tier === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS' ||
         (typeof window !== 'undefined' && localStorage.getItem('pica_arra_cronos_unlocked') === 'true');
@@ -53,7 +57,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
         if (!code) {
             setLoading(true);
             try {
-                const res = await fetch('/ARRA_Cronos.pine');
+                const res = await fetch('/api/arra-cronos/pine', { cache: 'no-store' });
                 if (res.ok) {
                     const text = await res.text();
                     setCode(text);
@@ -76,7 +80,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
         if (!textToCopy) {
             setLoading(true);
             try {
-                const res = await fetch('/ARRA_Cronos.pine');
+                const res = await fetch('/api/arra-cronos/pine', { cache: 'no-store' });
                 if (res.ok) {
                     textToCopy = await res.text();
                     setCode(textToCopy);
@@ -164,7 +168,7 @@ export default function PineScriptViewer({ initialCode, isUnlocked }: PineScript
                             </button>
 
                             <a
-                                href="/ARRA_Cronos.pine"
+                                href="/api/arra-cronos/pine"
                                 download="ARRA_Cronos.pine"
                                 className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:border-slate-600 hover:bg-slate-700"
                             >

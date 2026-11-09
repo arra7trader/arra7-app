@@ -18,8 +18,12 @@ export default function KursusFiboKyokoPage() {
         isAdmin ||
         tier === 'PRO' || 
         tier === 'VVIP' || 
+        tier === 'LIFETIME' ||
+        tier === 'WEBSITE_LIFETIME' ||
         session?.user?.tier === 'PRO' || 
         session?.user?.tier === 'VVIP' || 
+        session?.user?.tier === 'LIFETIME' ||
+        session?.user?.tier === 'WEBSITE_LIFETIME' ||
         isAdminEmail(session?.user?.email);
 
     const [activeTab, setActiveTab] = useState<'video' | 'mt5' | 'tradingview'>('video');
@@ -114,10 +118,10 @@ export default function KursusFiboKyokoPage() {
                                 <span>Aktivasi Kode</span>
                             </button>
                             <Link
-                                href="/payment/transfer?plan=FIBO_KYOKO&duration=lifetime&days=0"
+                                href="/pricing"
                                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
                             >
-                                Beli Kursus (Rp 169.000)
+                                Lihat Paket Website Lifetime
                             </Link>
                         </div>
                     )}
@@ -135,7 +139,7 @@ export default function KursusFiboKyokoPage() {
                                 <span>Akses Terkunci</span>
                             </span>
                             <h2 className="text-2xl sm:text-3xl font-extrabold">
-                                Kursus Khusus Member PRO / Pembeli Paket Fibo Kyoko
+                                Materi Fibo Kyoko untuk Member Website Lifetime
                             </h2>
                             <p className="text-blue-100 text-sm max-w-xl mx-auto mt-2">
                                 Dapatkan akses penuh ke seluruh video panduan teknikal, indikator auto MT5 langsung pasang, dan script TradingView Pine Script v6.
@@ -179,20 +183,18 @@ export default function KursusFiboKyokoPage() {
                             <div className="rounded-2xl border-2 border-blue-500/30 bg-blue-50/50 p-6 sm:p-8 text-center max-w-xl mx-auto">
                                 <p className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-1">Penawaran Spesial</p>
                                 <div className="flex items-center justify-center gap-3 mb-2">
-                                    <span className="text-slate-400 line-through text-base">Rp 499.000</span>
-                                    <span className="text-3xl sm:text-4xl font-extrabold text-blue-600">Rp 169.000</span>
-                                    <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[11px] font-bold">HEMAT 66%</span>
+                                    <span className="text-2xl sm:text-3xl font-extrabold text-blue-600">Termasuk Paket Website Lifetime</span>
                                 </div>
                                 <p className="text-slate-500 text-xs mb-6">
-                                    Sekali bayar untuk akses selamanya (Lifetime Access) + Bonus Akses PRO Platform PICA.
+                                    Materi Fibo Kyoko termasuk dalam akses PICA Website Lifetime Rp125.000 dan Full Access Rp229.000.
                                 </p>
 
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                     <Link
-                                        href="/payment/transfer?plan=FIBO_KYOKO&duration=lifetime&days=0"
+                                        href="/pricing"
                                         className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all"
                                     >
-                                        Beli Kursus Sekarang (Rp 169.000) →
+                                        Pilih Paket Website Lifetime →
                                     </Link>
                                     <button
                                         onClick={openActivation}

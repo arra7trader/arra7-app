@@ -96,7 +96,7 @@ export default function LowBalancePopup() {
                                         className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-red-900/20 flex items-center justify-center gap-2 transition-all"
                                     >
                                         <GemIcon size="sm" className="text-yellow-300" />
-                                        <span>Upgrade to PRO - Rp 99k</span>
+                                        <span>Lihat Website Lifetime — Rp 125.000</span>
                                     </motion.button>
                                 </Link>
 

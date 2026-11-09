@@ -25,7 +25,7 @@ export default function Navbar() {
     const { data: session, status } = useSession();
     const t = useTranslations('nav');
     const [isScrolled, setIsScrolled] = useState(false);
-    const { isVvip, isPro, daysLeft, openActivation } = usePicaDevice();
+    const { isVvip, isPro, daysLeft, openActivation, tier } = usePicaDevice();
 
     const isAdmin =
         Boolean(isAdminUser(session?.user)) ||
@@ -349,8 +349,8 @@ export default function Navbar() {
                                     title="Status: VVIP Member"
                                 >
                                     <CrownIcon size="xs" className="text-amber-600" />
-                                    <span className="hidden xs:inline">VVIP MEMBER</span>
-                                    <span className="xs:hidden">VVIP</span>
+                                    <span className="hidden xs:inline">{tier === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME' : tier === 'LIFETIME' ? 'FULL ACCESS LIFETIME' : 'VVIP MEMBER'}</span>
+                                    <span className="xs:hidden">{tier === 'WEBSITE_LIFETIME' ? 'LIFETIME' : tier === 'LIFETIME' ? 'FULL' : 'VVIP'}</span>
                                     <span className="text-[10px] text-amber-700 font-medium">({daysLeft}h)</span>
                                 </button>
                             ) : isPro ? (

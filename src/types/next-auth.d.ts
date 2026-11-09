@@ -8,7 +8,7 @@ declare module "next-auth" {
         user: {
             /** The user's postal address. */
             id: string
-            tier: 'BASIC' | 'PRO' | 'VVIP'
+            tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS'
             isAdmin?: boolean
             membershipExpires?: string
             daysUntilExpiry?: number
@@ -26,6 +26,6 @@ declare module "next-auth/jwt" {
     /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
     interface JWT {
         id: string
-        tier: 'BASIC' | 'PRO' | 'VVIP'
+        tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS'
     }
 }

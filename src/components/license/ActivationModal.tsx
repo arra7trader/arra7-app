@@ -52,8 +52,10 @@ export default function ActivationModal() {
     setTimeout(() => setCopiedDevId(false), 2000);
   };
 
-  const isVvip = tier === 'VVIP';
+  const isVvip = ['VVIP', 'LIFETIME', 'PROMO_125K'].includes(tier);
+  const isWebsiteLifetime = tier === 'WEBSITE_LIFETIME';
   const isPro = tier === 'PRO';
+  const isArraCronos = tier === 'ARRA_CRONOS';
 
   return (
     <AnimatePresence>
@@ -94,7 +96,7 @@ export default function ActivationModal() {
               Aktivasi Lisensi PICA
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Masukkan kode akses 1x pakai untuk mengaktifkan VVIP / PRO
+              Masukkan kode akses 1x pakai untuk mengaktifkan akses Website Lifetime, ARRA Cronos, PRO, atau VVIP
             </p>
           </div>
 
@@ -106,7 +108,7 @@ export default function ActivationModal() {
                 className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 ${
                   isVvip
                     ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                    : isPro
+                    : isPro || isArraCronos || isWebsiteLifetime
                     ? 'bg-blue-100 text-blue-800 border border-blue-300'
                     : 'bg-slate-200/80 text-slate-700 border border-slate-300'
                 }`}
@@ -114,7 +116,17 @@ export default function ActivationModal() {
                 {isVvip ? (
                   <>
                     <CrownIcon size="xs" />
-                    <span>VVIP AKTIF</span>
+                    <span>{tier === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME AKTIF' : tier === 'LIFETIME' ? 'FULL ACCESS LIFETIME' : 'VVIP AKTIF'}</span>
+                  </>
+                ) : isArraCronos ? (
+                  <>
+                    <BoltIcon size="xs" />
+                    <span>ARRA CRONOS + GROK AKTIF</span>
+                  </>
+                ) : isWebsiteLifetime ? (
+                  <>
+                    <CrownIcon size="xs" />
+                    <span>WEBSITE LIFETIME AKTIF</span>
                   </>
                 ) : isPro ? (
                   <>
@@ -127,7 +139,7 @@ export default function ActivationModal() {
               </span>
             </div>
 
-            {tierExpiresAt && (isVvip || isPro) ? (
+            {tierExpiresAt && (isVvip || isPro || isArraCronos || isWebsiteLifetime) ? (
               <p className="text-xs text-emerald-700 font-medium">
                 Aktif sampai: {new Date(tierExpiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} ({daysLeft} hari lagi)
               </p>

@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 
 export interface PicaDeviceState {
   deviceId: string;
-  tier: 'BASIC' | 'PRO' | 'VVIP';
+  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
   tierExpiresAt: string | null;
   daysLeft: number;
   isExpired: boolean;
   isLoading: boolean;
   isVvip: boolean;
   isPro: boolean;
+  isArraCronos: boolean;
   isActivationOpen: boolean;
   openActivation: () => void;
   closeActivation: () => void;
@@ -44,7 +45,7 @@ function getOrCreateDeviceId(): string {
 
 export function PicaDeviceProvider({ children }: { children: ReactNode }) {
   const [deviceId, setDeviceId] = useState<string>('');
-  const [tier, setTier] = useState<'BASIC' | 'PRO' | 'VVIP'>('BASIC');
+  const [tier, setTier] = useState<'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS'>('BASIC');
   const [tierExpiresAt, setTierExpiresAt] = useState<string | null>(null);
   const [daysLeft, setDaysLeft] = useState<number>(0);
   const [isExpired, setIsExpired] = useState<boolean>(false);
@@ -133,8 +134,9 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
   const closeActivation = () => setIsActivationOpen(false);
 
   const upperTier = String(tier || '').toUpperCase();
-  const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier);
+  const isVvipTier = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier);
   const isProTier = isVvipTier || upperTier === 'PRO';
+  const isArraCronosTier = ['ARRA_CRONOS', 'VVIP', 'PRO', 'PROMO_125K', 'LIFETIME'].includes(upperTier);
 
   const value: PicaDeviceState = {
     deviceId,
@@ -145,6 +147,7 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
     isLoading,
     isVvip: isVvipTier,
     isPro: isProTier,
+    isArraCronos: isArraCronosTier,
     isActivationOpen,
     openActivation,
     closeActivation,

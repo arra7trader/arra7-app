@@ -232,7 +232,7 @@ export default function XauusdNeuralLabPage() {
     // Determine Admin status
     const isAdmin = Boolean(isAdminUser(session?.user));
 
-    const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
+    const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
     const sessionTier = String((session?.user as any)?.tier || (session?.user as any)?.membership || '').toUpperCase();
     const cleanDeviceTier = String(deviceTier || '').toUpperCase();
 
@@ -260,7 +260,7 @@ export default function XauusdNeuralLabPage() {
                     const qData = await res.json();
                     if (qData.status === 'success') {
                         const membership = (qData.quota?.membership || 'BASIC').toUpperCase();
-                        const vvipStatus = membership === 'VVIP' || membership === 'ADMIN';
+                        const vvipStatus = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ADMIN'].includes(membership);
                         setIsDbVvip(vvipStatus);
                     }
                 } catch {

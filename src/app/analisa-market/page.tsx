@@ -765,7 +765,7 @@ export default function AnalisaMarketPage() {
 
     const isAdmin = isAdminUser(session?.user);
     const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isAdmin ? 'ADMIN' : isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
-    const isVvipMember = isAdmin || isDeviceVvip || uppercaseMembership === 'VVIP' || uppercaseMembership === 'ADMIN' || uppercaseMembership === 'LIFETIME' || uppercaseMembership === 'ALL_ACCESS' || uppercaseMembership === 'FULL_ACCESS' || uppercaseMembership === 'PROMO_125K';
+    const isVvipMember = isAdmin || isDeviceVvip || uppercaseMembership === 'VVIP' || uppercaseMembership === 'ADMIN' || uppercaseMembership === 'LIFETIME' || uppercaseMembership === 'WEBSITE_LIFETIME' || uppercaseMembership === 'ALL_ACCESS' || uppercaseMembership === 'FULL_ACCESS' || uppercaseMembership === 'PROMO_125K';
     const isProMember = isAdmin || uppercaseMembership === 'PRO' || isDevicePro || isVvipMember;
     const isPremiumMember = isVvipMember || isProMember;
     const isUnlimitedQuota = isAdmin || isVvipMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null || quotaStatus?.dailyLimit === Infinity;

@@ -1028,8 +1028,16 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       }
 
       const upperMem = membership.toUpperCase();
-      if (['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperMem)) {
+      if (['VVIP', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN'].includes(upperMem)) {
         membership = 'VVIP';
+      } else if (upperMem === 'LIFETIME') {
+        membership = 'VVIP';
+      } else if (upperMem === 'WEBSITE_LIFETIME') {
+        membership = 'WEBSITE_LIFETIME';
+      } else if (upperMem === 'PROMO_125K') {
+        membership = 'VVIP';
+      } else if (upperMem === 'ARRA_CRONOS') {
+        membership = 'ARRA_CRONOS';
       } else if (upperMem === 'PRO') {
         membership = 'PRO';
       }
@@ -1058,8 +1066,16 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       }
 
       const upperTier = tier.toUpperCase();
-      if (['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier)) {
+      if (['VVIP', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN'].includes(upperTier)) {
         tier = 'VVIP';
+      } else if (upperTier === 'LIFETIME') {
+        tier = 'VVIP';
+      } else if (upperTier === 'WEBSITE_LIFETIME') {
+        tier = 'WEBSITE_LIFETIME';
+      } else if (upperTier === 'PROMO_125K') {
+        tier = 'VVIP';
+      } else if (upperTier === 'ARRA_CRONOS') {
+        tier = 'ARRA_CRONOS';
       } else if (upperTier === 'PRO') {
         tier = 'PRO';
       }

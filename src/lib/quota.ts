@@ -112,7 +112,12 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
 
     try {
         const { membership } = await getUserMembership(userId);
-        const memKey = String(membership || 'BASIC').toUpperCase() as Membership;
+        const normalizedMembership = String(membership || 'BASIC').toUpperCase();
+        const memKey = (normalizedMembership === 'ARRA_CRONOS'
+            ? 'BASIC'
+            : normalizedMembership === 'WEBSITE_LIFETIME'
+                ? 'LIFETIME'
+                : normalizedMembership) as Membership;
 
         // Admin override
         if (memKey === 'ADMIN') {
@@ -145,7 +150,7 @@ export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
         return {
-            membership: membership as Membership,
+            membership: memKey,
             dailyLimit,
             used,
             remaining,

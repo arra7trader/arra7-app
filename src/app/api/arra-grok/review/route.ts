@@ -21,7 +21,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Pair yang didukung: BTCUSD, XAUUSD, EURUSD, GBPUSD, USDJPY.' }, { status: 400 });
         }
         const user = await resolveUserOrDevice(request);
-        const hasReviewAccess = user.isAdmin || user.membership === 'PRO' || user.membership === 'VVIP';
+        const hasReviewAccess = user.isAdmin || user.hasArraCronosAccess;
         if (!hasReviewAccess) {
             return NextResponse.json({ error: 'Review Groq tersedia untuk member ARRA Cronos.' }, { status: 403 });
         }

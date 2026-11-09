@@ -164,7 +164,7 @@ async function scanSymbol(
 
 export async function GET(request: Request) {
     const user = await resolveUserOrDevice(request);
-    if (!user.isAdmin && user.membership !== 'PRO' && user.membership !== 'VVIP') {
+    if (!user.isAdmin && !user.hasArraCronosAccess) {
         return NextResponse.json({ error: 'Pemindaian otomatis tersedia untuk member ARRA Cronos.' }, { status: 403 });
     }
 

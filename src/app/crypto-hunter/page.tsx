@@ -26,7 +26,7 @@ export default function CryptoHunterPage() {
     const isAdmin = isAdminUser(session?.user);
 
     // Full Access 125k tiers (Lifetime, All-Access, VVIP, Promo 125k, Admin)
-    const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
+    const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
     const sessionTier = String((session?.user as any)?.tier || (session?.user as any)?.membership || '').toUpperCase();
     const cleanDeviceTier = String(deviceTier || '').toUpperCase();
 
@@ -112,7 +112,7 @@ export default function CryptoHunterPage() {
                                 Crypto Hunter Terkunci
                             </h1>
                             <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
-                                Radar pencari crypto potensial ini eksklusif untuk pemilik <strong className="text-amber-400">Paket Full Access Lifetime Rp 229.000</strong> atau member <strong className="text-emerald-400">VVIP</strong> resmi.
+                                Radar pencari crypto potensial tersedia dalam paket website Lifetime dan Full Access, atau untuk member VVIP lama.
                             </p>
                         </div>
 

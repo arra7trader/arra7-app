@@ -110,8 +110,12 @@ export default function ArraGrokPage() {
         hasLocalUnlock ||
         tier === 'PRO' ||
         tier === 'VVIP' ||
+        tier === 'ARRA_CRONOS' ||
+        tier === 'LIFETIME' ||
         session?.user?.tier === 'PRO' ||
         session?.user?.tier === 'VVIP' ||
+        session?.user?.tier === 'ARRA_CRONOS' ||
+        session?.user?.tier === 'LIFETIME' ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS';
 

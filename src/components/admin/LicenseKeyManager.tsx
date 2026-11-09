@@ -25,7 +25,7 @@ import {
 export interface LicenseKey {
   id?: number;
   code: string;
-  tier: 'PRO' | 'VVIP';
+  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
   durationDays: number;
   isUsed: boolean;
   usedByDeviceId?: string;
@@ -37,7 +37,7 @@ export interface LicenseKey {
 
 export interface DeviceUser {
   deviceId: string;
-  tier: 'BASIC' | 'PRO' | 'VVIP';
+  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
   tierExpiresAt?: string;
   activeLicenseCode?: string;
   firstSeenAt: string;
@@ -49,7 +49,7 @@ export interface DeviceUser {
   totalVisits: number;
 }
 
-type ProductType = 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
+type ProductType = 'ALL_ACCESS' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
 
 interface ProductPreset {
   id: ProductType;
@@ -59,7 +59,7 @@ interface ProductPreset {
   tagColor: string;
   borderActive: string;
   description: string;
-  tier: 'PRO' | 'VVIP';
+  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
   durations: { label: string; days: number; price?: string }[];
   notePrefix: string;
   generateText: (code: string, buyerName: string, durationLabel: string) => string;
@@ -100,6 +100,38 @@ Cara Aktivasi:
 3. Tempel kode di atas lalu klik Aktifkan
 
 Semua fitur langsung terbuka seketika! Selamat trading dan salam cuan konsisten! 🚀`;
+    },
+  },
+  WEBSITE_LIFETIME: {
+    id: 'WEBSITE_LIFETIME',
+    title: 'PICA Website Lifetime',
+    badge: '♾️ PICA WEBSITE LIFETIME',
+    priceDisplay: 'Rp 125.000 (Lifetime)',
+    tagColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    borderActive: 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/40',
+    description: 'Akses lifetime fitur website PICA AI tanpa ARRA Cronos dan ARRA Grok.',
+    tier: 'WEBSITE_LIFETIME',
+    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 125.000' }],
+    notePrefix: '[WEBSITE_LIFETIME]',
+    generateText: (code, buyerName, _) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Berikut kode lisensi PICA Website Lifetime Anda:\n\n🔑 Kode: ${code}\n⏳ Akses: Lifetime (Selamanya)\n💰 Paket: PICA Website Lifetime\n\nPaket website ini tidak mencakup ARRA Cronos dan ARRA Grok.\n\nCara Aktivasi:\n1. Buka https://pica.my.id\n2. Klik tombol "Aktivasi Kode"\n3. Tempel kode di atas lalu klik Aktifkan.`;
+    },
+  },
+  ARRA_CRONOS: {
+    id: 'ARRA_CRONOS',
+    title: 'ARRA Cronos + ARRA Grok',
+    badge: '⚡ CRONOS + GROK LIFETIME',
+    priceDisplay: 'Rp 150.000 (Lifetime)',
+    tagColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+    borderActive: 'border-cyan-500 ring-2 ring-cyan-500/20 bg-cyan-50/40',
+    description: 'Akses ARRA Cronos, ARRA Grok, dan bonus indikator TradingView. Analisis saja, tanpa order broker.',
+    tier: 'ARRA_CRONOS',
+    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 150.000' }],
+    notePrefix: '[ARRA_CRONOS]',
+    generateText: (code, buyerName, _) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Berikut kode akses ARRA Cronos + ARRA Grok Anda:\n\n🔑 Kode: ${code}\n⏳ Akses: Lifetime (Selamanya)\n💰 Paket: ARRA Cronos + ARRA Grok + Bonus TradingView\n\nPaket ini untuk analisis pasar; tidak mengirim order broker.\n\nAktivasi: buka https://pica.my.id, pilih Aktivasi Kode, lalu tempel kode di atas.`;
     },
   },
   FIBO_KYOKO: {
@@ -417,7 +449,7 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
     setGenerating(true);
 
     try {
-      let tierToUse: 'PRO' | 'VVIP' = currentPreset.tier;
+      let tierToUse: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' = currentPreset.tier;
       let durationDaysToUse = currentDuration.days;
       let noteToUse = '';
 
@@ -500,6 +532,8 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
   const getProductFromNote = (note?: string): ProductType => {
     if (!note) return 'CUSTOM';
     if (note.includes('[ALL_ACCESS]') || note.toLowerCase().includes('all_access') || note.toLowerCase().includes('all access')) return 'ALL_ACCESS';
+    if (note.includes('[WEBSITE_LIFETIME]') || note.toLowerCase().includes('website lifetime')) return 'WEBSITE_LIFETIME';
+    if (note.includes('[ARRA_CRONOS]') || note.toLowerCase().includes('arra cronos')) return 'ARRA_CRONOS';
     if (note.includes('[FIBO_KYOKO]') || note.toLowerCase().includes('fibo')) return 'FIBO_KYOKO';
     if (note.includes('[TELEBOT]') || note.toLowerCase().includes('telebot')) return 'TELEBOT';
     if (note.includes('[VVIP]')) return 'VVIP';
