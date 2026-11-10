@@ -32,6 +32,7 @@ import type {
     CronosMTFBias,
 } from '@/lib/arra-cronos-engine';
 import type { CronosTrackedSetup } from '@/lib/arra-cronos-setups';
+import { formatCronosSetupStatus } from '@/lib/arra-cronos-setup-labels';
 
 const CronosChart = dynamic(() => import('@/components/arra-cronos/CronosChart'), { ssr: false });
 const TradingViewCronosChart = dynamic(() => import('@/components/arra-cronos/TradingViewCronosChart'), { ssr: false });
@@ -1148,7 +1149,7 @@ export default function ArraCronosPage() {
 
                                 {chartMode === 'lightweight' && marketReview?.scenarioSetup && (
                                     <div className="grid grid-cols-2 gap-px border-t border-[#ECECE6] bg-[#ECECE6] sm:grid-cols-5">
-                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STATUS SETUP</div><div className={`mt-1 text-sm font-black ${displayedTrackedSetup?.status.includes('TP') ? 'text-emerald-700' : displayedTrackedSetup?.status.includes('SL') ? 'text-rose-700' : displayedTrackedSetup?.status.includes('AMBIGUOUS') ? 'text-amber-700' : marketReview.scenarioSetup.action === 'WAIT' && !displayedTrackedSetup ? 'text-amber-700' : displayedTrackedSetup?.side === 'SELL' ? 'text-rose-700' : 'text-emerald-700'}`}>{displayedTrackedSetup ? `${displayedTrackedSetup.status.replaceAll('_', ' ')} · ${displayedTrackedSetup.side}` : marketReview.scenarioSetup.action === 'WAIT' ? `WAIT · ${marketReview.scenarioSetup.side}` : marketReview.scenarioSetup.action}</div></div>
+                                        <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STATUS SETUP</div><div className={`mt-1 text-sm font-black ${displayedTrackedSetup?.status.includes('TP') ? 'text-emerald-700' : displayedTrackedSetup?.status.includes('SL') ? 'text-rose-700' : displayedTrackedSetup?.status.includes('AMBIGUOUS') ? 'text-amber-700' : marketReview.scenarioSetup.action === 'WAIT' && !displayedTrackedSetup ? 'text-amber-700' : displayedTrackedSetup?.side === 'SELL' ? 'text-rose-700' : 'text-emerald-700'}`}>{displayedTrackedSetup ? `${formatCronosSetupStatus(displayedTrackedSetup.status)} · ${displayedTrackedSetup.side}` : marketReview.scenarioSetup.action === 'WAIT' ? `WAIT · ${marketReview.scenarioSetup.side}` : marketReview.scenarioSetup.action}</div></div>
                                         <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">ENTRY {displayedTrackedSetup ? 'TERKUNCI' : 'REFERENSI'}</div><div className="mt-1 text-sm font-bold text-slate-800">{price(displayedTrackedSetup?.entryPrice ?? marketReview.scenarioSetup.entryPrice)}</div></div>
                                         <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">STOP {displayedTrackedSetup ? 'TERKUNCI' : 'SKENARIO'}</div><div className="mt-1 text-sm font-bold text-rose-700">{price(displayedTrackedSetup?.stopLoss ?? marketReview.scenarioSetup.stopLoss)}</div></div>
                                         <div className="bg-white px-4 py-3"><div className="text-[9px] font-bold tracking-wider text-slate-500">TARGET 1 / 2</div><div className="mt-1 text-sm font-bold text-emerald-700">{price(displayedTrackedSetup?.takeProfit1 ?? marketReview.scenarioSetup.takeProfit1)} / {price(displayedTrackedSetup?.takeProfit2 ?? marketReview.scenarioSetup.takeProfit2)}</div></div>
@@ -1283,7 +1284,7 @@ export default function ArraCronosPage() {
                                                 {marketReview.setupHistory.slice(0, 5).map((setup) => (
                                                     <div key={setup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#F7F7F4] px-3 py-2 text-[11px]">
                                                         <span className="font-bold text-slate-700">{setup.side} · {price(setup.entryPrice)} · {new Date(setup.setupBarTime).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</span>
-                                                        <span className={`font-extrabold ${setup.status.startsWith('TP') ? 'text-emerald-700' : setup.status.startsWith('SL') ? 'text-rose-700' : setup.status.startsWith('AMBIGUOUS') || setup.status.startsWith('EXPIRED') ? 'text-amber-700' : 'text-slate-500'}`}>{setup.status.replaceAll('_', ' ')}</span>
+                                                        <span className={`font-extrabold ${setup.status.startsWith('TP') ? 'text-emerald-700' : setup.status.startsWith('SL') ? 'text-rose-700' : setup.status.startsWith('AMBIGUOUS') || setup.status.startsWith('EXPIRED') ? 'text-amber-700' : 'text-slate-500'}`}>{formatCronosSetupStatus(setup.status)}</span>
                                                     </div>
                                                 ))}
                                             </div>

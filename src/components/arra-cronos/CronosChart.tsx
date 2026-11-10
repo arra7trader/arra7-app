@@ -16,6 +16,7 @@ import {
 } from 'lightweight-charts';
 import type { CronosScenarioSetup } from '@/lib/arra-cronos-engine';
 import type { CronosTrackedSetup } from '@/lib/arra-cronos-setups';
+import { formatCronosSetupStatus } from '@/lib/arra-cronos-setup-labels';
 
 export interface CronosCandle {
     time: string;
@@ -278,9 +279,9 @@ export default function CronosChart({
             const sideLabel = visibleSetup.side === 'BUY' ? 'BUY' : 'SELL';
             const levels = [
                 { price: visibleSetup.entryPrice, title: `${sideLabel} · ENTRY${frozenSetup ? ' FIX' : ''}`, color: '#38bdf8', width: 1 as const },
-                { price: visibleSetup.stopLoss, title: `SL · ${frozenSetup ? 'FIX' : 'ESTIMASI'}`, color: '#f43f5e', width: 1 as const },
-                { price: visibleSetup.takeProfit1, title: `TP1 · ${frozenSetup ? `FIX ${frozenSetup.status}` : 'ESTIMASI'}`, color: '#34d399', width: 1 as const },
-                { price: visibleSetup.takeProfit2, title: `TP2 · ${frozenSetup ? `FIX ${frozenSetup.status}` : 'ESTIMASI'}`, color: '#10b981', width: 2 as const },
+                { price: visibleSetup.stopLoss, title: `SL · ${frozenSetup ? frozenSetup.stopHitAt ? 'HIT SL' : 'LEVEL FIX' : 'ESTIMASI'}`, color: '#f43f5e', width: 1 as const },
+                { price: visibleSetup.takeProfit1, title: `TP 1 · ${frozenSetup ? frozenSetup.tp1HitAt ? 'HIT TP 1' : 'LEVEL FIX' : 'ESTIMASI'}`, color: '#34d399', width: 1 as const },
+                { price: visibleSetup.takeProfit2, title: `TP 2 · ${frozenSetup ? frozenSetup.tp2HitAt ? 'HIT TP 2' : 'LEVEL FIX' : 'ESTIMASI'}`, color: '#10b981', width: 2 as const },
             ];
             for (const level of levels) {
                 levelsRef.current.push(candleSeries.createPriceLine({
@@ -309,17 +310,17 @@ export default function CronosChart({
             if (setup.tp1HitAt) markers.push({
                 time: chartTime(setup.tp1HitAt),
                 position: setup.side === 'BUY' ? 'belowBar' as const : 'aboveBar' as const,
-                color: '#34d399', shape: 'circle' as const, text: 'TP1 TERCAPAI', size: 2 as const,
+                color: '#34d399', shape: 'circle' as const, text: 'HIT TP 1', size: 2 as const,
             });
             if (setup.tp2HitAt) markers.push({
                 time: chartTime(setup.tp2HitAt),
                 position: setup.side === 'BUY' ? 'belowBar' as const : 'aboveBar' as const,
-                color: '#10b981', shape: setup.side === 'BUY' ? 'arrowUp' as const : 'arrowDown' as const, text: 'TP2 TERCAPAI', size: 2 as const,
+                color: '#10b981', shape: setup.side === 'BUY' ? 'arrowUp' as const : 'arrowDown' as const, text: 'HIT TP 2', size: 2 as const,
             });
             if (setup.stopHitAt) markers.push({
                 time: chartTime(setup.stopHitAt),
                 position: setup.side === 'BUY' ? 'aboveBar' as const : 'belowBar' as const,
-                color: '#f43f5e', shape: 'square' as const, text: setup.status === 'SL_AFTER_TP1' ? 'SL · SETELAH TP1' : 'SL TERSENTUH', size: 2 as const,
+                color: '#f43f5e', shape: 'square' as const, text: setup.status === 'SL_AFTER_TP1' ? 'HIT SL · SETELAH TP 1' : 'HIT SL', size: 2 as const,
             });
             if (setup.status === 'AMBIGUOUS' || setup.status === 'AMBIGUOUS_AFTER_TP1') markers.push({
                 time: chartTime(setup.ambiguousAt || setup.setupBarTime),
@@ -361,7 +362,7 @@ export default function CronosChart({
                     </span>
                     {latestTrackedSetup && (
                         <span className="rounded-lg border border-emerald-400/30 bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-emerald-200 backdrop-blur-sm">
-                            LEVEL SETUP TETAP · STATUS {latestTrackedSetup.status} · CANDLE AKTUAL
+                            LEVEL SETUP TETAP · {formatCronosSetupStatus(latestTrackedSetup.status)} · CANDLE AKTUAL
                         </span>
                     )}
                 </div>
