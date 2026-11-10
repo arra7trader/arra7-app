@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getStockQuotaStatus } from '@/lib/quota';
+import { isAdminUser } from '@/lib/admin-access';
 
 export async function GET() {
     try {
@@ -14,15 +15,17 @@ export async function GET() {
             );
         }
 
+        const isAdmin = isAdminUser(session.user);
         const quotaStatus = await getStockQuotaStatus(session.user.id);
+        const membership = isAdmin ? 'ADMIN' : quotaStatus.membership;
 
         return NextResponse.json({
             status: 'success',
             data: {
-                membership: quotaStatus.membership,
-                dailyLimit: quotaStatus.dailyLimit === Infinity ? 'Unlimited' : quotaStatus.dailyLimit,
+                membership,
+                dailyLimit: isAdmin || quotaStatus.dailyLimit === Infinity ? 'Unlimited' : quotaStatus.dailyLimit,
                 used: quotaStatus.used,
-                remaining: quotaStatus.remaining === Infinity ? 'Unlimited' : quotaStatus.remaining,
+                remaining: isAdmin || quotaStatus.remaining === Infinity ? 'Unlimited' : quotaStatus.remaining,
                 canAnalyze: quotaStatus.canAnalyze,
             },
         });

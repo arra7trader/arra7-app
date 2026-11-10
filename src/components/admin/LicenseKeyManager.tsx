@@ -25,7 +25,7 @@ import {
 export interface LicenseKey {
   id?: number;
   code: string;
-  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   durationDays: number;
   isUsed: boolean;
   usedByDeviceId?: string;
@@ -37,7 +37,7 @@ export interface LicenseKey {
 
 export interface DeviceUser {
   deviceId: string;
-  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   tierExpiresAt?: string;
   activeLicenseCode?: string;
   firstSeenAt: string;
@@ -50,6 +50,7 @@ export interface DeviceUser {
 }
 
 type ProductType = 'ALL_ACCESS' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
+const CURRENT_PRODUCT_TYPES: ProductType[] = ['ALL_ACCESS', 'WEBSITE_LIFETIME', 'ARRA_CRONOS', 'FIBO_KYOKO', 'TELEBOT', 'COPYTRADE', 'CUSTOM'];
 
 interface ProductPreset {
   id: ProductType;
@@ -59,7 +60,7 @@ interface ProductPreset {
   tagColor: string;
   borderActive: string;
   description: string;
-  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   durations: { label: string; days: number; price?: string }[];
   notePrefix: string;
   generateText: (code: string, buyerName: string, durationLabel: string) => string;
@@ -74,7 +75,7 @@ const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
     tagColor: 'bg-rose-50 text-rose-700 border-rose-200',
     borderActive: 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/40',
     description: 'Akses lifetime website ARRA 7/PICA, ARRA Cronos, dan ARRA Grok. Analisis saja, tanpa simulasi atau order broker otomatis.',
-    tier: 'VVIP',
+    tier: 'ALL_ACCESS',
     durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 229.000' }],
     notePrefix: '[ALL_ACCESS]',
     generateText: (code, buyerName, _) => {
@@ -199,7 +200,7 @@ Bonus akses akun PRO website dan channel VIP Anda langsung aktif!`;
     tagColor: 'bg-amber-50 text-amber-700 border-amber-200',
     borderActive: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/40',
     description: 'Akses penuh seluruh fitur platform: PICA Neural Lab, DOM ARRA, Analisis Market, Scanner Signal Real-time tanpa batas.',
-    tier: 'VVIP',
+    tier: 'ALL_ACCESS',
     durations: [
       { label: '1 Bulan (30 Hari)', days: 30, price: 'Rp 249.000' },
       { label: '3 Bulan (90 Hari)', days: 90, price: 'Rp 740.000' },
@@ -326,7 +327,7 @@ export default function LicenseKeyManager() {
   const [selectedDurationIndex, setSelectedDurationIndex] = useState<number>(0);
   const [buyerName, setBuyerName] = useState<string>('');
   const [buyerPhone, setBuyerPhone] = useState<string>('');
-  const [customTier, setCustomTier] = useState<'PRO' | 'VVIP'>('PRO');
+  const [customTier, setCustomTier] = useState<'WEBSITE_LIFETIME' | 'ALL_ACCESS' | 'ARRA_CRONOS'>('WEBSITE_LIFETIME');
   const [customDays, setCustomDays] = useState<number>(30);
   const [customNotes, setCustomNotes] = useState<string>('');
   const [genCount, setGenCount] = useState<number>(1);
@@ -449,7 +450,7 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
     setGenerating(true);
 
     try {
-      let tierToUse: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' = currentPreset.tier;
+      let tierToUse: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS' = currentPreset.tier;
       let durationDaysToUse = currentDuration.days;
       let noteToUse = '';
 
@@ -617,7 +618,7 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
 
               {/* Product Selector Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                {(Object.keys(PRODUCT_PRESETS) as ProductType[]).map((pKey) => {
+                {CURRENT_PRODUCT_TYPES.map((pKey) => {
                   const preset = PRODUCT_PRESETS[pKey];
                   const isSelected = selectedProduct === pKey;
                   return (
@@ -690,8 +691,9 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
                           onChange={(e) => setCustomTier(e.target.value as any)}
                           className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-900"
                         >
-                          <option value="PRO">PRO Access</option>
-                          <option value="VVIP">VVIP Access</option>
+                          <option value="WEBSITE_LIFETIME">Website Lifetime</option>
+                          <option value="ALL_ACCESS">Full Access Website + Cronos &amp; Grok</option>
+                          <option value="ARRA_CRONOS">ARRA Cronos + Grok</option>
                         </select>
                       </div>
                       <div>

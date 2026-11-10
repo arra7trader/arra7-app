@@ -88,7 +88,7 @@ function getTodayDate(): string {
 }
 
 // Default unlimited quota (when Turso is not configured or for admin)
-function getDefaultQuota(membership: Membership = 'VVIP'): QuotaStatus {
+function getDefaultQuota(membership: Membership = 'FULL_ACCESS'): QuotaStatus {
     return {
         membership,
         dailyLimit: Infinity,
@@ -200,7 +200,7 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     if (status.isTrialExpired) {
         return {
             allowed: false,
-            message: 'Masa trial Basic habis (2 hari). Upgrade ke Pro atau VVIP untuk akses unlimited.',
+            message: 'Masa akses Basic habis. Upgrade ke Website Lifetime atau Full Access untuk akses penuh.',
             quotaStatus: status,
         };
     }
@@ -209,11 +209,11 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
     const promoStatus = await checkUserPromo(userId);
 
     // Check pair restriction for BASIC (skip if promo is active)
-    const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(String(status.membership || '').toUpperCase());
-    if (pair && status.membership === 'BASIC' && !isVvipTier && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
+    const hasFullWebsiteAccess = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(String(status.membership || '').toUpperCase());
+    if (pair && status.membership === 'BASIC' && !hasFullWebsiteAccess && !promoStatus.hasPromo && !BASIC_ALLOWED_PAIRS.includes(pair.toUpperCase())) {
         return {
             allowed: false,
-            message: `Pair ${pair} tidak tersedia untuk paket BASIC. Basic hanya bisa analisa XAUUSD. Upgrade ke PRO untuk akses semua pairs.`,
+            message: `Pair ${pair} tidak tersedia untuk paket Basic. Basic hanya bisa analisa XAUUSD. Upgrade ke Website Lifetime atau Full Access untuk akses semua pair.`,
             quotaStatus: status,
         };
     }
@@ -244,21 +244,21 @@ export async function checkQuota(userId: string, timeframe: string, pair?: strin
 
     // Check timeframe restriction
     const allowedTfs = status.allowedTimeframes.map((t) => t.toLowerCase());
-    if (!isVvipTier && !allowedTfs.includes(timeframe.toLowerCase())) {
+    if (!hasFullWebsiteAccess && !allowedTfs.includes(timeframe.toLowerCase())) {
         return {
             allowed: false,
-            message: `Timeframe ${timeframe} tidak tersedia untuk paket ${status.membership}. Upgrade ke PRO untuk akses semua timeframe.`,
+            message: `Timeframe ${timeframe} tidak tersedia untuk paket ${status.membership}. Upgrade ke Website Lifetime atau Full Access untuk akses semua timeframe.`,
             quotaStatus: status,
         };
     }
 
     // Check quota
-    if (!isVvipTier && !status.canAnalyze) {
+    if (!hasFullWebsiteAccess && !status.canAnalyze) {
         const membershipLabel = String(status.membership || 'BASIC').toUpperCase();
         return {
             allowed: false,
             message: membershipLabel === 'BASIC'
-                ? 'Kuota harian Basic Anda sudah habis (1x per hari). Upgrade ke Pro atau VVIP untuk akses penuh.'
+                ? 'Kuota harian Basic Anda sudah habis. Upgrade ke Website Lifetime atau Full Access untuk akses penuh.'
                 : `Kuota harian paket ${membershipLabel} Anda sudah habis. Coba lagi besok atau hubungi admin jika ini tidak semestinya.`,
             quotaStatus: status,
         };
@@ -332,7 +332,7 @@ export interface StockQuotaStatus {
 }
 
 // Default unlimited stock quota
-function getDefaultStockQuota(membership: Membership = 'VVIP'): StockQuotaStatus {
+function getDefaultStockQuota(membership: Membership = 'FULL_ACCESS'): StockQuotaStatus {
     return {
         membership,
         dailyLimit: Infinity,
@@ -359,7 +359,9 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
             return getDefaultStockQuota('ADMIN');
         }
 
-        let dailyLimit = STOCK_QUOTA_LIMITS[membership as Membership] || STOCK_QUOTA_LIMITS.BASIC;
+        const normalizedMembership = memUpper === 'WEBSITE_LIFETIME' ? 'LIFETIME' : memUpper || 'BASIC';
+
+        let dailyLimit = STOCK_QUOTA_LIMITS[normalizedMembership as Membership] || STOCK_QUOTA_LIMITS.BASIC;
 
         const isTrialExpired = false;
 
@@ -383,7 +385,7 @@ export async function getStockQuotaStatus(userId: string): Promise<StockQuotaSta
         const remaining = dailyLimit === Infinity ? Infinity : Math.max(0, dailyLimit - used);
 
         return {
-            membership: membership as Membership,
+            membership: normalizedMembership as Membership,
             dailyLimit,
             used,
             remaining,
@@ -428,7 +430,7 @@ export async function checkStockQuota(userId: string): Promise<{
     if (status.isTrialExpired) {
         return {
             allowed: false,
-            message: 'Masa trial Basic habis (2 hari). Upgrade ke Pro atau VVIP untuk akses unlimited.',
+            message: 'Masa akses Basic habis. Upgrade ke Website Lifetime atau Full Access untuk akses penuh.',
             quotaStatus: status,
         };
     }
@@ -463,7 +465,7 @@ export async function checkStockQuota(userId: string): Promise<{
         return {
             allowed: false,
             message: membershipLabel === 'BASIC'
-                ? 'Kuota trial saham Basic Anda sudah habis. Upgrade ke Pro atau VVIP untuk akses penuh.'
+                ? 'Kuota analisis saham Basic Anda sudah habis. Upgrade ke Website Lifetime atau Full Access untuk akses penuh.'
                 : `Kuota analisa saham paket ${membershipLabel} Anda sudah habis. Coba lagi besok atau hubungi admin jika ini tidak semestinya.`,
             quotaStatus: status,
         };

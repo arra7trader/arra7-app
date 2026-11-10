@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 export interface LicenseKey {
   id?: number;
   code: string;
-  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   durationDays: number;
   isUsed: boolean;
   usedByDeviceId?: string;
@@ -17,7 +17,7 @@ export interface LicenseKey {
 
 export interface DeviceUser {
   deviceId: string;
-  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   tierExpiresAt?: string;
   activeLicenseCode?: string;
   firstSeenAt: string;
@@ -103,7 +103,7 @@ export async function ensureLicenseSchema(): Promise<boolean> {
 }
 
 // Generate a cryptographic, clean format license code: e.g. PICA-VVIP-7981-AB3F
-export function generateCodeString(tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' = 'VVIP'): string {
+export function generateCodeString(tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS' = 'ALL_ACCESS'): string {
   const hexPart1 = randomBytes(2).toString('hex').toUpperCase(); // 4 chars
   const hexPart2 = randomBytes(2).toString('hex').toUpperCase(); // 4 chars
   return `PICA-${tier}-${hexPart1}-${hexPart2}`;
@@ -111,7 +111,7 @@ export function generateCodeString(tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_
 
 // Admin function: Create one or multiple license keys
 export async function createLicenseKeys(params: {
-  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   durationDays: number;
   count?: number;
   notes?: string;
@@ -146,7 +146,7 @@ export async function redeemLicenseKey(params: {
 }): Promise<{
   success: boolean;
   message: string;
-  tier?: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier?: 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   expiresAt?: string;
   durationDays?: number;
 }> {
@@ -177,7 +177,7 @@ export async function redeemLicenseKey(params: {
   const row = keyResult.rows[0];
   const isUsed = Number(row.is_used) === 1;
   const usedByDeviceId = (row.used_by_device_id as string) || '';
-  const tier = (row.tier as 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS') || 'VVIP';
+  const tier = (row.tier as 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS') || 'ALL_ACCESS';
   const durationDays = Number(row.duration_days) || 30;
 
   // 2. Anti-reuse validation
@@ -261,7 +261,7 @@ export async function redeemLicenseKey(params: {
 // Get device status & automatically handle expiration
 export async function getDeviceStatus(deviceId: string): Promise<{
   deviceId: string;
-  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS';
   tierExpiresAt: string | null;
   isExpired: boolean;
   daysLeft: number;
@@ -297,7 +297,7 @@ export async function getDeviceStatus(deviceId: string): Promise<{
   }
 
   const row = result.rows[0];
-  let tier = (row.tier as 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS') || 'BASIC';
+  let tier = (row.tier as 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS') || 'BASIC';
   const tierExpiresAt = (row.tier_expires_at as string) || null;
   const activeLicenseCode = (row.active_license_code as string) || null;
 
@@ -392,7 +392,7 @@ export async function listLicenseKeys(limit: number = 100): Promise<LicenseKey[]
   return (result.rows || []).map((row: any) => ({
     id: Number(row.id),
     code: String(row.code),
-    tier: row.tier as 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS',
+    tier: row.tier as 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS',
     durationDays: Number(row.duration_days),
     isUsed: Number(row.is_used) === 1,
     usedByDeviceId: (row.used_by_device_id as string) || undefined,
@@ -417,7 +417,7 @@ export async function listTrackedDevices(limit: number = 100): Promise<DeviceUse
 
   return (result.rows || []).map((row: any) => ({
     deviceId: String(row.device_id),
-    tier: (row.tier as 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS') || 'BASIC',
+    tier: (row.tier as 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS') || 'BASIC',
     tierExpiresAt: (row.tier_expires_at as string) || undefined,
     activeLicenseCode: (row.active_license_code as string) || undefined,
     firstSeenAt: String(row.first_seen_at),

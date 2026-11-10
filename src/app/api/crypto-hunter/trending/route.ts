@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTrendingTokens } from '@/lib/crypto-hunter/scanner';
 import type { ChainType } from '@/lib/crypto-hunter/types';
 import { recordCryptoTokenBatch } from '@/lib/crypto-hunter/persistent-tracker';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await resolveUserOrDevice(request);
+    if (!user.isAdmin && !user.isFullAccess) {
+      return NextResponse.json({ success: false, error: 'Crypto Hunter tersedia untuk pemilik akses Website Lifetime atau Full Access.' }, { status: 403 });
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const rawChain = searchParams.get('chain') || 'solana';
     const supportedChains: ChainType[] = ['solana', 'base', 'ethereum', 'bsc'];

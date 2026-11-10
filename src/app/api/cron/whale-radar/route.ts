@@ -43,12 +43,12 @@ export async function GET(request: Request) {
         // 3. Check for recent alerts to avoid spam (Simple distinct check needed in DB ideally, but for MVP we send)
         // Optimization: In V2, store "last_alert_price" in DB to prevent duplicate alerts for same zone
 
-        // 4. Get all linked VVIP users
+        // 4. Get all linked Website Lifetime / Full Access users
         const usersRes = await turso.execute(`
             SELECT tu.chat_id, u.name 
             FROM telegram_users tu
             JOIN users u ON tu.user_id = u.id
-            WHERE u.membership IN ('VVIP', 'PRO', 'ADMIN')
+            WHERE u.membership IN ('VVIP', 'PRO', 'LIFETIME', 'WEBSITE_LIFETIME', 'PROMO_125K', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN')
         `);
 
         // 5. Broadcast Alert

@@ -4,6 +4,9 @@ import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { LockIcon } from '@/components/PremiumIcons'; // Using existing icons if available, otherwise will need to create/import
+import { isAdminUser } from '@/lib/admin-access';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 
 // Fallback icon if not available
 const LockIconFallback = ({ className }: { className?: string }) => (
@@ -23,15 +26,16 @@ export default function PremiumGuard({
     children,
     minTier = 'PRO',
     title = 'Premium Feature',
-    description = 'This feature is available exclusively for PRO and VVIP members.'
+    description = 'Fitur ini tersedia untuk pemilik akses Website Lifetime dan Full Access.'
 }: PremiumGuardProps) {
     const { data: session, status } = useSession();
-    const loading = status === 'loading';
-    const userTier = session?.user?.tier || 'BASIC';
+    const device = usePicaDevice();
+    const loading = status === 'loading' || device.isLoading;
+    const userTier = session?.user?.tier || (session?.user as any)?.membership || 'BASIC';
 
     // Check access
     const hasAccess = () => {
-        if (userTier === 'VVIP') return true;
+        if (isAdminUser(session?.user) || device.hasFullWebsiteAccess || hasFullWebsiteAccess(userTier)) return true;
         if (minTier === 'PRO' && userTier === 'PRO') return true;
         return false;
     };
@@ -77,7 +81,7 @@ export default function PremiumGuard({
                     <div className="space-y-3">
                         <Link href="/pricing" className="block w-full">
                             <button className="btn-primary w-full py-3 text-base shadow-lg shadow-blue-500/20">
-                                Upgrade to Unlock
+                                Lihat Paket Website
                             </button>
                         </Link>
                         <Link href="/" className="block w-full">

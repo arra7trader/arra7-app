@@ -2,6 +2,7 @@ import { hasAnyAIProviderConfigured } from '@/lib/ai-provider';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -9,15 +10,16 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        const userEmail = session?.user?.email || 'unknown';
-        const userTier = session?.user?.tier || 'GUEST';
+        const user = await resolveUserOrDevice(req);
+        const userEmail = session?.user?.email || user.email || 'unknown';
+        const userTier = user.membership || 'GUEST';
 
         // Strict VVIP Check
         console.log(`[VVIP Chat] User: ${userEmail} | Tier: ${userTier}`);
 
-        if (userTier !== 'VVIP') {
+        if (!user.isAdmin && !user.isFullAccess) {
             console.warn('[VVIP Chat] Unauthorized access attempt.');
-            return NextResponse.json({ error: 'Akses khusus VVIP aktif.' }, { status: 403 });
+            return NextResponse.json({ error: 'Fitur ini tersedia untuk pemilik Website Lifetime atau Full Access.' }, { status: 403 });
         }
 
         // Validate AI providers (Cerebras/Groq pool).

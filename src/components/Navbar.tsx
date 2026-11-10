@@ -356,22 +356,22 @@ export default function Navbar() {
                                 <button
                                     onClick={openActivation}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                                    title="Status: VVIP Member"
+                                    title="Status: akses website aktif"
                                 >
                                     <CrownIcon size="xs" className="text-amber-600" />
-                                    <span className="hidden xs:inline">{tier === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME' : tier === 'LIFETIME' ? 'FULL ACCESS LIFETIME' : 'VVIP MEMBER'}</span>
-                                    <span className="xs:hidden">{tier === 'WEBSITE_LIFETIME' ? 'LIFETIME' : tier === 'LIFETIME' ? 'FULL' : 'VVIP'}</span>
+                                    <span className="hidden xs:inline">{tier === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME' : 'FULL WEBSITE ACCESS'}</span>
+                                    <span className="xs:hidden">{tier === 'WEBSITE_LIFETIME' ? 'LIFETIME' : 'FULL ACCESS'}</span>
                                     <span className="text-[10px] text-amber-700 font-medium">({daysLeft}h)</span>
                                 </button>
                             ) : isPro ? (
                                 <button
                                     onClick={openActivation}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                                    title="Status: PRO Member"
+                                    title="Status: paket website aktif"
                                 >
                                     <BoltIcon size="xs" className="text-blue-600" />
-                                    <span className="hidden xs:inline">PRO MEMBER</span>
-                                    <span className="xs:hidden">PRO</span>
+                                    <span className="hidden xs:inline">WEBSITE ACCESS</span>
+                                    <span className="xs:hidden">ACTIVE</span>
                                     <span className="text-[10px] text-blue-700 font-medium">({daysLeft}h)</span>
                                 </button>
                             ) : (

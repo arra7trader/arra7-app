@@ -90,8 +90,8 @@ export default function AdminDashboard() {
     };
 
     const handleBulkUpgrade = async () => {
-        const membership = prompt('Enter membership level (PRO/VVIP/BASIC):', 'PRO');
-        if (!membership || !['PRO', 'VVIP', 'BASIC'].includes(membership.toUpperCase())) return;
+        const membership = prompt('Paket (WEBSITE_LIFETIME/ALL_ACCESS/ARRA_CRONOS/BASIC):', 'WEBSITE_LIFETIME');
+        if (!membership || !['WEBSITE_LIFETIME', 'ALL_ACCESS', 'ARRA_CRONOS', 'BASIC'].includes(membership.toUpperCase())) return;
 
         try {
             const res = await fetch('/api/admin/users/bulk', {
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
                 body: JSON.stringify({
                     action: 'upgrade',
                     userIds: selectedUserIds,
-                    data: { membership: membership.toUpperCase(), duration: 30 }
+                    data: { membership: membership.toUpperCase(), duration: membership.toUpperCase() === 'BASIC' ? 0 : 9999 }
                 })
             });
             const data = await res.json();
@@ -285,8 +285,8 @@ export default function AdminDashboard() {
     };
 
     const handleUpdateMembership = async (user: User, membership: string) => {
-        // If downgrading to BASIC, skip modal and update directly
-        if (membership === 'BASIC') {
+        // Assign current packages directly; legacy PRO/VVIP accounts retain the duration workflow.
+        if (membership === 'BASIC' || ['WEBSITE_LIFETIME', 'ALL_ACCESS', 'ARRA_CRONOS'].includes(membership)) {
             setUpdating(user.id);
             setMessage(null);
 
@@ -294,13 +294,13 @@ export default function AdminDashboard() {
                 const response = await fetch('/api/admin/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id, membership: 'BASIC' }),
+                    body: JSON.stringify({ userId: user.id, membership, durationDays: membership === 'BASIC' ? 0 : 9999 }),
                 });
 
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    setMessage({ type: 'success', text: `✅ ${user.name} berhasil di-downgrade ke BASIC` });
+                    setMessage({ type: 'success', text: `✅ ${user.name} berhasil diperbarui ke ${membership}` });
                     fetchUsers();
                 } else {
                     setMessage({ type: 'error', text: data.message });

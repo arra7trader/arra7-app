@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTokenSecurity, checkRugcheck, getDefaultSecurity } from '@/lib/crypto-hunter/goplus-security';
 import type { ChainType } from '@/lib/crypto-hunter/types';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await resolveUserOrDevice(request);
+    if (!user.isAdmin && !user.isFullAccess) {
+      return NextResponse.json({ success: false, error: 'Crypto Hunter tersedia untuk pemilik akses Website Lifetime atau Full Access.' }, { status: 403 });
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const rawChain = searchParams.get('chain') || 'solana';
     const supportedChains: ChainType[] = ['solana', 'base', 'ethereum', 'bsc'];

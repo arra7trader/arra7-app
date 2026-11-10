@@ -14,7 +14,7 @@ export default function VvipAssistantPage() {
                     {/* Header Section */}
                     <div>
                         <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">
-                            VVIP Pro Dashboard
+                            Full Access Market Dashboard
                         </h1>
                         <p className="text-[var(--text-secondary)] text-lg">
                             Institutional-grade market analysis & tools.

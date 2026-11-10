@@ -27,8 +27,9 @@ Gunakan link ini persis seperti yang tertulis:
 1.  **PICA Neural Lab & Analisa Market:** (Bi-LSTM Model, Forex AI, Stock IDX, Order Flow).
 2.  **Membership & Harga:**
     - **BASIC:** Gratis selamanya.
-    - **PRO:** Rp 99.000/bulan (Promo).
-    - **VVIP:** Rp 249.000/bulan (Akses Eksklusif Neural Lab Real-time).
+    - **Website Lifetime:** Rp 125.000 sekali bayar untuk akses fitur website PICA.
+    - **ARRA Cronos + Grok:** Rp 150.000 sekali bayar untuk akses kedua terminal.
+    - **Full Access:** Rp 229.000 sekali bayar untuk akses website, ARRA Cronos, dan ARRA Grok.
 3.  **Aplikasi Teknis:** (Login, Download, Setup).
 
 **⛔ BLACKLIST (TOLAK HALUS):**

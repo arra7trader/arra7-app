@@ -6,25 +6,19 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 import { FIBO_KYOKO_TRADINGVIEW_SCRIPT } from '@/lib/fibo-kyoko-script';
 import { KeyIcon, LockIcon, FilmIcon, BoltIcon, ChartIcon, TrendUpIcon, PlayIcon, FolderIcon, CheckIcon, DownloadIcon, ClipboardIcon, CheckCircleIcon, ShieldCheckIcon } from '@/components/PremiumIcons';
 
 export default function KursusFiboKyokoPage() {
     const { data: session } = useSession();
-    const { tier, daysLeft, openActivation } = usePicaDevice();
+    const { tier, daysLeft, openActivation, hasFullWebsiteAccess: deviceHasFullWebsiteAccess } = usePicaDevice();
 
     const isAdmin = isAdminUser(session?.user);
-    const isUnlocked = 
-        isAdmin ||
-        tier === 'PRO' || 
-        tier === 'VVIP' || 
-        tier === 'LIFETIME' ||
-        tier === 'WEBSITE_LIFETIME' ||
-        session?.user?.tier === 'PRO' || 
-        session?.user?.tier === 'VVIP' || 
-        session?.user?.tier === 'LIFETIME' ||
-        session?.user?.tier === 'WEBSITE_LIFETIME' ||
-        isAdminEmail(session?.user?.email);
+    const isUnlocked = isAdmin ||
+        isAdminEmail(session?.user?.email) ||
+        deviceHasFullWebsiteAccess ||
+        hasFullWebsiteAccess(tier, session?.user?.tier, (session?.user as any)?.membership);
 
     const [activeTab, setActiveTab] = useState<'video' | 'mt5' | 'tradingview'>('video');
     const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
@@ -92,7 +86,7 @@ export default function KursusFiboKyokoPage() {
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-xs mb-3 border border-blue-200">
                             <TrendUpIcon size="xs" className="text-blue-600" />
                             <span>Masterclass Eksklusif PICA</span>
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white">PRO</span>
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white">FULL ACCESS</span>
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                             Kursus Digital Fibo Kyoko
@@ -105,7 +99,7 @@ export default function KursusFiboKyokoPage() {
                     {isUnlocked ? (
                         <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>AKSES PRO AKTIF</span>
+                            <span>AKSES WEBSITE AKTIF</span>
                             {daysLeft > 0 && <span className="text-emerald-600 font-medium">({daysLeft} hari lagi)</span>}
                         </div>
                     ) : (
@@ -263,7 +257,7 @@ export default function KursusFiboKyokoPage() {
                                         </div>
                                         <div className="flex items-center gap-1.5 text-amber-300 font-semibold uppercase tracking-wider text-[10px]">
                                             <LockIcon size="xs" className="text-amber-400" />
-                                            <span>Member PRO Eksklusif</span>
+                                            <span>Akses Eksklusif Website</span>
                                         </div>
                                     </div>
 

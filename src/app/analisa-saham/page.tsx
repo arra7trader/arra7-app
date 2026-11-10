@@ -207,13 +207,13 @@ export default function AnalisaSahamPage() {
                     >
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${quota.membership === 'VVIP'
+                                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${['VVIP', 'FULL_ACCESS', 'ALL_ACCESS', 'LIFETIME', 'WEBSITE_LIFETIME', 'ADMIN'].includes(String(quota.membership).toUpperCase())
                                     ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                     : quota.membership === 'PRO'
                                         ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                         : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                     }`}>
-                                    {quota.membership}
+                                    {['VVIP', 'FULL_ACCESS', 'ALL_ACCESS', 'LIFETIME'].includes(String(quota.membership).toUpperCase()) ? 'FULL ACCESS' : quota.membership === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME' : quota.membership === 'PRO' ? 'WEBSITE ACCESS' : quota.membership === 'ADMIN' ? 'ADMIN' : quota.membership}
                                 </div>
                                 <span className="text-sm text-[var(--text-secondary)]">Quota Analisa Saham Hari Ini</span>
                             </div>

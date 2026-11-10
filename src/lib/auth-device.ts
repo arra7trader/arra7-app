@@ -4,11 +4,12 @@ import { resolveMobileUserFromRequest } from '@/lib/mobile-session';
 import { getDeviceStatus } from '@/lib/license';
 import getTursoClient, { getUserMembership } from '@/lib/turso';
 import { isAdminEmail } from '@/lib/admin-access';
+import { hasArraCronosAccess as tierHasArraCronosAccess, hasFullWebsiteAccess } from '@/lib/membership-access';
 import { createHash } from 'crypto';
 
 export interface ResolvedUser {
     userId: string;
-    membership: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS';
+    membership: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS' | 'FULL_ACCESS' | 'ADMIN';
     isDevice: boolean;
     isFullAccess: boolean;
     hasArraCronosAccess: boolean;
@@ -16,7 +17,7 @@ export interface ResolvedUser {
     isAdmin?: boolean;
 }
 
-const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
+const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K'];
 
 /**
  * Resolves user identity without forcing login.
@@ -51,7 +52,7 @@ export async function resolveUserOrDevice(
     }
 
     // Check device tier from database if deviceId exists
-    let deviceTier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' = 'BASIC';
+    let deviceTier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS' | 'FULL_ACCESS' = 'BASIC';
     let tierExpiresAt: string | null = null;
     if (deviceId) {
         try {
@@ -59,7 +60,7 @@ export async function resolveUserOrDevice(
             if (devStatus && devStatus.tier) {
                 const upper = String(devStatus.tier).toUpperCase();
                 if (FULL_ACCESS_TIERS.includes(upper)) {
-                    deviceTier = 'VVIP';
+                    deviceTier = upper as typeof deviceTier;
                 } else if (upper === 'WEBSITE_LIFETIME') {
                     deviceTier = 'WEBSITE_LIFETIME';
                 } else if (upper === 'LIFETIME') {
@@ -83,19 +84,18 @@ export async function resolveUserOrDevice(
         const session = await getServerSession(authOptions);
         if (session?.user?.id) {
             const email = session.user.email || '';
-            const isAdmin = isAdminEmail(email) || (session.user as any)?.role === 'ADMIN' || (session.user as any)?.isAdmin === true;
+            let isAdmin = isAdminEmail(email) || (session.user as any)?.role === 'ADMIN' || (session.user as any)?.isAdmin === true || String((session.user as any)?.tier || '').toUpperCase() === 'ADMIN';
             const sessionTier = String((session.user as any)?.tier || '').toUpperCase();
             const { membership } = await getUserMembership(session.user.id);
             const userMemUpper = String(membership || '').toUpperCase();
+            if (userMemUpper === 'ADMIN') isAdmin = true;
 
-            let finalMembership: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS' = 'BASIC';
-            if (
-                isAdmin ||
-                FULL_ACCESS_TIERS.includes(userMemUpper) ||
-                FULL_ACCESS_TIERS.includes(sessionTier) ||
-                FULL_ACCESS_TIERS.includes(deviceTier)
-            ) {
-                finalMembership = 'VVIP';
+            let finalMembership: ResolvedUser['membership'] = 'BASIC';
+            const fullAccessTier = [userMemUpper, sessionTier, deviceTier].find((tier) => FULL_ACCESS_TIERS.includes(tier));
+            if (isAdmin) {
+                finalMembership = 'ADMIN';
+            } else if (fullAccessTier) {
+                finalMembership = fullAccessTier as ResolvedUser['membership'];
             } else if (userMemUpper === 'LIFETIME' || sessionTier === 'LIFETIME' || deviceTier === 'LIFETIME') {
                 finalMembership = 'LIFETIME';
             } else if (userMemUpper === 'WEBSITE_LIFETIME' || sessionTier === 'WEBSITE_LIFETIME' || deviceTier === 'WEBSITE_LIFETIME') {
@@ -107,7 +107,7 @@ export async function resolveUserOrDevice(
             }
 
             // If user has full access on their device, sync to users table
-            if ((finalMembership === 'VVIP' || finalMembership === 'LIFETIME' || finalMembership === 'WEBSITE_LIFETIME') && userMemUpper !== finalMembership) {
+            if (!isAdmin && hasFullWebsiteAccess(finalMembership) && userMemUpper !== finalMembership) {
                 const turso = getTursoClient();
                 if (turso) {
                     await turso.execute({
@@ -121,13 +121,10 @@ export async function resolveUserOrDevice(
                 userId: session.user.id,
                 membership: finalMembership,
                 isDevice: false,
-                isFullAccess: ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME'].includes(finalMembership),
+                isFullAccess: isAdmin || hasFullWebsiteAccess(finalMembership),
                 email,
                 isAdmin,
-                hasArraCronosAccess: isAdmin ||
-                    ['PRO', 'VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ARRA_CRONOS'].includes(userMemUpper) ||
-                    ['PRO', 'VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ARRA_CRONOS'].includes(sessionTier) ||
-                    ['PRO', 'VVIP', 'LIFETIME', 'PROMO_125K', 'ARRA_CRONOS'].includes(deviceTier),
+                hasArraCronosAccess: isAdmin || tierHasArraCronosAccess(userMemUpper, sessionTier, deviceTier),
             };
         }
     } catch (err) {
@@ -142,9 +139,13 @@ export async function resolveUserOrDevice(
         if (mobileUser?.userId) {
             const { membership } = await getUserMembership(mobileUser.userId);
             const userMemUpper = String(membership || '').toUpperCase();
-            let finalMembership: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'ARRA_CRONOS' = 'BASIC';
-            if (FULL_ACCESS_TIERS.includes(userMemUpper) || FULL_ACCESS_TIERS.includes(deviceTier)) {
-                finalMembership = 'VVIP';
+            const isMobileAdmin = isAdminEmail(mobileUser.email) || userMemUpper === 'ADMIN';
+            let finalMembership: ResolvedUser['membership'] = 'BASIC';
+            const fullAccessTier = [userMemUpper, deviceTier].find((tier) => FULL_ACCESS_TIERS.includes(tier));
+            if (isMobileAdmin) {
+                finalMembership = 'ADMIN';
+            } else if (fullAccessTier) {
+                finalMembership = fullAccessTier as ResolvedUser['membership'];
             } else if (userMemUpper === 'LIFETIME' || deviceTier === 'LIFETIME') {
                 finalMembership = 'LIFETIME';
             } else if (userMemUpper === 'WEBSITE_LIFETIME' || deviceTier === 'WEBSITE_LIFETIME') {
@@ -159,11 +160,10 @@ export async function resolveUserOrDevice(
                 userId: mobileUser.userId,
                 membership: finalMembership,
                 isDevice: false,
-                isFullAccess: ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME'].includes(finalMembership),
+                isFullAccess: hasFullWebsiteAccess(finalMembership),
                 email: mobileUser.email,
-                hasArraCronosAccess:
-                    ['PRO', 'VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ARRA_CRONOS'].includes(userMemUpper) ||
-                    ['PRO', 'VVIP', 'LIFETIME', 'PROMO_125K', 'ARRA_CRONOS'].includes(deviceTier),
+                isAdmin: isMobileAdmin,
+                hasArraCronosAccess: tierHasArraCronosAccess(userMemUpper, deviceTier),
             };
         }
     } catch (err) {
@@ -183,19 +183,15 @@ export async function resolveUserOrDevice(
     try {
         const turso = getTursoClient();
         if (turso) {
-            const deviceMembership = deviceTier === 'ARRA_CRONOS'
-                ? 'BASIC'
-                : deviceTier === 'PROMO_125K' || deviceTier === 'LIFETIME'
-                    ? 'VVIP'
-                    : deviceTier;
+            const deviceMembership = deviceTier === 'ARRA_CRONOS' ? 'BASIC' : deviceTier;
             await turso.execute({
                 sql: `INSERT INTO users (id, email, name, membership, membership_expires)
                       VALUES (?, ?, ?, ?, ?)
                       ON CONFLICT(id) DO UPDATE SET
                         membership = CASE 
-                          WHEN excluded.membership = 'VVIP' THEN 'VVIP'
-                          WHEN excluded.membership = 'WEBSITE_LIFETIME' AND users.membership NOT IN ('VVIP', 'PRO') THEN 'WEBSITE_LIFETIME'
-                          WHEN excluded.membership = 'PRO' AND users.membership != 'VVIP' THEN 'PRO' 
+                          WHEN excluded.membership IN ('ALL_ACCESS', 'FULL_ACCESS', 'LIFETIME', 'PROMO_125K', 'VVIP') THEN excluded.membership
+                          WHEN excluded.membership = 'WEBSITE_LIFETIME' AND users.membership NOT IN ('ALL_ACCESS', 'FULL_ACCESS', 'LIFETIME', 'PROMO_125K', 'VVIP', 'PRO') THEN 'WEBSITE_LIFETIME'
+                          WHEN excluded.membership = 'PRO' AND users.membership NOT IN ('ALL_ACCESS', 'FULL_ACCESS', 'LIFETIME', 'PROMO_125K', 'VVIP') THEN 'PRO'
                           ELSE users.membership 
                         END,
                         membership_expires = COALESCE(excluded.membership_expires, users.membership_expires)`,
@@ -214,11 +210,9 @@ export async function resolveUserOrDevice(
 
     return {
         userId: deviceId,
-        membership: deviceTier === 'PROMO_125K'
-                ? 'VVIP'
-                : deviceTier,
+        membership: deviceTier,
         isDevice: true,
-        isFullAccess: ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'PROMO_125K'].includes(deviceTier),
-        hasArraCronosAccess: ['PRO', 'VVIP', 'LIFETIME', 'PROMO_125K', 'ARRA_CRONOS'].includes(deviceTier),
+        isFullAccess: hasFullWebsiteAccess(deviceTier),
+        hasArraCronosAccess: tierHasArraCronosAccess(deviceTier),
     };
 }

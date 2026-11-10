@@ -390,8 +390,8 @@ function BlockedView({ reason }: { reason: string }) {
 
                         <p className="body-lg text-[var(--text-secondary)] mb-8">
                             {isExpired
-                                ? 'Masa trial 3 hari Anda telah habis. Upgrade ke akun PRO untuk melanjutkan akses ke Bookmap PICA dan fitur premium lainnya.'
-                                : 'Fitur Bookmap PICA hanya tersedia untuk pengguna PRO dan VVIP.'}
+                                ? 'Masa trial DOM ARRA Anda telah habis. Website Lifetime membuka kembali akses DOM ARRA dan fitur website lainnya.'
+                                : 'DOM ARRA tersedia dengan paket Website Lifetime atau Full Access.'}
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -404,9 +404,9 @@ function BlockedView({ reason }: { reason: string }) {
                                 </ul>
                             </div>
                             <div className="p-4 bg-blue-500/10 border-blue-500/20 border border-blue-500/20 rounded-xl text-left">
-                                <h4 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">PRO <span className="text-xs bg-blue-200 text-blue-400 px-2 py-0.5 rounded-full">Recommended</span></h4>
+                                <h4 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">WEBSITE LIFETIME <span className="text-xs bg-blue-200 text-blue-400 px-2 py-0.5 rounded-full">RECOMMENDED</span></h4>
                                 <ul className="text-sm space-y-2 text-blue-400">
-                                    <li className="flex items-center gap-2">✅ Analisa Market Premium</li>
+                                    <li className="flex items-center gap-2">✅ Semua fitur website PICA</li>
                                     <li className="flex items-center gap-2">✅ Bookmap PICA Unlimited</li>
                                     <li className="flex items-center gap-2">✅ Whale Alerts Real-time</li>
                                 </ul>
@@ -416,7 +416,7 @@ function BlockedView({ reason }: { reason: string }) {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link href="/pricing">
                                 <button className="btn-primary w-full sm:w-auto">
-                                    Upgrade Sekarang
+                                    Lihat Paket Website
                                 </button>
                             </Link>
                             <Link href="/">

@@ -156,7 +156,7 @@ async function getVvipRecipients(): Promise<string[]> {
         sql: `
             SELECT telegram_chat_id
             FROM users
-            WHERE membership = 'VVIP'
+            WHERE membership IN ('VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'PROMO_125K', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN')
               AND telegram_chat_id IS NOT NULL
               AND TRIM(telegram_chat_id) != ''
         `,

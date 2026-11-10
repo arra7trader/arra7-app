@@ -9,16 +9,24 @@ export async function GET(request: Request) {
 
         // Check if Turso is configured
         if (!process.env.TURSO_DATABASE_URL) {
-            // Return unlimited quota if no database
+            const isFullAccess = user.isAdmin || user.isFullAccess;
+            const membership = user.isAdmin
+                ? 'ADMIN'
+                : user.isFullAccess
+                    ? user.hasArraCronosAccess ? 'ALL_ACCESS' : 'WEBSITE_LIFETIME'
+                    : user.membership;
+            const dailyLimit = isFullAccess ? -1 : user.membership === 'PRO' ? 25 : 1;
             return NextResponse.json({
                 status: 'success',
                 quota: {
-                    membership: 'VVIP',
-                    dailyLimit: -1, // -1 means unlimited
+                    membership,
+                    dailyLimit,
                     used: 0,
-                    remaining: -1, // -1 means unlimited  
+                    remaining: isFullAccess ? -1 : dailyLimit,
                     canAnalyze: true,
-                    allowedTimeframes: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+                    allowedTimeframes: isFullAccess || user.membership === 'PRO'
+                        ? ['1m', '5m', '15m', '30m', '1h', '4h', '1d']
+                        : ['5m', '15m'],
                 },
             });
         }
@@ -30,8 +38,13 @@ export async function GET(request: Request) {
         let effectiveRemaining = quotaStatus.remaining;
         let effectiveTimeframes = quotaStatus.allowedTimeframes;
 
-        if (user.membership === 'VVIP' || user.isFullAccess) {
-            effectiveMembership = 'VVIP' as any;
+        if (user.isAdmin) {
+            effectiveMembership = 'ADMIN' as any;
+            effectiveLimit = -1;
+            effectiveRemaining = -1;
+            effectiveTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+        } else if (user.isFullAccess) {
+            effectiveMembership = user.hasArraCronosAccess ? 'ALL_ACCESS' as any : 'WEBSITE_LIFETIME' as any;
             effectiveLimit = -1;
             effectiveRemaining = -1;
             effectiveTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];

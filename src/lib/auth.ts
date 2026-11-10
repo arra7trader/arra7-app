@@ -35,7 +35,7 @@ export const authOptions: NextAuthOptions = {
                         id: 'admin_master_1',
                         name: 'PICA Administrator',
                         email: chosenEmail,
-                        tier: 'VVIP',
+                        tier: 'ADMIN',
                     };
                 }
                 return null;
@@ -85,7 +85,7 @@ export const authOptions: NextAuthOptions = {
 
                 // Configured admin accounts always receive Crypto Hunter full access.
                 if (isAdmin) {
-                    session.user.tier = 'VVIP';
+                    session.user.tier = 'ADMIN';
                     session.user.isAdmin = true;
                     (session.user as any).role = 'ADMIN';
                     return session;
@@ -97,9 +97,7 @@ export const authOptions: NextAuthOptions = {
                         const { getUserMembership, getUserSubscription } = await import('./turso');
                         const { membership, expiresAt } = await getUserMembership(token.sub);
                         const subscription = await getUserSubscription(token.sub);
-                        session.user.tier = (membership === 'LIFETIME' || membership === 'WEBSITE_LIFETIME' || membership === 'ARRA_CRONOS'
-                            ? membership
-                            : membership as 'BASIC' | 'PRO' | 'VVIP') || 'BASIC';
+                        session.user.tier = membership as typeof session.user.tier || 'BASIC';
 
                         if (expiresAt) {
                             session.user.membershipExpires = expiresAt.toISOString();
@@ -133,7 +131,7 @@ export const authOptions: NextAuthOptions = {
             if (isAdminEmail(email) || (user as any)?.isAdmin || (user as any)?.role === 'ADMIN') {
                 (token as any).isAdmin = true;
                 (token as any).role = 'ADMIN';
-                token.tier = 'VVIP';
+                token.tier = 'ADMIN';
             }
             return token;
         },

@@ -5,6 +5,7 @@ import { checkStockQuota, useStockQuota } from '@/lib/quota';
 import { analyzeWithGroq } from '@/lib/groq-ai';
 import { getPredictor } from '@/lib/smart-predictor';
 import { formatMarketDataForAI, MarketData } from '@/lib/market-data';
+import { isAdminUser } from '@/lib/admin-access';
 
 export async function POST(request: NextRequest) {
     try {
@@ -50,8 +51,9 @@ export async function POST(request: NextRequest) {
         const userSessionId = userId;
 
         // Check stock quota
-        const quotaCheck = await checkStockQuota(userSessionId);
-        if (!quotaCheck.allowed) {
+        const isAdmin = isAdminUser(session?.user);
+        const quotaCheck = isAdmin ? null : await checkStockQuota(userSessionId);
+        if (quotaCheck && !quotaCheck.allowed) {
             return NextResponse.json(
                 {
                     status: 'error',
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Use quota after successful analysis
-        await useStockQuota(userSessionId);
+        if (!isAdmin) await useStockQuota(userSessionId);
 
         // Save to history
         try {

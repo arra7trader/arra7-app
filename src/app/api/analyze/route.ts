@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Check quota (only if Turso is configured)
-        if (process.env.TURSO_DATABASE_URL) {
+        if (process.env.TURSO_DATABASE_URL && !user.isAdmin) {
             const quotaCheck = await checkQuota(userId, timeframe, pair);
 
             if (!quotaCheck.allowed) {
@@ -574,7 +574,7 @@ export async function POST(request: NextRequest) {
             const isTradableSignal = directionRaw === 'BUY' || directionRaw === 'SELL';
 
             if (isTradableSignal) {
-                await consumeQuota(userId);
+                if (!user.isAdmin) await consumeQuota(userId);
                 quotaCharged = true;
             }
 

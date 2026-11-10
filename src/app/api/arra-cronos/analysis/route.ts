@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         let userId: string | null = null;
         // Quota check only if specifically configured
         if (
+            !user.isAdmin &&
             process.env.ARRA_CRONOS_REQUIRE_QUOTA === 'true' &&
             process.env.TURSO_DATABASE_URL &&
             user.membership !== 'ARRA_CRONOS' &&

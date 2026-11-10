@@ -1,7 +1,7 @@
 import GoldHeatmap from '@/components/vvip/GoldHeatmap';
 
 export const metadata = {
-    title: 'XAUUSD Probability Heatmap | ARRA7 VVIP',
+    title: 'XAUUSD Probability Heatmap | ARRA7',
     description: 'Real-time probability zones for Gold trading powered by Swissquote data and LSTM models.',
 };
 

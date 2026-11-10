@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getPrivateBotMembershipByUserId, getUserMembership, getUserSubscription } from '@/lib/turso';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
     const privateBot = await getPrivateBotMembershipByUserId(userId);
     const subscription = await getUserSubscription(userId);
     const telegramChatId = subscription.telegramChatId || null;
-    const isVvipActive = membership === 'VVIP';
+    const isVvipActive = hasFullWebsiteAccess(membership);
     const isPrivateBotActive =
       !!privateBot &&
       privateBot.status === 'active' &&

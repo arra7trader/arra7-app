@@ -2,16 +2,18 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
+import { hasArraCronosAccess, hasFullWebsiteAccess } from '@/lib/membership-access';
 
 export interface PicaDeviceState {
   deviceId: string;
-  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS';
+  tier: 'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS' | 'FULL_ACCESS';
   tierExpiresAt: string | null;
   daysLeft: number;
   isExpired: boolean;
   isLoading: boolean;
   isVvip: boolean;
   isPro: boolean;
+  hasFullWebsiteAccess: boolean;
   isArraCronos: boolean;
   isActivationOpen: boolean;
   openActivation: () => void;
@@ -32,20 +34,19 @@ function getOrCreateDeviceId(): string {
     // Generate persistent UUID
     const randomPart = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
     id = `pica_dev_${randomPart}`;
-    try {
-      localStorage.setItem(storageKey, id);
-      document.cookie = `pica_device_id=${id}; path=/; max-age=315360000; SameSite=Lax`;
-    } catch (e) {
-      console.warn('Storage quota or private mode', e);
-    }
+    try { localStorage.setItem(storageKey, id); }
+    catch (e) { console.warn('Storage quota or private mode', e); }
   }
+
+  try { document.cookie = `pica_device_id=${id}; path=/; max-age=315360000; SameSite=Lax`; }
+  catch (e) { console.warn('Could not synchronize device cookie', e); }
 
   return id;
 }
 
 export function PicaDeviceProvider({ children }: { children: ReactNode }) {
   const [deviceId, setDeviceId] = useState<string>('');
-  const [tier, setTier] = useState<'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS'>('BASIC');
+  const [tier, setTier] = useState<'BASIC' | 'PRO' | 'VVIP' | 'LIFETIME' | 'WEBSITE_LIFETIME' | 'PROMO_125K' | 'ARRA_CRONOS' | 'ALL_ACCESS' | 'FULL_ACCESS'>('BASIC');
   const [tierExpiresAt, setTierExpiresAt] = useState<string | null>(null);
   const [daysLeft, setDaysLeft] = useState<number>(0);
   const [isExpired, setIsExpired] = useState<boolean>(false);
@@ -134,9 +135,9 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
   const closeActivation = () => setIsActivationOpen(false);
 
   const upperTier = String(tier || '').toUpperCase();
-  const isVvipTier = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier);
+  const isVvipTier = hasFullWebsiteAccess(upperTier);
   const isProTier = isVvipTier || upperTier === 'PRO';
-  const isArraCronosTier = ['ARRA_CRONOS', 'VVIP', 'PRO', 'PROMO_125K', 'LIFETIME'].includes(upperTier);
+  const isArraCronosTier = hasArraCronosAccess(upperTier);
 
   const value: PicaDeviceState = {
     deviceId,
@@ -147,6 +148,7 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
     isLoading,
     isVvip: isVvipTier,
     isPro: isProTier,
+    hasFullWebsiteAccess: isVvipTier,
     isArraCronos: isArraCronosTier,
     isActivationOpen,
     openActivation,

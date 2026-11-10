@@ -16,6 +16,11 @@ import { CryptoHunterIcon } from '@/components/PremiumIcons';
 
 type TabType = 'live' | 'trending' | 'watchlist' | 'performance';
 
+function getDeviceRequestHeaders(): HeadersInit {
+  const deviceId = localStorage.getItem('pica_device_id');
+  return deviceId ? { 'x-device-id': deviceId } : {};
+}
+
 export default function CryptoHunterDashboard() {
   const [tokens, setTokens] = useState<CryptoToken[]>([]);
   const [trendingTokens, setTrendingTokens] = useState<CryptoToken[]>([]);
@@ -38,7 +43,7 @@ export default function CryptoHunterDashboard() {
 
   const refreshTracker = useCallback(async () => {
     try {
-      const res = await fetch('/api/crypto-hunter/tracker');
+      const res = await fetch('/api/crypto-hunter/tracker', { headers: getDeviceRequestHeaders() });
       const data = await res.json();
       if (data.success && Array.isArray(data.snapshots)) {
         const savedSnapshots = new Map<string, TokenSnapshot>(
@@ -89,7 +94,7 @@ export default function CryptoHunterDashboard() {
         ...(filters.tier !== 'all' ? { tier: filters.tier.toString() } : {}),
       });
 
-      const res = await fetch(`/api/crypto-hunter/scan?${params}`, { signal: controller.signal });
+      const res = await fetch(`/api/crypto-hunter/scan?${params}`, { headers: getDeviceRequestHeaders(), signal: controller.signal });
       const data = await res.json();
 
       if (data.success) {
@@ -124,7 +129,7 @@ export default function CryptoHunterDashboard() {
     const controller = new AbortController();
     trendingRequestRef.current = controller;
     try {
-      const res = await fetch(`/api/crypto-hunter/trending?chain=${filters.chain}`, { signal: controller.signal });
+      const res = await fetch(`/api/crypto-hunter/trending?chain=${filters.chain}`, { headers: getDeviceRequestHeaders(), signal: controller.signal });
       const data = await res.json();
       if (data.success && Array.isArray(data.tokens)) setTrendingTokens(data.tokens);
       else if (!controller.signal.aborted) setTrendingTokens([]);

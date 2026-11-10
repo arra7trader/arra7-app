@@ -53,7 +53,7 @@ export default function TermsPage() {
                             },
                             {
                                 title: '3. Paket Berlangganan',
-                                content: 'Tersedia paket: BASIC (gratis, 2x/hari), PRO (berbayar, 25x/hari), VVIP (berbayar, unlimited). Pembayaran di muka dan non-refundable.'
+                                content: 'Tersedia Basic gratis dengan kuota terbatas, Website Lifetime Rp125.000 untuk akses fitur website, ARRA Cronos + Grok Rp150.000, serta Full Access Rp229.000 yang mencakup website dan kedua terminal. Pembayaran di muka dan non-refundable.'
                             },
                             {
                                 title: '4. Batasan Tanggung Jawab',

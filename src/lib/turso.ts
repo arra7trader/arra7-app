@@ -989,7 +989,7 @@ export async function upsertUser(user: {
 
 export async function getUserMembership(userId: string): Promise<{ membership: string; createdAt: Date | null; expiresAt: Date | null }> {
   if (isAdminEmail(userId)) {
-    return { membership: 'VVIP', createdAt: null, expiresAt: null };
+    return { membership: 'ADMIN', createdAt: null, expiresAt: null };
   }
   const turso = getTursoClient();
   if (!turso) return { membership: 'BASIC', createdAt: null, expiresAt: null };
@@ -1005,9 +1005,9 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       let membership = (result.rows[0].membership as string) || 'BASIC';
       const createdAt = result.rows[0].created_at ? new Date(result.rows[0].created_at as string) : null;
 
-      // ADMIN OVERRIDE: Always VVIP, never expires
-      if (isAdminEmail(email) || membership === 'ADMIN') {
-        return { membership: 'VVIP', createdAt, expiresAt: null };
+      // Admin accounts always retain administrator access without expiry.
+      if (isAdminEmail(email) || String(membership).toUpperCase() === 'ADMIN') {
+        return { membership: 'ADMIN', createdAt, expiresAt: null };
       }
 
       const expiresAt = result.rows[0].membership_expires ? new Date(result.rows[0].membership_expires as string) : null;
@@ -1028,19 +1028,9 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       }
 
       const upperMem = membership.toUpperCase();
-      if (['VVIP', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN'].includes(upperMem)) {
-        membership = 'VVIP';
-      } else if (upperMem === 'LIFETIME') {
-        membership = 'VVIP';
-      } else if (upperMem === 'WEBSITE_LIFETIME') {
-        membership = 'WEBSITE_LIFETIME';
-      } else if (upperMem === 'PROMO_125K') {
-        membership = 'VVIP';
-      } else if (upperMem === 'ARRA_CRONOS') {
-        membership = 'ARRA_CRONOS';
-      } else if (upperMem === 'PRO') {
-        membership = 'PRO';
-      }
+      membership = ['BASIC', 'PRO', 'VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'PROMO_125K', 'ARRA_CRONOS', 'ALL_ACCESS', 'FULL_ACCESS'].includes(upperMem)
+        ? upperMem
+        : 'BASIC';
       return { membership, createdAt, expiresAt };
     }
     // Check device_users table (for devices that activated license keys without NextAuth login)
@@ -1066,19 +1056,9 @@ export async function getUserMembership(userId: string): Promise<{ membership: s
       }
 
       const upperTier = tier.toUpperCase();
-      if (['VVIP', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN'].includes(upperTier)) {
-        tier = 'VVIP';
-      } else if (upperTier === 'LIFETIME') {
-        tier = 'VVIP';
-      } else if (upperTier === 'WEBSITE_LIFETIME') {
-        tier = 'WEBSITE_LIFETIME';
-      } else if (upperTier === 'PROMO_125K') {
-        tier = 'VVIP';
-      } else if (upperTier === 'ARRA_CRONOS') {
-        tier = 'ARRA_CRONOS';
-      } else if (upperTier === 'PRO') {
-        tier = 'PRO';
-      }
+      tier = ['BASIC', 'PRO', 'VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'PROMO_125K', 'ARRA_CRONOS', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN'].includes(upperTier)
+        ? upperTier
+        : 'BASIC';
       return { membership: tier, createdAt, expiresAt };
     }
 
@@ -1102,8 +1082,8 @@ export async function checkBookmapAccess(userId: string): Promise<AccessResult> 
   }
   const { membership } = await getUserMembership(userId);
 
-  // 1. PRO and VVIP have unlimited access
-  if (membership === 'PRO' || membership === 'VVIP' || membership === 'ADMIN') {
+  // Full website plans and legacy paid memberships have unlimited DOM ARRA access.
+  if (['PRO', 'VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(String(membership || '').toUpperCase())) {
     return { allowed: true, reason: 'GRANTED', membership };
   }
 
@@ -1638,7 +1618,7 @@ function hashTelegramLinkCode(code: string): string {
 
 export async function isVvipActive(userId: string): Promise<boolean> {
   const { membership } = await getUserMembership(userId);
-  return membership === 'VVIP';
+  return ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'PROMO_125K', 'ALL_ACCESS', 'FULL_ACCESS', 'ADMIN'].includes(String(membership || '').toUpperCase());
 }
 
 export async function linkTelegramUser(userId: string, telegramData: {

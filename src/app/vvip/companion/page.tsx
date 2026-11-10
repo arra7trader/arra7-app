@@ -204,7 +204,7 @@ export default function CompanionPage() {
                     </h2>
                     <p className="text-sm text-slate-400 mt-1">Private Intelligence Terminal</p>
                     <span className="inline-block mt-2 px-3 py-1 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-full text-xs text-amber-300 font-semibold">
-                        ⭐ VVIP ACCESS
+                        ⭐ WEBSITE ACCESS
                     </span>
                 </div>
 
@@ -270,7 +270,7 @@ export default function CompanionPage() {
                         <div>
                             <h1 className="text-lg font-semibold flex items-center gap-2">
                                 <SparklesIcon className="w-5 h-5 text-blue-400" />
-                                VVIP Companion
+                                ARRA AI Companion
                             </h1>
                             <p className="text-xs text-slate-400">OpenClaw-powered AI Agent</p>
                         </div>

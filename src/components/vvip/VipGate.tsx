@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { isAdminUser } from '@/lib/admin-access';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 
 export default function VipGate({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -16,8 +17,8 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // Check if user is VVIP or ADMIN
-    const isVVIP = session?.user?.tier === 'VVIP' || isAdminUser(session?.user);
+    // Full website plans and administrators can use this legacy assistant module.
+    const isVVIP = isAdminUser(session?.user) || hasFullWebsiteAccess(session?.user?.tier);
 
     if (!isVVIP) {
         return (
@@ -39,11 +40,11 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
 
                     <div className="space-y-4">
                         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-600">
-                            VVIP Access Only
+                            Website Lifetime Access
                         </h1>
 
                         <p className="text-slate-400 leading-relaxed">
-                            This AI Companion is an exclusive private intelligence tool for our VVIP members. Upgrade your tier to unlock the ultimate trading assistant.
+                            AI Companion tersedia untuk pemilik akses Website Lifetime dan Full Access.
                         </p>
                     </div>
 
@@ -52,7 +53,7 @@ export default function VipGate({ children }: { children: React.ReactNode }) {
                             href="/pricing"
                             className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 text-[var(--text-primary)] font-bold hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:scale-105 transition-all duration-300"
                         >
-                            <span>Upgrade ke VVIP</span>
+                            <span>Lihat Paket Website</span>
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>

@@ -30,7 +30,10 @@ export default function TokenDetailModal({ token, isOpen, onClose }: TokenDetail
   const fetchSecurity = async (chain: string, address: string) => {
     setLoadingSecurity(true);
     try {
-      const res = await fetch(`/api/crypto-hunter/security?chain=${chain}&address=${address}`);
+      const deviceId = localStorage.getItem('pica_device_id');
+      const res = await fetch(`/api/crypto-hunter/security?chain=${chain}&address=${address}`, {
+        headers: deviceId ? { 'x-device-id': deviceId } : {},
+      });
       const data = await res.json();
       if (data.success && data.security) {
         setSecurity(data.security);

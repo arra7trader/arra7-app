@@ -18,7 +18,7 @@ const FAQ_DATA = [
         category: 'Analisa & Fitur',
         questions: [
             { q: 'Pair apa saja yang bisa dianalisa?', a: 'Forex: Gold, Major & Minor Pairs, Crypto, Indices. Saham: Semua emiten di IDX.' },
-            { q: 'Timeframe apa yang tersedia?', a: 'BASIC: M1-M30. PRO & VVIP: Semua timeframe termasuk H1, H4, D1.' },
+            { q: 'Timeframe apa yang tersedia?', a: 'Basic: M5 dan M15. Website Lifetime dan Full Access: semua timeframe termasuk H1, H4, dan D1.' },
             { q: 'Apa yang termasuk dalam hasil analisa?', a: 'Overall Score, Trend, Entry Zone, Stop Loss, Take Profit, Risk/Reward, dan Investment Thesis.' },
         ]
     },

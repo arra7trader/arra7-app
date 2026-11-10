@@ -27,7 +27,7 @@ export default function QuotaExceededCard({ message, limitType = 'FOREX' }: Quot
                 </h3>
 
                 <p className="text-sm text-slate-300 leading-relaxed mb-2">
-                    {message || "You've hit your daily free analysis limit. Upgrade to PRO for unlimited access and advanced features."}
+                    {message || "You've reached the Basic analysis limit. Website Lifetime unlocks the full website features."}
                 </p>
 
                 <div className="w-full h-px bg-slate-700/50 my-2" />
@@ -39,7 +39,7 @@ export default function QuotaExceededCard({ message, limitType = 'FOREX' }: Quot
                             whileTap={{ scale: 0.98 }}
                             className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-colors"
                         >
-                            <span>Upgrade to PRO</span>
+                            <span>View Website Plans</span>
                             {/* Arrow or Icon */}
                         </motion.button>
                     </Link>

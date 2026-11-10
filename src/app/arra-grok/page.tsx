@@ -87,7 +87,7 @@ function pairDecimals(pair: ArraGrokPair) {
 
 export default function ArraGrokPage() {
     const { data: session } = useSession();
-    const { tier, openActivation, deviceId } = usePicaDevice();
+    const { tier, openActivation, deviceId, isArraCronos: deviceHasArraCronosAccess } = usePicaDevice();
 
     const [hasLocalUnlock, setHasLocalUnlock] = useState(false);
 
@@ -108,14 +108,8 @@ export default function ArraGrokPage() {
     const isUnlocked =
         isAdmin ||
         hasLocalUnlock ||
-        tier === 'PRO' ||
-        tier === 'VVIP' ||
-        tier === 'ARRA_CRONOS' ||
-        tier === 'LIFETIME' ||
-        session?.user?.tier === 'PRO' ||
-        session?.user?.tier === 'VVIP' ||
-        session?.user?.tier === 'ARRA_CRONOS' ||
-        session?.user?.tier === 'LIFETIME' ||
+        deviceHasArraCronosAccess ||
+        ['PRO', 'VVIP', 'ARRA_CRONOS', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS'].includes(String(session?.user?.tier || '').toUpperCase()) ||
         (session?.user as any)?.plan === 'ARRA_CRONOS' ||
         (session?.user as any)?.plan === 'ALL_ACCESS';
 

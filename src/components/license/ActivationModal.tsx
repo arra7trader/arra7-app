@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 import { KeyIcon, CrownIcon, BoltIcon, CheckCircleIcon, WarningIcon, CheckIcon } from '@/components/PremiumIcons';
 
 export default function ActivationModal() {
@@ -52,7 +53,7 @@ export default function ActivationModal() {
     setTimeout(() => setCopiedDevId(false), 2000);
   };
 
-  const isVvip = ['VVIP', 'LIFETIME', 'PROMO_125K'].includes(tier);
+  const isVvip = hasFullWebsiteAccess(tier);
   const isWebsiteLifetime = tier === 'WEBSITE_LIFETIME';
   const isPro = tier === 'PRO';
   const isArraCronos = tier === 'ARRA_CRONOS';
@@ -96,7 +97,7 @@ export default function ActivationModal() {
               Aktivasi Lisensi PICA
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Masukkan kode akses 1x pakai untuk mengaktifkan akses Website Lifetime, ARRA Cronos, PRO, atau VVIP
+              Masukkan kode akses untuk mengaktifkan Website Lifetime, Full Access, atau ARRA Cronos + Grok
             </p>
           </div>
 
@@ -116,7 +117,7 @@ export default function ActivationModal() {
                 {isVvip ? (
                   <>
                     <CrownIcon size="xs" />
-                    <span>{tier === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME AKTIF' : tier === 'LIFETIME' ? 'FULL ACCESS LIFETIME' : 'VVIP AKTIF'}</span>
+                    <span>{tier === 'WEBSITE_LIFETIME' ? 'WEBSITE LIFETIME AKTIF' : 'FULL WEBSITE ACCESS AKTIF'}</span>
                   </>
                 ) : isArraCronos ? (
                   <>
@@ -131,7 +132,7 @@ export default function ActivationModal() {
                 ) : isPro ? (
                   <>
                     <BoltIcon size="xs" />
-                    <span>PRO AKTIF</span>
+                    <span>WEBSITE ACCESS AKTIF</span>
                   </>
                 ) : (
                   'BASIC (GRATIS)'
@@ -180,7 +181,7 @@ export default function ActivationModal() {
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="CONTOH: PICA-VVIP-XXXX-XXXX"
+                placeholder="CONTOH: KODE-AKSES-XXXX-XXXX"
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-sm tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all placeholder:text-slate-400 placeholder:normal-case"
                 disabled={loading}
                 autoFocus

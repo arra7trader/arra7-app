@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 import {
     BrainIcon,
     SignalIcon,
@@ -240,7 +241,7 @@ export default function XauusdNeuralLabPage() {
     const isFullAccess = Boolean(
         isAdmin ||
         isDeviceVvip ||
-        FULL_ACCESS_TIERS.includes(cleanDeviceTier) ||
+        hasFullWebsiteAccess(cleanDeviceTier) ||
         isDbVvip ||
         FULL_ACCESS_TIERS.includes(sessionTier)
     );
@@ -260,8 +261,7 @@ export default function XauusdNeuralLabPage() {
                     const qData = await res.json();
                     if (qData.status === 'success') {
                         const membership = (qData.quota?.membership || 'BASIC').toUpperCase();
-                        const vvipStatus = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ADMIN'].includes(membership);
-                        setIsDbVvip(vvipStatus);
+                        setIsDbVvip(hasFullWebsiteAccess(membership));
                     }
                 } catch {
                     setIsDbVvip(false);
@@ -282,7 +282,10 @@ export default function XauusdNeuralLabPage() {
         try {
             const res = await fetch('/api/xauusd-neural-lab/predict', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-device-id': localStorage.getItem('pica_device_id') || '',
+                },
                 body: JSON.stringify({ timeframe: tf }),
             });
             const result = await res.json();
@@ -312,7 +315,10 @@ export default function XauusdNeuralLabPage() {
             try {
                 const res = await fetch('/api/xauusd-neural-lab/predict', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-device-id': localStorage.getItem('pica_device_id') || '',
+                    },
                     body: JSON.stringify({ timeframe: tf }),
                 });
                 const result = await res.json();
@@ -403,13 +409,13 @@ export default function XauusdNeuralLabPage() {
                         <div className="space-y-2">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs font-bold font-mono">
                                 <CrownIcon size="xs" />
-                                <span>PORTAL VVIP RESTRICTED</span>
+                                <span>PORTAL WEBSITE LIFETIME</span>
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-['Space_Grotesk'] tracking-tight">
                                 PICA Neural Lab Terkunci
                             </h1>
                             <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
-                                Laboratorium inferensi kuantitatif XAU/USD ini diproteksi ketat. Anda harus memiliki <strong className="text-amber-400">Kunci Lisensi VVIP</strong> resmi untuk masuk dan melihat analisis live.
+                                Laboratorium inferensi kuantitatif XAU/USD tersedia untuk pemilik Website Lifetime dan Full Access.
                             </p>
                         </div>
 
@@ -462,7 +468,7 @@ export default function XauusdNeuralLabPage() {
                                 className="w-full py-3.5 px-6 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 font-sans"
                             >
                                 <CrownIcon size="sm" className="text-amber-400" />
-                                <span>Belum Punya Kunci? Beli Lisensi VVIP &rarr;</span>
+                                <span>Belum Punya Akses? Lihat Paket Website &rarr;</span>
                             </Link>
 
                             <div className="flex items-center justify-center gap-4 text-xs text-slate-400 pt-2 font-sans">
@@ -543,7 +549,7 @@ export default function XauusdNeuralLabPage() {
                         </div>
                     </div>
                 ) : (
-                    // VVIP MEMBER ACTIVE ACCESS BANNER
+                    // Website full access active banner
                     <div className="rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-md border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3.5">
                             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center shrink-0">
@@ -552,7 +558,7 @@ export default function XauusdNeuralLabPage() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-sm font-extrabold font-['Space_Grotesk'] tracking-wide text-white">
-                                        VVIP LICENSE VERIFIED
+                                        WEBSITE ACCESS VERIFIED
                                     </h3>
                                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                                         PORTAL RESMI TERBUKA

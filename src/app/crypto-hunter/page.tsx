@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { isAdminUser } from '@/lib/admin-access';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 import CryptoHunterDashboard from '@/components/crypto-hunter/CryptoHunterDashboard';
 import {
     ArrowLeftIcon,
@@ -17,7 +18,7 @@ import {
 
 export default function CryptoHunterPage() {
     const { data: session, status } = useSession();
-    const { isVvip: isDeviceVvip, openActivation, tier: deviceTier, isLoading: isDeviceLoading } = usePicaDevice();
+    const { hasFullWebsiteAccess: deviceHasFullWebsiteAccess, openActivation, tier: deviceTier, isLoading: isDeviceLoading } = usePicaDevice();
 
     const [isCheckingMembership, setIsCheckingMembership] = useState(true);
     const [isDbFullAccess, setIsDbFullAccess] = useState(false);
@@ -25,22 +26,20 @@ export default function CryptoHunterPage() {
     // Determine Admin status
     const isAdmin = isAdminUser(session?.user);
 
-    // Full Access 125k tiers (Lifetime, All-Access, VVIP, Promo 125k, Admin)
-    const FULL_ACCESS_TIERS = ['VVIP', 'LIFETIME', 'WEBSITE_LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'];
     const sessionTier = String((session?.user as any)?.tier || (session?.user as any)?.membership || '').toUpperCase();
     const cleanDeviceTier = String(deviceTier || '').toUpperCase();
 
-    // Full access if user is Admin OR has verified device license (125k/VVIP) OR session tier OR DB quota
+    // Website Lifetime, Full Access, and administrators can use Crypto Hunter.
     const isFullAccess = Boolean(
         isAdmin ||
-        isDeviceVvip ||
-        FULL_ACCESS_TIERS.includes(cleanDeviceTier) ||
+        deviceHasFullWebsiteAccess ||
+        hasFullWebsiteAccess(cleanDeviceTier, sessionTier) ||
         isDbFullAccess ||
-        FULL_ACCESS_TIERS.includes(sessionTier)
+        hasFullWebsiteAccess(sessionTier)
     );
 
     useEffect(() => {
-        if (isAdmin || isDeviceVvip || FULL_ACCESS_TIERS.includes(cleanDeviceTier)) {
+        if (isAdmin || deviceHasFullWebsiteAccess || hasFullWebsiteAccess(cleanDeviceTier)) {
             setIsDbFullAccess(true);
             setIsCheckingMembership(false);
             return;
@@ -53,7 +52,7 @@ export default function CryptoHunterPage() {
                     const qData = await res.json();
                     if (qData.status === 'success') {
                         const membership = String(qData.quota?.membership || 'BASIC').toUpperCase();
-                        const allowed = FULL_ACCESS_TIERS.includes(membership) || membership === 'VVIP' || membership === 'ADMIN';
+                        const allowed = hasFullWebsiteAccess(membership);
                         setIsDbFullAccess(allowed);
                     }
                 } catch {
@@ -66,7 +65,7 @@ export default function CryptoHunterPage() {
         } else if (status === 'unauthenticated') {
             setIsCheckingMembership(false);
         }
-    }, [status, isAdmin, isDeviceVvip, cleanDeviceTier]);
+    }, [status, isAdmin, deviceHasFullWebsiteAccess, cleanDeviceTier]);
 
     // Loading State
     if (isCheckingMembership || isDeviceLoading) {
@@ -74,13 +73,13 @@ export default function CryptoHunterPage() {
             <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
                 <div className="w-12 h-12 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-4" />
                 <p className="text-xs font-bold text-slate-600 font-mono tracking-wider uppercase">
-                    Memverifikasi Lisensi Full Access 125K...
+                    Memverifikasi Akses Website...
                 </p>
             </div>
         );
     }
 
-    // RESTRICTED ACCESS SCREEN (MUST HAVE 125K FULL ACCESS / VVIP LICENSE)
+    // Restricted to Website Lifetime, Full Access, or administrators.
     if (!isFullAccess) {
         return (
             <div className="min-h-screen bg-slate-950 text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans flex items-center justify-center relative overflow-hidden selection:bg-emerald-600 selection:text-white">
@@ -106,13 +105,13 @@ export default function CryptoHunterPage() {
                         <div className="space-y-2">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-bold font-mono">
                                 <CrownIcon size="xs" className="text-amber-400" />
-                                <span>PORTAL EKSKLUSIF FULL ACCESS 125K</span>
+                                <span>PORTAL WEBSITE LIFETIME</span>
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-['Space_Grotesk'] tracking-tight">
                                 Crypto Hunter Terkunci
                             </h1>
                             <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
-                                Radar pencari crypto potensial tersedia dalam paket website Lifetime dan Full Access, atau untuk member VVIP lama.
+                                Radar pencari crypto tersedia untuk pemilik Website Lifetime atau Full Access.
                             </p>
                         </div>
 
@@ -215,7 +214,7 @@ export default function CryptoHunterPage() {
                                 <span className="relative inline-flex rounded-full bg-emerald-600 h-1.5 w-1.5"></span>
                             </span>
                             <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                                {isAdmin ? 'ADMIN ACCESS' : 'FULL ACCESS 125K'}
+                                {isAdmin ? 'ADMIN ACCESS' : 'WEBSITE ACCESS'}
                             </span>
                         </div>
                     </div>

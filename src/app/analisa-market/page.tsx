@@ -1,6 +1,7 @@
 'use client';
 
 import { isAdminUser } from '@/lib/admin-access';
+import { hasFullWebsiteAccess } from '@/lib/membership-access';
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -223,7 +224,7 @@ function cleanLine(line: string): string {
 
 function parseDeepAnalystSections(rawAnalysis: string | null): DeepAnalystSections {
     const fallback: DeepAnalystSections = {
-        executiveSummary: 'Ruang analyst privat siap dipakai. Jalankan analisa untuk memuat thesis VVIP terbaru.',
+        executiveSummary: 'Ruang analyst privat siap dipakai. Jalankan analisa untuk memuat ringkasan pasar terbaru.',
         marketStructure: 'Belum ada snapshot struktur market pada sesi ini.',
         smcConfluence: 'Belum ada data orderflow SMC/ICT untuk pair dan timeframe aktif.',
         statisticalSignals: 'Model statistik belum menghasilkan pembacaan sinyal.',
@@ -477,7 +478,7 @@ function buildDeepAnalystNarrative(
     return {
         executiveSummary: withFallbackInsight(
             sections.executiveSummary,
-            `Desk privat VVIP aktif untuk ${symbol}. Jalankan analisa untuk memuat thesis multi-layer terbaru.`
+            `Desk analisa aktif untuk ${symbol}. Jalankan analisa untuk memuat tesis multi-layer terbaru.`
         ),
         marketStructure: withFallbackInsight(sections.marketStructure, structureFallback),
         smcConfluence: withFallbackInsight(sections.smcConfluence, smcFallback),
@@ -532,7 +533,7 @@ export default function AnalisaMarketPage() {
     const { data: session, status } = useSession();
     const t = useTranslations('analisaMarket');
     const router = useRouter();
-    const { isVvip: isDeviceVvip, isPro: isDevicePro, openActivation, deviceId, tier: deviceTier } = usePicaDevice();
+    const { isVvip: isDeviceVvip, isPro: isDevicePro, hasFullWebsiteAccess: deviceHasFullWebsiteAccess, openActivation, deviceId, tier: deviceTier } = usePicaDevice();
 
     const [selectedCategory, setSelectedCategory] = useState('commodities');
     const [selectedPair, setSelectedPair] = useState('XAUUSD');
@@ -764,18 +765,18 @@ export default function AnalisaMarketPage() {
     };
 
     const isAdmin = isAdminUser(session?.user);
-    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isAdmin ? 'ADMIN' : isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
-    const isVvipMember = isAdmin || isDeviceVvip || uppercaseMembership === 'VVIP' || uppercaseMembership === 'ADMIN' || uppercaseMembership === 'LIFETIME' || uppercaseMembership === 'WEBSITE_LIFETIME' || uppercaseMembership === 'ALL_ACCESS' || uppercaseMembership === 'FULL_ACCESS' || uppercaseMembership === 'PROMO_125K';
-    const isProMember = isAdmin || uppercaseMembership === 'PRO' || isDevicePro || isVvipMember;
-    const isPremiumMember = isVvipMember || isProMember;
-    const isUnlimitedQuota = isAdmin || isVvipMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null || quotaStatus?.dailyLimit === Infinity;
+    const uppercaseMembership = String(quotaStatus?.membership || session?.user?.tier || (isAdmin ? 'ADMIN' : deviceHasFullWebsiteAccess ? 'FULL_ACCESS' : isDeviceVvip ? 'VVIP' : isDevicePro ? 'PRO' : 'BASIC')).toUpperCase();
+    const isFullWebsiteMember = isAdmin || deviceHasFullWebsiteAccess || hasFullWebsiteAccess(uppercaseMembership);
+    const isProMember = isAdmin || uppercaseMembership === 'PRO' || isDevicePro || isFullWebsiteMember;
+    const isPremiumMember = isFullWebsiteMember || isProMember;
+    const isUnlimitedQuota = isAdmin || isFullWebsiteMember || quotaStatus?.dailyLimit === -1 || quotaStatus?.dailyLimit === null || quotaStatus?.dailyLimit === Infinity;
     const dailyLimitLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.dailyLimit ?? '-');
     const usedLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.used ?? '-');
     const remainingLabel = isUnlimitedQuota ? 'Unlimited' : String(quotaStatus?.remaining ?? '-');
     const usedPercentage = isUnlimitedQuota
         ? 0
         : Math.min(100, Math.max(0, ((quotaStatus?.used ?? 0) / Math.max(1, quotaStatus?.dailyLimit ?? 1)) * 100));
-    const allowedTimeframes = (isVvipMember || isProMember) ? ['1M', '5M', '15M', '30M', '1H', '4H', '1D'] : quotaStatus?.allowedTimeframes?.length
+    const allowedTimeframes = (isFullWebsiteMember || isProMember) ? ['1M', '5M', '15M', '30M', '1H', '4H', '1D'] : quotaStatus?.allowedTimeframes?.length
         ? quotaStatus.allowedTimeframes.map((tf) => tf.toUpperCase())
         : ['5M', '15M'];
     const lastChargeLabel = lastQuotaCharged === null
@@ -788,7 +789,7 @@ export default function AnalisaMarketPage() {
         : lastQuotaCharged
             ? 'text-amber-400'
             : 'text-emerald-400';
-    const isVvipUser = isVvipMember;
+    const isFullWebsiteUser = isFullWebsiteMember;
     const directionBadge = String(parsedSignal?.direction || parsedSignal?.type || 'WAIT').toUpperCase();
     const confidenceText = typeof parsedSignal?.confidence === 'number' && Number.isFinite(parsedSignal.confidence)
         ? `${Math.round(parsedSignal.confidence)}%`
@@ -811,7 +812,7 @@ export default function AnalisaMarketPage() {
     );
     const vvipAlias = session?.user?.name
         ? session.user.name.split(' ')[0]
-        : 'VVIP Member';
+        : 'Member';
 
 
     const isQuotaOrLockError = Boolean(
@@ -826,22 +827,22 @@ export default function AnalisaMarketPage() {
     );
     const lockTitle = isTimeframeLock
         ? 'Timeframe Terkunci'
-        : isProMember && isQuotaExhausted
-            ? 'Kuota Harian PRO Habis'
-            : isVvipMember
-                ? 'Desk VVIP Sedang Tertahan'
+        : isProMember && isQuotaExhausted && !isFullWebsiteMember
+            ? 'Kuota Harian Tercapai'
+            : isFullWebsiteMember
+                ? 'Desk Analisa Sedang Tertahan'
                 : isPremiumMember
                     ? 'Akses Premium Tertahan'
                     : 'Daily Quota Reached';
     const lockBody = isTimeframeLock
-        ? 'Timeframe ini khusus untuk member PRO/VVIP. Upgrade sekarang untuk akses ke semua timeframe.'
-        : isProMember && isQuotaExhausted
-            ? 'Kuota akun PRO Anda untuk hari ini sudah habis (25x analisa per hari). Coba lagi besok atau upgrade ke VVIP jika Anda ingin akses unlimited.'
-            : isVvipMember
-                ? (error || 'Akses desk VVIP Anda sedang tertahan. Silakan coba lagi sebentar atau hubungi admin jika ini berlanjut.')
+            ? 'Timeframe ini tersedia dengan akses Website Lifetime atau Full Access.'
+        : isProMember && isQuotaExhausted && !isFullWebsiteMember
+            ? 'Kuota analisa paket Anda hari ini sudah habis. Coba lagi besok atau lihat paket Website Lifetime.'
+            : isFullWebsiteMember
+                ? (error || 'Akses desk analisa Anda sedang tertahan. Silakan coba lagi sebentar atau hubungi admin jika ini berlanjut.')
                 : isPremiumMember
                     ? (error || 'Akses akun premium Anda sedang tertahan. Silakan coba lagi atau hubungi admin jika ini berlanjut.')
-                    : 'Anda telah mencapai batas 1x Analisa Harian. Upgrade ke PRO untuk membuka akses premium dan analisa AI yang lebih luas.';
+                    : 'Anda telah mencapai batas analisa Basic harian. Lihat paket Website Lifetime untuk membuka semua fitur website.';
 
     if (status === 'loading') {
         return (
@@ -870,7 +871,7 @@ export default function AnalisaMarketPage() {
                             <div>
                                 <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
                                 <p className="text-sm text-[var(--text-secondary)]">
-                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session?.user?.name || (isVvipMember ? 'VVIP Trader' : isProMember ? 'PRO Trader' : 'Trader')}</span>
+                                    {t('welcome')}, <span className="text-[var(--text-primary)] font-medium">{session?.user?.name || (isFullWebsiteMember ? 'Full Access Trader' : 'Trader')}</span>
                                 </p>
                             </div>
                         </div>
@@ -883,15 +884,15 @@ export default function AnalisaMarketPage() {
                                         <p className="text-sm font-semibold text-[var(--text-primary)]">Status akses analisa market</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${isVvipMember
+                                    <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${isFullWebsiteMember
                                         ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                         : isProMember
                                             ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                                         }`}>
-                                        {isVvipMember ? '👑 VVIP FULL ACCESS' : isProMember ? '⚡ PRO' : 'BASIC'}
+                                        {isFullWebsiteMember ? '👑 FULL WEBSITE ACCESS' : isProMember ? '⚡ WEBSITE ACCESS' : 'BASIC'}
                                     </span>
-                                    {!isVvipMember && (
+                                    {!isFullWebsiteMember && (
                                         <button
                                             type="button"
                                             onClick={() => openActivation()}
@@ -1166,7 +1167,7 @@ export default function AnalisaMarketPage() {
 
                         {/* Quota Status */}
                         {quotaStatus && (
-                            <div className={`rounded-2xl p-4 border ${isVvipMember
+                            <div className={`rounded-2xl p-4 border ${isFullWebsiteMember
                                 ? 'bg-amber-500/10 border-amber-500/20 border-amber-500/20'
                                 : isProMember
                                     ? 'bg-blue-500/10 border-blue-500/20 border-blue-500/20'
@@ -1174,13 +1175,13 @@ export default function AnalisaMarketPage() {
                                 }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-[var(--text-secondary)] flex items-center gap-1"><ChartIcon size="sm" /> Quota Hari Ini</span>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isVvipMember
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isFullWebsiteMember
                                         ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                         : isProMember
                                             ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                             : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                                         }`}>
-                                        {isVvipMember ? '👑 VVIP FULL ACCESS' : isProMember ? '⚡ PRO' : 'BASIC'}
+                                        {isFullWebsiteMember ? '👑 FULL WEBSITE ACCESS' : isProMember ? '⚡ WEBSITE ACCESS' : 'BASIC'}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1188,7 +1189,7 @@ export default function AnalisaMarketPage() {
                                         <div
                                             className={`h-full transition-all ${quotaStatus.remaining === 0
                                                 ? 'bg-red-500'
-                                                : isVvipMember
+                                                : isFullWebsiteMember
                                                     ? 'bg-amber-500'
                                                     : 'bg-[var(--accent-blue)]'
                                                 }`}
@@ -1382,7 +1383,7 @@ export default function AnalisaMarketPage() {
                         transition={{ delay: 0.2 }}
                         className="lg:col-span-2"
                     >
-                        {isVvipUser && (
+                        {isFullWebsiteUser && (
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1392,7 +1393,7 @@ export default function AnalisaMarketPage() {
                                 <div className="rounded-3xl border border-sky-500/20 bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-[var(--bg-secondary)] p-5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-400 font-semibold">VVIP Exclusive Desk</p>
+                                            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-400 font-semibold">Website Full Access Desk</p>
                                             <h3 className="text-2xl font-semibold text-[var(--text-primary)]">Deep Analyst Room</h3>
                                             <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)] max-w-2xl">
                                                 {deepSections.executiveSummary}

@@ -210,7 +210,15 @@ export default function UserTable({
                                         user.membership === 'PRO' ? 'bg-blue-500/20 text-blue-400' :
                                             'bg-slate-500/20 text-slate-400'
                                         }`}>
-                                        {user.membership}
+                                        {user.membership === 'VVIP' || user.membership === 'ALL_ACCESS' || user.membership === 'FULL_ACCESS' || user.membership === 'LIFETIME'
+                                            ? 'FULL ACCESS'
+                                            : user.membership === 'PRO'
+                                                ? 'WEBSITE ACCESS'
+                                                : user.membership === 'WEBSITE_LIFETIME'
+                                                    ? 'WEBSITE LIFETIME'
+                                                    : user.membership === 'ARRA_CRONOS'
+                                                        ? 'CRONOS + GROK'
+                                                        : user.membership}
                                     </span>
                                 </td>
 
@@ -239,22 +247,31 @@ export default function UserTable({
                                         >
                                             View/Edit
                                         </button>
-                                        {user.membership !== 'PRO' && (
+                                        {user.membership !== 'WEBSITE_LIFETIME' && (
                                             <button
-                                                onClick={() => onUpdateMembership(user, 'PRO')}
+                                                onClick={() => onUpdateMembership(user, 'WEBSITE_LIFETIME')}
                                                 disabled={updating === user.id}
                                                 className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-xs disabled:opacity-50"
                                             >
-                                                {updating === user.id ? '...' : '→ PRO'}
+                                                {updating === user.id ? '...' : '→ Website Lifetime'}
                                             </button>
                                         )}
-                                        {user.membership !== 'VVIP' && (
+                                        {user.membership !== 'ALL_ACCESS' && (
                                             <button
-                                                onClick={() => onUpdateMembership(user, 'VVIP')}
+                                                onClick={() => onUpdateMembership(user, 'ALL_ACCESS')}
                                                 disabled={updating === user.id}
                                                 className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded text-xs disabled:opacity-50"
                                             >
-                                                {updating === user.id ? '...' : '→ VVIP'}
+                                                {updating === user.id ? '...' : '→ Full Access'}
+                                            </button>
+                                        )}
+                                        {user.membership !== 'ARRA_CRONOS' && (
+                                            <button
+                                                onClick={() => onUpdateMembership(user, 'ARRA_CRONOS')}
+                                                disabled={updating === user.id}
+                                                className="px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded text-xs disabled:opacity-50"
+                                            >
+                                                {updating === user.id ? '...' : '→ Cronos + Grok'}
                                             </button>
                                         )}
                                         {user.membership !== 'BASIC' && (

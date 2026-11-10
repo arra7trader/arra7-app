@@ -23,6 +23,7 @@ import {
     conductNeuralDebate,
     QuantCandle
 } from '@/lib/xauusd-quant-engine';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,6 +37,11 @@ function getModel(): BiLSTMModel {
 
 export async function POST(req: NextRequest) {
     try {
+        const user = await resolveUserOrDevice(req);
+        if (!user.isAdmin && !user.isFullAccess) {
+            return NextResponse.json({ status: 'error', message: 'PICA Neural Lab tersedia untuk pemilik akses Website Lifetime atau Full Access.' }, { status: 403 });
+        }
+
         const body = await req.json().catch(() => ({}));
         const timeframe = body.timeframe || '1h';
 
