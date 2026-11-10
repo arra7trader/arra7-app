@@ -60,6 +60,7 @@ const PRICING_PLANS = [
             { text: 'Akses lifetime PICA Website', included: true, highlight: true },
             { text: 'Analisis market dan fitur PICA', included: true, highlight: false },
             { text: 'Kursus Fibo Kyoko, indikator MT5, dan script TradingView', included: true, highlight: false },
+            { text: 'Crypto Hunter: scanner token multi-chain, filter risiko, watchlist, dan tracker', included: true, highlight: true },
             { text: 'Tidak termasuk ARRA Cronos dan ARRA Grok', included: true, highlight: true },
         ],
         cta: 'Beli Website Lifetime (Rp 125.000)',
@@ -260,6 +261,16 @@ export default function PricingPage() {
                                         <p className="text-[11px] text-slate-500">Pemetaan struktur market kuantitatif Forex &amp; Saham, zona Supply &amp; Demand, Support/Resistance harian, dan ringkasan momentum teknikal multi-timeframe.</p>
                                     </div>
                                 </div>
+                                <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-emerald-200 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-sm">
+                                        🪙
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm">5. Crypto Hunter</p>
+                                        <p className="text-[11px] text-slate-500">Scanner token multi-chain dengan filter data pasar dan risiko, watchlist, serta tracker perubahan setelah token terdeteksi.</p>
+                                        <Link href="/crypto-hunter" className="inline-flex mt-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700">Buka Crypto Hunter →</Link>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -276,7 +287,7 @@ export default function PricingPage() {
                                 </p>
                             </div>
 
-                            <div className="w-full sm:w-auto">
+                            <div className="w-full sm:w-auto flex flex-col gap-2">
                                 <button
                                     onClick={() => handleSubscribe('ALL_ACCESS', 'lifetime')}
                                     disabled={isProcessing === 'ALL_ACCESS'}
@@ -285,6 +296,9 @@ export default function PricingPage() {
                                     <span>Ambil Lifetime Full Access (Rp 229.000)</span>
                                     <span className="text-xl">&rarr;</span>
                                 </button>
+                                <Link href="/crypto-hunter" className="w-full rounded-2xl border border-emerald-300 bg-emerald-50 px-6 py-3 text-center text-sm font-bold text-emerald-800 hover:bg-emerald-100 transition-colors">
+                                    Buka Crypto Hunter →
+                                </Link>
                                 <p className="text-[11px] text-center text-slate-500 mt-2">
                                     Bank BCA: <strong>1392698188</strong> a.n. Arland Pratama Muldiawan
                                 </p>

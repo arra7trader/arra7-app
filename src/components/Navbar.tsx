@@ -128,7 +128,7 @@ export default function Navbar() {
                             >
                                 <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                                     <span>EKOSISTEM ARRA 7 / PICA</span>
-                                    <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">4 FITUR UTAMA</span>
+                                    <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">7 MODUL</span>
                                 </div>
                                 <div className="py-1 space-y-0.5 text-xs">
                                     <Link href="/arra-cronos" className="flex items-center justify-between p-2 rounded-xl hover:bg-cyan-50 text-slate-800 hover:text-cyan-700 transition-colors">
@@ -190,6 +190,16 @@ export default function Navbar() {
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AI</span>
+                                    </Link>
+                                    <Link href="/crypto-hunter" className="flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 text-slate-800 hover:text-emerald-700 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🪙</span>
+                                            <div>
+                                                <p className="font-bold">Crypto Hunter</p>
+                                                <p className="text-[10px] text-slate-400">Scanner token multi-chain + risk checks</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">FULL</span>
                                     </Link>
                                     <Link href="/kompetisi" className="flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 text-slate-800 hover:text-amber-800 transition-colors border-t border-slate-100 mt-1 pt-1.5">
                                         <div className="flex items-center gap-2">

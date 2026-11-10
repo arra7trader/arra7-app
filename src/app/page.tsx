@@ -235,7 +235,7 @@ export default function Home() {
                 </div>
 
                 {/* Lifetime website features */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6 text-xs">
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                     <p className="font-bold text-slate-900 text-sm">🧠 PICA Neural Lab</p>
                     <p className="text-[11px] text-slate-500 mt-1">Bi-LSTM AI + Institutional SMC SL/TP Realtime Semua Timeframe</p>
@@ -256,6 +256,11 @@ export default function Home() {
                     <p className="font-bold text-slate-900 text-sm">⚡ ARRA Cronos + Grok</p>
                     <p className="text-[11px] text-slate-500 mt-1">Forecast dengan setup tercatat dan scan otomatis 5 pair</p>
                   </div>
+                  <Link href="/crypto-hunter" className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 hover:border-emerald-400 transition-colors">
+                    <p className="font-bold text-slate-900 text-sm">🪙 Crypto Hunter</p>
+                    <p className="text-[11px] text-slate-600 mt-1">Scanner token multi-chain, filter data pasar, pemeriksaan risiko, watchlist, dan tracker.</p>
+                    <span className="inline-flex mt-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white">Buka Crypto Hunter →</span>
+                  </Link>
                 </div>
 
                 {/* Harga & CTA */}
@@ -273,12 +278,17 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <Link href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime" className="w-full sm:w-auto">
-                    <button className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
-                      <span>Ambil Lifetime Full Access (Rp 229.000)</span>
-                      <span>&rarr;</span>
-                    </button>
-                  </Link>
+                  <div className="w-full sm:w-auto flex flex-col gap-2">
+                    <Link href="/payment/transfer?plan=ALL_ACCESS&duration=lifetime" className="w-full">
+                      <button className="w-full px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:opacity-95 shadow-md shadow-rose-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
+                        <span>Ambil Lifetime Full Access (Rp 229.000)</span>
+                        <span>&rarr;</span>
+                      </button>
+                    </Link>
+                    <Link href="/crypto-hunter" className="w-full rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-3 text-center text-sm font-bold text-emerald-800 hover:bg-emerald-100 transition-colors">
+                      Buka Crypto Hunter →
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
