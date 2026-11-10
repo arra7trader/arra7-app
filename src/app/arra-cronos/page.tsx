@@ -995,7 +995,7 @@ export default function ArraCronosPage() {
                                     💡
                                 </span>
                                 <span>
-                                    <strong>Indikator ARRA Cronos:</strong> Quant Canvas dan Pine Script TradingView sama-sama menampilkan jalur forecast, koridor volatilitas, serta ENTRY/SL/TP. Saat setup terkonfirmasi pada candle tutup, proyeksi dan levelnya tetap untuk dibandingkan dengan harga aktual.
+                                    <strong>Indikator ARRA Cronos:</strong> Quant Canvas dan Pine Script memakai formula sinyal, forecast, koridor volatilitas, serta level ENTRY/SL/TP yang sama. Setup dikonfirmasi saat candle tutup; harga dan candle tetap mengikuti feed masing-masing, jadi angka dapat berbeda antarpenyedia data.
                                 </span>
                             </div>
                             <span className="text-[11px] text-amber-700 font-bold">
@@ -1143,7 +1143,7 @@ export default function ArraCronosPage() {
                                             <span className="text-emerald-300">TP1 {price(marketReview.scenarioSetup.takeProfit1)}</span>
                                             <span className="text-emerald-200">TP2 {price(marketReview.scenarioSetup.takeProfit2)}</span>
                                         </div>
-                                        <p className="mt-2 text-[10px] text-slate-400">Level ini adalah estimasi teknikal dan tidak digambar pada widget TradingView tertanam.</p>
+                                        <p className="mt-2 text-[10px] text-slate-400">Widget ini menampilkan harga TradingView dan HUD sinyal dari engine web. Garis forecast/ENTRY/SL/TP berada di Quant Canvas atau Pine Script yang dipasang terpisah; perbedaan feed dapat menghasilkan level berbeda.</p>
                                     </div>
                                 )}
 

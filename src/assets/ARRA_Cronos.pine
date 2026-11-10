@@ -1,12 +1,11 @@
 //@version=6
-indicator("ARRA Cronos · Forecast & Locked Setup", overlay=true, max_lines_count=500, max_labels_count=500, max_bars_back=500)
+indicator("ARRA Cronos · Engine-Matched Signals", overlay=true, max_lines_count=500, max_labels_count=500, max_bars_back=500)
 
-fastLength = input.int(9, "EMA cepat", minval=2, maxval=100)
-signalLength = input.int(21, "EMA sinyal", minval=3, maxval=100)
-slowLength = input.int(55, "EMA tren", minval=3, maxval=100)
-rsiLength = input.int(14, "RSI", minval=2)
-atrLength = input.int(14, "ATR", minval=2)
-stopAtr = input.float(1.35, "Jarak SL (ATR)", minval=0.1, step=0.05)
+const int fastLength = 9
+const int signalLength = 21
+const int slowLength = 55
+const int rsiLength = 14
+const int atrLength = 14
 showDashboard = input.bool(true, "Tampilkan ringkasan")
 showForecast = input.bool(true, "Tampilkan jalur forecast & koridor")
 showLevels = input.bool(true, "Tampilkan ENTRY / SL / TP")
@@ -18,9 +17,29 @@ is4h = timeframe.isminutes and timeframe.multiplier == 240
 is1d = timeframe.isdaily and timeframe.multiplier == 1
 supportedTimeframe = is15m or is1h or is4h or is1d
 
-emaFast = ta.ema(close, fastLength)
-emaSignal = ta.ema(close, signalLength)
-emaSlow = ta.ema(close, slowLength)
+// Match the backend EMA initialization window: 2x period for the chart
+// timeframe and 3x period for higher-timeframe confirmation.
+f_engine_ema(source, period, sampleMultiplier) =>
+    sampleLength = math.min(bar_index + 1, period * sampleMultiplier)
+    alpha = 2.0 / (period + 1.0)
+    float result = source[sampleLength - 1]
+    if sampleLength > 1
+        for step = 0 to sampleLength - 2
+            offset = sampleLength - 2 - step
+            result := source[offset] * alpha + result * (1.0 - alpha)
+    result
+
+f_engine_round(value, factor) => math.round(value * factor) / factor
+
+f_engine_price_decimals() =>
+    tickerId = str.upper(syminfo.tickerid)
+    ticker = str.upper(syminfo.ticker)
+    str.contains(tickerId, "XAU") ? 2 : str.contains(tickerId, "XAG") ? 3 : str.contains(tickerId, "JPY") ? 3 : str.contains(tickerId, "BTC") or str.contains(tickerId, "ETH") ? 2 : 5
+
+enginePriceFactor = math.pow(10.0, f_engine_price_decimals())
+emaFast = f_engine_ema(close, fastLength, 2)
+emaSignal = f_engine_ema(close, signalLength, 2)
+emaSlow = f_engine_ema(close, slowLength, 2)
 trueRangeValue = ta.tr(true)
 atrValue = ta.sma(trueRangeValue, atrLength)
 gain = ta.sma(math.max(ta.change(close), 0.0), rsiLength)
@@ -32,8 +51,8 @@ priorAtr = ta.sma(trueRangeValue[atrLength], 36)
 atrRatio = priorAtr != 0 and not na(priorAtr) ? atrValue / priorAtr : 1.0
 
 f_mtf_bias(float tolerance) =>
-    fast = ta.ema(close, fastLength)
-    signal = ta.ema(close, signalLength)
+    fast = f_engine_ema(close, fastLength, 3)
+    signal = f_engine_ema(close, signalLength, 3)
     bar_index < 21 ? na : fast > signal * (1.0 + tolerance) ? 1 : fast < signal * (1.0 - tolerance) ? -1 : 0
 
 // Higher-timeframe reads use only the previous completed candle. The chart
@@ -47,17 +66,10 @@ bias1dCurrent = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001), gaps=
 confirmedHourBias = time_close == time_close("60") ? bias1hCurrent : bias1h
 confirmedFourHourBias = time_close == time_close("240") ? bias4hCurrent : bias4h
 confirmedDailyBias = time_close == time_close("D") ? bias1dCurrent : bias1d
-int dailyOneHourBias = 0
-int dailyFourHourBias = 0
-if is1d
-    dailyOneHourBiases = request.security_lower_tf(syminfo.tickerid, "60", f_mtf_bias(0.0005))
-    dailyFourHourBiases = request.security_lower_tf(syminfo.tickerid, "240", f_mtf_bias(0.0008))
-    dailyOneHourBias := array.size(dailyOneHourBiases) > 0 ? array.get(dailyOneHourBiases, array.size(dailyOneHourBiases) - 1) : 0
-    dailyFourHourBias := array.size(dailyFourHourBiases) > 0 ? array.get(dailyFourHourBiases, array.size(dailyFourHourBiases) - 1) : 0
 chartTolerance = is15m ? 0.0003 : is1h ? 0.0005 : is4h ? 0.0008 : 0.001
 chartBias = emaFast > emaSignal * (1.0 + chartTolerance) ? 1 : emaFast < emaSignal * (1.0 - chartTolerance) ? -1 : 0
-allBullish = is15m ? chartBias == 1 and confirmedHourBias == 1 and confirmedFourHourBias == 1 : is1h ? chartBias == 1 and confirmedFourHourBias == 1 and confirmedDailyBias == 1 : is4h ? chartBias == 1 and confirmedDailyBias == 1 : is1d ? chartBias == 1 and dailyFourHourBias == 1 : false
-allBearish = is15m ? chartBias == -1 and confirmedHourBias == -1 and confirmedFourHourBias == -1 : is1h ? chartBias == -1 and confirmedFourHourBias == -1 and confirmedDailyBias == -1 : is4h ? chartBias == -1 and confirmedDailyBias == -1 : is1d ? chartBias == -1 and dailyFourHourBias == -1 : false
+allBullish = is15m ? chartBias == 1 and confirmedHourBias == 1 and confirmedFourHourBias == 1 : is1h ? chartBias == 1 and confirmedFourHourBias == 1 and confirmedDailyBias == 1 : is4h ? chartBias == 1 and confirmedDailyBias == 1 : is1d ? chartBias == 1 and confirmedFourHourBias == 1 : false
+allBearish = is15m ? chartBias == -1 and confirmedHourBias == -1 and confirmedFourHourBias == -1 : is1h ? chartBias == -1 and confirmedFourHourBias == -1 and confirmedDailyBias == -1 : is4h ? chartBias == -1 and confirmedDailyBias == -1 : is1d ? chartBias == -1 and confirmedFourHourBias == -1 : false
 
 rawTrend = atrValue > 0 ? ((close - emaSignal) / atrValue) * 0.4 + ((emaFast - emaSignal) / atrValue) * 0.35 + ((emaSignal - emaSlow) / atrValue) * 0.25 : 0.0
 trendScore = math.round(math.max(-1.8, math.min(1.8, rawTrend)) / 1.8 * 100.0)
@@ -113,16 +125,16 @@ forecastSign = math.sign(trendScore != 0 ? trendScore : momentumPct != 0 ? momen
 for step = 1 to forecastBars
     drift = (trendScore / 100.0) * atrValue * 0.24 * math.exp(-0.06 * (step - 1))
     cycle = math.sin((step / forecastBars) * math.pi) * atrValue * 0.035 * forecastSign
-    projected += drift + cycle
+    projected := math.max(projected * 0.1, projected + drift + cycle)
     dispersion = atrValue * math.sqrt(step) * 0.48
-    array.push(forecast, projected)
-    array.push(forecastUpper, projected + dispersion)
-    array.push(forecastLower, projected - dispersion)
+    array.push(forecast, f_engine_round(projected, enginePriceFactor))
+    array.push(forecastUpper, f_engine_round(projected + dispersion, enginePriceFactor))
+    array.push(forecastLower, f_engine_round(projected - dispersion, enginePriceFactor))
 
 forecastTarget = array.get(forecast, forecastBars - 1)
 netMove = forecastTarget - close
 forecastDirection = math.abs(netMove) >= atrValue * 0.18 ? (netMove > 0 ? 1 : -1) : 0
-stopDistance = math.max(atrValue * stopAtr, close * 0.001)
+stopDistance = math.max(atrValue * 1.35, close * 0.001)
 forecastRR = stopDistance > 0 ? math.abs(netMove) / stopDistance : 0.0
 forecastSide = netMove < 0 or (netMove == 0 and trendScore < 0) ? -1 : 1
 candidateBuy = supportedTimeframe and bar_index >= 54 and barstate.isconfirmed and forecastDirection == 1 and trendScore >= 15 and allBullish and rsiValue < 70
@@ -134,12 +146,12 @@ newSetup = openedBuy or openedSell
 if newSetup
     setupSide := openedBuy ? 1 : -1
     setupBar := bar_index
-    lockedEntry := close
+    lockedEntry := f_engine_round(close, enginePriceFactor)
     lockedHorizon := forecastBars
-    lockedStop := close - setupSide * stopDistance
-    lockedTp1 := close + setupSide * math.abs(netMove) * 0.55
+    lockedStop := f_engine_round(close - setupSide * stopDistance, enginePriceFactor)
+    lockedTp1 := f_engine_round(close + setupSide * math.abs(netMove) * 0.55, enginePriceFactor)
     lockedTp2 := forecastTarget
-    lockedRR := forecastRR
+    lockedRR := math.round(forecastRR * 100.0) / 100.0
     setupStatus := 1
 
     if array.size(previewLines) > 0
@@ -222,9 +234,9 @@ plot(showLevels and setupStatus != 0 ? lockedTp1 : na, "TP1 · terkunci", color=
 plot(showLevels and setupStatus != 0 ? lockedTp2 : na, "TP2 · terkunci", color=color.green, linewidth=2, style=plot.style_linebr)
 plotshape(openedBuy, title="Setup BUY confirmed", text="BUY", style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.tiny)
 plotshape(openedSell, title="Setup SELL confirmed", text="SELL", style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.tiny)
-plotshape(tp1Event, title="TP1 tersentuh", text="TP1", style=shape.labeldown, location=location.abovebar, color=color.green, textcolor=color.white, size=size.tiny)
-plotshape(tp2Event, title="TP2 tersentuh", text="TP2 HIT", style=shape.labeldown, location=location.abovebar, color=color.lime, textcolor=color.black, size=size.tiny)
-plotshape(slEvent, title="SL tersentuh", text="SL HIT", style=shape.labelup, location=location.belowbar, color=color.red, textcolor=color.white, size=size.tiny)
+plotshape(tp1Event, title="TP1 tersentuh", text="HIT TP 1", style=shape.labeldown, location=location.abovebar, color=color.green, textcolor=color.white, size=size.tiny)
+plotshape(tp2Event, title="TP2 tersentuh", text="HIT TP 2", style=shape.labeldown, location=location.abovebar, color=color.lime, textcolor=color.black, size=size.tiny)
+plotshape(slEvent, title="SL tersentuh", text="HIT SL", style=shape.labelup, location=location.belowbar, color=color.red, textcolor=color.white, size=size.tiny)
 plotshape(ambiguousEvent, title="TP dan SL pada candle yang sama", text="AMBIGUOUS", style=shape.labeldown, location=location.abovebar, color=color.orange, textcolor=color.black, size=size.tiny)
 
 f_bias_text(value) => value > 0 ? "BULLISH" : value < 0 ? "BEARISH" : "NETRAL"
@@ -243,7 +255,7 @@ if barstate.islast
         table.cell(dashboard, 0, 2, "Status timeframe", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
         table.cell(dashboard, 1, 2, supportedTimeframe ? "SUPPORTED" : "GUNAKAN 15M / 1H / 4H / 1D", bgcolor=valueBg, text_color=supportedTimeframe ? color.lime : color.orange, text_halign=text.align_right, text_size=size.tiny)
         table.cell(dashboard, 0, 3, "Bias chart / 1H / 4H / 1D", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
-        table.cell(dashboard, 1, 3, f_bias_text(chartBias) + " / " + f_bias_text(is1d ? dailyOneHourBias : confirmedHourBias) + " / " + f_bias_text(is1d ? dailyFourHourBias : confirmedFourHourBias) + " / " + f_bias_text(is1d ? chartBias : confirmedDailyBias), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 1, 3, f_bias_text(chartBias) + " / " + f_bias_text(confirmedHourBias) + " / " + f_bias_text(confirmedFourHourBias) + " / " + f_bias_text(confirmedDailyBias), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
         table.cell(dashboard, 0, 4, "Trend score", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
         table.cell(dashboard, 1, 4, str.tostring(trendScore), bgcolor=valueBg, text_color=trendScore >= 15 ? color.lime : trendScore <= -15 ? color.red : color.silver, text_halign=text.align_right)
         table.cell(dashboard, 0, 5, "RSI " + str.tostring(rsiLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
@@ -263,7 +275,7 @@ if barstate.islast
         table.cell(dashboard, 0, 12, "Target forecast", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
         table.cell(dashboard, 1, 12, na(displayTp2) ? str.tostring(forecastTarget, format.mintick) : str.tostring(displayTp2, format.mintick), bgcolor=valueBg, text_color=color.aqua, text_halign=text.align_right)
         table.cell(dashboard, 0, 13, "Catatan", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 13, setupStatus == 0 ? "Level referensi dapat berubah" : "Level & jalur setup tetap", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 1, 13, "Formula engine cocok · feed TradingView", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
     else
         table.clear(dashboard, 0, 0, 1, 13)
 
@@ -283,8 +295,8 @@ if barstate.islast
         label.delete(previewEntryLabel)
         previewEntryLabel := na
 
-alertcondition(openedBuy, title="ARRA Cronos BUY confirmed", message="ARRA Cronos BUY setup confirmed · {{ticker}} · {{interval}} · {{close}}")
-alertcondition(openedSell, title="ARRA Cronos SELL confirmed", message="ARRA Cronos SELL setup confirmed · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(openedBuy, title="ARRA Cronos BUY confirmed", message="ARRA Cronos BUY setup confirmed · TradingView feed · {{ticker}} · {{interval}} · {{close}}")
+alertcondition(openedSell, title="ARRA Cronos SELL confirmed", message="ARRA Cronos SELL setup confirmed · TradingView feed · {{ticker}} · {{interval}} · {{close}}")
 alertcondition(tp1Event, title="ARRA Cronos TP1 hit", message="ARRA Cronos TP1 touched · {{ticker}} · {{interval}} · {{close}}")
 alertcondition(tp2Event, title="ARRA Cronos TP2 hit", message="ARRA Cronos TP2 hit · {{ticker}} · {{interval}} · {{close}}")
 alertcondition(slEvent, title="ARRA Cronos SL hit", message="ARRA Cronos SL hit · {{ticker}} · {{interval}} · {{close}}")

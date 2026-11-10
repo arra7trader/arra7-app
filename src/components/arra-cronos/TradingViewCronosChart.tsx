@@ -260,13 +260,13 @@ function TradingViewCronosChart({
                 <div className="flex items-center gap-2">
                     <span className="flex h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#38bdf8]" />
                     <span className="font-bold text-slate-300">
-                        Indikator ARRA Cronos Aktif di Chart:
+                        Chart harga TradingView
                     </span>
-                    <span className="text-cyan-300">Fast EMA 21 Cyan</span>
+                    <span className="text-cyan-300">EMA 21 / 55 + Volume</span>
                     <span className="text-slate-600">·</span>
-                    <span className="text-emerald-300">Volume 20 SMA</span>
+                    <span className="text-emerald-300">Sinyal ARRA dari engine web</span>
                     <span className="text-slate-600">·</span>
-                    <span className="text-cyan-200">Pine Indicator HUD</span>
+                    <span className="text-cyan-200">Pine Script dipasang terpisah</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="hidden sm:inline text-amber-300 font-semibold">
