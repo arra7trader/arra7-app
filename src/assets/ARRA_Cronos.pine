@@ -78,8 +78,9 @@ genericFirstPrevious = hasHigherConfirmation ? request.security(syminfo.tickerid
 genericSecondPrevious = hasHigherConfirmation ? request.security(syminfo.tickerid, confirmationTimeframe2, f_auto_mtf_bias()[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on) : na
 genericFirstBias = genericFirstPrevious
 genericSecondBias = genericSecondPrevious
-dailyFourHourBiases = is1d ? request.security_lower_tf(syminfo.tickerid, "240", f_mtf_bias(0.0008)) : array.new_int(0)
-dailyFourHourBias = array.size(dailyFourHourBiases) > 0 ? array.get(dailyFourHourBiases, array.size(dailyFourHourBiases) - 1) : na
+// request.security() is safe on every chart timeframe; on a daily chart it
+// returns the last 4H intrabar, which is used only when the daily candle closes.
+dailyFourHourBias = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
 chartTolerance = chartSeconds <= 900 ? 0.0003 : chartSeconds <= 3600 ? 0.0005 : chartSeconds <= 14400 ? 0.0008 : 0.001
 chartBias = emaFast > emaSignal * (1.0 + chartTolerance) ? 1 : emaFast < emaSignal * (1.0 - chartTolerance) ? -1 : 0
 allBullish = is15m ? chartBias == 1 and confirmedHourBias == 1 and confirmedFourHourBias == 1 : is1h ? chartBias == 1 and confirmedFourHourBias == 1 and confirmedDailyBias == 1 : is4h ? chartBias == 1 and confirmedDailyBias == 1 : is1d ? chartBias == 1 and dailyFourHourBias == 1 : chartBias == 1 and (not hasHigherConfirmation or genericFirstBias == 1) and (not hasHigherConfirmation or genericSecondBias == 1)
