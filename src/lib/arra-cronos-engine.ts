@@ -24,6 +24,8 @@ export interface CronosMTFBias {
 
 export type CronosMTFHistory = Partial<Record<CronosTimeframe, CronosMarketCandle[]>>;
 
+const MINIMUM_CRONOS_SETUP_RR = 1.5;
+
 function getPriceDecimals(symbol: string): number {
     const normalized = symbol.toUpperCase();
     if (normalized.includes('XAU')) return 2;
@@ -314,27 +316,29 @@ export function buildKronosMarketReview(
     const direction: CronosMarketReview['direction'] = Math.abs(netMove) >= atr * 0.18
         ? (netMove > 0 ? 'UP' : 'DOWN')
         : 'FLAT';
+    const stopDistance = Math.max(atr * 1.35, currentPrice * 0.001);
+    const rewardDistance = Math.abs(netMove);
+    const riskRewardRatio = rewardDistance / stopDistance;
     const allRequiredAvailable = availableBiases.length === requiredBiases.length;
     const bullish = allRequiredAvailable && requiredBiases.every((bias) => bias.direction === 'UP');
     const bearish = allRequiredAvailable && requiredBiases.every((bias) => bias.direction === 'DOWN');
-    const action: CronosMarketReview['action'] = direction === 'UP' && trendScore >= 15 && bullish && rsi14 < 70
+    const action: CronosMarketReview['action'] = direction === 'UP' && riskRewardRatio >= MINIMUM_CRONOS_SETUP_RR && trendScore >= 15 && bullish && rsi14 < 70
         ? 'BUY'
-        : direction === 'DOWN' && trendScore <= -15 && bearish && rsi14 > 30
+        : direction === 'DOWN' && riskRewardRatio >= MINIMUM_CRONOS_SETUP_RR && trendScore <= -15 && bearish && rsi14 > 30
             ? 'SELL'
             : 'WAIT';
 
     const priceDecimals = getPriceDecimals(symbol);
     const side: CronosScenarioSetup['side'] = netMove < 0 || (netMove === 0 && trendScore < 0) ? 'SELL' : 'BUY';
-    const stopDistance = Math.max(atr * 1.35, currentPrice * 0.001);
-    const rewardDistance = Math.abs(netMove);
+    const takeProfit1Distance = action === 'WAIT' ? rewardDistance * 0.55 : stopDistance;
     const scenarioSetup: CronosScenarioSetup = {
         action,
         side,
         entryPrice: Number(currentPrice.toFixed(priceDecimals)),
         stopLoss: Number((currentPrice + (side === 'BUY' ? -stopDistance : stopDistance)).toFixed(priceDecimals)),
-        takeProfit1: Number((currentPrice + (side === 'BUY' ? rewardDistance * 0.55 : -rewardDistance * 0.55)).toFixed(priceDecimals)),
+        takeProfit1: Number((currentPrice + (side === 'BUY' ? takeProfit1Distance : -takeProfit1Distance)).toFixed(priceDecimals)),
         takeProfit2: Number(targetPrice.toFixed(priceDecimals)),
-        riskRewardRatio: Number((rewardDistance / stopDistance).toFixed(2)),
+        riskRewardRatio: Number(riskRewardRatio.toFixed(2)),
         invalidationReason: side === 'BUY'
             ? 'Skenario BUY batal bila harga menembus stop skenario.'
             : 'Skenario SELL batal bila harga menembus stop skenario.',
@@ -352,7 +356,7 @@ export function buildKronosMarketReview(
         alignmentState: trendScore > 30 ? 'BULLISH ALIGNMENT' : trendScore < -30 ? 'BEARISH ALIGNMENT' : 'NEUTRAL CONSOLIDATION',
     };
     const commentary = action === 'WAIT'
-        ? `${symbol} ${timeframe.toUpperCase()}: status WAIT karena konfirmasi tren/timeframe belum lengkap. Jalur dan level ${side} adalah skenario teknikal dari ATR dan tren teramati, bukan harga masa depan yang pasti.`
+        ? `${symbol} ${timeframe.toUpperCase()}: status WAIT karena filter risk/reward minimum 1:1.5, tren, atau konfirmasi timeframe belum terpenuhi. Jalur dan level ${side} adalah skenario teknikal dari ATR dan tren teramati, bukan harga masa depan yang pasti.`
         : `${symbol} ${timeframe.toUpperCase()}: bias ${action} dari tren, RSI ${metrics.rsi14}, dan konfirmasi ${confluenceSummary}. Jalur dan level adalah estimasi teknikal, bukan harga pasti atau instruksi order.`;
 
     return { action, direction, currentPrice, targetPrice, forecast, scenarioSetup, metrics, mtfMatrix, confluenceScore, confluenceSummary, commentary };

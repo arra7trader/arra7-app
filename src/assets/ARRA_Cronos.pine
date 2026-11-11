@@ -6,6 +6,7 @@ const int signalLength = 21
 const int slowLength = 55
 const int rsiLength = 14
 const int atrLength = 14
+const float minimumSetupRR = 1.5
 showDashboard = input.bool(true, "Tampilkan ringkasan")
 showForecast = input.bool(true, "Tampilkan jalur forecast & koridor")
 showLevels = input.bool(true, "Tampilkan ENTRY / SL / TP")
@@ -155,8 +156,8 @@ forecastDirection = math.abs(netMove) >= atrValue * 0.18 ? (netMove > 0 ? 1 : -1
 stopDistance = math.max(atrValue * 1.35, close * 0.001)
 forecastRR = stopDistance > 0 ? math.abs(netMove) / stopDistance : 0.0
 forecastSide = netMove < 0 or (netMove == 0 and trendScore < 0) ? -1 : 1
-candidateBuy = barstate.isconfirmed and not na(atrValue) and not na(rsiValue) and forecastDirection == 1 and trendScore >= 15 and allBullish and rsiValue < 70
-candidateSell = barstate.isconfirmed and not na(atrValue) and not na(rsiValue) and forecastDirection == -1 and trendScore <= -15 and allBearish and rsiValue > 30
+candidateBuy = barstate.isconfirmed and not na(atrValue) and not na(rsiValue) and forecastDirection == 1 and forecastRR >= minimumSetupRR and trendScore >= 15 and allBullish and rsiValue < 70
+candidateSell = barstate.isconfirmed and not na(atrValue) and not na(rsiValue) and forecastDirection == -1 and forecastRR >= minimumSetupRR and trendScore <= -15 and allBearish and rsiValue > 30
 openedBuy = not hadActiveSetup and candidateBuy
 openedSell = not hadActiveSetup and candidateSell
 newSetup = openedBuy or openedSell
@@ -178,7 +179,7 @@ if newSetup
     lockedEntry := f_engine_round(close, enginePriceFactor)
     lockedHorizon := forecastBars
     lockedStop := f_engine_round(close - setupSide * stopDistance, enginePriceFactor)
-    lockedTp1 := f_engine_round(close + setupSide * math.abs(netMove) * 0.55, enginePriceFactor)
+    lockedTp1 := f_engine_round(close + setupSide * stopDistance, enginePriceFactor)
     lockedTp2 := forecastTarget
     lockedRR := math.round(forecastRR * 100.0) / 100.0
     setupStatus := 1
@@ -304,7 +305,7 @@ if barstate.islast
         table.cell(dashboard, 0, 12, "Target forecast", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
         table.cell(dashboard, 1, 12, na(displayTp2) ? str.tostring(forecastTarget, format.mintick) : str.tostring(displayTp2, format.mintick), bgcolor=valueBg, text_color=color.aqua, text_halign=text.align_right)
         table.cell(dashboard, 0, 13, "Catatan", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 13, "Setup terbaru saja · candle tutup", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 1, 13, "RR minimum 1:1.50 · TP1 1R", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
     else
         table.clear(dashboard, 0, 0, 1, 13)
 

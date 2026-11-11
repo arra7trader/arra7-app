@@ -10,7 +10,7 @@ export const metadata = {
 const features = [
     { title: 'Semua timeframe', description: 'Sinyal mengikuti timeframe chart TradingView, dengan konfirmasi timeframe lebih tinggi bila tersedia.', icon: ChartBarIcon },
     { title: 'Sinyal terbaru saja', description: 'Chart merapikan penanda setup lama dan mempertahankan setup terbaru beserta hasil TP/SL-nya.', icon: BellAlertIcon },
-    { title: 'Forecast & level tetap', description: 'Jalur forecast serta Entry, SL, TP1, dan TP2 dari setup terkonfirmasi tidak bergeser.', icon: ShieldCheckIcon },
+    { title: 'Risk/reward tersaring', description: 'Setup hanya dikonfirmasi jika target forecast minimal 1:1,5; TP1 berada di 1R dan level tetap.', icon: ShieldCheckIcon },
 ];
 
 export default function ArraCronosIndicatorPage() {
@@ -31,7 +31,7 @@ export default function ArraCronosIndicatorPage() {
                             Data pasar yang <span className="text-cyan-200">terbaca jelas.</span>
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-                            Indikator Pine Script mengikuti timeframe chart TradingView, menampilkan setup terbaru, dan merapikan penanda setup lama. Forecast dan level setup yang sudah terkonfirmasi tetap pada posisi asal saat candle berikutnya terbentuk. EMA, ATR, dan RSI tetap memerlukan data candle pemanasan sebelum sinyal dapat dihitung; indikator tidak mengirim order broker.
+                            Indikator Pine Script mengikuti timeframe chart TradingView, menampilkan setup terbaru, dan merapikan penanda setup lama. Setup hanya dikonfirmasi jika target forecast memberi minimal risk/reward 1:1,5; TP1 berada di 1R. Forecast dan level setup yang sudah terkonfirmasi tetap pada posisi asal. Indikator tidak mengirim order broker.
                         </p>
                         <div className="mt-7 flex flex-wrap gap-3">
                             <Link href="/arra-cronos" className="rounded-xl bg-cyan-200 px-4 py-3 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100">

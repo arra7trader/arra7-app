@@ -995,7 +995,7 @@ export default function ArraCronosPage() {
                                     💡
                                 </span>
                                 <span>
-                                    <strong>Indikator ARRA Cronos:</strong> Pine Script menampilkan setup terbaru pada semua timeframe TradingView, dengan forecast, koridor volatilitas, serta level ENTRY/SL/TP yang terkunci saat setup dikonfirmasi pada candle tutup. Feed dan konfirmasi timeframe dapat berbeda, jadi angka dapat berbeda dari Quant Canvas.
+                                    <strong>Indikator ARRA Cronos:</strong> Pine Script menampilkan setup terbaru pada semua timeframe TradingView jika forecast mencapai minimal RR 1:1,5. Pada setup terkonfirmasi, TP1 berada di 1R dan ENTRY/SL/TP tetap terkunci. Feed dan konfirmasi timeframe dapat berbeda dari Quant Canvas.
                                 </span>
                             </div>
                             <span className="text-[11px] text-amber-700 font-bold">
@@ -1140,7 +1140,7 @@ export default function ArraCronosPage() {
                                             <span className="font-bold text-sky-300">SKENARIO {marketReview.scenarioSetup.side} · {marketReview.scenarioSetup.action === 'WAIT' ? 'MENUNGGU KONFIRMASI' : 'BIAS TERKONFIRMASI'}</span>
                                             <span>Entry {price(marketReview.scenarioSetup.entryPrice)}</span>
                                             <span className="text-rose-300">SL {price(marketReview.scenarioSetup.stopLoss)}</span>
-                                            <span className="text-emerald-300">TP1 {price(marketReview.scenarioSetup.takeProfit1)}</span>
+                                            <span className="text-emerald-300">TP1 {marketReview.scenarioSetup.riskRewardRatio >= 1.5 ? '· 1R' : '· skenario'} {price(marketReview.scenarioSetup.takeProfit1)}</span>
                                             <span className="text-emerald-200">TP2 {price(marketReview.scenarioSetup.takeProfit2)}</span>
                                         </div>
                                         <p className="mt-2 text-[10px] text-slate-400">Widget ini menampilkan harga TradingView dan HUD sinyal dari engine web. Garis forecast/ENTRY/SL/TP berada di Quant Canvas atau Pine Script yang dipasang terpisah; perbedaan feed dapat menghasilkan level berbeda.</p>
