@@ -8,9 +8,9 @@ export const metadata = {
 };
 
 const features = [
-    { title: 'Jalur forecast', description: 'Garis proyeksi dan koridor ATR memperlihatkan skenario harga untuk beberapa candle ke depan.', icon: ChartBarIcon },
-    { title: 'Setup tetap', description: 'Entry, SL, TP1, TP2, dan jalur forecast dibekukan setelah setup terkonfirmasi pada candle tertutup.', icon: BellAlertIcon },
-    { title: 'Audit level', description: 'Penanda di chart mencatat TP, SL, candle ambigu, dan batas waktu setup yang tersentuh.', icon: ShieldCheckIcon },
+    { title: 'Semua timeframe', description: 'Sinyal mengikuti timeframe chart TradingView, dengan konfirmasi timeframe lebih tinggi bila tersedia.', icon: ChartBarIcon },
+    { title: 'Sinyal terbaru saja', description: 'Chart merapikan penanda setup lama dan mempertahankan setup terbaru beserta hasil TP/SL-nya.', icon: BellAlertIcon },
+    { title: 'Forecast & level tetap', description: 'Jalur forecast serta Entry, SL, TP1, dan TP2 dari setup terkonfirmasi tidak bergeser.', icon: ShieldCheckIcon },
 ];
 
 export default function ArraCronosIndicatorPage() {
@@ -31,7 +31,7 @@ export default function ArraCronosIndicatorPage() {
                             Data pasar yang <span className="text-cyan-200">terbaca jelas.</span>
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-                            Indikator Pine Script membaca OHLCV dari simbol dan timeframe chart aktif untuk menggambar forecast teknikal, koridor volatilitas, dan level setup. Setup hanya dikonfirmasi dari candle tertutup; level serta jalur yang sudah tercatat tidak bergeser saat candle berikutnya terbentuk. Indikator tidak mengirim order broker.
+                            Indikator Pine Script mengikuti timeframe chart TradingView, menampilkan setup terbaru, dan merapikan penanda setup lama. Forecast dan level setup yang sudah terkonfirmasi tetap pada posisi asal saat candle berikutnya terbentuk. EMA, ATR, dan RSI tetap memerlukan data candle pemanasan sebelum sinyal dapat dihitung; indikator tidak mengirim order broker.
                         </p>
                         <div className="mt-7 flex flex-wrap gap-3">
                             <Link href="/arra-cronos" className="rounded-xl bg-cyan-200 px-4 py-3 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-100">
@@ -64,7 +64,7 @@ export default function ArraCronosIndicatorPage() {
                             ['01', 'Salin Script di Atas', 'Klik tombol "Salin Script (Copy)" di panel atas atau download file .pine.'],
                             ['02', 'Buka Pine Editor', 'Di halaman chart TradingView, buka panel Pine Editor di bagian bawah chart.'],
                             ['03', 'Paste & Simpan', 'Buat script baru di Pine Editor, paste seluruh kode, lalu klik tombol "Save".'],
-                            ['04', 'Add to Chart', 'Klik tombol "Add to chart". Atur periode EMA, RSI, dan ATR sesuai kebutuhan.'],
+                            ['04', 'Add to Chart', 'Klik tombol "Add to chart". Ganti timeframe chart; indikator akan menyesuaikan sinyalnya otomatis.'],
                         ].map(([number, title, detail]) => (
                             <li key={number} className="flex gap-3 rounded-xl border border-slate-800/70 bg-[#080d14] p-4">
                                 <span className="font-mono text-xs font-bold text-cyan-200">{number}</span>

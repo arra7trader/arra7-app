@@ -995,7 +995,7 @@ export default function ArraCronosPage() {
                                     💡
                                 </span>
                                 <span>
-                                    <strong>Indikator ARRA Cronos:</strong> Quant Canvas dan Pine Script memakai formula sinyal, forecast, koridor volatilitas, serta level ENTRY/SL/TP yang sama. Setup dikonfirmasi saat candle tutup; harga dan candle tetap mengikuti feed masing-masing, jadi angka dapat berbeda antarpenyedia data.
+                                    <strong>Indikator ARRA Cronos:</strong> Pine Script menampilkan setup terbaru pada semua timeframe TradingView, dengan forecast, koridor volatilitas, serta level ENTRY/SL/TP yang terkunci saat setup dikonfirmasi pada candle tutup. Feed dan konfirmasi timeframe dapat berbeda, jadi angka dapat berbeda dari Quant Canvas.
                                 </span>
                             </div>
                             <span className="text-[11px] text-amber-700 font-bold">

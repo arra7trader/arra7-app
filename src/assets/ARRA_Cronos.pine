@@ -1,5 +1,5 @@
 //@version=6
-indicator("ARRA Cronos · Engine-Matched Signals", overlay=true, max_lines_count=500, max_labels_count=500, max_bars_back=500)
+indicator("ARRA Cronos · All-Timeframe Signals", overlay=true, max_lines_count=100, max_labels_count=100, max_bars_back=500)
 
 const int fastLength = 9
 const int signalLength = 21
@@ -15,7 +15,10 @@ is15m = timeframe.isminutes and timeframe.multiplier == 15
 is1h = timeframe.isminutes and timeframe.multiplier == 60
 is4h = timeframe.isminutes and timeframe.multiplier == 240
 is1d = timeframe.isdaily and timeframe.multiplier == 1
-supportedTimeframe = is15m or is1h or is4h or is1d
+chartSeconds = timeframe.in_seconds()
+confirmationTimeframe1 = chartSeconds < 900 ? "15" : chartSeconds < 3600 ? "60" : chartSeconds < 14400 ? "240" : chartSeconds < 86400 ? "D" : chartSeconds < 604800 ? "W" : chartSeconds < 2592000 ? "M" : chartSeconds < 7776000 ? "3M" : "12M"
+confirmationTimeframe2 = confirmationTimeframe1 == "15" ? "60" : confirmationTimeframe1 == "60" ? "240" : confirmationTimeframe1 == "240" ? "D" : confirmationTimeframe1 == "D" ? "W" : confirmationTimeframe1 == "W" ? "M" : confirmationTimeframe1 == "M" ? "3M" : "12M"
+hasHigherConfirmation = not na(chartSeconds) and chartSeconds < 31536000
 
 // Match the backend EMA initialization window: 2x period for the chart
 // timeframe and 3x period for higher-timeframe confirmation.
@@ -55,21 +58,32 @@ f_mtf_bias(float tolerance) =>
     signal = f_engine_ema(close, signalLength, 3)
     bar_index < 21 ? na : fast > signal * (1.0 + tolerance) ? 1 : fast < signal * (1.0 - tolerance) ? -1 : 0
 
+f_auto_mtf_bias() =>
+    contextSeconds = timeframe.in_seconds()
+    contextTolerance = contextSeconds <= 900 ? 0.0003 : contextSeconds <= 3600 ? 0.0005 : contextSeconds <= 14400 ? 0.0008 : 0.001
+    f_mtf_bias(contextTolerance)
+
 // Higher-timeframe reads use only the previous completed candle. The chart
 // timeframe itself is evaluated only when its candle closes.
-bias1h = request.security(syminfo.tickerid, "60", f_mtf_bias(0.0005)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
-bias4h = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
-bias1d = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
-bias1hCurrent = request.security(syminfo.tickerid, "60", f_mtf_bias(0.0005), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
-bias4hCurrent = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
-bias1dCurrent = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
-confirmedHourBias = time_close == time_close("60") ? bias1hCurrent : bias1h
-confirmedFourHourBias = time_close == time_close("240") ? bias4hCurrent : bias4h
-confirmedDailyBias = time_close == time_close("D") ? bias1dCurrent : bias1d
-chartTolerance = is15m ? 0.0003 : is1h ? 0.0005 : is4h ? 0.0008 : 0.001
+hourBiasPrevious = request.security(syminfo.tickerid, "60", f_mtf_bias(0.0005)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+hourBiasCurrent = request.security(syminfo.tickerid, "60", f_mtf_bias(0.0005), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
+fourHourBiasPrevious = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+fourHourBiasCurrent = request.security(syminfo.tickerid, "240", f_mtf_bias(0.0008), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
+dailyBiasPrevious = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+dailyBiasCurrent = request.security(syminfo.tickerid, "D", f_mtf_bias(0.001), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
+confirmedHourBias = time_close == time_close("60") ? hourBiasCurrent : hourBiasPrevious
+confirmedFourHourBias = time_close == time_close("240") ? fourHourBiasCurrent : fourHourBiasPrevious
+confirmedDailyBias = time_close == time_close("D") ? dailyBiasCurrent : dailyBiasPrevious
+genericFirstPrevious = hasHigherConfirmation ? request.security(syminfo.tickerid, confirmationTimeframe1, f_auto_mtf_bias()[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on) : na
+genericSecondPrevious = hasHigherConfirmation ? request.security(syminfo.tickerid, confirmationTimeframe2, f_auto_mtf_bias()[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on) : na
+genericFirstBias = genericFirstPrevious
+genericSecondBias = genericSecondPrevious
+dailyFourHourBiases = is1d ? request.security_lower_tf(syminfo.tickerid, "240", f_mtf_bias(0.0008)) : array.new_int(0)
+dailyFourHourBias = array.size(dailyFourHourBiases) > 0 ? array.get(dailyFourHourBiases, array.size(dailyFourHourBiases) - 1) : na
+chartTolerance = chartSeconds <= 900 ? 0.0003 : chartSeconds <= 3600 ? 0.0005 : chartSeconds <= 14400 ? 0.0008 : 0.001
 chartBias = emaFast > emaSignal * (1.0 + chartTolerance) ? 1 : emaFast < emaSignal * (1.0 - chartTolerance) ? -1 : 0
-allBullish = is15m ? chartBias == 1 and confirmedHourBias == 1 and confirmedFourHourBias == 1 : is1h ? chartBias == 1 and confirmedFourHourBias == 1 and confirmedDailyBias == 1 : is4h ? chartBias == 1 and confirmedDailyBias == 1 : is1d ? chartBias == 1 and confirmedFourHourBias == 1 : false
-allBearish = is15m ? chartBias == -1 and confirmedHourBias == -1 and confirmedFourHourBias == -1 : is1h ? chartBias == -1 and confirmedFourHourBias == -1 and confirmedDailyBias == -1 : is4h ? chartBias == -1 and confirmedDailyBias == -1 : is1d ? chartBias == -1 and confirmedFourHourBias == -1 : false
+allBullish = is15m ? chartBias == 1 and confirmedHourBias == 1 and confirmedFourHourBias == 1 : is1h ? chartBias == 1 and confirmedFourHourBias == 1 and confirmedDailyBias == 1 : is4h ? chartBias == 1 and confirmedDailyBias == 1 : is1d ? chartBias == 1 and dailyFourHourBias == 1 : chartBias == 1 and (not hasHigherConfirmation or genericFirstBias == 1) and (not hasHigherConfirmation or genericSecondBias == 1)
+allBearish = is15m ? chartBias == -1 and confirmedHourBias == -1 and confirmedFourHourBias == -1 : is1h ? chartBias == -1 and confirmedFourHourBias == -1 and confirmedDailyBias == -1 : is4h ? chartBias == -1 and confirmedDailyBias == -1 : is1d ? chartBias == -1 and dailyFourHourBias == -1 : chartBias == -1 and (not hasHigherConfirmation or genericFirstBias == -1) and (not hasHigherConfirmation or genericSecondBias == -1)
 
 rawTrend = atrValue > 0 ? ((close - emaSignal) / atrValue) * 0.4 + ((emaFast - emaSignal) / atrValue) * 0.35 + ((emaSignal - emaSlow) / atrValue) * 0.25 : 0.0
 trendScore = math.round(math.max(-1.8, math.min(1.8, rawTrend)) / 1.8 * 100.0)
@@ -86,7 +100,10 @@ var int lockedHorizon = na
 var int setupStatus = 0 // 0 none, 1 open, 2 TP1, 3 TP2, -1 SL, -2 SL after TP1, 4 ambiguous, 5 ambiguous after TP1, 6 expired, 7 expired after TP1
 var array<line> previewLines = array.new_line()
 var array<line> previewLevelLines = array.new_line()
+var array<line> latestSetupLines = array.new_line()
+var array<label> latestSetupLabels = array.new_label()
 var label previewEntryLabel = na
+var label statusEventLabel = na
 
 // Save flags before evaluating this candle. Cronos does not open a replacement
 // setup on the same candle that closes the previous one.
@@ -137,13 +154,24 @@ forecastDirection = math.abs(netMove) >= atrValue * 0.18 ? (netMove > 0 ? 1 : -1
 stopDistance = math.max(atrValue * 1.35, close * 0.001)
 forecastRR = stopDistance > 0 ? math.abs(netMove) / stopDistance : 0.0
 forecastSide = netMove < 0 or (netMove == 0 and trendScore < 0) ? -1 : 1
-candidateBuy = supportedTimeframe and bar_index >= 54 and barstate.isconfirmed and forecastDirection == 1 and trendScore >= 15 and allBullish and rsiValue < 70
-candidateSell = supportedTimeframe and bar_index >= 54 and barstate.isconfirmed and forecastDirection == -1 and trendScore <= -15 and allBearish and rsiValue > 30
+candidateBuy = barstate.isconfirmed and not na(atrValue) and not na(rsiValue) and forecastDirection == 1 and trendScore >= 15 and allBullish and rsiValue < 70
+candidateSell = barstate.isconfirmed and not na(atrValue) and not na(rsiValue) and forecastDirection == -1 and trendScore <= -15 and allBearish and rsiValue > 30
 openedBuy = not hadActiveSetup and candidateBuy
 openedSell = not hadActiveSetup and candidateSell
 newSetup = openedBuy or openedSell
 
 if newSetup
+    if not na(statusEventLabel)
+        label.delete(statusEventLabel)
+        statusEventLabel := na
+    if array.size(latestSetupLines) > 0
+        for i = 0 to array.size(latestSetupLines) - 1
+            line.delete(array.get(latestSetupLines, i))
+    array.clear(latestSetupLines)
+    if array.size(latestSetupLabels) > 0
+        for i = 0 to array.size(latestSetupLabels) - 1
+            label.delete(array.get(latestSetupLabels, i))
+    array.clear(latestSetupLabels)
     setupSide := openedBuy ? 1 : -1
     setupBar := bar_index
     lockedEntry := f_engine_round(close, enginePriceFactor)
@@ -166,8 +194,9 @@ if newSetup
         label.delete(previewEntryLabel)
         previewEntryLabel := na
 
-    // Draw a permanent copy of the projection that existed at setup time.
-    // Historical forecast points remain in place after price reaches TP or SL.
+    // Draw the projection that existed at setup time.
+    // Only the newest setup is kept visible; older setup drawings are removed.
+    array.push(latestSetupLabels, label.new(bar_index, setupSide == 1 ? low : high, setupSide == 1 ? "BUY" : "SELL", xloc=xloc.bar_index, style=setupSide == 1 ? label.style_label_up : label.style_label_down, color=setupSide == 1 ? color.green : color.red, textcolor=color.white, size=size.small))
     if showForecast
         prevX = bar_index + 1
         prevMid = lockedEntry
@@ -178,23 +207,30 @@ if newSetup
             nextUpper = array.get(forecastUpper, step - 1)
             nextLower = array.get(forecastLower, step - 1)
             nextX = bar_index + step + 1
-            line.new(prevX, prevMid, nextX, nextMid, xloc=xloc.bar_index, color=color.aqua, width=3)
-            line.new(prevX, prevUpper, nextX, nextUpper, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1)
-            line.new(prevX, prevLower, nextX, nextLower, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1)
-            label.new(nextX, nextMid, "·", xloc=xloc.bar_index, style=label.style_none, textcolor=color.aqua, size=size.large)
+            array.push(latestSetupLines, line.new(prevX, prevMid, nextX, nextMid, xloc=xloc.bar_index, color=color.aqua, width=3))
+            array.push(latestSetupLines, line.new(prevX, prevUpper, nextX, nextUpper, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1))
+            array.push(latestSetupLines, line.new(prevX, prevLower, nextX, nextLower, xloc=xloc.bar_index, color=color.new(color.aqua, 58), style=line.style_dashed, width=1))
+            array.push(latestSetupLabels, label.new(nextX, nextMid, "·", xloc=xloc.bar_index, style=label.style_none, textcolor=color.aqua, size=size.large))
             prevX := nextX
             prevMid := nextMid
             prevUpper := nextUpper
             prevLower := nextLower
     if showLevels
-        line.new(bar_index, lockedEntry, bar_index + lockedHorizon + 1, lockedEntry, xloc=xloc.bar_index, color=color.blue, style=line.style_dashed, width=2)
-        line.new(bar_index, lockedStop, bar_index + lockedHorizon + 1, lockedStop, xloc=xloc.bar_index, color=color.red, style=line.style_dashed, width=2)
-        line.new(bar_index, lockedTp1, bar_index + lockedHorizon + 1, lockedTp1, xloc=xloc.bar_index, color=color.lime, style=line.style_dashed, width=1)
-        line.new(bar_index, lockedTp2, bar_index + lockedHorizon + 1, lockedTp2, xloc=xloc.bar_index, color=color.green, style=line.style_dashed, width=2)
-        label.new(bar_index + 1, lockedEntry, (setupSide == 1 ? "BUY" : "SELL") + " ENTRY · " + str.tostring(lockedEntry, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.blue, textcolor=color.white, size=size.tiny)
-        label.new(bar_index + 1, lockedStop, "SL · " + str.tostring(lockedStop, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.red, textcolor=color.white, size=size.tiny)
-        label.new(bar_index + 1, lockedTp1, "TP1 · " + str.tostring(lockedTp1, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.green, textcolor=color.white, size=size.tiny)
-        label.new(bar_index + 1, lockedTp2, "TP2 · " + str.tostring(lockedTp2, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.green, textcolor=color.white, size=size.tiny)
+        array.push(latestSetupLines, line.new(bar_index, lockedEntry, bar_index + lockedHorizon + 1, lockedEntry, xloc=xloc.bar_index, color=color.blue, style=line.style_dashed, width=2))
+        array.push(latestSetupLines, line.new(bar_index, lockedStop, bar_index + lockedHorizon + 1, lockedStop, xloc=xloc.bar_index, color=color.red, style=line.style_dashed, width=2))
+        array.push(latestSetupLines, line.new(bar_index, lockedTp1, bar_index + lockedHorizon + 1, lockedTp1, xloc=xloc.bar_index, color=color.lime, style=line.style_dashed, width=1))
+        array.push(latestSetupLines, line.new(bar_index, lockedTp2, bar_index + lockedHorizon + 1, lockedTp2, xloc=xloc.bar_index, color=color.green, style=line.style_dashed, width=2))
+        array.push(latestSetupLabels, label.new(bar_index + 1, lockedEntry, (setupSide == 1 ? "BUY" : "SELL") + " ENTRY · " + str.tostring(lockedEntry, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.blue, textcolor=color.white, size=size.tiny))
+        array.push(latestSetupLabels, label.new(bar_index + 1, lockedStop, "SL · " + str.tostring(lockedStop, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.red, textcolor=color.white, size=size.tiny))
+        array.push(latestSetupLabels, label.new(bar_index + 1, lockedTp1, "TP1 · " + str.tostring(lockedTp1, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.green, textcolor=color.white, size=size.tiny))
+        array.push(latestSetupLabels, label.new(bar_index + 1, lockedTp2, "TP2 · " + str.tostring(lockedTp2, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, color=color.green, textcolor=color.white, size=size.tiny))
+
+if tp1Event or tp2Event or slEvent or ambiguousEvent
+    if not na(statusEventLabel)
+        label.delete(statusEventLabel)
+    eventText = tp2Event ? "HIT TP 2" : tp1Event ? "HIT TP 1" : slEvent ? "HIT SL" : "AMBIGUOUS · CEK CANDLE"
+    eventColor = tp2Event ? color.lime : tp1Event ? color.green : slEvent ? color.red : color.orange
+    statusEventLabel := label.new(bar_index, setupSide == 1 ? high : low, eventText, xloc=xloc.bar_index, style=setupSide == 1 ? label.style_label_down : label.style_label_up, color=eventColor, textcolor=tp2Event ? color.black : color.white, size=size.small)
 
 // Before the first setup, show a live analytical path. It may update with the
 // still-forming market candle; confirmed setup paths above never repaint.
@@ -228,16 +264,7 @@ displayRR = setupStatus == 0 ? forecastRR : lockedRR
 
 plot(emaSignal, "EMA 21", color=color.aqua, linewidth=2)
 plot(emaSlow, "EMA 55", color=color.orange, linewidth=2)
-plot(showLevels and setupStatus != 0 ? lockedEntry : na, "ENTRY · terkunci", color=color.blue, linewidth=2, style=plot.style_linebr)
-plot(showLevels and setupStatus != 0 ? lockedStop : na, "SL · terkunci", color=color.red, linewidth=2, style=plot.style_linebr)
-plot(showLevels and setupStatus != 0 ? lockedTp1 : na, "TP1 · terkunci", color=color.lime, linewidth=1, style=plot.style_linebr)
-plot(showLevels and setupStatus != 0 ? lockedTp2 : na, "TP2 · terkunci", color=color.green, linewidth=2, style=plot.style_linebr)
-plotshape(openedBuy, title="Setup BUY confirmed", text="BUY", style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.tiny)
-plotshape(openedSell, title="Setup SELL confirmed", text="SELL", style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.tiny)
-plotshape(tp1Event, title="TP1 tersentuh", text="HIT TP 1", style=shape.labeldown, location=location.abovebar, color=color.green, textcolor=color.white, size=size.tiny)
-plotshape(tp2Event, title="TP2 tersentuh", text="HIT TP 2", style=shape.labeldown, location=location.abovebar, color=color.lime, textcolor=color.black, size=size.tiny)
-plotshape(slEvent, title="SL tersentuh", text="HIT SL", style=shape.labelup, location=location.belowbar, color=color.red, textcolor=color.white, size=size.tiny)
-plotshape(ambiguousEvent, title="TP dan SL pada candle yang sama", text="AMBIGUOUS", style=shape.labeldown, location=location.abovebar, color=color.orange, textcolor=color.black, size=size.tiny)
+// Setup drawings above intentionally show only the newest confirmed signal.
 
 f_bias_text(value) => value > 0 ? "BULLISH" : value < 0 ? "BEARISH" : "NETRAL"
 f_status_text(value) => value == 1 ? "OPEN" : value == 2 ? "TP1 HIT · LEVEL TETAP" : value == 3 ? "TP2 HIT" : value == -1 ? "SL HIT" : value == -2 ? "SL SETELAH TP1" : value == 4 ? "AMBIGUOUS · CEK CANDLE" : value == 5 ? "AMBIGUOUS SETELAH TP1" : value == 6 ? "EXPIRED" : value == 7 ? "EXPIRED SETELAH TP1" : "BELUM ADA SETUP"
@@ -249,13 +276,14 @@ if barstate.islast
         labelBg = color.new(color.rgb(18, 27, 39), 4)
         valueBg = color.new(color.rgb(12, 20, 31), 2)
         table.cell(dashboard, 0, 0, "ARRA CRONOS", bgcolor=header, text_color=color.white, text_halign=text.align_left)
-        table.cell(dashboard, 1, 0, "FORECAST & SETUP", bgcolor=header, text_color=color.aqua, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 1, 0, "FORECAST · SIGNAL TERBARU", bgcolor=header, text_color=color.aqua, text_halign=text.align_right, text_size=size.tiny)
         table.cell(dashboard, 0, 1, "Simbol / timeframe", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
         table.cell(dashboard, 1, 1, syminfo.ticker + " · " + timeframe.period, bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
-        table.cell(dashboard, 0, 2, "Status timeframe", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 2, supportedTimeframe ? "SUPPORTED" : "GUNAKAN 15M / 1H / 4H / 1D", bgcolor=valueBg, text_color=supportedTimeframe ? color.lime : color.orange, text_halign=text.align_right, text_size=size.tiny)
-        table.cell(dashboard, 0, 3, "Bias chart / 1H / 4H / 1D", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
-        table.cell(dashboard, 1, 3, f_bias_text(chartBias) + " / " + f_bias_text(confirmedHourBias) + " / " + f_bias_text(confirmedFourHourBias) + " / " + f_bias_text(confirmedDailyBias), bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 2, "Timeframe sinyal", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
+        table.cell(dashboard, 1, 2, "SEMUA TIMEFRAME", bgcolor=valueBg, text_color=color.lime, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 0, 3, "Bias chart / konfirmasi", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left, text_size=size.tiny)
+        biasSummary = f_bias_text(chartBias) + " / " + (is15m ? "1H " + f_bias_text(confirmedHourBias) + " · 4H " + f_bias_text(confirmedFourHourBias) : is1h ? "4H " + f_bias_text(confirmedFourHourBias) + " · 1D " + f_bias_text(confirmedDailyBias) : is4h ? "1D " + f_bias_text(confirmedDailyBias) : is1d ? "4H " + f_bias_text(dailyFourHourBias) : hasHigherConfirmation ? confirmationTimeframe1 + " " + f_bias_text(genericFirstBias) + " · " + confirmationTimeframe2 + " " + f_bias_text(genericSecondBias) : "HTF N/A")
+        table.cell(dashboard, 1, 3, biasSummary, bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
         table.cell(dashboard, 0, 4, "Trend score", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
         table.cell(dashboard, 1, 4, str.tostring(trendScore), bgcolor=valueBg, text_color=trendScore >= 15 ? color.lime : trendScore <= -15 ? color.red : color.silver, text_halign=text.align_right)
         table.cell(dashboard, 0, 5, "RSI " + str.tostring(rsiLength), bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
@@ -275,7 +303,7 @@ if barstate.islast
         table.cell(dashboard, 0, 12, "Target forecast", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
         table.cell(dashboard, 1, 12, na(displayTp2) ? str.tostring(forecastTarget, format.mintick) : str.tostring(displayTp2, format.mintick), bgcolor=valueBg, text_color=color.aqua, text_halign=text.align_right)
         table.cell(dashboard, 0, 13, "Catatan", bgcolor=labelBg, text_color=color.silver, text_halign=text.align_left)
-        table.cell(dashboard, 1, 13, "Formula engine cocok · feed TradingView", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
+        table.cell(dashboard, 1, 13, "Setup terbaru saja · candle tutup", bgcolor=valueBg, text_color=color.white, text_halign=text.align_right, text_size=size.tiny)
     else
         table.clear(dashboard, 0, 0, 1, 13)
 
