@@ -584,6 +584,41 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
         </div>
       </div>
 
+      {/* 👑 MASTER ADMIN PASSKEY BANNER */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 border border-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <CrownIcon size="sm" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-slate-900 text-sm">Passkey Admin Master (Akses Perangkat Sendiri Tanpa Generate)</h3>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white">VVIP LIFETIME</span>
+            </div>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Gunakan kode master <strong className="font-mono text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">PICA-ADMIN</strong> atau <strong className="font-mono text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">ARRA7ADMIN</strong> di popup aktivasi perangkat HP, laptop, atau browser apa pun untuk langsung membuka akses VVIP selamanya!
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => handleCopy('PICA-ADMIN')}
+          className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+        >
+          {copiedKey === 'PICA-ADMIN' ? (
+            <>
+              <CheckIcon size="xs" />
+              <span>Tersalin!</span>
+            </>
+          ) : (
+            <>
+              <ClipboardIcon size="xs" />
+              <span>Salin: PICA-ADMIN</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {activeTab === 'keys' && (
         <div className="space-y-8">
           {/* ══════ 1-CLICK PRODUCT ACTIVATION GENERATOR ══════ */}

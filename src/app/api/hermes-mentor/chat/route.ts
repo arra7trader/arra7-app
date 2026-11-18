@@ -36,15 +36,22 @@ export async function POST(request: NextRequest) {
 
         // 3. NextAuth Server Session check
         const session = await getServerSession(authOptions);
+        const { isAdminEmail, isAdminUser } = await import('@/lib/admin-access');
+        const isAdmin = Boolean(isAdminUser(session?.user)) || Boolean(isAdminEmail(session?.user?.email));
+
         if (session?.user) {
             userName = session.user.name || 'Trader';
             userEmail = session.user.email || '';
             userId = (session.user as any).id || '';
-            const sessTier = (session.user as any).tier || (session.user as any).membership;
-            if (sessTier && sessTier !== 'BASIC') {
-                membershipTier = String(sessTier).toUpperCase();
+            if (isAdmin) {
+                membershipTier = 'VVIP';
             } else {
-                membershipTier = 'BASIC';
+                const sessTier = (session.user as any).tier || (session.user as any).membership;
+                if (sessTier && sessTier !== 'BASIC') {
+                    membershipTier = String(sessTier).toUpperCase();
+                } else {
+                    membershipTier = 'BASIC';
+                }
             }
         } else {
             // Mobile auth Bearer token fallback
@@ -172,19 +179,19 @@ export async function POST(request: NextRequest) {
 
 async function checkHermesMentorAccess(userId: string, email: string, tier: string, deviceId?: string): Promise<boolean> {
     // 1. Admin always has access
-    const { isAdminEmail } = await import('@/lib/admin-access');
-    if (isAdminEmail(email)) return true;
+    const { isAdminEmail, isAdminUser } = await import('@/lib/admin-access');
+    if (isAdminEmail(email) || isAdminUser({ email, id: userId })) return true;
 
     // 2. PRO/VVIP members get full access
     const upperTier = (tier || '').toUpperCase();
-    if (['PRO', 'VVIP', 'HERMES_MENTOR', 'LIFETIME', 'ALL_ACCESS'].includes(upperTier)) return true;
+    if (['PRO', 'VVIP', 'HERMES_MENTOR', 'LIFETIME', 'ALL_ACCESS', 'ADMIN'].includes(upperTier)) return true;
 
     // 3. Fallback direct device check from DB
     if (deviceId) {
         try {
             const { getDeviceStatus } = await import('@/lib/license');
             const dev = await getDeviceStatus(deviceId);
-            if (dev && !dev.isExpired && ['PRO', 'VVIP'].includes(dev.tier)) {
+            if (dev && !dev.isExpired && (['PRO', 'VVIP'].includes(dev.tier) || dev.activeLicenseCode === 'MASTER-ADMIN-PASSKEY' || dev.activeLicenseCode === 'ADMIN-SESSION')) {
                 return true;
             }
         } catch {}

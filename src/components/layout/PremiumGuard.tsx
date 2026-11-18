@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { KeyIcon } from '@/components/PremiumIcons';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 
 interface PremiumGuardProps {
     children: React.ReactNode;
@@ -19,15 +20,17 @@ export default function PremiumGuard({
     title = 'Fitur Premium',
     description = 'Fitur ini khusus untuk member yang memiliki kode lisensi aktif.'
 }: PremiumGuardProps) {
-    const { isVvip, isPro, openActivation, isLoading } = usePicaDevice();
+    const { isVvip, isPro, isAdmin: isDeviceAdmin, openActivation, isLoading } = usePicaDevice();
     const { data: session } = useSession();
 
-    // Check access: device license (VVIP/PRO) or session tier
+    // Check access: Admin, device license (VVIP/PRO), or session tier
     const hasAccess = () => {
+        if (isDeviceAdmin) return true;
+        if (isAdminUser(session?.user) || isAdminEmail(session?.user?.email)) return true;
         if (isVvip) return true;
         if (minTier === 'PRO' && isPro) return true;
         const sessionTier = (session?.user as any)?.tier || (session?.user as any)?.membership;
-        if (sessionTier === 'VVIP') return true;
+        if (sessionTier === 'VVIP' || sessionTier === 'ADMIN') return true;
         if (minTier === 'PRO' && sessionTier === 'PRO') return true;
         return false;
     };

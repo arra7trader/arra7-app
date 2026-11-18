@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BoltIcon, CrownIcon, CheckIcon, SparklesIcon, TrendUpIcon, StarSolidIcon, KeyIcon } from '@/components/PremiumIcons';
 import { usePicaDevice } from '@/context/PicaDeviceContext';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -55,7 +56,7 @@ const TESTIMONIALS = [
 
 export default function HermesMentorPage() {
     const { data: session } = useSession();
-    const { openActivation, tier, deviceId, isVvip, isPro } = usePicaDevice();
+    const { openActivation, tier, deviceId, isVvip, isPro, isAdmin: isDeviceAdmin } = usePicaDevice();
 
     const getEffectiveDeviceId = () => {
         if (deviceId) return deviceId;
@@ -66,7 +67,8 @@ export default function HermesMentorPage() {
         return '';
     };
 
-    const isDeviceActive = isVvip || isPro || ['PRO', 'VVIP', 'HERMES_MENTOR', 'LIFETIME', 'ALL_ACCESS'].includes((tier || '').toUpperCase());
+    const isAdmin = Boolean(isDeviceAdmin) || Boolean(isAdminUser(session?.user)) || Boolean(isAdminEmail(session?.user?.email));
+    const isDeviceActive = isAdmin || isVvip || isPro || ['PRO', 'VVIP', 'HERMES_MENTOR', 'LIFETIME', 'ALL_ACCESS'].includes((tier || '').toUpperCase());
     const [showChat, setShowChat] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');

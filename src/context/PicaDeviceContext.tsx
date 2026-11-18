@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { isAdminEmail, isAdminUser } from '@/lib/admin-access';
 
 export interface PicaDeviceState {
   deviceId: string;
@@ -12,6 +14,7 @@ export interface PicaDeviceState {
   isLoading: boolean;
   isVvip: boolean;
   isPro: boolean;
+  isAdmin: boolean;
   isActivationOpen: boolean;
   openActivation: () => void;
   closeActivation: () => void;
@@ -43,6 +46,9 @@ function getOrCreateDeviceId(): string {
 }
 
 export function PicaDeviceProvider({ children }: { children: ReactNode }) {
+  const { data: session } = useSession();
+  const isAdmin = Boolean(isAdminUser(session?.user)) || Boolean(isAdminEmail(session?.user?.email));
+
   const [deviceId, setDeviceId] = useState<string>('');
   const [tier, setTier] = useState<'BASIC' | 'PRO' | 'VVIP'>('BASIC');
   const [tierExpiresAt, setTierExpiresAt] = useState<string | null>(null);
@@ -77,6 +83,13 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
     setDeviceId(id);
     fetchStatus(id);
   }, [fetchStatus]);
+
+  // If session identifies as admin, re-fetch status to ensure backend device_users is upgraded
+  useEffect(() => {
+    if (isAdmin && deviceId) {
+      fetchStatus(deviceId);
+    }
+  }, [isAdmin, deviceId, fetchStatus]);
 
   // 2. Background telemetry tracking on route changes
   useEffect(() => {
@@ -132,19 +145,23 @@ export function PicaDeviceProvider({ children }: { children: ReactNode }) {
   const openActivation = () => setIsActivationOpen(true);
   const closeActivation = () => setIsActivationOpen(false);
 
-  const upperTier = String(tier || '').toUpperCase();
-  const isVvipTier = ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier);
-  const isProTier = isVvipTier || upperTier === 'PRO';
+  const effectiveTier = isAdmin ? 'VVIP' : tier;
+  const upperTier = String(effectiveTier || '').toUpperCase();
+  const isVvipTier = isAdmin || ['VVIP', 'LIFETIME', 'ALL_ACCESS', 'FULL_ACCESS', 'PROMO_125K', 'ADMIN'].includes(upperTier);
+  const isProTier = isAdmin || isVvipTier || upperTier === 'PRO';
+  const effectiveDaysLeft = isAdmin ? 99999 : daysLeft;
+  const effectiveIsExpired = isAdmin ? false : isExpired;
 
   const value: PicaDeviceState = {
     deviceId,
-    tier,
-    tierExpiresAt,
-    daysLeft,
-    isExpired,
+    tier: effectiveTier,
+    tierExpiresAt: isAdmin ? '2099-12-31T23:59:59.000Z' : tierExpiresAt,
+    daysLeft: effectiveDaysLeft,
+    isExpired: effectiveIsExpired,
     isLoading,
     isVvip: isVvipTier,
     isPro: isProTier,
+    isAdmin,
     isActivationOpen,
     openActivation,
     closeActivation,

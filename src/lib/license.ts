@@ -164,6 +164,45 @@ export async function redeemLicenseKey(params: {
     return { success: false, message: 'Identitas perangkat (Device ID) tidak valid.' };
   }
 
+  // Admin Master Passkey support: allows Admin to unlock any phone/laptop/browser instantly
+  const ADMIN_PASSKEYS = ['PICA-ADMIN', 'ARRA7ADMIN', 'ARLAND77', 'ADMIN-PASSKEY', 'ARRA-ADMIN'];
+  if (ADMIN_PASSKEYS.includes(cleanCode)) {
+    const expiresAtIso = '2099-12-31T23:59:59.000Z';
+    await turso.execute({
+      sql: `INSERT INTO device_users (
+              device_id, tier, tier_expires_at, active_license_code, 
+              last_active_at, ip_address, user_agent
+            )
+            VALUES (?, 'VVIP', ?, 'MASTER-ADMIN-PASSKEY', CURRENT_TIMESTAMP, ?, ?)
+            ON CONFLICT(device_id) DO UPDATE SET
+              tier = 'VVIP',
+              tier_expires_at = excluded.tier_expires_at,
+              active_license_code = 'MASTER-ADMIN-PASSKEY',
+              last_active_at = CURRENT_TIMESTAMP`,
+      args: [cleanDeviceId, expiresAtIso, params.ip || null, params.userAgent || null],
+    });
+
+    try {
+      await turso.execute({
+        sql: `INSERT INTO device_activity_logs (device_id, path, action, meta, ip_address)
+              VALUES (?, '/api/license/redeem', 'ADMIN_MASTER_PASSKEY_REDEEMED', ?, ?)`,
+        args: [
+          cleanDeviceId,
+          JSON.stringify({ code: cleanCode, tier: 'VVIP', expiresAt: expiresAtIso }),
+          params.ip || null,
+        ],
+      });
+    } catch (_) {}
+
+    return {
+      success: true,
+      message: '👑 Akses Admin VVIP Seumur Hidup berhasil diaktifkan untuk perangkat ini!',
+      tier: 'VVIP',
+      expiresAt: expiresAtIso,
+      durationDays: 99999,
+    };
+  }
+
   // 1. Fetch the key
   const keyResult = await turso.execute({
     sql: `SELECT * FROM license_keys WHERE UPPER(code) = ? LIMIT 1`,

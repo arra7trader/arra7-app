@@ -13,6 +13,7 @@ export default function ActivationModal() {
     tierExpiresAt,
     daysLeft,
     deviceId,
+    isAdmin,
     redeemKey,
   } = usePicaDevice();
 
@@ -52,7 +53,7 @@ export default function ActivationModal() {
     setTimeout(() => setCopiedDevId(false), 2000);
   };
 
-  const isVvip = tier === 'VVIP';
+  const isVvip = tier === 'VVIP' || isAdmin;
   const isPro = tier === 'PRO';
 
   return (
@@ -104,14 +105,21 @@ export default function ActivationModal() {
               <span className="text-xs text-slate-500 font-medium">Status Perangkat Ini:</span>
               <span
                 className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 ${
-                  isVvip
+                  isAdmin
+                    ? 'bg-amber-100 text-amber-900 border border-amber-400'
+                    : isVvip
                     ? 'bg-amber-100 text-amber-800 border border-amber-300'
                     : isPro
                     ? 'bg-blue-100 text-blue-800 border border-blue-300'
                     : 'bg-slate-200/80 text-slate-700 border border-slate-300'
                 }`}
               >
-                {isVvip ? (
+                {isAdmin ? (
+                  <>
+                    <CrownIcon size="xs" />
+                    <span>SUPER ADMIN (VVIP)</span>
+                  </>
+                ) : isVvip ? (
                   <>
                     <CrownIcon size="xs" />
                     <span>VVIP AKTIF</span>
@@ -127,7 +135,12 @@ export default function ActivationModal() {
               </span>
             </div>
 
-            {tierExpiresAt && (isVvip || isPro) ? (
+            {isAdmin ? (
+              <p className="text-xs text-amber-700 font-bold flex items-center gap-1">
+                <span>👑</span>
+                <span>Mode Administrator Aktif — Akses Penuh VVIP Seumur Hidup</span>
+              </p>
+            ) : tierExpiresAt && (isVvip || isPro) ? (
               <p className="text-xs text-emerald-700 font-medium">
                 Aktif sampai: {new Date(tierExpiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} ({daysLeft} hari lagi)
               </p>
