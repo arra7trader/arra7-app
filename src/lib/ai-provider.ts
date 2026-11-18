@@ -1,13 +1,15 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { generateText, ModelMessage, streamText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { generateText, streamText } from 'ai';
+import type { ModelMessage } from 'ai';
 
-type ProviderName = 'cerebras' | 'groq';
+type ProviderName = 'google' | 'groq' | 'cerebras';
 
 type ProviderEntry = {
     provider: ProviderName;
     modelId: string;
     apiKey: string;
-    modelFactory?: ReturnType<typeof createOpenAI>;
+    modelFactory?: any;
 };
 
 type CerebrasChatCompletionResponse = {
@@ -44,6 +46,9 @@ function uniqueModels(models: string[]): string[] {
 }
 
 function getProviderModels(provider: ProviderName, preferredModel?: string): string[] {
+    if (provider === 'google') {
+        return uniqueModels([preferredModel || 'gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-flash-latest']);
+    }
     if (provider === 'cerebras') {
         return uniqueModels([preferredModel || 'qwen-3.8-27b', 'qwen-3.8-27b', 'gpt-oss-120b']);
     }
@@ -56,40 +61,32 @@ function getProviderModels(provider: ProviderName, preferredModel?: string): str
     ]);
 }
 
-function interleaveProviders(groups: ProviderEntry[][]): ProviderEntry[] {
-    const result: ProviderEntry[] = [];
-    const queues = groups.map((group) => [...group]).filter((group) => group.length > 0);
-
-    while (queues.some((group) => group.length > 0)) {
-        for (const group of queues) {
-            const next = group.shift();
-            if (next) result.push(next);
-        }
-    }
-
-    return result;
-}
-
 function ensureProvidersInitialized() {
     if (providerPool.length > 0) {
         return;
     }
 
-    const cerebrasModel = process.env.CEREBRAS_MODEL || process.env.CELEBRAS_MODEL || 'qwen-3.8-27b';
-    const groqModel = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
-    const cerebrasKeys = collectKeys([
-        'CEREBRAS_API_KEYS', 'CEREBRAS_API_KEY', 'CELEBRAS_API_KEYS', 'CELEBRAS_API_KEY',
-    ]);
-    const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
-    const cerebrasEntries: ProviderEntry[] = [];
-    const groqEntries: ProviderEntry[] = [];
+    // 1. Google Gemini (Primary high-performance free provider with zero payment blocks)
+    const googleKeys = collectKeys(['GOOGLE_GENERATIVE_AI_API_KEY', 'GEMINI_API_KEY']);
+    const googleModel = process.env.GOOGLE_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const googleEntries: ProviderEntry[] = [];
 
-    for (const apiKey of cerebrasKeys) {
-        const modelFactory = createOpenAI({ baseURL: 'https://api.cerebras.ai/v1', apiKey });
-        for (const modelId of getProviderModels('cerebras', cerebrasModel)) {
-            cerebrasEntries.push({ provider: 'cerebras', modelId, apiKey, modelFactory });
+    for (const apiKey of googleKeys) {
+        const googleFactory = createGoogleGenerativeAI({ apiKey });
+        for (const modelId of getProviderModels('google', googleModel)) {
+            googleEntries.push({
+                provider: 'google',
+                modelId,
+                apiKey,
+                modelFactory: googleFactory,
+            });
         }
     }
+
+    // 2. Groq (Fast open-source inference)
+    const groqModel = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
+    const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
+    const groqEntries: ProviderEntry[] = [];
 
     for (const apiKey of groqKeys) {
         const modelFactory = createOpenAI({
@@ -107,20 +104,34 @@ function ensureProvidersInitialized() {
         }
     }
 
-    // Try Cerebras first when configured; permanent billing/key/model errors remove
-    // that route and allow the request to continue through Groq.
-    providerPool.push(...interleaveProviders([cerebrasEntries, groqEntries]));
+    // 3. Cerebras
+    const cerebrasModel = process.env.CEREBRAS_MODEL || process.env.CELEBRAS_MODEL || 'qwen-3.8-27b';
+    const cerebrasKeys = collectKeys([
+        'CEREBRAS_API_KEYS', 'CEREBRAS_API_KEY', 'CELEBRAS_API_KEYS', 'CELEBRAS_API_KEY',
+    ]);
+    const cerebrasEntries: ProviderEntry[] = [];
+
+    for (const apiKey of cerebrasKeys) {
+        const modelFactory = createOpenAI({ baseURL: 'https://api.cerebras.ai/v1', apiKey });
+        for (const modelId of getProviderModels('cerebras', cerebrasModel)) {
+            cerebrasEntries.push({ provider: 'cerebras', modelId, apiKey, modelFactory });
+        }
+    }
+
+    // Place Google Gemini first for top reliability & speed, then Groq, then Cerebras
+    providerPool.push(...googleEntries, ...groqEntries, ...cerebrasEntries);
 
     if (providerPool.length === 0) {
         console.warn(
-            '[AI Provider] No API keys found. Set CEREBRAS_API_KEY or GROQ_API_KEY (and optional numbered variants).',
+            '[AI Provider] No API keys found. Set GOOGLE_GENERATIVE_AI_API_KEY, GROQ_API_KEY, or CEREBRAS_API_KEY.',
         );
         return;
     }
 
+    const googleCount = providerPool.filter((p) => p.provider === 'google').length;
     const groqCount = providerPool.filter((p) => p.provider === 'groq').length;
     const cerebrasCount = providerPool.filter((p) => p.provider === 'cerebras').length;
-    console.log(`[AI Provider] Loaded ${providerPool.length} routes (Cerebras=${cerebrasCount}, Groq=${groqCount}).`);
+    console.log(`[AI Provider] Loaded ${providerPool.length} routes (Google=${googleCount}, Groq=${groqCount}, Cerebras=${cerebrasCount}).`);
 }
 
 function getPrimaryModel(index?: number) {
@@ -132,7 +143,7 @@ function getPrimaryModel(index?: number) {
     const selectedIndex =
         index !== undefined
             ? index % providerPool.length
-            : Math.floor(Math.random() * providerPool.length);
+            : 0;
     const selected = providerPool[selectedIndex];
     if (!selected.modelFactory) {
         throw new Error(`Model factory is not available for provider ${selected.provider}`);
@@ -140,28 +151,8 @@ function getPrimaryModel(index?: number) {
     return selected.modelFactory(selected.modelId);
 }
 
-function getProviderInfo(index: number) {
-    const selected = providerPool[index % providerPool.length];
-    return `${selected.provider}:${selected.modelId}`;
-}
-
-function getBalancedStartIndex(): number {
-    const providers = Array.from(new Set(providerPool.map((entry) => entry.provider)));
-    if (providers.length === 0) {
-        return 0;
-    }
-
-    const chosenProvider = providers[Math.floor(Math.random() * providers.length)];
-    const matchingIndexes = providerPool
-        .map((entry, index) => ({ entry, index }))
-        .filter(({ entry }) => entry.provider === chosenProvider)
-        .map(({ index }) => index);
-
-    if (matchingIndexes.length === 0) {
-        return Math.floor(Math.random() * providerPool.length);
-    }
-
-    return matchingIndexes[Math.floor(Math.random() * matchingIndexes.length)];
+function getProviderInfo(entry: ProviderEntry): string {
+    return `${entry.provider}:${entry.modelId}`;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -266,12 +257,14 @@ export function hasAnyAIProviderConfigured(): boolean {
 
 export function getAIProviderStats() {
     ensureProvidersInitialized();
+    const google = providerPool.filter((p) => p.provider === 'google').length;
     const cerebras = providerPool.filter((p) => p.provider === 'cerebras').length;
     const groq = providerPool.filter((p) => p.provider === 'groq').length;
     return {
         total: providerPool.length,
-        cerebras,
+        google,
         groq,
+        cerebras,
     };
 }
 
@@ -297,22 +290,19 @@ export async function streamTextHybrid(params: {
     }
 
     let lastError: unknown = null;
-    const maxAttempts = providerPool.length;
-    const startIndex = getBalancedStartIndex();
+    const candidates = [...providerPool];
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        if (providerPool.length === 0) {
-            break;
-        }
+    for (let attempt = 0; attempt < candidates.length; attempt++) {
+        const entry = candidates[attempt];
+        const providerLabel = getProviderInfo(entry);
 
-        const providerIndex = (startIndex + attempt) % providerPool.length;
-        const providerLabel = getProviderInfo(providerIndex);
         try {
             console.log(
-                `[AI Provider] Stream attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
+                `[AI Provider] Stream attempt ${attempt + 1}/${candidates.length} using ${providerLabel}`,
             );
+
             return await streamText({
-                model: getPrimaryModel(providerIndex),
+                model: entry.modelFactory(entry.modelId),
                 system: params.system,
                 messages: params.messages,
                 maxOutputTokens: params.maxTokens,
@@ -322,12 +312,15 @@ export async function streamTextHybrid(params: {
             lastError = error;
             const message = getErrorMessage(error);
             console.error(
-                `[AI Provider] Stream attempt ${attempt + 1} failed: ${message}`,
+                `[AI Provider] Stream attempt ${attempt + 1} failed (${providerLabel}): ${message}`,
             );
-            if (isPermanentProviderError(message) && providerPool.length > 0) {
-                const removeIndex = providerIndex % providerPool.length;
-                providerPool.splice(removeIndex, 1);
-                console.warn(`[AI Provider] Removed provider from pool due to permanent error: ${providerLabel}`);
+
+            if (isPermanentProviderError(message)) {
+                const idx = providerPool.findIndex((p) => p.apiKey === entry.apiKey && p.modelId === entry.modelId);
+                if (idx !== -1) {
+                    providerPool.splice(idx, 1);
+                    console.warn(`[AI Provider] Removed failed route from global pool: ${providerLabel}`);
+                }
             }
         }
     }
@@ -355,21 +348,17 @@ export async function generateTextHybrid(params: {
     }
 
     let lastError: unknown = null;
-    const maxAttempts = providerPool.length;
-    const startIndex = getBalancedStartIndex();
+    const candidates = [...providerPool];
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        if (providerPool.length === 0) {
-            break;
-        }
+    for (let attempt = 0; attempt < candidates.length; attempt++) {
+        const entry = candidates[attempt];
+        const providerLabel = getProviderInfo(entry);
 
-        const providerIndex = (startIndex + attempt) % providerPool.length;
-        const providerLabel = getProviderInfo(providerIndex);
         try {
             console.log(
-                `[AI Provider] Generate attempt ${attempt + 1}/${maxAttempts} using ${providerLabel}`,
+                `[AI Provider] Generate attempt ${attempt + 1}/${candidates.length} using ${providerLabel}`,
             );
-            const entry = providerPool[providerIndex % providerPool.length];
+
             if (entry.provider === 'cerebras') {
                 return await generateTextWithCerebras({
                     apiKey: entry.apiKey,
@@ -381,9 +370,10 @@ export async function generateTextHybrid(params: {
                     temperature: params.temperature,
                 });
             }
+
             if (params.prompt) {
                 return await generateText({
-                    model: getPrimaryModel(providerIndex),
+                    model: entry.modelFactory(entry.modelId),
                     system: params.system,
                     maxOutputTokens: params.maxTokens,
                     temperature: params.temperature,
@@ -392,7 +382,7 @@ export async function generateTextHybrid(params: {
             }
 
             return await generateText({
-                model: getPrimaryModel(providerIndex),
+                model: entry.modelFactory(entry.modelId),
                 system: params.system,
                 maxOutputTokens: params.maxTokens,
                 temperature: params.temperature,
@@ -402,12 +392,15 @@ export async function generateTextHybrid(params: {
             lastError = error;
             const message = getErrorMessage(error);
             console.error(
-                `[AI Provider] Generate attempt ${attempt + 1} failed: ${message}`,
+                `[AI Provider] Generate attempt ${attempt + 1} failed (${providerLabel}): ${message}`,
             );
-            if (isPermanentProviderError(message) && providerPool.length > 0) {
-                const removeIndex = providerIndex % providerPool.length;
-                providerPool.splice(removeIndex, 1);
-                console.warn(`[AI Provider] Removed provider from pool due to permanent error: ${providerLabel}`);
+
+            if (isPermanentProviderError(message)) {
+                const idx = providerPool.findIndex((p) => p.apiKey === entry.apiKey && p.modelId === entry.modelId);
+                if (idx !== -1) {
+                    providerPool.splice(idx, 1);
+                    console.warn(`[AI Provider] Removed failed route from global pool: ${providerLabel}`);
+                }
             }
         }
     }
