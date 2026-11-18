@@ -3,11 +3,22 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
 export default function WithdrawPage() {
+    const { deviceId, openActivation } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
     const { data: session, status } = useSession();
     const router = useRouter();
     const [balance, setBalance] = useState<number>(0);
@@ -24,18 +35,15 @@ export default function WithdrawPage() {
     });
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/wallet/withdraw');
-            return;
-        }
-        if (status === 'authenticated') {
-            fetchBalance();
-        }
-    }, [status]);
+        fetchBalance();
+    }, [status, deviceId]);
 
     const fetchBalance = async () => {
         try {
-            const res = await fetch('/api/wallet/balance');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/wallet/balance?deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (res.ok) {
                 setBalance(data.balance || 0);
@@ -65,7 +73,7 @@ export default function WithdrawPage() {
         try {
             const res = await fetch('/api/wallet/withdraw', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-device-id': getEffectiveDeviceId() },
                 body: JSON.stringify(formData)
             });
             const data = await res.json();

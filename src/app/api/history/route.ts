@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 import getTursoClient from '@/lib/turso';
 
-// Get user's analysis history
+// Get user's analysis history (supports session or deviceId)
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json(
                 { status: 'error', message: 'Unauthorized' },
                 { status: 401 }
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '20');
 
         let sql = 'SELECT id, type, symbol, timeframe, result, created_at FROM analysis_history WHERE user_id = ?';
-        const args: (string | number)[] = [session.user.id];
+        const args: (string | number)[] = [user.userId];
 
         if (type) {
             sql += ' AND type = ?';
@@ -63,11 +62,11 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// Save analysis to history
+// Save analysis to history (supports session or deviceId)
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json(
                 { status: 'error', message: 'Unauthorized' },
                 { status: 401 }
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
 
         await turso.execute({
             sql: 'INSERT INTO analysis_history (user_id, type, symbol, timeframe, result) VALUES (?, ?, ?, ?, ?)',
-            args: [session.user.id, type, symbol, timeframe || null, result],
+            args: [user.userId, type, symbol, timeframe || null, result],
         });
 
         // Keep only last 50 analyses per user to prevent database bloat
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
             sql: `DELETE FROM analysis_history WHERE user_id = ? AND id NOT IN (
                 SELECT id FROM analysis_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 50
             )`,
-            args: [session.user.id, session.user.id],
+            args: [user.userId, user.userId],
         });
 
         return NextResponse.json({

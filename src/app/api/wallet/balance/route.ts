@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 import getTursoClient from '@/lib/turso';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -16,7 +15,7 @@ export async function GET(request: NextRequest) {
         // Fetch balance
         const userRes = await turso.execute({
             sql: 'SELECT koin_balance FROM users WHERE id = ?',
-            args: [session.user.id]
+            args: [user.userId]
         });
 
         const balance = userRes.rows.length > 0 ? Number(userRes.rows[0].koin_balance || 0) : 0;
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
         // Fetch trx history
         const trxRes = await turso.execute({
             sql: 'SELECT * FROM trx_coins WHERE user_id = ? ORDER BY created_at DESC LIMIT 50',
-            args: [session.user.id]
+            args: [user.userId]
         });
 
         return NextResponse.json({

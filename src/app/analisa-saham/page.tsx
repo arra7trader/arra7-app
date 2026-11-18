@@ -4,7 +4,8 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { ChartIcon, CpuChipIcon, SearchIcon } from '@/components/PremiumIcons';
+import { ChartIcon, CpuChipIcon, SearchIcon, KeyIcon } from '@/components/PremiumIcons';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 import AIStockPicks from '@/components/stock/AIStockPicks';
 
 interface StockData {
@@ -31,6 +32,16 @@ interface QuotaStatus {
 }
 
 export default function AnalisaSahamPage() {
+    const { isVvip, isPro, openActivation, deviceId } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
     const { data: session, status } = useSession();
     const router = useRouter();
     const [market, setMarket] = useState<'IDX' | 'US'>('IDX');
@@ -45,7 +56,10 @@ export default function AnalisaSahamPage() {
 
     const fetchQuota = async () => {
         try {
-            const res = await fetch('/api/stock/quota');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/stock/quota?deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setQuota(data.data);
@@ -56,10 +70,8 @@ export default function AnalisaSahamPage() {
     };
 
     useEffect(() => {
-        if (session?.user) {
-            fetchQuota();
-        }
-    }, [session]);
+        fetchQuota();
+    }, [session, deviceId]);
 
     // Countdown Timer
     useEffect(() => {
@@ -99,10 +111,7 @@ export default function AnalisaSahamPage() {
         };
     }, []);
 
-    if (status === 'unauthenticated') {
-        router.push('/login?callbackUrl=/analisa-saham');
-        return null;
-    }
+    
 
     if (status === 'loading') {
         return (
@@ -216,6 +225,14 @@ export default function AnalisaSahamPage() {
                                     {quota.membership}
                                 </div>
                                 <span className="text-sm text-[var(--text-secondary)]">Quota Analisa Saham Hari Ini</span>
+                                <button
+                                    type="button"
+                                    onClick={openActivation}
+                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-semibold border border-amber-500/30 transition-colors"
+                                >
+                                    <KeyIcon size="xs" />
+                                    <span>Aktivasi Key</span>
+                                </button>
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="text-right">

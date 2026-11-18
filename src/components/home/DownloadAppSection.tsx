@@ -54,10 +54,10 @@ export default function DownloadAppSection() {
                                     <ArrowRightIcon className="ml-2 h-4 w-4" />
                                 </Link>
                                 <Link
-                                    href="/login"
+                                    href="/analisa-market"
                                     className="inline-flex items-center justify-center rounded-xl border border-[var(--border-light)] px-6 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-secondary)]"
                                 >
-                                    Masuk Web ARRA7
+                                    Buka Web ARRA7
                                 </Link>
                             </div>
                         </div>
@@ -66,7 +66,7 @@ export default function DownloadAppSection() {
                             <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">Fitur Android vNext</p>
                             <div className="space-y-3">
                                 <div className="rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-                                    Login Google native tanpa webview
+                                    Akses instan dengan Kode Lisensi
                                 </div>
                                 <div className="rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                                     Analisa market Forex, Gold, Crypto

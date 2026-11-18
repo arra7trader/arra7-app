@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { BookOpenIcon } from '@/components/PremiumIcons';
+import { BookOpenIcon, KeyIcon } from '@/components/PremiumIcons';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 
 interface JournalEntry {
     id: number;
@@ -67,6 +68,16 @@ interface ActualTradeStats {
 }
 
 export default function JournalPage() {
+    const { deviceId, openActivation } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
     const { data: session, status } = useSession();
     const router = useRouter();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -88,16 +99,15 @@ export default function JournalPage() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/journal');
-        } else if (status === 'authenticated') {
-            fetchJournal();
-        }
-    }, [status, router]);
+        fetchJournal();
+    }, [session, deviceId]);
 
     const fetchJournal = async () => {
         try {
-            const res = await fetch('/api/journal');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/journal?deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setEntries(data.entries);
@@ -118,7 +128,7 @@ export default function JournalPage() {
         try {
             const res = await fetch('/api/journal', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-device-id': getEffectiveDeviceId() },
                 body: JSON.stringify({
                     symbol: formSymbol,
                     direction: formDirection,
@@ -194,7 +204,7 @@ export default function JournalPage() {
         );
     }
 
-    if (!session) return null;
+    
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-36">

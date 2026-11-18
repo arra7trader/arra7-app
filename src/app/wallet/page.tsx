@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
@@ -40,6 +41,16 @@ const KOIN_PACKAGES = [
 ];
 
 export default function WalletPage() {
+    const { deviceId, openActivation } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
     const { data: session, status } = useSession();
     const router = useRouter();
     const [balance, setBalance] = useState<number | null>(null);
@@ -47,18 +58,15 @@ export default function WalletPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/wallet');
-            return;
-        }
-        if (status === 'authenticated') {
-            fetchWalletData();
-        }
-    }, [status]);
+        fetchWalletData();
+    }, [status, deviceId]);
 
     const fetchWalletData = async () => {
         try {
-            const res = await fetch('/api/wallet/balance');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/wallet/balance?deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (res.ok) {
                 setBalance(data.balance);
@@ -72,7 +80,7 @@ export default function WalletPage() {
     };
 
     const handleTopUp = (pkg: typeof KOIN_PACKAGES[0]) => {
-        const text = `Halo Admin ARRA 7! 🚀\n\nSaya ingin Top-Up Saldo Dompet ARRA:\n\n📧 Email: ${session?.user?.email}\n📦 Paket: ${pkg.label} (${pkg.koinCount} Koin)\n💰 Total Transfer: *${pkg.totalStr}*\n\nMohon dikirimkan instruksi QRIS pembayarannya. Terima kasih!`;
+        const text = `Halo Admin ARRA 7! 🚀\n\nSaya ingin Top-Up Saldo Dompet ARRA:\n\n📱 Akun: ${session?.user?.email || getEffectiveDeviceId()}\n📦 Paket: ${pkg.label} (${pkg.koinCount} Koin)\n💰 Total Transfer: *${pkg.totalStr}*\n\nMohon dikirimkan instruksi QRIS pembayarannya. Terima kasih!`;
         window.open(`https://t.me/arra7trader?text=${encodeURIComponent(text)}`, '_blank');
     };
 

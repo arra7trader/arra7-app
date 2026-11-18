@@ -1,7 +1,6 @@
 // Trade Journal API Route
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 import {
     getJournalEntries,
     addJournalEntry,
@@ -153,8 +152,8 @@ async function getActualTradesFromCopytrade(userId: string): Promise<{ trades: A
 // GET - Fetch journal entries and stats
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
         }
 
@@ -163,9 +162,9 @@ export async function GET(request: NextRequest) {
         const offset = parseInt(searchParams.get('offset') || '0');
 
         const [entries, stats, actual] = await Promise.all([
-            getJournalEntries(session.user.id, limit, offset),
-            getJournalStats(session.user.id),
-            getActualTradesFromCopytrade(session.user.id),
+            getJournalEntries(user.userId, limit, offset),
+            getJournalStats(user.userId),
+            getActualTradesFromCopytrade(user.userId),
         ]);
 
         return NextResponse.json({
@@ -184,8 +183,8 @@ export async function GET(request: NextRequest) {
 // POST - Add new entry
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
         }
 
@@ -197,7 +196,7 @@ export async function POST(request: NextRequest) {
         }
 
         const success = await addJournalEntry({
-            userId: session.user.id,
+            userId: user.userId,
             symbol,
             direction,
             entryPrice,
@@ -222,8 +221,8 @@ export async function POST(request: NextRequest) {
 // PUT - Update entry (close trade or update notes)
 export async function PUT(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
         }
 
@@ -258,8 +257,8 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remove entry
 export async function DELETE(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const user = await resolveUserOrDevice(request);
+        if (!user?.userId) {
             return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
         }
 
@@ -270,7 +269,7 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ status: 'error', message: 'Missing entry ID' }, { status: 400 });
         }
 
-        const success = await deleteJournalEntry(parseInt(id), session.user.id);
+        const success = await deleteJournalEntry(parseInt(id), user.userId);
 
         if (success) {
             return NextResponse.json({ status: 'success', message: 'Entry deleted' });

@@ -168,9 +168,13 @@ export default function CryptoHunterPage() {
 
                             {/* Secondary Navigation */}
                             <div className="flex items-center justify-center gap-4 text-xs text-slate-400 pt-2 font-sans">
-                                <Link href="/login" className="hover:text-white transition-colors underline underline-offset-4">
-                                    Sudah beli tapi belum login? Masuk
-                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={openActivation}
+                                    className="hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
+                                >
+                                    Punya Kode Lisensi? Aktivasi di sini
+                                </button>
                                 <span>•</span>
                                 <Link href="/" className="hover:text-white transition-colors">
                                     Kembali ke Beranda

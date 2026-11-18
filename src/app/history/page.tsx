@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DocumentIcon, TrendUpIcon, ChartIcon, ChevronDownIcon } from '@/components/PremiumIcons';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 
 interface HistoryItem {
     id: number;
@@ -17,24 +17,28 @@ interface HistoryItem {
 }
 
 export default function HistoryPage() {
-    const { data: session, status } = useSession();
-    const router = useRouter();
+    const { data: session } = useSession();
+    const { deviceId } = usePicaDevice();
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'forex' | 'stock'>('all');
     const [expandedId, setExpandedId] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/history');
-        } else if (status === 'authenticated') {
-            fetchHistory();
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
         }
-    }, [status, router]);
+        return '';
+    };
 
     const fetchHistory = async () => {
         try {
-            const res = await fetch('/api/history?limit=50');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/history?limit=50&deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (data.status === 'success') setHistory(data.data);
         } catch (error) {
@@ -43,6 +47,10 @@ export default function HistoryPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchHistory();
+    }, [session, deviceId]);
 
     const filteredHistory = history.filter(item => filter === 'all' ? true : item.type === filter);
 
@@ -55,7 +63,7 @@ export default function HistoryPage() {
         return type === 'forex' ? 'bg-blue-500/10 text-blue-400' : 'bg-green-500/10 text-green-400';
     };
 
-    if (status === 'loading' || loading) {
+    if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
                 <div className="w-10 h-10 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin" />

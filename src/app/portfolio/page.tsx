@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ChartIcon, TrashIcon } from '@/components/PremiumIcons';
+import { ChartIcon, TrashIcon, KeyIcon } from '@/components/PremiumIcons';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 
 interface Position {
     id: number;
@@ -34,6 +35,16 @@ interface PortfolioSummary {
 const POPULAR_SYMBOLS = ['XAUUSD', 'BTCUSD', 'EURUSD', 'GBPUSD', 'USDJPY'];
 
 export default function PortfolioPage() {
+    const { deviceId, openActivation } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
     const { data: session, status } = useSession();
     const router = useRouter();
     const [positions, setPositions] = useState<Position[]>([]);
@@ -52,12 +63,8 @@ export default function PortfolioPage() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?callbackUrl=/portfolio');
-        } else if (status === 'authenticated') {
-            fetchPortfolio();
-        }
-    }, [status, router]);
+        fetchPortfolio();
+    }, [session, deviceId]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -70,7 +77,10 @@ export default function PortfolioPage() {
         if (!silent) setLoading(true);
         else setRefreshing(true);
         try {
-            const res = await fetch('/api/portfolio');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/portfolio?deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setPositions(data.positions);
@@ -90,7 +100,7 @@ export default function PortfolioPage() {
         try {
             const res = await fetch('/api/portfolio', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-device-id': getEffectiveDeviceId() },
                 body: JSON.stringify({
                     symbol: formSymbol,
                     direction: formDirection,
@@ -158,7 +168,7 @@ export default function PortfolioPage() {
         );
     }
 
-    if (!session) return null;
+    
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-36">

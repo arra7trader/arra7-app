@@ -592,7 +592,7 @@ export default function PricingPage() {
                 <p className="text-slate-600 mb-6 text-sm">
                     Anda selalu dapat mencoba akun Basic secara gratis untuk melakukan analisis harian XAUUSD dan simulasi PICA Neural Lab.
                 </p>
-                <Link href={session ? '/xauusd-neural-lab' : '/login'}>
+                <Link href="/xauusd-neural-lab">
                     <button className="px-8 py-3 rounded-full border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-bold text-sm transition-all shadow-xs cursor-pointer">
                         Mulai dengan Akun Gratis
                     </button>

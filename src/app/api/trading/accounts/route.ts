@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 import getTursoClient from '@/lib/turso';
 import { nanoid } from 'nanoid';
 
-// GET: Fetch all connected accounts for the user
+// GET: Fetch all connected accounts for the user (supports session or deviceId)
 export async function GET(req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const user = await resolveUserOrDevice(req);
+    if (!user?.userId) {
         return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest) {
                   FROM trading_accounts 
                   WHERE user_id = ? 
                   ORDER BY created_at DESC`,
-            args: [session.user.id]
+            args: [user.userId]
         });
 
         const accounts = result.rows.map(row => ({
@@ -36,17 +35,17 @@ export async function GET(req: NextRequest) {
             createdAt: row.created_at
         }));
 
-        return NextResponse.json({ status: 'success', data: accounts });
+        return NextResponse.json({ status: 'success', accounts, data: accounts });
     } catch (error) {
         console.error('Fetch accounts error:', error);
         return NextResponse.json({ status: 'error', message: 'Failed to fetch accounts' }, { status: 500 });
     }
 }
 
-// POST: Connect a new trading account
+// POST: Connect a new trading account (supports session or deviceId)
 export async function POST(req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const user = await resolveUserOrDevice(req);
+    if (!user?.userId) {
         return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -64,20 +63,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ status: 'error', message: 'Database configuration error' }, { status: 500 });
         }
 
-        // SIMULATION: In a real app, we would verify with MetaApi here.
-        // For MVP, if the server contains "demo", we mark as CONNECTED immediately.
-        // If "real", we simulate a verification delay or success.
         const connectionStatus = 'CONNECTED';
         const accountId = nanoid();
-
-        // Encrypt password/key before storing (Placeholder for now)
-        // In production, use proper encryption (e.g., AES)
         const encryptedKey = `encrypted_${password}`;
 
         await turso.execute({
             sql: `INSERT INTO trading_accounts (id, user_id, name, broker, login, server, platform, api_key, connection_status)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [accountId, session.user.id, name, broker, login, server, platform, encryptedKey, connectionStatus]
+            args: [accountId, user.userId, name, broker, login, server, platform, encryptedKey, connectionStatus]
         });
 
         // Initialize Auto-Trade Settings for this account
@@ -96,5 +89,36 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error('Connect account error:', error);
         return NextResponse.json({ status: 'error', message: 'Failed to connect account' }, { status: 500 });
+    }
+}
+
+// DELETE: Remove account
+export async function DELETE(req: NextRequest) {
+    const user = await resolveUserOrDevice(req);
+    if (!user?.userId) {
+        return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+        if (!id) {
+            return NextResponse.json({ status: 'error', message: 'Account ID required' }, { status: 400 });
+        }
+
+        const turso = getTursoClient();
+        if (!turso) {
+            return NextResponse.json({ status: 'error', message: 'Database configuration error' }, { status: 500 });
+        }
+
+        await turso.execute({
+            sql: 'DELETE FROM trading_accounts WHERE id = ? AND user_id = ?',
+            args: [id, user.userId]
+        });
+
+        return NextResponse.json({ status: 'success', message: 'Account deleted' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        return NextResponse.json({ status: 'error', message: 'Failed to delete account' }, { status: 500 });
     }
 }

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { usePicaDevice } from '@/context/PicaDeviceContext';
 import { PlusIcon, TrashIcon, PlayIcon, PauseIcon, CogIcon } from '@heroicons/react/24/outline';
 
 interface TradingAccount {
@@ -23,6 +24,16 @@ interface TradingAccount {
 }
 
 export default function AutoTradingDashboard() {
+    const { deviceId, openActivation } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
     const { data: session } = useSession();
     const [accounts, setAccounts] = useState<TradingAccount[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,14 +47,15 @@ export default function AutoTradingDashboard() {
     });
 
     useEffect(() => {
-        if (session) {
-            fetchAccounts();
-        }
-    }, [session]);
+        fetchAccounts();
+    }, [session, deviceId]);
 
     const fetchAccounts = async () => {
         try {
-            const res = await fetch('/api/trading/accounts');
+            const activeDevId = getEffectiveDeviceId();
+            const res = await fetch(`/api/trading/accounts?deviceId=${activeDevId}`, {
+                headers: { 'x-device-id': activeDevId },
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setAccounts(data.accounts);
@@ -60,7 +72,7 @@ export default function AutoTradingDashboard() {
         try {
             const res = await fetch('/api/trading/accounts', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-device-id': getEffectiveDeviceId() },
                 body: JSON.stringify({ action: 'create', ...newAccount })
             });
             const data = await res.json();

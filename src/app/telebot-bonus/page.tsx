@@ -1,20 +1,30 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getEffectiveTelebotMembership, getTelebotBonusVideoConfig, TELEBOT_BONUS_VIDEO_TITLE } from '@/lib/telebot-bonus';
+import { getDeviceStatus } from '@/lib/license';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TelebotBonusPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect('/login?callbackUrl=/telebot-bonus');
+  const cookieStore = await cookies();
+  const deviceId = cookieStore.get('pica_device_id')?.value;
+
+  let isDeviceActive = false;
+  if (deviceId) {
+    try {
+      const dev = await getDeviceStatus(deviceId);
+      if (dev && !dev.isExpired && ['PRO', 'VVIP'].includes(dev.tier)) {
+        isDeviceActive = true;
+      }
+    } catch {}
   }
 
-  const membership = await getEffectiveTelebotMembership(session.user.id);
+  const membership = session?.user?.id ? await getEffectiveTelebotMembership(session.user.id) : null;
   const config = getTelebotBonusVideoConfig();
-  const isActive = membership?.status === 'active';
+  const isActive = isDeviceActive || membership?.status === 'active';
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] pt-28 pb-20 px-4">
@@ -32,7 +42,7 @@ export default async function TelebotBonusPage() {
           <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-8">
             <h2 className="text-2xl font-semibold mb-3">Akses Belum Aktif</h2>
             <p className="text-[var(--text-secondary)] mb-6">
-              Bonus video ini hanya terbuka untuk member TELEBOT yang statusnya masih aktif.
+              Bonus video ini hanya terbuka untuk member TELEBOT atau pemilik lisensi PRO / VVIP yang statusnya masih aktif.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/telebot" className="px-5 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors">
@@ -92,9 +102,9 @@ export default async function TelebotBonusPage() {
               </div>
               <div className="mt-6 rounded-2xl bg-[var(--bg-primary)]/70 border border-[var(--border-light)] p-4 text-sm text-[var(--text-secondary)]">
                 <p className="font-semibold text-[var(--text-primary)] mb-2">Status Membership</p>
-                <p>Plan: {membership?.planCode || 'TELEBOT'}</p>
-                <p>Status: {membership?.status || 'inactive'}</p>
-                <p>Masa aktif: {membership?.expiresAt ? new Date(membership.expiresAt).toLocaleDateString('id-ID') : '-'}</p>
+                <p>Plan: {isDeviceActive ? 'VVIP LICENSE' : (membership?.planCode || 'TELEBOT')}</p>
+                <p>Status: {isActive ? 'active' : 'inactive'}</p>
+                <p>Masa aktif: {isDeviceActive ? 'Aktif (Lisensi Device)' : (membership?.expiresAt ? new Date(membership.expiresAt).toLocaleDateString('id-ID') : '-')}</p>
               </div>
             </div>
           </div>

@@ -1,18 +1,14 @@
+'use client';
 
 import AutoTradingDashboard from '@/components/trading/AutoTradingDashboard';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import PremiumGuard from '@/components/layout/PremiumGuard';
 
-export default async function TradingBotPage() {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        redirect('/login');
-    }
-
+export default function TradingBotPage() {
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <AutoTradingDashboard />
-        </div>
+        <PremiumGuard minTier="PRO" title="Trading Bot">
+            <div className="p-6 max-w-7xl mx-auto">
+                <AutoTradingDashboard />
+            </div>
+        </PremiumGuard>
     );
 }

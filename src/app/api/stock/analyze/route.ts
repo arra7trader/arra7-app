@@ -1,70 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { checkStockQuota, useStockQuota } from '@/lib/quota';
 import { analyzeWithGroq } from '@/lib/groq-ai';
 import { getPredictor } from '@/lib/smart-predictor';
 import { formatMarketDataForAI, MarketData } from '@/lib/market-data';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 
 export async function POST(request: NextRequest) {
     try {
-        // Check authentication
-        let userId: string | null = null;
-        const session = await getServerSession(authOptions);
-
-        if (session?.user?.id) {
-            userId = session.user.id;
-        } else {
-            // Try Mobile Bearer Token
-            const authHeader = request.headers.get('Authorization');
-            if (authHeader?.startsWith('Bearer ')) {
-                const token = authHeader.split(' ')[1];
-                const { verifyMobileToken } = await import('@/lib/mobile-auth');
-                const userEmail = await verifyMobileToken(token);
-
-                if (userEmail) {
-                    const turso = (await import('@/lib/turso')).default();
-                    if (turso) {
-                        try {
-                            const userRes = await turso.execute({
-                                sql: 'SELECT id FROM users WHERE email = ?',
-                                args: [userEmail]
-                            });
-                            if (userRes.rows.length > 0) {
-                                userId = userRes.rows[0].id as string;
-                            }
-                        } catch (e) { console.error(e); }
-                    }
-                }
-            }
+        let body: any = {};
+        try {
+            body = await request.json();
+        } catch {
+            body = {};
         }
 
-        if (!userId) {
-            return NextResponse.json(
-                { status: 'error', message: 'Silakan login terlebih dahulu' },
-                { status: 401 }
-            );
-        }
-
-        // Session wrapper for quota function compatibility
-        const userSessionId = userId;
-
-        // Check stock quota
-        const quotaCheck = await checkStockQuota(userSessionId);
-        if (!quotaCheck.allowed) {
-            return NextResponse.json(
-                {
-                    status: 'error',
-                    message: quotaCheck.message,
-                    quotaStatus: quotaCheck.quotaStatus,
-                    waitTimeSeconds: quotaCheck.waitTimeSeconds,
-                },
-                { status: 403 }
-            );
-        }
-
-        const body = await request.json();
-        const { symbol, stockData, market } = body; // market: 'IDX' | 'US'
+        const { symbol, stockData, market, deviceId } = body; // market: 'IDX' | 'US'
 
         if (!symbol || !stockData) {
             return NextResponse.json(
@@ -73,11 +23,27 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // === 1. Prepare Market Data for AI ===
-        // Convert stockData from frontend to MarketData format needed for formatMarketDataForAI
-        // Frontend stockData usually has: currentPrice, change, changePercent, high52Week, etc. and historicalData
+        // Frictionless auth: resolve user or device license without requiring Google login
+        const resolvedUser = await resolveUserOrDevice(request, deviceId);
+        const userSessionId = resolvedUser.userId;
 
-        // Map simplified stockData to full MarketData
+        // Check stock quota (VVIP / full access has unlimited quota)
+        if (!resolvedUser.isFullAccess) {
+            const quotaCheck = await checkStockQuota(userSessionId);
+            if (!quotaCheck.allowed) {
+                return NextResponse.json(
+                    {
+                        status: 'error',
+                        message: quotaCheck.message,
+                        quotaStatus: quotaCheck.quotaStatus,
+                        waitTimeSeconds: quotaCheck.waitTimeSeconds,
+                    },
+                    { status: 403 }
+                );
+            }
+        }
+
+        // === 1. Prepare Market Data for AI ===
         const mappingData: MarketData = {
             symbol: symbol,
             name: stockData.name || symbol,
@@ -92,7 +58,7 @@ export async function POST(request: NextRequest) {
             is_realtime: true,
             candles: (stockData.historicalData || []).map((h: any) => ({
                 time: h.date,
-                open: h.open || h.close, // Fallback if limited data
+                open: h.open || h.close,
                 high: h.high || h.close,
                 low: h.low || h.close,
                 close: h.close,
@@ -107,32 +73,25 @@ export async function POST(request: NextRequest) {
         try {
             const predictor = getPredictor(symbol, 14); // 14 period horizon
 
-            // Prepare history for predictor
             const history = mappingData.candles.map(c => ({
                 price: c.close,
                 timestamp: new Date(c.time).getTime(),
                 volume: c.volume
             }));
 
-            // Generate Prediction
             const prediction = predictor.predictStock(mappingData.current_price, history);
 
             mlContext = {
                 direction: prediction.direction,
-                winrate: Math.round(prediction.confidence * 100), // Map confidence to winrate representation
+                winrate: Math.round(prediction.confidence * 100),
                 confidence: prediction.confidence,
                 isAvailable: true
             };
-
-            console.log(`[StockML] ${symbol} Prediction: ${prediction.direction} (${prediction.confidence})`);
         } catch (e) {
             console.error('Stock ML Error:', e);
-            // Non-blocking, continue without ML
         }
 
-
         // === 3. Call Groq AI ===
-        // Uses the standardized 'Quantum' Prompt logic via analyzeWithGroq
         const aiResult = await analyzeWithGroq(marketDataText, mlContext);
 
         if (!aiResult.success || !aiResult.analysis) {
@@ -140,7 +99,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Use quota after successful analysis
-        await useStockQuota(userSessionId);
+        await useStockQuota(userSessionId).catch(() => {});
 
         // Save to history
         try {
@@ -158,15 +117,11 @@ export async function POST(request: NextRequest) {
         // Save signal for performance tracking
         let nativeSignalData = null;
         try {
-            const { parseSignalFromAnalysis, saveSignal, forceSaveSignal } = await import('@/lib/signal-tracker');
-
+            const { parseSignalFromAnalysis, saveSignal } = await import('@/lib/signal-tracker');
             const signalData = parseSignalFromAnalysis(aiResult.analysis, 'stock', symbol);
             if (signalData) {
-                const saved = await saveSignal(signalData);
+                await saveSignal(signalData);
                 nativeSignalData = signalData;
-            } else {
-                // Fallback parsing (simplified relative to the complex function)
-                // Actually relying on parseSignalFromAnalysis is best as it handles the new format.
             }
         } catch (signalError) {
             console.error('Failed to save signal:', signalError);
@@ -175,7 +130,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             status: 'success',
             analysis: aiResult.analysis,
-            formattedHtml: aiResult.formattedHtml, // Include the nice HTML
+            formattedHtml: aiResult.formattedHtml,
             parsedSignal: nativeSignalData,
             timestamp: new Date().toISOString(),
         });

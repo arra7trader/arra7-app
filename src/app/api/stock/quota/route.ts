@@ -1,29 +1,22 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { resolveUserOrDevice } from '@/lib/auth-device';
 import { getStockQuotaStatus } from '@/lib/quota';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const resolved = await resolveUserOrDevice(request);
 
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { status: 'error', message: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
-
-        const quotaStatus = await getStockQuotaStatus(session.user.id);
+        const quotaStatus = await getStockQuotaStatus(resolved.userId);
+        const isUnlimited = resolved.membership === 'VVIP' || quotaStatus.membership === 'VVIP';
 
         return NextResponse.json({
             status: 'success',
             data: {
-                membership: quotaStatus.membership,
-                dailyLimit: quotaStatus.dailyLimit === Infinity ? 'Unlimited' : quotaStatus.dailyLimit,
+                membership: isUnlimited ? 'VVIP' : (resolved.membership || quotaStatus.membership),
+                dailyLimit: isUnlimited || quotaStatus.dailyLimit === Infinity ? 'Unlimited' : quotaStatus.dailyLimit,
                 used: quotaStatus.used,
-                remaining: quotaStatus.remaining === Infinity ? 'Unlimited' : quotaStatus.remaining,
-                canAnalyze: quotaStatus.canAnalyze,
+                remaining: isUnlimited || quotaStatus.remaining === Infinity ? 'Unlimited' : quotaStatus.remaining,
+                canAnalyze: isUnlimited || quotaStatus.canAnalyze,
             },
         });
 

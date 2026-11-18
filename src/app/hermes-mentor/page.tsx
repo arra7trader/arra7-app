@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -85,10 +85,15 @@ export default function HermesMentorPage() {
 
     // Check access when user opens chat
     const handleStartChat = async () => {
+        if (!isDeviceActive) {
+            openActivation();
+            return;
+        }
+
         setShowChat(true);
         setMessages([{
             role: 'assistant',
-            content: `🧠 **Halo ${session?.user?.name || (isDeviceActive ? 'Member VIP' : 'Trader')}! Saya HERMES — AI Private Mentor Trading kamu.**
+            content: `🧠 **Halo Trader! Saya HERMES — AI Private Mentor Trading kamu.**
 
 Senang bertemu! Saya di sini untuk membimbing kamu menjadi trader yang lebih baik, bukan cuma kasih sinyal, tapi kasih **PEMAHAMAN MENDALAM**.
 
@@ -213,7 +218,7 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
                             className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-base shadow-lg shadow-amber-500/30 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
                         >
                             <BoltIcon size="sm" className="text-white" />
-                            <span>Mulai Chat dengan HERMES →</span>
+                            <span>{isDeviceActive ? 'Mulai Chat dengan HERMES →' : '🔑 Aktivasi Lisensi untuk Chat →'}</span>
                         </button>
 
                         <button
@@ -393,7 +398,7 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
                         onClick={handleStartChat}
                         className="px-8 py-3.5 rounded-xl bg-white text-amber-700 font-black text-sm hover:bg-amber-50 transition-all shadow-lg active:scale-95 cursor-pointer"
                     >
-                        🧠 Chat HERMES Sekarang
+                        {isDeviceActive ? '🧠 Chat HERMES Sekarang' : '🔑 Aktivasi Lisensi Sekarang'}
                     </button>
                 </div>
             </section>
