@@ -49,7 +49,7 @@ export interface DeviceUser {
   totalVisits: number;
 }
 
-type ProductType = 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
+type ProductType = 'HERMES_MENTOR' | 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
 
 interface ProductPreset {
   id: ProductType;
@@ -66,6 +66,22 @@ interface ProductPreset {
 }
 
 const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
+  HERMES_MENTOR: {
+    id: 'HERMES_MENTOR',
+    title: 'HERMES AI Private Mentor 24/7',
+    badge: '🤖 HERMES AI MENTOR',
+    priceDisplay: 'Rp 49.000 (Lifetime)',
+    tagColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    borderActive: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/40',
+    description: 'AI Trading Mentor pribadi dengan memori 20 percakapan, kalkulator position sizing, review journal, dan bimbingan psikologi trading 24/7. Akses Lifetime!',
+    tier: 'VVIP',
+    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 49.000' }],
+    notePrefix: '[HERMES_MENTOR]',
+    generateText: (code, buyerName, _) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Terima kasih, pembayaran HERMES AI Private Mentor telah kami verifikasi. ✅\n\nBerikut Kode Lisensi Aktivasi Anda:\n🔑 Kode: ${code}\n💎 Akses: Lifetime (Selamanya)\n🤖 Paket: HERMES AI Private Mentor 24/7\n\nFitur Utama yang Anda Dapatkan:\n✅ AI Trading Mentor Pribadi 24 Jam Non-stop\n✅ Ingat riwayat portofolio & konteks percakapan (20 memory)\n✅ Kalkulator Position Sizing & Hitungan Margin Otomatis\n✅ Review Trading Journal & Evaluasi Emosi/Overtrading\n✅ Akses Selamanya tanpa biaya langganan bulanan\n\nCara Aktivasi & Akses:\n1. Buka https://pica.my.id/hermes-mentor (atau https://pica.my.id)\n2. Klik tombol "Aktivasi Kode Lisensi"\n3. Masukkan kode: ${code} lalu klik Aktifkan\n4. Klik tombol "Mulai Chat Mentor" untuk langsung konsultasi!\n\nSelamat menikmati bimbingan AI pribadi Anda & salam profit konsisten! 🚀`;
+    },
+  },
   ALL_ACCESS: {
     id: 'ALL_ACCESS',
     title: 'Promo Semua Produk Lifetime (4 Produk Inti)',
@@ -498,6 +514,7 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
   // Helper to parse product from note
   const getProductFromNote = (note?: string): ProductType => {
     if (!note) return 'CUSTOM';
+    if (note.includes('[HERMES_MENTOR]') || note.toLowerCase().includes('hermes')) return 'HERMES_MENTOR';
     if (note.includes('[ALL_ACCESS]') || note.toLowerCase().includes('all_access') || note.toLowerCase().includes('all access')) return 'ALL_ACCESS';
     if (note.includes('[FIBO_KYOKO]') || note.toLowerCase().includes('fibo')) return 'FIBO_KYOKO';
     if (note.includes('[TELEBOT]') || note.toLowerCase().includes('telebot')) return 'TELEBOT';
@@ -892,6 +909,14 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
                   }`}
                 >
                   Semua Produk
+                </button>
+                <button
+                  onClick={() => setFilterProduct('HERMES_MENTOR')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                    filterProduct === 'HERMES_MENTOR' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  🤖 Hermes AI
                 </button>
                 <button
                   onClick={() => setFilterProduct('ALL_ACCESS')}

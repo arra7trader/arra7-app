@@ -453,6 +453,106 @@ export async function POST(request: Request) {
       lastMessageText: text,
     });
 
+    // Admin Instant Activator for HERMES AI (via Telegram DM)
+    const isAdminTelegram = username.toLowerCase() === 'arra7trader' || username.toLowerCase() === 'arlandpratama';
+    if ((cmd === '/aktifkan' || cmd === '/activate') && arg) {
+      if (!isAdminTelegram) {
+        await reply(chatId, '❌ Perintah ini khusus untuk Administrator (@arra7trader).');
+        return NextResponse.json({ ok: true });
+      }
+
+      const targetEmail = arg.trim().toLowerCase();
+      if (!targetEmail.includes('@')) {
+        await reply(chatId, '❌ Format email salah. Contoh penggunaan:\n<code>/aktifkan pembeli@gmail.com</code>', { allowHtml: true });
+        return NextResponse.json({ ok: true });
+      }
+
+      try {
+        const turso = (await import('@/lib/turso')).default();
+        if (!turso) {
+          await reply(chatId, '❌ Database belum terkonfigurasi.');
+          return NextResponse.json({ ok: true });
+        }
+
+        await turso.execute(`
+          CREATE TABLE IF NOT EXISTS user_purchases (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id TEXT NOT NULL,
+              product TEXT NOT NULL,
+              price INTEGER NOT NULL,
+              currency TEXT DEFAULT 'IDR',
+              status TEXT DEFAULT 'ACTIVE',
+              purchased_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              expires_at DATETIME,
+              notes TEXT,
+              FOREIGN KEY (user_id) REFERENCES users(id)
+          )
+        `);
+
+        const userRes = await turso.execute({
+          sql: 'SELECT id, name, membership FROM users WHERE email = ?',
+          args: [targetEmail],
+        });
+
+        let targetUserId = '';
+        let targetName = targetEmail.split('@')[0];
+
+        if (userRes.rows.length > 0) {
+          targetUserId = userRes.rows[0].id as string;
+          targetName = (userRes.rows[0].name as string) || targetName;
+          const currentTier = userRes.rows[0].membership as string;
+          if (!['PRO', 'VVIP'].includes(currentTier)) {
+            await turso.execute({
+              sql: "UPDATE users SET membership = 'HERMES_MENTOR', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+              args: [targetUserId],
+            });
+          }
+        } else {
+          const crypto = await import('crypto');
+          targetUserId = crypto.randomUUID();
+          await turso.execute({
+            sql: `INSERT INTO users (id, email, name, membership, created_at, updated_at)
+                  VALUES (?, ?, ?, 'HERMES_MENTOR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            args: [targetUserId, targetEmail, targetName],
+          });
+        }
+
+        const existingPurchase = await turso.execute({
+          sql: "SELECT id FROM user_purchases WHERE user_id = ? AND product = 'HERMES_MENTOR' AND status = 'ACTIVE'",
+          args: [targetUserId],
+        });
+
+        if (existingPurchase.rows.length === 0) {
+          await turso.execute({
+            sql: `INSERT INTO user_purchases (user_id, product, price, notes)
+                  VALUES (?, 'HERMES_MENTOR', 49000, ?)`,
+            args: [targetUserId, `Activated via Telegram by @${username}`],
+          });
+        }
+
+        const successMsg = `🎉 <b>HERMES AI BERHASIL DIAKTIFKAN!</b>\n\n` +
+          `👤 <b>User:</b> ${targetName}\n` +
+          `📧 <b>Email:</b> <code>${targetEmail}</code>\n` +
+          `💎 <b>Akses:</b> LIFETIME (Seumur Hidup)\n\n` +
+          `📋 <b>Salin pesan di bawah & kirimkan ke pembeli di Telegram:</b>\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `<i>Halo kak ${targetName}! Pembayaran Rp 49.000 sudah diverifikasi. ✅\n\n` +
+          `Akses HERMES AI Private Mentor kamu sudah AKTIF SEUMUR HIDUP untuk email: ${targetEmail}\n\n` +
+          `Cara pakainya:\n` +
+          `1. Buka https://pica.my.id/hermes-mentor\n` +
+          `2. Login menggunakan email Google kamu (${targetEmail})\n` +
+          `3. Klik tombol "Mulai Chat Mentor"\n` +
+          `4. Kamu bisa langsung konsultasi analisa, hitung lot, dan review journal 24/7!\n\n` +
+          `Selamat trading & salam profit! 🚀</i>`;
+
+        await reply(chatId, successMsg, { allowHtml: true });
+        return NextResponse.json({ ok: true });
+      } catch (e: any) {
+        await reply(chatId, `❌ Terjadi kesalahan: ${e.message}`);
+        return NextResponse.json({ ok: true });
+      }
+    }
+
     if (cmd === '/start') {
       const linked = await getTelegramUser(chatId);
       if (!linked) {

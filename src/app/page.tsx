@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -511,6 +511,7 @@ export default function Home() {
             <Link href="/kursus-fibo-kyoko" className="hover:text-blue-600 transition-colors">Kursus Fibo Kyoko</Link>
             <Link href="/dom-arra" className="hover:text-blue-600 transition-colors">DOM ARRA</Link>
             <Link href="/analisa-market" className="hover:text-blue-600 transition-colors">Analisis Market</Link>
+            <Link href="/hermes-mentor" className="hover:text-blue-600 transition-colors">Hermes Mentor</Link>
             <Link href="/pricing" className="hover:text-blue-600 transition-colors">Pricing</Link>
             <Link href="/faq" className="hover:text-blue-600 transition-colors">FAQ</Link>
           </div>
