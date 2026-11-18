@@ -25,6 +25,7 @@ export default function Navbar() {
     const { data: session, status } = useSession();
     const t = useTranslations('nav');
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isVvip, isPro, daysLeft, openActivation } = usePicaDevice();
 
     const isAdmin =
@@ -90,8 +91,8 @@ export default function Navbar() {
             </div>
 
             <nav className="relative flex items-center justify-between h-14 sm:h-16 w-full px-3 sm:px-6 md:px-12 antialiased">
-                {/* Left Side: Akses Harga & Fitur */}
-                <div className="hidden sm:flex flex-1 items-center gap-1.5 sm:gap-3">
+                {/* Left Side: Akses Harga, Kompetisi, Hermes AI & Fitur */}
+                <div className="hidden sm:flex flex-1 items-center gap-1.5 sm:gap-2.5">
                     <Link
                         href="/pricing"
                         className="hidden sm:flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
@@ -109,7 +110,17 @@ export default function Navbar() {
                         <span className="xs:hidden">Lomba</span>
                     </Link>
 
-                    {/* Popover Menu: 4 Fitur Utama */}
+                    {/* Prominent Direct Hermes AI Button */}
+                    <Link
+                        href="/hermes-mentor"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border border-amber-400 text-xs sm:text-[13px] font-black transition-all shadow-xs hover:shadow-amber-500/20 active:scale-95 cursor-pointer"
+                    >
+                        <span>🧠</span>
+                        <span>HERMES AI</span>
+                        <span className="text-[9px] bg-black/25 px-1 py-0.2 rounded font-extrabold uppercase">49K</span>
+                    </Link>
+
+                    {/* Popover Menu: Fitur Utama */}
                     <Popover.Root>
                         <Popover.Trigger asChild>
                             <button
@@ -128,9 +139,22 @@ export default function Navbar() {
                             >
                                 <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                                     <span>EKOSISTEM ARRA 7 / PICA</span>
-                                    <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">4 FITUR UTAMA</span>
+                                    <span className="text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded font-bold">FITUR &amp; AI</span>
                                 </div>
                                 <div className="py-1 space-y-0.5 text-xs">
+                                    <Link href="/hermes-mentor" className="flex items-center justify-between p-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-950 transition-colors border border-amber-200/80">
+                                        <div className="flex items-center gap-2">
+                                            <span>🧠</span>
+                                            <div>
+                                                <p className="font-bold flex items-center gap-1 text-slate-900">
+                                                    HERMES AI Mentor
+                                                    <span className="text-[8px] bg-red-600 text-white px-1 py-0.2 rounded font-black">HOT</span>
+                                                </p>
+                                                <p className="text-[10px] text-amber-800">AI Private Coach Trading (SMC &amp; Sizing)</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900">49K</span>
+                                    </Link>
                                     <Link href="/arra-cronos" className="flex items-center justify-between p-2 rounded-xl hover:bg-cyan-50 text-slate-800 hover:text-cyan-700 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <span>⚡</span>
@@ -220,9 +244,18 @@ export default function Navbar() {
                 </div>
 
                 {/* Right Side Actions */}
-                <div className="flex-1 flex items-center justify-end gap-2 sm:gap-3">
+                <div className="flex-1 flex items-center justify-end gap-1.5 sm:gap-3">
+                    {/* Mobile Direct Hermes AI button */}
+                    <Link
+                        href="/hermes-mentor"
+                        className="sm:hidden flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black shadow-xs active:scale-95 shrink-0 border border-amber-400/80"
+                    >
+                        <span>🧠</span>
+                        <span>HERMES</span>
+                    </Link>
+
                     {/* Language Switcher */}
-                    <div className="flex items-center">
+                    <div className="hidden xs:flex items-center">
                         <LanguageSwitcher />
                     </div>
 
@@ -345,7 +378,7 @@ export default function Navbar() {
                             {isVvip ? (
                                 <button
                                     onClick={openActivation}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
                                     title="Status: VVIP Member"
                                 >
                                     <CrownIcon size="xs" className="text-amber-600" />
@@ -356,7 +389,7 @@ export default function Navbar() {
                             ) : isPro ? (
                                 <button
                                     onClick={openActivation}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
                                     title="Status: PRO Member"
                                 >
                                     <BoltIcon size="xs" className="text-blue-600" />
@@ -370,13 +403,135 @@ export default function Navbar() {
                                     className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95"
                                 >
                                     <KeyIcon size="xs" className="text-white" />
-                                    <span>Aktivasi Kode</span>
+                                    <span className="hidden xs:inline">Aktivasi Kode</span>
+                                    <span className="xs:hidden">Kode</span>
                                 </button>
                             )}
                         </div>
                     )}
+
+                    {/* Mobile Hamburger Menu Toggle */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="sm:hidden flex items-center justify-center size-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors cursor-pointer border border-slate-200 shrink-0"
+                        aria-label="Toggle Navigation Menu"
+                    >
+                        {isMobileMenuOpen ? (
+                            <span className="text-base font-black leading-none">✕</span>
+                        ) : (
+                            <span className="text-base font-black leading-none">☰</span>
+                        )}
+                    </button>
                 </div>
             </nav>
+
+            {/* Mobile Menu Dropdown Panel */}
+            {isMobileMenuOpen && (
+                <div className="sm:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-2xl shadow-xl px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
+                    <div className="space-y-2">
+                        {/* Top Highlight: Hermes AI */}
+                        <Link
+                            href="/hermes-mentor"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/20 active:scale-98 transition-all"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <span className="text-2xl">🧠</span>
+                                <div>
+                                    <p className="font-black text-sm flex items-center gap-1.5">
+                                        HERMES AI Private Mentor
+                                        <span className="text-[9px] bg-white text-amber-700 px-1.5 py-0.2 rounded-full font-black uppercase">HOT</span>
+                                    </p>
+                                    <p className="text-[11px] text-amber-100 font-medium">Bimbingan SMC, Sizing &amp; Psikologi 24/7</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-black/30 text-amber-200 shrink-0">49K</span>
+                        </Link>
+
+                        {/* Grid of Other Features */}
+                        <div className="grid grid-cols-2 gap-1.5 pt-1">
+                            <Link
+                                href="/pricing"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200/80 transition-colors"
+                            >
+                                <span>💵</span>
+                                <span>Daftar Harga</span>
+                            </Link>
+                            <Link
+                                href="/kompetisi"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs border border-amber-200 transition-colors"
+                            >
+                                <span>🏆</span>
+                                <span>Lomba FBS $1.5K</span>
+                            </Link>
+                            <Link
+                                href="/arra-cronos"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200/80 transition-colors"
+                            >
+                                <span>⚡</span>
+                                <span>ARRA Cronos</span>
+                            </Link>
+                            <Link
+                                href="/arra-grok"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-200 transition-colors"
+                            >
+                                <span>🤖</span>
+                                <span>ARRA GROK</span>
+                            </Link>
+                            <Link
+                                href="/xauusd-neural-lab"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200/80 transition-colors"
+                            >
+                                <span>🧠</span>
+                                <span>Neural Lab</span>
+                            </Link>
+                            <Link
+                                href="/kursus-fibo-kyoko"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200/80 transition-colors"
+                            >
+                                <span>🎓</span>
+                                <span>Kursus Fibo</span>
+                            </Link>
+                            <Link
+                                href="/dom-arra"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200/80 transition-colors"
+                            >
+                                <span>📊</span>
+                                <span>DOM ARRA</span>
+                            </Link>
+                            <Link
+                                href="/analisa-market"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200/80 transition-colors"
+                            >
+                                <span>📈</span>
+                                <span>Analisis Market</span>
+                            </Link>
+                        </div>
+
+                        {/* Activation Link in Drawer */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    openActivation();
+                                }}
+                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                            >
+                                <KeyIcon size="xs" className="text-white" />
+                                <span>Aktivasi Kode Lisensi</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </motion.header>
     );
 }

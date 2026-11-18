@@ -55,8 +55,18 @@ const TESTIMONIALS = [
 
 export default function HermesMentorPage() {
     const { data: session } = useSession();
-    const { openActivation, tier, deviceId } = usePicaDevice();
-    const isDeviceActive = ['PRO', 'VVIP', 'HERMES_MENTOR', 'LIFETIME', 'ALL_ACCESS'].includes((tier || '').toUpperCase());
+    const { openActivation, tier, deviceId, isVvip, isPro } = usePicaDevice();
+
+    const getEffectiveDeviceId = () => {
+        if (deviceId) return deviceId;
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('pica_device_id');
+            if (stored) return stored;
+        }
+        return '';
+    };
+
+    const isDeviceActive = isVvip || isPro || ['PRO', 'VVIP', 'HERMES_MENTOR', 'LIFETIME', 'ALL_ACCESS'].includes((tier || '').toUpperCase());
     const [showChat, setShowChat] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -75,15 +85,10 @@ export default function HermesMentorPage() {
 
     // Check access when user opens chat
     const handleStartChat = async () => {
-        if (!session && !isDeviceActive) {
-            signIn('google');
-            return;
-        }
-
         setShowChat(true);
         setMessages([{
             role: 'assistant',
-            content: `🧠 **Halo ${session?.user?.name || 'Trader'}! Saya HERMES — AI Private Mentor Trading kamu.**
+            content: `🧠 **Halo ${session?.user?.name || (isDeviceActive ? 'Member VIP' : 'Trader')}! Saya HERMES — AI Private Mentor Trading kamu.**
 
 Senang bertemu! Saya di sini untuk membimbing kamu menjadi trader yang lebih baik, bukan cuma kasih sinyal, tapi kasih **PEMAHAMAN MENDALAM**.
 
@@ -110,6 +115,13 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setIsTyping(true);
 
+        const activeDevId = getEffectiveDeviceId();
+        if (activeDevId && typeof document !== 'undefined') {
+            try {
+                document.cookie = `pica_device_id=${activeDevId}; path=/; max-age=315360000; SameSite=Lax`;
+            } catch (_) {}
+        }
+
         try {
             const history = messages.map(m => ({ role: m.role, content: m.content }));
 
@@ -117,11 +129,12 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-pica-device-id': deviceId || '',
+                    'x-pica-device-id': activeDevId,
                 },
                 body: JSON.stringify({
                     message: userMsg,
                     conversationHistory: history,
+                    deviceId: activeDevId,
                 }),
             });
 
@@ -200,7 +213,7 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
                             className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-base shadow-lg shadow-amber-500/30 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
                         >
                             <BoltIcon size="sm" className="text-white" />
-                            {session || isDeviceActive ? 'Mulai Chat dengan HERMES →' : 'Login & Mulai Chat →'}
+                            <span>Mulai Chat dengan HERMES →</span>
                         </button>
 
                         <button
@@ -380,7 +393,7 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
                         onClick={handleStartChat}
                         className="px-8 py-3.5 rounded-xl bg-white text-amber-700 font-black text-sm hover:bg-amber-50 transition-all shadow-lg active:scale-95 cursor-pointer"
                     >
-                        {session ? '🧠 Chat HERMES Sekarang' : '🔑 Login & Mulai'}
+                        🧠 Chat HERMES Sekarang
                     </button>
                 </div>
             </section>
@@ -437,10 +450,25 @@ Jawab satu-satu juga boleh, kita ngobrol santai aja! 🤝`
                                             {msg.role === 'user' ? (
                                                 msg.content
                                             ) : (
-                                                <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 text-slate-800 prose-a:text-amber-600 font-sans prose-strong:text-slate-900">
-                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                        {msg.content}
-                                                    </ReactMarkdown>
+                                                <div>
+                                                    <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 text-slate-800 prose-a:text-amber-600 font-sans prose-strong:text-slate-900">
+                                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                            {msg.content}
+                                                        </ReactMarkdown>
+                                                    </div>
+
+                                                    {/* Instant Activate Button if locked message shown */}
+                                                    {msg.content.includes('Akses Hermes Mentor terkunci') && (
+                                                        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                                                            <button
+                                                                onClick={() => openActivation()}
+                                                                className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs cursor-pointer flex items-center gap-1.5 active:scale-95"
+                                                            >
+                                                                <KeyIcon size="xs" className="text-white" />
+                                                                <span>Masukkan Kode Lisensi VVIP</span>
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
