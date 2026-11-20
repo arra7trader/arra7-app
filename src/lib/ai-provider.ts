@@ -3,19 +3,13 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText, streamText } from 'ai';
 import type { ModelMessage } from 'ai';
 
-type ProviderName = 'google' | 'groq' | 'cerebras';
+type ProviderName = 'google' | 'groq';
 
 type ProviderEntry = {
     provider: ProviderName;
     modelId: string;
     apiKey: string;
     modelFactory?: any;
-};
-
-type CerebrasChatCompletionResponse = {
-    message?: string;
-    error?: { message?: string };
-    choices?: Array<{ message?: { content?: unknown } }>;
 };
 
 const providerPool: ProviderEntry[] = [];
@@ -48,9 +42,6 @@ function uniqueModels(models: string[]): string[] {
 function getProviderModels(provider: ProviderName, preferredModel?: string): string[] {
     if (provider === 'google') {
         return uniqueModels([preferredModel || 'gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-flash-latest']);
-    }
-    if (provider === 'cerebras') {
-        return uniqueModels([preferredModel || 'qwen-3.8-27b', 'qwen-3.8-27b', 'gpt-oss-120b']);
     }
 
     return uniqueModels([
@@ -104,34 +95,19 @@ function ensureProvidersInitialized() {
         }
     }
 
-    // 3. Cerebras
-    const cerebrasModel = process.env.CEREBRAS_MODEL || process.env.CELEBRAS_MODEL || 'qwen-3.8-27b';
-    const cerebrasKeys = collectKeys([
-        'CEREBRAS_API_KEYS', 'CEREBRAS_API_KEY', 'CELEBRAS_API_KEYS', 'CELEBRAS_API_KEY',
-    ]);
-    const cerebrasEntries: ProviderEntry[] = [];
-
-    for (const apiKey of cerebrasKeys) {
-        const modelFactory = createOpenAI({ baseURL: 'https://api.cerebras.ai/v1', apiKey });
-        for (const modelId of getProviderModels('cerebras', cerebrasModel)) {
-            cerebrasEntries.push({ provider: 'cerebras', modelId, apiKey, modelFactory });
-        }
-    }
-
-    // Place Google Gemini first for top reliability & speed, then Groq, then Cerebras
-    providerPool.push(...googleEntries, ...groqEntries, ...cerebrasEntries);
+    // Place Google Gemini first for top reliability & speed, then Groq
+    providerPool.push(...googleEntries, ...groqEntries);
 
     if (providerPool.length === 0) {
         console.warn(
-            '[AI Provider] No API keys found. Set GOOGLE_GENERATIVE_AI_API_KEY, GROQ_API_KEY, or CEREBRAS_API_KEY.',
+            '[AI Provider] No API keys found. Set GOOGLE_GENERATIVE_AI_API_KEY or GROQ_API_KEY.',
         );
         return;
     }
 
     const googleCount = providerPool.filter((p) => p.provider === 'google').length;
     const groqCount = providerPool.filter((p) => p.provider === 'groq').length;
-    const cerebrasCount = providerPool.filter((p) => p.provider === 'cerebras').length;
-    console.log(`[AI Provider] Loaded ${providerPool.length} routes (Google=${googleCount}, Groq=${groqCount}, Cerebras=${cerebrasCount}).`);
+    console.log(`[AI Provider] Loaded ${providerPool.length} routes (Google=${googleCount}, Groq=${groqCount}).`);
 }
 
 function getPrimaryModel(index?: number) {
@@ -183,32 +159,6 @@ function toOpenAICompatibleMessages(system: string | undefined, messages?: Model
     return normalized;
 }
 
-async function generateTextWithCerebras(params: {
-    apiKey: string;
-    modelId: string;
-    system?: string;
-    messages?: ModelMessage[];
-    prompt?: string;
-    maxTokens?: number;
-    temperature?: number;
-}) {
-    const messages = params.prompt
-        ? toOpenAICompatibleMessages(params.system, [{ role: 'user', content: params.prompt } as ModelMessage])
-        : toOpenAICompatibleMessages(params.system, params.messages);
-    const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${params.apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: params.modelId, messages, temperature: params.temperature, max_completion_tokens: params.maxTokens }),
-    });
-    const raw = await response.text();
-    let parsed: CerebrasChatCompletionResponse | null = null;
-    try { parsed = JSON.parse(raw) as CerebrasChatCompletionResponse; } catch { parsed = null; }
-    if (!response.ok) throw new Error(String(parsed?.message || parsed?.error?.message || raw || `Cerebras request failed with status ${response.status}`));
-    const text = parsed?.choices?.[0]?.message?.content;
-    if (typeof text !== 'string' || !text.trim()) throw new Error('No analysis returned from Cerebras');
-    return { text };
-}
-
 function isPermanentProviderError(message: string): boolean {
     const normalized = message.toLowerCase();
     return (
@@ -258,13 +208,11 @@ export function hasAnyAIProviderConfigured(): boolean {
 export function getAIProviderStats() {
     ensureProvidersInitialized();
     const google = providerPool.filter((p) => p.provider === 'google').length;
-    const cerebras = providerPool.filter((p) => p.provider === 'cerebras').length;
     const groq = providerPool.filter((p) => p.provider === 'groq').length;
     return {
         total: providerPool.length,
         google,
         groq,
-        cerebras,
     };
 }
 
@@ -358,18 +306,6 @@ export async function generateTextHybrid(params: {
             console.log(
                 `[AI Provider] Generate attempt ${attempt + 1}/${candidates.length} using ${providerLabel}`,
             );
-
-            if (entry.provider === 'cerebras') {
-                return await generateTextWithCerebras({
-                    apiKey: entry.apiKey,
-                    modelId: entry.modelId,
-                    system: params.system,
-                    messages: params.messages,
-                    prompt: params.prompt,
-                    maxTokens: params.maxTokens,
-                    temperature: params.temperature,
-                });
-            }
 
             if (params.prompt) {
                 return await generateText({

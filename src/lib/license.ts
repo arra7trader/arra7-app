@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 export interface LicenseKey {
   id?: number;
   code: string;
-  tier: 'PRO' | 'VVIP';
+  tier: 'PRO' | 'VVIP' | 'EA_GOLD' | string;
   durationDays: number;
   isUsed: boolean;
   usedByDeviceId?: string;
@@ -103,7 +103,7 @@ export async function ensureLicenseSchema(): Promise<boolean> {
 }
 
 // Generate a cryptographic, clean format license code: e.g. PICA-VVIP-7981-AB3F
-export function generateCodeString(tier: 'PRO' | 'VVIP' = 'VVIP'): string {
+export function generateCodeString(tier: string = 'VVIP'): string {
   const hexPart1 = randomBytes(2).toString('hex').toUpperCase(); // 4 chars
   const hexPart2 = randomBytes(2).toString('hex').toUpperCase(); // 4 chars
   return `PICA-${tier}-${hexPart1}-${hexPart2}`;
@@ -111,7 +111,7 @@ export function generateCodeString(tier: 'PRO' | 'VVIP' = 'VVIP'): string {
 
 // Admin function: Create one or multiple license keys
 export async function createLicenseKeys(params: {
-  tier: 'PRO' | 'VVIP';
+  tier: 'PRO' | 'VVIP' | 'EA_GOLD' | string;
   durationDays: number;
   count?: number;
   notes?: string;
@@ -549,3 +549,47 @@ export async function deleteLicenseKey(code: string): Promise<{ success: boolean
   return { success: true, message: `Kode ${cleanCode} berhasil dihapus.` };
 }
 
+
+// Verify license key for EA PICA Neural Gold Packages
+export async function verifyEALicense(code: string): Promise<{
+  valid: boolean;
+  message: string;
+  tier?: string;
+  code?: string;
+}> {
+  await ensureLicenseSchema();
+  const turso = getTursoClient();
+  if (!turso) return { valid: false, message: 'Database belum terhubung.' };
+
+  const cleanCode = code.trim().toUpperCase();
+  if (!cleanCode) return { valid: false, message: 'Kode lisensi tidak boleh kosong.' };
+
+  const ADMIN_PASSKEYS = ['PICA-ADMIN', 'ARRA7ADMIN', 'ARLAND77', 'ADMIN-PASSKEY', 'ARRA-ADMIN'];
+  if (ADMIN_PASSKEYS.includes(cleanCode)) {
+    return {
+      valid: true,
+      message: '👑 Akses Admin terverifikasi! Seluruh paket EA PICA Neural Gold terbuka.',
+      tier: 'ADMIN',
+      code: cleanCode,
+    };
+  }
+
+  const keyResult = await turso.execute({
+    sql: 'SELECT * FROM license_keys WHERE UPPER(code) = ? LIMIT 1',
+    args: [cleanCode],
+  });
+
+  if (!keyResult.rows || keyResult.rows.length === 0) {
+    return { valid: false, message: 'Kode lisensi tidak ditemukan atau tidak valid.' };
+  }
+
+  const row = keyResult.rows[0];
+  const tier = String(row.tier || 'EA_GOLD');
+
+  return {
+    valid: true,
+    message: `Akses paket EA PICA Neural Gold (${tier}) berhasil terverifikasi!`,
+    tier,
+    code: cleanCode,
+  };
+}

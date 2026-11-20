@@ -119,6 +119,17 @@ export default function Navbar() {
                         <span>HERMES AI</span>
                         <span className="text-[9px] bg-black/25 px-1 py-0.2 rounded font-extrabold uppercase">49K</span>
                     </Link>
+                    {/* Prominent Direct EA PICA Gold Button */}
+                    <Link
+                        href="/ea-pica-neural-gold"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-yellow-500 via-amber-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 border border-yellow-300 text-xs sm:text-[13px] font-black transition-all shadow-xs hover:shadow-amber-500/20 active:scale-95 cursor-pointer"
+                        title="EA PICA Neural Gold M1 & M5 (Terkunci)"
+                    >
+                        <span>🤖</span>
+                        <span>EA GOLD</span>
+                        <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold uppercase">90K</span>
+                    </Link>
+
 
                     {/* Popover Menu: Fitur Utama */}
                     <Popover.Root>
@@ -175,6 +186,20 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">BARU</span>
                                     </Link>
+                                    <Link href="/ea-pica-neural-gold" className="flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 text-slate-800 hover:text-amber-800 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span>🤖</span>
+                                            <div>
+                                                <p className="font-bold flex items-center gap-1 text-slate-900">
+                                                    EA PICA Gold (M1+M5)
+                                                    <span className="text-[8px] bg-amber-500 text-white px-1 py-0.2 rounded font-black">90K</span>
+                                                </p>
+                                                <p className="text-[10px] text-slate-400">Deep Learning MT5 Scalper &amp; Intraday</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">EA MT5</span>
+                                    </Link>
+
                                     <Link href="/xauusd-neural-lab" className="flex items-center justify-between p-2 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-600 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <span>🧠</span>
@@ -185,7 +210,15 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">SMC</span>
                                     </Link>
-                                    <Link href="/kursus-fibo-kyoko" className="flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 text-slate-800 hover:text-indigo-600 transition-colors">
+                                                                <Link
+                                href="/ea-pica-neural-gold"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-950 font-bold text-xs border border-amber-200 transition-colors"
+                            >
+                                <span>🤖</span>
+                                <span>EA PICA Gold (90K)</span>
+                            </Link>
+<Link href="/kursus-fibo-kyoko" className="flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50 text-slate-800 hover:text-indigo-600 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <span>🎓</span>
                                             <div>
@@ -253,6 +286,17 @@ export default function Navbar() {
                         <span>🧠</span>
                         <span>HERMES</span>
                     </Link>
+                    {/* Mobile Direct EA Gold button */}
+                    <Link
+                        href="/ea-pica-neural-gold"
+                        className="sm:hidden flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black shadow-xs active:scale-95 shrink-0 border border-yellow-300"
+                        title="EA PICA Neural Gold M1 & M5 (Terkunci)"
+                    >
+                        <span>🤖</span>
+                        <span>EA GOLD</span>
+                        <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold">90K</span>
+                    </Link>
+
 
                     {/* Language Switcher */}
                     <div className="hidden xs:flex items-center">
@@ -447,6 +491,25 @@ export default function Navbar() {
                             </div>
                             <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-black/30 text-amber-200 shrink-0">49K</span>
                         </Link>
+                        {/* Top Highlight 2: EA PICA Gold */}
+                        <Link
+                            href="/ea-pica-neural-gold"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-yellow-500 via-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20 active:scale-98 transition-all border border-yellow-300"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <span className="text-2xl">🤖</span>
+                                <div>
+                                    <p className="font-black text-sm flex items-center gap-1.5 text-slate-950">
+                                        EA PICA Neural Gold (M1+M5)
+                                        <span className="text-[9px] bg-slate-950 text-amber-300 px-1.5 py-0.2 rounded-full font-black uppercase">HOT</span>
+                                    </p>
+                                    <p className="text-[11px] text-slate-900 font-medium">Deep Learning MT5 Scalper &amp; Intraday (Terkunci)</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-amber-300 shrink-0">90K</span>
+                        </Link>
+
 
                         {/* Grid of Other Features */}
                         <div className="grid grid-cols-2 gap-1.5 pt-1">

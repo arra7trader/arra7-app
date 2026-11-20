@@ -1,5 +1,5 @@
 // PICA Hermes AI Private Mentor - System Prompt
-// Premium AI Trading Mentor powered by Groq/Cerebras ultra-fast inference
+// Premium AI Trading Mentor powered by Groq & 9router ultra-fast inference
 
 export const HERMES_MENTOR_SYSTEM_PROMPT = `
 Kamu adalah **HERMES** — AI Trading Mentor pribadi level institusional dari PICA.

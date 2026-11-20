@@ -22,18 +22,6 @@ const PRICING_OPTIONS: Record<
         '6months': { durationLabel: '6 Bulan', price: 1490000, priceDisplay: 'Rp 1.490.000', originalPrice: 'Rp 2.394.000', period: '/6 bulan' },
         '1year': { durationLabel: '1 Tahun', price: 2800000, priceDisplay: 'Rp 2.800.000', originalPrice: 'Rp 4.788.000', period: '/tahun' },
     },
-    CT_FOLLOWER: {
-        '1month': { durationLabel: '1 Bulan', price: 49000, priceDisplay: 'Rp 49.000', originalPrice: null, period: '/bulan' },
-        '3months': { durationLabel: '3 Bulan', price: 130000, priceDisplay: 'Rp 130.000', originalPrice: 'Rp 147.000', period: '/3 bulan' },
-        '6months': { durationLabel: '6 Bulan', price: 249000, priceDisplay: 'Rp 249.000', originalPrice: 'Rp 294.000', period: '/6 bulan' },
-        '1year': { durationLabel: '1 Tahun', price: 449000, priceDisplay: 'Rp 449.000', originalPrice: 'Rp 588.000', period: '/tahun' },
-    },
-    CT_PROVIDER: {
-        '1month': { durationLabel: '1 Bulan', price: 99000, priceDisplay: 'Rp 99.000', originalPrice: null, period: '/bulan' },
-        '3months': { durationLabel: '3 Bulan', price: 270000, priceDisplay: 'Rp 270.000', originalPrice: 'Rp 297.000', period: '/3 bulan' },
-        '6months': { durationLabel: '6 Bulan', price: 499000, priceDisplay: 'Rp 499.000', originalPrice: 'Rp 594.000', period: '/6 bulan' },
-        '1year': { durationLabel: '1 Tahun', price: 899000, priceDisplay: 'Rp 899.000', originalPrice: 'Rp 1.188.000', period: '/tahun' },
-    },
     TELEBOT: {
         '1month': { durationLabel: '1 Bulan', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 249.000', period: '/bulan' },
         'lifetime': { durationLabel: 'Lifetime', price: 375000, priceDisplay: 'Rp 375.000', originalPrice: null, period: '/sekali bayar' },
@@ -46,6 +34,9 @@ const PRICING_OPTIONS: Record<
     },
     ALL_ACCESS: {
         'lifetime': { durationLabel: 'Lifetime (Semua Produk)', price: 125000, priceDisplay: 'Rp 125.000', originalPrice: 'Rp 1.499.000', period: '/sekali bayar (Flash Sale Diperpanjang 2 Hari)' },
+    },
+    EA_PICA_GOLD: {
+        'lifetime': { durationLabel: 'Lifetime (Promo Hari Ini)', price: 90000, priceDisplay: 'Rp 90.000', originalPrice: 'Rp 499.000', period: '/sekali bayar (Dual Timeframe M1 + M5)' },
     },
 };
 
@@ -75,12 +66,11 @@ function TransferContent() {
         const nameMap: Record<string, string> = {
             PRO: 'Pro',
             VVIP: 'VVIP',
-            CT_FOLLOWER: 'CT Follower',
-            CT_PROVIDER: 'CT Provider',
             TELEBOT: 'TELEBOT',
             FIBO_KYOKO: 'Kursus Digital Fibo Kyoko',
             ARRA_CRONOS: 'ARRA Cronos AI Quant Engine + ARRA GROK Terminal + Bonus Indikator TradingView',
-            ALL_ACCESS: 'Semua Produk ARRA 7 (Lifetime All-Access Promo)'
+            ALL_ACCESS: 'Semua Produk ARRA 7 (Lifetime All-Access Promo)',
+            EA_PICA_GOLD: 'EA PICA Neural Gold M1 & M5 (Dual AI Scalper MT5)'
         };
 
         return {
@@ -133,6 +123,7 @@ function TransferContent() {
         plan.id === 'ALL_ACCESS' ? '★ Paket Promo Flash Sale 2 Hari: Akses Lifetime 4 Produk Inti Platform (PICA Neural Lab, Kursus Masterclass Fibo Kyoko + MT5/TradingView, DOM ARRA, dan Analisis Market)' : null,
         plan.id === 'TELEBOT' ? `Bonus member: akun PRO website 1 bulan + video eksklusif di ${telebotBonusPageUrl}` : null,
         plan.id === 'FIBO_KYOKO' ? 'Mohon kirimkan Kode Lisensi aktivasi Kursus Fibo Kyoko saya.' : null,
+        plan.id === 'EA_PICA_GOLD' ? '🤖 Paket EA PICA Neural Gold M1+M5: Akses Full EA Deep Learning Scalper + Intraday, File ONNX Native, 4 Preset .set, & Panduan. Mohon kirimkan kode lisensi unlock download saya.' : null,
         plan.id === 'ARRA_CRONOS' ? '🎯 Paket ARRA Cronos Lifetime: Akses Full AI Quant Engine + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + Bonus Source Code Indikator TradingView Pine Script v6. Mohon kirimkan kode aktivasi saya.' : null,
         '',
         requiresTelegramUsername

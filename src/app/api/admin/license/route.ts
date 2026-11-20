@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tier = 'VVIP', durationDays = 30, count = 1, notes } = body;
 
-    const validTier = tier === 'PRO' ? 'PRO' : 'VVIP';
+    const validTier = (tier === 'PRO' || tier === 'EA_GOLD') ? tier : 'VVIP';
     const validDays = Number(durationDays) || 30;
     const validCount = Math.min(Math.max(Number(count) || 1, 1), 50);
 

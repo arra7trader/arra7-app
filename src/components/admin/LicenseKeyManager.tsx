@@ -25,7 +25,7 @@ import {
 export interface LicenseKey {
   id?: number;
   code: string;
-  tier: 'PRO' | 'VVIP';
+  tier: 'PRO' | 'VVIP' | 'EA_GOLD';
   durationDays: number;
   isUsed: boolean;
   usedByDeviceId?: string;
@@ -49,7 +49,7 @@ export interface DeviceUser {
   totalVisits: number;
 }
 
-type ProductType = 'HERMES_MENTOR' | 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'COPYTRADE' | 'CUSTOM';
+type ProductType = 'EA_PICA_GOLD' | 'HERMES_MENTOR' | 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'CUSTOM';
 
 interface ProductPreset {
   id: ProductType;
@@ -59,13 +59,29 @@ interface ProductPreset {
   tagColor: string;
   borderActive: string;
   description: string;
-  tier: 'PRO' | 'VVIP';
+  tier: 'PRO' | 'VVIP' | 'EA_GOLD' | string;
   durations: { label: string; days: number; price?: string }[];
   notePrefix: string;
   generateText: (code: string, buyerName: string, durationLabel: string) => string;
 }
 
 const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
+  EA_PICA_GOLD: {
+    id: 'EA_PICA_GOLD',
+    title: 'EA PICA Neural Gold M1 & M5 (Dual AI MT5)',
+    badge: '🤖 EA PICA GOLD (90K)',
+    priceDisplay: 'Rp 90.000 (Lifetime Promo)',
+    tagColor: 'bg-amber-50 text-amber-800 border-amber-300',
+    borderActive: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/40',
+    description: 'Expert Advisor MT5 berbasis Deep Learning ONNX untuk Gold (XAUUSD). Dual strategy: M1 Scalper agresif (~75 trades/hari) & M5 Intraday Presisi (~16 trades/hari) + Presets & Panduan.',
+    tier: 'EA_GOLD',
+    durations: [{ label: 'Lifetime (Selamanya)', days: 9999, price: 'Rp 90.000' }],
+    notePrefix: '[EA_PICA_GOLD]',
+    generateText: (code, buyerName, _) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Terima kasih, pembayaran Paket EA PICA Neural Gold M1 & M5 telah kami verifikasi. ✅\n\nBerikut Kode Lisensi Unlock & Download Anda:\n🔑 Kode Lisensi: ${code}\n💎 Akses: Lifetime (Selamanya)\n🤖 Paket: EA PICA Neural Gold (Dual Engine M1 Scalper & M5 Intraday)\n\nIsi Paket yang Anda Dapatkan:\n✅ File EA Expert Advisor MT5 (.ex5): M1 Scalper & M5 Intraday\n✅ Model Deep Learning ONNX Native: PICA_Neural_Gold_M1 & M5.onnx\n✅ 4 File Preset (.set): Aggressive & Safe Scalper, Intraday Balanced & Conservative\n✅ Akses Halaman Download Terproteksi Seumur Hidup\n✅ Panduan Lengkap Instalasi MT5 & Setting Parameter\n\nCara Buka Kunci (Unlock) & Download:\n1. Buka link: https://pica.my.id/ea-pica-neural-gold\n2. Di bagian form "Sudah Punya Lisensi?", masukkan kode: ${code}\n3. Klik tombol "🔓 Buka Akses & Download"\n4. Halaman unduhan otomatis terbuka! Silakan download Paket Lengkap ZIP atau file binary yang diperlukan.\n5. Ikuti panduan instalasi di tab "Panduan Instalasi MT5" pada halaman tersebut.\n\nJika butuh bantuan saat pemasangan di MT5, silakan hubungi admin kami di Telegram @arra7trader. Selamat trading otomatis & salam profit konsisten! 🚀`;
+    },
+  },
   HERMES_MENTOR: {
     id: 'HERMES_MENTOR',
     title: 'HERMES AI Private Mentor 24/7',
@@ -237,35 +253,6 @@ Cara Aktivasi:
 3. Tempel kode di atas lalu klik Aktifkan`;
     },
   },
-  COPYTRADE: {
-    id: 'COPYTRADE',
-    title: 'Copytrade Arra77',
-    badge: '📈 COPYTRADE',
-    priceDisplay: 'Mulai Rp 49.000',
-    tagColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-    borderActive: 'border-cyan-500 ring-2 ring-cyan-500/20 bg-cyan-50/40',
-    description: 'Koneksi MetaTrader 5 Bridge Arra-Copytrade (Follower / Provider).',
-    tier: 'PRO',
-    durations: [
-      { label: 'Follower 1 Bulan', days: 30, price: 'Rp 49.000' },
-      { label: 'Follower 1 Tahun', days: 365, price: 'Rp 449.000' },
-      { label: 'Provider 1 Bulan', days: 30, price: 'Rp 99.000' },
-      { label: 'Provider 1 Tahun', days: 365, price: 'Rp 899.000' },
-    ],
-    notePrefix: '[COPYTRADE]',
-    generateText: (code, buyerName, durationLabel) => {
-      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
-      return `${greeting} Lisensi Copytrade Arra77 Anda telah dikonfirmasi. 📈
-
-Berikut Kode Lisensi Anda:
-🔑 Kode: ${code}
-⏳ Masa Aktif: ${durationLabel}
-
-Cara Aktivasi:
-1. Buka https://pica.my.id/copytrade-arra77
-2. Masukkan kode lisensi ini untuk menghubungkan akun MT5 Bridge Anda`;
-    },
-  },
   CUSTOM: {
     id: 'CUSTOM',
     title: 'Mode Manual / Kustom',
@@ -432,7 +419,7 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
     setGenerating(true);
 
     try {
-      let tierToUse: 'PRO' | 'VVIP' = currentPreset.tier;
+      let tierToUse: string = currentPreset.tier;
       let durationDaysToUse = currentDuration.days;
       let noteToUse = '';
 
@@ -520,7 +507,7 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
     if (note.includes('[TELEBOT]') || note.toLowerCase().includes('telebot')) return 'TELEBOT';
     if (note.includes('[VVIP]')) return 'VVIP';
     if (note.includes('[PRO]')) return 'PRO';
-    if (note.includes('[COPYTRADE]') || note.toLowerCase().includes('copytrade')) return 'COPYTRADE';
+    if (note.includes('[EA_PICA_GOLD]') || note.toLowerCase().includes('ea_pica') || note.toLowerCase().includes('gold')) return 'EA_PICA_GOLD';
     return 'CUSTOM';
   };
 

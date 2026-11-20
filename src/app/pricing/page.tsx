@@ -36,6 +36,9 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
     HERMES_MENTOR: [
         { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 49.000', originalPrice: 'Rp 299.000', savingsText: 'LAUNCH PROMO Hemat Rp 250.000 · Diskon 83%', promoSlots: 50, period: '/ sekali bayar' },
     ],
+    EA_PICA_GOLD: [
+        { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 90.000', originalPrice: 'Rp 499.000', savingsText: 'PROMO HARI INI Hemat Rp 409.000 • Diskon 82%', period: '/ sekali bayar' },
+    ],
 };
 
 function PlanIcon({ planId }: { planId: string }) {
@@ -54,6 +57,8 @@ function PlanIcon({ planId }: { planId: string }) {
             return <TrendUpIcon size="lg" className="text-indigo-600" />;
         case 'ARRA_CRONOS':
             return <BoltIcon size="lg" className="text-cyan-400" />;
+        case 'EA_PICA_GOLD':
+            return <RobotIcon size="lg" className="text-amber-500" />;
         case 'HERMES_MENTOR':
             return <SparklesIcon size="lg" className="text-amber-500" />;
         default:
@@ -184,6 +189,22 @@ const PRICING_PLANS = [
         cta: 'Beli Kursus Sekarang (Rp 169.000)',
         popular: false,
     },
+        {
+        id: 'EA_PICA_GOLD',
+        name: 'EA PICA Neural Gold M1 & M5',
+        description: 'Expert Advisor MT5 berbasis Deep Learning ONNX untuk Gold (XAUUSD). Dual strategy: M1 Scalper agresif (75 trades/hari) & M5 Intraday Presisi (16 trades/hari) + Presets & Panduan.',
+        theme: 'amber',
+        features: [
+            { text: 'File EA MT5 (.ex5) M1 Scalper & M5 Intraday', included: true, highlight: true },
+            { text: 'Model AI ONNX Native (PICA_Neural_Gold_M1 & M5.onnx)', included: true, highlight: true },
+            { text: '4 Preset File (.set) Siap Pakai (Aggressive & Safe)', included: true, highlight: true },
+            { text: 'Halaman Download Terkunci & Key Unlocker Otomatis', included: true, highlight: true },
+            { text: 'Panduan Setup MT5, ONNX Model & Algo Trading dari Nol', included: true, highlight: true },
+            { text: 'Akses Selamanya (Promo Hari Ini Rp 90.000 Sekali Bayar)', included: true, highlight: true },
+        ],
+        cta: 'Beli Paket EA (Rp 90.000)',
+        popular: true,
+    },
     {
         id: 'HERMES_MENTOR',
         name: 'HERMES AI Mentor',
@@ -239,7 +260,7 @@ export default function PricingPage() {
             durationOverride ||
             (planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
@@ -261,7 +282,7 @@ export default function PricingPage() {
         const duration =
             planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month';
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);

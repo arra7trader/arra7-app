@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Akses khusus VVIP aktif.' }, { status: 403 });
         }
 
-        // Validate AI providers (Cerebras/Groq pool).
+        // Validate AI providers (Google/Groq pool).
         const hasProvider = hasAnyAIProviderConfigured();
         if (!hasProvider) {
             console.error('[VVIP Chat] CRITICAL: No AI provider keys found.');
