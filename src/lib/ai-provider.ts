@@ -3,16 +3,20 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText, streamText } from 'ai';
 import type { ModelMessage } from 'ai';
 
-type ProviderName = 'google' | 'groq';
+type ProviderName = 'google' | 'freepi' | 'groq';
 
 type ProviderEntry = {
     provider: ProviderName;
     modelId: string;
     apiKey: string;
-    modelFactory?: any;
+    modelFactory: (id: string) => any;
 };
 
 const providerPool: ProviderEntry[] = [];
+
+// Built-in 24/7 free token fallback for FreePI
+const DEFAULT_FREEPI_TOKEN =
+    'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0ZTE2MjAzZi01YzAxLTQ2MjktOTYxYy03ZWIyYTgwOTQ2MmQiLCJpYXQiOjE3OTQxNjAxMjcsImV4cCI6MTgwMTkzNjEyN30.FfUozRrBrNkySF8cCRD1QwRAxvCu-pagG8Onh9o8nlc';
 
 function splitCsv(value?: string): string[] {
     return (value || '')
@@ -41,7 +45,21 @@ function uniqueModels(models: string[]): string[] {
 
 function getProviderModels(provider: ProviderName, preferredModel?: string): string[] {
     if (provider === 'google') {
-        return uniqueModels([preferredModel || 'gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-flash-latest']);
+        return uniqueModels([
+            preferredModel || 'gemini-2.5-flash',
+            'gemini-2.5-flash',
+            'gemini-flash-latest',
+        ]);
+    }
+
+    if (provider === 'freepi') {
+        return uniqueModels([
+            preferredModel || 'glm-5.3-flash',
+            'glm-5.3-flash',
+            'deepseek-v4.1-flash',
+            'particle',
+            'qwen-2.5-72b-instruct',
+        ]);
     }
 
     return uniqueModels([
@@ -57,7 +75,7 @@ function ensureProvidersInitialized() {
         return;
     }
 
-    // 1. Google Gemini (Primary high-performance free provider with zero payment blocks)
+    // 1. Google Gemini (Primary high-performance free provider)
     const googleKeys = collectKeys(['GOOGLE_GENERATIVE_AI_API_KEY', 'GEMINI_API_KEY']);
     const googleModel = process.env.GOOGLE_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const googleEntries: ProviderEntry[] = [];
@@ -69,18 +87,42 @@ function ensureProvidersInitialized() {
                 provider: 'google',
                 modelId,
                 apiKey,
-                modelFactory: googleFactory,
+                modelFactory: (id: string) => googleFactory(id),
             });
         }
     }
 
-    // 2. Groq (Fast open-source inference)
+    // 2. FreePI (High-reliability zero-cost OpenAI-compatible secondary backup)
+    const freepiKeys = collectKeys(['FREEPI_API_KEY', 'FREEPI_API_KEYS']);
+    if (freepiKeys.length === 0) {
+        freepiKeys.push(DEFAULT_FREEPI_TOKEN);
+    }
+    const freepiModel = process.env.FREEPI_MODEL || 'glm-5.3-flash';
+    const freepiEntries: ProviderEntry[] = [];
+
+    for (const apiKey of freepiKeys) {
+        const freepiClient = createOpenAI({
+            baseURL: 'https://api.freepi.ai/v1',
+            apiKey,
+        });
+
+        for (const modelId of getProviderModels('freepi', freepiModel)) {
+            freepiEntries.push({
+                provider: 'freepi',
+                modelId,
+                apiKey,
+                modelFactory: (id: string) => freepiClient.chat(id),
+            });
+        }
+    }
+
+    // 3. Groq (Legacy open-source fallback pool)
     const groqModel = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
     const groqKeys = collectKeys(['GROQ_API_KEYS', 'GROQ_API_KEY']);
     const groqEntries: ProviderEntry[] = [];
 
     for (const apiKey of groqKeys) {
-        const modelFactory = createOpenAI({
+        const groqClient = createOpenAI({
             baseURL: 'https://api.groq.com/openai/v1',
             apiKey,
         });
@@ -90,24 +132,27 @@ function ensureProvidersInitialized() {
                 provider: 'groq',
                 modelId,
                 apiKey,
-                modelFactory,
+                modelFactory: (id: string) => groqClient.chat(id),
             });
         }
     }
 
-    // Place Google Gemini first for top reliability & speed, then Groq
-    providerPool.push(...googleEntries, ...groqEntries);
+    // Pool priority: Google Gemini (Primary) -> FreePI (Secondary backup) -> Groq (Tertiary)
+    providerPool.push(...googleEntries, ...freepiEntries, ...groqEntries);
 
     if (providerPool.length === 0) {
         console.warn(
-            '[AI Provider] No API keys found. Set GOOGLE_GENERATIVE_AI_API_KEY or GROQ_API_KEY.',
+            '[AI Provider] No AI provider keys configured.',
         );
         return;
     }
 
     const googleCount = providerPool.filter((p) => p.provider === 'google').length;
+    const freepiCount = providerPool.filter((p) => p.provider === 'freepi').length;
     const groqCount = providerPool.filter((p) => p.provider === 'groq').length;
-    console.log(`[AI Provider] Loaded ${providerPool.length} routes (Google=${googleCount}, Groq=${groqCount}).`);
+    console.log(
+        `[AI Provider] Loaded ${providerPool.length} routes (Google=${googleCount}, FreePI=${freepiCount}, Groq=${groqCount}).`,
+    );
 }
 
 function getPrimaryModel(index?: number) {
@@ -149,14 +194,6 @@ function normalizeMessageContent(content: unknown): string {
         if (part && typeof part === 'object' && 'text' in part && typeof part.text === 'string') return part.text;
         return '';
     }).filter(Boolean).join('\n');
-}
-
-function toOpenAICompatibleMessages(system: string | undefined, messages?: ModelMessage[]) {
-    const normalized = (messages || [])
-        .map((message) => ({ role: String(message.role || 'user'), content: normalizeMessageContent(message.content) }))
-        .filter((message) => message.content.length > 0);
-    if (system?.trim()) normalized.unshift({ role: 'system', content: system.trim() });
-    return normalized;
 }
 
 function isPermanentProviderError(message: string): boolean {
@@ -208,10 +245,12 @@ export function hasAnyAIProviderConfigured(): boolean {
 export function getAIProviderStats() {
     ensureProvidersInitialized();
     const google = providerPool.filter((p) => p.provider === 'google').length;
+    const freepi = providerPool.filter((p) => p.provider === 'freepi').length;
     const groq = providerPool.filter((p) => p.provider === 'groq').length;
     return {
         total: providerPool.length,
         google,
+        freepi,
         groq,
     };
 }
