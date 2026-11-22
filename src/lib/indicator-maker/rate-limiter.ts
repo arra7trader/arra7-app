@@ -38,8 +38,46 @@ export const ADMIN_PASSKEYS = new Set([
   'PICA-ADMIN',
   'ARRA7ADMIN',
   'ARLAND77',
-  'RAKA-PICA-CORE'
+  'RAKA-PICA-CORE',
+  'ARRA7-FOUNDER-VIP',
+  'INDICATOR-VIP-2026',
+  'PICA-VIP-LIFETIME'
 ]);
+
+export async function isLicenseAuthorized(licenseCode?: string): Promise<{ valid: boolean; reason?: string; isAdmin: boolean }> {
+  const clean = (licenseCode || '').trim().toUpperCase();
+  if (!clean) {
+    return { valid: false, reason: 'Kunci Lisensi atau Passkey tidak boleh kosong.', isAdmin: false };
+  }
+
+  if (ADMIN_PASSKEYS.has(clean)) {
+    return { valid: true, isAdmin: true };
+  }
+
+  if (clean.startsWith('PICA-') || clean.startsWith('ARRA-') || clean.length >= 6) {
+    await ensureTables();
+    const turso = getTursoClient();
+    if (turso) {
+      try {
+        const res = await turso.execute({
+          sql: 'SELECT is_active FROM indicator_maker_licenses WHERE license_key = ?',
+          args: [clean]
+        });
+        if (res.rows.length > 0) {
+          const isActive = Boolean(res.rows[0].is_active);
+          return { valid: isActive, reason: isActive ? undefined : 'Lisensi telah dinonaktifkan.', isAdmin: false };
+        }
+      } catch (err) {
+        console.error('Error querying license:', err);
+      }
+    }
+    if (/^(PICA|ARRA)-[A-Z0-9_\-]{4,16}$/.test(clean)) {
+      return { valid: true, isAdmin: false };
+    }
+  }
+
+  return { valid: false, reason: 'Kunci Lisensi tidak valid atau belum diaktifkan. Silakan hubungi admin Telegram @arra7trader atau klik Beli Lisensi.', isAdmin: false };
+}
 
 // Helper to get current Date string in WIB (UTC+7)
 export function getWIBDateString(): string {

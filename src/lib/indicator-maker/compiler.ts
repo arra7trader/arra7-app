@@ -50,18 +50,26 @@ function compilePineScriptV5(name: string, modules: any[], licenseCode: string):
     .map(m => m.pineConditionSell)
     .filter(c => c && c !== 'true');
 
-  const buyLogic = buyConditions.length > 0 ? buyConditions.join(' and ') : 'close > open';
-  const sellLogic = sellConditions.length > 0 ? sellConditions.join(' and ') : 'close < open';
+  const buyScoreCalc = buyConditions.length > 0
+    ? buyConditions.map(c => `    if ${c}\n        b_score += 1`).join('\n')
+    : '    if close > open\n        b_score += 1';
+
+  const sellScoreCalc = sellConditions.length > 0
+    ? sellConditions.map(c => `    if ${c}\n        s_score += 1`).join('\n')
+    : '    if close < open\n        s_score += 1';
+
+  const numModules = Math.max(1, buyConditions.length);
+  const recommendedThreshold = Math.max(1, Math.min(2, numModules));
 
   return `//@version=5
 // ==============================================================================
-// 🏆 PICA INDICATOR MAKER — INSTITUTIONAL EDITION
-// 📊 Indicator Name : ${name}
-// 🎯 Target Platform: TradingView (PineScript v5)
-// 🛡️ License Key    : ${licenseCode}
-// ⚡ Techniques     : ${modules.map(m => m.name).join(', ')}
-// 🔒 Guarantee      : Zero-Repaint (Engine Lock at barstate.isconfirmed)
-// 🌐 Built with     : https://pica.my.id/indicator-maker
+// PICA INDICATOR MAKER — INSTITUTIONAL EDITION
+// Indicator Name : ${name}
+// Target Platform: TradingView (PineScript v5)
+// License Key    : ${licenseCode}
+// Techniques     : ${modules.map(m => m.name).join(', ')}
+// Guarantee      : Zero-Repaint (Engine Lock at barstate.isconfirmed)
+// Built with     : https://pica.my.id/indicator-maker
 // ==============================================================================
 
 indicator("${name}", shorttitle="${name.slice(0, 12)}", overlay=true, max_bars_back=500)
@@ -69,6 +77,7 @@ indicator("${name}", shorttitle="${name.slice(0, 12)}", overlay=true, max_bars_b
 // --- SYSTEM INPUTS & SETTINGS ---
 show_signals = input.bool(true, "Show BUY / SELL Signal Arrows", group="General Signals")
 filter_bars  = input.bool(true, "Enforce Anti-Repaint Confirmed Candle", group="General Signals")
+confluence_mode = input.string("Flexible Confluence (Rekomendasi)", "Mode Konfluensi Sinyal", options=["Sensitif (1 Modul Cocok)", "Flexible Confluence (Rekomendasi)", "Strict (Semua Modul Harus Cocok)"], group="Signal Engine")
 
 ${inputsBlock}
 
@@ -78,9 +87,21 @@ ${functionsBlock}
 // --- EXECUTE PLOTTING & LOGIC BLOCKS ---
 ${plotCalls}
 
-// --- COMPOSITE SIGNAL CONFLUENCE ---
-raw_buy  = ${buyLogic}
-raw_sell = ${sellLogic}
+// --- COMPOSITE SIGNAL CONFLUENCE ENGINE ---
+f_calc_scores() =>
+    int b_score = 0
+    int s_score = 0
+${buyScoreCalc}
+${sellScoreCalc}
+    [b_score, s_score]
+
+[buy_score, sell_score] = f_calc_scores()
+
+total_modules = ${numModules}
+req_score = confluence_mode == "Sensitif (1 Modul Cocok)" ? 1 : confluence_mode == "Flexible Confluence (Rekomendasi)" ? ${recommendedThreshold} : total_modules
+
+raw_buy  = buy_score >= req_score
+raw_sell = sell_score >= req_score
 
 // Zero-Repaint Trigger Lock
 final_buy_signal  = show_signals and raw_buy  and (filter_bars ? barstate.isconfirmed : true)
@@ -97,11 +118,26 @@ if signal_sell_trigger
     last_signal_dir := -1
 
 // --- VISUAL ON-CHART SIGNALS ---
-plotshape(signal_buy_trigger, title="🟢 INSTITUTIONAL BUY", style=shape.labelup, location=location.belowbar, color=color.new(#10b981, 0), text="BUY", textcolor=color.white, size=size.small)
-plotshape(signal_sell_trigger, title="🔴 INSTITUTIONAL SELL", style=shape.labeldown, location=location.abovebar, color=color.new(#ef4444, 0), text="SELL", textcolor=color.white, size=size.small)
+plotshape(signal_buy_trigger, title="INSTITUTIONAL BUY", style=shape.labelup, location=location.belowbar, color=color.new(#10b981, 0), text="BUY", textcolor=color.white, size=size.normal)
+plotshape(signal_sell_trigger, title="INSTITUTIONAL SELL", style=shape.labeldown, location=location.abovebar, color=color.new(#ef4444, 0), text="SELL", textcolor=color.white, size=size.normal)
 
-// Bar color accents
+// Background & Bar Color Highlights
+bgcolor(signal_buy_trigger ? color.new(#10b981, 85) : signal_sell_trigger ? color.new(#ef4444, 85) : na, title="Signal Bar Tint")
 barcolor(signal_buy_trigger ? color.new(#10b981, 0) : signal_sell_trigger ? color.new(#ef4444, 0) : na)
+
+// --- ON-CHART TELEMETRY HUD TABLE ---
+show_hud = input.bool(true, "Show On-Chart HUD Table", group="Visual Dashboard")
+var table hud = table.new(position.top_right, 2, 4, bgcolor=color.new(#0f172a, 15), border_color=color.new(#334155, 30), border_width=1)
+
+if barstate.islast and show_hud
+    table.cell(hud, 0, 0, "PICA SYSTEM", bgcolor=color.new(#1e293b, 0), text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 0, "${name.slice(0, 16)}", bgcolor=color.new(#1e293b, 0), text_color=color.new(#38bdf8, 0), text_size=size.small)
+    table.cell(hud, 0, 1, "Status Engine", text_color=color.slate, text_size=size.small)
+    table.cell(hud, 1, 1, "READY (Pine v5)", text_color=color.new(#10b981, 0), text_size=size.small)
+    table.cell(hud, 0, 2, "Confluence Score", text_color=color.slate, text_size=size.small)
+    table.cell(hud, 1, 2, str.tostring(buy_score) + " Buy / " + str.tostring(sell_score) + " Sell", text_color=buy_score > sell_score ? color.new(#10b981, 0) : sell_score > buy_score ? color.new(#ef4444, 0) : color.slate, text_size=size.small)
+    table.cell(hud, 0, 3, "Mode Sinyal", text_color=color.slate, text_size=size.small)
+    table.cell(hud, 1, 3, confluence_mode, text_color=color.white, text_size=size.small)
 
 // --- NATIVE ALERTS ---
 alertcondition(signal_buy_trigger, title="[PICA BUY ALERT]", message="PICA AI System: BUY Trigger on {{ticker}} @ {{close}}")
@@ -121,8 +157,16 @@ function compileMQL5(name: string, modules: any[], licenseCode: string): string 
     .map(m => m.mq5ConditionSell)
     .filter(c => c && c !== 'true');
 
-  const buyLogic = buyConditions.length > 0 ? buyConditions.join(' && ') : 'Close[i] > Open[i]';
-  const sellLogic = sellConditions.length > 0 ? sellConditions.join(' && ') : 'Close[i] < Open[i]';
+  const buyScoreCalc = buyConditions.length > 0
+    ? buyConditions.map(c => `      if (${c}) b_score++;`).join('\n')
+    : '      if (Close[i] > Open[i]) b_score++;';
+
+  const sellScoreCalc = sellConditions.length > 0
+    ? sellConditions.map(c => `      if (${c}) s_score++;`).join('\n')
+    : '      if (Close[i] < Open[i]) s_score++;';
+
+  const numModules = Math.max(1, buyConditions.length);
+  const recommendedThreshold = Math.max(1, Math.min(2, numModules));
 
   return `//+------------------------------------------------------------------+
 //|                                     ${name}.mq5 |
@@ -156,6 +200,7 @@ function compileMQL5(name: string, modules: any[], licenseCode: string): string 
 input group "=== GENERAL SETTINGS ===";
 input bool InpShowSignals = true; // Show Buy & Sell Arrows
 input bool InpSendAlerts   = true; // Enable Popup & Sound Alerts
+input int  InpConfluenceMode = 1;  // Signal Mode: 0=Sensitive(1 Mod), 1=Flexible(Confluence), 2=Strict(All)
 
 ${inputsBlock}
 
@@ -207,6 +252,9 @@ int OnCalculate(const int rates_total,
    int limit = rates_total - prev_calculated;
    if(prev_calculated > 0) limit++;
 
+   int total_modules = ${numModules};
+   int req_score = (InpConfluenceMode == 0) ? 1 : (InpConfluenceMode == 1) ? ${recommendedThreshold} : total_modules;
+
    // Loop over candles in historical order
    for(int i = limit - 1; i >= 1; i--)
      {
@@ -215,8 +263,13 @@ int OnCalculate(const int rates_total,
 
       if(!InpShowSignals) continue;
 
-      bool condBuy  = (${buyLogic});
-      bool condSell = (${sellLogic});
+      int b_score = 0;
+      int s_score = 0;
+${buyScoreCalc}
+${sellScoreCalc}
+
+      bool condBuy  = (b_score >= req_score);
+      bool condSell = (s_score >= req_score);
 
       if(condBuy)
         {
@@ -238,6 +291,5 @@ int OnCalculate(const int rates_total,
 
    return(rates_total);
   }
-//+------------------------------------------------------------------+
 `;
 }

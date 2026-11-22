@@ -125,6 +125,12 @@ export default function IndicatorMakerPage() {
 
   // Generate Handler
   const handleGenerate = async () => {
+    if (!licenseKey.trim()) {
+      setErrorMessage('Akses Terkunci: Masukkan Kunci Lisensi resmi atau Passkey VIP Anda untuk merakit indikator. Belum punya lisensi? Klik "Beli Lisensi" (Rp 175.000).');
+      setShowBcaModal(true);
+      return;
+    }
+
     if (selectedTechniqueIds.length === 0) {
       setErrorMessage('Pilih minimal 1 teknik untuk merakit indikator.');
       return;
@@ -368,9 +374,13 @@ export default function IndicatorMakerPage() {
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700">Kunci Lisensi / Passkey:</label>
-                {isAdminPasskey && (
+                {isAdminPasskey ? (
                   <span className="text-[10px] font-black text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
                     ⚡ VIP UNLIMITED PASSKEY
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    Passkey VIP Founder: <strong className="text-blue-600 font-mono">ARLAND77</strong> / <strong className="text-blue-600 font-mono">PICA-ADMIN</strong>
                   </span>
                 )}
               </div>
@@ -379,7 +389,7 @@ export default function IndicatorMakerPage() {
                   type="text"
                   value={licenseKey}
                   onChange={e => setLicenseKey(e.target.value)}
-                  placeholder="Masukkan Kunci Lisensi / Passkey"
+                  placeholder="Masukkan Kunci Lisensi (cth: ARLAND77 atau PICA-EB-xxxx)"
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors font-mono"
                 />
                 <button

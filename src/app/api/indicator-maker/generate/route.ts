@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { compileIndicator } from '@/lib/indicator-maker/compiler';
-import { checkRateLimit, recordGeneration, getEarlyBirdStats } from '@/lib/indicator-maker/rate-limiter';
+import { checkRateLimit, recordGeneration, getEarlyBirdStats, isLicenseAuthorized } from '@/lib/indicator-maker/rate-limiter';
 import { PlatformTarget } from '@/lib/indicator-maker/types';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +36,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { status: 'error', message: 'Maksimal 5 teknik dapat dikombinasikan untuk mencegah lagging dan over-filtering' },
         { status: 400 }
+      );
+    }
+
+        // License & Passkey Verification (Strict Access Gate)
+    const cleanLicense = (licenseCode || '').trim().toUpperCase();
+    if (!cleanLicense) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          code: 'LICENSE_REQUIRED',
+          message: 'Akses Terkunci. Masukkan Kunci Lisensi atau Passkey VIP Anda untuk merakit indikator. Belum punya lisensi? Beli paket Early Bird Rp 175.000 via Transfer BCA.'
+        },
+        { status: 403 }
+      );
+    }
+
+    const authCheck = await isLicenseAuthorized(cleanLicense);
+    if (!authCheck.valid) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          code: 'INVALID_LICENSE',
+          message: authCheck.reason || 'Kunci Lisensi atau Passkey tidak valid.'
+        },
+        { status: 403 }
       );
     }
 
