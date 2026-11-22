@@ -186,13 +186,18 @@ int OnInit()
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
 //+------------------------------------------------------------------+
+#define open Open
+#define high High
+#define low Low
+#define close Close
+
 int OnCalculate(const int rates_total,
                 const int prev_calculated,
                 const datetime &time[],
-                const double &open[],
-                const double &high[],
-                const double &low[],
-                const double &close[],
+                const double &Open[],
+                const double &High[],
+                const double &Low[],
+                const double &Close[],
                 const long &tick_volume[],
                 const long &volume[],
                 const int &spread[])
