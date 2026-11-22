@@ -128,11 +128,18 @@ export const createAnalyzeForexTool = (
                 return { error: result.error || 'Analysis failed.' };
             }
 
+            const { isMarketOpen } = await import('@/lib/market-hours');
+            const marketStatus = isMarketOpen(pair as any);
+            let finalAnalysis = result.analysis;
+            if (!marketStatus.isOpen && !pair.includes('BTC') && !pair.includes('ETH')) {
+                finalAnalysis = `⚠️ [PASAR LIBUR WEEKEND - ${pair} TUTUP]\nPasar ${pair} saat ini sedang tutup libur akhir pekan (buka kembali Senin 05:00 WIB). Harga di bawah adalah harga penutupan Jumat. Untuk trading aktif akhir pekan 24/7, gunakan BTCUSD.\n\n` + finalAnalysis;
+            }
+
             return {
                 type: 'analysis',
                 symbol: pair,
                 timeframe,
-                analysis: result.analysis,
+                analysis: finalAnalysis,
                 price: marketData.current_price,
                 high: marketData.high,
                 low: marketData.low,

@@ -827,9 +827,11 @@ export class SmartPredictor {
         confidence: number,
         history: PriceHistory[]
     ): TradeSetup {
+        const isCrypto = this.symbol.includes('BTC') || this.symbol.includes('ETH') || currentPrice > 10000;
+
         // Volatility based TP/SL
         // Use average candle size or volatility function
-        let volatility = 2.0; // Default points (approx 20 pips for Gold)
+        let volatility = isCrypto ? currentPrice * 0.004 : 2.0; // Default points (approx 20 pips for Gold, 0.4% for BTC)
 
         if (history.length > 5) {
             const volValues = history.slice(-5).map((h, i, arr) => {
@@ -840,14 +842,17 @@ export class SmartPredictor {
             if (avgVol > 0) volatility = avgVol;
         }
 
-        // Multipliers for Gold (XAUUSD) - TUNED V3 (User Request: Min SL 70 pips)
+        // Multipliers:
+        // For Gold (XAUUSD): Min SL 70 pips (7.0 pts), Min TP 100 pips (10.0 pts)
+        // For Crypto (BTCUSD): Min SL 0.8% ($500+), Min TP 1.6% ($1000+) to maintain > 1:1.5 ratio
         const slMult = 3.5;
         const tpMult = 5.0;
 
-        // Min SL = 70 pips (7.0 points)
-        // Min TP = 100 pips (10.0 points) to maintain > 1:1.4 ratio
-        const risk = Math.max(volatility * slMult, 7.0);
-        const reward = Math.max(volatility * tpMult, 10.0);
+        const minRisk = isCrypto ? currentPrice * 0.008 : 7.0;
+        const minReward = isCrypto ? currentPrice * 0.016 : 10.0;
+
+        const risk = Math.max(volatility * slMult, minRisk);
+        const reward = Math.max(volatility * tpMult, minReward);
 
         let tp, sl;
         if (direction === 'UP') {

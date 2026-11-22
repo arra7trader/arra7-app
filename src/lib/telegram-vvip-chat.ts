@@ -9,6 +9,7 @@ import {
   getMarketData,
   Timeframe,
 } from './market-data';
+import { isMarketOpen } from './market-hours';
 import { analyzeWithGroq } from './groq-ai';
 import { parseSignalFromAnalysis } from './signal-tracker';
 import { runAgentText } from './agent/core';
@@ -159,7 +160,22 @@ function inferExecutionType(
 }
 
 async function buildDirectSignalReply(userId: string, rawText: string): Promise<string> {
-  const symbol = extractSymbol(rawText) || 'XAUUSD';
+  const extracted = extractSymbol(rawText);
+  const isWeekend = !isMarketOpen('XAUUSD').isOpen;
+
+  let symbol = extracted;
+  let weekendNote = '';
+
+  if (!symbol) {
+    symbol = isWeekend ? 'BTCUSD' : 'XAUUSD';
+    if (isWeekend) {
+      weekendNote = 'ℹ️ _Catatan: Pasar Forex & Gold libur akhir pekan. Analisa otomatis dialihkan ke BTCUSD (Crypto 24/7 Live)._\n\n';
+    }
+  } else if (isWeekend && (symbol === 'XAUUSD' || symbol === 'XAGUSD' || (!symbol.includes('BTC') && !symbol.includes('ETH') && !symbol.includes('SOL') && !symbol.includes('BNB') && !symbol.includes('XRP')))) {
+    weekendNote = `⚠️ _Pasar ${symbol} tutup libur akhir pekan (buka kembali Senin 05:00 WIB). Sesuai arahan operasional, analisa disajikan untuk BTCUSD (Crypto 24/7 Live):_\n\n`;
+    symbol = 'BTCUSD';
+  }
+
   const timeframe = normalizeTimeframe(extractTimeframe(rawText));
 
   try {
@@ -168,7 +184,7 @@ async function buildDirectSignalReply(userId: string, rawText: string): Promise<
     const ai = await analyzeWithGroq(formatted);
 
     if (!ai.success || !ai.analysis) {
-      return `Maaf, analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang. Coba ulang 1-2 menit lagi.`;
+      return `${weekendNote}Maaf, analisa ${symbol} ${timeframe.toUpperCase()} belum bisa diproses sekarang. Coba ulang 1-2 menit lagi.`;
     }
 
     const parsed = parseSignalFromAnalysis(ai.analysis, 'forex', symbol, timeframe);
@@ -184,7 +200,7 @@ async function buildDirectSignalReply(userId: string, rawText: string): Promise<
 
     const summary = cleanSummary(ai.analysis);
 
-    return [
+    return weekendNote + [
       `Signal ${symbol} ${timeframe.toUpperCase()}`,
       `Direction: ${direction}`,
       `Current Price: ${formatSignalPrice(currentPrice)}`,

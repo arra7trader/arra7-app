@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPredictor } from '@/lib/smart-predictor';
+import { isMarketOpen } from '@/lib/market-hours';
 
 export const maxDuration = 60; // Allow 1 minute timeout for cron
 
@@ -14,14 +15,23 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // 1. Fetch Real-Time Data (XAUUSD)
-        // Try getMarketData to allow Yahoo fallback if Swissquote/OANDA fails
+        // Market Hours & Weekend Auto-Switch:
+        // Forex/Gold (XAUUSD) closes Friday 22:00 UTC (~05:00 WIB Sat) to Sunday 22:00 UTC (~05:00 WIB Mon).
+        // On weekends, automatically switch from closed Gold to BTCUSD (Bitcoin 24/7 Live Crypto).
+        const xauMarketStatus = isMarketOpen('XAUUSD');
+        const isForexOpen = xauMarketStatus.isOpen;
+
+        const symbol = isForexOpen ? 'XAUUSD' : 'BTCUSD';
+        const pairLabel = isForexOpen ? 'XAUUSD (Gold)' : 'BTCUSD (Bitcoin 24/7)';
+        const timeframe = isForexOpen ? '5m' : '15m';
+
+        // 1. Fetch Real-Time Data (XAUUSD on weekdays, BTCUSD on weekends)
         let marketData;
         try {
             const { getMarketData } = await import('@/lib/market-data');
-            marketData = await getMarketData('XAUUSD', '5m');
+            marketData = await getMarketData(symbol as any, timeframe as any);
         } catch (e) {
-            console.error('[ForexSignal] All feeds failed', e);
+            console.error(`[ForexSignal] All feeds failed for ${symbol}`, e);
             return NextResponse.json({ error: 'Market data unavailable' }, { status: 503 });
         }
 
@@ -37,15 +47,15 @@ export async function GET(request: NextRequest) {
             volume: c.volume
         }));
 
-        // 1.5. MANAGE ACTIVE SIGNALS (Check TP/SL)
+        // 1.5. MANAGE ACTIVE SIGNALS (Check TP/SL for current symbol)
         try {
             const { default: getTursoClient } = await import('@/lib/turso');
             const turso = getTursoClient();
             if (turso) {
                 const activeSignals = await turso.execute({
                     sql: `SELECT * FROM provider_signals 
-                          WHERE provider_id = 'provider_ai_genesis' AND status = 'active'`,
-                    args: []
+                          WHERE provider_id = 'provider_ai_genesis' AND status = 'active' AND pair = ?`,
+                    args: [symbol]
                 });
 
                 for (const signal of activeSignals.rows) {
@@ -55,14 +65,15 @@ export async function GET(request: NextRequest) {
                     const action = signal.action as string; // 'BUY' or 'SELL'
                     let outcome: 'WIN' | 'LOSS' | 'OPEN' = 'OPEN';
                     let pips = 0;
+                    const isGold = symbol === 'XAUUSD';
 
                     // Support both legacy 'LONG'/'SHORT' and new 'BUY'/'SELL' formats
                     if (action === 'BUY' || action === 'LONG') {
-                        if (currentPrice >= tp) { outcome = 'WIN'; pips = (tp - entry) * 10; } // TP Hit
-                        else if (currentPrice <= sl) { outcome = 'LOSS'; pips = (sl - entry) * 10; } // SL Hit
+                        if (currentPrice >= tp) { outcome = 'WIN'; pips = isGold ? (tp - entry) * 10 : (tp - entry); } // TP Hit
+                        else if (currentPrice <= sl) { outcome = 'LOSS'; pips = isGold ? (sl - entry) * 10 : (sl - entry); } // SL Hit
                     } else if (action === 'SELL' || action === 'SHORT') {
-                        if (currentPrice <= tp) { outcome = 'WIN'; pips = (entry - tp) * 10; } // TP Hit
-                        else if (currentPrice >= sl) { outcome = 'LOSS'; pips = (entry - sl) * 10; } // SL Hit
+                        if (currentPrice <= tp) { outcome = 'WIN'; pips = isGold ? (entry - tp) * 10 : (entry - tp); } // TP Hit
+                        else if (currentPrice >= sl) { outcome = 'LOSS'; pips = isGold ? (entry - sl) * 10 : (entry - sl); } // SL Hit
                     }
 
                     if (outcome !== 'OPEN') {
@@ -76,7 +87,7 @@ export async function GET(request: NextRequest) {
 
                         // Update Provider Stats
                         const isWin = outcome === 'WIN';
-                        const profitUsd = pips * 1; // Approx $1 per pip for 0.1 lot on XAUUSD (simplified)
+                        const profitUsd = isGold ? pips * 1 : pips * 0.01; // Scaled for lot size
 
                         await turso.execute({
                             sql: `UPDATE provider_statistics 
@@ -88,7 +99,7 @@ export async function GET(request: NextRequest) {
                                   WHERE provider_id = 'provider_ai_genesis'`,
                             args: [isWin ? 1 : 0, isWin ? 0 : 1, profitUsd, isWin ? 1 : 0]
                         });
-                        console.log(`[ForexSignal] Closed Signal ${signal.id} (${outcome}: ${pips.toFixed(1)} pips)`);
+                        console.log(`[ForexSignal] Closed Signal ${signal.id} for ${symbol} (${outcome}: ${pips.toFixed(1)} pts)`);
                     }
                 }
             }
@@ -97,10 +108,10 @@ export async function GET(request: NextRequest) {
         }
 
         // 2. Generate Prediction
-        const predictor = getPredictor('XAUUSD', 10);
+        const predictor = getPredictor(symbol, 10);
         const prediction = predictor.predictForex(currentPrice, priceHistory);
 
-        console.log(`[ForexSignal] XAUUSD: ${prediction.direction} (${prediction.confidence})`);
+        console.log(`[ForexSignal] ${symbol}: ${prediction.direction} (${prediction.confidence})`);
 
         // 3. Evaluate for Broadcast
         // Criteria: High Confidence (>0.75) AND Clear Direction (UP/DOWN)
@@ -116,14 +127,14 @@ export async function GET(request: NextRequest) {
                         sql: `SELECT * FROM ai_signals 
                               WHERE symbol = ? AND created_at > datetime('now', '-60 minutes') 
                               ORDER BY created_at DESC LIMIT 1`,
-                        args: ['XAUUSD']
+                        args: [symbol]
                     });
 
                     if (recentSignals.rows.length > 0) {
                         const lastSignal = recentSignals.rows[0];
                         // If same direction, skip (don't spam)
                         if (lastSignal.direction === prediction.direction) {
-                            console.log('[ForexSignal] Skipping duplicate signal (sent recently)');
+                            console.log(`[ForexSignal] Skipping duplicate signal for ${symbol} (sent recently)`);
                             return NextResponse.json({ success: true, message: 'Duplicate signal skipped' });
                         }
                     }
@@ -131,10 +142,11 @@ export async function GET(request: NextRequest) {
 
                 // Formatting Message
                 const actionEmoji = setup.action === 'LONG' ? '🟢 BUY' : '🔴 SELL';
+                const sessionHeader = isForexOpen ? 'FOREX / GOLD MARKET' : 'WEEKEND CRYPTO 24/7';
                 const message = `
-**🔔 AI GENESIS SIGNAL**
+**🔔 AI GENESIS SIGNAL — ${sessionHeader}**
 
-**Pair:** XAUUSD (Gold)
+**Pair:** ${pairLabel}
 **Action:** ${actionEmoji} NOW
 **Entry:** ${setup.entry}
 **TP:** ${setup.tp}
@@ -157,9 +169,9 @@ _DYOR. Money Management Recommended._
                         sql: `INSERT INTO ai_signals (type, symbol, timeframe, direction, entry_price, stop_loss, take_profit_1, confidence, status)
                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
                         args: [
-                            'FOREX',
-                            'XAUUSD',
-                            '10m', // horizon
+                            isForexOpen ? 'FOREX' : 'CRYPTO',
+                            symbol,
+                            timeframe,
                             prediction.direction,
                             setup.entry,
                             setup.sl,
@@ -177,19 +189,23 @@ _DYOR. Money Management Recommended._
                                     id, provider_id, pair, action, 
                                     entry_price, stop_loss, take_profit, 
                                     commentary, status, timeframe, lot_size, price_koin
-                                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', '10m', 0.01, 10)`,
+                                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, 10)`,
                             args: [
                                 signalId,
                                 'provider_ai_genesis', // Fixed ID for AI
-                                'XAUUSD',
+                                symbol,
                                 setup.action === 'LONG' ? 'BUY' : 'SELL', // Map for Copytrade UI
                                 setup.entry,
                                 setup.sl,
                                 setup.tp,
-                                `AI Confidence: ${(prediction.confidence * 100).toFixed(0)}%`,
+                                isForexOpen 
+                                    ? `AI Confidence: ${(prediction.confidence * 100).toFixed(0)}%`
+                                    : `AI Weekend Crypto: ${(prediction.confidence * 100).toFixed(0)}%`,
+                                timeframe,
+                                isForexOpen ? 0.01 : 0.001
                             ]
                         });
-                        console.log('[ForexSignal] Linked to AI Genesis Provider');
+                        console.log(`[ForexSignal] Linked ${symbol} to AI Genesis Provider`);
                     } catch (err) {
                         console.error('[ForexSignal] Failed to link provider signal:', err);
                     }
@@ -197,6 +213,8 @@ _DYOR. Money Management Recommended._
 
                 return NextResponse.json({
                     success: true,
+                    symbol,
+                    isForexOpen,
                     signal: setup,
                     broadcast: stats
                 });
@@ -205,6 +223,8 @@ _DYOR. Money Management Recommended._
 
         return NextResponse.json({
             success: true,
+            symbol,
+            isForexOpen,
             message: 'No high-confidence signal generated',
             prediction: {
                 direction: prediction.direction,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/lib/telegram';
 import getTursoClient from '@/lib/turso';
+import { isMarketOpen } from '@/lib/market-hours';
 
 // Vercel Cron Job - Scan for Whale Zones Every Minute
 // Schedule: * * * * * (Every minute)
@@ -14,6 +15,17 @@ export async function GET(request: Request) {
     const cronSecret = process.env.CRON_SECRET;
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Weekend Market Hours Check:
+    // Gold (XAUUSD) is closed on weekends (Fri 22:00 UTC - Sun 22:00 UTC / Mon 05:00 WIB).
+    // Standby on weekends to avoid false alerts on closed market data.
+    const xauStatus = isMarketOpen('XAUUSD');
+    if (!xauStatus.isOpen) {
+        return NextResponse.json({
+            status: 'standby',
+            message: 'Forex & Gold market closed (weekend). Whale radar standby until Monday 05:00 WIB.'
+        });
     }
 
     const turso = getTursoClient();
