@@ -130,6 +130,17 @@ export default function Navbar() {
                         <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold uppercase">90K</span>
                     </Link>
 
+                    {/* Prominent Direct PICA Indicator Maker Button */}
+                    <Link
+                        href="/indicator-maker"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white border border-emerald-400 text-xs sm:text-[13px] font-black transition-all shadow-xs hover:shadow-emerald-500/20 active:scale-95 cursor-pointer"
+                        title="PICA Indicator Maker (TradingView & MT5)"
+                    >
+                        <span>🛠️</span>
+                        <span>INDICATOR MAKER</span>
+                        <span className="text-[9px] bg-black/25 px-1 py-0.2 rounded font-extrabold uppercase">175K</span>
+                    </Link>
+
 
                     {/* Popover Menu: Fitur Utama */}
                     <Popover.Root>
@@ -153,6 +164,19 @@ export default function Navbar() {
                                     <span className="text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded font-bold">FITUR &amp; AI</span>
                                 </div>
                                 <div className="py-1 space-y-0.5 text-xs">
+                                    <Link href="/indicator-maker" className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 transition-colors border border-emerald-200/80">
+                                        <div className="flex items-center gap-2">
+                                            <span>🛠️</span>
+                                            <div>
+                                                <p className="font-bold flex items-center gap-1 text-slate-900">
+                                                    PICA Indicator Maker
+                                                    <span className="text-[8px] bg-emerald-600 text-white px-1 py-0.2 rounded font-black">BARU</span>
+                                                </p>
+                                                <p className="text-[10px] text-emerald-800">Rakit Indikator PineScript v5 &amp; MT5 (50 Modul)</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-900">175K</span>
+                                    </Link>
                                     <Link href="/hermes-mentor" className="flex items-center justify-between p-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-950 transition-colors border border-amber-200/80">
                                         <div className="flex items-center gap-2">
                                             <span>🧠</span>
@@ -295,6 +319,16 @@ export default function Navbar() {
                         <span>🤖</span>
                         <span>EA GOLD</span>
                         <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold">90K</span>
+                    </Link>
+
+                    {/* Mobile Direct Indicator Maker button */}
+                    <Link
+                        href="/indicator-maker"
+                        className="sm:hidden flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black shadow-xs active:scale-95 shrink-0 border border-emerald-400/80"
+                        title="Indicator Maker"
+                    >
+                        <span>🛠️</span>
+                        <span>MAKER</span>
                     </Link>
 
 
@@ -508,6 +542,25 @@ export default function Navbar() {
                                 </div>
                             </div>
                             <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-amber-300 shrink-0">90K</span>
+                        </Link>
+
+                        {/* Top Highlight 3: PICA Indicator Maker */}
+                        <Link
+                            href="/indicator-maker"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md shadow-emerald-500/20 active:scale-98 transition-all border border-emerald-400"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <span className="text-2xl">🛠️</span>
+                                <div>
+                                    <p className="font-black text-sm flex items-center gap-1.5 text-white">
+                                        PICA Indicator Maker
+                                        <span className="text-[9px] bg-white text-emerald-800 px-1.5 py-0.2 rounded-full font-black uppercase">BARU</span>
+                                    </p>
+                                    <p className="text-[11px] text-emerald-100 font-medium">Rakit Indikator TradingView &amp; MT5 (50 Modul)</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-emerald-300 shrink-0">175K</span>
                         </Link>
 
 

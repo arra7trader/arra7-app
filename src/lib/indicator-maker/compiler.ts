@@ -1,0 +1,238 @@
+import { PlatformTarget } from './types';
+import { getTechniqueById } from './catalog';
+
+export interface CompileOptions {
+  platform: PlatformTarget;
+  techniqueIds: string[];
+  customName?: string;
+  licenseCode?: string;
+}
+
+export function compileIndicator(options: CompileOptions): {
+  platform: PlatformTarget;
+  code: string;
+  filename: string;
+  techniqueNames: string[];
+} {
+  const { platform, techniqueIds, customName = 'PICA Custom Strategy', licenseCode = 'COMMUNITY-USER' } = options;
+  
+  // Enforce Max 5 Combo
+  const validIds = techniqueIds.slice(0, 5);
+  const modules = validIds.map(id => getTechniqueById(id)).filter((m): m is NonNullable<typeof m> => !!m);
+
+  if (modules.length === 0) {
+    throw new Error('Pilih minimal 1 teknik untuk merakit indikator.');
+  }
+
+  const cleanName = customName.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim() || 'PICA_Custom_Strategy';
+  const techniqueNames = modules.map(m => m.name);
+
+  if (platform === 'tradingview') {
+    const code = compilePineScriptV5(cleanName, modules, licenseCode);
+    const filename = `${cleanName.toLowerCase().replace(/\s+/g, '_')}_tv5.pine`;
+    return { platform: 'tradingview', code, filename, techniqueNames };
+  } else {
+    const code = compileMQL5(cleanName, modules, licenseCode);
+    const filename = `${cleanName.toLowerCase().replace(/\s+/g, '_')}_mt5.mq5`;
+    return { platform: 'mt5', code, filename, techniqueNames };
+  }
+}
+
+function compilePineScriptV5(name: string, modules: any[], licenseCode: string): string {
+  const inputsBlock = modules.map(m => m.pineInputs).filter(Boolean).join('\n');
+  const functionsBlock = modules.map(m => m.pineFunction).filter(Boolean).join('\n');
+  const plotCalls = modules.map(m => m.pinePlotting).filter(Boolean).join('\n');
+  
+  const buyConditions = modules
+    .map(m => m.pineConditionBuy)
+    .filter(c => c && c !== 'true');
+  const sellConditions = modules
+    .map(m => m.pineConditionSell)
+    .filter(c => c && c !== 'true');
+
+  const buyLogic = buyConditions.length > 0 ? buyConditions.join(' and ') : 'close > open';
+  const sellLogic = sellConditions.length > 0 ? sellConditions.join(' and ') : 'close < open';
+
+  return `//@version=5
+// ==============================================================================
+// 🏆 PICA INDICATOR MAKER — INSTITUTIONAL EDITION
+// 📊 Indicator Name : ${name}
+// 🎯 Target Platform: TradingView (PineScript v5)
+// 🛡️ License Key    : ${licenseCode}
+// ⚡ Techniques     : ${modules.map(m => m.name).join(', ')}
+// 🔒 Guarantee      : Zero-Repaint (Engine Lock at barstate.isconfirmed)
+// 🌐 Built with     : https://pica.my.id/indicator-maker
+// ==============================================================================
+
+indicator("${name}", shorttitle="${name.slice(0, 12)}", overlay=true, max_bars_back=500)
+
+// --- SYSTEM INPUTS & SETTINGS ---
+show_signals = input.bool(true, "Show BUY / SELL Signal Arrows", group="General Signals")
+filter_bars  = input.bool(true, "Enforce Anti-Repaint Confirmed Candle", group="General Signals")
+
+${inputsBlock}
+
+// --- MODULAR INSTITUTIONAL FUNCTIONS ---
+${functionsBlock}
+
+// --- EXECUTE PLOTTING & LOGIC BLOCKS ---
+${plotCalls}
+
+// --- COMPOSITE SIGNAL CONFLUENCE ---
+raw_buy  = ${buyLogic}
+raw_sell = ${sellLogic}
+
+// Zero-Repaint Trigger Lock
+final_buy_signal  = show_signals and raw_buy  and (filter_bars ? barstate.isconfirmed : true)
+final_sell_signal = show_signals and raw_sell and (filter_bars ? barstate.isconfirmed : true)
+
+// Avoid repeated sequential signals on same trend
+var int last_signal_dir = 0
+signal_buy_trigger  = final_buy_signal  and last_signal_dir != 1
+signal_sell_trigger = final_sell_signal and last_signal_dir != -1
+
+if signal_buy_trigger
+    last_signal_dir := 1
+if signal_sell_trigger
+    last_signal_dir := -1
+
+// --- VISUAL ON-CHART SIGNALS ---
+plotshape(signal_buy_trigger, title="🟢 INSTITUTIONAL BUY", style=shape.labelup, location=location.belowbar, color=color.new(#10b981, 0), text="BUY", textcolor=color.white, size=size.small)
+plotshape(signal_sell_trigger, title="🔴 INSTITUTIONAL SELL", style=shape.labeldown, location=location.abovebar, color=color.new(#ef4444, 0), text="SELL", textcolor=color.white, size=size.small)
+
+// Bar color accents
+barcolor(signal_buy_trigger ? color.new(#10b981, 0) : signal_sell_trigger ? color.new(#ef4444, 0) : na)
+
+// --- NATIVE ALERTS ---
+alertcondition(signal_buy_trigger, title="[PICA BUY ALERT]", message="PICA AI System: BUY Trigger on {{ticker}} @ {{close}}")
+alertcondition(signal_sell_trigger, title="[PICA SELL ALERT]", message="PICA AI System: SELL Trigger on {{ticker}} @ {{close}}")
+`;
+}
+
+function compileMQL5(name: string, modules: any[], licenseCode: string): string {
+  const inputsBlock = modules.map(m => m.mq5Inputs).filter(Boolean).join('\n');
+  const functionsBlock = modules.map(m => m.mq5Function).filter(Boolean).join('\n');
+  const plotCalls = modules.map(m => m.mq5Plotting).filter(Boolean).join('\n');
+
+  const buyConditions = modules
+    .map(m => m.mq5ConditionBuy)
+    .filter(c => c && c !== 'true');
+  const sellConditions = modules
+    .map(m => m.mq5ConditionSell)
+    .filter(c => c && c !== 'true');
+
+  const buyLogic = buyConditions.length > 0 ? buyConditions.join(' && ') : 'Close[i] > Open[i]';
+  const sellLogic = sellConditions.length > 0 ? sellConditions.join(' && ') : 'Close[i] < Open[i]';
+
+  return `//+------------------------------------------------------------------+
+//|                                     ${name}.mq5 |
+//|                     PICA INDICATOR MAKER — MT5 EDITION           |
+//|                          https://pica.my.id/indicator-maker      |
+//+------------------------------------------------------------------+
+#property copyright   "PICA AI Quantitative Platform & ARRA AI"
+#property link        "https://pica.my.id/indicator-maker"
+#property version     "1.00"
+#property description "Custom Indicator generated by PICA INDICATOR MAKER"
+#property description "License: ${licenseCode}"
+#property indicator_chart_window
+#property indicator_buffers 2
+#property indicator_plots   2
+
+//--- Plot Buy Arrow
+#property indicator_label1  "PICA Buy Signal"
+#property indicator_type1   DRAW_ARROW
+#property indicator_color1  clrLimeGreen
+#property indicator_style1  STYLE_SOLID
+#property indicator_width1  2
+
+//--- Plot Sell Arrow
+#property indicator_label2  "PICA Sell Signal"
+#property indicator_type2   DRAW_ARROW
+#property indicator_color2  clrCrimson
+#property indicator_style2  STYLE_SOLID
+#property indicator_width2  2
+
+//--- Input Parameters
+input group "=== GENERAL SETTINGS ===";
+input bool InpShowSignals = true; // Show Buy & Sell Arrows
+input bool InpSendAlerts   = true; // Enable Popup & Sound Alerts
+
+${inputsBlock}
+
+//--- Indicator Buffers
+double BufferBuy[];
+double BufferSell[];
+
+${functionsBlock}
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   SetIndexBuffer(0, BufferBuy, INDICATOR_DATA);
+   SetIndexBuffer(1, BufferSell, INDICATOR_DATA);
+   
+   PlotIndexSetInteger(0, PLOT_ARROW, 233); // Up Arrow Wingdings
+   PlotIndexSetInteger(1, PLOT_ARROW, 234); // Down Arrow Wingdings
+   
+   PlotIndexSetDouble(0, PLOT_EMPTY_VALUE, 0.0);
+   PlotIndexSetDouble(1, PLOT_EMPTY_VALUE, 0.0);
+   
+   IndicatorSetString(INDICATOR_SHORTNAME, "${name}");
+   return(INIT_SUCCEEDED);
+  }
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+  {
+   if(rates_total < 30) return(0);
+
+   int limit = rates_total - prev_calculated;
+   if(prev_calculated > 0) limit++;
+
+   // Loop over candles in historical order
+   for(int i = limit - 1; i >= 1; i--)
+     {
+      BufferBuy[i] = 0.0;
+      BufferSell[i] = 0.0;
+
+      if(!InpShowSignals) continue;
+
+      bool condBuy  = (${buyLogic});
+      bool condSell = (${sellLogic});
+
+      if(condBuy)
+        {
+         BufferBuy[i] = Low[i] - (High[i] - Low[i]) * 0.3;
+         if(i == 1 && InpSendAlerts)
+           {
+            Alert(StringFormat("[PICA BUY] %s %s @ %.5f", _Symbol, EnumToString(_Period), Close[i]));
+           }
+        }
+      else if(condSell)
+        {
+         BufferSell[i] = High[i] + (High[i] - Low[i]) * 0.3;
+         if(i == 1 && InpSendAlerts)
+           {
+            Alert(StringFormat("[PICA SELL] %s %s @ %.5f", _Symbol, EnumToString(_Period), Close[i]));
+           }
+        }
+     }
+
+   return(rates_total);
+  }
+//+------------------------------------------------------------------+
+`;
+}
