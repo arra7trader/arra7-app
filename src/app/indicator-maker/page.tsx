@@ -13,7 +13,10 @@ import {
   SparklesIcon,
   BoltIcon,
   FireIcon,
-  ChartIcon
+  ChartIcon,
+  ClockIcon,
+  TradingViewIcon,
+  MetaTraderIcon
 } from '@/components/PremiumIcons';
 
 export default function IndicatorMakerPage() {
@@ -231,7 +234,7 @@ export default function IndicatorMakerPage() {
         <div className="flex items-center gap-2">
           {earlyBirdStats.isEarlyBirdActive ? (
             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-emerald-800 font-bold text-[11px] shadow-2xs">
-              <span>🔥 EARLY BIRD: Tersisa {earlyBirdStats.remainingEarlyBirdSlots} dari {earlyBirdStats.maxEarlyBirdSlots} Slot</span>
+              <FireIcon size="xs" className="text-amber-500 inline mr-1" /><span>EARLY BIRD: Tersisa {earlyBirdStats.remainingEarlyBirdSlots} dari {earlyBirdStats.maxEarlyBirdSlots} Slot</span>
               <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-full font-extrabold text-[10px]">
                 175K LIFETIME
               </span>
@@ -310,7 +313,7 @@ export default function IndicatorMakerPage() {
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-2xl">📈</span>
+                <TradingViewIcon size="lg" />
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
                   selectedPlatform === 'tradingview' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
                 }`}>
@@ -413,12 +416,12 @@ export default function IndicatorMakerPage() {
               {/* Quota & Cooldown Status */}
               <div className="flex items-center gap-3 text-xs">
                 <div className="flex items-center gap-1.5 text-slate-600">
-                  <span>📊 Kuota Hari ini:</span>
+                  <div className="flex items-center gap-1"><ChartIcon size="xs" className="text-blue-600" /><span>Kuota Hari ini:</span></div>
                   <span className="font-bold text-slate-900">{isAdminPasskey ? 'Unlimited' : `${dailyRemaining}/5`}</span>
                 </div>
                 {cooldownSeconds > 0 && !isAdminPasskey && (
                   <div className="flex items-center gap-1 text-amber-800 font-bold bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-lg">
-                    <span>⏳ Cooldown:</span>
+                    <ClockIcon size="xs" className="text-amber-600" /><span>Cooldown:</span>
                     <span>{formatTime(cooldownSeconds)}</span>
                   </div>
                 )}
@@ -694,8 +697,8 @@ export default function IndicatorMakerPage() {
         {/* Big Action Bar */}
         <div className="sticky bottom-4 z-30 bg-white/95 border border-slate-200 rounded-3xl p-4 shadow-xl shadow-slate-300/40 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 text-xl font-bold shadow-2xs">
-              ⚡
+            <div className="size-10 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-center shadow-2xs">
+              <IndicatorMakerIcon size="md" />
             </div>
             <div>
               <p className="text-xs font-extrabold text-slate-900">

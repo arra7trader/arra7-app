@@ -418,28 +418,88 @@ export const CryptoHunterIcon: React.FC<IconProps> = ({ className = '', size = '
     </svg>
 );
 
-// PICA Indicator Maker Icon - Candlestick Engine Forge + Vector Blueprint Gear
+// PICA Indicator Maker Icon - Ultra-Premium Institutional Candlestick Forge + Glowing Buy Signal
 export const IndicatorMakerIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
-    <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        {/* Candlestick 1 Bull */}
-        <line x1="6" y1="3" x2="6" y2="15" strokeLinecap="round" strokeWidth={1.75} />
-        <rect x="4.25" y="6" width="3.5" height="6" rx="0.75" fill="currentColor" fillOpacity={0.2} strokeWidth={1.75} />
-        {/* Candlestick 2 Bear */}
-        <line x1="12" y1="2" x2="12" y2="13" strokeLinecap="round" strokeWidth={1.75} />
-        <rect x="10.25" y="4" width="3.5" height="5" rx="0.75" fill="currentColor" fillOpacity={0.2} strokeWidth={1.75} />
-        {/* Algo Forge Bracket & Precision Code Node */}
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.5 4l2.5 2.5-2.5 2.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 18.5h17" />
-        {/* Slider & Precision Dial */}
-        <circle cx="9" cy="18.5" r="2.25" fill="currentColor" fillOpacity={0.25} strokeWidth={1.75} />
-        <circle cx="16" cy="18.5" r="1.5" fill="currentColor" />
-        {/* Institutional Buy Arrow Marker */}
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 11.5l2-2m0 0l2 2m-2-2v5" />
+    <svg className={`${sizeMap[size]} ${className}`} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="pim-grad-bg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#F0FDF4" />
+                <stop offset="1" stopColor="#DCFCE7" />
+            </linearGradient>
+            <linearGradient id="pim-grad-bull" x1="6" y1="7" x2="11" y2="17" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#34D399" />
+                <stop offset="1" stopColor="#059669" />
+            </linearGradient>
+            <linearGradient id="pim-grad-bear" x1="12" y1="6" x2="17" y2="14" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#F87171" />
+                <stop offset="1" stopColor="#DC2626" />
+            </linearGradient>
+            <linearGradient id="pim-grad-arrow" x1="18" y1="6" x2="26" y2="15" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#06B6D4" />
+                <stop offset="1" stopColor="#2563EB" />
+            </linearGradient>
+            <filter id="pim-glow" x="14" y="5" width="14" height="14" filterUnits="userSpaceOnUse">
+                <feGaussianBlur stdDeviation="1" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+
+        {/* Outer Premium Badge Frame */}
+        <rect x="1.5" y="1.5" width="25" height="25" rx="6" fill="url(#pim-grad-bg)" stroke="#86EFAC" strokeWidth="1.25" />
+
+        {/* Candlestick 1: Bullish Wick & Body */}
+        <line x1="8.5" y1="4.5" x2="8.5" y2="18.5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="6" y="8" width="5" height="7.5" rx="1.25" fill="url(#pim-grad-bull)" stroke="#047857" strokeWidth="1" />
+
+        {/* Candlestick 2: Bearish Wick & Body */}
+        <line x1="14.5" y1="5.5" x2="14.5" y2="16" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="12" y="7" width="5" height="5.5" rx="1.25" fill="url(#pim-grad-bear)" stroke="#B91C1C" strokeWidth="1" />
+
+        {/* Calibration Slider Track */}
+        <path d="M4.5 22.5h19" stroke="#94A3B8" strokeWidth="1.25" strokeLinecap="round" strokeDasharray="1 2" />
+        <line x1="4.5" y1="22.5" x2="15" y2="22.5" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Calibrator Dial Nodes */}
+        <circle cx="10" cy="22.5" r="2.5" fill="#FFFFFF" stroke="#059669" strokeWidth="1.5" />
+        <circle cx="10" cy="22.5" r="1.25" fill="#10B981" />
+        <circle cx="17.5" cy="22.5" r="1.5" fill="#0EA5E9" />
+
+        {/* Institutional Buy Arrow Beacon */}
+        <g filter="url(#pim-glow)">
+            <path d="M21 7l-3.5 4h2.5v5h2v-5h2.5L21 7z" fill="url(#pim-grad-arrow)" />
+        </g>
+    </svg>
+);
+
+// TradingView Vector Mark
+export const TradingViewIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="20" height="20" rx="5" fill="#0F172A" />
+        <rect x="5.5" y="11" width="3" height="7" rx="1" fill="#3B82F6" />
+        <rect x="10.5" y="6" width="3" height="12" rx="1" fill="#10B981" />
+        <rect x="15.5" y="9" width="3" height="9" rx="1" fill="#6366F1" />
+        <circle cx="12" cy="4" r="1" fill="#38BDF8" />
+    </svg>
+);
+
+// MetaTrader 5 Vector Mark
+export const MetaTraderIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="20" height="20" rx="5" fill="#1E293B" />
+        <circle cx="12" cy="7.5" r="2.75" fill="#3B82F6" stroke="#60A5FA" strokeWidth="1" />
+        <circle cx="7.5" cy="15.5" r="2.75" fill="#10B981" stroke="#34D399" strokeWidth="1" />
+        <circle cx="16.5" cy="15.5" r="2.75" fill="#F59E0B" stroke="#FBBF24" strokeWidth="1" />
+        <line x1="12" y1="7.5" x2="7.5" y2="15.5" stroke="#FFFFFF" strokeWidth="1.25" strokeOpacity="0.8" />
+        <line x1="12" y1="7.5" x2="16.5" y2="15.5" stroke="#FFFFFF" strokeWidth="1.25" strokeOpacity="0.8" />
+        <line x1="7.5" y1="15.5" x2="16.5" y2="15.5" stroke="#FFFFFF" strokeWidth="1.25" strokeOpacity="0.8" />
+        <circle cx="12" cy="13" r="1.25" fill="#FFFFFF" />
     </svg>
 );
 
 export const IconMap = {
     indicatorMaker: IndicatorMakerIcon,
+    tradingView: TradingViewIcon,
+    metaTrader: MetaTraderIcon,
     cryptoHunter: CryptoHunterIcon,
     chart: ChartIcon,
     trendUp: TrendUpIcon,
