@@ -130,17 +130,6 @@ export default function Navbar() {
                         <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold uppercase">90K</span>
                     </Link>
 
-                    {/* Prominent Direct PICA Indicator Maker Button */}
-                    <Link
-                        href="/indicator-maker"
-                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white border border-emerald-400 text-xs sm:text-[13px] font-black transition-all shadow-xs hover:shadow-emerald-500/20 active:scale-95 cursor-pointer"
-                        title="PICA Indicator Maker (TradingView & MT5)"
-                    >
-                        <span>🛠️</span>
-                        <span>INDICATOR MAKER</span>
-                        <span className="text-[9px] bg-black/25 px-1 py-0.2 rounded font-extrabold uppercase">175K</span>
-                    </Link>
-
 
                     {/* Popover Menu: Fitur Utama */}
                     <Popover.Root>
@@ -319,16 +308,6 @@ export default function Navbar() {
                         <span>🤖</span>
                         <span>EA GOLD</span>
                         <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold">90K</span>
-                    </Link>
-
-                    {/* Mobile Direct Indicator Maker button */}
-                    <Link
-                        href="/indicator-maker"
-                        className="sm:hidden flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black shadow-xs active:scale-95 shrink-0 border border-emerald-400/80"
-                        title="Indicator Maker"
-                    >
-                        <span>🛠️</span>
-                        <span>MAKER</span>
                     </Link>
 
 

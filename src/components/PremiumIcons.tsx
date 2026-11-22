@@ -418,7 +418,28 @@ export const CryptoHunterIcon: React.FC<IconProps> = ({ className = '', size = '
     </svg>
 );
 
+// PICA Indicator Maker Icon - Candlestick Engine Forge + Vector Blueprint Gear
+export const IndicatorMakerIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        {/* Candlestick 1 Bull */}
+        <line x1="6" y1="3" x2="6" y2="15" strokeLinecap="round" strokeWidth={1.75} />
+        <rect x="4.25" y="6" width="3.5" height="6" rx="0.75" fill="currentColor" fillOpacity={0.2} strokeWidth={1.75} />
+        {/* Candlestick 2 Bear */}
+        <line x1="12" y1="2" x2="12" y2="13" strokeLinecap="round" strokeWidth={1.75} />
+        <rect x="10.25" y="4" width="3.5" height="5" rx="0.75" fill="currentColor" fillOpacity={0.2} strokeWidth={1.75} />
+        {/* Algo Forge Bracket & Precision Code Node */}
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.5 4l2.5 2.5-2.5 2.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 18.5h17" />
+        {/* Slider & Precision Dial */}
+        <circle cx="9" cy="18.5" r="2.25" fill="currentColor" fillOpacity={0.25} strokeWidth={1.75} />
+        <circle cx="16" cy="18.5" r="1.5" fill="currentColor" />
+        {/* Institutional Buy Arrow Marker */}
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 11.5l2-2m0 0l2 2m-2-2v5" />
+    </svg>
+);
+
 export const IconMap = {
+    indicatorMaker: IndicatorMakerIcon,
     cryptoHunter: CryptoHunterIcon,
     chart: ChartIcon,
     trendUp: TrendUpIcon,
