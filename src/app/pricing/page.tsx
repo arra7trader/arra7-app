@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon } from '@/components/PremiumIcons';
+import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon, IndicatorMakerIcon } from '@/components/PremiumIcons';
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
     ALL_ACCESS: [
@@ -39,10 +39,16 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
     EA_PICA_GOLD: [
         { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 90.000', originalPrice: 'Rp 499.000', savingsText: 'PROMO HARI INI Hemat Rp 409.000 • Diskon 82%', period: '/ sekali bayar' },
     ],
+    INDICATOR_MAKER: [
+        { duration: 'lifetime', days: 0, label: 'Early Bird (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 324.000 • 20 Slot Tercepat', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 299.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+    ],
 };
 
 function PlanIcon({ planId }: { planId: string }) {
     switch (planId) {
+        case 'INDICATOR_MAKER':
+            return <IndicatorMakerIcon size="lg" className="text-emerald-600" />;
         case 'BASIC':
             return <SparklesIcon size="lg" className="text-slate-600" />;
         case 'PRO':
@@ -157,7 +163,25 @@ const PRICING_PLANS = [
         cta: 'Ambil TELEBOT Lifetime',
         popular: false,
     },
-    {
+        {
+        id: 'INDICATOR_MAKER',
+        name: 'PICA Indicator Maker',
+        description: 'Rakit indikator Buy/Sell kustom TradingView v5 (.pine) atau MT5 (.mq5) dengan 100 formula standar institusi dunia (SMC, Order Flow, Volatilitas, & Killzones). Zero-Repaint & Siap Pasang di Chart.',
+        theme: 'emerald',
+        features: [
+            { text: '100 Modul Standar Institusi (SMC, Order Flow, Killzone)', included: true, highlight: true },
+            { text: 'Pilih Single Output: Pine Script v5 ATAU MT5 (.mq5)', included: true, highlight: true },
+            { text: 'Zero-Repaint Guarantee (Formula Barindex Fix & Candle Closed)', included: true, highlight: true },
+            { text: 'Proteksi Anti-Abuse (Jeda 1 Jam & Max 5x Generate / Hari)', included: true, highlight: true },
+            { text: 'Early Bird Eksklusif 20 Slot: Sekali Bayar Rp 175.000 Lifetime', included: true, highlight: true },
+            { text: 'Setelah 20 Slot Habis: Harga Tetap Rp 175.000 / Bulan', included: true, highlight: false },
+            { text: 'Formula Diagram Mockup Visual & Card Lengkap', included: true, highlight: false },
+            { text: 'Export File Bersih Tanpa Error & Siap Pasang di Chart', included: true, highlight: false },
+        ],
+        cta: 'Rakit Indikator (Rp 175.000)',
+        popular: true,
+    },
+{
         id: 'ARRA_CRONOS',
         name: 'ARRA Cronos & ARRA GROK Terminal',
         description: 'Paket komplit AI Quant Forecast Lilin Masa Depan + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + BONUS Resmi Indikator TradingView Pine Script v6.',
@@ -231,6 +255,7 @@ export default function PricingPage() {
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
         PRO: '3months',
         VVIP: '3months',
+        INDICATOR_MAKER: 'lifetime',
     });
 
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
