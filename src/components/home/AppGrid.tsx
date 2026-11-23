@@ -11,6 +11,7 @@ import {
     CryptoHunterIcon,
     BoltIcon,
     IndicatorMakerIcon,
+    EaMakerIcon,
 } from '@/components/PremiumIcons';
 import MaintenanceModal from '@/components/MaintenanceModal';
 
@@ -58,7 +59,7 @@ export default function AppGrid() {
             sublabel: 'Backtest Engine · MT5 .mq5',
             badge: 'EA BUILDER',
             badgeColor: 'bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 text-white font-extrabold shadow-sm',
-            icon: <BoltIcon size="lg" className="text-blue-600" />,
+            icon: <EaMakerIcon size="lg" className="text-blue-600" />,
             href: '/ea-maker',
             color: 'bg-blue-100/90 border-blue-400/90 ring-2 ring-blue-400/30',
             highlight: true,

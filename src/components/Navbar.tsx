@@ -18,7 +18,11 @@ import {
     ShieldCheckIcon,
     BookOpenIcon,
     ChartIcon,
-    CurrencyIcon
+    CurrencyIcon,
+    IndicatorMakerIcon,
+    EaMakerIcon,
+    BrainIcon,
+    TrophyIcon
 } from './PremiumIcons';
 
 export default function Navbar() {
@@ -125,7 +129,7 @@ export default function Navbar() {
                         className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-yellow-500 via-amber-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 border border-yellow-300 text-xs sm:text-[13px] font-black transition-all shadow-xs hover:shadow-amber-500/20 active:scale-95 cursor-pointer"
                         title="EA PICA Neural Gold M1 & M5 (Terkunci)"
                     >
-                        <span>🤖</span>
+                        <EaMakerIcon size="xs" />
                         <span>EA GOLD</span>
                         <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold uppercase">90K</span>
                     </Link>
@@ -137,7 +141,7 @@ export default function Navbar() {
                             <button
                                 className="hidden sm:flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition-all shadow-2xs hover:border-blue-300 active:scale-95 cursor-pointer"
                             >
-                                <span className="text-xs">⚡</span>
+                                <BoltIcon size="xs" />
                                 <span>Fitur</span>
                                 <span className="text-[10px] text-slate-400">▼</span>
                             </button>
@@ -155,26 +159,26 @@ export default function Navbar() {
                                 <div className="py-1 space-y-0.5 text-xs">
                                     <Link href="/indicator-maker" className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 transition-colors border border-emerald-200/80">
                                         <div className="flex items-center gap-2">
-                                            <span>🛠️</span>
+                                            <IndicatorMakerIcon size="sm" />
                                             <div>
                                                 <p className="font-bold flex items-center gap-1 text-slate-900">
                                                     PICA Indicator Maker
                                                     <span className="text-[8px] bg-emerald-600 text-white px-1 py-0.2 rounded font-black">BARU</span>
                                                 </p>
-                                                <p className="text-[10px] text-emerald-800">Rakit Indikator PineScript v5 &amp; MT5 (50 Modul)</p>
+                                                <p className="text-[10px] text-emerald-800">Rakit Indikator PineScript v5 &amp; MT5 (100 Modul)</p>
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-900">175K</span>
                                     </Link>
                                     <Link href="/ea-maker" className="flex items-center justify-between p-2 rounded-xl bg-blue-50/80 hover:bg-blue-100 text-blue-950 transition-colors border border-blue-200/80">
                                         <div className="flex items-center gap-2">
-                                            <span>🤖</span>
+                                            <EaMakerIcon size="sm" />
                                             <div>
                                                 <p className="font-bold flex items-center gap-1 text-slate-900">
                                                     PICA EA Maker
                                                     <span className="text-[8px] bg-blue-600 text-white px-1 py-0.2 rounded font-black">BARU</span>
                                                 </p>
-                                                <p className="text-[10px] text-blue-800">Rakit Expert Advisor MT5 + Backtest Engine</p>
+                                                <p className="text-[10px] text-blue-800">Rakit Expert Advisor MT5 + Backtest Engine (100 Modul)</p>
                                             </div>
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-200 text-blue-900">MQL5</span>
@@ -315,10 +319,10 @@ export default function Navbar() {
                     {/* Mobile Direct EA Gold button */}
                     <Link
                         href="/ea-pica-neural-gold"
-                        className="sm:hidden flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black shadow-xs active:scale-95 shrink-0 border border-yellow-300"
+                        className="sm:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black shadow-xs active:scale-95 shrink-0 border border-yellow-300"
                         title="EA PICA Neural Gold M1 & M5 (Terkunci)"
                     >
-                        <span>🤖</span>
+                        <EaMakerIcon size="xs" />
                         <span>EA GOLD</span>
                         <span className="text-[9px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-extrabold">90K</span>
                     </Link>
@@ -543,13 +547,13 @@ export default function Navbar() {
                             className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md shadow-emerald-500/20 active:scale-98 transition-all border border-emerald-400"
                         >
                             <div className="flex items-center gap-2.5">
-                                <span className="text-2xl">🛠️</span>
+                                <IndicatorMakerIcon size="lg" />
                                 <div>
                                     <p className="font-black text-sm flex items-center gap-1.5 text-white">
                                         PICA Indicator Maker
                                         <span className="text-[9px] bg-white text-emerald-800 px-1.5 py-0.2 rounded-full font-black uppercase">BARU</span>
                                     </p>
-                                    <p className="text-[11px] text-emerald-100 font-medium">Rakit Indikator TradingView &amp; MT5 (50 Modul)</p>
+                                    <p className="text-[11px] text-emerald-100 font-medium">Rakit Indikator TradingView &amp; MT5 (100 Modul)</p>
                                 </div>
                             </div>
                             <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-emerald-300 shrink-0">175K</span>
@@ -562,13 +566,13 @@ export default function Navbar() {
                             className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-md shadow-blue-500/20 active:scale-98 transition-all border border-blue-400"
                         >
                             <div className="flex items-center gap-2.5">
-                                <span className="text-2xl">🤖</span>
+                                <EaMakerIcon size="lg" />
                                 <div>
                                     <p className="font-black text-sm flex items-center gap-1.5 text-white">
                                         PICA EA Maker
                                         <span className="text-[9px] bg-white text-blue-800 px-1.5 py-0.2 rounded-full font-black uppercase">BARU</span>
                                     </p>
-                                    <p className="text-[11px] text-blue-100 font-medium">Rakit Robot MT5 + Backtest Winrate Engine</p>
+                                    <p className="text-[11px] text-blue-100 font-medium">Rakit Robot MT5 + Backtest Winrate Engine (100 Modul)</p>
                                 </div>
                             </div>
                             <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-blue-300 shrink-0">MT5</span>

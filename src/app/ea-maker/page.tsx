@@ -5,6 +5,21 @@ import Link from 'next/link';
 import { EA_MODULES, getEAModulesByStyle } from '@/lib/ea-maker/catalog';
 import { EAStyle, EAPair, RiskModel } from '@/lib/ea-maker/types';
 import { simulateEABacktest } from '@/lib/ea-maker/backtest-simulator';
+import {
+  EaMakerIcon,
+  BoltIcon,
+  CrosshairIcon,
+  ChartIcon,
+  SearchIcon,
+  CheckIcon,
+  XIcon,
+  WarningIcon,
+  SparklesIcon,
+  ClipboardIcon,
+  DownloadIcon,
+  BookOpenIcon,
+  ArrowRightIcon
+} from '@/components/PremiumIcons';
 
 export default function EAMakerPage() {
   const [selectedStyle, setSelectedStyle] = useState<EAStyle>('scalping');
@@ -239,7 +254,7 @@ export default function EAMakerPage() {
         <div className="flex items-center gap-2">
           <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping" />
           <div className="flex items-center gap-1.5 font-extrabold uppercase tracking-wider text-slate-900">
-            <span className="text-blue-600 font-mono text-sm">🤖</span>
+            <EaMakerIcon size="xs" />
             <span>PICA EA MAKER (MT5 INSTITUTIONAL)</span>
           </div>
           <span className="text-slate-300 hidden sm:inline">|</span>
@@ -303,7 +318,7 @@ export default function EAMakerPage() {
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">⚡</span>
+                <BoltIcon size="lg" className="text-blue-600" />
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                   selectedStyle === 'hft' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
                 }`}>
@@ -326,7 +341,7 @@ export default function EAMakerPage() {
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">🎯</span>
+                <CrosshairIcon size="lg" className="text-emerald-600" />
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                   selectedStyle === 'scalping' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
                 }`}>
@@ -349,7 +364,7 @@ export default function EAMakerPage() {
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">🏛️</span>
+                <ChartIcon size="lg" className="text-purple-600" />
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                   selectedStyle === 'intraday' ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-700'
                 }`}>
@@ -385,11 +400,11 @@ export default function EAMakerPage() {
                 onChange={e => setSelectedPair(e.target.value as EAPair)}
                 className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-bold focus:outline-hidden focus:border-blue-500 focus:bg-white transition-colors"
               >
-                <option value="XAUUSD">🥇 Gold Spot (XAUUSD)</option>
-                <option value="EURUSD">💶 EUR/USD (Euro Forex)</option>
-                <option value="GBPUSD">💷 GBP/USD (British Pound)</option>
-                <option value="BTCUSD">₿ Bitcoin (BTCUSD 24/7)</option>
-                <option value="UNIVERSAL">🌐 UNIVERSAL (Semua Pair - Auto Normalizer)</option>
+                <option value="XAUUSD">Gold Spot (XAUUSD)</option>
+                <option value="EURUSD">EUR/USD (Euro Forex)</option>
+                <option value="GBPUSD">GBP/USD (British Pound)</option>
+                <option value="BTCUSD">Bitcoin (BTCUSD 24/7)</option>
+                <option value="UNIVERSAL">UNIVERSAL (Semua Pair - Auto Normalizer)</option>
               </select>
             </div>
 
@@ -554,7 +569,7 @@ export default function EAMakerPage() {
             <div className="flex items-center justify-between text-xs text-slate-400 font-mono px-2">
               <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
                 <span className="size-1.5 rounded-full bg-emerald-400" />
-                SIMULATED EQUITY GROWTH (Modal $10.000 ➔ ${(telemetry.equityCurve[telemetry.equityCurve.length - 1]?.equity || 10000).toLocaleString()})
+                SIMULATED EQUITY GROWTH (Modal $10.000 → ${(telemetry.equityCurve[telemetry.equityCurve.length - 1]?.equity || 10000).toLocaleString()})
               </span>
               <span className="text-slate-400">{telemetry.totalTrades} Trades Sequenced</span>
             </div>
@@ -634,15 +649,16 @@ export default function EAMakerPage() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Cari formula/teknik (cth: FVG, Order Block, Killzone, ATR)..."
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500 transition-colors shadow-2xs"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500 transition-colors shadow-2xs"
                 />
-                <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+                <SearchIcon size="xs" className="absolute left-3 top-2.5 text-slate-400" />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 cursor-pointer p-0.5"
+                    title="Hapus pencarian"
                   >
-                    ✕
+                    <XIcon size="xs" />
                   </button>
                 )}
               </div>
@@ -700,14 +716,23 @@ export default function EAMakerPage() {
 
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-[10px] font-mono text-slate-400">PF: {m.baseProfitFactor} | DD: {m.baseDrawdown}%</span>
-                    <span className={`text-xs font-bold px-3 py-1 rounded-lg ${
+                    <span className={`text-xs font-bold px-3 py-1 rounded-lg inline-flex items-center gap-1 ${
                       isSelected
                         ? 'bg-blue-600 text-white'
                         : isMaxed
                         ? 'bg-slate-200 text-slate-500'
                         : 'bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white'
                     }`}>
-                      {isSelected ? '✓ Terpilih' : isMaxed ? 'Maks 4' : '+ Pasang'}
+                      {isSelected ? (
+                        <>
+                          <CheckIcon size="xs" />
+                          <span>Terpilih</span>
+                        </>
+                      ) : isMaxed ? (
+                        'Maks 4'
+                      ) : (
+                        '+ Pasang'
+                      )}
                     </span>
                   </div>
                 </div>
@@ -717,11 +742,11 @@ export default function EAMakerPage() {
 
           {filteredModules.length === 0 && (
             <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-              <span className="text-3xl block mb-2">🔍</span>
+              <SearchIcon size="xl" className="text-slate-300 mx-auto mb-2" />
               <p className="font-bold text-slate-800 text-sm">Tidak ada modul yang cocok dengan pencarian Anda</p>
               <button
                 onClick={() => { setSelectedCategory('all'); setSearchQuery(''); setFilterByStyle(false); }}
-                className="mt-3 text-xs text-blue-600 hover:underline font-bold"
+                className="mt-3 text-xs text-blue-600 hover:underline font-bold cursor-pointer"
               >
                 Reset Filter Pencarian
               </button>
@@ -733,11 +758,15 @@ export default function EAMakerPage() {
         {errorMessage && (
           <div className="bg-red-50 border border-red-300 rounded-2xl p-4 text-red-800 text-xs flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2">
-              <span className="text-base">⚠️</span>
+              <WarningIcon size="sm" className="text-red-600 flex-shrink-0" />
               <span className="font-medium">{errorMessage}</span>
             </div>
-            <button onClick={() => setErrorMessage(null)} className="text-red-500 hover:text-red-800 font-bold cursor-pointer">
-              ✕
+            <button 
+              onClick={() => setErrorMessage(null)} 
+              className="text-red-500 hover:text-red-800 cursor-pointer p-1"
+              title="Tutup"
+            >
+              <XIcon size="xs" />
             </button>
           </div>
         )}
@@ -745,8 +774,8 @@ export default function EAMakerPage() {
         {/* Sticky Action Footer */}
         <div className="sticky bottom-4 z-30 bg-white/95 border border-slate-200 rounded-3xl p-4 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-2xl bg-blue-50 border border-blue-300 flex items-center justify-center font-mono text-xl">
-              🤖
+            <div className="size-10 rounded-2xl bg-blue-50 border border-blue-300 flex items-center justify-center">
+              <EaMakerIcon size="md" />
             </div>
             <div>
               <p className="text-xs font-extrabold text-slate-900">
@@ -769,9 +798,10 @@ export default function EAMakerPage() {
                 <span>MERAKIT ROBOT MT5...</span>
               </>
             ) : (
-              <>
-                <span>⚡ RAKIT &amp; GENERATE EA (.MQ5)</span>
-              </>
+              <span className="inline-flex items-center gap-1.5">
+                <BoltIcon size="sm" />
+                <span>RAKIT &amp; GENERATE EA (.MQ5)</span>
+              </span>
             )}
           </button>
         </div>
@@ -782,7 +812,7 @@ export default function EAMakerPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">🎉</span>
+                  <SparklesIcon size="lg" className="text-blue-600" />
                   <h3 className="text-lg font-black text-slate-900">Expert Advisor Berhasil Dirakit!</h3>
                 </div>
                 <p className="text-xs text-slate-500 font-mono mt-0.5">
@@ -793,23 +823,35 @@ export default function EAMakerPage() {
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={handleCopyCode}
-                  className="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 transition-all cursor-pointer"
+                  className="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {copySuccess ? '✓ TERSALIN!' : '📋 Salin Kode'}
+                  {copySuccess ? (
+                    <>
+                      <CheckIcon size="xs" className="text-emerald-600" />
+                      <span>TERSALIN!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardIcon size="xs" />
+                      <span>Salin Kode</span>
+                    </>
+                  )}
                 </button>
 
                 <button
                   onClick={handleDownloadFile}
-                  className="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                  className="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
                 >
-                  💾 Unduh File .MQ5
+                  <DownloadIcon size="xs" />
+                  <span>Unduh File .MQ5</span>
                 </button>
 
                 <button
                   onClick={() => setShowInstallGuide(true)}
-                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-2 rounded-xl border border-emerald-300 transition-all cursor-pointer"
+                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-2 rounded-xl border border-emerald-300 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  📖 Panduan Pasang MT5
+                  <BookOpenIcon size="xs" />
+                  <span>Panduan Pasang MT5</span>
                 </button>
               </div>
             </div>
@@ -827,13 +869,15 @@ export default function EAMakerPage() {
           <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
             <button
               onClick={() => setShowInstallGuide(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              title="Tutup"
             >
-              ✕
+              <XIcon size="sm" />
             </button>
 
             <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>📖 Panduan Memasang EA di MetaTrader 5</span>
+              <BookOpenIcon size="md" className="text-blue-600" />
+              <span>Panduan Memasang EA di MetaTrader 5</span>
             </h3>
 
             <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
@@ -841,13 +885,13 @@ export default function EAMakerPage() {
                 <strong>Langkah 1:</strong> Buka terminal MetaTrader 5 di PC Anda, lalu tekan tombol <code>F4</code> untuk membuka <strong>MetaEditor</strong>.
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border">
-                <strong>Langkah 2:</strong> Di MetaEditor, klik <strong>New</strong> ➔ Pilih <strong>Expert Advisor (template)</strong> ➔ Beri nama sesuai EA Anda ➔ Paste kode EA hasil rakitan PICA ke dalamnya.
+                <strong>Langkah 2:</strong> Di MetaEditor, klik <strong>New</strong> → Pilih <strong>Expert Advisor (template)</strong> → Beri nama sesuai EA Anda → Paste kode EA hasil rakitan PICA ke dalamnya.
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border">
                 <strong>Langkah 3:</strong> Tekan tombol <code>F7</code> (Compile). Pastikan hasil di bawah: <code>0 errors, 0 warnings</code>.
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border">
-                <strong>Langkah 4:</strong> Kembali ke MT5, buka Navigator (<code>Ctrl+N</code>) ➔ Buka folder <strong>Experts</strong> ➔ Drag EA ke chart pair yang diinginkan (misal XAUUSD M15).
+                <strong>Langkah 4:</strong> Kembali ke MT5, buka Navigator (<code>Ctrl+N</code>) → Buka folder <strong>Experts</strong> → Drag EA ke chart pair yang diinginkan (misal XAUUSD M15).
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border">
                 <strong>Langkah 5:</strong> Aktifkan centang <strong>"Allow Algo Trading"</strong> dan klik tombol <strong>Algo Trading</strong> di toolbar atas MT5 hingga menyala hijau. Robot sekarang aktif trading otomatis!
@@ -870,9 +914,10 @@ export default function EAMakerPage() {
           <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
             <button
               onClick={() => setShowBcaModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              title="Tutup"
             >
-              ✕
+              <XIcon size="sm" />
             </button>
 
             <div>

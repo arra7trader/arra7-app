@@ -16,7 +16,15 @@ import {
   ChartIcon,
   ClockIcon,
   TradingViewIcon,
-  MetaTraderIcon
+  MetaTraderIcon,
+  LightbulbIcon,
+  CheckIcon,
+  XIcon,
+  WarningIcon,
+  ClipboardIcon,
+  DownloadIcon,
+  BookOpenIcon,
+  TelegramIcon
 } from '@/components/PremiumIcons';
 
 export default function IndicatorMakerPage() {
@@ -292,8 +300,9 @@ export default function IndicatorMakerPage() {
                 style={{ width: `${Math.min(100, (earlyBirdStats.totalSold / earlyBirdStats.maxEarlyBirdSlots) * 100)}%` }}
               />
             </div>
-            <p className="text-[11px] text-slate-500 mt-2 text-left">
-              💡 20 Pembeli pertama mendapatkan akses <strong>LIFETIME Rp 175.000</strong>. Setelah 20 slot selesai, harga tetap <strong>Rp 175.000 per bulan</strong>.
+            <p className="text-[11px] text-slate-500 mt-2 text-left flex items-start gap-1.5">
+              <LightbulbIcon size="xs" className="text-amber-500 flex-shrink-0 mt-0.5" />
+              <span>20 Pembeli pertama mendapatkan akses <strong>LIFETIME Rp 175.000</strong>. Setelah 20 slot selesai, harga tetap <strong>Rp 175.000 per bulan</strong>.</span>
             </p>
           </div>
         </div>
@@ -342,7 +351,7 @@ export default function IndicatorMakerPage() {
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-2xl">🤖</span>
+                <MetaTraderIcon size="lg" />
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
                   selectedPlatform === 'mt5' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'
                 }`}>
@@ -375,8 +384,8 @@ export default function IndicatorMakerPage() {
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700">Kunci Lisensi / Passkey:</label>
                 {isAdminPasskey ? (
-                  <span className="text-[10px] font-black text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
-                    ⚡ VIP UNLIMITED PASSKEY
+                  <span className="text-[10px] font-black text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                    <BoltIcon size="xs" className="text-amber-600" /> VIP UNLIMITED PASSKEY
                   </span>
                 ) : (
                   <span className="text-[10px] text-slate-500 font-medium">
@@ -417,8 +426,8 @@ export default function IndicatorMakerPage() {
                   [{selectedTechniqueIds.length} / 5]
                 </span>
                 {selectedTechniqueIds.length === 5 && (
-                  <span className="text-xs text-amber-700 font-medium hidden sm:inline">
-                    🔒 Maksimal 5 teknik tercapai (Batas aman anti-lag &amp; anti-overfiltering)
+                  <span className="text-xs text-amber-700 font-medium hidden sm:inline-flex items-center gap-1">
+                    <LockIcon size="xs" className="text-amber-600" /> Maksimal 5 teknik tercapai (Batas aman anti-lag &amp; anti-overfiltering)
                   </span>
                 )}
               </div>
@@ -455,10 +464,10 @@ export default function IndicatorMakerPage() {
                       <span>{m?.name || id}</span>
                       <button
                         onClick={() => toggleTechnique(id)}
-                        className="hover:text-red-600 ml-1 font-bold text-slate-400 cursor-pointer"
+                        className="hover:text-red-600 ml-1 text-slate-400 cursor-pointer inline-flex items-center"
                         title="Hapus teknik"
                       >
-                        ✕
+                        <XIcon size="xs" />
                       </button>
                     </span>
                   );
@@ -673,14 +682,23 @@ export default function IndicatorMakerPage() {
                   <span className="text-[11px] font-mono text-slate-500 uppercase">
                     ID: {module.id}
                   </span>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-lg transition-all ${
+                  <span className={`text-xs font-bold px-3 py-1 rounded-lg transition-all inline-flex items-center gap-1 ${
                     isSelected
                       ? 'bg-emerald-600 text-white'
                       : isLocked
                       ? 'bg-slate-200 text-slate-500'
                       : 'bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 border border-slate-200'
                   }`}>
-                    {isSelected ? '✓ Terpilih' : isLocked ? 'Maksimal 5' : '+ Pilih Teknik'}
+                    {isSelected ? (
+                      <>
+                        <CheckIcon size="xs" />
+                        <span>Terpilih</span>
+                      </>
+                    ) : isLocked ? (
+                      'Maksimal 5'
+                    ) : (
+                      '+ Pilih Teknik'
+                    )}
                   </span>
                 </div>
               </div>
@@ -692,14 +710,15 @@ export default function IndicatorMakerPage() {
         {errorMessage && (
           <div className="bg-red-50 border border-red-300 rounded-2xl p-4 text-red-800 text-xs flex items-center justify-between gap-3 animate-in fade-in shadow-xs">
             <div className="flex items-center gap-2">
-              <span className="text-base">⚠️</span>
+              <WarningIcon size="sm" className="text-red-600 flex-shrink-0" />
               <span className="font-medium">{errorMessage}</span>
             </div>
             <button 
               onClick={() => setErrorMessage(null)} 
-              className="text-red-500 hover:text-red-800 font-bold cursor-pointer"
+              className="text-red-500 hover:text-red-800 cursor-pointer p-1"
+              title="Tutup"
             >
-              ✕
+              <XIcon size="xs" />
             </button>
           </div>
         )}
@@ -737,9 +756,10 @@ export default function IndicatorMakerPage() {
                     <span>MERAKIT SCRIPT...</span>
                   </>
                 ) : (
-                  <>
-                    <span>⚡ RAKIT &amp; GENERATE INDIKATOR</span>
-                  </>
+                  <span className="inline-flex items-center gap-1.5">
+                    <BoltIcon size="sm" />
+                    <span>RAKIT &amp; GENERATE INDIKATOR</span>
+                  </span>
                 )}
               </button>
             )}
@@ -752,7 +772,7 @@ export default function IndicatorMakerPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 text-lg">🎉</span>
+                  <SparklesIcon size="lg" className="text-emerald-600" />
                   <h3 className="text-lg font-black text-slate-900">Indikator Berhasil Dirakit!</h3>
                 </div>
                 <p className="text-xs text-slate-500 font-mono mt-0.5">
@@ -765,21 +785,33 @@ export default function IndicatorMakerPage() {
                   onClick={handleCopyCode}
                   className="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <span>{copySuccess ? '✓ TERSALIN!' : '📋 Salin Kode'}</span>
+                  {copySuccess ? (
+                    <>
+                      <CheckIcon size="xs" className="text-emerald-600" />
+                      <span>TERSALIN!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardIcon size="xs" />
+                      <span>Salin Kode</span>
+                    </>
+                  )}
                 </button>
 
                 <button
                   onClick={handleDownloadFile}
                   className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                 >
-                  <span>💾 Unduh File ({generatedFilename?.split('.').pop()?.toUpperCase()})</span>
+                  <DownloadIcon size="xs" />
+                  <span>Unduh File ({generatedFilename?.split('.').pop()?.toUpperCase()})</span>
                 </button>
 
                 <button
                   onClick={() => setShowInstallGuide(true)}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold px-3 py-2 rounded-xl border border-blue-200 transition-all cursor-pointer"
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold px-3 py-2 rounded-xl border border-blue-200 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  📖 Panduan Pasang
+                  <BookOpenIcon size="xs" />
+                  <span>Panduan Pasang</span>
                 </button>
               </div>
             </div>
@@ -798,9 +830,10 @@ export default function IndicatorMakerPage() {
           <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setShowBcaModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              title="Tutup"
             >
-              ✕
+              <XIcon size="sm" />
             </button>
 
             <div className="space-y-1">
@@ -857,7 +890,8 @@ export default function IndicatorMakerPage() {
                 rel="noreferrer"
                 className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
               >
-                <span>💬 Konfirmasi via Telegram (@arra7trader)</span>
+                <TelegramIcon size="sm" />
+                <span>Konfirmasi via Telegram (@arra7trader)</span>
               </a>
               <p className="text-[11px] text-slate-500 text-center">
                 Setelah bukti transfer dikirim, Bang Arland akan langsung memberikan Passkey Lisensi untuk dimasukkan di web ini.
@@ -873,9 +907,10 @@ export default function IndicatorMakerPage() {
           <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowInstallGuide(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              title="Tutup"
             >
-              ✕
+              <XIcon size="sm" />
             </button>
 
             <div className="space-y-1">
@@ -924,7 +959,7 @@ export default function IndicatorMakerPage() {
 }
 
 // ==============================================================================
-// 🎨 ACCURATE SVG DIAGRAM MOCKUP RENDERER FOR ALL 100 MODULES
+// ACCURATE SVG DIAGRAM MOCKUP RENDERER FOR ALL 100 MODULES
 // Every pattern has a specific, clear vector visualization
 // ==============================================================================
 function DiagramMockup({ pattern }: { pattern: string }) {

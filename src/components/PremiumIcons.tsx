@@ -471,6 +471,44 @@ export const IndicatorMakerIcon: React.FC<IconProps> = ({ className = '', size =
     </svg>
 );
 
+// PICA EA Maker Icon - Ultra-Premium Institutional Automated Trading Robot + Quant Core
+export const EaMakerIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
+    <svg className={`${sizeMap[size]} ${className}`} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="pea-grad-bg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#EFF6FF" />
+                <stop offset="1" stopColor="#DBEAFE" />
+            </linearGradient>
+            <linearGradient id="pea-grad-bot" x1="6" y1="4" x2="22" y2="24" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#3B82F6" />
+                <stop offset="1" stopColor="#1D4ED8" />
+            </linearGradient>
+            <linearGradient id="pea-grad-bolt" x1="12" y1="10" x2="16" y2="18" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#FBBF24" />
+                <stop offset="1" stopColor="#F59E0B" />
+            </linearGradient>
+        </defs>
+        {/* Outer Premium Badge Frame */}
+        <rect x="1.5" y="1.5" width="25" height="25" rx="6" fill="url(#pea-grad-bg)" stroke="#93C5FD" strokeWidth="1.25" />
+        {/* Antenna */}
+        <line x1="14" y1="3.5" x2="14" y2="6.5" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="14" cy="3.5" r="1.5" fill="#3B82F6" />
+        {/* Robot Head Body */}
+        <rect x="6.5" y="6.5" width="15" height="13" rx="3.5" fill="url(#pea-grad-bot)" stroke="#1E40AF" strokeWidth="1" />
+        {/* Eyes Display Screen */}
+        <rect x="8.5" y="9" width="11" height="4.5" rx="1.5" fill="#0F172A" />
+        <circle cx="11" cy="11.25" r="1.2" fill="#38BDF8" />
+        <circle cx="17" cy="11.25" r="1.2" fill="#38BDF8" />
+        {/* Quant Lightning Core */}
+        <path d="M14.5 15.2l-1.5 2.1h1.8l-1 2.2 2.5-2.8h-1.8l1-1.5h-1z" fill="url(#pea-grad-bolt)" />
+        {/* Dual Ear Nodes */}
+        <rect x="4.5" y="10" width="2" height="4" rx="0.75" fill="#2563EB" />
+        <rect x="21.5" y="10" width="2" height="4" rx="0.75" fill="#2563EB" />
+        {/* Base Platform Stand */}
+        <path d="M8.5 22.5h11" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+);
+
 // TradingView Vector Mark
 export const TradingViewIcon: React.FC<IconProps> = ({ className = '', size = 'md' }) => (
     <svg className={`${sizeMap[size]} ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -498,6 +536,7 @@ export const MetaTraderIcon: React.FC<IconProps> = ({ className = '', size = 'md
 
 export const IconMap = {
     indicatorMaker: IndicatorMakerIcon,
+    eaMaker: EaMakerIcon,
     tradingView: TradingViewIcon,
     metaTrader: MetaTraderIcon,
     cryptoHunter: CryptoHunterIcon,
