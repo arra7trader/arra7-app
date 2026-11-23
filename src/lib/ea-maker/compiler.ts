@@ -118,16 +118,14 @@ function generateMQL5ExpertAdvisor(params: InternalMQL5Params): string {
   const inputsBlock = modules.map(m => m.mq5Inputs).filter(Boolean).join('\n');
   const functionsBlock = modules.map(m => m.mq5Function).filter(Boolean).join('\n');
 
-  const buyConditions = modules.map(m => m.mq5ConditionBuy).filter(Boolean);
-  const sellConditions = modules.map(m => m.mq5ConditionSell).filter(Boolean);
-
-  const buyEvalExpr = buyConditions.length > 0
-    ? buyConditions.map(c => `(${c})`).join(' && ')
-    : '(Close[1] > Open[1])';
-
-  const sellEvalExpr = sellConditions.length > 0
-    ? sellConditions.map(c => `(${c})`).join(' && ')
-    : '(Close[1] < Open[1])';
+  const modCount = modules.length;
+  const scoreBlocks = modules.map((m, idx) => {
+    const cb = m.mq5ConditionBuy || '(Close[1] > Open[1])';
+    const cs = m.mq5ConditionSell || '(Close[1] < Open[1])';
+    return `   //--- Module ${idx + 1}: ${m.id} (${m.name})
+   if(${cb}) buy_score++;
+   if(${cs}) sell_score++;`;
+  }).join('\n\n');
 
   return `//+------------------------------------------------------------------+
 //|                                     ${cleanName}.mq5 |
@@ -183,8 +181,13 @@ input int    InpMaxSpreadPoints    = ${maxSpreadPoints};     // Max Spread Allow
 input ulong  InpMagicNumber        = ${magicNumber}; // EA Unique Magic Identifier
 input ulong  InpSlippage           = 5;      // Max Allowed Slippage Points
 
+//--- Input Parameters: Confluence & Trigger Engine
+input group "=== 5. CONFLUENCE & TRIGGER ENGINE ===";
+input int    InpConfluenceMode     = 1;      // Confluence: 0=Strict ALL (${modCount} Modul), 1=Score Threshold, 2=ANY Trigger
+input int    InpMinScore           = ${Math.max(1, modCount - 1)};      // Min Confluence Score (if Mode=1)
+
 //--- Strategy Custom Inputs
-input group "=== 5. STRATEGY MODULE PARAMETERS ===";
+input group "=== 6. STRATEGY MODULE PARAMETERS ===";
 ${inputsBlock}
 
 //--- Global Objects
@@ -413,10 +416,31 @@ void OnTick()
 
    // Signal Evaluation Bar (Bar 1 = last closed candle)
    int i = 1;
+   int buy_score = 0;
+   int sell_score = 0;
 
-   // Strategy Signal Evaluation
-   bool signalBuy  = ${buyEvalExpr};
-   bool signalSell = ${sellEvalExpr};
+${scoreBlocks}
+
+   // Confluence Signal Evaluation
+   bool signalBuy  = false;
+   bool signalSell = false;
+
+   if(InpConfluenceMode == 0) // Strict ALL
+     {
+      signalBuy  = (buy_score >= ${modCount});
+      signalSell = (sell_score >= ${modCount});
+     }
+   else if(InpConfluenceMode == 1) // Confluence Threshold
+     {
+      int reqScore = MathMin(InpMinScore, ${modCount});
+      signalBuy  = (buy_score >= reqScore);
+      signalSell = (sell_score >= reqScore);
+     }
+   else // ANY Trigger
+     {
+      signalBuy  = (buy_score >= 1);
+      signalSell = (sell_score >= 1);
+     }
 
    if(!signalBuy && !signalSell)
       return;
