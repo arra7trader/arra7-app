@@ -40,30 +40,32 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
         { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 90.000', originalPrice: 'Rp 499.000', savingsText: 'PROMO HARI INI Hemat Rp 409.000 • Diskon 82%', period: '/ sekali bayar' },
     ],
     MAKER_BUNDLE: [
-        { duration: 'lifetime', days: 0, label: 'Early Bird Bundle (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 2-in-1 Suite', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
-        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+        { duration: 'lifetime', days: 0, label: 'Harga 1: Early Bird (20 Slot Lifetime)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 20 Slot Perdana', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Harga 2: Reguler (Setelah 20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Harga Reguler Setelah 20 Slot', period: '/ bulan' },
     ],
     INDICATOR_MAKER: [
-        { duration: 'lifetime', days: 0, label: 'Early Bird Bundle (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 2-in-1 Suite', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
-        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+        { duration: 'lifetime', days: 0, label: 'Harga 1: Early Bird (20 Slot Lifetime)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 20 Slot Perdana', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Harga 2: Reguler (Setelah 20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Harga Reguler Setelah 20 Slot', period: '/ bulan' },
     ],
     EA_MAKER: [
-        { duration: 'lifetime', days: 0, label: 'Early Bird Bundle (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 2-in-1 Suite', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
-        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+        { duration: 'lifetime', days: 0, label: 'Harga 1: Early Bird (20 Slot Lifetime)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 20 Slot Perdana', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Harga 2: Reguler (Setelah 20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Harga Reguler Setelah 20 Slot', period: '/ bulan' },
     ],
 };
 
 function PlanIcon({ planId }: { planId: string }) {
     switch (planId) {
-        case 'INDICATOR_MAKER':
         case 'MAKER_BUNDLE':
-        case 'EA_MAKER':
             return (
                 <div className="flex items-center -space-x-1">
                     <IndicatorMakerIcon size="md" />
                     <EaMakerIcon size="md" />
                 </div>
             );
+        case 'INDICATOR_MAKER':
+            return <IndicatorMakerIcon size="lg" className="text-emerald-600" />;
+        case 'EA_MAKER':
+            return <EaMakerIcon size="lg" className="text-blue-600" />;
         case 'BASIC':
             return <SparklesIcon size="lg" className="text-slate-600" />;
         case 'PRO':
@@ -179,8 +181,8 @@ const PRICING_PLANS = [
         popular: false,
     },
         {
-        id: 'INDICATOR_MAKER',
-        name: 'PICA Quant Builder Bundle (Indicator & EA Maker)',
+        id: 'MAKER_BUNDLE',
+        name: 'PICA Quant Builder Bundle (Indicator & EA Maker 2-in-1)',
         description: 'Paket komplit 2-in-1: PICA Indicator Maker (100 Formula TradingView & MT5) + PICA EA Maker MT5 (100 Modul + Backtest Engine). 1 Passkey membuka akses kedua tool selamanya!',
         theme: 'emerald',
         features: [
@@ -195,6 +197,42 @@ const PRICING_PLANS = [
         ],
         cta: 'Ambil Paket 2-in-1 (Rp 175.000)',
         popular: true,
+    },
+    {
+        id: 'EA_MAKER',
+        name: 'PICA EA Maker (MetaTrader 5 Expert Advisor)',
+        description: 'Rakit Robot Trading (EA) MT5 Anda sendiri dengan 100 modul institusi terverifikasi. Dilengkapi mesin Live Backtest Telemetry, proteksi spread ketat, dynamic ATR SL/TP, dan Trailing Stop otomatis.',
+        theme: 'blue',
+        features: [
+            { text: '100 Modul Standar Institusi EA MT5 (SMC, Order Flow, Volatilitas)', included: true, highlight: true },
+            { text: 'Mesin Live Backtest Simulator (Winrate, DD & Equity Growth)', included: true, highlight: true },
+            { text: 'Multi-Pair Auto Normalizer (XAUUSD, EURUSD, GBPUSD, Crypto)', included: true, highlight: true },
+            { text: 'Proteksi Risiko Bawaan (Auto Break-Even & Trailing Stop)', included: true, highlight: true },
+            { text: 'Early Bird Eksklusif 20 Slot: Sekali Bayar Rp 175.000 Lifetime', included: true, highlight: true },
+            { text: 'Setelah 20 Slot Habis: Harga Reguler Rp 175.000 / Bulan', included: true, highlight: false },
+            { text: 'Export File Bersih (.mq5) Siap Compile 0 Error di MetaEditor MT5', included: true, highlight: false },
+            { text: 'Terintegrasi Paket Bundle 2-in-1 dengan Indicator Maker', included: true, highlight: true },
+        ],
+        cta: 'Rakit EA MT5 (Rp 175.000)',
+        popular: false,
+    },
+    {
+        id: 'INDICATOR_MAKER',
+        name: 'PICA Indicator Maker (TradingView & MT5)',
+        description: 'Rakit indikator Buy/Sell kustom TradingView v5 (.pine) atau MT5 (.mq5) dengan 100 formula standar institusi dunia (SMC, Order Flow, Volatilitas, & Killzones). Zero-Repaint & Siap Pasang di Chart.',
+        theme: 'emerald',
+        features: [
+            { text: '100 Modul Standar Institusi (SMC, Order Flow, Killzone)', included: true, highlight: true },
+            { text: 'Pilih Single Output: Pine Script v5 ATAU MT5 (.mq5)', included: true, highlight: true },
+            { text: 'Zero-Repaint Guarantee (Formula Barindex Fix & Candle Closed)', included: true, highlight: true },
+            { text: 'Proteksi Anti-Abuse (Jeda 1 Jam & Max 5x Generate / Hari)', included: true, highlight: true },
+            { text: 'Early Bird Eksklusif 20 Slot: Sekali Bayar Rp 175.000 Lifetime', included: true, highlight: true },
+            { text: 'Setelah 20 Slot Habis: Harga Tetap Rp 175.000 / Bulan', included: true, highlight: false },
+            { text: 'Formula Diagram Mockup Visual & Card Lengkap', included: true, highlight: false },
+            { text: 'Export File Bersih Tanpa Error & Siap Pasang di Chart', included: true, highlight: false },
+        ],
+        cta: 'Rakit Indikator (Rp 175.000)',
+        popular: false,
     },
 {
         id: 'ARRA_CRONOS',
@@ -270,7 +308,9 @@ export default function PricingPage() {
     const [selectedDuration, setSelectedDuration] = useState<Record<string, string>>({
         PRO: '3months',
         VVIP: '3months',
+        MAKER_BUNDLE: 'lifetime',
         INDICATOR_MAKER: 'lifetime',
+        EA_MAKER: 'lifetime',
     });
 
     const [promoSlots, setPromoSlots] = useState<Record<string, Record<string, { used: number; remaining: number; max: number }>> | null>(null);
@@ -300,9 +340,11 @@ export default function PricingPage() {
             durationOverride ||
             (planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD' || planId === 'INDICATOR_MAKER' || planId === 'MAKER_BUNDLE' || planId === 'EA_MAKER'
-                    ? 'lifetime'
-                    : selectedDuration[planId] || '1month');
+                : selectedDuration[planId] || (
+                    planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD' || planId === 'INDICATOR_MAKER' || planId === 'MAKER_BUNDLE' || planId === 'EA_MAKER'
+                        ? 'lifetime'
+                        : '1month'
+                ));
         setIsProcessing(planId);
         const durationOption = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
         const days = durationOption?.days ?? (duration === 'lifetime' ? 0 : 30);
@@ -322,9 +364,11 @@ export default function PricingPage() {
         const duration =
             planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD' || planId === 'INDICATOR_MAKER' || planId === 'MAKER_BUNDLE' || planId === 'EA_MAKER'
-                    ? 'lifetime'
-                    : selectedDuration[planId] || '1month';
+                : selectedDuration[planId] || (
+                    planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD' || planId === 'INDICATOR_MAKER' || planId === 'MAKER_BUNDLE' || planId === 'EA_MAKER'
+                        ? 'lifetime'
+                        : '1month'
+                );
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);
 
         if (!option) {
@@ -618,6 +662,19 @@ export default function PricingPage() {
                                             <span className="text-slate-500 font-medium text-sm whitespace-nowrap">{pricing.period}</span>
                                         )}
                                     </div>
+
+                                    {(plan.id === 'INDICATOR_MAKER' || plan.id === 'EA_MAKER' || plan.id === 'MAKER_BUNDLE') && (
+                                        <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5 w-full">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-600 font-bold">Harga 1 (20 Slot Perdana):</span>
+                                                <span className="font-extrabold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md font-mono text-[11px]">Rp 175.000 Lifetime</span>
+                                            </div>
+                                            <div className="flex items-center justify-between border-t border-slate-200/80 pt-1.5">
+                                                <span className="text-slate-600 font-bold">Harga 2 (Setelah 20 Slot):</span>
+                                                <span className="font-extrabold text-blue-700 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-md font-mono text-[11px]">Rp 175.000 / Bulan</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <button
