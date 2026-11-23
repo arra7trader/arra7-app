@@ -888,8 +888,8 @@ export default function IndicatorMakerPage() {
             <div className="space-y-4 text-xs text-slate-700">
               {/* TradingView Guide */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <h4 className="font-bold text-emerald-700 text-sm flex items-center gap-1.5">
-                  <span>📈</span>
+                <h4 className="font-bold text-emerald-700 text-sm flex items-center gap-2">
+                  <TradingViewIcon size="sm" />
                   <span>Cara Pasang di TradingView:</span>
                 </h4>
                 <ol className="list-decimal list-inside space-y-1 text-slate-600 leading-relaxed">
@@ -903,8 +903,8 @@ export default function IndicatorMakerPage() {
 
               {/* MT5 Guide */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <h4 className="font-bold text-blue-700 text-sm flex items-center gap-1.5">
-                  <span>🤖</span>
+                <h4 className="font-bold text-blue-700 text-sm flex items-center gap-2">
+                  <MetaTraderIcon size="sm" />
                   <span>Cara Pasang di MetaTrader 5 (MT5):</span>
                 </h4>
                 <ol className="list-decimal list-inside space-y-1 text-slate-600 leading-relaxed">
