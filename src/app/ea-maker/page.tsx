@@ -10,12 +10,15 @@ export default function EAMakerPage() {
   const [selectedStyle, setSelectedStyle] = useState<EAStyle>('scalping');
   const [selectedPair, setSelectedPair] = useState<EAPair>('XAUUSD');
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([
-    'scalp_smc_fvg_sniper',
-    'scalp_smc_orderblock',
-    'scalp_session_killzone'
+    'smc_fvg',
+    'smc_ob',
+    'smc_liq_sweep'
   ]);
   const [customName, setCustomName] = useState('PICA_Neural_Sniper_EA');
   const [licenseKey, setLicenseKey] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterByStyle, setFilterByStyle] = useState(false);
   
   // Risk & Trade Engine Settings
   const [riskModel, setRiskModel] = useState<RiskModel>('percent_equity');
@@ -40,10 +43,38 @@ export default function EAMakerPage() {
   const [showBcaModal, setShowBcaModal] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
 
-  // Available modules based on selected style
-  const availableModules = useMemo(() => {
-    return EA_MODULES.filter(m => m.style.includes(selectedStyle) || m.style.includes('scalping'));
-  }, [selectedStyle]);
+  const categories = [
+    { id: 'all', label: 'Semua Formula', count: 100 },
+    { id: 'smc', label: 'Smart Money (SMC)', count: 25 },
+    { id: 'orderflow', label: 'Order Flow & Volume', count: 20 },
+    { id: 'volatility', label: 'Volatilitas & Math', count: 15 },
+    { id: 'sessions', label: 'Sessions & Killzones', count: 15 },
+    { id: 'trend', label: 'Trend & Momentum', count: 15 },
+    { id: 'execution', label: 'Risk & Eksekusi', count: 10 },
+  ];
+
+  // Available modules based on category, style filter, and search
+  const filteredModules = useMemo(() => {
+    return EA_MODULES.filter(m => {
+      if (selectedCategory !== 'all' && m.category !== selectedCategory) {
+        return false;
+      }
+      if (filterByStyle && !m.style.includes(selectedStyle)) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchName = m.name.toLowerCase().includes(q);
+        const matchId = m.id.toLowerCase().includes(q);
+        const matchDesc = m.description.toLowerCase().includes(q);
+        const matchBadge = m.badge.toLowerCase().includes(q);
+        if (!matchName && !matchId && !matchDesc && !matchBadge) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [selectedCategory, filterByStyle, selectedStyle, searchQuery]);
 
   // Selected module objects
   const selectedModules = useMemo(() => {
@@ -80,17 +111,17 @@ export default function EAMakerPage() {
   const handleStyleSwitch = (newStyle: EAStyle) => {
     setSelectedStyle(newStyle);
     if (newStyle === 'hft') {
-      setSelectedModuleIds(['hft_tick_velocity', 'hft_micro_imbalance', 'hft_micro_wick_sweep']);
+      setSelectedModuleIds(['smc_fvg', 'vol_bb_squeeze', 'sess_killzone']);
       setTrailingStopPoints(80);
       setBreakEvenTriggerPoints(60);
       setMaxSpreadPoints(25);
     } else if (newStyle === 'scalping') {
-      setSelectedModuleIds(['scalp_smc_fvg_sniper', 'scalp_smc_orderblock', 'scalp_session_killzone']);
+      setSelectedModuleIds(['smc_fvg', 'smc_ob', 'smc_liq_sweep']);
       setTrailingStopPoints(150);
       setBreakEvenTriggerPoints(120);
       setMaxSpreadPoints(40);
     } else if (newStyle === 'intraday') {
-      setSelectedModuleIds(['intra_smc_bos_expansion', 'intra_daily_bias_sync', 'intra_prem_disc_equilibrium']);
+      setSelectedModuleIds(['smc_bos', 'smc_choch', 'smc_prem_disc']);
       setTrailingStopPoints(300);
       setBreakEvenTriggerPoints(250);
       setMaxSpreadPoints(60);
@@ -557,21 +588,82 @@ export default function EAMakerPage() {
         </div>
 
         {/* STEP 4: STRATEGY MODULE SELECTION GRID */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">LANGKAH 3: PILIH MODUL STRATEGI</span>
-              <h2 className="text-xl font-extrabold text-slate-900 mt-0.5">
-                Pilih Modul Logika Robot ({selectedModuleIds.length} / 4 Terpilih)
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-0.5">
+                Katalog 100 Modul Institusi ({selectedModuleIds.length} / 4 Terpilih)
               </h2>
             </div>
-            <span className="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-bold border border-slate-200">
-              Gaya: {selectedStyle.toUpperCase()}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-bold border border-slate-200">
+                Gaya: {selectedStyle.toUpperCase()}
+              </span>
+              <span className="text-xs bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full font-extrabold border border-emerald-300">
+                100 Modul Lengkap
+              </span>
+            </div>
           </div>
 
+          {/* Category Tabs & Search Bar */}
+          <div className="space-y-3">
+            {/* Category Pills */}
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`text-xs font-bold px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                    selectedCategory === cat.id
+                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-500'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {cat.label} ({cat.count})
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input & Style Match Toggle */}
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+              <div className="relative flex-1 max-w-md">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Cari formula/teknik (cth: FVG, Order Block, Killzone, ATR)..."
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500 transition-colors shadow-2xs"
+                />
+                <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                <input
+                  type="checkbox"
+                  checked={filterByStyle}
+                  onChange={e => setFilterByStyle(e.target.checked)}
+                  className="rounded text-blue-600"
+                />
+                <span className="font-semibold text-slate-800">
+                  Hanya Tampilkan Modul Cocok ({selectedStyle.toUpperCase()})
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Module Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableModules.map(m => {
+            {filteredModules.map(m => {
               const isSelected = selectedModuleIds.includes(m.id);
               const isMaxed = !isSelected && selectedModuleIds.length >= 4;
 
@@ -581,7 +673,7 @@ export default function EAMakerPage() {
                   onClick={() => !isMaxed && toggleModule(m.id)}
                   className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
-                      ? 'bg-blue-50/40 border-blue-600 shadow-sm ring-1 ring-blue-600'
+                      ? 'bg-blue-50/50 border-blue-600 shadow-sm ring-1 ring-blue-600'
                       : isMaxed
                       ? 'bg-slate-100/60 border-slate-200 opacity-50 cursor-not-allowed'
                       : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm'
@@ -589,16 +681,21 @@ export default function EAMakerPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border">
-                        {m.badge}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border">
+                          {m.badge}
+                        </span>
+                        <span className="text-[9px] font-semibold text-slate-500 uppercase">
+                          TF: {m.recommendedTf}
+                        </span>
+                      </div>
                       <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                         WR: {m.baseWinRate}%
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-slate-900 text-sm">{m.name}</h3>
-                    <p className="text-xs text-slate-600 mt-2 leading-relaxed">{m.description}</p>
+                    <h3 className="font-bold text-slate-900 text-sm leading-snug">{m.name}</h3>
+                    <p className="text-xs text-slate-600 mt-2 leading-relaxed line-clamp-3">{m.description}</p>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
@@ -617,6 +714,19 @@ export default function EAMakerPage() {
               );
             })}
           </div>
+
+          {filteredModules.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+              <span className="text-3xl block mb-2">🔍</span>
+              <p className="font-bold text-slate-800 text-sm">Tidak ada modul yang cocok dengan pencarian Anda</p>
+              <button
+                onClick={() => { setSelectedCategory('all'); setSearchQuery(''); setFilterByStyle(false); }}
+                className="mt-3 text-xs text-blue-600 hover:underline font-bold"
+              >
+                Reset Filter Pencarian
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Error Banner */}

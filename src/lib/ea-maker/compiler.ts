@@ -146,6 +146,12 @@ function generateMQL5ExpertAdvisor(params: InternalMQL5Params): string {
 #include <Trade\\SymbolInfo.mqh>
 #include <Trade\\PositionInfo.mqh>
 
+//--- Case-Insensitivity Aliases (Robust Universal Array Support)
+#define open Open
+#define high High
+#define low Low
+#define close Close
+
 //--- Input Parameters: Money & Risk Management
 input group "=== 1. RISK & MONEY MANAGEMENT ===";
 input int    InpRiskModel          = ${riskModel === 'fixed_lot' ? 0 : 1};   // Risk Mode: 0=Fixed Lot, 1=Percent Equity
@@ -383,8 +389,8 @@ void OnTick()
    // Copy Recent Candle Prices for Strategy Evaluation
    MqlRates rates[];
    ArraySetAsSeries(rates, true);
-   int copied = CopyRates(_Symbol, _Period, 0, 30, rates);
-   if(copied < 25)
+   int copied = CopyRates(_Symbol, _Period, 0, 50, rates);
+   if(copied < 30)
       return;
 
    // Bind array buffers for modular functions
@@ -404,6 +410,9 @@ void OnTick()
       tick_volume[k] = rates[k].tick_volume;
       time[k]   = rates[k].time;
      }
+
+   // Signal Evaluation Bar (Bar 1 = last closed candle)
+   int i = 1;
 
    // Strategy Signal Evaluation
    bool signalBuy  = ${buyEvalExpr};

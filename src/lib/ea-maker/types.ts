@@ -4,6 +4,8 @@ export type EAStyle = 'hft' | 'scalping' | 'intraday';
 
 export type EAPair = 'XAUUSD' | 'EURUSD' | 'GBPUSD' | 'BTCUSD' | 'UNIVERSAL';
 
+export type EACategory = 'all' | 'smc' | 'orderflow' | 'volatility' | 'sessions' | 'trend' | 'execution';
+
 export type RiskModel = 'fixed_lot' | 'percent_equity';
 
 export interface BacktestTelemetry {
@@ -20,6 +22,7 @@ export interface BacktestTelemetry {
 export interface EAModule {
   id: string;
   name: string;
+  category: string;
   style: EAStyle[];
   pairs: EAPair[];
   recommendedTf: string;
