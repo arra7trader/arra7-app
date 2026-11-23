@@ -25,6 +25,10 @@ async function isAutoPostEnabled(): Promise<boolean> {
 }
 
 export async function GET(request: Request) {
+    return NextResponse.json({
+        status: 'disabled',
+        message: 'Auto-posting channel Telegram dinonaktifkan total secara permanen sesuai perintah mutlak CEO.'
+    });
     // Verify cron secret for security (optional but recommended)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;

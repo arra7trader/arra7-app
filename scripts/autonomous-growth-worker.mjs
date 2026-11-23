@@ -1,3 +1,6 @@
+console.log('[AUTONOMOUS GROWTH WORKER] Dinonaktifkan total secara permanen sesuai perintah mutlak CEO.');
+process.exit(0);
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

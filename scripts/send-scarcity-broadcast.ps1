@@ -1,3 +1,6 @@
+﻿Write-Host "[BROADCAST] Dinonaktifkan total secara permanen sesuai perintah mutlak CEO."
+exit 0
+
 $envFile = Join-Path $PSScriptRoot "..\.env.local"
 $token = $env:TELEGRAM_BOT_TOKEN
 if (Test-Path $envFile) {

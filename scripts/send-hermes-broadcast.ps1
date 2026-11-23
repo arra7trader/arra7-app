@@ -1,4 +1,7 @@
-# HERMES AI Mentor - Telegram Broadcast Script
+﻿# HERMES AI Mentor - Telegram Broadcast Script
+Write-Host "[BROADCAST] Dinonaktifkan total secara permanen sesuai perintah mutlak CEO."
+exit 0
+
 # Run this script to send promotional message to @arrareborn7
 
 $envFile = Join-Path $PSScriptRoot "..\.env.local"

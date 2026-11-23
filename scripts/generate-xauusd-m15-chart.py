@@ -1,3 +1,7 @@
+import sys
+print('[XAUUSD CHART ENGINE] Dinonaktifkan total secara permanen sesuai perintah mutlak CEO.')
+sys.exit(0)
+
 import os
 import sys
 import json
