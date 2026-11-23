@@ -50,13 +50,13 @@ function compilePineScriptV5(name: string, modules: any[], licenseCode: string):
     .map(m => m.pineConditionSell)
     .filter(c => c && c !== 'true');
 
-  const buyScoreCalc = buyConditions.length > 0
-    ? buyConditions.map(c => `    if ${c}\n        b_score += 1`).join('\n')
-    : '    if close > open\n        b_score += 1';
+  const buyScoreExpr = buyConditions.length > 0
+    ? buyConditions.map(c => `(${c} ? 1 : 0)`).join(' + ')
+    : '(close > open ? 1 : 0)';
 
-  const sellScoreCalc = sellConditions.length > 0
-    ? sellConditions.map(c => `    if ${c}\n        s_score += 1`).join('\n')
-    : '    if close < open\n        s_score += 1';
+  const sellScoreExpr = sellConditions.length > 0
+    ? sellConditions.map(c => `(${c} ? 1 : 0)`).join(' + ')
+    : '(close < open ? 1 : 0)';
 
   const numModules = Math.max(1, buyConditions.length);
   const recommendedThreshold = Math.max(1, Math.min(2, numModules));
@@ -88,14 +88,8 @@ ${functionsBlock}
 ${plotCalls}
 
 // --- COMPOSITE SIGNAL CONFLUENCE ENGINE ---
-f_calc_scores() =>
-    int b_score = 0
-    int s_score = 0
-${buyScoreCalc}
-${sellScoreCalc}
-    [b_score, s_score]
-
-[buy_score, sell_score] = f_calc_scores()
+buy_score = ${buyScoreExpr}
+sell_score = ${sellScoreExpr}
 
 total_modules = ${numModules}
 req_score = confluence_mode == "Sensitif (1 Modul Cocok)" ? 1 : confluence_mode == "Flexible Confluence (Rekomendasi)" ? ${recommendedThreshold} : total_modules
@@ -118,25 +112,25 @@ if signal_sell_trigger
     last_signal_dir := -1
 
 // --- VISUAL ON-CHART SIGNALS ---
-plotshape(signal_buy_trigger, title="INSTITUTIONAL BUY", style=shape.labelup, location=location.belowbar, color=color.new(#10b981, 0), text="BUY", textcolor=color.white, size=size.normal)
-plotshape(signal_sell_trigger, title="INSTITUTIONAL SELL", style=shape.labeldown, location=location.abovebar, color=color.new(#ef4444, 0), text="SELL", textcolor=color.white, size=size.normal)
+plotshape(signal_buy_trigger, title="INSTITUTIONAL BUY", style=shape.labelup, location=location.belowbar, color=color.rgb(16, 185, 129), text="BUY", textcolor=color.white, size=size.normal)
+plotshape(signal_sell_trigger, title="INSTITUTIONAL SELL", style=shape.labeldown, location=location.abovebar, color=color.rgb(239, 68, 68), text="SELL", textcolor=color.white, size=size.normal)
 
 // Background & Bar Color Highlights
-bgcolor(signal_buy_trigger ? color.new(#10b981, 85) : signal_sell_trigger ? color.new(#ef4444, 85) : na, title="Signal Bar Tint")
-barcolor(signal_buy_trigger ? color.new(#10b981, 0) : signal_sell_trigger ? color.new(#ef4444, 0) : na)
+bgcolor(signal_buy_trigger ? color.rgb(16, 185, 129, 85) : signal_sell_trigger ? color.rgb(239, 68, 68, 85) : na, title="Signal Bar Tint")
+barcolor(signal_buy_trigger ? color.rgb(16, 185, 129) : signal_sell_trigger ? color.rgb(239, 68, 68) : na)
 
 // --- ON-CHART TELEMETRY HUD TABLE ---
 show_hud = input.bool(true, "Show On-Chart HUD Table", group="Visual Dashboard")
-var table hud = table.new(position.top_right, 2, 4, bgcolor=color.new(#0f172a, 15), border_color=color.new(#334155, 30), border_width=1)
+var table hud = table.new(position.top_right, 2, 4, bgcolor=color.rgb(15, 23, 42, 15), border_color=color.rgb(51, 65, 85, 30), border_width=1)
 
 if barstate.islast and show_hud
-    table.cell(hud, 0, 0, "PICA SYSTEM", bgcolor=color.new(#1e293b, 0), text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 0, "${name.slice(0, 16)}", bgcolor=color.new(#1e293b, 0), text_color=color.new(#38bdf8, 0), text_size=size.small)
-    table.cell(hud, 0, 1, "Status Engine", text_color=color.slate, text_size=size.small)
-    table.cell(hud, 1, 1, "READY (Pine v5)", text_color=color.new(#10b981, 0), text_size=size.small)
-    table.cell(hud, 0, 2, "Confluence Score", text_color=color.slate, text_size=size.small)
-    table.cell(hud, 1, 2, str.tostring(buy_score) + " Buy / " + str.tostring(sell_score) + " Sell", text_color=buy_score > sell_score ? color.new(#10b981, 0) : sell_score > buy_score ? color.new(#ef4444, 0) : color.slate, text_size=size.small)
-    table.cell(hud, 0, 3, "Mode Sinyal", text_color=color.slate, text_size=size.small)
+    table.cell(hud, 0, 0, "PICA SYSTEM", bgcolor=color.rgb(30, 41, 59), text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 0, "${name.slice(0, 16)}", bgcolor=color.rgb(30, 41, 59), text_color=color.rgb(56, 189, 248), text_size=size.small)
+    table.cell(hud, 0, 1, "Status Engine", text_color=color.gray, text_size=size.small)
+    table.cell(hud, 1, 1, "READY (Pine v5)", text_color=color.rgb(16, 185, 129), text_size=size.small)
+    table.cell(hud, 0, 2, "Confluence Score", text_color=color.gray, text_size=size.small)
+    table.cell(hud, 1, 2, str.tostring(buy_score) + " Buy / " + str.tostring(sell_score) + " Sell", text_color=buy_score > sell_score ? color.rgb(16, 185, 129) : sell_score > buy_score ? color.rgb(239, 68, 68) : color.gray, text_size=size.small)
+    table.cell(hud, 0, 3, "Mode Sinyal", text_color=color.gray, text_size=size.small)
     table.cell(hud, 1, 3, confluence_mode, text_color=color.white, text_size=size.small)
 
 // --- NATIVE ALERTS ---
