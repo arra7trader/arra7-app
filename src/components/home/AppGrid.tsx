@@ -53,6 +53,18 @@ export default function AppGrid() {
             centerFeature: true,
         },
         {
+            id: 'ea-maker',
+            label: 'PICA EA Maker',
+            sublabel: 'Backtest Engine · MT5 .mq5',
+            badge: 'EA BUILDER',
+            badgeColor: 'bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 text-white font-extrabold shadow-sm',
+            icon: <BoltIcon size="lg" className="text-blue-600" />,
+            href: '/ea-maker',
+            color: 'bg-blue-100/90 border-blue-400/90 ring-2 ring-blue-400/30',
+            highlight: true,
+            centerFeature: true,
+        },
+        {
             id: 'arra-grok',
             label: 'ARRA GROK',
             sublabel: '6-Agent Autonomous Terminal',
@@ -104,7 +116,7 @@ export default function AppGrid() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="w-full max-w-5xl mx-auto mt-6"
             >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2.5 sm:gap-3 p-4 sm:p-5 bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/60">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2.5 sm:gap-3 p-4 sm:p-5 bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/60">
                     {apps.map((app) => (
                         <Link key={app.id} href={app.href} className="group">
                             <motion.div

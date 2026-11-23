@@ -166,6 +166,19 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-900">175K</span>
                                     </Link>
+                                    <Link href="/ea-maker" className="flex items-center justify-between p-2 rounded-xl bg-blue-50/80 hover:bg-blue-100 text-blue-950 transition-colors border border-blue-200/80">
+                                        <div className="flex items-center gap-2">
+                                            <span>🤖</span>
+                                            <div>
+                                                <p className="font-bold flex items-center gap-1 text-slate-900">
+                                                    PICA EA Maker
+                                                    <span className="text-[8px] bg-blue-600 text-white px-1 py-0.2 rounded font-black">BARU</span>
+                                                </p>
+                                                <p className="text-[10px] text-blue-800">Rakit Expert Advisor MT5 + Backtest Engine</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-200 text-blue-900">MQL5</span>
+                                    </Link>
                                     <Link href="/hermes-mentor" className="flex items-center justify-between p-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-950 transition-colors border border-amber-200/80">
                                         <div className="flex items-center gap-2">
                                             <span>🧠</span>
@@ -540,6 +553,25 @@ export default function Navbar() {
                                 </div>
                             </div>
                             <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-emerald-300 shrink-0">175K</span>
+                        </Link>
+
+                        {/* Top Highlight 4: PICA EA Maker */}
+                        <Link
+                            href="/ea-maker"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-md shadow-blue-500/20 active:scale-98 transition-all border border-blue-400"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <span className="text-2xl">🤖</span>
+                                <div>
+                                    <p className="font-black text-sm flex items-center gap-1.5 text-white">
+                                        PICA EA Maker
+                                        <span className="text-[9px] bg-white text-blue-800 px-1.5 py-0.2 rounded-full font-black uppercase">BARU</span>
+                                    </p>
+                                    <p className="text-[11px] text-blue-100 font-medium">Rakit Robot MT5 + Backtest Winrate Engine</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-slate-950 text-blue-300 shrink-0">MT5</span>
                         </Link>
 
 
