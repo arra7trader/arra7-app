@@ -41,7 +41,11 @@ export const ADMIN_PASSKEYS = new Set([
   'RAKA-PICA-CORE',
   'ARRA7-FOUNDER-VIP',
   'INDICATOR-VIP-2026',
-  'PICA-VIP-LIFETIME'
+  'PICA-VIP-LIFETIME',
+  'QUANT-MAKER-LIFETIME',
+  'PICA-QUANT-2026',
+  'MAKER-BUNDLE-2026',
+  'PICA-EA-VIP'
 ]);
 
 export async function isLicenseAuthorized(licenseCode?: string): Promise<{ valid: boolean; reason?: string; isAdmin: boolean }> {

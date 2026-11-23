@@ -302,7 +302,7 @@ export default function IndicatorMakerPage() {
             </div>
             <p className="text-[11px] text-slate-500 mt-2 text-left flex items-start gap-1.5">
               <LightbulbIcon size="xs" className="text-amber-500 flex-shrink-0 mt-0.5" />
-              <span>20 Pembeli pertama mendapatkan akses <strong>LIFETIME Rp 175.000</strong>. Setelah 20 slot selesai, harga tetap <strong>Rp 175.000 per bulan</strong>.</span>
+              <span>Paket Bundle 2-in-1: 20 Pembeli pertama mendapatkan akses <strong>LIFETIME Rp 175.000 (Indicator Maker + EA Maker MT5 Sekaligus)</strong>. Setelah 20 slot selesai, harga normal <strong>Rp 175.000 per bulan</strong>.</span>
             </p>
           </div>
         </div>
@@ -838,11 +838,11 @@ export default function IndicatorMakerPage() {
 
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-800 bg-blue-100 border border-blue-300 px-2.5 py-0.5 rounded-full">
-                LISENSI RESMI PICA INDICATOR MAKER
+                PAKET BUNDLE 2-IN-1: INDICATOR MAKER + EA MAKER MT5
               </span>
-              <h3 className="text-xl font-black text-slate-900">Pembayaran &amp; Aktivasi Instan</h3>
+              <h3 className="text-xl font-black text-slate-900">Pembayaran &amp; Aktivasi Passkey Lifetime</h3>
               <p className="text-xs text-slate-500">
-                Akses tanpa batas ke 100 modul formula kuantitatif TradingView &amp; MetaTrader 5.
+                1 Passkey resmi untuk akses tak terbatas ke 100 modul Indicator Maker &amp; 100 modul EA Maker MT5 seumur hidup.
               </p>
             </div>
 
@@ -885,7 +885,7 @@ export default function IndicatorMakerPage() {
             {/* Confirmation Link */}
             <div className="space-y-2">
               <a
-                href={`https://t.me/arra7trader?text=${encodeURIComponent('Halo Bang Arland (@arra7trader), saya mau konfirmasi pembayaran PICA INDICATOR MAKER Rp 175.000 via BCA 1392698188. Mohon kunci lisensinya ya!')}`}
+                href={`https://t.me/arra7trader?text=${encodeURIComponent('Halo Bang Arland (@arra7trader), saya mau konfirmasi pembayaran PAKET BUNDLE PICA INDICATOR & EA MAKER Rp 175.000 via BCA 1392698188. Mohon kirimkan kunci lisensi lifetime saya ya!')}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"

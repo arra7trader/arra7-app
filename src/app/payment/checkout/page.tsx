@@ -55,6 +55,15 @@ function PaymentCheckoutContent() {
                 description: 'Akses Penuh ARRA Cronos AI, ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures), serta Bonus Indikator TradingView Pine Script v6',
                 color: 'from-cyan-500 via-blue-600 to-indigo-600'
             };
+        } else if (planId === 'MAKER_BUNDLE' || planId === 'INDICATOR_MAKER' || planId === 'EA_MAKER' || planId === 'indicator-maker' || planId === 'ea-maker') {
+            return {
+                id: 'MAKER_BUNDLE',
+                name: 'PICA Quant Builder Bundle (Indicator Maker + EA Maker MT5)',
+                price: 175000,
+                priceFormatted: 'Rp 175.000',
+                description: 'Paket Komplit 2-in-1: Indicator Maker 100 Modul (TradingView v5 & MT5) + EA Maker MT5 (100 Modul & Backtest Engine). Sekali Bayar Lifetime Selamanya (20 Slot Perdana).',
+                color: 'from-emerald-500 via-teal-600 to-blue-600'
+            };
         }
         return null;
     }, [planId]);

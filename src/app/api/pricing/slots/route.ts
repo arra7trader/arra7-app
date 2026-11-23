@@ -75,6 +75,24 @@ export async function GET() {
             };
         }
 
+        slots.MAKER_BUNDLE = slots.MAKER_BUNDLE || {};
+        if (!slots.MAKER_BUNDLE['lifetime']) {
+            slots.MAKER_BUNDLE['lifetime'] = {
+                used: 8,
+                remaining: 12,
+                max: 20,
+            };
+        }
+
+        slots.INDICATOR_MAKER = slots.INDICATOR_MAKER || {};
+        if (!slots.INDICATOR_MAKER['lifetime']) {
+            slots.INDICATOR_MAKER['lifetime'] = {
+                used: 8,
+                remaining: 12,
+                max: 20,
+            };
+        }
+
         return NextResponse.json({
             status: 'success',
             slots,

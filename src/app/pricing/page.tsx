@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon, IndicatorMakerIcon } from '@/components/PremiumIcons';
+import { CheckIcon, XIcon, SparklesIcon, StarSolidIcon, BoltIcon, CrownIcon, RobotIcon, GemIcon, TrendUpIcon, IndicatorMakerIcon, EaMakerIcon } from '@/components/PremiumIcons';
 
 const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; label: string; price: string; originalPrice?: string | null; savingsText?: string; promoSlots?: number; period?: string }>> = {
     ALL_ACCESS: [
@@ -39,16 +39,31 @@ const DURATION_OPTIONS: Record<string, Array<{ duration: string; days: number; l
     EA_PICA_GOLD: [
         { duration: 'lifetime', days: 0, label: 'Sekali Bayar', price: 'Rp 90.000', originalPrice: 'Rp 499.000', savingsText: 'PROMO HARI INI Hemat Rp 409.000 • Diskon 82%', period: '/ sekali bayar' },
     ],
+    MAKER_BUNDLE: [
+        { duration: 'lifetime', days: 0, label: 'Early Bird Bundle (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 2-in-1 Suite', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+    ],
     INDICATOR_MAKER: [
-        { duration: 'lifetime', days: 0, label: 'Early Bird (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Hemat Rp 324.000 • 20 Slot Tercepat', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
-        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 299.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+        { duration: 'lifetime', days: 0, label: 'Early Bird Bundle (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 2-in-1 Suite', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
+    ],
+    EA_MAKER: [
+        { duration: 'lifetime', days: 0, label: 'Early Bird Bundle (20 Slot)', price: 'Rp 175.000', originalPrice: 'Rp 999.000', savingsText: 'Hemat Rp 824.000 • 2-in-1 Suite', promoSlots: 20, period: '/ sekali bayar (Lifetime)' },
+        { duration: '1month', days: 30, label: 'Reguler Bulanan', price: 'Rp 175.000', originalPrice: 'Rp 499.000', savingsText: 'Akses 1 Bulan', period: '/ bulan' },
     ],
 };
 
 function PlanIcon({ planId }: { planId: string }) {
     switch (planId) {
         case 'INDICATOR_MAKER':
-            return <IndicatorMakerIcon size="lg" className="text-emerald-600" />;
+        case 'MAKER_BUNDLE':
+        case 'EA_MAKER':
+            return (
+                <div className="flex items-center -space-x-1">
+                    <IndicatorMakerIcon size="md" />
+                    <EaMakerIcon size="md" />
+                </div>
+            );
         case 'BASIC':
             return <SparklesIcon size="lg" className="text-slate-600" />;
         case 'PRO':
@@ -165,20 +180,20 @@ const PRICING_PLANS = [
     },
         {
         id: 'INDICATOR_MAKER',
-        name: 'PICA Indicator Maker',
-        description: 'Rakit indikator Buy/Sell kustom TradingView v5 (.pine) atau MT5 (.mq5) dengan 100 formula standar institusi dunia (SMC, Order Flow, Volatilitas, & Killzones). Zero-Repaint & Siap Pasang di Chart.',
+        name: 'PICA Quant Builder Bundle (Indicator & EA Maker)',
+        description: 'Paket komplit 2-in-1: PICA Indicator Maker (100 Formula TradingView & MT5) + PICA EA Maker MT5 (100 Modul + Backtest Engine). 1 Passkey membuka akses kedua tool selamanya!',
         theme: 'emerald',
         features: [
-            { text: '100 Modul Standar Institusi (SMC, Order Flow, Killzone)', included: true, highlight: true },
-            { text: 'Pilih Single Output: Pine Script v5 ATAU MT5 (.mq5)', included: true, highlight: true },
-            { text: 'Zero-Repaint Guarantee (Formula Barindex Fix & Candle Closed)', included: true, highlight: true },
-            { text: 'Proteksi Anti-Abuse (Jeda 1 Jam & Max 5x Generate / Hari)', included: true, highlight: true },
-            { text: 'Early Bird Eksklusif 20 Slot: Sekali Bayar Rp 175.000 Lifetime', included: true, highlight: true },
-            { text: 'Setelah 20 Slot Habis: Harga Tetap Rp 175.000 / Bulan', included: true, highlight: false },
-            { text: 'Formula Diagram Mockup Visual & Card Lengkap', included: true, highlight: false },
-            { text: 'Export File Bersih Tanpa Error & Siap Pasang di Chart', included: true, highlight: false },
+            { text: 'PICA Indicator Maker: 100 Modul Formula Institusi (PineScript v5 & MT5)', included: true, highlight: true },
+            { text: 'PICA EA Maker: 100 Modul Robot MT5 + Backtest Winrate Simulator', included: true, highlight: true },
+            { text: '1 Passkey Resmi Mengaktifkan KEDUA Generator Sekaligus', included: true, highlight: true },
+            { text: 'Akses Early Bird 20 Orang Pertama: Sekali Bayar Rp 175.000 (Lifetime Selamanya)', included: true, highlight: true },
+            { text: 'Setelah 20 Slot Terisi: Harga Kembali Normal Rp 175.000 / Bulan', included: true, highlight: false },
+            { text: 'Formula SMC, Order Flow, Volatilitas, Killzone & Algoritma HFT/Scalping', included: true, highlight: true },
+            { text: 'Zero-Repaint Guarantee & Multi-Pair Auto Normalizer', included: true, highlight: false },
+            { text: 'Download File Bersih (.pine & .mq5) Siap Pasang di Chart & MetaTrader', included: true, highlight: false },
         ],
-        cta: 'Rakit Indikator (Rp 175.000)',
+        cta: 'Ambil Paket 2-in-1 (Rp 175.000)',
         popular: true,
     },
 {
@@ -285,7 +300,7 @@ export default function PricingPage() {
             durationOverride ||
             (planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD' || planId === 'INDICATOR_MAKER' || planId === 'MAKER_BUNDLE' || planId === 'EA_MAKER'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month');
         setIsProcessing(planId);
@@ -307,7 +322,7 @@ export default function PricingPage() {
         const duration =
             planId === 'TELEBOT_MONTHLY'
                 ? '1month'
-                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD'
+                : planId === 'TELEBOT_LIFETIME' || planId === 'FIBO_KYOKO' || planId === 'ALL_ACCESS' || planId === 'ARRA_CRONOS' || planId === 'HERMES_MENTOR' || planId === 'EA_PICA_GOLD' || planId === 'INDICATOR_MAKER' || planId === 'MAKER_BUNDLE' || planId === 'EA_MAKER'
                     ? 'lifetime'
                     : selectedDuration[planId] || '1month';
         const option = DURATION_OPTIONS[catalogPlanId]?.find(d => d.duration === duration);

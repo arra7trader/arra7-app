@@ -18,7 +18,8 @@ import {
   ClipboardIcon,
   DownloadIcon,
   BookOpenIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  LightbulbIcon
 } from '@/components/PremiumIcons';
 
 export default function EAMakerPage() {
@@ -298,6 +299,24 @@ export default function EAMakerPage() {
           <p className="text-slate-600 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Rakit Robot Trading (EA) MT5 Anda sendiri dengan <strong>modul institusi terverifikasi</strong>. Dilengkapi mesin <strong>Live Backtest Telemetry</strong>, proteksi spread ketat, dynamic ATR SL/TP, dan Trailing Stop otomatis.
           </p>
+
+          {/* Early Bird 2-in-1 Quant Bundle Banner */}
+          <div className="max-w-md mx-auto bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm text-left">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="font-bold text-slate-700">Kuota 20 Orang Perdana (Eksklusif Lifetime):</span>
+              <span className="font-extrabold text-emerald-600">8 / 20 Slot Terisi</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/60">
+              <div 
+                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 h-2.5 rounded-full transition-all duration-500"
+                style={{ width: '40%' }}
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2 text-left flex items-start gap-1.5">
+              <LightbulbIcon size="xs" className="text-amber-500 flex-shrink-0 mt-0.5" />
+              <span>Paket Bundle 2-in-1: 20 Pembeli pertama mendapatkan akses <strong>LIFETIME Rp 175.000 (EA Maker MT5 + Indicator Maker Sekaligus)</strong>. Setelah 20 slot selesai, harga normal <strong>Rp 175.000 per bulan</strong>.</span>
+            </p>
+          </div>
         </div>
 
         {/* STEP 1: STYLE SELECTION TABS */}
@@ -921,14 +940,14 @@ export default function EAMakerPage() {
             </button>
 
             <div>
-              <span className="text-xs font-black text-blue-600 uppercase tracking-widest">
-                AKTIVASI LISENSI RESMI
+              <span className="text-[10px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">
+                PAKET BUNDLE 2-IN-1: EA MAKER MT5 + INDICATOR MAKER
               </span>
-              <h3 className="text-xl font-extrabold text-slate-900 mt-1">
-                Akses PICA EA Maker &amp; Indicator Maker
+              <h3 className="text-xl font-extrabold text-slate-900 mt-2">
+                Aktivasi Passkey VIP Lifetime
               </h3>
               <p className="text-xs text-slate-600 mt-1">
-                Dapatkan akses tak terbatas untuk merakit robot EA MT5 &amp; indikator kustom seumur hidup.
+                1 Passkey resmi membuka akses tak terbatas untuk merakit robot EA MT5 &amp; indikator kustom seumur hidup (20 Slot Perdana).
               </p>
             </div>
 
@@ -958,7 +977,7 @@ export default function EAMakerPage() {
 
             <div className="flex gap-3">
               <a
-                href="https://t.me/arra7trader?text=Halo%20Admin,%20saya%20sudah%20transfer%20Rp%20175.000%20untuk%20Aktivasi%20VIP%20PICA%20EA%20Maker"
+                href={`https://t.me/arra7trader?text=${encodeURIComponent('Halo Bang Arland (@arra7trader), saya mau konfirmasi pembayaran PAKET BUNDLE PICA EA MAKER & INDICATOR MAKER Rp 175.000 via BCA 1392698188. Mohon kunci lisensinya ya!')}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs text-center shadow-xs"

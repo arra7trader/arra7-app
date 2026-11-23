@@ -38,9 +38,17 @@ const PRICING_OPTIONS: Record<
     EA_PICA_GOLD: {
         'lifetime': { durationLabel: 'Lifetime (Promo Hari Ini)', price: 90000, priceDisplay: 'Rp 90.000', originalPrice: 'Rp 499.000', period: '/sekali bayar (Dual Timeframe M1 + M5)' },
     },
+    MAKER_BUNDLE: {
+        'lifetime': { durationLabel: 'Lifetime 2-in-1 (Early Bird 20 Slot)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 999.000', period: '/sekali bayar (Akses Selamanya)' },
+        '1month': { durationLabel: '1 Bulan Reguler (Indicator + EA Maker)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 499.000', period: '/bulan' },
+    },
     INDICATOR_MAKER: {
-        'lifetime': { durationLabel: 'Lifetime (Early Bird 20 Slot)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 499.000', period: '/sekali bayar (Akses Selamanya)' },
-        '1month': { durationLabel: '1 Bulan Reguler', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 299.000', period: '/bulan' },
+        'lifetime': { durationLabel: 'Lifetime 2-in-1 (Early Bird 20 Slot)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 999.000', period: '/sekali bayar (Akses Selamanya)' },
+        '1month': { durationLabel: '1 Bulan Reguler (Indicator + EA Maker)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 499.000', period: '/bulan' },
+    },
+    EA_MAKER: {
+        'lifetime': { durationLabel: 'Lifetime 2-in-1 (Early Bird 20 Slot)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 999.000', period: '/sekali bayar (Akses Selamanya)' },
+        '1month': { durationLabel: '1 Bulan Reguler (Indicator + EA Maker)', price: 175000, priceDisplay: 'Rp 175.000', originalPrice: 'Rp 499.000', period: '/bulan' },
     },
 };
 
@@ -75,7 +83,9 @@ function TransferContent() {
             ARRA_CRONOS: 'ARRA Cronos AI Quant Engine + ARRA GROK Terminal + Bonus Indikator TradingView',
             ALL_ACCESS: 'Semua Produk ARRA 7 (Lifetime All-Access Promo)',
             EA_PICA_GOLD: 'EA PICA Neural Gold M1 & M5 (Dual AI Scalper MT5)',
-            INDICATOR_MAKER: 'PICA Indicator Maker (100 Formula SMC & MT5/Pine)',
+            INDICATOR_MAKER: 'PICA Quant Builder Bundle (Indicator Maker + EA Maker MT5)',
+            MAKER_BUNDLE: 'PICA Quant Builder Bundle (Indicator Maker + EA Maker MT5)',
+            EA_MAKER: 'PICA Quant Builder Bundle (EA Maker MT5 + Indicator Maker)',
         };
 
         return {
@@ -130,7 +140,7 @@ function TransferContent() {
         plan.id === 'FIBO_KYOKO' ? 'Mohon kirimkan Kode Lisensi aktivasi Kursus Fibo Kyoko saya.' : null,
         plan.id === 'EA_PICA_GOLD' ? '🤖 Paket EA PICA Neural Gold M1+M5: Akses Full EA Deep Learning Scalper + Intraday, File ONNX Native, 4 Preset .set, & Panduan. Mohon kirimkan kode lisensi unlock download saya.' : null,
         plan.id === 'ARRA_CRONOS' ? '🎯 Paket ARRA Cronos Lifetime: Akses Full AI Quant Engine + ARRA GROK 6-Agent Autonomous Terminal (Forex & Gold Futures) + Bonus Source Code Indikator TradingView Pine Script v6. Mohon kirimkan kode aktivasi saya.' : null,
-        plan.id === 'INDICATOR_MAKER' ? '🛠️ Paket PICA Indicator Maker: Rakit Indikator Pine Script v5 / MT5 dengan 100 Formula Institusi & Zero-Repaint. Mohon aktifkan lisensi Indicator Maker saya.' : null,
+        plan.id === 'INDICATOR_MAKER' || plan.id === 'MAKER_BUNDLE' || plan.id === 'EA_MAKER' ? '⚡ Paket 2-in-1 PICA Quant Builder Bundle (Early Bird 20 Slot): Akses Full PICA Indicator Maker (100 Modul PineScript v5 & MT5) + PICA EA Maker MT5 (100 Modul + Backtest Engine). Mohon kirimkan Passkey Lisensi Resmi pembuka akses KEDUA alat sekaligus ya Bang Arland.' : null,
         '',
         requiresTelegramUsername
             ? 'Mohon approve akses TELEBOT saya. Berikut bukti transfernya: (Lampirkan Bukti Transfer)'
