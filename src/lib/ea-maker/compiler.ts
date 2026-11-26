@@ -144,11 +144,8 @@ function generateMQL5ExpertAdvisor(params: InternalMQL5Params): string {
 #include <Trade\\SymbolInfo.mqh>
 #include <Trade\\PositionInfo.mqh>
 
-//--- Case-Insensitivity Aliases (Robust Universal Array Support)
-#define open Open
-#define high High
-#define low Low
-#define close Close
+//--- OHLCV Arrays are declared as local variables in OnTick() scope
+//--- All module functions receive them as const reference parameters
 
 //--- Input Parameters: Money & Risk Management
 input group "=== 1. RISK & MONEY MANAGEMENT ===";
