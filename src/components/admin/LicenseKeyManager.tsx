@@ -25,7 +25,7 @@ import {
 export interface LicenseKey {
   id?: number;
   code: string;
-  tier: 'PRO' | 'VVIP' | 'EA_GOLD';
+  tier: 'PRO' | 'VVIP' | 'EA_GOLD' | string;
   durationDays: number;
   isUsed: boolean;
   usedByDeviceId?: string;
@@ -49,7 +49,7 @@ export interface DeviceUser {
   totalVisits: number;
 }
 
-type ProductType = 'EA_PICA_GOLD' | 'HERMES_MENTOR' | 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'CUSTOM';
+type ProductType = 'MAKER_BUNDLE' | 'EA_MAKER' | 'INDICATOR_MAKER' | 'EA_PICA_GOLD' | 'HERMES_MENTOR' | 'ALL_ACCESS' | 'FIBO_KYOKO' | 'TELEBOT' | 'VVIP' | 'PRO' | 'CUSTOM';
 
 interface ProductPreset {
   id: ProductType;
@@ -66,6 +66,106 @@ interface ProductPreset {
 }
 
 const PRODUCT_PRESETS: Record<ProductType, ProductPreset> = {
+  MAKER_BUNDLE: {
+    id: 'MAKER_BUNDLE',
+    title: 'PICA Quant Builder Bundle (2-in-1 Suite)',
+    badge: '⚡ QUANT BUNDLE (175K)',
+    priceDisplay: 'Rp 175.000 (Early Bird Lifetime) / Rp 175.000/bln',
+    tagColor: 'bg-amber-50 text-amber-800 border-amber-300',
+    borderActive: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/40',
+    description: 'Paket Bundle 2-in-1 Suite: 100 Modul Indikator TradingView/MT5 + 100 Modul EA MT5 Builder + Instant Backtest Engine. 1 Lisensi membuka akses ke kedua aplikasi sekaligus!',
+    tier: 'BUNDLE',
+    durations: [
+      { label: 'Early Bird Lifetime (20 Slot Perdana)', days: 9999, price: 'Rp 175.000' },
+      { label: 'Reguler 1 Bulan (Setelah 20 Slot)', days: 30, price: 'Rp 175.000' },
+    ],
+    notePrefix: '[MAKER_BUNDLE]',
+    generateText: (code, buyerName, durationLabel) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Terima kasih, pembayaran Paket PICA Quant Builder Bundle (2-in-1 Suite) telah kami verifikasi. ✅
+
+Berikut Kunci Lisensi (Passkey) Anda:
+🔑 Kunci Lisensi: ${code}
+💎 Paket: PICA Quant Builder Bundle (Indicator Maker + EA Maker MT5)
+⏳ Akses: ${durationLabel}
+
+Fitur yang Anda Dapatkan (1 Kunci Buka 2 Tool Sekaligus):
+✅ PICA EA Maker MT5: 100 Modul Strategi (Scalping, Intraday, HFT, Hedging, SMC) + Instant Backtest Engine
+✅ PICA Indicator Maker: 100 Modul Formula Indikator Pine Script v6 & MQL5 tanpa koding
+✅ Export Source Code Lengkap (.mq5 / .ex5 / .pine) & Bebas Racik Kustom
+
+Cara Aktivasi & Penggunaan:
+1. Buka salah satu atau kedua tool:
+   • EA Maker: https://pica.my.id/ea-maker
+   • Indikator Maker: https://pica.my.id/indicator-maker
+2. Masukkan kode di atas pada kolom "Kunci Lisensi / Passkey": ${code}
+3. Langsung racik strategi, klik "Jalankan Backtest" atau "Generate EA/Indikator", dan download hasilnya!
+
+Jika butuh panduan, silakan hubungi admin di Telegram @arra7trader. Selamat berkarya & salam profit konsisten! 🚀`;
+    },
+  },
+  EA_MAKER: {
+    id: 'EA_MAKER',
+    title: 'PICA EA Maker MT5 (100 Modul & Backtest)',
+    badge: '🤖 EA MAKER MT5',
+    priceDisplay: 'Rp 175.000 (Lifetime / Bulanan)',
+    tagColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    borderActive: 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/40',
+    description: 'Pembangun Expert Advisor MT5 otomatis dengan 100 modul strategi (Scalping, Intraday, HFT, Hedging, SMC) + Instant Backtest Engine.',
+    tier: 'EA_MAKER',
+    durations: [
+      { label: 'Early Bird Lifetime (20 Slot)', days: 9999, price: 'Rp 175.000' },
+      { label: 'Reguler 1 Bulan (30 Hari)', days: 30, price: 'Rp 175.000' },
+    ],
+    notePrefix: '[EA_MAKER]',
+    generateText: (code, buyerName, durationLabel) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Terima kasih, pembayaran PICA EA Maker MT5 telah kami verifikasi. ✅
+
+Berikut Kunci Lisensi Anda:
+🔑 Kunci Lisensi: ${code}
+🤖 Paket: PICA EA Maker MT5 (100 Modul & Backtest Engine)
+⏳ Akses: ${durationLabel}
+
+Cara Aktivasi & Penggunaan:
+1. Buka: https://pica.my.id/ea-maker
+2. Masukkan kode di atas pada kolom "Kunci Lisensi / Passkey": ${code}
+3. Pilih modul strategi, atur parameter, dan klik "Generate EA MT5" atau "Jalankan Backtest"!
+
+Butuh bantuan? Hubungi admin di Telegram @arra7trader. Salam profit konsisten! 🚀`;
+    },
+  },
+  INDICATOR_MAKER: {
+    id: 'INDICATOR_MAKER',
+    title: 'PICA Indicator Maker (TradingView & MT5)',
+    badge: '📊 INDIKATOR MAKER',
+    priceDisplay: 'Rp 175.000 (Lifetime / Bulanan)',
+    tagColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    borderActive: 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/40',
+    description: 'Peracik Indikator TradingView (Pine Script v6) & MT5 Custom Indicator dengan 100 modul formula teknikal tanpa koding.',
+    tier: 'INDICATOR_MAKER',
+    durations: [
+      { label: 'Early Bird Lifetime (20 Slot)', days: 9999, price: 'Rp 175.000' },
+      { label: 'Reguler 1 Bulan (30 Hari)', days: 30, price: 'Rp 175.000' },
+    ],
+    notePrefix: '[INDICATOR_MAKER]',
+    generateText: (code, buyerName, durationLabel) => {
+      const greeting = buyerName ? `Halo Kak ${buyerName}!` : 'Halo Kak!';
+      return `${greeting} Terima kasih, pembayaran PICA Indicator Maker telah kami verifikasi. ✅
+
+Berikut Kunci Lisensi Anda:
+🔑 Kunci Lisensi: ${code}
+📊 Paket: PICA Indicator Maker (TradingView & MT5)
+⏳ Akses: ${durationLabel}
+
+Cara Aktivasi & Penggunaan:
+1. Buka: https://pica.my.id/indicator-maker
+2. Masukkan kode di atas pada kolom "Kunci Lisensi": ${code}
+3. Pilih modul indikator, gabungkan formula, dan klik "Generate Indikator"!
+
+Butuh bantuan? Hubungi admin di Telegram @arra7trader. Salam cuan konsisten! 🚀`;
+    },
+  },
   EA_PICA_GOLD: {
     id: 'EA_PICA_GOLD',
     title: 'EA PICA Neural Gold M1 & M5 (Dual AI MT5)',
@@ -501,6 +601,9 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
   // Helper to parse product from note
   const getProductFromNote = (note?: string): ProductType => {
     if (!note) return 'CUSTOM';
+    if (note.includes('[MAKER_BUNDLE]') || note.toLowerCase().includes('maker_bundle') || note.toLowerCase().includes('bundle')) return 'MAKER_BUNDLE';
+    if (note.includes('[EA_MAKER]') || note.toLowerCase().includes('ea_maker') || note.toLowerCase().includes('ea maker')) return 'EA_MAKER';
+    if (note.includes('[INDICATOR_MAKER]') || note.toLowerCase().includes('indicator_maker') || note.toLowerCase().includes('indicator maker')) return 'INDICATOR_MAKER';
     if (note.includes('[HERMES_MENTOR]') || note.toLowerCase().includes('hermes')) return 'HERMES_MENTOR';
     if (note.includes('[ALL_ACCESS]') || note.toLowerCase().includes('all_access') || note.toLowerCase().includes('all access')) return 'ALL_ACCESS';
     if (note.includes('[FIBO_KYOKO]') || note.toLowerCase().includes('fibo')) return 'FIBO_KYOKO';
@@ -931,6 +1034,38 @@ Semua fitur langsung aktif di laptop Kakak! Selamat trading dan salam cuan konsi
                   }`}
                 >
                   Semua Produk
+                </button>
+                <button
+                  onClick={() => setFilterProduct('MAKER_BUNDLE')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                    filterProduct === 'MAKER_BUNDLE' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  ⚡ Bundle 2-in-1
+                </button>
+                <button
+                  onClick={() => setFilterProduct('EA_MAKER')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                    filterProduct === 'EA_MAKER' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                  }`}
+                >
+                  🤖 EA Maker
+                </button>
+                <button
+                  onClick={() => setFilterProduct('INDICATOR_MAKER')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                    filterProduct === 'INDICATOR_MAKER' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  📊 Indikator Maker
+                </button>
+                <button
+                  onClick={() => setFilterProduct('EA_PICA_GOLD')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                    filterProduct === 'EA_PICA_GOLD' ? 'bg-amber-700 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                  }`}
+                >
+                  🥇 EA Neural Gold
                 </button>
                 <button
                   onClick={() => setFilterProduct('HERMES_MENTOR')}

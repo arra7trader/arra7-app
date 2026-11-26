@@ -63,6 +63,23 @@ export async function isLicenseAuthorized(licenseCode?: string): Promise<{ valid
     const turso = getTursoClient();
     if (turso) {
       try {
+        // 1. Check central license_keys table (Admin Generated Keys)
+        const mainKeyRes = await turso.execute({
+          sql: 'SELECT tier, duration_days, is_used, expires_at FROM license_keys WHERE UPPER(code) = ? LIMIT 1',
+          args: [clean]
+        });
+        if (mainKeyRes.rows.length > 0) {
+          const row = mainKeyRes.rows[0];
+          if (row.expires_at) {
+            const exp = new Date(String(row.expires_at)).getTime();
+            if (Date.now() > exp) {
+              return { valid: false, reason: 'Masa aktif lisensi telah berakhir.', isAdmin: false };
+            }
+          }
+          return { valid: true, isAdmin: false };
+        }
+
+        // 2. Fallback to indicator_maker_licenses table
         const res = await turso.execute({
           sql: 'SELECT is_active FROM indicator_maker_licenses WHERE license_key = ?',
           args: [clean]
@@ -75,7 +92,7 @@ export async function isLicenseAuthorized(licenseCode?: string): Promise<{ valid
         console.error('Error querying license:', err);
       }
     }
-    if (/^(PICA|ARRA)-[A-Z0-9_\-]{4,16}$/.test(clean)) {
+    if (/^(PICA|ARRA)-[A-Z0-9_\-]{3,24}$/.test(clean)) {
       return { valid: true, isAdmin: false };
     }
   }
